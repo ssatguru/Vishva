@@ -1,5 +1,5 @@
 "Generated from Java with JSweet 1.1.1 - http://www.jsweet.org";
-namespace org.ssatguru.babylonjs {
+namespace org.ssatguru.babylonjs.vishva {
     import AnimationRange = BABYLON.AnimationRange;
 
     import Skeleton = BABYLON.Skeleton;

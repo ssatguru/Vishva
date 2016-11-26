@@ -9,7 +9,7 @@ var gulp = require('gulp');
 var ts = require("gulp-typescript");
 
 gulp.task("default", function () {
-    var tsResult = gulp.src("src/ts/*.ts")
+    var tsResult = gulp.src("src/ts/**/*.ts")
         .pipe(ts({
               noImplicitAny: false,
               out: "Vishva-merged.js"

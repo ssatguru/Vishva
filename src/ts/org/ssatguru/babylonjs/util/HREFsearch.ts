@@ -1,5 +1,4 @@
-"Generated from Java with JSweet 1.1.1 - http://www.jsweet.org";
-namespace org.ssatguru.babylonjs {
+namespace org.ssatguru.babylonjs.util {
     export class HREFsearch {
         names : Array<string> = new Array<string>();
 

@@ -292,7 +292,7 @@ table, th, td {
 
 	<div id="loadDiv">
 		<form id="fileLoadForm">
-			<input>Select File <input id="loadFileInput" type="file"></input>
+			Select File <input id="loadFileInput" type="file"/>
 		</form>
 		<p>
 			<button id="loadFileOk">Load File</button>
@@ -339,7 +339,7 @@ table, th, td {
 				$(this).blur();
 			});
 
-			var HREFsearch = org.ssatguru.babylonjs.HREFsearch;
+			var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
 			var search = new HREFsearch();
 
 			var world, worldFolder, sceneFolder, sceneFile, editEnabled;
@@ -367,7 +367,7 @@ table, th, td {
 			}
 			if (editEnabled == null)
 				editEnabled = true;
-			var Vishva = org.ssatguru.babylonjs.Vishva;
+			var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
 			var vishva = new Vishva(scenePath, sceneFile, "vCanvas",
 					editEnabled, assets);
 		});

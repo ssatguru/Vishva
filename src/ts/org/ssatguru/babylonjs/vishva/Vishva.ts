@@ -33,6 +33,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Node = BABYLON.Node;
     import ParticleSystem = BABYLON.ParticleSystem;
     import PickingInfo = BABYLON.PickingInfo;
+    import PointLight = BABYLON.PointLight
     import Quaternion = BABYLON.Quaternion;
     import Scene = BABYLON.Scene;
     import SceneLoader = BABYLON.SceneLoader;
@@ -345,7 +346,54 @@ namespace org.ssatguru.babylonjs.vishva {
             (this.shadowGenerator.getShadowMap().renderList).push(inst);
             return null;
         }
+        public toggleMeshVisibility() {
+            if (!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            var mesh = this.meshPicked;
+            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
+                Tags.RemoveTagsFrom(this.meshPicked, "invisible")
+                this.meshPicked.visibility = 1;
+                if (this.showingAllInvisibles)
+                    mesh.showBoundingBox = false;
+            } else {
+                Tags.AddTagsTo(this.meshPicked, "invisible");
+                if (this.showingAllInvisibles) {
+                    this.meshPicked.visibility = 0.5;
+                    mesh.showBoundingBox = true;
+                } else {
+                    this.meshPicked.visibility = 0;
+                }
+            }
+        }
+        showingAllInvisibles: boolean = false;
+        public showAllInvisibles() {
+            this.showingAllInvisibles = true;
+            for (var i = 0; i < this.scene.meshes.length; i++) {
+                var mesh = this.scene.meshes[i];
+                if (Tags.HasTags(mesh)) {
+                    if (Tags.MatchesQuery(mesh, "invisible")) {
+                        mesh.visibility = 0.5;
+                        mesh.showBoundingBox = true;
+                    }
+                }
+            }
+        }
 
+        public hideAllInvisibles() {
+            this.showingAllInvisibles = false;
+            for (var i = 0; i < this.scene.meshes.length; i++) {
+                for (var i = 0; i < this.scene.meshes.length; i++) {
+                    var mesh = this.scene.meshes[i];
+                    if (Tags.HasTags(mesh)) {
+                        if (Tags.MatchesQuery(mesh, "invisible")) {
+                            mesh.visibility = 0;
+                            mesh.showBoundingBox = false;
+                        }
+                    }
+                }
+            }
+        }
         public makeParent(): string {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
@@ -495,6 +543,16 @@ namespace org.ssatguru.babylonjs.vishva {
                 meshes.splice(i, 1);
             }
             mesh.dispose();
+        }
+        
+        public attachLight(){
+            if (!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            //var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
+            var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
+            light0.parent = this.meshPicked;
+            
         }
 
         public setSpaceLocal(lcl: any) {
@@ -1716,15 +1774,15 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private switchFocusToAV() {
             this.mainCamera.detachControl(this.canvas);
-            
+
             this.frames = 25;
             this.f = this.frames;
-            
+
             this.delta = this.saveAVcameraPos.subtract(this.mainCamera.position).scale(1 / this.frames);
-            
+
             var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
             this.delta2 = avTarget.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
-            
+
             this.cameraAnimating = true;
             this.scene.registerBeforeRender(this.animFunc);
         }
@@ -1755,11 +1813,11 @@ namespace org.ssatguru.babylonjs.vishva {
             var targetDiff = avTarget.subtract((<Vector3>this.mainCamera.target)).length();
             if (targetDiff > 0.01)
                 this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
-            
+
             var posDiff = this.saveAVcameraPos.subtract(this.mainCamera.position).length();
             if (posDiff > 0.01)
                 this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
-                
+
             this.f--;
             if (this.f < 0) {
                 this.focusOnAv = true;

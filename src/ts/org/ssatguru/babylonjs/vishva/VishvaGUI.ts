@@ -17,6 +17,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import SliderUIParams = JQueryUI.SliderUIParams;
 
     export class VishvaGUI {
+        
         private vishva: Vishva;
 
         local: boolean = true;
@@ -947,12 +948,19 @@ namespace org.ssatguru.babylonjs.vishva {
         private setEditMenu() {
             var swAv: HTMLElement = document.getElementById("swAv");
             var swGnd: HTMLElement = document.getElementById("swGnd");
+            
             var instMesh: HTMLElement = document.getElementById("instMesh");
             var parentMesh: HTMLElement = document.getElementById("parentMesh");
             var removeParent: HTMLElement = document.getElementById("removeParent");
             var removeChildren: HTMLElement = document.getElementById("removeChildren");
             var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
             var delMesh: HTMLElement = document.getElementById("delMesh");
+            var visMesh: HTMLElement = document.getElementById("visMesh");
+            var showInvis: HTMLElement = document.getElementById("showInvis");
+            var hideInvis: HTMLElement = document.getElementById("hideInvis");
+            
+            var attLight: HTMLElement = document.getElementById("attLight");
+            
             var undo: HTMLElement = document.getElementById("undo");
             var redo: HTMLElement = document.getElementById("redo");
             var sNa: HTMLElement = document.getElementById("sNa");
@@ -1027,6 +1035,30 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return false;
             };
+            visMesh.onclick = (e) => {
+                var err: string = this.vishva.toggleMeshVisibility();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            showInvis.onclick = (e) => {
+                this.vishva.showAllInvisibles();
+                return false;
+            };
+            hideInvis.onclick = (e) => {
+                this.vishva.hideAllInvisibles();
+                return false;
+            };
+            
+            attLight.onclick = (e) => {
+                var err: string = this.vishva.attachLight();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            
             undo.onclick = (e) => {
                 this.vishva.undo();
                 return false;

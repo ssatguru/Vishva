@@ -924,6 +924,7 @@ var org;
                         this.prevAnim = null;
                         this.showBoundingBox = false;
                         this.cameraCollision = false;
+                        this.showingAllInvisibles = false;
                         this.focusOnAv = true;
                         this.cameraAnimating = false;
                         this.jumpCycleMax = 25;
@@ -1155,6 +1156,54 @@ var org;
                         (this.shadowGenerator.getShadowMap().renderList).push(inst);
                         return null;
                     };
+                    Vishva.prototype.toggleMeshVisibility = function () {
+                        if (!this.isMeshSelected) {
+                            return "no mesh selected";
+                        }
+                        var mesh = this.meshPicked;
+                        if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
+                            Tags.RemoveTagsFrom(this.meshPicked, "invisible");
+                            this.meshPicked.visibility = 1;
+                            if (this.showingAllInvisibles)
+                                mesh.showBoundingBox = false;
+                        }
+                        else {
+                            Tags.AddTagsTo(this.meshPicked, "invisible");
+                            if (this.showingAllInvisibles) {
+                                this.meshPicked.visibility = 0.5;
+                                mesh.showBoundingBox = true;
+                            }
+                            else {
+                                this.meshPicked.visibility = 0;
+                            }
+                        }
+                    };
+                    Vishva.prototype.showAllInvisibles = function () {
+                        this.showingAllInvisibles = true;
+                        for (var i = 0; i < this.scene.meshes.length; i++) {
+                            var mesh = this.scene.meshes[i];
+                            if (Tags.HasTags(mesh)) {
+                                if (Tags.MatchesQuery(mesh, "invisible")) {
+                                    mesh.visibility = 0.5;
+                                    mesh.showBoundingBox = true;
+                                }
+                            }
+                        }
+                    };
+                    Vishva.prototype.hideAllInvisibles = function () {
+                        this.showingAllInvisibles = false;
+                        for (var i = 0; i < this.scene.meshes.length; i++) {
+                            for (var i = 0; i < this.scene.meshes.length; i++) {
+                                var mesh = this.scene.meshes[i];
+                                if (Tags.HasTags(mesh)) {
+                                    if (Tags.MatchesQuery(mesh, "invisible")) {
+                                        mesh.visibility = 0;
+                                        mesh.showBoundingBox = false;
+                                    }
+                                }
+                            }
+                        }
+                    };
                     Vishva.prototype.makeParent = function () {
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
@@ -1298,6 +1347,14 @@ var org;
                             meshes.splice(i, 1);
                         }
                         mesh.dispose();
+                    };
+                    Vishva.prototype.attachLight = function () {
+                        if (!this.isMeshSelected) {
+                            return "no mesh selected";
+                        }
+                        //var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
+                        var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
+                        light0.parent = this.meshPicked;
                     };
                     Vishva.prototype.setSpaceLocal = function (lcl) {
                         if (this.editControl != null)
@@ -3572,6 +3629,10 @@ var org;
                         var removeChildren = document.getElementById("removeChildren");
                         var cloneMesh = document.getElementById("cloneMesh");
                         var delMesh = document.getElementById("delMesh");
+                        var visMesh = document.getElementById("visMesh");
+                        var showInvis = document.getElementById("showInvis");
+                        var hideInvis = document.getElementById("hideInvis");
+                        var attLight = document.getElementById("attLight");
                         var undo = document.getElementById("undo");
                         var redo = document.getElementById("redo");
                         var sNa = document.getElementById("sNa");
@@ -3641,6 +3702,28 @@ var org;
                         };
                         delMesh.onclick = function (e) {
                             var err = _this.vishva.delete_mesh();
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                            }
+                            return false;
+                        };
+                        visMesh.onclick = function (e) {
+                            var err = _this.vishva.toggleMeshVisibility();
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                            }
+                            return false;
+                        };
+                        showInvis.onclick = function (e) {
+                            _this.vishva.showAllInvisibles();
+                            return false;
+                        };
+                        hideInvis.onclick = function (e) {
+                            _this.vishva.hideAllInvisibles();
+                            return false;
+                        };
+                        attLight.onclick = function (e) {
+                            var err = _this.vishva.attachLight();
                             if (err != null) {
                                 _this.showAlertDiag(err);
                             }

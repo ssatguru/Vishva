@@ -2,7 +2,7 @@
  * Sensors and Actuators
  */
 namespace org.ssatguru.babylonjs.vishva {
-     
+
     import AbstractMesh = BABYLON.AbstractMesh;
     import Action = BABYLON.Action;
     import ActionEvent = BABYLON.ActionEvent;
@@ -20,7 +20,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Tags = BABYLON.Tags;
     import Quaternion = BABYLON.Quaternion;
     import Vector3 = BABYLON.Vector3;
-    
+
     export interface SNAConfig { }
 
     export class SNAManager {
@@ -28,9 +28,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         actuators: Object;
 
-        sensorList: string[] = ["Touch"];
+        sensorList: string[] = ["Touch", "Collision"];
 
-        actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound"];
+        actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound", "Cloaker"];
 
         snaDisabledList: Array<AbstractMesh> = new Array();
 
@@ -62,14 +62,25 @@ namespace org.ssatguru.babylonjs.vishva {
         public getActuatorList(): string[] {
             return this.actuatorList;
         }
+        
+        /*
+         * the first constructor is called by the vishva scene unmarshaller
+         * the second by the gui to create a new sensor
+         */
 
         public createSensorByName(name: string, mesh: Mesh, prop: SNAproperties): Sensor {
             if (name === "Touch") {
                 if (prop != null) return new SensorTouch(mesh, prop); else return new SensorTouch(mesh, new SenTouchProp());
-            }
-            return null;
+            } else if (name === "Collision") {
+                if (prop != null) return new SensorCollision(mesh, prop); else return new SensorCollision(mesh, new SenCollisionProp());
+            } else
+                return null;
         }
-
+        
+        /*
+         * the first constructor is called by the vishva scene unmarshaller
+         * the second by the gui to create a new actuator
+         */
         public createActuatorByName(name: string, mesh: Mesh, prop: SNAproperties): Actuator {
             if (name === "Mover") {
                 if (prop != null) return new ActuatorMover(mesh, <ActMoverParm>prop); else return new ActuatorMover(mesh, new ActMoverParm());
@@ -79,8 +90,10 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (prop != null) return new ActuatorSound(mesh, <ActSoundProp>prop); else return new ActuatorSound(mesh, new ActSoundProp());
             } else if (name === "Animator") {
                 if (prop != null) return new ActuatorAnimator(mesh, <AnimatorProp>prop); else return new ActuatorAnimator(mesh, new AnimatorProp());
-            }
-            return null;
+            } else if (name === "Cloaker") {
+                if (prop != null) return new ActuatorCloaker(mesh, <ActCloakerProp>prop); else return new ActuatorCloaker(mesh, new ActCloakerProp());
+            } else
+                return null;
         }
 
         public getSensorParms(sensor: string): Object {
@@ -511,6 +524,65 @@ namespace org.ssatguru.babylonjs.vishva {
         }
     }
 
+
+
+    export class SensorCollision extends SensorAbstract {
+        properties: SenCollisionProp;
+
+        public constructor(mesh: Mesh, properties: SenCollisionProp) {
+            super(mesh, properties);
+            this.properties = properties;
+            if (this.mesh.actionManager == null) {
+                this.mesh.actionManager = new ActionManager(mesh.getScene());
+            }
+            var scene: Scene = mesh.getScene();
+            var otherMesh = this.findAV(scene);
+            this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
+            this.mesh.actionManager.registerAction(this.action);
+        }
+
+        public getName(): string {
+            return "Collision";
+        }
+
+        public getProperties(): SNAproperties {
+            return this.properties;
+        }
+
+        public setProperties(properties: SNAproperties) {
+            this.properties = properties;
+        }
+
+        public cleanUp() {
+            var actions: Array<Action> = this.mesh.actionManager.actions;
+            var i: number = actions.indexOf(this.action);
+            actions.splice(i, 1);
+            if (actions.length === 0) {
+                this.mesh.actionManager.dispose();
+                this.mesh.actionManager = null;
+            }
+        }
+
+        public processUpdateSpecific() {
+        }
+
+        private findAV(scene: Scene): AbstractMesh {
+
+            for (var index140 = 0; index140 < scene.meshes.length; index140++) {
+                var mesh = scene.meshes[index140];
+                {
+                    if (Tags.HasTags(mesh)) {
+                        if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                            return mesh;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+
     export abstract class ActuatorAbstract implements Actuator {
         public abstract getName(): any;
         public abstract processUpdateSpecific(): any;
@@ -795,6 +867,61 @@ namespace org.ssatguru.babylonjs.vishva {
         }
     }
 
+    export class ActuatorCloaker extends ActuatorAbstract {
+        a: Animatable;
+        s: number = 1;
+        e: number = 0;
+
+        public constructor(mesh: Mesh, prop: ActCloakerProp) {
+            super(mesh, prop);
+        }
+
+        public actuate() {
+            var props: ActCloakerProp = <ActCloakerProp>this.properties;
+            if (props.toggle) {
+                if (props.state_toggle) {
+                    this.s = 1;
+                    this.e = 0;
+                } else {
+                    this.s = 0;
+                    this.e = 1;
+                }
+                props.state_toggle = !props.state_toggle;
+            } else {
+                this.s = 1;
+                this.e = 0;
+            }
+
+            this.a = Animation.CreateAndStartAnimation("cloaker", this.mesh, "visibility", 60, 60 * props.timeToCloak, this.s, this.e, 0, null, () => { return this.onActuateEnd() });
+        }
+
+        public stop() {
+            if (this.a != null) {
+                this.a.stop();
+                window.setTimeout((() => { return this.onActuateEnd() }), 0);
+            }
+        }
+
+        public isReady(): boolean {
+            return true;
+        }
+
+        public getName(): string {
+            return "Cloaker";
+        }
+
+        public processUpdateSpecific() {
+            if (this.properties.autoStart) {
+                var started: boolean = this.start();
+            }
+        }
+
+        public cleanUp() {
+            this.properties.loop = false;
+        }
+    }
+
+
     export class ActuatorSound extends ActuatorAbstract {
         sound: Sound;
 
@@ -886,6 +1013,12 @@ namespace org.ssatguru.babylonjs.vishva {
         }
     }
 
+    export class SenCollisionProp extends SNAproperties {
+        public unmarshall(obj: Object): SenCollisionProp {
+            return <SenCollisionProp>obj;
+        }
+    }
+
     export abstract class ActProperties extends SNAproperties {
         signalStart: string = "";
 
@@ -953,7 +1086,16 @@ namespace org.ssatguru.babylonjs.vishva {
             return null;
         }
     }
-} 
- 
+
+    export class ActCloakerProp extends ActProperties {
+        timeToCloak: number = 1;
+
+
+        public unmarshall(obj: Object): ActCloakerProp {
+            return null;
+        }
+    }
+}
+
 
 

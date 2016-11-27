@@ -84,6 +84,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
         primTexture: string = "vishva/internal/textures/Birch.jpg";
 
+        waterTexture: string = "vishva/internal/textures/waterbump.png";
+
         sun: HemisphericLight;
 
         sunDR: DirectionalLight;
@@ -150,7 +152,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 return;
             }
             this.loadingMsg = document.getElementById("loadingMsg");
+            this.loadingMsg.style.visibility = "visible";
             this.loadingStatus = document.getElementById("loadingStatus");
+            
             this.editEnabled = editEnabled;
             this.assets = assets;
             this.key = new Key();
@@ -544,15 +548,15 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             mesh.dispose();
         }
-        
-        public attachLight(){
+
+        public attachLight() {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
             //var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
             var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
             light0.parent = this.meshPicked;
-            
+
         }
 
         public setSpaceLocal(lcl: any) {
@@ -943,7 +947,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.cleanupMats();
             this.renameWorldTextures();
             var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
-            var snaObjStr: string = JSON.stringify(snaObj);
+            //var snaObjStr: string = JSON.stringify(snaObj);
+            //console.log(snaObjStr);
             var sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
             sceneObj["VishvaSNA"] = snaObj;
             var sceneString: string = JSON.stringify(sceneObj);
@@ -1323,8 +1328,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 var mesh = this.scene.meshes[index144];
                 {
                     if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                        mesh.receiveShadows = true;
-                        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+                       mesh.receiveShadows = true;
+                       (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                     }
                 }
             }
@@ -1368,11 +1373,41 @@ namespace org.ssatguru.babylonjs.vishva {
             this.render();
         }
 
-        private createWater() {
+        public createWater() {
             var waterMesh: Mesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
-            waterMesh.position.y = 1;
+            //waterMesh.position.y = 0;
             var water: WaterMaterial = new WaterMaterial("water", this.scene);
-            water.bumpTexture = new Texture("waterbump.png", this.scene);
+            water.bumpTexture = new Texture(this.waterTexture, this.scene);
+            //repoint the path, so that we can reload this if it is saved in scene 
+            water.bumpTexture.name = "../../../../" + water.bumpTexture.name;
+            //wavy
+//            water.windForce = -5;
+//            water.waveHeight = 0.5;
+//            water.waterColor = new Color3(0.1, 0.1, 0.6);
+//            water.colorBlendFactor = 0;
+//            water.bumpHeight = 0.1;
+//            water.waveLength = 0.1;
+
+
+            //calm
+            water.windForce = -5;
+            water.waveHeight = 0.02;
+            water.bumpHeight = 0.05;
+            water.waterColor = new Color3(0.047, 0.23, 0.015);
+            water.colorBlendFactor = 0.5;
+            water.addToRenderList(this.skybox);
+            water.addToRenderList(this.ground);
+
+
+            waterMesh.material = water;
+        }
+
+        public addWater() {
+            if (!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            var water: WaterMaterial = new WaterMaterial("water", this.scene);
+            water.bumpTexture = new Texture(this.waterTexture, this.scene);
             water.windForce = -5;
             water.waveHeight = 0.5;
             water.waterColor = new Color3(0.1, 0.1, 0.6);
@@ -1380,7 +1415,7 @@ namespace org.ssatguru.babylonjs.vishva {
             water.bumpHeight = 0.1;
             water.waveLength = 0.1;
             water.addToRenderList(this.skybox);
-            waterMesh.material = water;
+            this.meshPicked.material = water;
         }
 
         public switch_avatar(): string {

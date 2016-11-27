@@ -66,8 +66,8 @@ var org;
                 var Vector3 = BABYLON.Vector3;
                 var SNAManager = (function () {
                     function SNAManager() {
-                        this.sensorList = ["Touch"];
-                        this.actuatorList = ["Animator", "Mover", "Rotator", "Sound"];
+                        this.sensorList = ["Touch", "Collision"];
+                        this.actuatorList = ["Animator", "Mover", "Rotator", "Sound", "Cloaker"];
                         this.snaDisabledList = new Array();
                         this.sig2actMap = new Object();
                         this.prevUID = "";
@@ -97,7 +97,14 @@ var org;
                             else
                                 return new SensorTouch(mesh, new SenTouchProp());
                         }
-                        return null;
+                        else if (name === "Collision") {
+                            if (prop != null)
+                                return new SensorCollision(mesh, prop);
+                            else
+                                return new SensorCollision(mesh, new SenCollisionProp());
+                        }
+                        else
+                            return null;
                     };
                     SNAManager.prototype.createActuatorByName = function (name, mesh, prop) {
                         if (name === "Mover") {
@@ -124,7 +131,14 @@ var org;
                             else
                                 return new ActuatorAnimator(mesh, new AnimatorProp());
                         }
-                        return null;
+                        else if (name === "Cloaker") {
+                            if (prop != null)
+                                return new ActuatorCloaker(mesh, prop);
+                            else
+                                return new ActuatorCloaker(mesh, new ActCloakerProp());
+                        }
+                        else
+                            return null;
                     };
                     SNAManager.prototype.getSensorParms = function (sensor) {
                         var sensorObj = this.sensors[sensor];
@@ -437,6 +451,56 @@ var org;
                     return SensorTouch;
                 }(SensorAbstract));
                 vishva.SensorTouch = SensorTouch;
+                var SensorCollision = (function (_super) {
+                    __extends(SensorCollision, _super);
+                    function SensorCollision(mesh, properties) {
+                        var _this = this;
+                        _super.call(this, mesh, properties);
+                        this.properties = properties;
+                        if (this.mesh.actionManager == null) {
+                            this.mesh.actionManager = new ActionManager(mesh.getScene());
+                        }
+                        var scene = mesh.getScene();
+                        var otherMesh = this.findAV(scene);
+                        this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
+                        this.mesh.actionManager.registerAction(this.action);
+                    }
+                    SensorCollision.prototype.getName = function () {
+                        return "Collision";
+                    };
+                    SensorCollision.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    SensorCollision.prototype.setProperties = function (properties) {
+                        this.properties = properties;
+                    };
+                    SensorCollision.prototype.cleanUp = function () {
+                        var actions = this.mesh.actionManager.actions;
+                        var i = actions.indexOf(this.action);
+                        actions.splice(i, 1);
+                        if (actions.length === 0) {
+                            this.mesh.actionManager.dispose();
+                            this.mesh.actionManager = null;
+                        }
+                    };
+                    SensorCollision.prototype.processUpdateSpecific = function () {
+                    };
+                    SensorCollision.prototype.findAV = function (scene) {
+                        for (var index140 = 0; index140 < scene.meshes.length; index140++) {
+                            var mesh = scene.meshes[index140];
+                            {
+                                if (Tags.HasTags(mesh)) {
+                                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                                        return mesh;
+                                    }
+                                }
+                            }
+                        }
+                        return null;
+                    };
+                    return SensorCollision;
+                }(SensorAbstract));
+                vishva.SensorCollision = SensorCollision;
                 var ActuatorAbstract = (function () {
                     function ActuatorAbstract(mesh, prop) {
                         this.actuating = false;
@@ -697,6 +761,57 @@ var org;
                     return ActuatorAnimator;
                 }(ActuatorAbstract));
                 vishva.ActuatorAnimator = ActuatorAnimator;
+                var ActuatorCloaker = (function (_super) {
+                    __extends(ActuatorCloaker, _super);
+                    function ActuatorCloaker(mesh, prop) {
+                        _super.call(this, mesh, prop);
+                        this.s = 1;
+                        this.e = 0;
+                    }
+                    ActuatorCloaker.prototype.actuate = function () {
+                        var _this = this;
+                        var props = this.properties;
+                        if (props.toggle) {
+                            if (props.state_toggle) {
+                                this.s = 1;
+                                this.e = 0;
+                            }
+                            else {
+                                this.s = 0;
+                                this.e = 1;
+                            }
+                            props.state_toggle = !props.state_toggle;
+                        }
+                        else {
+                            this.s = 1;
+                            this.e = 0;
+                        }
+                        this.a = Animation.CreateAndStartAnimation("cloaker", this.mesh, "visibility", 60, 60 * props.timeToCloak, this.s, this.e, 0, null, function () { return _this.onActuateEnd(); });
+                    };
+                    ActuatorCloaker.prototype.stop = function () {
+                        var _this = this;
+                        if (this.a != null) {
+                            this.a.stop();
+                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
+                        }
+                    };
+                    ActuatorCloaker.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorCloaker.prototype.getName = function () {
+                        return "Cloaker";
+                    };
+                    ActuatorCloaker.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorCloaker.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorCloaker;
+                }(ActuatorAbstract));
+                vishva.ActuatorCloaker = ActuatorCloaker;
                 var ActuatorSound = (function (_super) {
                     __extends(ActuatorSound, _super);
                     function ActuatorSound(mesh, prop) {
@@ -794,6 +909,17 @@ var org;
                     return SenTouchProp;
                 }(SNAproperties));
                 vishva.SenTouchProp = SenTouchProp;
+                var SenCollisionProp = (function (_super) {
+                    __extends(SenCollisionProp, _super);
+                    function SenCollisionProp() {
+                        _super.apply(this, arguments);
+                    }
+                    SenCollisionProp.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return SenCollisionProp;
+                }(SNAproperties));
+                vishva.SenCollisionProp = SenCollisionProp;
                 var ActProperties = (function (_super) {
                     __extends(ActProperties, _super);
                     function ActProperties() {
@@ -866,6 +992,18 @@ var org;
                     return ActSoundProp;
                 }(ActProperties));
                 vishva.ActSoundProp = ActSoundProp;
+                var ActCloakerProp = (function (_super) {
+                    __extends(ActCloakerProp, _super);
+                    function ActCloakerProp() {
+                        _super.apply(this, arguments);
+                        this.timeToCloak = 1;
+                    }
+                    ActCloakerProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return ActCloakerProp;
+                }(ActProperties));
+                vishva.ActCloakerProp = ActCloakerProp;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -915,6 +1053,7 @@ var org;
                         this.avatarFile = "starterAvatars.babylon";
                         this.groundTexture = "vishva/internal/textures/ground.jpg";
                         this.primTexture = "vishva/internal/textures/Birch.jpg";
+                        this.waterTexture = "vishva/internal/textures/waterbump.png";
                         this.editAlreadyOpen = false;
                         /**
                          * use this to prevent users from switching to another mesh during edit.
@@ -943,6 +1082,7 @@ var org;
                             return;
                         }
                         this.loadingMsg = document.getElementById("loadingMsg");
+                        this.loadingMsg.style.visibility = "visible";
                         this.loadingStatus = document.getElementById("loadingStatus");
                         this.editEnabled = editEnabled;
                         this.assets = assets;
@@ -1727,6 +1867,7 @@ var org;
                         this.renameWorldTextures();
                         var snaObj = vishva.SNAManager.getSNAManager().serializeSnAs(this.scene);
                         var snaObjStr = JSON.stringify(snaObj);
+                        console.log(snaObjStr);
                         var sceneObj = SceneSerializer.Serialize(this.scene);
                         sceneObj["VishvaSNA"] = snaObj;
                         var sceneString = JSON.stringify(sceneObj);
@@ -2137,9 +2278,34 @@ var org;
                     };
                     Vishva.prototype.createWater = function () {
                         var waterMesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
-                        waterMesh.position.y = 1;
+                        //waterMesh.position.y = 0;
                         var water = new WaterMaterial("water", this.scene);
-                        water.bumpTexture = new Texture("waterbump.png", this.scene);
+                        water.bumpTexture = new Texture(this.waterTexture, this.scene);
+                        //repoint the path, so that we can reload this if it is saved in scene 
+                        water.bumpTexture.name = "../../../../" + water.bumpTexture.name;
+                        //wavy
+                        //            water.windForce = -5;
+                        //            water.waveHeight = 0.5;
+                        //            water.waterColor = new Color3(0.1, 0.1, 0.6);
+                        //            water.colorBlendFactor = 0;
+                        //            water.bumpHeight = 0.1;
+                        //            water.waveLength = 0.1;
+                        //calm
+                        water.windForce = -5;
+                        water.waveHeight = 0.02;
+                        water.bumpHeight = 0.05;
+                        water.waterColor = new Color3(0.047, 0.23, 0.015);
+                        water.colorBlendFactor = 0.5;
+                        water.addToRenderList(this.skybox);
+                        water.addToRenderList(this.ground);
+                        waterMesh.material = water;
+                    };
+                    Vishva.prototype.addWater = function () {
+                        if (!this.isMeshSelected) {
+                            return "no mesh selected";
+                        }
+                        var water = new WaterMaterial("water", this.scene);
+                        water.bumpTexture = new Texture(this.waterTexture, this.scene);
                         water.windForce = -5;
                         water.waveHeight = 0.5;
                         water.waterColor = new Color3(0.1, 0.1, 0.6);
@@ -2147,7 +2313,7 @@ var org;
                         water.bumpHeight = 0.1;
                         water.waveLength = 0.1;
                         water.addToRenderList(this.skybox);
-                        waterMesh.material = water;
+                        this.meshPicked.material = water;
                     };
                     Vishva.prototype.switch_avatar = function () {
                         if (!this.isMeshSelected) {
@@ -2746,7 +2912,6 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
-"Generated from Java with JSweet 1.1.1 - http://www.jsweet.org";
 var org;
 (function (org) {
     var ssatguru;
@@ -2855,6 +3020,7 @@ var org;
                         var _this = this;
                         var assetTypes = Object.keys(this.vishva.assets);
                         var addMenu = document.getElementById("AddMenu");
+                        addMenu.style.visibility = "visible";
                         var f = function (e) { return _this.onAddMenuItemClick(e); };
                         for (var index162 = 0; index162 < assetTypes.length; index162++) {
                             var assetType = assetTypes[index162];
@@ -3001,6 +3167,7 @@ var org;
                     };
                     VishvaGUI.prototype.createEnvDiag = function () {
                         var _this = this;
+                        //var sunPos: JQuery = <JQuery>(<any>$("#sunPos"));
                         var sunPos = $("#sunPos");
                         var light = $("#light");
                         var shade = $("#shade");
@@ -3292,6 +3459,9 @@ var org;
                         var dbos = [dbo];
                         editActDiag.dialog("option", "buttons", dbos);
                     };
+                    /*
+                     * auto generate forms based on properties
+                     */
                     VishvaGUI.prototype.formCreate = function (snap, idPrefix) {
                         idPrefix = idPrefix + ".";
                         var tbl = document.createElement("table");
@@ -3633,6 +3803,7 @@ var org;
                         var showInvis = document.getElementById("showInvis");
                         var hideInvis = document.getElementById("hideInvis");
                         var attLight = document.getElementById("attLight");
+                        var addWater = document.getElementById("addWater");
                         var undo = document.getElementById("undo");
                         var redo = document.getElementById("redo");
                         var sNa = document.getElementById("sNa");
@@ -3728,6 +3899,14 @@ var org;
                                 _this.showAlertDiag(err);
                             }
                             return false;
+                        };
+                        addWater.onclick = function (e) {
+                            _this.vishva.createWater();
+                            //                var err: string = this.vishva.addWater();
+                            //                if (err != null) {
+                            //                    this.showAlertDiag(err);
+                            //                }
+                            //                return false;
                         };
                         undo.onclick = function (e) {
                             _this.vishva.undo();

@@ -1,4 +1,3 @@
-"Generated from Java with JSweet 1.1.1 - http://www.jsweet.org";
 namespace org.ssatguru.babylonjs.vishva {
     import AnimationRange = BABYLON.AnimationRange;
 
@@ -131,6 +130,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private updateAddMenu() {
             var assetTypes: string[] = Object.keys(this.vishva.assets);
             var addMenu: HTMLUListElement = <HTMLUListElement>document.getElementById("AddMenu");
+            addMenu.style.visibility = "visible";
             var f: (p1: MouseEvent) => any = (e) => { return this.onAddMenuItemClick(e) };
             for (var index162 = 0; index162 < assetTypes.length; index162++) {
                 var assetType = assetTypes[index162];
@@ -286,7 +286,8 @@ namespace org.ssatguru.babylonjs.vishva {
         envDiag: JQuery;
 
         private createEnvDiag() {
-            var sunPos: JQuery = <JQuery>(<any>$("#sunPos"));
+            //var sunPos: JQuery = <JQuery>(<any>$("#sunPos"));
+            var sunPos: JQuery = $("#sunPos");
             var light: JQuery = <JQuery>(<any>$("#light"));
             var shade: JQuery = <JQuery>(<any>$("#shade"));
             var fog: JQuery = <JQuery>(<any>$("#fog"));
@@ -605,7 +606,9 @@ namespace org.ssatguru.babylonjs.vishva {
             var dbos: DialogButtonOptions[] = [dbo];
             editActDiag.dialog("option", "buttons", dbos);
         }
-
+        /*
+         * auto generate forms based on properties
+         */
         private formCreate(snap: SNAproperties, idPrefix: string): HTMLTableElement {
             idPrefix = idPrefix + ".";
             var tbl: HTMLTableElement = document.createElement("table");
@@ -914,6 +917,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     return true;
                 }
             })(addMenu, navAdd, slideDown);
+            
             var downWorld: HTMLElement = document.getElementById("downWorld");
             downWorld.onclick = (e) => {
                 var downloadURL: string = this.vishva.saveWorld();
@@ -960,6 +964,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var hideInvis: HTMLElement = document.getElementById("hideInvis");
             
             var attLight: HTMLElement = document.getElementById("attLight");
+            var addWater: HTMLElement = document.getElementById("addWater");
             
             var undo: HTMLElement = document.getElementById("undo");
             var redo: HTMLElement = document.getElementById("redo");
@@ -1057,6 +1062,15 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.showAlertDiag(err);
                 }
                 return false;
+            };
+            
+             addWater.onclick = (e) => {
+                     this.vishva.createWater();
+//                var err: string = this.vishva.addWater();
+//                if (err != null) {
+//                    this.showAlertDiag(err);
+//                }
+//                return false;
             };
             
             undo.onclick = (e) => {

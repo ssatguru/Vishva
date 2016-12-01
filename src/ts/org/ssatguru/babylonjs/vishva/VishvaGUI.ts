@@ -962,6 +962,10 @@ namespace org.ssatguru.babylonjs.vishva {
             var visMesh: HTMLElement = document.getElementById("visMesh");
             var showInvis: HTMLElement = document.getElementById("showInvis");
             var hideInvis: HTMLElement = document.getElementById("hideInvis");
+            var togCol: HTMLElement = document.getElementById("togCol");
+            let togEna: HTMLElement = document.getElementById("togEna");
+            let showDisa: HTMLElement = document.getElementById("showDisa");
+            let hideDisa: HTMLElement = document.getElementById("hideDisa");
             
             var attLight: HTMLElement = document.getElementById("attLight");
             var addWater: HTMLElement = document.getElementById("addWater");
@@ -1056,6 +1060,28 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             };
             
+            togCol.onclick = (e) => {
+                var err: string = this.vishva.toggleCollision();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+             togEna.onclick = (e) => {
+                var err: string = this.vishva.toggleEnable();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            showDisa.onclick = (e) => {
+                this.vishva.showAllDisabled();
+                return false;
+            };
+            hideDisa.onclick = (e) => {
+                this.vishva.hideAllDisabled();
+                return false;
+            };
             attLight.onclick = (e) => {
                 var err: string = this.vishva.attachLight();
                 if (err != null) {

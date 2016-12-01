@@ -85,6 +85,10 @@ namespace org.ssatguru.babylonjs.vishva {
         primTexture: string = "vishva/internal/textures/Birch.jpg";
 
         waterTexture: string = "vishva/internal/textures/waterbump.png";
+        
+        SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/" ;
+        
+        RELATIVE_ASSET_LOCATION : string = "../../../../";
 
         sun: HemisphericLight;
 
@@ -350,6 +354,39 @@ namespace org.ssatguru.babylonjs.vishva {
             (this.shadowGenerator.getShadowMap().renderList).push(inst);
             return null;
         }
+        
+        public toggleCollision(){
+            if (!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            this.meshPicked.checkCollisions = !this.meshPicked.checkCollisions;
+            
+            
+        }
+        
+        public toggleEnable(){
+            if (!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
+            console.log("enable : " + this.meshPicked.isEnabled())
+        }
+        
+        public showAllDisabled(){
+            for (let mesh of this.scene.meshes){
+                if (!mesh.isEnabled()){
+                    mesh.showBoundingBox = true;
+                }
+            }
+        }
+        public hideAllDisabled(){
+            for (let mesh of this.scene.meshes){
+                if (!mesh.isEnabled()){
+                    mesh.showBoundingBox = false;
+                }
+            }
+        }
+        
         public toggleMeshVisibility() {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
@@ -553,10 +590,14 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
+            
             //var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
             var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
+            //var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), this.scene);
+        light0.diffuse = new BABYLON.Color3(1, 1, 1);
+        light0.specular = new BABYLON.Color3(1, 1, 1);
+        //light0.groundColor = new BABYLON.Color3(0, 0, 0);
             light0.parent = this.meshPicked;
-
         }
 
         public setSpaceLocal(lcl: any) {
@@ -936,21 +977,29 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public saveWorld(): string {
+            
             if (this.editControl != null) {
                 alert("cannot save during edit");
                 return null;
             }
+            
             this.removeInstancesFromShadow();
             this.renameMeshIds();
             this.cleanupSkels();
             this.resetSkels(this.scene);
             this.cleanupMats();
             this.renameWorldTextures();
+            //serialize sna first
+            //we might add tags to meshes in scene during sna serialize.
+            //if we serialize scene before we would miss those
             var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
-            //var snaObjStr: string = JSON.stringify(snaObj);
-            //console.log(snaObjStr);
+
             var sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
+            this.changeSoundUrl(sceneObj);
+            
+            
             sceneObj["VishvaSNA"] = snaObj;
+            
             var sceneString: string = JSON.stringify(sceneObj);
             var file: File = new File([sceneString], "WorldFile.babylon");
             this.addInstancesToShadow();
@@ -1054,7 +1103,28 @@ namespace org.ssatguru.babylonjs.vishva {
         public rename(bt: BaseTexture) {
             if (bt == null) return;
             if (bt.name.substring(0, 2) !== "..") {
-                bt.name = "../../../../" + bt.name;
+                bt.name = this.RELATIVE_ASSET_LOCATION + bt.name;
+            }
+        }
+        /*
+         * since 2.5, June 17 2016  sound is being serialized.
+         * 
+         * (see src/Audio/babylon.sound.js
+         * changes at
+         * https://github.com/BabylonJS/Babylon.js/commit/6ba058aec5ffaceb8aef3abecdb95df4b95ac2ac)
+         * 
+         * the url property only has the file name not path.
+         * we need to add the full path
+         * 
+         */
+        public changeSoundUrl(sceneObj: Object){
+            var sounds = sceneObj["sounds"];
+            if (sounds != null){
+                var soundList : [Object] = sounds;
+                for (let sound  of soundList){
+                    sound["url"] = this.RELATIVE_ASSET_LOCATION + this.SOUND_ASSET_LOCATION + sound["url"];
+                }
+                //sceneObj["sounds"] = soundList;
             }
         }
 
@@ -1379,7 +1449,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var water: WaterMaterial = new WaterMaterial("water", this.scene);
             water.bumpTexture = new Texture(this.waterTexture, this.scene);
             //repoint the path, so that we can reload this if it is saved in scene 
-            water.bumpTexture.name = "../../../../" + water.bumpTexture.name;
+            water.bumpTexture.name = this.RELATIVE_ASSET_LOCATION + water.bumpTexture.name;
             //wavy
 //            water.windForce = -5;
 //            water.waveHeight = 0.5;

@@ -28,9 +28,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         actuators: Object;
 
-        sensorList: string[] = ["Touch", "Collision"];
+        sensorList: string[] = ["Touch", "Proximity"];
 
-        actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound", "Cloaker"];
+        actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound", "Cloaker","Disabler"];
 
         snaDisabledList: Array<AbstractMesh> = new Array();
 
@@ -62,7 +62,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public getActuatorList(): string[] {
             return this.actuatorList;
         }
-        
+
         /*
          * the first constructor is called by the vishva scene unmarshaller
          * the second by the gui to create a new sensor
@@ -71,12 +71,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public createSensorByName(name: string, mesh: Mesh, prop: SNAproperties): Sensor {
             if (name === "Touch") {
                 if (prop != null) return new SensorTouch(mesh, prop); else return new SensorTouch(mesh, new SenTouchProp());
-            } else if (name === "Collision") {
+            } else if (name === "Proximity") {
                 if (prop != null) return new SensorCollision(mesh, prop); else return new SensorCollision(mesh, new SenCollisionProp());
             } else
                 return null;
         }
-        
+
         /*
          * the first constructor is called by the vishva scene unmarshaller
          * the second by the gui to create a new actuator
@@ -92,6 +92,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (prop != null) return new ActuatorAnimator(mesh, <AnimatorProp>prop); else return new ActuatorAnimator(mesh, new AnimatorProp());
             } else if (name === "Cloaker") {
                 if (prop != null) return new ActuatorCloaker(mesh, <ActCloakerProp>prop); else return new ActuatorCloaker(mesh, new ActCloakerProp());
+            } else if (name === "Disabler") {
+                if (prop != null) return new ActuatorDisabler(mesh, <ActDisablerProp>prop); else return new ActuatorDisabler(mesh, new ActDisablerProp());                
             } else
                 return null;
         }
@@ -282,16 +284,18 @@ namespace org.ssatguru.babylonjs.vishva {
             if (snas == null) return;
             for (var index158 = 0; index158 < snas.length; index158++) {
                 var sna = snas[index158];
-                {
-                    var mesh: Mesh = scene.getMeshesByTags(sna.meshId)[0];
-                    if (mesh != null) {
-                        if (sna.type === "SENSOR") {
-                            this.createSensorByName(sna.name, mesh, sna.properties);
-                        } else if (sna.type === "ACTUATOR") {
-                            this.createActuatorByName(sna.name, mesh, sna.properties);
-                        }
+
+                var mesh: Mesh = scene.getMeshesByTags(sna.meshId)[0];
+                if (mesh != null) {
+                    if (sna.type === "SENSOR") {
+                        this.createSensorByName(sna.name, mesh, sna.properties);
+                    } else if (sna.type === "ACTUATOR") {
+                        this.createActuatorByName(sna.name, mesh, sna.properties);
                     }
+                } else {
+                    console.log("didnot find mesh for tag " + sna.meshId);
                 }
+
             }
         }
 
@@ -408,6 +412,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
         cleanUp();
 
+        // TODO swicth start and actuate
+        // start is callled by SNAManager
         start(): boolean;
 
         stop();
@@ -463,6 +469,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public emitSignal(e: ActionEvent) {
+            // donot emit signal if this mesh is on the diabled list
             var i: number = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
             if (i >= 0) return;
             SNAManager.getSNAManager().emitSignal(this.properties.signalId);
@@ -529,20 +536,20 @@ namespace org.ssatguru.babylonjs.vishva {
     export class SensorCollision extends SensorAbstract {
         properties: SenCollisionProp;
 
-        public constructor(mesh: Mesh, properties: SenCollisionProp) {
-            super(mesh, properties);
+        public constructor(aMesh: Mesh, properties: SenCollisionProp) {
+            super(aMesh, properties);
             this.properties = properties;
             if (this.mesh.actionManager == null) {
-                this.mesh.actionManager = new ActionManager(mesh.getScene());
+                this.mesh.actionManager = new ActionManager(aMesh.getScene());
             }
-            var scene: Scene = mesh.getScene();
+            var scene: Scene = aMesh.getScene();
             var otherMesh = this.findAV(scene);
             this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
             this.mesh.actionManager.registerAction(this.action);
         }
 
         public getName(): string {
-            return "Collision";
+            return "Proximity";
         }
 
         public getProperties(): SNAproperties {
@@ -620,6 +627,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public start(): boolean {
             if (this.disposed) return false;
             if (!this.ready) return false;
+            // donot actuate if this mesh is on the disabled list
             var i: number = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
             if (i >= 0) return false;
             if (this.actuating) {
@@ -663,6 +671,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public processUpdateGeneric() {
+            // check if signalId changed, if yes then resubscribe
             if (this.signalId != null && this.signalId !== this.properties.signalId) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalId);
                 this.signalId = this.properties.signalId;
@@ -751,6 +760,10 @@ namespace org.ssatguru.babylonjs.vishva {
         public processUpdateSpecific() {
             if (this.properties.autoStart) {
                 var started: boolean = this.start();
+                // sometime a start maynot be possible example during edit
+                // if could not start now then queue it for later start
+                // if (!started)
+                // this.queued++;
             }
         }
 
@@ -922,7 +935,55 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
 
+export class ActuatorDisabler extends ActuatorAbstract {
+
+
+        public constructor(mesh: Mesh, prop: ActDisablerProp) {
+            super(mesh, prop);
+        }
+
+        public actuate() {
+            let enable :boolean = false;
+            if (this.properties.toggle) {
+                if (this.properties.state_toggle) {
+                    enable = false
+                } else {
+                    enable = true;
+                    }
+                this.properties.state_toggle = !this.properties.state_toggle;
+            } else {
+                enable =false;
+                }
+            this.mesh.setEnabled(enable);
+            this.onActuateEnd();
+
+        }
+
+        public stop() {
+            this.mesh.setEnabled(true)
+        }
+
+        public isReady(): boolean {
+            return true;
+        }
+
+        public getName(): string {
+            return "Disabler";
+        }
+
+        public processUpdateSpecific() {
+            if (this.properties.autoStart) {
+                var started: boolean = this.start();
+            }
+        }
+
+        public cleanUp() {
+            this.properties.loop = false;
+        }
+    }
+
     export class ActuatorSound extends ActuatorAbstract {
+
         sound: Sound;
 
         public constructor(mesh: Mesh, prop: ActSoundProp) {
@@ -943,7 +1004,14 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        /*
+        update is little tricky here as sound file has to be loaded and that
+        happens aynchronously
+        it is not ready to play immediately
+        */
         public processUpdateSpecific() {
+            var SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
+            var RELATIVE_ASSET_LOCATION: string = "../../../../";
             var properties: ActSoundProp = <ActSoundProp>this.properties;
             if (properties.soundFile.value == null) return;
             if (this.sound == null || properties.soundFile.value !== this.sound.name) {
@@ -952,7 +1020,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.sound.dispose();
                 }
                 this.ready = false;
-                this.sound = new Sound(properties.soundFile.value, "vishva/assets/sounds/" + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
+                this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
                     return () => {
                         this.updateSound(properties);
                     }
@@ -1044,6 +1112,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
         duration: number = 1;
 
+        //
+        // TODO:always local for now. provide a way to do global rotate
+        // boolean local = false;
+
+
         public unmarshall(obj: Object): ActRotatorParm {
             return <ActRotatorParm>obj;
         }
@@ -1091,6 +1164,12 @@ namespace org.ssatguru.babylonjs.vishva {
         timeToCloak: number = 1;
 
 
+        public unmarshall(obj: Object): ActCloakerProp {
+            return null;
+        }
+    }
+    
+     export class ActDisablerProp extends ActProperties {
         public unmarshall(obj: Object): ActCloakerProp {
             return null;
         }

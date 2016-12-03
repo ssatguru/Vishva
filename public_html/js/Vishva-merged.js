@@ -477,7 +477,8 @@ var org;
                             this.mesh.actionManager = new ActionManager(aMesh.getScene());
                         }
                         var scene = aMesh.getScene();
-                        var otherMesh = this.findAV(scene);
+                        //var otherMesh = this.findAV(scene);
+                        var otherMesh = scene.getMeshesByTags("Vishva.avatar")[0];
                         this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
                         this.mesh.actionManager.registerAction(this.action);
                     }
@@ -1138,15 +1139,18 @@ var org;
                         this.waterTexture = "vishva/internal/textures/waterbump.png";
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
                         this.RELATIVE_ASSET_LOCATION = "../../../../";
-                        this.editAlreadyOpen = false;
+                        //editAlreadyOpen: boolean = false;
+                        //automatcally open edit menu whenever a mesh is selected
+                        this.autoEditMenu = false;
                         /**
                          * use this to prevent users from switching to another mesh during edit.
                          */
                         this.switchDisabled = false;
                         this.avatarSpeed = 0.05;
                         this.prevAnim = null;
+                        this.keysDisabled = false;
                         this.showBoundingBox = false;
-                        this.cameraCollision = false;
+                        this.cameraCollision = true;
                         this.showingAllInvisibles = false;
                         this.focusOnAv = true;
                         this.cameraAnimating = false;
@@ -1303,7 +1307,8 @@ var org;
                         mesh.material = this.primMaterial;
                         mesh.checkCollisions = true;
                         (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                        mesh.receiveShadows = true;
+                        //sat TODO remove comment
+                        //mesh.receiveShadows = true;
                         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
                         mesh.id = (new Number(Date.now())).toString();
                         mesh.name = mesh.id;
@@ -1376,7 +1381,8 @@ var org;
                         inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
                         this.meshPicked = inst;
                         this.swicthEditControl(inst);
-                        inst.receiveShadows = true;
+                        //TODO think
+                        //inst.receiveShadows = true;
                         (this.shadowGenerator.getShadowMap().renderList).push(inst);
                         return null;
                     };
@@ -1417,6 +1423,7 @@ var org;
                         if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
                             Tags.RemoveTagsFrom(this.meshPicked, "invisible");
                             this.meshPicked.visibility = 1;
+                            this.meshPicked.isPickable = true;
                             if (this.showingAllInvisibles)
                                 mesh.showBoundingBox = false;
                         }
@@ -1425,9 +1432,11 @@ var org;
                             if (this.showingAllInvisibles) {
                                 this.meshPicked.visibility = 0.5;
                                 mesh.showBoundingBox = true;
+                                this.meshPicked.isPickable = true;
                             }
                             else {
                                 this.meshPicked.visibility = 0;
+                                this.meshPicked.isPickable = false;
                             }
                         }
                     };
@@ -1567,7 +1576,8 @@ var org;
                         delete clone["sensors"];
                         delete clone["actuators"];
                         clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
-                        clone.receiveShadows = true;
+                        //TODO think
+                        //clone.receiveShadows = true;
                         mesh.showBoundingBox = false;
                         (this.shadowGenerator.getShadowMap().renderList).push(clone);
                         return clone;
@@ -1606,6 +1616,7 @@ var org;
                             return "no mesh selected";
                         }
                         var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
+                        light0.range = 5;
                         //var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
                         //var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), this.scene);
                         light0.diffuse = new BABYLON.Color3(1, 1, 1);
@@ -2014,7 +2025,8 @@ var org;
                             var mesh = this.scene.meshes[index128];
                             {
                                 if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                                    mesh.receiveShadows = true;
+                                    //TODO think
+                                    //mesh.receiveShadows = true;
                                     (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                                 }
                             }
@@ -2201,7 +2213,8 @@ var org;
                                     var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
                                     mesh.position.addInPlace(placementGlobal);
                                     (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                                    mesh.receiveShadows = true;
+                                    //TODO think
+                                    //mesh.receiveShadows = true;
                                     if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
                                         var mm = mesh.material;
                                         var mats = mm.subMaterials;
@@ -2301,6 +2314,8 @@ var org;
                         for (var index140 = 0; index140 < scene.meshes.length; index140++) {
                             var mesh = scene.meshes[index140];
                             {
+                                //sat TODO
+                                mesh.receiveShadows = false;
                                 if (Tags.HasTags(mesh)) {
                                     if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
                                         avFound = true;
@@ -2358,23 +2373,20 @@ var org;
                         else {
                             for (var index143 = 0; index143 < scene.lights.length; index143++) {
                                 var light = scene.lights[index143];
-                                {
-                                    if (light.id === "Vishva.dl01") {
-                                        this.sunDR = light;
-                                        this.shadowGenerator = light.getShadowGenerator();
-                                        this.shadowGenerator.bias = 1.0E-6;
-                                        this.shadowGenerator.useBlurVarianceShadowMap = true;
-                                    }
+                                if (light.id === "Vishva.dl01") {
+                                    this.sunDR = light;
+                                    this.shadowGenerator = light.getShadowGenerator();
+                                    this.shadowGenerator.bias = 1.0E-6;
+                                    this.shadowGenerator.useBlurVarianceShadowMap = true;
                                 }
                             }
                         }
                         for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
                             var mesh = this.scene.meshes[index144];
-                            {
-                                if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                                    mesh.receiveShadows = true;
-                                    (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                                }
+                            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                                //sat TODO remove comment
+                                //mesh.receiveShadows = true;
+                                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             }
                         }
                         for (var index145 = 0; index145 < scene.cameras.length; index145++) {
@@ -2393,9 +2405,16 @@ var org;
                             this.mainCamera = this.createCamera(this.scene, this.canvas);
                             this.scene.activeCamera = this.mainCamera;
                         }
+                        //TODO
+                        this.mainCamera.checkCollisions = true;
+                        this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         if (!groundFound) {
                             console.log("no vishva ground found. creating ground");
                             this.ground = this.createGround(this.scene);
+                        }
+                        else {
+                            //in case this wasn't set in serialized scene
+                            this.ground.receiveShadows = true;
                         }
                         if (!skyFound) {
                             console.log("no vishva sky found. creating sky");
@@ -2572,11 +2591,16 @@ var org;
                     Vishva.prototype.process = function () {
                         if (this.cameraAnimating)
                             return;
+                        if (this.keysDisabled)
+                            return;
+                        //switch to first person?
                         if (this.mainCamera.radius < 0.75) {
                             this.avatar.visibility = 0;
+                            this.mainCamera.checkCollisions = false;
                         }
                         else {
                             this.avatar.visibility = 1;
+                            this.mainCamera.checkCollisions = this.cameraCollision;
                         }
                         if (this.isMeshSelected) {
                             if (this.key.focus) {
@@ -2606,11 +2630,11 @@ var org;
                         }
                         if (this.focusOnAv) {
                             if (this.editControl == null) {
-                                this.moveAvatarCamera();
+                                this.moveAVandCamera();
                             }
                             else {
                                 if (!this.editControl.isEditing()) {
-                                    this.moveAvatarCamera();
+                                    this.moveAVandCamera();
                                 }
                             }
                         }
@@ -2620,7 +2644,7 @@ var org;
                             }
                         }
                     };
-                    Vishva.prototype.moveAvatarCamera = function () {
+                    Vishva.prototype.moveAVandCamera = function () {
                         var anim = this.idle;
                         var moving = false;
                         var speed = 0;
@@ -2749,7 +2773,10 @@ var org;
                                 vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
                                 this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
                                 this.editControl.enableTranslation();
-                                this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                                //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                                if (this.autoEditMenu) {
+                                    this.vishvaGUI.showEditMenu();
+                                }
                                 if (this.key.ctl)
                                     this.multiSelect();
                                 if (this.snapperOn) {
@@ -2835,7 +2862,8 @@ var org;
                         }
                         this.editControl.detach();
                         this.editControl = null;
-                        if (!this.editAlreadyOpen)
+                        //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
+                        if (this.autoEditMenu)
                             this.vishvaGUI.closeEditMenu();
                         if (this.meshPicked != null) {
                             vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
@@ -2927,6 +2955,7 @@ var org;
                             camera.target = Vector3.Zero();
                         }
                         camera.checkCollisions = this.cameraCollision;
+                        this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         Tags.AddTagsTo(camera, "Vishva.camera");
                         return camera;
                     };
@@ -2937,7 +2966,8 @@ var org;
                     Vishva.prototype.onAvatarLoaded = function (meshes, particleSystems, skeletons) {
                         this.avatar = meshes[0];
                         (this.shadowGenerator.getShadowMap().renderList).push(this.avatar);
-                        this.avatar.receiveShadows = true;
+                        //TODO
+                        //this.avatar.receiveShadows = true;
                         var l = meshes.length;
                         for (var i = 1; i < l; i++) {
                             meshes[i].checkCollisions = false;
@@ -3011,6 +3041,25 @@ var org;
                             mat[index].backFaceCulling = false;
                         }
                     };
+                    Vishva.prototype.disableKeys = function () {
+                        this.keysDisabled = true;
+                    };
+                    Vishva.prototype.enableKeys = function () {
+                        this.keysDisabled = false;
+                    };
+                    Vishva.prototype.enableCameraCollision = function (yesNo) {
+                        this.cameraCollision = yesNo;
+                        this.mainCamera.checkCollisions = yesNo;
+                    };
+                    Vishva.prototype.isCameraCollisionOn = function () {
+                        return this.cameraCollision;
+                    };
+                    Vishva.prototype.enableAutoEditMenu = function (yesNo) {
+                        this.autoEditMenu = yesNo;
+                    };
+                    Vishva.prototype.isAutoEditMenuOn = function () {
+                        return this.autoEditMenu;
+                    };
                     return Vishva;
                 }());
                 vishva.Vishva = Vishva;
@@ -3078,35 +3127,16 @@ var org;
                         this.firstTime = true;
                         this.addMenuOn = false;
                         this.vishva = vishva;
-                        var showMenu = document.getElementById("showMenu");
-                        showMenu.style.visibility = "visible";
-                        document.getElementById("menubar").style.visibility = "visible";
-                        var menuBar = $("#menubar");
-                        var jpo = Object.defineProperty({
-                            my: "left center",
-                            at: "right center",
-                            of: showMenu
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
-                        menuBar.position(jpo);
-                        menuBar.hide(null);
-                        showMenu.onclick = (function (menuBar) {
-                            return function (e) {
-                                if (_this.menuBarOn) {
-                                    menuBar.hide("slide");
-                                }
-                                else {
-                                    menuBar.show("slide");
-                                }
-                                _this.menuBarOn = !_this.menuBarOn;
-                                return true;
-                            };
-                        })(menuBar);
                         this.createJPOs();
-                        this.updateAddMenu();
-                        this.setNavMenu();
-                        this.setEditMenu();
+                        //need to do add menu before main navigation menu
+                        //the content of add menu is not static
+                        //it changes based on the asset.js file
+                        this.createAddMenu();
+                        //main navigation menu 
+                        this.createNavMenu();
+                        this.createEditMenu();
                         this.createEditDiag();
-                        this.createEnvDiag();
+                        //this.createEnvDiag();
                         this.createDownloadDiag();
                         this.createUploadDiag();
                         this.createHelpDiag();
@@ -3137,6 +3167,8 @@ var org;
                      * resposition all dialogs to their original default postions without this,
                      * a window resize could end up moving some dialogs outside the window and
                      * thus make them disappear
+                     * the default position of each dialog will be stored in a new property called "jpo"
+                     * this would be created whenever/wherever the dialog is defined
                      *
                      * @param evt
                      */
@@ -3156,7 +3188,7 @@ var org;
                             }
                         }
                     };
-                    VishvaGUI.prototype.updateAddMenu = function () {
+                    VishvaGUI.prototype.createAddMenu = function () {
                         var _this = this;
                         var assetTypes = Object.keys(this.vishva.assets);
                         var addMenu = document.getElementById("AddMenu");
@@ -3203,7 +3235,8 @@ var org;
                             resizable: true,
                             position: this.centerBottom,
                             width: "100%",
-                            height: "auto"
+                            height: "auto",
+                            closeOnEscape: false
                         }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
                         jq.dialog(dos);
                         jq["jpo"] = this.centerBottom;
@@ -3263,7 +3296,8 @@ var org;
                             resizable: false,
                             position: this.leftCenter,
                             width: "auto",
-                            height: "auto"
+                            height: "auto",
+                            closeOnEscape: false
                         }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
                         this.editDialog.dialog(dos);
                         this.editDialog["jpo"] = this.leftCenter;
@@ -3305,9 +3339,11 @@ var org;
                     VishvaGUI.prototype.closeEditMenu = function () {
                         this.editDialog.dialog("close");
                     };
+                    /*
+                     * Create Environment Dialog
+                     */
                     VishvaGUI.prototype.createEnvDiag = function () {
                         var _this = this;
-                        //var sunPos: JQuery = <JQuery>(<any>$("#sunPos"));
                         var sunPos = $("#sunPos");
                         var light = $("#light");
                         var shade = $("#shade");
@@ -3341,16 +3377,42 @@ var org;
                             cp.setRgb(rgb);
                         }
                         this.envDiag = $("#envDiv");
-                        var dos1 = Object.defineProperty({
+                        var dos = Object.defineProperty({
                             autoOpen: false,
                             resizable: false,
                             position: this.rightCenter,
                             minWidth: 350,
-                            height: "auto"
+                            height: "auto",
+                            closeOnEscape: false
                         }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
-                        this.envDiag.dialog(dos1);
+                        this.envDiag.dialog(dos);
                         this.envDiag["jpo"] = this.rightCenter;
                         this.dialogs.push(this.envDiag);
+                    };
+                    VishvaGUI.prototype.createSettingDiag = function () {
+                        var _this = this;
+                        this.settingDiag = $("#settingDiag");
+                        var dos = {
+                            autoOpen: false,
+                            resizable: false,
+                            position: this.rightCenter,
+                            minWidth: 350,
+                            height: "auto",
+                            closeOnEscape: false
+                        };
+                        this.settingDiag.dialog(dos);
+                        this.settingDiag["jpo"] = this.rightCenter;
+                        this.dialogs.push(this.settingDiag);
+                        var dbo = {};
+                        dbo.text = "save";
+                        dbo.click = function (e) {
+                            _this.vishva.enableCameraCollision($("#camCol").prop("checked"));
+                            _this.vishva.enableAutoEditMenu($("#autoEditMenu").prop("checked"));
+                            _this.settingDiag.dialog("close");
+                            return true;
+                        };
+                        var dbos = [dbo];
+                        this.settingDiag.dialog("option", "buttons", dbos);
                     };
                     VishvaGUI.prototype.createDownloadDiag = function () {
                         this.downloadLink = document.getElementById("downloadLink");
@@ -3391,7 +3453,8 @@ var org;
                         var dos = Object.defineProperty({
                             autoOpen: false,
                             resizable: false,
-                            width: 500
+                            width: 500,
+                            closeOnEscape: false
                         }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
                         this.helpDiag.dialog(dos);
                     };
@@ -3406,6 +3469,7 @@ var org;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.title = "Sensors and Actuators";
+                        dos.closeOnEscape = false;
                         dos.close = function (e, ui) {
                             _this.vishva.switchDisabled = false;
                         };
@@ -3531,10 +3595,17 @@ var org;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.title = "Edit Sensor";
+                        dos.closeOnEscape = false;
                         editSensDiag.dialog(dos);
                     };
+                    /*
+                    * show a dialog box to edit sensor properties
+                    * dynamically creates an appropriate form.
+                    *
+                    */
                     VishvaGUI.prototype.showEditSensDiag = function (sensor) {
                         var _this = this;
+                        this.vishva.disableKeys();
                         var sensNameEle = document.getElementById("editSensDiag.sensName");
                         sensNameEle.innerHTML = sensor.getName();
                         var editSensDiag = $("#editSensDiag");
@@ -3545,31 +3616,37 @@ var org;
                             parmDiv.removeChild(node);
                         var tbl = this.formCreate(sensor.getProperties(), parmDiv.id);
                         parmDiv.appendChild(tbl);
-                        var dbo = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogButtonOptions"] });
+                        var dbo = {};
                         dbo.text = "save";
-                        dbo.click = (function (editSensDiag, parmDiv) {
-                            return function (e) {
-                                _this.formRead(sensor.getProperties(), parmDiv.id);
-                                _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
-                                editSensDiag.dialog("close");
-                                return true;
-                            };
-                        })(editSensDiag, parmDiv);
+                        dbo.click = function (e) {
+                            _this.formRead(sensor.getProperties(), parmDiv.id);
+                            _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
+                            editSensDiag.dialog("close");
+                            _this.vishva.enableKeys();
+                            return true;
+                        };
                         var dbos = [dbo];
                         editSensDiag.dialog("option", "buttons", dbos);
                     };
                     VishvaGUI.prototype.createEditActDiag = function () {
                         var editActDiag = $("#editActDiag");
-                        var dos = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        var dos = {};
                         dos.autoOpen = false;
                         dos.modal = true;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.title = "Edit Actuator";
+                        dos.closeOnEscape = false;
                         editActDiag.dialog(dos);
                     };
+                    /*
+                     * show a dialog box to edit actuator properties
+                     * dynamically creates an appropriate form.
+                     *
+                     */
                     VishvaGUI.prototype.showEditActDiag = function (actuator) {
                         var _this = this;
+                        this.vishva.disableKeys();
                         var actNameEle = document.getElementById("editActDiag.actName");
                         actNameEle.innerHTML = actuator.getName();
                         var editActDiag = $("#editActDiag");
@@ -3585,27 +3662,26 @@ var org;
                         }
                         var tbl = this.formCreate(actuator.getProperties(), parmDiv.id);
                         parmDiv.appendChild(tbl);
-                        var dbo = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogButtonOptions"] });
+                        var dbo = {};
                         dbo.text = "save";
-                        dbo.click = (function (parmDiv, editActDiag) {
-                            return function (e) {
-                                _this.formRead(actuator.getProperties(), parmDiv.id);
-                                actuator.processUpdateGeneric();
-                                _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
-                                editActDiag.dialog("close");
-                                return true;
-                            };
-                        })(parmDiv, editActDiag);
+                        dbo.click = function (e) {
+                            _this.formRead(actuator.getProperties(), parmDiv.id);
+                            actuator.processUpdateGeneric();
+                            _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
+                            editActDiag.dialog("close");
+                            _this.vishva.enableKeys();
+                            return true;
+                        };
                         var dbos = [dbo];
                         editActDiag.dialog("option", "buttons", dbos);
                     };
                     /*
                      * auto generate forms based on properties
                      */
-                    VishvaGUI.prototype.formCreate = function (snap, idPrefix) {
+                    VishvaGUI.prototype.formCreate = function (snaP, idPrefix) {
                         idPrefix = idPrefix + ".";
                         var tbl = document.createElement("table");
-                        var keys = Object.keys(snap);
+                        var keys = Object.keys(snaP);
                         for (var index168 = 0; index168 < keys.length; index168++) {
                             var key = keys[index168];
                             {
@@ -3615,10 +3691,9 @@ var org;
                                 var cell = row.insertCell();
                                 cell.innerHTML = key;
                                 cell = row.insertCell();
-                                var t = typeof snap[key];
-                                if ((t === "object") && (snap[key]["type"] === "SelectType")) {
-                                    console.log("is of type SelectType");
-                                    var keyValue = snap[key];
+                                var t = typeof snaP[key];
+                                if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
+                                    var keyValue = snaP[key];
                                     var options = keyValue.values;
                                     var sel = document.createElement("select");
                                     sel.id = idPrefix + key;
@@ -3639,9 +3714,9 @@ var org;
                                     var inp = document.createElement("input");
                                     inp.id = idPrefix + key;
                                     inp.className = "ui-widget-content ui-corner-all";
-                                    inp.value = snap[key];
-                                    if ((t === "object") && (snap[key]["type"] === "Range")) {
-                                        var r = snap[key];
+                                    inp.value = snaP[key];
+                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                        var r = snaP[key];
                                         inp.type = "range";
                                         inp.max = (new Number(r.max)).toString();
                                         inp.min = (new Number(r.min)).toString();
@@ -3650,10 +3725,10 @@ var org;
                                     }
                                     else if ((t === "string") || (t === "number")) {
                                         inp.type = "text";
-                                        inp.value = snap[key];
+                                        inp.value = snaP[key];
                                     }
                                     else if (t === "boolean") {
-                                        var check = snap[key];
+                                        var check = snaP[key];
                                         inp.type = "checkbox";
                                         if (check)
                                             inp.setAttribute("checked", "true");
@@ -3664,40 +3739,40 @@ var org;
                         }
                         return tbl;
                     };
-                    VishvaGUI.prototype.formRead = function (snap, idPrefix) {
+                    VishvaGUI.prototype.formRead = function (snaP, idPrefix) {
                         idPrefix = idPrefix + ".";
-                        var keys = Object.keys(snap);
+                        var keys = Object.keys(snaP);
                         for (var index170 = 0; index170 < keys.length; index170++) {
                             var key = keys[index170];
                             {
                                 if (key.split("_")[0] === this.STATE_IND)
                                     continue;
-                                var t = typeof snap[key];
-                                if ((t === "object") && (snap[key]["type"] === "SelectType")) {
-                                    var s = snap[key];
+                                var t = typeof snaP[key];
+                                if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
+                                    var s = snaP[key];
                                     var sel = document.getElementById(idPrefix + key);
                                     s.value = sel.value;
                                 }
                                 else {
                                     var ie = document.getElementById(idPrefix + key);
-                                    if ((t === "object") && (snap[key]["type"] === "Range")) {
-                                        var r = snap[key];
+                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                        var r = snaP[key];
                                         r.value = parseFloat(ie.value);
                                     }
                                     else if ((t === "string") || (t === "number")) {
                                         if (t === "number") {
                                             var v = parseFloat(ie.value);
                                             if (isNaN(v))
-                                                snap[key] = 0;
+                                                snaP[key] = 0;
                                             else
-                                                snap[key] = v;
+                                                snaP[key] = v;
                                         }
                                         else {
-                                            snap[key] = ie.value;
+                                            snaP[key] = ie.value;
                                         }
                                     }
                                     else if (t === "boolean") {
-                                        snap[key] = ie.checked;
+                                        snaP[key] = ie.checked;
                                     }
                                 }
                             }
@@ -3740,6 +3815,7 @@ var org;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.height = "auto";
+                        dos.closeOnEscape = false;
                         dos.close = function (e, ui) {
                             _this.vishva.switchDisabled = false;
                         };
@@ -3790,6 +3866,7 @@ var org;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.height = "auto";
+                        dos.closeOnEscape = false;
                         dos.close = function (e, ui) {
                             _this.vishva.switchDisabled = false;
                         };
@@ -3819,7 +3896,8 @@ var org;
                             title: "Information",
                             autoOpen: false,
                             width: "auto",
-                            height: "auto"
+                            height: "auto",
+                            closeOnEscape: false
                         }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
                         this.alertDialog.dialog(dos);
                     };
@@ -3862,8 +3940,32 @@ var org;
                         var colors = [rgb.r, rgb.g, rgb.b];
                         this.vishva.setGroundColor(colors);
                     };
-                    VishvaGUI.prototype.setNavMenu = function () {
+                    VishvaGUI.prototype.createNavMenu = function () {
                         var _this = this;
+                        //button to show navigation menu
+                        var showNavMenu = document.getElementById("showNavMenu");
+                        showNavMenu.style.visibility = "visible";
+                        //navigation menu sliding setup
+                        document.getElementById("navMenubar").style.visibility = "visible";
+                        var navMenuBar = $("#navMenubar");
+                        var jpo = {
+                            my: "left center",
+                            at: "right center",
+                            of: showNavMenu
+                        };
+                        navMenuBar.position(jpo);
+                        navMenuBar.hide(null);
+                        showNavMenu.onclick = function (e) {
+                            if (_this.menuBarOn) {
+                                navMenuBar.hide("slide");
+                            }
+                            else {
+                                navMenuBar.show("slide");
+                            }
+                            _this.menuBarOn = !_this.menuBarOn;
+                            return true;
+                        };
+                        //add menu sliding setup
                         var slideDown = JSON.parse("{\"direction\":\"up\"}");
                         var navAdd = document.getElementById("navAdd");
                         var addMenu = $("#AddMenu");
@@ -3872,11 +3974,11 @@ var org;
                         navAdd.onclick = (function (addMenu, navAdd, slideDown) {
                             return function (e) {
                                 if (_this.firstTime) {
-                                    var jpo = Object.defineProperty({
+                                    var jpo = {
                                         my: "left top",
                                         at: "left bottom",
                                         of: navAdd
-                                    }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
+                                    };
                                     addMenu.menu().position(jpo);
                                     _this.firstTime = false;
                                 }
@@ -3909,18 +4011,40 @@ var org;
                         };
                         var navEnv = document.getElementById("navEnv");
                         navEnv.onclick = function (e) {
-                            _this.envDiag = $("#envDiv");
-                            _this.envDiag.dialog("open");
+                            if (_this.envDiag == undefined) {
+                                _this.createEnvDiag();
+                            }
+                            _this.toggleDiag(_this.envDiag);
                             return false;
                         };
                         var navEdit = document.getElementById("navEdit");
                         navEdit.onclick = function (e) {
-                            _this.showEditMenu();
+                            if (_this.editDialog.dialog("isOpen") === true) {
+                                _this.closeEditMenu();
+                            }
+                            else {
+                                _this.showEditMenu();
+                            }
                             return true;
+                        };
+                        var navSettings = document.getElementById("navSettings");
+                        navSettings.onclick = function (e) {
+                            if (_this.settingDiag == undefined) {
+                                _this.createSettingDiag();
+                            }
+                            if (_this.settingDiag.dialog("isOpen") === false) {
+                                $("#camCol").prop("checked", _this.vishva.isCameraCollisionOn());
+                                $("#autoEditMenu").prop("checked", _this.vishva.isAutoEditMenuOn());
+                                _this.settingDiag.dialog("open");
+                            }
+                            else {
+                                _this.settingDiag.dialog("close");
+                            }
+                            return false;
                         };
                         var helpLink = document.getElementById("helpLink");
                         helpLink.onclick = function (e) {
-                            _this.helpDiag.dialog("open");
+                            _this.toggleDiag(_this.helpDiag);
                             return true;
                         };
                         var debugLink = document.getElementById("debugLink");
@@ -3929,7 +4053,19 @@ var org;
                             return true;
                         };
                     };
-                    VishvaGUI.prototype.setEditMenu = function () {
+                    /*
+                     * open diag if close
+                     * close diag if open
+                     */
+                    VishvaGUI.prototype.toggleDiag = function (diag) {
+                        if (diag.dialog("isOpen") === false) {
+                            diag.dialog("open");
+                        }
+                        else {
+                            diag.dialog("close");
+                        }
+                    };
+                    VishvaGUI.prototype.createEditMenu = function () {
                         var _this = this;
                         var swAv = document.getElementById("swAv");
                         var swGnd = document.getElementById("swGnd");

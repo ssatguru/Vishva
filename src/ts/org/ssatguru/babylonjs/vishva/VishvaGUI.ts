@@ -16,7 +16,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import SliderUIParams = JQueryUI.SliderUIParams;
 
     export class VishvaGUI {
-        
+
         private vishva: Vishva;
 
         local: boolean = true;
@@ -33,36 +33,26 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public constructor(vishva: Vishva) {
             this.vishva = vishva;
-            var showMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showMenu");
-            showMenu.style.visibility = "visible";
-            document.getElementById("menubar").style.visibility = "visible";
-            var menuBar: JQuery = <JQuery>(<any>$("#menubar"));
-            var jpo: JQueryPositionOptions = <JQueryPositionOptions>Object.defineProperty({
-                my: "left center",
-                at: "right center",
-                of: showMenu
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
-            menuBar.position(jpo);
-            menuBar.hide(null);
-            showMenu.onclick = ((menuBar) => {
-                return (e) => {
-                    if (this.menuBarOn) {
-                        menuBar.hide("slide");
-                    } else {
-                        menuBar.show("slide");
-                    }
-                    this.menuBarOn = !this.menuBarOn;
-                    return true;
-                }
-            })(menuBar);
+
             this.createJPOs();
-            this.updateAddMenu();
-            this.setNavMenu();
-            this.setEditMenu();
+
+            //need to do add menu before main navigation menu
+            //the content of add menu is not static
+            //it changes based on the asset.js file
+            this.createAddMenu();
+
+            //main navigation menu 
+            this.createNavMenu();
+
+            this.createEditMenu();
             this.createEditDiag();
-            this.createEnvDiag();
+
+            //this.createEnvDiag();
+
             this.createDownloadDiag();
             this.createUploadDiag();
+
+
             this.createHelpDiag();
             this.createAlertDiag();
             this.create_sNaDiag();
@@ -105,6 +95,8 @@ namespace org.ssatguru.babylonjs.vishva {
          * resposition all dialogs to their original default postions without this,
          * a window resize could end up moving some dialogs outside the window and
          * thus make them disappear
+         * the default position of each dialog will be stored in a new property called "jpo"
+         * this would be created whenever/wherever the dialog is defined
          * 
          * @param evt
          */
@@ -127,7 +119,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         skyboxesDiag: JQuery;
 
-        private updateAddMenu() {
+        private createAddMenu() {
             var assetTypes: string[] = Object.keys(this.vishva.assets);
             var addMenu: HTMLUListElement = <HTMLUListElement>document.getElementById("AddMenu");
             addMenu.style.visibility = "visible";
@@ -175,7 +167,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 resizable: true,
                 position: this.centerBottom,
                 width: (<any>"100%"),
-                height: (<any>"auto")
+                height: (<any>"auto"),
+                closeOnEscape: false
             }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
             jq.dialog(dos);
             jq["jpo"] = this.centerBottom;
@@ -237,7 +230,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 resizable: false,
                 position: this.leftCenter,
                 width: (<any>"auto"),
-                height: (<any>"auto")
+                height: (<any>"auto"),
+                closeOnEscape: false
             }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
             this.editDialog.dialog(dos);
             this.editDialog["jpo"] = this.leftCenter;
@@ -251,8 +245,10 @@ namespace org.ssatguru.babylonjs.vishva {
         snapper: HTMLElement = document.getElementById("snapper");
 
         public showEditMenu(): boolean {
+
             var alreadyOpen: boolean = <boolean>(<any>this.editDialog.dialog("isOpen"));
             if (alreadyOpen) return alreadyOpen;
+
             if (this.vishva.isSpaceLocal()) {
                 this.local = true;
                 this.localAxis.innerHTML = "Switch to Global Axis";
@@ -284,30 +280,36 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         envDiag: JQuery;
-
+        /*
+         * Create Environment Dialog
+         */
         private createEnvDiag() {
-            //var sunPos: JQuery = <JQuery>(<any>$("#sunPos"));
-            var sunPos: JQuery = $("#sunPos");
-            var light: JQuery = <JQuery>(<any>$("#light"));
-            var shade: JQuery = <JQuery>(<any>$("#shade"));
-            var fog: JQuery = <JQuery>(<any>$("#fog"));
-            var fov: JQuery = <JQuery>(<any>$("#fov"));
+
+            let sunPos: JQuery = $("#sunPos");
+            let light: JQuery = $("#light");
+            let shade: JQuery = $("#shade");
+            let fog: JQuery = $("#fog");
+            let fov: JQuery = $("#fov");
+
             sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
             fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
             fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
+
             var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
             skyButton.onclick = (e) => {
                 var foo: HTMLElement = document.getElementById("add-skyboxes");
                 foo.click();
                 return true;
             };
+
             var trnButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("trnButton");
             trnButton.onclick = (e) => {
                 this.showAlertDiag("Sorry. To be implemneted soon");
                 return true;
             };
+
             var colorEle: HTMLElement = document.getElementById("color-picker");
             var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
             var setRGB: Function = <Function>cp["setRgb"];
@@ -319,17 +321,51 @@ namespace org.ssatguru.babylonjs.vishva {
                 rgb.b = color[2];
                 cp.setRgb(rgb);
             }
+
             this.envDiag = <JQuery>(<any>$("#envDiv"));
-            var dos1: DialogOptions = <DialogOptions>Object.defineProperty({
+            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
                 autoOpen: false,
                 resizable: false,
                 position: this.rightCenter,
                 minWidth: 350,
-                height: (<any>"auto")
+                height: (<any>"auto"),
+                closeOnEscape: false
             }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
-            this.envDiag.dialog(dos1);
+            this.envDiag.dialog(dos);
             this.envDiag["jpo"] = this.rightCenter;
             this.dialogs.push(this.envDiag);
+        }
+        /*
+         * Create Setting Dialog
+         */
+        settingDiag: JQuery;
+        private createSettingDiag() {
+            this.settingDiag = $("#settingDiag");
+            let dos: DialogOptions = {
+                autoOpen: false,
+                resizable: false,
+                position: this.rightCenter,
+                minWidth: 350,
+                height: (<any>"auto"),
+                closeOnEscape: false
+            };
+            this.settingDiag.dialog(dos);
+            this.settingDiag["jpo"] = this.rightCenter;
+            this.dialogs.push(this.settingDiag);
+
+            let dbo: DialogButtonOptions = {};
+            dbo.text = "save";
+            dbo.click = (e) => {
+
+                this.vishva.enableCameraCollision($("#camCol").prop("checked"));
+                this.vishva.enableAutoEditMenu($("#autoEditMenu").prop("checked"));
+
+                this.settingDiag.dialog("close");
+                return true;
+            };
+            let dbos: DialogButtonOptions[] = [dbo];
+
+            this.settingDiag.dialog("option", "buttons", dbos);
         }
 
         downloadDialog: JQuery;
@@ -378,7 +414,8 @@ namespace org.ssatguru.babylonjs.vishva {
             var dos: DialogOptions = <DialogOptions>Object.defineProperty({
                 autoOpen: false,
                 resizable: false,
-                width: 500
+                width: 500,
+                closeOnEscape: false
             }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
             this.helpDiag.dialog(dos);
         }
@@ -405,6 +442,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Sensors and Actuators";
+            dos.closeOnEscape = false;
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -532,10 +570,18 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Edit Sensor";
+            dos.closeOnEscape = false;
             editSensDiag.dialog(dos);
         }
-
+        /*
+        * show a dialog box to edit sensor properties
+        * dynamically creates an appropriate form.
+        * 
+        */
         private showEditSensDiag(sensor: Sensor) {
+
+            this.vishva.disableKeys();
+
             var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
             sensNameEle.innerHTML = sensor.getName();
             var editSensDiag: JQuery = <JQuery>(<any>$("#editSensDiag"));
@@ -545,40 +591,46 @@ namespace org.ssatguru.babylonjs.vishva {
             if (node != null) parmDiv.removeChild(node);
             var tbl: HTMLTableElement = this.formCreate(sensor.getProperties(), parmDiv.id);
             parmDiv.appendChild(tbl);
-            var dbo: DialogButtonOptions = <DialogButtonOptions>Object.defineProperty({
-
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogButtonOptions"] });
+            var dbo: DialogButtonOptions = {};
             dbo.text = "save";
-            dbo.click = ((editSensDiag, parmDiv) => {
-                return (e) => {
-                    this.formRead(sensor.getProperties(), parmDiv.id);
-                    this.updateSensActTbl(this.vishva.getSensors(), this.sensTbl);
-                    editSensDiag.dialog("close");
-                    return true;
-                }
-            })(editSensDiag, parmDiv);
+            dbo.click = (e) => {
+                this.formRead(sensor.getProperties(), parmDiv.id);
+                this.updateSensActTbl(this.vishva.getSensors(), this.sensTbl);
+                editSensDiag.dialog("close");
+                this.vishva.enableKeys();
+                return true;
+            };
+
             var dbos: DialogButtonOptions[] = [dbo];
             editSensDiag.dialog("option", "buttons", dbos);
         }
 
         private createEditActDiag() {
             var editActDiag: JQuery = <JQuery>(<any>$("#editActDiag"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
-
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            var dos: DialogOptions = {};
             dos.autoOpen = false;
             dos.modal = true;
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Edit Actuator";
+            dos.closeOnEscape = false;
             editActDiag.dialog(dos);
         }
 
+        /*
+         * show a dialog box to edit actuator properties
+         * dynamically creates an appropriate form.
+         * 
+         */
         private showEditActDiag(actuator: Actuator) {
+            this.vishva.disableKeys();
+
             var actNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editActDiag.actName");
             actNameEle.innerHTML = actuator.getName();
-            var editActDiag: JQuery = <JQuery>(<any>$("#editActDiag"));
+
+            var editActDiag: JQuery = $("#editActDiag");
             editActDiag.dialog("open");
+
             var parmDiv: HTMLElement = document.getElementById("editActDiag.parms");
             var node: Node = parmDiv.firstChild;
             if (node != null) {
@@ -590,29 +642,27 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             var tbl: HTMLTableElement = this.formCreate(actuator.getProperties(), parmDiv.id);
             parmDiv.appendChild(tbl);
-            var dbo: DialogButtonOptions = <DialogButtonOptions>Object.defineProperty({
-
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogButtonOptions"] });
+            var dbo: DialogButtonOptions = {};
             dbo.text = "save";
-            dbo.click = ((parmDiv, editActDiag) => {
-                return (e) => {
-                    this.formRead(actuator.getProperties(), parmDiv.id);
-                    actuator.processUpdateGeneric();
-                    this.updateSensActTbl(this.vishva.getActuators(), this.actTbl);
-                    editActDiag.dialog("close");
-                    return true;
-                }
-            })(parmDiv, editActDiag);
+            dbo.click = (e) => {
+                this.formRead(actuator.getProperties(), parmDiv.id);
+                actuator.processUpdateGeneric();
+                this.updateSensActTbl(this.vishva.getActuators(), this.actTbl);
+                editActDiag.dialog("close");
+                this.vishva.enableKeys();
+                return true;
+            };
             var dbos: DialogButtonOptions[] = [dbo];
+
             editActDiag.dialog("option", "buttons", dbos);
         }
         /*
          * auto generate forms based on properties
          */
-        private formCreate(snap: SNAproperties, idPrefix: string): HTMLTableElement {
+        private formCreate(snaP: SNAproperties, idPrefix: string): HTMLTableElement {
             idPrefix = idPrefix + ".";
             var tbl: HTMLTableElement = document.createElement("table");
-            var keys: string[] = Object.keys(snap);
+            var keys: string[] = Object.keys(snaP);
             for (var index168 = 0; index168 < keys.length; index168++) {
                 var key = keys[index168];
                 {
@@ -621,10 +671,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
                     cell.innerHTML = key;
                     cell = <HTMLTableCellElement>row.insertCell();
-                    var t: string = typeof snap[key];
-                    if ((t === "object") && ((<Object>snap[key])["type"] === "SelectType")) {
-                        console.log("is of type SelectType");
-                        var keyValue: SelectType = <SelectType>snap[key];
+                    var t: string = typeof snaP[key];
+                    if ((t === "object") && ((<Object>snaP[key])["type"] === "SelectType")) {
+                        var keyValue: SelectType = <SelectType>snaP[key];
                         var options: string[] = keyValue.values;
                         var sel: HTMLSelectElement = document.createElement("select");
                         sel.id = idPrefix + key;
@@ -644,9 +693,9 @@ namespace org.ssatguru.babylonjs.vishva {
                         var inp: HTMLInputElement = document.createElement("input");
                         inp.id = idPrefix + key;
                         inp.className = "ui-widget-content ui-corner-all";
-                        inp.value = <string>snap[key];
-                        if ((t === "object") && ((<Object>snap[key])["type"] === "Range")) {
-                            var r: Range = <Range>snap[key];
+                        inp.value = <string>snaP[key];
+                        if ((t === "object") && ((<Object>snaP[key])["type"] === "Range")) {
+                            var r: Range = <Range>snaP[key];
                             inp.type = "range";
                             inp.max = (<number>new Number(r.max)).toString();
                             inp.min = (<number>new Number(r.min)).toString();
@@ -654,9 +703,9 @@ namespace org.ssatguru.babylonjs.vishva {
                             inp.value = (<number>new Number(r.value)).toString();
                         } else if ((t === "string") || (t === "number")) {
                             inp.type = "text";
-                            inp.value = <string>snap[key];
+                            inp.value = <string>snaP[key];
                         } else if (t === "boolean") {
-                            var check: boolean = <boolean>snap[key];
+                            var check: boolean = <boolean>snaP[key];
                             inp.type = "checkbox";
                             if (check) inp.setAttribute("checked", "true");
                         }
@@ -667,32 +716,32 @@ namespace org.ssatguru.babylonjs.vishva {
             return tbl;
         }
 
-        private formRead(snap: SNAproperties, idPrefix: string) {
+        private formRead(snaP: SNAproperties, idPrefix: string) {
             idPrefix = idPrefix + ".";
-            var keys: string[] = Object.keys(snap);
+            var keys: string[] = Object.keys(snaP);
             for (var index170 = 0; index170 < keys.length; index170++) {
                 var key = keys[index170];
                 {
                     if (key.split("_")[0] === this.STATE_IND) continue;
-                    var t: string = typeof snap[key];
-                    if ((t === "object") && ((<Object>snap[key])["type"] === "SelectType")) {
-                        var s: SelectType = <SelectType>snap[key];
+                    var t: string = typeof snaP[key];
+                    if ((t === "object") && ((<Object>snaP[key])["type"] === "SelectType")) {
+                        var s: SelectType = <SelectType>snaP[key];
                         var sel: HTMLSelectElement = <HTMLSelectElement>document.getElementById(idPrefix + key);
                         s.value = sel.value;
                     } else {
                         var ie: HTMLInputElement = <HTMLInputElement>document.getElementById(idPrefix + key);
-                        if ((t === "object") && ((<Object>snap[key])["type"] === "Range")) {
-                            var r: Range = <Range>snap[key];
+                        if ((t === "object") && ((<Object>snaP[key])["type"] === "Range")) {
+                            var r: Range = <Range>snaP[key];
                             r.value = parseFloat(ie.value);
                         } else if ((t === "string") || (t === "number")) {
                             if (t === "number") {
                                 var v: number = parseFloat(ie.value);
-                                if (isNaN(v)) snap[key] = 0; else snap[key] = v;
+                                if (isNaN(v)) snaP[key] = 0; else snaP[key] = v;
                             } else {
-                                snap[key] = ie.value;
+                                snaP[key] = ie.value;
                             }
                         } else if (t === "boolean") {
-                            snap[key] = ie.checked;
+                            snaP[key] = ie.checked;
                         }
                     }
                 }
@@ -745,6 +794,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.height = (<any>"auto");
+            dos.closeOnEscape = false;
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -798,6 +848,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.height = (<any>"auto");
+            dos.closeOnEscape = false;
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -834,7 +885,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 title: "Information",
                 autoOpen: false,
                 width: (<any>"auto"),
-                height: (<any>"auto")
+                height: (<any>"auto"),
+                closeOnEscape: false
             }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
             this.alertDialog.dialog(dos);
         }
@@ -883,7 +935,33 @@ namespace org.ssatguru.babylonjs.vishva {
 
         addMenuOn: boolean = false;
 
-        private setNavMenu() {
+        private createNavMenu() {
+
+            //button to show navigation menu
+            let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
+            showNavMenu.style.visibility = "visible";
+
+            //navigation menu sliding setup
+            document.getElementById("navMenubar").style.visibility = "visible";
+            let navMenuBar: JQuery = <JQuery>(<any>$("#navMenubar"));
+            let jpo: JQueryPositionOptions = {
+                my: "left center",
+                at: "right center",
+                of: showNavMenu
+            };
+            navMenuBar.position(jpo);
+            navMenuBar.hide(null);
+            showNavMenu.onclick = (e) => {
+                if (this.menuBarOn) {
+                    navMenuBar.hide("slide");
+                } else {
+                    navMenuBar.show("slide");
+                }
+                this.menuBarOn = !this.menuBarOn;
+                return true;
+            };
+
+            //add menu sliding setup
             var slideDown: any = JSON.parse("{\"direction\":\"up\"}");
             var navAdd: HTMLElement = document.getElementById("navAdd");
             var addMenu: JQuery = <JQuery>(<any>$("#AddMenu"));
@@ -892,11 +970,11 @@ namespace org.ssatguru.babylonjs.vishva {
             navAdd.onclick = ((addMenu, navAdd, slideDown) => {
                 return (e) => {
                     if (this.firstTime) {
-                        var jpo: JQueryPositionOptions = <JQueryPositionOptions>Object.defineProperty({
+                        var jpo: JQueryPositionOptions = {
                             my: "left top",
                             at: "left bottom",
                             of: navAdd
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
+                        };
                         addMenu.menu().position(jpo);
                         this.firstTime = false;
                     }
@@ -917,7 +995,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     return true;
                 }
             })(addMenu, navAdd, slideDown);
-            
+
             var downWorld: HTMLElement = document.getElementById("downWorld");
             downWorld.onclick = (e) => {
                 var downloadURL: string = this.vishva.saveWorld();
@@ -926,33 +1004,70 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.downloadDialog.dialog("open");
                 return false;
             };
+
             var navEnv: HTMLElement = document.getElementById("navEnv");
             navEnv.onclick = (e) => {
-                this.envDiag = <JQuery>(<any>$("#envDiv"));
-                this.envDiag.dialog("open");
+                if (this.envDiag == undefined) {
+                    this.createEnvDiag();
+                }
+                this.toggleDiag(this.envDiag);
                 return false;
             };
+
             var navEdit: HTMLElement = document.getElementById("navEdit");
             navEdit.onclick = (e) => {
-                this.showEditMenu();
+                if (this.editDialog.dialog("isOpen") === true) {
+                    this.closeEditMenu();
+                } else {
+                    this.showEditMenu();
+                }
                 return true;
             };
+
+            var navSettings: HTMLElement = document.getElementById("navSettings");
+            navSettings.onclick = (e) => {
+                if (this.settingDiag == undefined) {
+                    this.createSettingDiag();
+                }
+                if (this.settingDiag.dialog("isOpen") === false) {
+                    $("#camCol").prop("checked", this.vishva.isCameraCollisionOn());
+                    $("#autoEditMenu").prop("checked", this.vishva.isAutoEditMenuOn());
+                    this.settingDiag.dialog("open");
+                } else {
+                    this.settingDiag.dialog("close");
+                }
+
+                return false;
+            };
+
             var helpLink: HTMLElement = document.getElementById("helpLink");
             helpLink.onclick = (e) => {
-                this.helpDiag.dialog("open");
+                this.toggleDiag(this.helpDiag);
                 return true;
             };
+
             var debugLink: HTMLElement = document.getElementById("debugLink");
             debugLink.onclick = (e) => {
                 this.vishva.toggleDebug();
                 return true;
             };
         }
+        /*
+         * open diag if close
+         * close diag if open
+         */
+        private toggleDiag(diag: JQuery) {
+            if (diag.dialog("isOpen") === false) {
+                diag.dialog("open");
+            } else {
+                diag.dialog("close");
+            }
+        }
 
-        private setEditMenu() {
+        private createEditMenu() {
             var swAv: HTMLElement = document.getElementById("swAv");
             var swGnd: HTMLElement = document.getElementById("swGnd");
-            
+
             var instMesh: HTMLElement = document.getElementById("instMesh");
             var parentMesh: HTMLElement = document.getElementById("parentMesh");
             var removeParent: HTMLElement = document.getElementById("removeParent");
@@ -966,10 +1081,10 @@ namespace org.ssatguru.babylonjs.vishva {
             let togEna: HTMLElement = document.getElementById("togEna");
             let showDisa: HTMLElement = document.getElementById("showDisa");
             let hideDisa: HTMLElement = document.getElementById("hideDisa");
-            
+
             var attLight: HTMLElement = document.getElementById("attLight");
             var addWater: HTMLElement = document.getElementById("addWater");
-            
+
             var undo: HTMLElement = document.getElementById("undo");
             var redo: HTMLElement = document.getElementById("redo");
             var sNa: HTMLElement = document.getElementById("sNa");
@@ -1059,7 +1174,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.hideAllInvisibles();
                 return false;
             };
-            
+
             togCol.onclick = (e) => {
                 var err: string = this.vishva.toggleCollision();
                 if (err != null) {
@@ -1067,7 +1182,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return false;
             };
-             togEna.onclick = (e) => {
+            togEna.onclick = (e) => {
                 var err: string = this.vishva.toggleEnable();
                 if (err != null) {
                     this.showAlertDiag(err);
@@ -1089,16 +1204,16 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return false;
             };
-            
-             addWater.onclick = (e) => {
-                     this.vishva.createWater();
-//                var err: string = this.vishva.addWater();
-//                if (err != null) {
-//                    this.showAlertDiag(err);
-//                }
-//                return false;
+
+            addWater.onclick = (e) => {
+                this.vishva.createWater();
+                //                var err: string = this.vishva.addWater();
+                //                if (err != null) {
+                //                    this.showAlertDiag(err);
+                //                }
+                //                return false;
             };
-            
+
             undo.onclick = (e) => {
                 this.vishva.undo();
                 return false;

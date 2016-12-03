@@ -475,6 +475,8 @@ namespace org.ssatguru.babylonjs.vishva {
             SNAManager.getSNAManager().emitSignal(this.properties.signalId);
         }
 
+
+
         public getProperties(): SNAproperties {
             return this.properties;
         }
@@ -543,7 +545,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.mesh.actionManager = new ActionManager(aMesh.getScene());
             }
             var scene: Scene = aMesh.getScene();
-            var otherMesh = this.findAV(scene);
+            //var otherMesh = this.findAV(scene);
+            let otherMesh = scene.getMeshesByTags("Vishva.avatar" )[0];
             this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
             this.mesh.actionManager.registerAction(this.action);
         }
@@ -579,6 +582,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 var mesh = scene.meshes[index140];
                 {
                     if (Tags.HasTags(mesh)) {
+                        
                         if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
                             return mesh;
                         }

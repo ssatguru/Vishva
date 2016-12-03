@@ -101,14 +101,15 @@
             </div>
 
             <div style="padding: 4px; position: absolute; top: 0px; left: 0px;  ">
-                <button id="showMenu">&#9776;</button>
+                <button id="showNavMenu">&#9776;</button>
             </div>
 
-            <div id="menubar" style="padding: 4px; display: inline-block; position: absolute;">
+            <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;">
                 <button id="downWorld">Save</button>
                 <button id="navAdd">Add</button>
                 <button id="navEnv">Environment</button>
                 <button id="navEdit">Edit</button>
+                <button id="navSettings">Settings</button>
                 <button id="helpLink">Help</button>
                 <button id="debugLink">Debug</button>
             </div>
@@ -157,7 +158,58 @@
                     <li id="meshTrans">Transform</li>
                 </ul>
             </div>
+            
+            <div id="envDiv" title="Environment">
+                <table style="width: 100%; text-align: center;">
+                    <tr>
+                        <td>sun (west-east)</td>
+                        <td><div id="sunPos"></div></td>
+                    </tr>
+                    <tr>
+                        <td>light</td>
+                        <td><div id="light"></div></td>
+                    </tr>
+                    <tr>
+                        <td>shade</td>
+                        <td><div id="shade"></div></td>
+                    </tr>
+                    <tr>
+                        <td>fog</td>
+                        <td><div id="fog"></div></td>
+                    </tr>
+                    <tr>
+                        <td>fov</td>
+                        <td><div id="fov"></div></td>
+                    </tr>
+                    <tr>
+                        <td>sky</td>
+                        <td><Button id="skyButton">Select Sky</button></td>
+                    </tr>
+                    <tr>
+                        <td>terrain</td>
+                        <td><Button id="trnButton">Select Terrain</button></td>
+                    </tr>
+                    <tr>
+                        <td>terrain color</td>
+                        <td><div ondragstart="return false;" id="color-picker" class="cp-small"></div></td>
+                    </tr>
+                </table>
+            </div>
 
+            <div id="settingDiag" title="Settings" data-keyboard="false">
+                 <table style="width: 100%; text-align: center;">
+                    <tr>
+                        <td>camera collision</td>
+                        <td><input id="camCol" type="checkbox"/></td>
+                    </tr>
+                     <tr>
+                        <td>show edit menu on mesh selection</td>
+                        <td><input id="autoEditMenu" type="checkbox"/></td>
+                    </tr>
+                </table>
+                
+            </div>
+            
             <div id="sNaDiag">
                 <div id="sNaDetails">
                     <ul>
@@ -269,42 +321,7 @@
 
             </div>
 
-            <div id="envDiv" title="Environment">
-                <table style="width: 100%; text-align: center;">
-                    <tr>
-                        <td>sun (west-east)</td>
-                        <td><div id="sunPos"></div></td>
-                    </tr>
-                    <tr>
-                        <td>light</td>
-                        <td><div id="light"></div></td>
-                    </tr>
-                    <tr>
-                        <td>shade</td>
-                        <td><div id="shade"></div></td>
-                    </tr>
-                    <tr>
-                        <td>fog</td>
-                        <td><div id="fog"></div></td>
-                    </tr>
-                    <tr>
-                        <td>fov</td>
-                        <td><div id="fov"></div></td>
-                    </tr>
-                    <tr>
-                        <td>sky</td>
-                        <td><Button id="skyButton">Select Sky</button></td>
-                    </tr>
-                    <tr>
-                        <td>terrain</td>
-                        <td><Button id="trnButton">Select Terrain</button></td>
-                    </tr>
-                    <tr>
-                        <td>terrain color</td>
-                        <td><div ondragstart="return false;" id="color-picker" class="cp-small"></div></td>
-                    </tr>
-                </table>
-            </div>
+
 
 
             <div id="saveDiv">

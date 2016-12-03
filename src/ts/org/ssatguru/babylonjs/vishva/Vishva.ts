@@ -106,7 +106,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
         vishvaGUI: VishvaGUI;
 
-        editAlreadyOpen: boolean = false;
+        //editAlreadyOpen: boolean = false;
+        
+        //automatcally open edit menu whenever a mesh is selected
+        private autoEditMenu : boolean = false;
 
         /**
          * use this to prevent users from switching to another mesh during edit.
@@ -138,6 +141,8 @@ namespace org.ssatguru.babylonjs.vishva {
         prevAnim: AnimData = null;
 
         key: Key;
+        
+        private keysDisabled: boolean = false;
 
         loadingMsg: HTMLElement;
 
@@ -145,7 +150,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         showBoundingBox: boolean = false;
 
-        cameraCollision: boolean = false;
+        cameraCollision: boolean = true;
 
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
@@ -280,7 +285,8 @@ namespace org.ssatguru.babylonjs.vishva {
             mesh.material = this.primMaterial;
             mesh.checkCollisions = true;
             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-            mesh.receiveShadows = true;
+            //sat TODO remove comment
+            //mesh.receiveShadows = true;
             Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
             mesh.id = (<number>new Number(Date.now())).toString();
             mesh.name = mesh.id;
@@ -350,7 +356,8 @@ namespace org.ssatguru.babylonjs.vishva {
             inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
             this.meshPicked = inst;
             this.swicthEditControl(inst);
-            inst.receiveShadows = true;
+            //TODO think
+            //inst.receiveShadows = true;
             (this.shadowGenerator.getShadowMap().renderList).push(inst);
             return null;
         }
@@ -395,6 +402,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
                 Tags.RemoveTagsFrom(this.meshPicked, "invisible")
                 this.meshPicked.visibility = 1;
+                this.meshPicked.isPickable = true;
                 if (this.showingAllInvisibles)
                     mesh.showBoundingBox = false;
             } else {
@@ -402,8 +410,10 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (this.showingAllInvisibles) {
                     this.meshPicked.visibility = 0.5;
                     mesh.showBoundingBox = true;
+                    this.meshPicked.isPickable = true;
                 } else {
                     this.meshPicked.visibility = 0;
+                    this.meshPicked.isPickable = false;
                 }
             }
         }
@@ -549,7 +559,8 @@ namespace org.ssatguru.babylonjs.vishva {
             delete clone["sensors"];
             delete clone["actuators"];
             clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
-            clone.receiveShadows = true;
+            //TODO think
+            //clone.receiveShadows = true;
             mesh.showBoundingBox = false;
             (this.shadowGenerator.getShadowMap().renderList).push(clone);
             return clone;
@@ -591,8 +602,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "no mesh selected";
             }
             
-            //var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
-            var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
+            var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
+            light0.range=5;
+            //var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
             //var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), this.scene);
         light0.diffuse = new BABYLON.Color3(1, 1, 1);
         light0.specular = new BABYLON.Color3(1, 1, 1);
@@ -1027,7 +1039,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 var mesh = this.scene.meshes[index128];
                 {
                     if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                        mesh.receiveShadows = true;
+                        //TODO think
+                        //mesh.receiveShadows = true;
                         (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                     }
                 }
@@ -1224,7 +1237,8 @@ namespace org.ssatguru.babylonjs.vishva {
                         var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
                         mesh.position.addInPlace(placementGlobal);
                         (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                        mesh.receiveShadows = true;
+                        //TODO think
+                        //mesh.receiveShadows = true;
                         if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
                             var mm: MultiMaterial = <MultiMaterial>mesh.material;
                             var mats: Material[] = mm.subMaterials;
@@ -1330,6 +1344,8 @@ namespace org.ssatguru.babylonjs.vishva {
             for (var index140 = 0; index140 < scene.meshes.length; index140++) {
                 var mesh = scene.meshes[index140];
                 {
+                    //sat TODO
+                    mesh.receiveShadows = false;
                     if (Tags.HasTags(mesh)) {
                         if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
                             avFound = true;
@@ -1384,25 +1400,26 @@ namespace org.ssatguru.babylonjs.vishva {
             } else {
                 for (var index143 = 0; index143 < scene.lights.length; index143++) {
                     var light = scene.lights[index143];
-                    {
                         if (light.id === "Vishva.dl01") {
                             this.sunDR = <DirectionalLight>light;
                             this.shadowGenerator = light.getShadowGenerator();
                             this.shadowGenerator.bias = 1.0E-6;
                             this.shadowGenerator.useBlurVarianceShadowMap = true;
                         }
-                    }
                 }
+                
             }
+            
             for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
                 var mesh = this.scene.meshes[index144];
-                {
                     if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                       mesh.receiveShadows = true;
+                        //sat TODO remove comment
+                       //mesh.receiveShadows = true;
                        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+     
                     }
-                }
             }
+
             for (var index145 = 0; index145 < scene.cameras.length; index145++) {
                 var camera = scene.cameras[index145];
                 {
@@ -1419,10 +1436,19 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.mainCamera = this.createCamera(this.scene, this.canvas);
                 this.scene.activeCamera = this.mainCamera;
             }
+            
+            //TODO
+            this.mainCamera.checkCollisions = true;
+            this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+            
             if (!groundFound) {
                 console.log("no vishva ground found. creating ground");
                 this.ground = this.createGround(this.scene);
+            }else{
+                //in case this wasn't set in serialized scene
+                this.ground.receiveShadows = true;
             }
+            
             if (!skyFound) {
                 console.log("no vishva sky found. creating sky");
                 this.skybox = this.createSkyBox(this.scene);
@@ -1607,10 +1633,15 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private process() {
             if (this.cameraAnimating) return;
+            if (this.keysDisabled) return;
+            
+            //switch to first person?
             if (this.mainCamera.radius < 0.75) {
                 this.avatar.visibility = 0;
+                this.mainCamera.checkCollisions = false;
             } else {
                 this.avatar.visibility = 1;
+                this.mainCamera.checkCollisions = this.cameraCollision;
             }
             if (this.isMeshSelected) {
                 if (this.key.focus) {
@@ -1640,10 +1671,10 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (this.focusOnAv) {
                 if (this.editControl == null) {
-                    this.moveAvatarCamera();
+                    this.moveAVandCamera();
                 } else {
                     if (!this.editControl.isEditing()) {
-                        this.moveAvatarCamera();
+                        this.moveAVandCamera();
                     }
                 }
             } else if (this.key.up || this.key.down) {
@@ -1659,7 +1690,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private wasJumping: boolean = false;
 
-        private moveAvatarCamera() {
+        private moveAVandCamera() {
             var anim: AnimData = this.idle;
             var moving: boolean = false;
             var speed: number = 0;
@@ -1791,7 +1822,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
                     this.editControl.enableTranslation();
-                    this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                    //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                    if (this.autoEditMenu){
+                        this.vishvaGUI.showEditMenu();
+                    }
                     if (this.key.ctl) this.multiSelect();
 
                     if (this.snapperOn) {
@@ -1871,7 +1905,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.editControl.detach();
             this.editControl = null;
-            if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
+            //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
+            if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
             if (this.meshPicked != null) {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
             }
@@ -1986,6 +2021,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 camera.target = Vector3.Zero();
             }
             camera.checkCollisions = this.cameraCollision;
+            this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+            
             Tags.AddTagsTo(camera, "Vishva.camera");
             return camera;
         }
@@ -1997,7 +2034,8 @@ namespace org.ssatguru.babylonjs.vishva {
         private onAvatarLoaded(meshes: AbstractMesh[], particleSystems: ParticleSystem[], skeletons: Skeleton[]) {
             this.avatar = <Mesh>meshes[0];
             (this.shadowGenerator.getShadowMap().renderList).push(this.avatar);
-            this.avatar.receiveShadows = true;
+            //TODO
+            //this.avatar.receiveShadows = true;
             var l: number = meshes.length;
             for (var i: number = 1; i < l; i++) {
                 meshes[i].checkCollisions = false;
@@ -2075,6 +2113,31 @@ namespace org.ssatguru.babylonjs.vishva {
                 mat[index].backFaceCulling = false;
             }
         }
+        
+        public disableKeys(){
+            this.keysDisabled = true;
+        }
+        public enableKeys(){
+            this.keysDisabled = false;
+        }
+        
+        public enableCameraCollision(yesNo:boolean){
+            this.cameraCollision = yesNo;
+            this.mainCamera.checkCollisions = yesNo;
+        }
+        
+        public isCameraCollisionOn() : boolean{
+            return this.cameraCollision;
+        }
+        
+        public enableAutoEditMenu(yesNo: boolean){
+            this.autoEditMenu = yesNo;
+        }
+        
+         public isAutoEditMenuOn() : boolean{
+            return this.autoEditMenu;
+        }
+        
     }
 
     export class Key {

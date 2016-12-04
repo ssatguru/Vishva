@@ -42,12 +42,16 @@
             }
 
             /* #sNaDiag */
-            /* required as jquery dialog size does not adjust to content after it has been dragged */
-
+            /* required as jquery dialog size does not re-adjust to content after it has been dragged */
+            /* unfortunately messes up the dialog box for add items */
+            /*
             .ui-dialog {
                           height:auto !important;
                           width: auto !important;
+                          
              }
+            */
+          
 
             /* reduce the overlay for modal dialogs */
             .ui-widget-overlay {

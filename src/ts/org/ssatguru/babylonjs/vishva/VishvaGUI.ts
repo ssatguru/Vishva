@@ -425,45 +425,61 @@ namespace org.ssatguru.babylonjs.vishva {
 
         actTbl: HTMLTableElement;
 
+        /*
+         * A dialog box to show the list of available sensors 
+         * actuators in seperate tabs
+         */
         private create_sNaDiag() {
-            var sNaDetails: JQuery = $("#sNaDetails");
-            sNaDetails.tabs();
             
+            //tabs
+            var sNaDetails: JQuery = $("#sNaDetails");
+            sNaDetails.tabs({
+                /* required as jquery dialog's size does not re-adjust to content after it has been dragged 
+                 Thus if the size of sensors tab is different from the size of actuators tab  the the content of
+                 actuator tab is cutoff if its size is greater
+                 so we close and open for it to recalculate the sizes.
+                 */
+                activate: (e,ui)=>{
+                    this.sNaDialog.dialog("close");
+                    this.sNaDialog.dialog("open");
+                }
+            });
+            
+
+            //dialog box
             this.sNaDialog = $("#sNaDiag");
-            var dos: DialogOptions ={};
+            var dos: DialogOptions = {};
             dos.autoOpen = false;
             dos.modal = false;
             dos.resizable = false;
             dos.width = "auto";
+            dos.height ="auto";
             dos.title = "Sensors and Actuators";
             dos.closeOnEscape = false;
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
             this.sNaDialog.dialog(dos);
-            
+
             this.sensSel = <HTMLSelectElement>document.getElementById("sensSel");
             this.actSel = <HTMLSelectElement>document.getElementById("actSel");
             var sensors: string[] = this.vishva.getSensorList();
             var actuators: string[] = this.vishva.getActuatorList();
-            for (var index166 = 0; index166 < sensors.length; index166++) {
-                var sensor = sensors[index166];
-                {
-                    var opt: HTMLOptionElement = <HTMLOptionElement>document.createElement("option");
-                    opt.value = sensor;
-                    opt.innerHTML = sensor;
-                    this.sensSel.add(opt);
-                }
+
+            for (let sensor of sensors) {
+                var opt: HTMLOptionElement = <HTMLOptionElement>document.createElement("option");
+                opt.value = sensor;
+                opt.innerHTML = sensor;
+                this.sensSel.add(opt);
             }
-            for (var index167 = 0; index167 < actuators.length; index167++) {
-                var actuator = actuators[index167];
-                {
-                    var opt: HTMLOptionElement = <HTMLOptionElement>document.createElement("option");
-                    opt.value = actuator;
-                    opt.innerHTML = actuator;
-                    this.actSel.add(opt);
-                }
+
+            for (let actuator of actuators) {
+                var opt: HTMLOptionElement = <HTMLOptionElement>document.createElement("option");
+                opt.value = actuator;
+                opt.innerHTML = actuator;
+                this.actSel.add(opt);
             }
+
             this.sensTbl = <HTMLTableElement>document.getElementById("sensTbl");
             this.actTbl = <HTMLTableElement>document.getElementById("actTbl");
         }
@@ -479,7 +495,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.showAlertDiag("no mesh selected");
                 return;
             }
-            
+
             this.vishva.switchDisabled = true;
             this.updateSensActTbl(sens, this.sensTbl);
             this.updateSensActTbl(acts, this.actTbl);
@@ -503,7 +519,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.sNaDialog.dialog("open");
                 return true;
             };
-            
+
             this.sNaDialog.dialog("open");
         }
         /*
@@ -582,16 +598,16 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
             sensNameEle.innerHTML = sensor.getName();
-            
+
             var editSensDiag: JQuery = <JQuery>(<any>$("#editSensDiag"));
             editSensDiag.dialog("open");
-            
+
             var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
             var node: Node = parmDiv.firstChild;
             if (node != null) parmDiv.removeChild(node);
             var tbl: HTMLTableElement = this.formCreate(sensor.getProperties(), parmDiv.id);
             parmDiv.appendChild(tbl);
-            
+
             var dbo: DialogButtonOptions = {};
             dbo.text = "save";
             dbo.click = (e) => {
@@ -840,10 +856,8 @@ namespace org.ssatguru.babylonjs.vishva {
         meshTransDiag: JQuery;
 
         private createTransDiag() {
-            this.meshTransDiag = <JQuery>(<any>$("#meshTransDiag"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
-
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            this.meshTransDiag = $("#meshTransDiag");
+            var dos: DialogOptions = {};
             dos.autoOpen = false;
             dos.modal = false;
             dos.resizable = false;
@@ -858,7 +872,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private updateTransform() {
             var loc: Vector3 = this.vishva.getLocation();
-            var rot: Vector3 = this.vishva.getRoation();
+            var rot: Vector3 = this.vishva.getRotation();
             var scl: Vector3 = this.vishva.getScale();
             document.getElementById("loc.x").innerText = this.toString(loc.x);
             document.getElementById("loc.y").innerText = this.toString(loc.y);
@@ -944,7 +958,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //navigation menu sliding setup
             document.getElementById("navMenubar").style.visibility = "visible";
-            let navMenuBar: JQuery = <JQuery>(<any>$("#navMenubar"));
+            let navMenuBar: JQuery = $("#navMenubar");
             let jpo: JQueryPositionOptions = {
                 my: "left center",
                 at: "right center",
@@ -965,37 +979,35 @@ namespace org.ssatguru.babylonjs.vishva {
             //add menu sliding setup
             var slideDown: any = JSON.parse("{\"direction\":\"up\"}");
             var navAdd: HTMLElement = document.getElementById("navAdd");
-            var addMenu: JQuery = <JQuery>(<any>$("#AddMenu"));
+            var addMenu: JQuery = $("#AddMenu");
             addMenu.menu();
             addMenu.hide(null);
-            navAdd.onclick = ((addMenu, navAdd, slideDown) => {
-                return (e) => {
-                    if (this.firstTime) {
-                        var jpo: JQueryPositionOptions = {
-                            my: "left top",
-                            at: "left bottom",
-                            of: navAdd
-                        };
-                        addMenu.menu().position(jpo);
-                        this.firstTime = false;
-                    }
+            navAdd.onclick = (e) => {
+                if (this.firstTime) {
+                    var jpo: JQueryPositionOptions = {
+                        my: "left top",
+                        at: "left bottom",
+                        of: navAdd
+                    };
+                    addMenu.menu().position(jpo);
+                    this.firstTime = false;
+                }
+                if (this.addMenuOn) {
+                    addMenu.menu().hide("slide", slideDown);
+                } else {
+                    addMenu.show("slide", slideDown);
+                }
+                this.addMenuOn = !this.addMenuOn;
+                $(document).one("click", (jqe) => {
                     if (this.addMenuOn) {
                         addMenu.menu().hide("slide", slideDown);
-                    } else {
-                        addMenu.show("slide", slideDown);
+                        this.addMenuOn = false;
                     }
-                    this.addMenuOn = !this.addMenuOn;
-                    $(document).one("click", (jqe) => {
-                        if (this.addMenuOn) {
-                            addMenu.menu().hide("slide", slideDown);
-                            this.addMenuOn = false;
-                        }
-                        return true;
-                    });
-                    e.cancelBubble = true;
                     return true;
-                }
-            })(addMenu, navAdd, slideDown);
+                });
+                e.cancelBubble = true;
+                return true;
+            };
 
             var downWorld: HTMLElement = document.getElementById("downWorld");
             downWorld.onclick = (e) => {
@@ -1224,7 +1236,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             };
             this.snapper.onclick = (e) => {
-                this.vishva.snapper();
+                var err: string = this.vishva.snapper();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                    return false;
+                }
                 if (this.vishva.isSnapperOn()) {
                     (<HTMLElement>e.currentTarget).innerHTML = "Snapper Off";
                 } else {
@@ -1233,7 +1249,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             }
             this.snapTrans.onclick = (e) => {
-                this.vishva.snapTrans();
+                var err: string = this.vishva.snapTrans();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                    return false;
+                }
                 if (this.vishva.isSnapTransOn()) {
                     (<HTMLElement>e.currentTarget).innerHTML = "Snap Translate Off";
                 } else {
@@ -1242,7 +1262,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             }
             this.snapRot.onclick = (e) => {
-                this.vishva.snapRot();
+                var err: string = this.vishva.snapRot();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                    return false;
+                }
                 if (this.vishva.isSnapRotOn()) {
                     (<HTMLElement>e.currentTarget).innerHTML = "Snap Rotate Off";
                 } else {
@@ -1251,13 +1275,17 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             }
             this.localAxis.onclick = (e) => {
+                var err: string = this.vishva.setSpaceLocal(!this.local);
+                if (err != null) {
+                    this.showAlertDiag(err);
+                    return false;
+                }
                 this.local = !this.local;
                 if (this.local) {
                     (<HTMLElement>e.currentTarget).innerHTML = "Switch to Global Axis";
                 } else {
                     (<HTMLElement>e.currentTarget).innerHTML = "Switch to Local Axis";
                 }
-                this.vishva.setSpaceLocal(this.local);
                 return true;
             };
             sNa.onclick = (e) => {
@@ -1281,6 +1309,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshAnimDiag.dialog("open");
                 return true;
             };
+            
             meshTrans.onclick = (e) => {
                 if (!this.vishva.anyMeshSelected()) {
                     this.showAlertDiag("no mesh selected");

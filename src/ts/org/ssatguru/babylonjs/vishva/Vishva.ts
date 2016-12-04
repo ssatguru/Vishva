@@ -47,6 +47,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Texture = BABYLON.Texture;
     import Vector3 = BABYLON.Vector3;
     import WaterMaterial = BABYLON.WaterMaterial;
+    //import VishvaSerialized = org.ssatguru.babylonjs.vishva.VishvaSerialized;
 
     /**
      * @author satguru
@@ -63,12 +64,21 @@ namespace org.ssatguru.babylonjs.vishva {
         editEnabled: boolean;
 
 
-        snapTransOn: boolean = false;
-        snapTransValue: number = 1;
+        private snapTransOn: boolean = false;
+        private snapTransValue: number = 1;
 
-        snapRotOn: boolean = false;
-        snapRotValue: number = Math.PI / 4;
-        snapperOn: boolean = false;
+        private snapRotOn: boolean = false;
+        private snapRotValue: number = Math.PI / 4;
+        /*
+         * snapper mode snaps mesh to global grid points
+         * evertime a mesh is selected it will be snapped to
+         * the closest global grid point
+         * can only work in globalAxisMode
+         * 
+         */
+        private snapperOn: boolean = false;
+
+        private globalAxisMode: boolean = true;
 
         skyboxes: Array<string>;
 
@@ -106,7 +116,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         vishvaGUI: VishvaGUI;
 
-       
+
 
         /**
          * use this to prevent users from switching to another mesh during edit.
@@ -196,11 +206,17 @@ namespace org.ssatguru.babylonjs.vishva {
 
         snas: SNAserialized[];
 
+        vishvaSerialized: VishvaSerialized;
+
         private onTaskSuccess(obj: any) {
             var tfat: TextFileAssetTask = <TextFileAssetTask>obj;
             var foo: Object = <Object>JSON.parse(tfat.text);
 
-            this.snas = <SNAserialized[]>foo["VishvaSNA"];
+            this.vishvaSerialized = foo["VishvaSerialized"];
+            //this.snas = <SNAserialized[]>foo["VishvaSNA"];
+            this.snas = this.vishvaSerialized.snas;
+            this.cameraCollision = this.vishvaSerialized.settings.cameraCollision;
+            this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
 
             var sceneData: string = "data:" + tfat.text;
             SceneLoader.ShowLoadingScreen = false;
@@ -220,49 +236,44 @@ namespace org.ssatguru.babylonjs.vishva {
             var groundFound: boolean = false;
             var skyFound: boolean = false;
             var cameraFound: boolean = false;
-            for (var index140 = 0; index140 < scene.meshes.length; index140++) {
-                var mesh = scene.meshes[index140];
-                {
-                    //sat TODO
-                    mesh.receiveShadows = false;
-                    if (Tags.HasTags(mesh)) {
-                        if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
-                            avFound = true;
-                            this.avatar = <Mesh>mesh;
-                            this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
-                        } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
-                            skyFound = true;
-                            this.skybox = <Mesh>mesh;
-                            this.skybox.isPickable = false;
-                        } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
-                            groundFound = true;
-                            this.ground = <Mesh>mesh;
-                        }
+
+            for (let mesh of scene.meshes) {
+                //sat TODO
+                mesh.receiveShadows = false;
+                if (Tags.HasTags(mesh)) {
+                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                        avFound = true;
+                        this.avatar = <Mesh>mesh;
+                        this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
+                    } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
+                        skyFound = true;
+                        this.skybox = <Mesh>mesh;
+                        this.skybox.isPickable = false;
+                    } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
+                        groundFound = true;
+                        this.ground = <Mesh>mesh;
                     }
                 }
             }
-            for (var index141 = 0; index141 < scene.skeletons.length; index141++) {
-                var skeleton = scene.skeletons[index141];
-                {
-                    if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
-                        skelFound = true;
-                        this.avatarSkeleton = skeleton;
-                        this.checkAnimRange(this.avatarSkeleton);
-                    }
+
+            for (let skeleton of scene.skeletons) {
+                if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
+                    skelFound = true;
+                    this.avatarSkeleton = skeleton;
+                    this.checkAnimRange(this.avatarSkeleton);
                 }
             }
             if (!skelFound) {
                 console.error("ALARM: No Skeleton found");
             }
-            for (var index142 = 0; index142 < scene.lights.length; index142++) {
-                var light = scene.lights[index142];
-                {
-                    if (Tags.MatchesQuery(light, "Vishva.sun")) {
-                        sunFound = true;
-                        this.sun = <HemisphericLight>light;
-                    }
+
+            for (let light of scene.lights) {
+                if (Tags.MatchesQuery(light, "Vishva.sun")) {
+                    sunFound = true;
+                    this.sun = <HemisphericLight>light;
                 }
             }
+
             if (!sunFound) {
                 console.log("no vishva sun found. creating sun");
                 var hl: HemisphericLight = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
@@ -277,8 +288,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.shadowGenerator.useBlurVarianceShadowMap = true;
                 this.shadowGenerator.bias = 1.0E-6;
             } else {
-                for (var index143 = 0; index143 < scene.lights.length; index143++) {
-                    var light = scene.lights[index143];
+                for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
                         this.sunDR = <DirectionalLight>light;
                         this.shadowGenerator = light.getShadowGenerator();
@@ -286,11 +296,9 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.shadowGenerator.useBlurVarianceShadowMap = true;
                     }
                 }
-
             }
 
-            for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
-                var mesh = this.scene.meshes[index144];
+            for (let mesh of scene.meshes) {
                 if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
                     //sat TODO remove comment
                     //mesh.receiveShadows = true;
@@ -298,18 +306,17 @@ namespace org.ssatguru.babylonjs.vishva {
 
                 }
             }
-
-            for (var index145 = 0; index145 < scene.cameras.length; index145++) {
-                var camera = scene.cameras[index145];
-                {
-                    if (Tags.MatchesQuery(camera, "Vishva.camera")) {
-                        cameraFound = true;
-                        this.mainCamera = <ArcRotateCamera>camera;
-                        this.setCameraSettings(this.mainCamera);
-                        this.mainCamera.attachControl(this.canvas, true);
-                    }
+            
+            for (let camera of scene.cameras) {
+                if (Tags.MatchesQuery(camera, "Vishva.camera")) {
+                    cameraFound = true;
+                    this.mainCamera = <ArcRotateCamera>camera;
+                    this.setCameraSettings(this.mainCamera);
+                    this.mainCamera.attachControl(this.canvas, true);
+                    this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
                 }
             }
+
             if (!cameraFound) {
                 console.log("no vishva camera found. creating camera");
                 this.mainCamera = this.createCamera(this.scene, this.canvas);
@@ -560,7 +567,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
                     this.editControl.enableTranslation();
-                    //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                    if (this.globalAxisMode) {
+                        this.editControl.setLocal(false);
+                    }
                     if (this.autoEditMenu) {
                         this.vishvaGUI.showEditMenu();
                     }
@@ -714,9 +723,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.mainCamera.attachControl(this.canvas);
             }
         }
-        
+
         //////////////////////////////////////////////////////////
-        
+
         private initAnims() {
             this.walk = new AnimData("walk", 7, 35, 1);
             this.walkBack = new AnimData("walkBack", 39, 65, 0.5);
@@ -808,7 +817,7 @@ namespace org.ssatguru.babylonjs.vishva {
             let mesh: Mesh = Mesh.CreatePlane("", 1.0, this.scene);
             this.setPrimProperties(mesh);
             mesh.material.backFaceCulling = false;
-            
+
         }
 
         public addBox() {
@@ -1126,12 +1135,17 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public setSpaceLocal(lcl: any) {
+            if (this.snapperOn) {
+                return "Cannot switch axis mode when snapper is on"
+            }
             if (this.editControl != null) this.editControl.setLocal(<boolean>lcl);
+            this.globalAxisMode = !this.globalAxisMode;
             return;
         }
 
         public isSpaceLocal(): boolean {
-            if (this.editControl != null) return this.editControl.isLocal(); else return true;
+            //if (this.editControl != null) return this.editControl.isLocal(); else return true;
+            return !this.globalAxisMode;
         }
 
         public undo() {
@@ -1146,14 +1160,16 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         public snapTrans() {
+            if (this.snapperOn) {
+                return "Cannot change snapping mode when snapper is on"
+            }
+            this.snapTransOn = !this.snapTransOn;
             if (this.editControl != null) {
-                if (this.snapTransOn) {
+                if (!this.snapTransOn) {
                     this.editControl.setTransSnap(false);
-                    this.snapTransOn = false;
                 } else {
                     this.editControl.setTransSnap(true);
                     this.editControl.setTransSnapValue(this.snapTransValue);
-                    this.snapTransOn = true;
                 }
             }
             return;
@@ -1163,14 +1179,16 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public snapRot() {
+            if (this.snapperOn) {
+                return "Cannot change snapping mode when snapper is on"
+            }
+            this.snapRotOn = !this.snapTransOn;
             if (this.editControl != null) {
-                if (this.snapRotOn) {
+                if (!this.snapRotOn) {
                     this.editControl.setRotSnap(false);
-                    this.snapRotOn = false;
                 } else {
                     this.editControl.setRotSnap(true);
                     this.editControl.setRotSnapValue(this.snapRotValue);
-                    this.snapRotOn = true;
                 }
             }
             return;
@@ -1181,11 +1199,16 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public snapper() {
+            if (!this.globalAxisMode) {
+                return "Can only be turned on in Global Axis Mode"
+            }
+            this.snapperOn = !this.snapperOn;
+            //if edit control is already up then lets switch snaps on
             if (this.editControl != null) {
                 if (this.snapperOn) {
-                    this.setSnapperOff();
-                } else {
                     this.setSnapperOn();
+                } else {
+                    this.setSnapperOff();
                 }
             }
             return;
@@ -1194,20 +1217,14 @@ namespace org.ssatguru.babylonjs.vishva {
         private setSnapperOn() {
             this.editControl.setRotSnap(true);
             this.editControl.setTransSnap(true);
-            this.editControl.setRotSnapValue(Math.PI / 4);
-            this.editControl.setTransSnapValue(1);
-            this.snapTransOn = true;
-            this.snapRotOn = true;
-            this.snapperOn = true;
+            this.editControl.setRotSnapValue(this.snapRotValue);
+            this.editControl.setTransSnapValue(this.snapTransValue);
             this.snapToGlobal();
         }
 
         private setSnapperOff() {
             this.editControl.setRotSnap(false);
             this.editControl.setTransSnap(false);
-            this.snapTransOn = false;
-            this.snapRotOn = false;
-            this.snapperOn = false;
         }
 
         public isSnapperOn(): boolean {
@@ -1215,12 +1232,21 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private snapToGlobal() {
+
             if (this.isMeshSelected) {
-                var x: number = Math.round(this.meshPicked.position.x);
-                var y: number = Math.round(this.meshPicked.position.y);
-                var z: number = Math.round(this.meshPicked.position.z);
-                this.meshPicked.position = new Vector3(x, y, z);
+                let tx: number = Math.round(this.meshPicked.position.x / this.snapTransValue) * this.snapTransValue;
+                let ty: number = Math.round(this.meshPicked.position.y / this.snapTransValue) * this.snapTransValue;
+                let tz: number = Math.round(this.meshPicked.position.z / this.snapTransValue) * this.snapTransValue;
+                this.meshPicked.position = new Vector3(tx, ty, tz);
+
+                var eulerRotation: Vector3 = this.meshPicked.rotationQuaternion.toEulerAngles();
+                let rx: number = Math.round(eulerRotation.x / this.snapRotValue) * this.snapRotValue;
+                let ry: number = Math.round(eulerRotation.y / this.snapRotValue) * this.snapRotValue;
+                let rz: number = Math.round(eulerRotation.z / this.snapRotValue) * this.snapRotValue;
+                this.meshPicked.rotationQuaternion = Quaternion.RotationYawPitchRoll(ry, rx, rz);
+
             }
+
         }
 
         public getSoundFiles(): string[] {
@@ -1235,7 +1261,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.meshPicked.position;
         }
 
-        public getRoation(): Vector3 {
+        public getRotation(): Vector3 {
             var euler: Vector3 = this.meshPicked.rotationQuaternion.toEulerAngles();
             var r: number = 180 / Math.PI;
             var degrees: Vector3 = euler.multiplyByFloats(r, r, r);
@@ -1514,16 +1540,22 @@ namespace org.ssatguru.babylonjs.vishva {
             this.resetSkels(this.scene);
             this.cleanupMats();
             this.renameWorldTextures();
+            
+            let vishvaSerialzed = new VishvaSerialized();
+            vishvaSerialzed.settings.cameraCollision = this.cameraCollision;
+            vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
+            vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
             //serialize sna first
             //we might add tags to meshes in scene during sna serialize.
             //if we serialize scene before we would miss those
-            var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
+            //var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
+            vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.scene);
 
             var sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
             this.changeSoundUrl(sceneObj);
 
-
-            sceneObj["VishvaSNA"] = snaObj;
+            //sceneObj["VishvaSNA"] = snaObj;
+            sceneObj["VishvaSerialized"] = vishvaSerialzed;
 
             var sceneString: string = JSON.stringify(sceneObj);
             var file: File = new File([sceneString], "WorldFile.babylon");

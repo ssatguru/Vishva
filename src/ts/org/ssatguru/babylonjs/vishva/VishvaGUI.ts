@@ -47,8 +47,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.createEditMenu();
             this.createEditDiag();
 
-            //this.createEnvDiag();
-
             this.createDownloadDiag();
             this.createUploadDiag();
 
@@ -62,9 +60,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private centerBottom: JQueryPositionOptions;
-
         private leftCenter: JQueryPositionOptions;
-
         private rightCenter: JQueryPositionOptions;
 
         private createJPOs() {
@@ -409,14 +405,13 @@ namespace org.ssatguru.babylonjs.vishva {
         helpDiag: JQuery;
 
         private createHelpDiag() {
-            var obj: any = $("#helpDiv");
-            this.helpDiag = <JQuery>obj;
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
+            this.helpDiag = $("#helpDiv");
+            var dos: DialogOptions = {
                 autoOpen: false,
                 resizable: false,
                 width: 500,
                 closeOnEscape: false
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            };
             this.helpDiag.dialog(dos);
         }
 
@@ -431,12 +426,11 @@ namespace org.ssatguru.babylonjs.vishva {
         actTbl: HTMLTableElement;
 
         private create_sNaDiag() {
-            var sNaDetails: JQuery = <JQuery>(<any>$("#sNaDetails"));
+            var sNaDetails: JQuery = $("#sNaDetails");
             sNaDetails.tabs();
-            this.sNaDialog = <JQuery>(<any>$("#sNaDiag"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
-
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            
+            this.sNaDialog = $("#sNaDiag");
+            var dos: DialogOptions ={};
             dos.autoOpen = false;
             dos.modal = false;
             dos.resizable = false;
@@ -447,6 +441,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.switchDisabled = false;
             };
             this.sNaDialog.dialog(dos);
+            
             this.sensSel = <HTMLSelectElement>document.getElementById("sensSel");
             this.actSel = <HTMLSelectElement>document.getElementById("actSel");
             var sensors: string[] = this.vishva.getSensorList();
@@ -484,6 +479,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.showAlertDiag("no mesh selected");
                 return;
             }
+            
             this.vishva.switchDisabled = true;
             this.updateSensActTbl(sens, this.sensTbl);
             this.updateSensActTbl(acts, this.actTbl);
@@ -507,9 +503,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.sNaDialog.dialog("open");
                 return true;
             };
+            
             this.sNaDialog.dialog("open");
         }
-
+        /*
+         * fill up the sensor and actuator tables
+         * with a list of sensors and actuators
+         */
         private updateSensActTbl(sensAct: Array<SensorActuator>, tbl: HTMLTableElement) {
             var l: number = tbl.rows.length;
             for (var i: number = l - 1; i > 0; i--) {
@@ -561,10 +561,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private createEditSensDiag() {
-            var editSensDiag: JQuery = <JQuery>(<any>$("#editSensDiag"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
-
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            var editSensDiag: JQuery = $("#editSensDiag");
+            var dos: DialogOptions = {};
             dos.autoOpen = false;
             dos.modal = true;
             dos.resizable = false;
@@ -584,13 +582,16 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
             sensNameEle.innerHTML = sensor.getName();
+            
             var editSensDiag: JQuery = <JQuery>(<any>$("#editSensDiag"));
             editSensDiag.dialog("open");
+            
             var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
             var node: Node = parmDiv.firstChild;
             if (node != null) parmDiv.removeChild(node);
             var tbl: HTMLTableElement = this.formCreate(sensor.getProperties(), parmDiv.id);
             parmDiv.appendChild(tbl);
+            
             var dbo: DialogButtonOptions = {};
             dbo.text = "save";
             dbo.click = (e) => {

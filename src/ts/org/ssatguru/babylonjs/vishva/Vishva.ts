@@ -85,10 +85,10 @@ namespace org.ssatguru.babylonjs.vishva {
         primTexture: string = "vishva/internal/textures/Birch.jpg";
 
         waterTexture: string = "vishva/internal/textures/waterbump.png";
-        
-        SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/" ;
-        
-        RELATIVE_ASSET_LOCATION : string = "../../../../";
+
+        SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
+
+        RELATIVE_ASSET_LOCATION: string = "../../../../";
 
         sun: HemisphericLight;
 
@@ -106,10 +106,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         vishvaGUI: VishvaGUI;
 
-        //editAlreadyOpen: boolean = false;
-        
-        //automatcally open edit menu whenever a mesh is selected
-        private autoEditMenu : boolean = false;
+       
 
         /**
          * use this to prevent users from switching to another mesh during edit.
@@ -141,7 +138,7 @@ namespace org.ssatguru.babylonjs.vishva {
         prevAnim: AnimData = null;
 
         key: Key;
-        
+
         private keysDisabled: boolean = false;
 
         loadingMsg: HTMLElement;
@@ -151,6 +148,8 @@ namespace org.ssatguru.babylonjs.vishva {
         showBoundingBox: boolean = false;
 
         cameraCollision: boolean = true;
+        //automatcally open edit menu whenever a mesh is selected
+        private autoEditMenu: boolean = false;
 
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
@@ -163,7 +162,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.loadingMsg = document.getElementById("loadingMsg");
             this.loadingMsg.style.visibility = "visible";
             this.loadingStatus = document.getElementById("loadingStatus");
-            
+
             this.editEnabled = editEnabled;
             this.assets = assets;
             this.key = new Key();
@@ -171,9 +170,11 @@ namespace org.ssatguru.babylonjs.vishva {
             this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
             this.engine = new Engine(this.canvas, true);
             this.scene = new Scene(this.engine);
+
             window.addEventListener("resize", (event) => { return this.onWindowResize(event) });
             window.addEventListener("keydown", (e) => { return this.onKeyDown(e) }, false);
             window.addEventListener("keyup", (e) => { return this.onKeyUp(e) }, false);
+
             this.scenePath = scenePath;
             if (sceneFile == null) {
                 this.onSceneLoaded(this.scene);
@@ -198,7 +199,9 @@ namespace org.ssatguru.babylonjs.vishva {
         private onTaskSuccess(obj: any) {
             var tfat: TextFileAssetTask = <TextFileAssetTask>obj;
             var foo: Object = <Object>JSON.parse(tfat.text);
+
             this.snas = <SNAserialized[]>foo["VishvaSNA"];
+
             var sceneData: string = "data:" + tfat.text;
             SceneLoader.ShowLoadingScreen = false;
             this.loadingStatus.innerHTML = "loading scene";
@@ -209,6 +212,511 @@ namespace org.ssatguru.babylonjs.vishva {
             alert("scene load failed");
         }
 
+        private onSceneLoaded(scene: Scene) {
+            this.loadingStatus.innerHTML = "checking assets";
+            var avFound: boolean = false;
+            var skelFound: boolean = false;
+            var sunFound: boolean = false;
+            var groundFound: boolean = false;
+            var skyFound: boolean = false;
+            var cameraFound: boolean = false;
+            for (var index140 = 0; index140 < scene.meshes.length; index140++) {
+                var mesh = scene.meshes[index140];
+                {
+                    //sat TODO
+                    mesh.receiveShadows = false;
+                    if (Tags.HasTags(mesh)) {
+                        if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                            avFound = true;
+                            this.avatar = <Mesh>mesh;
+                            this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
+                        } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
+                            skyFound = true;
+                            this.skybox = <Mesh>mesh;
+                            this.skybox.isPickable = false;
+                        } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
+                            groundFound = true;
+                            this.ground = <Mesh>mesh;
+                        }
+                    }
+                }
+            }
+            for (var index141 = 0; index141 < scene.skeletons.length; index141++) {
+                var skeleton = scene.skeletons[index141];
+                {
+                    if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
+                        skelFound = true;
+                        this.avatarSkeleton = skeleton;
+                        this.checkAnimRange(this.avatarSkeleton);
+                    }
+                }
+            }
+            if (!skelFound) {
+                console.error("ALARM: No Skeleton found");
+            }
+            for (var index142 = 0; index142 < scene.lights.length; index142++) {
+                var light = scene.lights[index142];
+                {
+                    if (Tags.MatchesQuery(light, "Vishva.sun")) {
+                        sunFound = true;
+                        this.sun = <HemisphericLight>light;
+                    }
+                }
+            }
+            if (!sunFound) {
+                console.log("no vishva sun found. creating sun");
+                var hl: HemisphericLight = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                hl.groundColor = new Color3(0.5, 0.5, 0.5);
+                hl.intensity = 0.4;
+                this.sun = hl;
+                Tags.AddTagsTo(hl, "Vishva.sun");
+                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
+                this.sunDR.intensity = 0.5;
+                var sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                this.shadowGenerator = new ShadowGenerator(1024, sl);
+                this.shadowGenerator.useBlurVarianceShadowMap = true;
+                this.shadowGenerator.bias = 1.0E-6;
+            } else {
+                for (var index143 = 0; index143 < scene.lights.length; index143++) {
+                    var light = scene.lights[index143];
+                    if (light.id === "Vishva.dl01") {
+                        this.sunDR = <DirectionalLight>light;
+                        this.shadowGenerator = light.getShadowGenerator();
+                        this.shadowGenerator.bias = 1.0E-6;
+                        this.shadowGenerator.useBlurVarianceShadowMap = true;
+                    }
+                }
+
+            }
+
+            for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
+                var mesh = this.scene.meshes[index144];
+                if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                    //sat TODO remove comment
+                    //mesh.receiveShadows = true;
+                    (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+
+                }
+            }
+
+            for (var index145 = 0; index145 < scene.cameras.length; index145++) {
+                var camera = scene.cameras[index145];
+                {
+                    if (Tags.MatchesQuery(camera, "Vishva.camera")) {
+                        cameraFound = true;
+                        this.mainCamera = <ArcRotateCamera>camera;
+                        this.setCameraSettings(this.mainCamera);
+                        this.mainCamera.attachControl(this.canvas, true);
+                    }
+                }
+            }
+            if (!cameraFound) {
+                console.log("no vishva camera found. creating camera");
+                this.mainCamera = this.createCamera(this.scene, this.canvas);
+                this.scene.activeCamera = this.mainCamera;
+            }
+
+            //TODO
+            this.mainCamera.checkCollisions = true;
+            this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+
+            if (!groundFound) {
+                console.log("no vishva ground found. creating ground");
+                this.ground = this.createGround(this.scene);
+            } else {
+                //in case this wasn't set in serialized scene
+                this.ground.receiveShadows = true;
+            }
+
+            if (!skyFound) {
+                console.log("no vishva sky found. creating sky");
+                this.skybox = this.createSkyBox(this.scene);
+            }
+            if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
+                this.scene.fogMode = Scene.FOGMODE_EXP;
+                this.scene.fogDensity = 0;
+            }
+            if (this.editEnabled) {
+                this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(evt, pickResult) };
+            }
+            if (!avFound) {
+                console.log("no vishva av found. creating av");
+                this.loadAvatar();
+            }
+            SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
+            this.snas = null;
+            this.render();
+        }
+
+        private render() {
+            this.scene.registerBeforeRender(() => { return this.process() });
+            this.scene.executeWhenReady(() => { return this.startRenderLoop() });
+        }
+
+        private startRenderLoop() {
+            this.backfaceCulling(this.scene.materials);
+            if (this.editEnabled) {
+                this.vishvaGUI = new VishvaGUI(this);
+            } else {
+                this.vishvaGUI = null;
+            }
+            this.engine.hideLoadingUI();
+            this.loadingMsg.style.visibility = "hidden";
+            this.engine.runRenderLoop(() => this.scene.render());
+        }
+
+        focusOnAv: boolean = true;
+
+        cameraAnimating: boolean = false;
+
+        private process() {
+            if (this.cameraAnimating) return;
+            if (this.keysDisabled) return;
+
+            //switch to first person?
+            if (this.mainCamera.radius < 0.75) {
+                this.avatar.visibility = 0;
+                this.mainCamera.checkCollisions = false;
+            } else {
+                this.avatar.visibility = 1;
+                this.mainCamera.checkCollisions = this.cameraCollision;
+            }
+            if (this.isMeshSelected) {
+                if (this.key.focus) {
+                    this.key.focus = false;
+                    if (this.focusOnAv) {
+                        this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                        this.focusOnAv = false;
+                    }
+                    this.focusOnMesh(this.meshPicked, 25);
+                }
+                if (this.key.esc) {
+                    this.key.esc = false;
+                    this.removeEditControl();
+                }
+                if (this.key.trans) {
+                    this.key.trans = false;
+                    this.editControl.enableTranslation();
+                }
+                if (this.key.rot) {
+                    this.key.rot = false;
+                    this.editControl.enableRotation();
+                }
+                if (this.key.scale) {
+                    this.key.scale = false;
+                    this.editControl.enableScaling();
+                }
+            }
+            if (this.focusOnAv) {
+                if (this.editControl == null) {
+                    this.moveAVandCamera();
+                } else {
+                    if (!this.editControl.isEditing()) {
+                        this.moveAVandCamera();
+                    }
+                }
+            } else if (this.key.up || this.key.down) {
+                if (!this.editControl.isEditing()) {
+                    this.switchFocusToAV();
+                }
+            }
+        }
+
+        private jumpCycleMax: number = 25;
+
+        private jumpCycle: number = this.jumpCycleMax;
+
+        private wasJumping: boolean = false;
+
+        private moveAVandCamera() {
+            var anim: AnimData = this.idle;
+            var moving: boolean = false;
+            var speed: number = 0;
+            var upSpeed: number = 0.05;
+            var dir: number = 1;
+            var forward: Vector3;
+            var backwards: Vector3;
+            var stepLeft: Vector3;
+            var stepRight: Vector3;
+            var up: Vector3;
+            if (this.key.up) {
+                if (this.key.shift) {
+                    speed = this.avatarSpeed * 2;
+                    anim = this.run;
+                } else {
+                    speed = this.avatarSpeed;
+                    anim = this.walk;
+                }
+                if (this.key.jump) {
+                    this.wasJumping = true;
+                }
+                if (this.wasJumping) {
+                    upSpeed *= 2;
+                    if (this.jumpCycle < this.jumpCycleMax / 2) {
+                        dir = 1;
+                        if (this.jumpCycle < 0) {
+                            this.jumpCycle = this.jumpCycleMax;
+                            upSpeed /= 2;
+                            this.key.jump = false;
+                            this.wasJumping = false;
+                        }
+                    } else {
+                        anim = this.jump;
+                        dir = -1;
+                    }
+                    this.jumpCycle--;
+                }
+                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                this.avatar.moveWithCollisions(forward);
+                moving = true;
+            } else if (this.key.down) {
+                backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                this.avatar.moveWithCollisions(backwards);
+                moving = true;
+                anim = this.walkBack;
+                if (this.key.jump) this.key.jump = false;
+            } else if (this.key.stepLeft) {
+                anim = this.strafeLeft;
+                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                this.avatar.moveWithCollisions(stepLeft);
+                moving = true;
+            } else if (this.key.stepRight) {
+                anim = this.strafeRight;
+                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                this.avatar.moveWithCollisions(stepRight);
+                moving = true;
+            }
+            if (!moving) {
+                if (this.key.jump) {
+                    this.wasJumping = true;
+                }
+                if (this.wasJumping) {
+                    upSpeed *= 2;
+                    if (this.jumpCycle < this.jumpCycleMax / 2) {
+                        dir = 1;
+                        if (this.jumpCycle < 0) {
+                            this.jumpCycle = this.jumpCycleMax;
+                            upSpeed /= 2;
+                            this.key.jump = false;
+                            this.wasJumping = false;
+                        }
+                    } else {
+                        anim = this.jump;
+                        dir = -1;
+                    }
+                    this.jumpCycle--;
+                } else dir = dir / 2;
+                this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
+            }
+            if (!this.key.stepLeft && !this.key.stepRight) {
+                if (this.key.left) {
+                    this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
+                    if (!moving) {
+                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                        anim = this.turnLeft;
+                    }
+                } else if (this.key.right) {
+                    this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
+                    if (!moving) {
+                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                        anim = this.turnRight;
+                    }
+                }
+            }
+            if (moving) {
+                this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+            }
+            if (this.prevAnim !== anim) {
+                if (anim.exist) {
+                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                }
+                this.prevAnim = anim;
+            }
+            this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+        }
+
+        private meshPicked: AbstractMesh;
+
+        private meshesPicked: Array<AbstractMesh>;
+
+        private isMeshSelected: boolean = false;
+
+        private cameraTargetPos: Vector3 = new Vector3(0, 0, 0);
+
+        private saveAVcameraPos: Vector3 = new Vector3(0, 0, 0);
+
+        private editControl: EditControl;
+
+        private pickObject(evt: PointerEvent, pickResult: PickingInfo) {
+            // prevent curosr from changing to a edit caret in Chrome
+            evt.preventDefault();
+            if (evt.button !== 2) return;
+            if (pickResult.hit) {
+                if (!this.isMeshSelected) {
+                    // if none selected then select the one clicked
+                    this.isMeshSelected = true;
+                    this.meshPicked = pickResult.pickedMesh;
+                    SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
+
+                    this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
+                    this.editControl.enableTranslation();
+                    //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                    if (this.autoEditMenu) {
+                        this.vishvaGUI.showEditMenu();
+                    }
+                    if (this.key.ctl) this.multiSelect();
+
+                    if (this.snapperOn) {
+                        this.setSnapperOn();
+                    } else {
+                        if (this.snapTransOn) {
+                            this.editControl.setTransSnap(true);
+                            this.editControl.setTransSnapValue(this.snapTransValue);
+                        };
+                        if (this.snapRotOn) {
+                            this.editControl.setRotSnap(true);
+                            this.editControl.setRotSnapValue(this.snapRotValue);
+                        };
+                    }
+
+                } else {
+                    if (pickResult.pickedMesh === this.meshPicked) {
+                        if (this.key.ctl) {
+                            this.multiSelect();
+                        } else {
+                            // if already selected then focus on it
+                            if (this.focusOnAv) {
+                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                                this.focusOnAv = false;
+                            }
+                            this.focusOnMesh(this.meshPicked, 50);
+                        }
+                    } else {
+                        this.swicthEditControl(pickResult.pickedMesh);
+                        if (this.snapperOn) this.snapToGlobal()
+                    }
+                }
+            }
+        }
+
+        /**
+         * switch the edit control to the new mesh
+         * 
+         * @param mesh
+         */
+        private swicthEditControl(mesh: AbstractMesh) {
+            if (this.switchDisabled) return;
+            SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+            this.meshPicked = mesh;
+            this.editControl.switchTo(<Mesh>this.meshPicked);
+            SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
+            if (this.key.ctl) this.multiSelect();
+        }
+
+        private multiSelect() {
+            if (this.meshesPicked == null) {
+                this.meshesPicked = new Array<AbstractMesh>();
+            }
+            var i: number = this.meshesPicked.indexOf(this.meshPicked);
+            if (i >= 0) {
+                this.meshesPicked.splice(i, 1);
+                this.meshPicked.showBoundingBox = false;
+            } else {
+                this.meshesPicked.push(this.meshPicked);
+                this.meshPicked.showBoundingBox = true;
+            }
+        }
+
+        private removeEditControl() {
+            if (this.meshesPicked != null) {
+                for (var index148 = 0; index148 < this.meshesPicked.length; index148++) {
+                    var mesh = this.meshesPicked[index148];
+                    {
+                        mesh.showBoundingBox = false;
+                    }
+                }
+                this.meshesPicked = null;
+            }
+            this.isMeshSelected = false;
+            if (!this.focusOnAv) {
+                this.switchFocusToAV();
+            }
+            this.editControl.detach();
+            this.editControl = null;
+            //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
+            if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
+            if (this.meshPicked != null) {
+                SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+            }
+        }
+
+        private switchFocusToAV() {
+            this.mainCamera.detachControl(this.canvas);
+
+            this.frames = 25;
+            this.f = this.frames;
+
+            this.delta = this.saveAVcameraPos.subtract(this.mainCamera.position).scale(1 / this.frames);
+
+            var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+            this.delta2 = avTarget.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+
+            this.cameraAnimating = true;
+            this.scene.registerBeforeRender(this.animFunc);
+        }
+
+        private focusOnMesh(mesh: AbstractMesh, frames: number) {
+            this.mainCamera.detachControl(this.canvas);
+            this.frames = frames;
+            this.f = frames;
+            this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+            this.cameraAnimating = true;
+            this.scene.registerBeforeRender(this.animFunc2);
+        }
+
+        animFunc: () => void = () => { return this.animateCamera() };
+
+        animFunc2: () => void = () => { return this.justReFocus() };
+
+        frames: number;
+
+        f: number;
+
+        delta: Vector3;
+
+        delta2: Vector3;
+
+        private animateCamera() {
+            var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+            var targetDiff = avTarget.subtract((<Vector3>this.mainCamera.target)).length();
+            if (targetDiff > 0.01)
+                this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
+
+            var posDiff = this.saveAVcameraPos.subtract(this.mainCamera.position).length();
+            if (posDiff > 0.01)
+                this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
+
+            this.f--;
+            if (this.f < 0) {
+                this.focusOnAv = true;
+                this.cameraAnimating = false;
+                this.scene.unregisterBeforeRender(this.animFunc);
+                this.mainCamera.attachControl(this.canvas);
+            }
+        }
+
+        private justReFocus() {
+            this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
+            this.f--;
+            if (this.f < 0) {
+                this.cameraAnimating = false;
+                this.scene.unregisterBeforeRender(this.animFunc2);
+                this.mainCamera.attachControl(this.canvas);
+            }
+        }
+        
+        //////////////////////////////////////////////////////////
+        
         private initAnims() {
             this.walk = new AnimData("walk", 7, 35, 1);
             this.walkBack = new AnimData("walkBack", 39, 65, 0.5);
@@ -297,37 +805,40 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public addPlane() {
-            var mesh: Mesh = Mesh.CreatePlane("", 1.0, this.scene);
+            let mesh: Mesh = Mesh.CreatePlane("", 1.0, this.scene);
             this.setPrimProperties(mesh);
+            mesh.material.backFaceCulling = false;
+            
         }
 
         public addBox() {
-            var mesh: Mesh = Mesh.CreateBox("", 1, this.scene);
+            let mesh: Mesh = Mesh.CreateBox("", 1, this.scene);
             this.setPrimProperties(mesh);
         }
 
         public addSphere() {
-            var mesh: Mesh = Mesh.CreateSphere("", 10, 1, this.scene);
+            let mesh: Mesh = Mesh.CreateSphere("", 10, 1, this.scene);
             this.setPrimProperties(mesh);
         }
 
         public addDisc() {
-            var mesh: Mesh = Mesh.CreateDisc("", 0.5, 20, this.scene);
+            let mesh: Mesh = Mesh.CreateDisc("", 0.5, 20, this.scene);
             this.setPrimProperties(mesh);
+            mesh.material.backFaceCulling = false;
         }
 
         public addCylinder() {
-            var mesh: Mesh = Mesh.CreateCylinder("", 1, 1, 1, 20, 1, this.scene);
+            let mesh: Mesh = Mesh.CreateCylinder("", 1, 1, 1, 20, 1, this.scene);
             this.setPrimProperties(mesh);
         }
 
         public addCone() {
-            var mesh: Mesh = Mesh.CreateCylinder("", 1, 0, 1, 20, 1, this.scene);
+            let mesh: Mesh = Mesh.CreateCylinder("", 1, 0, 1, 20, 1, this.scene);
             this.setPrimProperties(mesh);
         }
 
         public addTorus() {
-            var mesh: Mesh = Mesh.CreateTorus("", 1, 0.25, 20, this.scene);
+            let mesh: Mesh = Mesh.CreateTorus("", 1, 0.25, 20, this.scene);
             this.setPrimProperties(mesh);
         }
 
@@ -361,39 +872,39 @@ namespace org.ssatguru.babylonjs.vishva {
             (this.shadowGenerator.getShadowMap().renderList).push(inst);
             return null;
         }
-        
-        public toggleCollision(){
+
+        public toggleCollision() {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
             this.meshPicked.checkCollisions = !this.meshPicked.checkCollisions;
-            
-            
+
+
         }
-        
-        public toggleEnable(){
+
+        public toggleEnable() {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
             this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
             console.log("enable : " + this.meshPicked.isEnabled())
         }
-        
-        public showAllDisabled(){
-            for (let mesh of this.scene.meshes){
-                if (!mesh.isEnabled()){
+
+        public showAllDisabled() {
+            for (let mesh of this.scene.meshes) {
+                if (!mesh.isEnabled()) {
                     mesh.showBoundingBox = true;
                 }
             }
         }
-        public hideAllDisabled(){
-            for (let mesh of this.scene.meshes){
-                if (!mesh.isEnabled()){
+        public hideAllDisabled() {
+            for (let mesh of this.scene.meshes) {
+                if (!mesh.isEnabled()) {
                     mesh.showBoundingBox = false;
                 }
             }
         }
-        
+
         public toggleMeshVisibility() {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
@@ -426,6 +937,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if (Tags.MatchesQuery(mesh, "invisible")) {
                         mesh.visibility = 0.5;
                         mesh.showBoundingBox = true;
+                        mesh.isPickable = true;
                     }
                 }
             }
@@ -440,6 +952,7 @@ namespace org.ssatguru.babylonjs.vishva {
                         if (Tags.MatchesQuery(mesh, "invisible")) {
                             mesh.visibility = 0;
                             mesh.showBoundingBox = false;
+                            mesh.isPickable = false;
                         }
                     }
                 }
@@ -601,14 +1114,14 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
-            
+
             var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
-            light0.range=5;
+            light0.range = 5;
             //var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
             //var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), this.scene);
-        light0.diffuse = new BABYLON.Color3(1, 1, 1);
-        light0.specular = new BABYLON.Color3(1, 1, 1);
-        //light0.groundColor = new BABYLON.Color3(0, 0, 0);
+            light0.diffuse = new BABYLON.Color3(1, 1, 1);
+            light0.specular = new BABYLON.Color3(1, 1, 1);
+            //light0.groundColor = new BABYLON.Color3(0, 0, 0);
             light0.parent = this.meshPicked;
         }
 
@@ -989,12 +1502,12 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public saveWorld(): string {
-            
+
             if (this.editControl != null) {
                 alert("cannot save during edit");
                 return null;
             }
-            
+
             this.removeInstancesFromShadow();
             this.renameMeshIds();
             this.cleanupSkels();
@@ -1008,10 +1521,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
             this.changeSoundUrl(sceneObj);
-            
-            
+
+
             sceneObj["VishvaSNA"] = snaObj;
-            
+
             var sceneString: string = JSON.stringify(sceneObj);
             var file: File = new File([sceneString], "WorldFile.babylon");
             this.addInstancesToShadow();
@@ -1130,11 +1643,11 @@ namespace org.ssatguru.babylonjs.vishva {
          * we need to add the full path
          * 
          */
-        public changeSoundUrl(sceneObj: Object){
+        public changeSoundUrl(sceneObj: Object) {
             var sounds = sceneObj["sounds"];
-            if (sounds != null){
-                var soundList : [Object] = sounds;
-                for (let sound  of soundList){
+            if (sounds != null) {
+                var soundList: [Object] = sounds;
+                for (let sound of soundList) {
                     sound["url"] = this.RELATIVE_ASSET_LOCATION + this.SOUND_ASSET_LOCATION + sound["url"];
                 }
                 //sceneObj["sounds"] = soundList;
@@ -1333,141 +1846,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
         shadowGenerator: ShadowGenerator;
 
-        private onSceneLoaded(scene: Scene) {
-            this.loadingStatus.innerHTML = "checking assets";
-            var avFound: boolean = false;
-            var skelFound: boolean = false;
-            var sunFound: boolean = false;
-            var groundFound: boolean = false;
-            var skyFound: boolean = false;
-            var cameraFound: boolean = false;
-            for (var index140 = 0; index140 < scene.meshes.length; index140++) {
-                var mesh = scene.meshes[index140];
-                {
-                    //sat TODO
-                    mesh.receiveShadows = false;
-                    if (Tags.HasTags(mesh)) {
-                        if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
-                            avFound = true;
-                            this.avatar = <Mesh>mesh;
-                            this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
-                        } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
-                            skyFound = true;
-                            this.skybox = <Mesh>mesh;
-                            this.skybox.isPickable = false;
-                        } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
-                            groundFound = true;
-                            this.ground = <Mesh>mesh;
-                        }
-                    }
-                }
-            }
-            for (var index141 = 0; index141 < scene.skeletons.length; index141++) {
-                var skeleton = scene.skeletons[index141];
-                {
-                    if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
-                        skelFound = true;
-                        this.avatarSkeleton = skeleton;
-                        this.checkAnimRange(this.avatarSkeleton);
-                    }
-                }
-            }
-            if (!skelFound) {
-                console.error("ALARM: No Skeleton found");
-            }
-            for (var index142 = 0; index142 < scene.lights.length; index142++) {
-                var light = scene.lights[index142];
-                {
-                    if (Tags.MatchesQuery(light, "Vishva.sun")) {
-                        sunFound = true;
-                        this.sun = <HemisphericLight>light;
-                    }
-                }
-            }
-            if (!sunFound) {
-                console.log("no vishva sun found. creating sun");
-                var hl: HemisphericLight = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
-                hl.groundColor = new Color3(0.5, 0.5, 0.5);
-                hl.intensity = 0.4;
-                this.sun = hl;
-                Tags.AddTagsTo(hl, "Vishva.sun");
-                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-                this.sunDR.intensity = 0.5;
-                var sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                this.shadowGenerator = new ShadowGenerator(1024, sl);
-                this.shadowGenerator.useBlurVarianceShadowMap = true;
-                this.shadowGenerator.bias = 1.0E-6;
-            } else {
-                for (var index143 = 0; index143 < scene.lights.length; index143++) {
-                    var light = scene.lights[index143];
-                        if (light.id === "Vishva.dl01") {
-                            this.sunDR = <DirectionalLight>light;
-                            this.shadowGenerator = light.getShadowGenerator();
-                            this.shadowGenerator.bias = 1.0E-6;
-                            this.shadowGenerator.useBlurVarianceShadowMap = true;
-                        }
-                }
-                
-            }
-            
-            for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
-                var mesh = this.scene.meshes[index144];
-                    if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                        //sat TODO remove comment
-                       //mesh.receiveShadows = true;
-                       (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-     
-                    }
-            }
-
-            for (var index145 = 0; index145 < scene.cameras.length; index145++) {
-                var camera = scene.cameras[index145];
-                {
-                    if (Tags.MatchesQuery(camera, "Vishva.camera")) {
-                        cameraFound = true;
-                        this.mainCamera = <ArcRotateCamera>camera;
-                        this.setCameraSettings(this.mainCamera);
-                        this.mainCamera.attachControl(this.canvas, true);
-                    }
-                }
-            }
-            if (!cameraFound) {
-                console.log("no vishva camera found. creating camera");
-                this.mainCamera = this.createCamera(this.scene, this.canvas);
-                this.scene.activeCamera = this.mainCamera;
-            }
-            
-            //TODO
-            this.mainCamera.checkCollisions = true;
-            this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
-            
-            if (!groundFound) {
-                console.log("no vishva ground found. creating ground");
-                this.ground = this.createGround(this.scene);
-            }else{
-                //in case this wasn't set in serialized scene
-                this.ground.receiveShadows = true;
-            }
-            
-            if (!skyFound) {
-                console.log("no vishva sky found. creating sky");
-                this.skybox = this.createSkyBox(this.scene);
-            }
-            if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
-                this.scene.fogMode = Scene.FOGMODE_EXP;
-                this.scene.fogDensity = 0;
-            }
-            if (this.editEnabled) {
-                this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(evt, pickResult) };
-            }
-            if (!avFound) {
-                console.log("no vishva av found. creating av");
-                this.loadAvatar();
-            }
-            SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
-            this.snas = null;
-            this.render();
-        }
 
         public createWater() {
             var waterMesh: Mesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
@@ -1477,12 +1855,12 @@ namespace org.ssatguru.babylonjs.vishva {
             //repoint the path, so that we can reload this if it is saved in scene 
             water.bumpTexture.name = this.RELATIVE_ASSET_LOCATION + water.bumpTexture.name;
             //wavy
-//            water.windForce = -5;
-//            water.waveHeight = 0.5;
-//            water.waterColor = new Color3(0.1, 0.1, 0.6);
-//            water.colorBlendFactor = 0;
-//            water.bumpHeight = 0.1;
-//            water.waveLength = 0.1;
+            //            water.windForce = -5;
+            //            water.waveHeight = 0.5;
+            //            water.waterColor = new Color3(0.1, 0.1, 0.6);
+            //            water.colorBlendFactor = 0;
+            //            water.bumpHeight = 0.1;
+            //            water.waveLength = 0.1;
 
 
             //calm
@@ -1610,372 +1988,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        private render() {
-            this.scene.registerBeforeRender(() => { return this.process() });
-            this.scene.executeWhenReady(() => { return this.startRenderLoop() });
-        }
 
-        private startRenderLoop() {
-            this.backfaceCulling(this.scene.materials);
-            if (this.editEnabled) {
-                this.vishvaGUI = new VishvaGUI(this);
-            } else {
-                this.vishvaGUI = null;
-            }
-            this.engine.hideLoadingUI();
-            this.loadingMsg.style.visibility = "hidden";
-            this.engine.runRenderLoop(() => this.scene.render());
-        }
-
-        focusOnAv: boolean = true;
-
-        cameraAnimating: boolean = false;
-
-        private process() {
-            if (this.cameraAnimating) return;
-            if (this.keysDisabled) return;
-            
-            //switch to first person?
-            if (this.mainCamera.radius < 0.75) {
-                this.avatar.visibility = 0;
-                this.mainCamera.checkCollisions = false;
-            } else {
-                this.avatar.visibility = 1;
-                this.mainCamera.checkCollisions = this.cameraCollision;
-            }
-            if (this.isMeshSelected) {
-                if (this.key.focus) {
-                    this.key.focus = false;
-                    if (this.focusOnAv) {
-                        this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                        this.focusOnAv = false;
-                    }
-                    this.focusOnMesh(this.meshPicked, 25);
-                }
-                if (this.key.esc) {
-                    this.key.esc = false;
-                    this.removeEditControl();
-                }
-                if (this.key.trans) {
-                    this.key.trans = false;
-                    this.editControl.enableTranslation();
-                }
-                if (this.key.rot) {
-                    this.key.rot = false;
-                    this.editControl.enableRotation();
-                }
-                if (this.key.scale) {
-                    this.key.scale = false;
-                    this.editControl.enableScaling();
-                }
-            }
-            if (this.focusOnAv) {
-                if (this.editControl == null) {
-                    this.moveAVandCamera();
-                } else {
-                    if (!this.editControl.isEditing()) {
-                        this.moveAVandCamera();
-                    }
-                }
-            } else if (this.key.up || this.key.down) {
-                if (!this.editControl.isEditing()) {
-                    this.switchFocusToAV();
-                }
-            }
-        }
-
-        private jumpCycleMax: number = 25;
-
-        private jumpCycle: number = this.jumpCycleMax;
-
-        private wasJumping: boolean = false;
-
-        private moveAVandCamera() {
-            var anim: AnimData = this.idle;
-            var moving: boolean = false;
-            var speed: number = 0;
-            var upSpeed: number = 0.05;
-            var dir: number = 1;
-            var forward: Vector3;
-            var backwards: Vector3;
-            var stepLeft: Vector3;
-            var stepRight: Vector3;
-            var up: Vector3;
-            if (this.key.up) {
-                if (this.key.shift) {
-                    speed = this.avatarSpeed * 2;
-                    anim = this.run;
-                } else {
-                    speed = this.avatarSpeed;
-                    anim = this.walk;
-                }
-                if (this.key.jump) {
-                    this.wasJumping = true;
-                }
-                if (this.wasJumping) {
-                    upSpeed *= 2;
-                    if (this.jumpCycle < this.jumpCycleMax / 2) {
-                        dir = 1;
-                        if (this.jumpCycle < 0) {
-                            this.jumpCycle = this.jumpCycleMax;
-                            upSpeed /= 2;
-                            this.key.jump = false;
-                            this.wasJumping = false;
-                        }
-                    } else {
-                        anim = this.jump;
-                        dir = -1;
-                    }
-                    this.jumpCycle--;
-                }
-                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
-                this.avatar.moveWithCollisions(forward);
-                moving = true;
-            } else if (this.key.down) {
-                backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                this.avatar.moveWithCollisions(backwards);
-                moving = true;
-                anim = this.walkBack;
-                if (this.key.jump) this.key.jump = false;
-            } else if (this.key.stepLeft) {
-                anim = this.strafeLeft;
-                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                this.avatar.moveWithCollisions(stepLeft);
-                moving = true;
-            } else if (this.key.stepRight) {
-                anim = this.strafeRight;
-                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                this.avatar.moveWithCollisions(stepRight);
-                moving = true;
-            }
-            if (!moving) {
-                if (this.key.jump) {
-                    this.wasJumping = true;
-                }
-                if (this.wasJumping) {
-                    upSpeed *= 2;
-                    if (this.jumpCycle < this.jumpCycleMax / 2) {
-                        dir = 1;
-                        if (this.jumpCycle < 0) {
-                            this.jumpCycle = this.jumpCycleMax;
-                            upSpeed /= 2;
-                            this.key.jump = false;
-                            this.wasJumping = false;
-                        }
-                    } else {
-                        anim = this.jump;
-                        dir = -1;
-                    }
-                    this.jumpCycle--;
-                } else dir = dir / 2;
-                this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
-            }
-            if (!this.key.stepLeft && !this.key.stepRight) {
-                if (this.key.left) {
-                    this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
-                    if (!moving) {
-                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                        anim = this.turnLeft;
-                    }
-                } else if (this.key.right) {
-                    this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
-                    if (!moving) {
-                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                        anim = this.turnRight;
-                    }
-                }
-            }
-            if (moving) {
-                this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-            }
-            if (this.prevAnim !== anim) {
-                if (anim.exist) {
-                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                }
-                this.prevAnim = anim;
-            }
-            this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-        }
-
-        private meshPicked: AbstractMesh;
-
-        private meshesPicked: Array<AbstractMesh>;
-
-        private isMeshSelected: boolean = false;
-
-        private cameraTargetPos: Vector3 = new Vector3(0, 0, 0);
-
-        private saveAVcameraPos: Vector3 = new Vector3(0, 0, 0);
-
-        private editControl: EditControl;
-
-        private pickObject(evt: PointerEvent, pickResult: PickingInfo) {
-            // prevent curosr from changing to a edit caret in Chrome
-            evt.preventDefault();
-            if (evt.button !== 2) return;
-            if (pickResult.hit) {
-                if (!this.isMeshSelected) {
-                    // if none selected then select the one clicked
-                    this.isMeshSelected = true;
-                    this.meshPicked = pickResult.pickedMesh;
-                    SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-
-                    this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
-                    this.editControl.enableTranslation();
-                    //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
-                    if (this.autoEditMenu){
-                        this.vishvaGUI.showEditMenu();
-                    }
-                    if (this.key.ctl) this.multiSelect();
-
-                    if (this.snapperOn) {
-                        this.setSnapperOn();
-                    } else {
-                        if (this.snapTransOn) {
-                            this.editControl.setTransSnap(true);
-                            this.editControl.setTransSnapValue(this.snapTransValue);
-                        };
-                        if (this.snapRotOn) {
-                            this.editControl.setRotSnap(true);
-                            this.editControl.setRotSnapValue(this.snapRotValue);
-                        };
-                    }
-
-                } else {
-                    if (pickResult.pickedMesh === this.meshPicked) {
-                        if (this.key.ctl) {
-                            this.multiSelect();
-                        } else {
-                            // if already selected then focus on it
-                            if (this.focusOnAv) {
-                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                this.focusOnAv = false;
-                            }
-                            this.focusOnMesh(this.meshPicked, 50);
-                        }
-                    } else {
-                        this.swicthEditControl(pickResult.pickedMesh);
-                        if (this.snapperOn) this.snapToGlobal()
-                    }
-                }
-            }
-        }
-
-        /**
-         * switch the edit control to the new mesh
-         * 
-         * @param mesh
-         */
-        private swicthEditControl(mesh: AbstractMesh) {
-            if (this.switchDisabled) return;
-            SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-            this.meshPicked = mesh;
-            this.editControl.switchTo(<Mesh>this.meshPicked);
-            SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-            if (this.key.ctl) this.multiSelect();
-        }
-
-        private multiSelect() {
-            if (this.meshesPicked == null) {
-                this.meshesPicked = new Array<AbstractMesh>();
-            }
-            var i: number = this.meshesPicked.indexOf(this.meshPicked);
-            if (i >= 0) {
-                this.meshesPicked.splice(i, 1);
-                this.meshPicked.showBoundingBox = false;
-            } else {
-                this.meshesPicked.push(this.meshPicked);
-                this.meshPicked.showBoundingBox = true;
-            }
-        }
-
-        private removeEditControl() {
-            if (this.meshesPicked != null) {
-                for (var index148 = 0; index148 < this.meshesPicked.length; index148++) {
-                    var mesh = this.meshesPicked[index148];
-                    {
-                        mesh.showBoundingBox = false;
-                    }
-                }
-                this.meshesPicked = null;
-            }
-            this.isMeshSelected = false;
-            if (!this.focusOnAv) {
-                this.switchFocusToAV();
-            }
-            this.editControl.detach();
-            this.editControl = null;
-            //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
-            if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
-            if (this.meshPicked != null) {
-                SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-            }
-        }
-
-        private switchFocusToAV() {
-            this.mainCamera.detachControl(this.canvas);
-
-            this.frames = 25;
-            this.f = this.frames;
-
-            this.delta = this.saveAVcameraPos.subtract(this.mainCamera.position).scale(1 / this.frames);
-
-            var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-            this.delta2 = avTarget.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
-
-            this.cameraAnimating = true;
-            this.scene.registerBeforeRender(this.animFunc);
-        }
-
-        private focusOnMesh(mesh: AbstractMesh, frames: number) {
-            this.mainCamera.detachControl(this.canvas);
-            this.frames = frames;
-            this.f = frames;
-            this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
-            this.cameraAnimating = true;
-            this.scene.registerBeforeRender(this.animFunc2);
-        }
-
-        animFunc: () => void = () => { return this.animateCamera() };
-
-        animFunc2: () => void = () => { return this.justReFocus() };
-
-        frames: number;
-
-        f: number;
-
-        delta: Vector3;
-
-        delta2: Vector3;
-
-        private animateCamera() {
-            var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-            var targetDiff = avTarget.subtract((<Vector3>this.mainCamera.target)).length();
-            if (targetDiff > 0.01)
-                this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
-
-            var posDiff = this.saveAVcameraPos.subtract(this.mainCamera.position).length();
-            if (posDiff > 0.01)
-                this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
-
-            this.f--;
-            if (this.f < 0) {
-                this.focusOnAv = true;
-                this.cameraAnimating = false;
-                this.scene.unregisterBeforeRender(this.animFunc);
-                this.mainCamera.attachControl(this.canvas);
-            }
-        }
-
-        private justReFocus() {
-            this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
-            this.f--;
-            if (this.f < 0) {
-                this.cameraAnimating = false;
-                this.scene.unregisterBeforeRender(this.animFunc2);
-                this.mainCamera.attachControl(this.canvas);
-            }
-        }
 
         private createGround(scene: Scene): Mesh {
             var groundMaterial: StandardMaterial = new StandardMaterial("groundMat", scene);
@@ -2021,8 +2034,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 camera.target = Vector3.Zero();
             }
             camera.checkCollisions = this.cameraCollision;
-            this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
-            
+            camera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+
             Tags.AddTagsTo(camera, "Vishva.camera");
             return camera;
         }
@@ -2113,31 +2126,31 @@ namespace org.ssatguru.babylonjs.vishva {
                 mat[index].backFaceCulling = false;
             }
         }
-        
-        public disableKeys(){
+
+        public disableKeys() {
             this.keysDisabled = true;
         }
-        public enableKeys(){
+        public enableKeys() {
             this.keysDisabled = false;
         }
-        
-        public enableCameraCollision(yesNo:boolean){
+
+        public enableCameraCollision(yesNo: boolean) {
             this.cameraCollision = yesNo;
             this.mainCamera.checkCollisions = yesNo;
         }
-        
-        public isCameraCollisionOn() : boolean{
+
+        public isCameraCollisionOn(): boolean {
             return this.cameraCollision;
         }
-        
-        public enableAutoEditMenu(yesNo: boolean){
+
+        public enableAutoEditMenu(yesNo: boolean) {
             this.autoEditMenu = yesNo;
         }
-        
-         public isAutoEditMenuOn() : boolean{
+
+        public isAutoEditMenuOn(): boolean {
             return this.autoEditMenu;
         }
-        
+
     }
 
     export class Key {

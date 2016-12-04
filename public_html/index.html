@@ -17,7 +17,7 @@
         <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet">
 
 
-        <script src="lib/babylon.2.5.js"></script>
+        <script src="lib/babylon.max-2.5.js"></script>
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
         <script src="lib/colorpicker.min.js"></script>
@@ -43,12 +43,12 @@
 
             /* #sNaDiag */
             /* required as jquery dialog size does not adjust to content after it has been dragged */
-            /*
+
             .ui-dialog {
                           height:auto !important;
                           width: auto !important;
              }
-            */
+
             /* reduce the overlay for modal dialogs */
             .ui-widget-overlay {
                 opacity: 0.2;
@@ -113,8 +113,6 @@
                 <button id="helpLink">Help</button>
                 <button id="debugLink">Debug</button>
             </div>
-
-
 
             <ul id="AddMenu" style="position: absolute; width: auto; ">
             </ul>
@@ -321,7 +319,13 @@
 
             </div>
 
-
+            <div id="matDiag">
+                <select id="matSelect">
+                    <option value="wood">Wood</option>
+                    <option value="marble">Marble</option>
+                    <option value="fire">Fire</option>
+                </select>
+            </div>
 
 
             <div id="saveDiv">

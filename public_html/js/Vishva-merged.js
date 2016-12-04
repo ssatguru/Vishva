@@ -1139,9 +1139,6 @@ var org;
                         this.waterTexture = "vishva/internal/textures/waterbump.png";
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
                         this.RELATIVE_ASSET_LOCATION = "../../../../";
-                        //editAlreadyOpen: boolean = false;
-                        //automatcally open edit menu whenever a mesh is selected
-                        this.autoEditMenu = false;
                         /**
                          * use this to prevent users from switching to another mesh during edit.
                          */
@@ -1151,7 +1148,8 @@ var org;
                         this.keysDisabled = false;
                         this.showBoundingBox = false;
                         this.cameraCollision = true;
-                        this.showingAllInvisibles = false;
+                        //automatcally open edit menu whenever a mesh is selected
+                        this.autoEditMenu = false;
                         this.focusOnAv = true;
                         this.cameraAnimating = false;
                         this.jumpCycleMax = 25;
@@ -1162,6 +1160,7 @@ var org;
                         this.saveAVcameraPos = new Vector3(0, 0, 0);
                         this.animFunc = function () { return _this.animateCamera(); };
                         this.animFunc2 = function () { return _this.justReFocus(); };
+                        this.showingAllInvisibles = false;
                         this.editEnabled = false;
                         this.frames = 0;
                         this.f = 0;
@@ -1212,6 +1211,482 @@ var org;
                     Vishva.prototype.onTaskFailure = function (obj) {
                         alert("scene load failed");
                     };
+                    Vishva.prototype.onSceneLoaded = function (scene) {
+                        var _this = this;
+                        this.loadingStatus.innerHTML = "checking assets";
+                        var avFound = false;
+                        var skelFound = false;
+                        var sunFound = false;
+                        var groundFound = false;
+                        var skyFound = false;
+                        var cameraFound = false;
+                        for (var index140 = 0; index140 < scene.meshes.length; index140++) {
+                            var mesh = scene.meshes[index140];
+                            {
+                                //sat TODO
+                                mesh.receiveShadows = false;
+                                if (Tags.HasTags(mesh)) {
+                                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                                        avFound = true;
+                                        this.avatar = mesh;
+                                        this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
+                                    }
+                                    else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
+                                        skyFound = true;
+                                        this.skybox = mesh;
+                                        this.skybox.isPickable = false;
+                                    }
+                                    else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
+                                        groundFound = true;
+                                        this.ground = mesh;
+                                    }
+                                }
+                            }
+                        }
+                        for (var index141 = 0; index141 < scene.skeletons.length; index141++) {
+                            var skeleton = scene.skeletons[index141];
+                            {
+                                if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
+                                    skelFound = true;
+                                    this.avatarSkeleton = skeleton;
+                                    this.checkAnimRange(this.avatarSkeleton);
+                                }
+                            }
+                        }
+                        if (!skelFound) {
+                            console.error("ALARM: No Skeleton found");
+                        }
+                        for (var index142 = 0; index142 < scene.lights.length; index142++) {
+                            var light = scene.lights[index142];
+                            {
+                                if (Tags.MatchesQuery(light, "Vishva.sun")) {
+                                    sunFound = true;
+                                    this.sun = light;
+                                }
+                            }
+                        }
+                        if (!sunFound) {
+                            console.log("no vishva sun found. creating sun");
+                            var hl = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                            hl.groundColor = new Color3(0.5, 0.5, 0.5);
+                            hl.intensity = 0.4;
+                            this.sun = hl;
+                            Tags.AddTagsTo(hl, "Vishva.sun");
+                            this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
+                            this.sunDR.intensity = 0.5;
+                            var sl = this.sunDR;
+                            this.shadowGenerator = new ShadowGenerator(1024, sl);
+                            this.shadowGenerator.useBlurVarianceShadowMap = true;
+                            this.shadowGenerator.bias = 1.0E-6;
+                        }
+                        else {
+                            for (var index143 = 0; index143 < scene.lights.length; index143++) {
+                                var light = scene.lights[index143];
+                                if (light.id === "Vishva.dl01") {
+                                    this.sunDR = light;
+                                    this.shadowGenerator = light.getShadowGenerator();
+                                    this.shadowGenerator.bias = 1.0E-6;
+                                    this.shadowGenerator.useBlurVarianceShadowMap = true;
+                                }
+                            }
+                        }
+                        for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
+                            var mesh = this.scene.meshes[index144];
+                            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                                //sat TODO remove comment
+                                //mesh.receiveShadows = true;
+                                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+                            }
+                        }
+                        for (var index145 = 0; index145 < scene.cameras.length; index145++) {
+                            var camera = scene.cameras[index145];
+                            {
+                                if (Tags.MatchesQuery(camera, "Vishva.camera")) {
+                                    cameraFound = true;
+                                    this.mainCamera = camera;
+                                    this.setCameraSettings(this.mainCamera);
+                                    this.mainCamera.attachControl(this.canvas, true);
+                                }
+                            }
+                        }
+                        if (!cameraFound) {
+                            console.log("no vishva camera found. creating camera");
+                            this.mainCamera = this.createCamera(this.scene, this.canvas);
+                            this.scene.activeCamera = this.mainCamera;
+                        }
+                        //TODO
+                        this.mainCamera.checkCollisions = true;
+                        this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+                        if (!groundFound) {
+                            console.log("no vishva ground found. creating ground");
+                            this.ground = this.createGround(this.scene);
+                        }
+                        else {
+                            //in case this wasn't set in serialized scene
+                            this.ground.receiveShadows = true;
+                        }
+                        if (!skyFound) {
+                            console.log("no vishva sky found. creating sky");
+                            this.skybox = this.createSkyBox(this.scene);
+                        }
+                        if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
+                            this.scene.fogMode = Scene.FOGMODE_EXP;
+                            this.scene.fogDensity = 0;
+                        }
+                        if (this.editEnabled) {
+                            this.scene.onPointerDown = function (evt, pickResult) { return _this.pickObject(evt, pickResult); };
+                        }
+                        if (!avFound) {
+                            console.log("no vishva av found. creating av");
+                            this.loadAvatar();
+                        }
+                        vishva.SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
+                        this.snas = null;
+                        this.render();
+                    };
+                    Vishva.prototype.render = function () {
+                        var _this = this;
+                        this.scene.registerBeforeRender(function () { return _this.process(); });
+                        this.scene.executeWhenReady(function () { return _this.startRenderLoop(); });
+                    };
+                    Vishva.prototype.startRenderLoop = function () {
+                        var _this = this;
+                        this.backfaceCulling(this.scene.materials);
+                        if (this.editEnabled) {
+                            this.vishvaGUI = new vishva.VishvaGUI(this);
+                        }
+                        else {
+                            this.vishvaGUI = null;
+                        }
+                        this.engine.hideLoadingUI();
+                        this.loadingMsg.style.visibility = "hidden";
+                        this.engine.runRenderLoop(function () { return _this.scene.render(); });
+                    };
+                    Vishva.prototype.process = function () {
+                        if (this.cameraAnimating)
+                            return;
+                        if (this.keysDisabled)
+                            return;
+                        //switch to first person?
+                        if (this.mainCamera.radius < 0.75) {
+                            this.avatar.visibility = 0;
+                            this.mainCamera.checkCollisions = false;
+                        }
+                        else {
+                            this.avatar.visibility = 1;
+                            this.mainCamera.checkCollisions = this.cameraCollision;
+                        }
+                        if (this.isMeshSelected) {
+                            if (this.key.focus) {
+                                this.key.focus = false;
+                                if (this.focusOnAv) {
+                                    this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                                    this.focusOnAv = false;
+                                }
+                                this.focusOnMesh(this.meshPicked, 25);
+                            }
+                            if (this.key.esc) {
+                                this.key.esc = false;
+                                this.removeEditControl();
+                            }
+                            if (this.key.trans) {
+                                this.key.trans = false;
+                                this.editControl.enableTranslation();
+                            }
+                            if (this.key.rot) {
+                                this.key.rot = false;
+                                this.editControl.enableRotation();
+                            }
+                            if (this.key.scale) {
+                                this.key.scale = false;
+                                this.editControl.enableScaling();
+                            }
+                        }
+                        if (this.focusOnAv) {
+                            if (this.editControl == null) {
+                                this.moveAVandCamera();
+                            }
+                            else {
+                                if (!this.editControl.isEditing()) {
+                                    this.moveAVandCamera();
+                                }
+                            }
+                        }
+                        else if (this.key.up || this.key.down) {
+                            if (!this.editControl.isEditing()) {
+                                this.switchFocusToAV();
+                            }
+                        }
+                    };
+                    Vishva.prototype.moveAVandCamera = function () {
+                        var anim = this.idle;
+                        var moving = false;
+                        var speed = 0;
+                        var upSpeed = 0.05;
+                        var dir = 1;
+                        var forward;
+                        var backwards;
+                        var stepLeft;
+                        var stepRight;
+                        var up;
+                        if (this.key.up) {
+                            if (this.key.shift) {
+                                speed = this.avatarSpeed * 2;
+                                anim = this.run;
+                            }
+                            else {
+                                speed = this.avatarSpeed;
+                                anim = this.walk;
+                            }
+                            if (this.key.jump) {
+                                this.wasJumping = true;
+                            }
+                            if (this.wasJumping) {
+                                upSpeed *= 2;
+                                if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                    dir = 1;
+                                    if (this.jumpCycle < 0) {
+                                        this.jumpCycle = this.jumpCycleMax;
+                                        upSpeed /= 2;
+                                        this.key.jump = false;
+                                        this.wasJumping = false;
+                                    }
+                                }
+                                else {
+                                    anim = this.jump;
+                                    dir = -1;
+                                }
+                                this.jumpCycle--;
+                            }
+                            forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                            this.avatar.moveWithCollisions(forward);
+                            moving = true;
+                        }
+                        else if (this.key.down) {
+                            backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                            this.avatar.moveWithCollisions(backwards);
+                            moving = true;
+                            anim = this.walkBack;
+                            if (this.key.jump)
+                                this.key.jump = false;
+                        }
+                        else if (this.key.stepLeft) {
+                            anim = this.strafeLeft;
+                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            this.avatar.moveWithCollisions(stepLeft);
+                            moving = true;
+                        }
+                        else if (this.key.stepRight) {
+                            anim = this.strafeRight;
+                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            this.avatar.moveWithCollisions(stepRight);
+                            moving = true;
+                        }
+                        if (!moving) {
+                            if (this.key.jump) {
+                                this.wasJumping = true;
+                            }
+                            if (this.wasJumping) {
+                                upSpeed *= 2;
+                                if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                    dir = 1;
+                                    if (this.jumpCycle < 0) {
+                                        this.jumpCycle = this.jumpCycleMax;
+                                        upSpeed /= 2;
+                                        this.key.jump = false;
+                                        this.wasJumping = false;
+                                    }
+                                }
+                                else {
+                                    anim = this.jump;
+                                    dir = -1;
+                                }
+                                this.jumpCycle--;
+                            }
+                            else
+                                dir = dir / 2;
+                            this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
+                        }
+                        if (!this.key.stepLeft && !this.key.stepRight) {
+                            if (this.key.left) {
+                                this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
+                                if (!moving) {
+                                    this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                                    anim = this.turnLeft;
+                                }
+                            }
+                            else if (this.key.right) {
+                                this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
+                                if (!moving) {
+                                    this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                                    anim = this.turnRight;
+                                }
+                            }
+                        }
+                        if (moving) {
+                            this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                        }
+                        if (this.prevAnim !== anim) {
+                            if (anim.exist) {
+                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                            }
+                            this.prevAnim = anim;
+                        }
+                        this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                    };
+                    Vishva.prototype.pickObject = function (evt, pickResult) {
+                        // prevent curosr from changing to a edit caret in Chrome
+                        evt.preventDefault();
+                        if (evt.button !== 2)
+                            return;
+                        if (pickResult.hit) {
+                            if (!this.isMeshSelected) {
+                                // if none selected then select the one clicked
+                                this.isMeshSelected = true;
+                                this.meshPicked = pickResult.pickedMesh;
+                                vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
+                                this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
+                                this.editControl.enableTranslation();
+                                //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
+                                if (this.autoEditMenu) {
+                                    this.vishvaGUI.showEditMenu();
+                                }
+                                if (this.key.ctl)
+                                    this.multiSelect();
+                                if (this.snapperOn) {
+                                    this.setSnapperOn();
+                                }
+                                else {
+                                    if (this.snapTransOn) {
+                                        this.editControl.setTransSnap(true);
+                                        this.editControl.setTransSnapValue(this.snapTransValue);
+                                    }
+                                    ;
+                                    if (this.snapRotOn) {
+                                        this.editControl.setRotSnap(true);
+                                        this.editControl.setRotSnapValue(this.snapRotValue);
+                                    }
+                                    ;
+                                }
+                            }
+                            else {
+                                if (pickResult.pickedMesh === this.meshPicked) {
+                                    if (this.key.ctl) {
+                                        this.multiSelect();
+                                    }
+                                    else {
+                                        // if already selected then focus on it
+                                        if (this.focusOnAv) {
+                                            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                                            this.focusOnAv = false;
+                                        }
+                                        this.focusOnMesh(this.meshPicked, 50);
+                                    }
+                                }
+                                else {
+                                    this.swicthEditControl(pickResult.pickedMesh);
+                                    if (this.snapperOn)
+                                        this.snapToGlobal();
+                                }
+                            }
+                        }
+                    };
+                    /**
+                     * switch the edit control to the new mesh
+                     *
+                     * @param mesh
+                     */
+                    Vishva.prototype.swicthEditControl = function (mesh) {
+                        if (this.switchDisabled)
+                            return;
+                        vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+                        this.meshPicked = mesh;
+                        this.editControl.switchTo(this.meshPicked);
+                        vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
+                        if (this.key.ctl)
+                            this.multiSelect();
+                    };
+                    Vishva.prototype.multiSelect = function () {
+                        if (this.meshesPicked == null) {
+                            this.meshesPicked = new Array();
+                        }
+                        var i = this.meshesPicked.indexOf(this.meshPicked);
+                        if (i >= 0) {
+                            this.meshesPicked.splice(i, 1);
+                            this.meshPicked.showBoundingBox = false;
+                        }
+                        else {
+                            this.meshesPicked.push(this.meshPicked);
+                            this.meshPicked.showBoundingBox = true;
+                        }
+                    };
+                    Vishva.prototype.removeEditControl = function () {
+                        if (this.meshesPicked != null) {
+                            for (var index148 = 0; index148 < this.meshesPicked.length; index148++) {
+                                var mesh = this.meshesPicked[index148];
+                                {
+                                    mesh.showBoundingBox = false;
+                                }
+                            }
+                            this.meshesPicked = null;
+                        }
+                        this.isMeshSelected = false;
+                        if (!this.focusOnAv) {
+                            this.switchFocusToAV();
+                        }
+                        this.editControl.detach();
+                        this.editControl = null;
+                        //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
+                        if (this.autoEditMenu)
+                            this.vishvaGUI.closeEditMenu();
+                        if (this.meshPicked != null) {
+                            vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+                        }
+                    };
+                    Vishva.prototype.switchFocusToAV = function () {
+                        this.mainCamera.detachControl(this.canvas);
+                        this.frames = 25;
+                        this.f = this.frames;
+                        this.delta = this.saveAVcameraPos.subtract(this.mainCamera.position).scale(1 / this.frames);
+                        var avTarget = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        this.delta2 = avTarget.subtract(this.mainCamera.target).scale(1 / this.frames);
+                        this.cameraAnimating = true;
+                        this.scene.registerBeforeRender(this.animFunc);
+                    };
+                    Vishva.prototype.focusOnMesh = function (mesh, frames) {
+                        this.mainCamera.detachControl(this.canvas);
+                        this.frames = frames;
+                        this.f = frames;
+                        this.delta2 = mesh.absolutePosition.subtract(this.mainCamera.target).scale(1 / this.frames);
+                        this.cameraAnimating = true;
+                        this.scene.registerBeforeRender(this.animFunc2);
+                    };
+                    Vishva.prototype.animateCamera = function () {
+                        var avTarget = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        var targetDiff = avTarget.subtract(this.mainCamera.target).length();
+                        if (targetDiff > 0.01)
+                            this.mainCamera.setTarget(this.mainCamera.target.add(this.delta2));
+                        var posDiff = this.saveAVcameraPos.subtract(this.mainCamera.position).length();
+                        if (posDiff > 0.01)
+                            this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
+                        this.f--;
+                        if (this.f < 0) {
+                            this.focusOnAv = true;
+                            this.cameraAnimating = false;
+                            this.scene.unregisterBeforeRender(this.animFunc);
+                            this.mainCamera.attachControl(this.canvas);
+                        }
+                    };
+                    Vishva.prototype.justReFocus = function () {
+                        this.mainCamera.setTarget(this.mainCamera.target.add(this.delta2));
+                        this.f--;
+                        if (this.f < 0) {
+                            this.cameraAnimating = false;
+                            this.scene.unregisterBeforeRender(this.animFunc2);
+                            this.mainCamera.attachControl(this.canvas);
+                        }
+                    };
+                    //////////////////////////////////////////////////////////
                     Vishva.prototype.initAnims = function () {
                         this.walk = new AnimData("walk", 7, 35, 1);
                         this.walkBack = new AnimData("walkBack", 39, 65, 0.5);
@@ -1332,6 +1807,7 @@ var org;
                     Vishva.prototype.addPlane = function () {
                         var mesh = Mesh.CreatePlane("", 1.0, this.scene);
                         this.setPrimProperties(mesh);
+                        mesh.material.backFaceCulling = false;
                     };
                     Vishva.prototype.addBox = function () {
                         var mesh = Mesh.CreateBox("", 1, this.scene);
@@ -1344,6 +1820,7 @@ var org;
                     Vishva.prototype.addDisc = function () {
                         var mesh = Mesh.CreateDisc("", 0.5, 20, this.scene);
                         this.setPrimProperties(mesh);
+                        mesh.material.backFaceCulling = false;
                     };
                     Vishva.prototype.addCylinder = function () {
                         var mesh = Mesh.CreateCylinder("", 1, 1, 1, 20, 1, this.scene);
@@ -1448,6 +1925,7 @@ var org;
                                 if (Tags.MatchesQuery(mesh, "invisible")) {
                                     mesh.visibility = 0.5;
                                     mesh.showBoundingBox = true;
+                                    mesh.isPickable = true;
                                 }
                             }
                         }
@@ -1461,6 +1939,7 @@ var org;
                                     if (Tags.MatchesQuery(mesh, "invisible")) {
                                         mesh.visibility = 0;
                                         mesh.showBoundingBox = false;
+                                        mesh.isPickable = false;
                                     }
                                 }
                             }
@@ -2302,139 +2781,6 @@ var org;
                         this.prevAnim = null;
                         SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, function (scene) { return _this.onSceneLoaded(scene); });
                     };
-                    Vishva.prototype.onSceneLoaded = function (scene) {
-                        var _this = this;
-                        this.loadingStatus.innerHTML = "checking assets";
-                        var avFound = false;
-                        var skelFound = false;
-                        var sunFound = false;
-                        var groundFound = false;
-                        var skyFound = false;
-                        var cameraFound = false;
-                        for (var index140 = 0; index140 < scene.meshes.length; index140++) {
-                            var mesh = scene.meshes[index140];
-                            {
-                                //sat TODO
-                                mesh.receiveShadows = false;
-                                if (Tags.HasTags(mesh)) {
-                                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
-                                        avFound = true;
-                                        this.avatar = mesh;
-                                        this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
-                                    }
-                                    else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
-                                        skyFound = true;
-                                        this.skybox = mesh;
-                                        this.skybox.isPickable = false;
-                                    }
-                                    else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
-                                        groundFound = true;
-                                        this.ground = mesh;
-                                    }
-                                }
-                            }
-                        }
-                        for (var index141 = 0; index141 < scene.skeletons.length; index141++) {
-                            var skeleton = scene.skeletons[index141];
-                            {
-                                if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
-                                    skelFound = true;
-                                    this.avatarSkeleton = skeleton;
-                                    this.checkAnimRange(this.avatarSkeleton);
-                                }
-                            }
-                        }
-                        if (!skelFound) {
-                            console.error("ALARM: No Skeleton found");
-                        }
-                        for (var index142 = 0; index142 < scene.lights.length; index142++) {
-                            var light = scene.lights[index142];
-                            {
-                                if (Tags.MatchesQuery(light, "Vishva.sun")) {
-                                    sunFound = true;
-                                    this.sun = light;
-                                }
-                            }
-                        }
-                        if (!sunFound) {
-                            console.log("no vishva sun found. creating sun");
-                            var hl = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
-                            hl.groundColor = new Color3(0.5, 0.5, 0.5);
-                            hl.intensity = 0.4;
-                            this.sun = hl;
-                            Tags.AddTagsTo(hl, "Vishva.sun");
-                            this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-                            this.sunDR.intensity = 0.5;
-                            var sl = this.sunDR;
-                            this.shadowGenerator = new ShadowGenerator(1024, sl);
-                            this.shadowGenerator.useBlurVarianceShadowMap = true;
-                            this.shadowGenerator.bias = 1.0E-6;
-                        }
-                        else {
-                            for (var index143 = 0; index143 < scene.lights.length; index143++) {
-                                var light = scene.lights[index143];
-                                if (light.id === "Vishva.dl01") {
-                                    this.sunDR = light;
-                                    this.shadowGenerator = light.getShadowGenerator();
-                                    this.shadowGenerator.bias = 1.0E-6;
-                                    this.shadowGenerator.useBlurVarianceShadowMap = true;
-                                }
-                            }
-                        }
-                        for (var index144 = 0; index144 < this.scene.meshes.length; index144++) {
-                            var mesh = this.scene.meshes[index144];
-                            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                                //sat TODO remove comment
-                                //mesh.receiveShadows = true;
-                                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                            }
-                        }
-                        for (var index145 = 0; index145 < scene.cameras.length; index145++) {
-                            var camera = scene.cameras[index145];
-                            {
-                                if (Tags.MatchesQuery(camera, "Vishva.camera")) {
-                                    cameraFound = true;
-                                    this.mainCamera = camera;
-                                    this.setCameraSettings(this.mainCamera);
-                                    this.mainCamera.attachControl(this.canvas, true);
-                                }
-                            }
-                        }
-                        if (!cameraFound) {
-                            console.log("no vishva camera found. creating camera");
-                            this.mainCamera = this.createCamera(this.scene, this.canvas);
-                            this.scene.activeCamera = this.mainCamera;
-                        }
-                        //TODO
-                        this.mainCamera.checkCollisions = true;
-                        this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
-                        if (!groundFound) {
-                            console.log("no vishva ground found. creating ground");
-                            this.ground = this.createGround(this.scene);
-                        }
-                        else {
-                            //in case this wasn't set in serialized scene
-                            this.ground.receiveShadows = true;
-                        }
-                        if (!skyFound) {
-                            console.log("no vishva sky found. creating sky");
-                            this.skybox = this.createSkyBox(this.scene);
-                        }
-                        if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
-                            this.scene.fogMode = Scene.FOGMODE_EXP;
-                            this.scene.fogDensity = 0;
-                        }
-                        if (this.editEnabled) {
-                            this.scene.onPointerDown = function (evt, pickResult) { return _this.pickObject(evt, pickResult); };
-                        }
-                        if (!avFound) {
-                            console.log("no vishva av found. creating av");
-                            this.loadAvatar();
-                        }
-                        vishva.SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
-                        this.snas = null;
-                        this.render();
-                    };
                     Vishva.prototype.createWater = function () {
                         var waterMesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
                         //waterMesh.position.y = 0;
@@ -2570,348 +2916,6 @@ var org;
                             }
                         }
                     };
-                    Vishva.prototype.render = function () {
-                        var _this = this;
-                        this.scene.registerBeforeRender(function () { return _this.process(); });
-                        this.scene.executeWhenReady(function () { return _this.startRenderLoop(); });
-                    };
-                    Vishva.prototype.startRenderLoop = function () {
-                        var _this = this;
-                        this.backfaceCulling(this.scene.materials);
-                        if (this.editEnabled) {
-                            this.vishvaGUI = new vishva.VishvaGUI(this);
-                        }
-                        else {
-                            this.vishvaGUI = null;
-                        }
-                        this.engine.hideLoadingUI();
-                        this.loadingMsg.style.visibility = "hidden";
-                        this.engine.runRenderLoop(function () { return _this.scene.render(); });
-                    };
-                    Vishva.prototype.process = function () {
-                        if (this.cameraAnimating)
-                            return;
-                        if (this.keysDisabled)
-                            return;
-                        //switch to first person?
-                        if (this.mainCamera.radius < 0.75) {
-                            this.avatar.visibility = 0;
-                            this.mainCamera.checkCollisions = false;
-                        }
-                        else {
-                            this.avatar.visibility = 1;
-                            this.mainCamera.checkCollisions = this.cameraCollision;
-                        }
-                        if (this.isMeshSelected) {
-                            if (this.key.focus) {
-                                this.key.focus = false;
-                                if (this.focusOnAv) {
-                                    this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                    this.focusOnAv = false;
-                                }
-                                this.focusOnMesh(this.meshPicked, 25);
-                            }
-                            if (this.key.esc) {
-                                this.key.esc = false;
-                                this.removeEditControl();
-                            }
-                            if (this.key.trans) {
-                                this.key.trans = false;
-                                this.editControl.enableTranslation();
-                            }
-                            if (this.key.rot) {
-                                this.key.rot = false;
-                                this.editControl.enableRotation();
-                            }
-                            if (this.key.scale) {
-                                this.key.scale = false;
-                                this.editControl.enableScaling();
-                            }
-                        }
-                        if (this.focusOnAv) {
-                            if (this.editControl == null) {
-                                this.moveAVandCamera();
-                            }
-                            else {
-                                if (!this.editControl.isEditing()) {
-                                    this.moveAVandCamera();
-                                }
-                            }
-                        }
-                        else if (this.key.up || this.key.down) {
-                            if (!this.editControl.isEditing()) {
-                                this.switchFocusToAV();
-                            }
-                        }
-                    };
-                    Vishva.prototype.moveAVandCamera = function () {
-                        var anim = this.idle;
-                        var moving = false;
-                        var speed = 0;
-                        var upSpeed = 0.05;
-                        var dir = 1;
-                        var forward;
-                        var backwards;
-                        var stepLeft;
-                        var stepRight;
-                        var up;
-                        if (this.key.up) {
-                            if (this.key.shift) {
-                                speed = this.avatarSpeed * 2;
-                                anim = this.run;
-                            }
-                            else {
-                                speed = this.avatarSpeed;
-                                anim = this.walk;
-                            }
-                            if (this.key.jump) {
-                                this.wasJumping = true;
-                            }
-                            if (this.wasJumping) {
-                                upSpeed *= 2;
-                                if (this.jumpCycle < this.jumpCycleMax / 2) {
-                                    dir = 1;
-                                    if (this.jumpCycle < 0) {
-                                        this.jumpCycle = this.jumpCycleMax;
-                                        upSpeed /= 2;
-                                        this.key.jump = false;
-                                        this.wasJumping = false;
-                                    }
-                                }
-                                else {
-                                    anim = this.jump;
-                                    dir = -1;
-                                }
-                                this.jumpCycle--;
-                            }
-                            forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
-                            this.avatar.moveWithCollisions(forward);
-                            moving = true;
-                        }
-                        else if (this.key.down) {
-                            backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                            this.avatar.moveWithCollisions(backwards);
-                            moving = true;
-                            anim = this.walkBack;
-                            if (this.key.jump)
-                                this.key.jump = false;
-                        }
-                        else if (this.key.stepLeft) {
-                            anim = this.strafeLeft;
-                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            this.avatar.moveWithCollisions(stepLeft);
-                            moving = true;
-                        }
-                        else if (this.key.stepRight) {
-                            anim = this.strafeRight;
-                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            this.avatar.moveWithCollisions(stepRight);
-                            moving = true;
-                        }
-                        if (!moving) {
-                            if (this.key.jump) {
-                                this.wasJumping = true;
-                            }
-                            if (this.wasJumping) {
-                                upSpeed *= 2;
-                                if (this.jumpCycle < this.jumpCycleMax / 2) {
-                                    dir = 1;
-                                    if (this.jumpCycle < 0) {
-                                        this.jumpCycle = this.jumpCycleMax;
-                                        upSpeed /= 2;
-                                        this.key.jump = false;
-                                        this.wasJumping = false;
-                                    }
-                                }
-                                else {
-                                    anim = this.jump;
-                                    dir = -1;
-                                }
-                                this.jumpCycle--;
-                            }
-                            else
-                                dir = dir / 2;
-                            this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
-                        }
-                        if (!this.key.stepLeft && !this.key.stepRight) {
-                            if (this.key.left) {
-                                this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
-                                if (!moving) {
-                                    this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                                    anim = this.turnLeft;
-                                }
-                            }
-                            else if (this.key.right) {
-                                this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
-                                if (!moving) {
-                                    this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                                    anim = this.turnRight;
-                                }
-                            }
-                        }
-                        if (moving) {
-                            this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                        }
-                        if (this.prevAnim !== anim) {
-                            if (anim.exist) {
-                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                            }
-                            this.prevAnim = anim;
-                        }
-                        this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-                    };
-                    Vishva.prototype.pickObject = function (evt, pickResult) {
-                        // prevent curosr from changing to a edit caret in Chrome
-                        evt.preventDefault();
-                        if (evt.button !== 2)
-                            return;
-                        if (pickResult.hit) {
-                            if (!this.isMeshSelected) {
-                                // if none selected then select the one clicked
-                                this.isMeshSelected = true;
-                                this.meshPicked = pickResult.pickedMesh;
-                                vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
-                                this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
-                                this.editControl.enableTranslation();
-                                //this.editAlreadyOpen = this.vishvaGUI.showEditMenu();
-                                if (this.autoEditMenu) {
-                                    this.vishvaGUI.showEditMenu();
-                                }
-                                if (this.key.ctl)
-                                    this.multiSelect();
-                                if (this.snapperOn) {
-                                    this.setSnapperOn();
-                                }
-                                else {
-                                    if (this.snapTransOn) {
-                                        this.editControl.setTransSnap(true);
-                                        this.editControl.setTransSnapValue(this.snapTransValue);
-                                    }
-                                    ;
-                                    if (this.snapRotOn) {
-                                        this.editControl.setRotSnap(true);
-                                        this.editControl.setRotSnapValue(this.snapRotValue);
-                                    }
-                                    ;
-                                }
-                            }
-                            else {
-                                if (pickResult.pickedMesh === this.meshPicked) {
-                                    if (this.key.ctl) {
-                                        this.multiSelect();
-                                    }
-                                    else {
-                                        // if already selected then focus on it
-                                        if (this.focusOnAv) {
-                                            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                            this.focusOnAv = false;
-                                        }
-                                        this.focusOnMesh(this.meshPicked, 50);
-                                    }
-                                }
-                                else {
-                                    this.swicthEditControl(pickResult.pickedMesh);
-                                    if (this.snapperOn)
-                                        this.snapToGlobal();
-                                }
-                            }
-                        }
-                    };
-                    /**
-                     * switch the edit control to the new mesh
-                     *
-                     * @param mesh
-                     */
-                    Vishva.prototype.swicthEditControl = function (mesh) {
-                        if (this.switchDisabled)
-                            return;
-                        vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-                        this.meshPicked = mesh;
-                        this.editControl.switchTo(this.meshPicked);
-                        vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
-                        if (this.key.ctl)
-                            this.multiSelect();
-                    };
-                    Vishva.prototype.multiSelect = function () {
-                        if (this.meshesPicked == null) {
-                            this.meshesPicked = new Array();
-                        }
-                        var i = this.meshesPicked.indexOf(this.meshPicked);
-                        if (i >= 0) {
-                            this.meshesPicked.splice(i, 1);
-                            this.meshPicked.showBoundingBox = false;
-                        }
-                        else {
-                            this.meshesPicked.push(this.meshPicked);
-                            this.meshPicked.showBoundingBox = true;
-                        }
-                    };
-                    Vishva.prototype.removeEditControl = function () {
-                        if (this.meshesPicked != null) {
-                            for (var index148 = 0; index148 < this.meshesPicked.length; index148++) {
-                                var mesh = this.meshesPicked[index148];
-                                {
-                                    mesh.showBoundingBox = false;
-                                }
-                            }
-                            this.meshesPicked = null;
-                        }
-                        this.isMeshSelected = false;
-                        if (!this.focusOnAv) {
-                            this.switchFocusToAV();
-                        }
-                        this.editControl.detach();
-                        this.editControl = null;
-                        //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
-                        if (this.autoEditMenu)
-                            this.vishvaGUI.closeEditMenu();
-                        if (this.meshPicked != null) {
-                            vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-                        }
-                    };
-                    Vishva.prototype.switchFocusToAV = function () {
-                        this.mainCamera.detachControl(this.canvas);
-                        this.frames = 25;
-                        this.f = this.frames;
-                        this.delta = this.saveAVcameraPos.subtract(this.mainCamera.position).scale(1 / this.frames);
-                        var avTarget = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-                        this.delta2 = avTarget.subtract(this.mainCamera.target).scale(1 / this.frames);
-                        this.cameraAnimating = true;
-                        this.scene.registerBeforeRender(this.animFunc);
-                    };
-                    Vishva.prototype.focusOnMesh = function (mesh, frames) {
-                        this.mainCamera.detachControl(this.canvas);
-                        this.frames = frames;
-                        this.f = frames;
-                        this.delta2 = mesh.absolutePosition.subtract(this.mainCamera.target).scale(1 / this.frames);
-                        this.cameraAnimating = true;
-                        this.scene.registerBeforeRender(this.animFunc2);
-                    };
-                    Vishva.prototype.animateCamera = function () {
-                        var avTarget = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-                        var targetDiff = avTarget.subtract(this.mainCamera.target).length();
-                        if (targetDiff > 0.01)
-                            this.mainCamera.setTarget(this.mainCamera.target.add(this.delta2));
-                        var posDiff = this.saveAVcameraPos.subtract(this.mainCamera.position).length();
-                        if (posDiff > 0.01)
-                            this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
-                        this.f--;
-                        if (this.f < 0) {
-                            this.focusOnAv = true;
-                            this.cameraAnimating = false;
-                            this.scene.unregisterBeforeRender(this.animFunc);
-                            this.mainCamera.attachControl(this.canvas);
-                        }
-                    };
-                    Vishva.prototype.justReFocus = function () {
-                        this.mainCamera.setTarget(this.mainCamera.target.add(this.delta2));
-                        this.f--;
-                        if (this.f < 0) {
-                            this.cameraAnimating = false;
-                            this.scene.unregisterBeforeRender(this.animFunc2);
-                            this.mainCamera.attachControl(this.canvas);
-                        }
-                    };
                     Vishva.prototype.createGround = function (scene) {
                         var groundMaterial = new StandardMaterial("groundMat", scene);
                         groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
@@ -2955,7 +2959,7 @@ var org;
                             camera.target = Vector3.Zero();
                         }
                         camera.checkCollisions = this.cameraCollision;
-                        this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+                        camera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         Tags.AddTagsTo(camera, "Vishva.camera");
                         return camera;
                     };
@@ -3136,7 +3140,6 @@ var org;
                         this.createNavMenu();
                         this.createEditMenu();
                         this.createEditDiag();
-                        //this.createEnvDiag();
                         this.createDownloadDiag();
                         this.createUploadDiag();
                         this.createHelpDiag();
@@ -3448,14 +3451,13 @@ var org;
                         this.loadDialog.dialog("close");
                     };
                     VishvaGUI.prototype.createHelpDiag = function () {
-                        var obj = $("#helpDiv");
-                        this.helpDiag = obj;
-                        var dos = Object.defineProperty({
+                        this.helpDiag = $("#helpDiv");
+                        var dos = {
                             autoOpen: false,
                             resizable: false,
                             width: 500,
                             closeOnEscape: false
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        };
                         this.helpDiag.dialog(dos);
                     };
                     VishvaGUI.prototype.create_sNaDiag = function () {
@@ -3463,7 +3465,7 @@ var org;
                         var sNaDetails = $("#sNaDetails");
                         sNaDetails.tabs();
                         this.sNaDialog = $("#sNaDiag");
-                        var dos = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        var dos = {};
                         dos.autoOpen = false;
                         dos.modal = false;
                         dos.resizable = false;
@@ -3536,6 +3538,10 @@ var org;
                         };
                         this.sNaDialog.dialog("open");
                     };
+                    /*
+                     * fill up the sensor and actuator tables
+                     * with a list of sensors and actuators
+                     */
                     VishvaGUI.prototype.updateSensActTbl = function (sensAct, tbl) {
                         var _this = this;
                         var l = tbl.rows.length;
@@ -3589,7 +3595,7 @@ var org;
                     };
                     VishvaGUI.prototype.createEditSensDiag = function () {
                         var editSensDiag = $("#editSensDiag");
-                        var dos = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        var dos = {};
                         dos.autoOpen = false;
                         dos.modal = true;
                         dos.resizable = false;
@@ -4330,6 +4336,38 @@ var org;
                     return SelectType;
                 }());
                 vishva_1.SelectType = SelectType;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var VishvaSerial = (function () {
+                    function VishvaSerial() {
+                    }
+                    return VishvaSerial;
+                }());
+                vishva.VishvaSerial = VishvaSerial;
+                var Settings = (function () {
+                    function Settings() {
+                        this.cameraCollision = true;
+                        //automatcally open edit menu whenever a mesh is selected
+                        this.autoEditMenu = false;
+                    }
+                    return Settings;
+                }());
+                vishva.Settings = Settings;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));

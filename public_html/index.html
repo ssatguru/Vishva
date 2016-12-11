@@ -12,11 +12,12 @@
 
         <title>Vishva</title>
 
+
         <script src="lib/jquery-darkness-flat/jquery-2.2.0.min.js"></script>
         <script src="lib/jquery-darkness-flat/jquery-ui.min.js"></script>
         <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet">
 
-
+        <script src="lib/cannon.js"></script>
         <script src="lib/babylon.max-2.5.js"></script>
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
@@ -51,7 +52,7 @@
                           
              }
             */
-          
+
 
             /* reduce the overlay for modal dialogs */
             .ui-widget-overlay {
@@ -86,7 +87,7 @@
                 width: 100%;
                 height: 100%;
             }
-            
+
         </style>
 
     </head>
@@ -95,7 +96,7 @@
         <canvas id="vCanvas" oncontextmenu="return false;" tabindex="1"></canvas>
 
         <div id="gui-items">
-            
+
             <div id="loadingMsg"
                  style="text-align: center; display: inline-block; position: fixed; top: 0; bottom: 0; left: 0; right: 0; width: 200px; height: 100px; margin: auto;">
                 <h1>loading</h1>
@@ -123,6 +124,8 @@
 
             <div id="editDiv" title="Edit">
                 <ul id="editMenu">
+                    <li id="showProps">Mesh Properties</li>
+                    <li>-</li>
                     <li id="swAv">Use as Avatar</li>
                     <li id="swGnd">Use as Ground</li>
                     <li>-</li>
@@ -141,7 +144,6 @@
                     <li id="togEna">Toggle Enable</li>
                     <li id="showDisa">Show all Disabled</li>
                     <li id="hideDisa">Hide all Disabled</li>
-                    
                     <li>-</li>
                     <li id="attLight">Attach light</li>
                     <li id="addWater">Add water</li>
@@ -155,12 +157,14 @@
                     <li id="snapper">Snapper On</li>
                     <li>-</li>
                     <li id="sNa">Sensors & Actuators</li>
+                    <!--
                     <li id="meshAnims">Animations</li>
                     <li id="meshMat">Materials</li>
                     <li id="meshTrans">Transform</li>
+                    -->
                 </ul>
             </div>
-            
+
             <div id="envDiv" title="Environment">
                 <table style="width: 100%; text-align: center;">
                     <tr>
@@ -199,19 +203,19 @@
             </div>
 
             <div id="settingDiag" title="Settings" data-keyboard="false">
-                 <table style="width: 100%; text-align: center;">
+                <table style="width: 100%; text-align: center;">
                     <tr>
                         <td>camera collision</td>
                         <td><input id="camCol" type="checkbox"/></td>
                     </tr>
-                     <tr>
+                    <tr>
                         <td>show edit menu on mesh selection</td>
                         <td><input id="autoEditMenu" type="checkbox"/></td>
                     </tr>
                 </table>
-                
+
             </div>
-            
+
             <div id="sNaDiag">
                 <div id="sNaDetails">
                     <ul>
@@ -259,69 +263,132 @@
                 <div id="editActDiag.parms"></div>
             </div>
 
+            <div id="propsDiag" title="mesh properties">
+                <div id="propsTabs">
+                    <ul>
+                        <li><a href="#meshTransDiag">Transforms</a></li>
+                        <li><a href="#Physics">Physics</a></li>
+                        <li><a href="#Material">Material</a></li>
+                        <li><a href="#Lights">Lights</a></li>
+                        <li><a href="#meshAnimDiag">Animations</a></li>
+                    </ul>
 
-            <div id="meshTransDiag" title="Transforms">
-                <table>
-                    <tr>
-                        <td></td>
-                        <td>x</td>
-                        <td>y</td>
-                        <td>z</td>
-                    </tr>
-                    <tr>
-                        <td>location</td>
-                        <td id="loc.x"></td>
-                        <td id="loc.y"></td>
-                        <td id="loc.z"></td>
-                    </tr>
-                    <tr>
-                        <td>rotation</td>
-                        <td id="rot.x"></td>
-                        <td id="rot.y"></td>
-                        <td id="rot.z"></td>
-                    </tr>
-                    <tr>
-                        <td>scale</td>
-                        <td id="scl.x"></td>
-                        <td id="scl.y"></td>
-                        <td id="scl.z"></td>
-                    </tr>
-                </table>
+                    <div id="meshTransDiag" title="Transforms">
+                        <table>
+                            <tr>
+                                <td></td>
+                                <td>x</td>
+                                <td>y</td>
+                                <td>z</td>
+                            </tr>
+                            <tr>
+                                <td>location</td>
+                                <td id="loc.x"></td>
+                                <td id="loc.y"></td>
+                                <td id="loc.z"></td>
+                            </tr>
+                            <tr>
+                                <td>rotation</td>
+                                <td id="rot.x"></td>
+                                <td id="rot.y"></td>
+                                <td id="rot.z"></td>
+                            </tr>
+                            <tr>
+                                <td>scale</td>
+                                <td id="scl.x"></td>
+                                <td id="scl.y"></td>
+                                <td id="scl.z"></td>
+                            </tr>
+                        </table>
+                        <br>
+                        <button id="transRefresh">refresh</button>
+                    </div>
+                    
+                    <div id="Physics" >
+                        <table>
+                            <tr>
+                                <td>enabled</td>
+                                <td><input type="checkbox" id="phyEna" ></td>
+                            </tr>
+                            <tr>
+                                <td>type</td>
+                                <td><select id="phyType">
+                                        <option value="2">box</option>
+                                        <option value="1">sphere</option>
+                                        <option value="3">plane</option>
+                                        <option value="7">cylinder</option>
+                                        <option value="4">mesh</option>
+                                        <!--
+                                        <option value="8">particle</option>
+                                        <option value="9">height map</option>
+                                        -->
+                                    </select></td>
+                            </tr>
+                            <tr>
+                                <td>mass</td>
+                                <td><input type="text" id="phyMass" size="3" value="1"></td>
+                            </tr>
+                            <tr>
+                                <td>restitution : <output for="phyRes" id="phyResVal"></output></td>
+                                <td>
+                                    <input type="range" id="phyRes" min="0.0" max="1.0" step="0.1" value="0.0">
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>friction : <output for="phyFric" id="phyFricVal"></output> </td>
+                                <td>
+                                    <input type="range" id="phyFric" min="0.0" max="1.0" step="0.1" value="0.0">
+                                   
+                                </td>
+                            </tr>
+                        </table>
+                        <br>
+                        <button id ="phyApply">apply</button>
+                        <button id ="phyRestore">restore</button>
+                    </div>
+                    
+                    <div id="Material" ></div>
+                    <div id="Lights" ></div>
+
+                    <div id="meshAnimDiag" title="Animations">
+                        <table>
+                            <tr>
+                                <td>skeleton name</td>
+                                <td>ranges</td>
+                                <td>from frame</td>
+                                <td>to frame</td>
+                            </tr>
+                            <tr>
+                                <td id="skelName"></td>
+                                <td><select id="animList"></select></td>
+                                <td id="animFrom"></td>
+                                <td id="animTo"></td>
+                            </tr>
+                        </table>
+                        <br>
+                        <table>
+                            <tr>
+                                <td>rate</td>
+                                <td><input id="animRate" type="text" value="1" size="2"></td>
+                            </tr>
+                            <tr>
+                                <td>loop</td>
+                                <td><input type="checkbox" id="animLoop"></td>
+                            </tr>
+                            <tr>
+                                <td><button id="playAnim">play</button></td>
+                                <td><button id="stopAnim">stop</button></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
             </div>
 
-            <div id="meshAnimDiag" title="Animations">
-                <br>
-                <table>
-                    <tr>
-                        <td>skeleton name</td>
-                        <td>ranges</td>
-                        <td>from frame</td>
-                        <td>to frame</td>
-                    </tr>
-                    <tr>
-                        <td id="skelName"></td>
-                        <td><select id="animList"></select></td>
-                        <td id="animFrom"></td>
-                        <td id="animTo"></td>
-                    </tr>
-                </table>
-                <br>
-                <table>
-                    <tr>
-                        <td>rate</td>
-                        <td><input id="animRate" type="text" value="1" size="2"></td>
-                    </tr>
-                    <tr>
-                        <td>loop</td>
-                        <td><input type="checkbox" id="animLoop"></td>
-                    </tr>
-                    <tr>
-                        <td><button id="playAnim">play</button></td>
-                        <td><button id="stopAnim">stop</button></td>
-                    </tr>
-                </table>
 
-            </div>
+
+
 
             <div id="matDiag">
                 <select id="matSelect">

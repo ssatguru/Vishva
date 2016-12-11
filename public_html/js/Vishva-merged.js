@@ -1108,6 +1108,7 @@ var org;
                 var HemisphericLight = BABYLON.HemisphericLight;
                 var Matrix = BABYLON.Matrix;
                 var Mesh = BABYLON.Mesh;
+                var PhysicsImpostor = BABYLON.PhysicsImpostor;
                 var PointLight = BABYLON.PointLight;
                 var Quaternion = BABYLON.Quaternion;
                 var Scene = BABYLON.Scene;
@@ -1159,6 +1160,7 @@ var org;
                         this.cameraCollision = true;
                         //automatcally open edit menu whenever a mesh is selected
                         this.autoEditMenu = false;
+                        this.enablePhysics = true;
                         this.focusOnAv = true;
                         this.cameraAnimating = false;
                         this.jumpCycleMax = 25;
@@ -1170,6 +1172,7 @@ var org;
                         this.animFunc = function () { return _this.animateCamera(); };
                         this.animFunc2 = function () { return _this.justReFocus(); };
                         this.showingAllInvisibles = false;
+                        this.meshPickedPhyParms = null;
                         this.editEnabled = false;
                         this.frames = 0;
                         this.f = 0;
@@ -1187,6 +1190,7 @@ var org;
                         this.canvas = document.getElementById(canvasId);
                         this.engine = new Engine(this.canvas, true);
                         this.scene = new Scene(this.engine);
+                        this.scene.enablePhysics();
                         window.addEventListener("resize", function (event) { return _this.onWindowResize(event); });
                         window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); }, false);
                         window.addEventListener("keyup", function (e) { return _this.onKeyUp(e); }, false);
@@ -1312,7 +1316,6 @@ var org;
                                 this.mainCamera = camera;
                                 this.setCameraSettings(this.mainCamera);
                                 this.mainCamera.attachControl(this.canvas, true);
-                                this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
                             }
                         }
                         if (!cameraFound) {
@@ -1330,6 +1333,9 @@ var org;
                         else {
                             //in case this wasn't set in serialized scene
                             this.ground.receiveShadows = true;
+                        }
+                        if (this.enablePhysics) {
+                            this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
                         }
                         if (!skyFound) {
                             console.log("no vishva sky found. creating sky");
@@ -1464,8 +1470,10 @@ var org;
                                 }
                                 this.jumpCycle--;
                             }
+                            //TODO testing physics
                             forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                             this.avatar.moveWithCollisions(forward);
+                            //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
                             moving = true;
                         }
                         else if (this.key.down) {
@@ -1551,6 +1559,14 @@ var org;
                                 this.isMeshSelected = true;
                                 this.meshPicked = pickResult.pickedMesh;
                                 vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
+                                if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
+                                    this.meshPickedPhyParms = null;
+                                }
+                                else {
+                                    this.savePhyParms();
+                                    this.meshPicked.physicsImpostor.dispose();
+                                    this.meshPicked.physicsImpostor = null;
+                                }
                                 this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
                                 this.editControl.enableTranslation();
                                 if (this.globalAxisMode) {
@@ -1599,6 +1615,19 @@ var org;
                             }
                         }
                     };
+                    Vishva.prototype.savePhyParms = function () {
+                        this.meshPickedPhyParms = new PhysicsParm();
+                        this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
+                        this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
+                        this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
+                        this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+                    };
+                    Vishva.prototype.restorePhyParms = function () {
+                        this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
+                        this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
+                        this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
+                        this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+                    };
                     /**
                      * switch the edit control to the new mesh
                      *
@@ -1608,6 +1637,10 @@ var org;
                         if (this.switchDisabled)
                             return;
                         vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+                        if (this.meshPickedPhyParms != null) {
+                            this.restorePhyParms();
+                            this.meshPickedPhyParms = null;
+                        }
                         this.meshPicked = mesh;
                         this.editControl.switchTo(this.meshPicked);
                         vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
@@ -1649,6 +1682,10 @@ var org;
                             this.vishvaGUI.closeEditMenu();
                         if (this.meshPicked != null) {
                             vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+                            if (this.meshPickedPhyParms != null) {
+                                this.restorePhyParms();
+                                this.meshPickedPhyParms = null;
+                            }
                         }
                     };
                     Vishva.prototype.switchFocusToAV = function () {
@@ -2110,6 +2147,36 @@ var org;
                         light0.specular = new BABYLON.Color3(1, 1, 1);
                         //light0.groundColor = new BABYLON.Color3(0, 0, 0);
                         light0.parent = this.meshPicked;
+                    };
+                    Vishva.prototype.togglePhyiscs = function () {
+                        if (!this.isMeshSelected) {
+                            return "no mesh selected";
+                        }
+                        if (this.meshPickedPhyParms === null) {
+                            this.meshPickedPhyParms = new PhysicsParm();
+                            this.meshPickedPhyParms.type = PhysicsImpostor.BoxImpostor;
+                            this.meshPickedPhyParms.mass = 1;
+                            this.meshPickedPhyParms.restitution = 0.9;
+                            this.meshPickedPhyParms.friction = 0.5;
+                        }
+                        else {
+                            this.meshPickedPhyParms = null;
+                        }
+                    };
+                    Vishva.prototype.physTypes = function () {
+                        console.log("BoxImpostor " + PhysicsImpostor.BoxImpostor);
+                        console.log("SphereImpostor " + PhysicsImpostor.SphereImpostor);
+                        console.log("PlaneImpostor " + PhysicsImpostor.PlaneImpostor);
+                        console.log("CylinderImpostor " + PhysicsImpostor.CylinderImpostor);
+                        console.log("MeshImpostor " + PhysicsImpostor.MeshImpostor);
+                        console.log("ParticleImpostor " + PhysicsImpostor.ParticleImpostor);
+                        console.log("HeightmapImpostor " + PhysicsImpostor.HeightmapImpostor);
+                    };
+                    Vishva.prototype.getMeshPickedPhyParms = function () {
+                        return this.meshPickedPhyParms;
+                    };
+                    Vishva.prototype.setMeshPickedPhyParms = function (parms) {
+                        this.meshPickedPhyParms = parms;
                     };
                     Vishva.prototype.setSpaceLocal = function (lcl) {
                         if (this.snapperOn) {
@@ -3125,6 +3192,16 @@ var org;
                     return AnimData;
                 }());
                 vishva.AnimData = AnimData;
+                /*
+                 * will be used to store a meshes, usually mesh picked for edit,
+                 * physics parms if physics is enabled for it
+                 */
+                var PhysicsParm = (function () {
+                    function PhysicsParm() {
+                    }
+                    return PhysicsParm;
+                }());
+                vishva.PhysicsParm = PhysicsParm;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3152,8 +3229,10 @@ var org;
                         this.snapTrans = document.getElementById("snapTrans");
                         this.snapRot = document.getElementById("snapRot");
                         this.snapper = document.getElementById("snapper");
+                        this.animSelect = null;
                         this.firstTime = true;
                         this.addMenuOn = false;
+                        this.propsDiag = null;
                         this.vishva = vishva;
                         this.createJPOs();
                         //need to do add menu before main navigation menu
@@ -3334,6 +3413,9 @@ var org;
                         var alreadyOpen = this.editDialog.dialog("isOpen");
                         if (alreadyOpen)
                             return alreadyOpen;
+                        /* Update menu items that are assoicated with
+                           Vishva entities whose state might have changed
+                        */
                         if (this.vishva.isSpaceLocal()) {
                             this.local = true;
                             this.localAxis.innerHTML = "Switch to Global Axis";
@@ -3404,14 +3486,14 @@ var org;
                             cp.setRgb(rgb);
                         }
                         this.envDiag = $("#envDiv");
-                        var dos = Object.defineProperty({
+                        var dos = {
                             autoOpen: false,
                             resizable: false,
                             position: this.rightCenter,
                             minWidth: 350,
                             height: "auto",
                             closeOnEscape: false
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        };
                         this.envDiag.dialog(dos);
                         this.envDiag["jpo"] = this.rightCenter;
                         this.dialogs.push(this.envDiag);
@@ -3486,7 +3568,7 @@ var org;
                     };
                     /*
                      * A dialog box to show the list of available sensors
-                     * actuators in seperate tabs
+                     * actuators, each in seperate tabs
                      */
                     VishvaGUI.prototype.create_sNaDiag = function () {
                         var _this = this;
@@ -3821,7 +3903,9 @@ var org;
                             }
                         }
                     };
-                    VishvaGUI.prototype.createAnimDiag = function () {
+                    VishvaGUI.prototype.initAnimUI = function () {
+                        //if lready initialized then return
+                        //if (this.animSelect !== null) return;
                         var _this = this;
                         this.animSelect = document.getElementById("animList");
                         this.animSelect.onchange = function (e) {
@@ -3851,8 +3935,12 @@ var org;
                             _this.vishva.stopAnimation();
                             return true;
                         };
+                    };
+                    VishvaGUI.prototype.createAnimDiag = function () {
+                        var _this = this;
+                        this.initAnimUI();
                         this.meshAnimDiag = $("#meshAnimDiag");
-                        var dos = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        var dos = {};
                         dos.autoOpen = false;
                         dos.modal = false;
                         dos.resizable = false;
@@ -3865,6 +3953,8 @@ var org;
                         this.meshAnimDiag.dialog(dos);
                     };
                     VishvaGUI.prototype.updateAnimations = function () {
+                        this.vishva.switchDisabled = true;
+                        this.initAnimUI();
                         this.skel = this.vishva.getSkeleton();
                         var skelName;
                         if (this.skel == null) {
@@ -3900,6 +3990,78 @@ var org;
                             }
                         }
                     };
+                    VishvaGUI.prototype.initPhyUI = function () {
+                        var _this = this;
+                        this.phyEna = document.getElementById("phyEna");
+                        this.phyType = document.getElementById("phyType");
+                        this.phyMass = document.getElementById("phyMass");
+                        this.phyRes = document.getElementById("phyRes");
+                        this.phyResVal = document.getElementById("phyResVal");
+                        this.phyResVal["value"] = "0.0";
+                        this.phyRes.oninput = function () {
+                            _this.phyResVal["value"] = _this.formatValue(_this.phyRes.value);
+                        };
+                        this.phyFric = document.getElementById("phyFric");
+                        this.phyFricVal = document.getElementById("phyFricVal");
+                        this.phyFricVal["value"] = "0.0";
+                        this.phyFric.oninput = function () {
+                            _this.phyFricVal["value"] = _this.formatValue(_this.phyFric.value);
+                        };
+                        var phyApply = document.getElementById("phyApply");
+                        var phyRestore = document.getElementById("phyRestore");
+                        phyApply.onclick = function (ev) {
+                            _this.applyPhysics();
+                            return false;
+                        };
+                        phyRestore.onclick = function (ev) {
+                            _this.updatePhysics();
+                            return false;
+                        };
+                    };
+                    VishvaGUI.prototype.formatValue = function (val) {
+                        if (val === "1")
+                            return "1.0";
+                        if (val === "0")
+                            return "0.0";
+                        return val;
+                    };
+                    VishvaGUI.prototype.updatePhysics = function () {
+                        if (this.phyEna === undefined)
+                            this.initPhyUI();
+                        var phyParms = this.vishva.getMeshPickedPhyParms();
+                        if (phyParms !== null) {
+                            this.phyEna.setAttribute("checked", "true");
+                            this.phyType.value = Number(phyParms.type).toString();
+                            this.phyMass.value = Number(phyParms.mass).toString();
+                            this.phyRes.value = Number(phyParms.restitution).toString();
+                            this.phyResVal["value"] = this.formatValue(this.phyRes.value);
+                            this.phyFric.value = Number(phyParms.friction).toString();
+                            this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
+                        }
+                        else {
+                            this.phyEna.checked = false;
+                            this.phyType.value = "0";
+                            this.phyMass.value = "1";
+                            this.phyRes.value = "0";
+                            this.phyResVal["value"] = "0.0";
+                            this.phyFric.value = "0";
+                            this.phyFricVal["value"] = "0.0";
+                        }
+                    };
+                    VishvaGUI.prototype.applyPhysics = function () {
+                        var phyParms;
+                        if (this.phyEna.checked) {
+                            phyParms = new vishva_1.PhysicsParm();
+                            phyParms.type = parseInt(this.phyType.value);
+                            phyParms.mass = parseFloat(this.phyMass.value);
+                            phyParms.restitution = parseFloat(this.phyRes.value);
+                            phyParms.friction = parseFloat(this.phyFric.value);
+                        }
+                        else {
+                            phyParms = null;
+                        }
+                        this.vishva.setMeshPickedPhyParms(phyParms);
+                    };
                     VishvaGUI.prototype.createTransDiag = function () {
                         var _this = this;
                         this.meshTransDiag = $("#meshTransDiag");
@@ -3916,6 +4078,14 @@ var org;
                         this.meshTransDiag.dialog(dos);
                     };
                     VishvaGUI.prototype.updateTransform = function () {
+                        var _this = this;
+                        if (this.transRefresh === undefined) {
+                            this.transRefresh = document.getElementById("transRefresh");
+                            this.transRefresh.onclick = function () {
+                                _this.updateTransform();
+                                return false;
+                            };
+                        }
                         var loc = this.vishva.getLocation();
                         var rot = this.vishva.getRotation();
                         var scl = this.vishva.getScale();
@@ -4108,6 +4278,7 @@ var org;
                     };
                     VishvaGUI.prototype.createEditMenu = function () {
                         var _this = this;
+                        var showProps = document.getElementById("showProps");
                         var swAv = document.getElementById("swAv");
                         var swGnd = document.getElementById("swGnd");
                         var instMesh = document.getElementById("instMesh");
@@ -4123,14 +4294,28 @@ var org;
                         var togEna = document.getElementById("togEna");
                         var showDisa = document.getElementById("showDisa");
                         var hideDisa = document.getElementById("hideDisa");
+                        //let togPhys: HTMLElement = document.getElementById("togPhys");
                         var attLight = document.getElementById("attLight");
                         var addWater = document.getElementById("addWater");
                         var undo = document.getElementById("undo");
                         var redo = document.getElementById("redo");
                         var sNa = document.getElementById("sNa");
-                        var meshAnims = document.getElementById("meshAnims");
-                        var meshMat = document.getElementById("meshMat");
-                        var meshTrans = document.getElementById("meshTrans");
+                        /*
+                        var meshAnims: HTMLElement = document.getElementById("meshAnims");
+                        var meshMat: HTMLElement = document.getElementById("meshMat");
+                        var meshTrans: HTMLElement = document.getElementById("meshTrans");
+                        */
+                        showProps.onclick = function (e) {
+                            if (!_this.vishva.anyMeshSelected()) {
+                                _this.showAlertDiag("no mesh selected");
+                                return;
+                            }
+                            if (_this.propsDiag == null) {
+                                _this.createPropsDiag();
+                            }
+                            _this.propsDiag.dialog("open");
+                            return true;
+                        };
                         swGnd.onclick = function (e) {
                             var err = _this.vishva.switchGround();
                             if (err != null) {
@@ -4236,6 +4421,15 @@ var org;
                             _this.vishva.hideAllDisabled();
                             return false;
                         };
+                        /*
+                        togPhys.onclick = (e) => {
+                            var err: string = this.vishva.togglePhyiscs();
+                            if (err != null) {
+                                this.showAlertDiag(err);
+                            }
+                            return false;
+                        };
+                        */
                         attLight.onclick = function (e) {
                             var err = _this.vishva.attachLight();
                             if (err != null) {
@@ -4320,36 +4514,88 @@ var org;
                             _this.show_sNaDiag();
                             return true;
                         };
-                        meshMat.onclick = function (e) {
-                            _this.showAlertDiag("to be implemented");
+                        /*
+                        meshMat.onclick = (e) => {
+                            this.showAlertDiag("to be implemented");
                             return true;
                         };
-                        meshAnims.onclick = function (e) {
-                            if (!_this.vishva.anyMeshSelected()) {
-                                _this.showAlertDiag("no mesh selected");
+                        meshAnims.onclick = (e) => {
+                            if (!this.vishva.anyMeshSelected()) {
+                                this.showAlertDiag("no mesh selected");
                                 return true;
                             }
-                            if (_this.meshAnimDiag == null) {
-                                _this.createAnimDiag();
+                            if (this.meshAnimDiag == null) {
+                                this.createAnimDiag();
                             }
-                            _this.vishva.switchDisabled = true;
-                            _this.updateAnimations();
-                            _this.meshAnimDiag.dialog("open");
+                            this.vishva.switchDisabled = true;
+                            this.updateAnimations();
+                            this.meshAnimDiag.dialog("open");
                             return true;
                         };
-                        meshTrans.onclick = function (e) {
-                            if (!_this.vishva.anyMeshSelected()) {
-                                _this.showAlertDiag("no mesh selected");
+                        
+                        meshTrans.onclick = (e) => {
+                            if (!this.vishva.anyMeshSelected()) {
+                                this.showAlertDiag("no mesh selected");
                                 return true;
                             }
-                            if (_this.meshTransDiag == null) {
-                                _this.createTransDiag();
+                            if (this.meshTransDiag == null) {
+                                this.createTransDiag();
                             }
-                            _this.vishva.switchDisabled = true;
-                            _this.updateTransform();
-                            _this.meshTransDiag.dialog("open");
+                            this.vishva.switchDisabled = true;
+                            this.updateTransform();
+                            this.meshTransDiag.dialog("open");
                             return true;
                         };
+                        */
+                    };
+                    VishvaGUI.prototype.createPropsDiag = function () {
+                        var _this = this;
+                        //property tabs
+                        var propsTabs = $("#propsTabs");
+                        propsTabs.tabs({
+                            //everytime we switch tabs, close open to re-adjust size
+                            activate: function (e, ui) {
+                                _this.propsDiag.dialog("close");
+                                _this.propsDiag.dialog("open");
+                            },
+                            beforeActivate: function (e, ui) {
+                                _this.vishva.switchDisabled = false;
+                                _this.refreshTab(ui.newTab.index());
+                            }
+                        });
+                        //dialog box
+                        this.propsDiag = $("#propsDiag");
+                        var dos = {
+                            autoOpen: false,
+                            resizable: false,
+                            position: this.rightCenter,
+                            minWidth: 350,
+                            width: "auto",
+                            height: "auto",
+                            closeOnEscape: false,
+                            open: function (e, ui) {
+                                // refresh the active tab
+                                var activeTab = propsTabs.tabs("option", "active");
+                                _this.refreshTab(activeTab);
+                            },
+                            close: function (e, ui) {
+                                _this.vishva.switchDisabled = false;
+                            }
+                        };
+                        this.propsDiag.dialog(dos);
+                        this.propsDiag["jpo"] = this.rightCenter;
+                        this.dialogs.push(this.propsDiag);
+                    };
+                    VishvaGUI.prototype.refreshTab = function (tabIndex) {
+                        if (tabIndex === 0 /* Transforms */) {
+                            this.updateTransform();
+                        }
+                        else if (tabIndex === 4 /* Animations */) {
+                            this.updateAnimations();
+                        }
+                        else if (tabIndex === 1 /* Physics */) {
+                            this.updatePhysics();
+                        }
                     };
                     VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
                     VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";

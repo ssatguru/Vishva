@@ -245,6 +245,9 @@ namespace org.ssatguru.babylonjs.vishva {
             var alreadyOpen: boolean = <boolean>(<any>this.editDialog.dialog("isOpen"));
             if (alreadyOpen) return alreadyOpen;
 
+            /* Update menu items that are assoicated with 
+               Vishva entities whose state might have changed
+            */
             if (this.vishva.isSpaceLocal()) {
                 this.local = true;
                 this.localAxis.innerHTML = "Switch to Global Axis";
@@ -318,15 +321,15 @@ namespace org.ssatguru.babylonjs.vishva {
                 cp.setRgb(rgb);
             }
 
-            this.envDiag = <JQuery>(<any>$("#envDiv"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
+            this.envDiag = $("#envDiv");
+            var dos: DialogOptions = {
                 autoOpen: false,
                 resizable: false,
                 position: this.rightCenter,
                 minWidth: 350,
-                height: (<any>"auto"),
+                height: "auto",
                 closeOnEscape: false
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            };
             this.envDiag.dialog(dos);
             this.envDiag["jpo"] = this.rightCenter;
             this.dialogs.push(this.envDiag);
@@ -427,10 +430,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
         /*
          * A dialog box to show the list of available sensors 
-         * actuators in seperate tabs
+         * actuators, each in seperate tabs
          */
         private create_sNaDiag() {
-            
+
             //tabs
             var sNaDetails: JQuery = $("#sNaDetails");
             sNaDetails.tabs({
@@ -439,12 +442,12 @@ namespace org.ssatguru.babylonjs.vishva {
                  actuator tab is cutoff if its size is greater
                  so we close and open for it to recalculate the sizes.
                  */
-                activate: (e,ui)=>{
+                activate: (e, ui) => {
                     this.sNaDialog.dialog("close");
                     this.sNaDialog.dialog("open");
                 }
             });
-            
+
 
             //dialog box
             this.sNaDialog = $("#sNaDiag");
@@ -453,7 +456,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.modal = false;
             dos.resizable = false;
             dos.width = "auto";
-            dos.height ="auto";
+            dos.height = "auto";
             dos.title = "Sensors and Actuators";
             dos.closeOnEscape = false;
             dos.close = (e, ui) => {
@@ -640,6 +643,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * 
          */
         private showEditActDiag(actuator: Actuator) {
+
             this.vishva.disableKeys();
 
             var actNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editActDiag.actName");
@@ -767,7 +771,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         meshAnimDiag: JQuery;
 
-        animSelect: HTMLSelectElement;
+        animSelect: HTMLSelectElement = null;
 
         animRate: HTMLInputElement;
 
@@ -775,7 +779,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
         skel: Skeleton;
 
-        private createAnimDiag() {
+        private initAnimUI() {
+
+            //if lready initialized then return
+            //if (this.animSelect !== null) return;
+
             this.animSelect = <HTMLSelectElement>document.getElementById("animList");
             this.animSelect.onchange = (e) => {
                 var animName: string = this.animSelect.value;
@@ -802,10 +810,12 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.stopAnimation();
                 return true;
             };
-            this.meshAnimDiag = <JQuery>(<any>$("#meshAnimDiag"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
+        }
 
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+        private createAnimDiag() {
+            this.initAnimUI();
+            this.meshAnimDiag = $("#meshAnimDiag");
+            var dos: DialogOptions = {};
             dos.autoOpen = false;
             dos.modal = false;
             dos.resizable = false;
@@ -819,6 +829,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private updateAnimations() {
+            this.vishva.switchDisabled = true;
+            this.initAnimUI();
             this.skel = this.vishva.getSkeleton();
             var skelName: string;
             if (this.skel == null) {
@@ -852,6 +864,92 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
+        phyEna: HTMLInputElement;
+        phyType: HTMLSelectElement;
+        phyMass: HTMLInputElement;
+        phyRes: HTMLInputElement;
+        phyResVal: HTMLElement;
+        phyFric: HTMLInputElement;
+        phyFricVal: HTMLElement;
+
+        private initPhyUI() {
+            this.phyEna = <HTMLInputElement>document.getElementById("phyEna");
+
+            this.phyType = <HTMLSelectElement>document.getElementById("phyType");
+
+            this.phyMass = <HTMLInputElement>document.getElementById("phyMass");
+
+            this.phyRes = <HTMLInputElement>document.getElementById("phyRes");
+            this.phyResVal = <HTMLElement>document.getElementById("phyResVal");
+            this.phyResVal["value"] = "0.0";
+            this.phyRes.oninput = () => {
+                this.phyResVal["value"] = this.formatValue(this.phyRes.value);
+            }
+
+            this.phyFric = <HTMLInputElement>document.getElementById("phyFric");
+            this.phyFricVal = <HTMLElement>document.getElementById("phyFricVal");
+            this.phyFricVal["value"] = "0.0";
+            this.phyFric.oninput = () => {
+                this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
+            }
+
+            let phyApply = <HTMLButtonElement>document.getElementById("phyApply");
+            let phyRestore = <HTMLButtonElement>document.getElementById("phyRestore");
+
+            phyApply.onclick = (ev) => {
+                this.applyPhysics();
+                return false;
+            }
+
+            phyRestore.onclick = (ev) => {
+                this.updatePhysics();
+                return false;
+            }
+        }
+
+        private formatValue(val: string) {
+            if (val === "1") return "1.0";
+            if (val === "0") return "0.0";
+            return val;
+        }
+
+        private updatePhysics() {
+
+            if (this.phyEna === undefined) this.initPhyUI();
+
+            let phyParms: PhysicsParm = this.vishva.getMeshPickedPhyParms();
+            if (phyParms !== null) {
+                this.phyEna.setAttribute("checked", "true");
+                this.phyType.value = Number(phyParms.type).toString();
+                this.phyMass.value = Number(phyParms.mass).toString();
+                this.phyRes.value = Number(phyParms.restitution).toString();
+                this.phyResVal["value"] = this.formatValue(this.phyRes.value);
+                this.phyFric.value = Number(phyParms.friction).toString();
+                this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
+            } else {
+                this.phyEna.checked = false;
+                this.phyType.value = "0";
+                this.phyMass.value = "1";
+                this.phyRes.value = "0";
+                this.phyResVal["value"] = "0.0";
+                this.phyFric.value = "0";
+                this.phyFricVal["value"] = "0.0";
+            }
+        }
+
+        private applyPhysics() {
+            let phyParms: PhysicsParm;
+            if (this.phyEna.checked) {
+                phyParms = new PhysicsParm();
+                phyParms.type = parseInt(this.phyType.value);
+                phyParms.mass = parseFloat(this.phyMass.value);
+                phyParms.restitution = parseFloat(this.phyRes.value);
+                phyParms.friction = parseFloat(this.phyFric.value);
+            } else {
+                phyParms = null;
+            }
+            this.vishva.setMeshPickedPhyParms(phyParms);
+        }
 
         meshTransDiag: JQuery;
 
@@ -869,8 +967,18 @@ namespace org.ssatguru.babylonjs.vishva {
             };
             this.meshTransDiag.dialog(dos);
         }
-
+        
+        transRefresh: HTMLButtonElement;
+        
         private updateTransform() {
+            if (this.transRefresh === undefined){
+                this.transRefresh = <HTMLButtonElement>document.getElementById("transRefresh");
+                this.transRefresh.onclick = ()=>{
+                    this.updateTransform();
+                    return false;
+                }
+            }
+            
             var loc: Vector3 = this.vishva.getLocation();
             var rot: Vector3 = this.vishva.getRotation();
             var scl: Vector3 = this.vishva.getScale();
@@ -1078,6 +1186,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private createEditMenu() {
+            var showProps: HTMLElement = document.getElementById("showProps");
+
             var swAv: HTMLElement = document.getElementById("swAv");
             var swGnd: HTMLElement = document.getElementById("swGnd");
 
@@ -1087,6 +1197,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var removeChildren: HTMLElement = document.getElementById("removeChildren");
             var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
             var delMesh: HTMLElement = document.getElementById("delMesh");
+
             var visMesh: HTMLElement = document.getElementById("visMesh");
             var showInvis: HTMLElement = document.getElementById("showInvis");
             var hideInvis: HTMLElement = document.getElementById("hideInvis");
@@ -1095,15 +1206,32 @@ namespace org.ssatguru.babylonjs.vishva {
             let showDisa: HTMLElement = document.getElementById("showDisa");
             let hideDisa: HTMLElement = document.getElementById("hideDisa");
 
+            //let togPhys: HTMLElement = document.getElementById("togPhys");
+
             var attLight: HTMLElement = document.getElementById("attLight");
             var addWater: HTMLElement = document.getElementById("addWater");
 
             var undo: HTMLElement = document.getElementById("undo");
             var redo: HTMLElement = document.getElementById("redo");
             var sNa: HTMLElement = document.getElementById("sNa");
+            /*
             var meshAnims: HTMLElement = document.getElementById("meshAnims");
             var meshMat: HTMLElement = document.getElementById("meshMat");
             var meshTrans: HTMLElement = document.getElementById("meshTrans");
+            */
+
+            showProps.onclick = (e) => {
+                if (!this.vishva.anyMeshSelected()) {
+                    this.showAlertDiag("no mesh selected")
+                    return;
+                }
+                if (this.propsDiag == null) {
+                    this.createPropsDiag();
+                }
+                this.propsDiag.dialog("open");
+                return true;
+            };
+
             swGnd.onclick = (e) => {
                 var err: string = this.vishva.switchGround();
                 if (err != null) {
@@ -1210,6 +1338,17 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.hideAllDisabled();
                 return false;
             };
+
+            /*
+            togPhys.onclick = (e) => {
+                var err: string = this.vishva.togglePhyiscs();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            */
+
             attLight.onclick = (e) => {
                 var err: string = this.vishva.attachLight();
                 if (err != null) {
@@ -1292,6 +1431,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.show_sNaDiag();
                 return true;
             };
+            /*
             meshMat.onclick = (e) => {
                 this.showAlertDiag("to be implemented");
                 return true;
@@ -1323,7 +1463,71 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshTransDiag.dialog("open");
                 return true;
             };
+            */
         }
+
+        private propsDiag: JQuery = null;
+
+        private createPropsDiag() {
+
+            //property tabs
+            let propsTabs = $("#propsTabs");
+            propsTabs.tabs({
+                //everytime we switch tabs, close open to re-adjust size
+                activate: (e, ui) => {
+                    this.propsDiag.dialog("close");
+                    this.propsDiag.dialog("open");
+                },
+                beforeActivate: (e, ui) => {
+                    this.vishva.switchDisabled = false;
+                    this.refreshTab(ui.newTab.index());
+                }
+            });
+
+            //dialog box
+            this.propsDiag = $("#propsDiag");
+            var dos: DialogOptions = {
+                autoOpen: false,
+                resizable: false,
+                position: this.rightCenter,
+                minWidth: 350,
+                width: "auto",
+                height: "auto",
+                closeOnEscape: false,
+                open: (e, ui) => {
+                    // refresh the active tab
+                    let activeTab = propsTabs.tabs("option", "active");
+                    this.refreshTab(activeTab);
+                },
+                close: (e, ui) => {
+                    this.vishva.switchDisabled = false;
+                },
+            };
+            this.propsDiag.dialog(dos);
+            this.propsDiag["jpo"] = this.rightCenter;
+            this.dialogs.push(this.propsDiag);
+
+
+        }
+
+
+        private refreshTab(tabIndex: number) {
+            if (tabIndex === propertyTabs.Transforms) {
+                this.updateTransform();
+            } else if (tabIndex === propertyTabs.Animations) {
+                this.updateAnimations();
+            } else if (tabIndex === propertyTabs.Physics) {
+                this.updatePhysics()
+            }
+        }
+    }
+
+    const enum propertyTabs {
+        Transforms,
+        Physics,
+        Material,
+        Lights,
+        Animations
     }
 
     export declare class ColorPicker {

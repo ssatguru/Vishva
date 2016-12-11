@@ -32,6 +32,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import MultiMaterial = BABYLON.MultiMaterial;
     import Node = BABYLON.Node;
     import ParticleSystem = BABYLON.ParticleSystem;
+    import PhysicsImpostor = BABYLON.PhysicsImpostor;
     import PickingInfo = BABYLON.PickingInfo;
     import PointLight = BABYLON.PointLight
     import Quaternion = BABYLON.Quaternion;
@@ -39,6 +40,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import SceneLoader = BABYLON.SceneLoader;
     import SceneSerializer = BABYLON.SceneSerializer;
     import ShadowGenerator = BABYLON.ShadowGenerator;
+    import IShadowGenerator = BABYLON.IShadowGenerator;
     import Skeleton = BABYLON.Skeleton;
     import Sound = BABYLON.Sound;
     import StandardMaterial = BABYLON.StandardMaterial;
@@ -161,6 +163,8 @@ namespace org.ssatguru.babylonjs.vishva {
         //automatcally open edit menu whenever a mesh is selected
         private autoEditMenu: boolean = false;
 
+        private enablePhysics: boolean = true;
+
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
             this.frames = 0;
@@ -180,6 +184,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
             this.engine = new Engine(this.canvas, true);
             this.scene = new Scene(this.engine);
+            this.scene.enablePhysics();
 
             window.addEventListener("resize", (event) => { return this.onWindowResize(event) });
             window.addEventListener("keydown", (e) => { return this.onKeyDown(e) }, false);
@@ -245,6 +250,12 @@ namespace org.ssatguru.babylonjs.vishva {
                         avFound = true;
                         this.avatar = <Mesh>mesh;
                         this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
+                        /*
+                        if (this.enablePhysics) {
+                            this.avatar.checkCollisions = false;
+                            this.avatar.physicsImpostor = new BABYLON.PhysicsImpostor(this.avatar, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.1 }, this.scene);
+                        }
+                        */
                     } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
                         skyFound = true;
                         this.skybox = <Mesh>mesh;
@@ -291,7 +302,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
                         this.sunDR = <DirectionalLight>light;
-                        this.shadowGenerator = light.getShadowGenerator();
+                        this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
                         this.shadowGenerator.bias = 1.0E-6;
                         this.shadowGenerator.useBlurVarianceShadowMap = true;
                     }
@@ -306,14 +317,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
                 }
             }
-            
+
             for (let camera of scene.cameras) {
                 if (Tags.MatchesQuery(camera, "Vishva.camera")) {
                     cameraFound = true;
                     this.mainCamera = <ArcRotateCamera>camera;
                     this.setCameraSettings(this.mainCamera);
                     this.mainCamera.attachControl(this.canvas, true);
-                    this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
+                    //this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
                 }
             }
 
@@ -333,6 +344,9 @@ namespace org.ssatguru.babylonjs.vishva {
             } else {
                 //in case this wasn't set in serialized scene
                 this.ground.receiveShadows = true;
+            }
+            if (this.enablePhysics) {
+                this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
             }
 
             if (!skyFound) {
@@ -473,8 +487,10 @@ namespace org.ssatguru.babylonjs.vishva {
                     }
                     this.jumpCycle--;
                 }
+                //TODO testing physics
                 forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                 this.avatar.moveWithCollisions(forward);
+                //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
                 moving = true;
             } else if (this.key.down) {
                 backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
@@ -564,6 +580,13 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.isMeshSelected = true;
                     this.meshPicked = pickResult.pickedMesh;
                     SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
+                    if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
+                        this.meshPickedPhyParms = null;
+                    } else {
+                        this.savePhyParms();
+                        this.meshPicked.physicsImpostor.dispose();
+                        this.meshPicked.physicsImpostor = null;
+                    }
 
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
                     this.editControl.enableTranslation();
@@ -608,6 +631,20 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        private savePhyParms() {
+            this.meshPickedPhyParms = new PhysicsParm();
+            this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
+            this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
+            this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
+            this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+        }
+
+        private restorePhyParms() {
+            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
+            this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
+            this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
+            this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+        }
         /**
          * switch the edit control to the new mesh
          * 
@@ -616,10 +653,16 @@ namespace org.ssatguru.babylonjs.vishva {
         private swicthEditControl(mesh: AbstractMesh) {
             if (this.switchDisabled) return;
             SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+            if (this.meshPickedPhyParms != null) {
+                this.restorePhyParms();
+                this.meshPickedPhyParms = null;
+            }
             this.meshPicked = mesh;
             this.editControl.switchTo(<Mesh>this.meshPicked);
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
             if (this.key.ctl) this.multiSelect();
+
+
         }
 
         private multiSelect() {
@@ -656,6 +699,10 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
             if (this.meshPicked != null) {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
+                if (this.meshPickedPhyParms != null) {
+                    this.restorePhyParms();
+                    this.meshPickedPhyParms = null;
+                }
             }
         }
 
@@ -1134,6 +1181,43 @@ namespace org.ssatguru.babylonjs.vishva {
             light0.parent = this.meshPicked;
         }
 
+        
+        meshPickedPhyParms: PhysicsParm = null;
+        public togglePhyiscs() {
+            if (!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+
+            if (this.meshPickedPhyParms === null) {
+                this.meshPickedPhyParms = new PhysicsParm();
+                this.meshPickedPhyParms.type = PhysicsImpostor.BoxImpostor;
+                this.meshPickedPhyParms.mass = 1;
+                this.meshPickedPhyParms.restitution = 0.9;
+                this.meshPickedPhyParms.friction = 0.5;
+
+            } else {
+                this.meshPickedPhyParms = null;
+            }
+            
+        }
+        
+        private physTypes(){
+            console.log("BoxImpostor "+ PhysicsImpostor.BoxImpostor);
+            console.log("SphereImpostor "+PhysicsImpostor.SphereImpostor);
+            console.log("PlaneImpostor "+PhysicsImpostor.PlaneImpostor);
+            console.log("CylinderImpostor "+PhysicsImpostor.CylinderImpostor);
+            console.log("MeshImpostor "+PhysicsImpostor.MeshImpostor);
+            console.log("ParticleImpostor "+PhysicsImpostor.ParticleImpostor);
+            console.log("HeightmapImpostor "+PhysicsImpostor.HeightmapImpostor);
+        }
+        
+        public getMeshPickedPhyParms(){
+            return this.meshPickedPhyParms;
+        }
+        public setMeshPickedPhyParms(parms: PhysicsParm){
+            this.meshPickedPhyParms = parms;
+        }
+        
         public setSpaceLocal(lcl: any) {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
@@ -1540,7 +1624,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.resetSkels(this.scene);
             this.cleanupMats();
             this.renameWorldTextures();
-            
+
             let vishvaSerialzed = new VishvaSerialized();
             vishvaSerialzed.settings.cameraCollision = this.cameraCollision;
             vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
@@ -2252,6 +2336,16 @@ namespace org.ssatguru.babylonjs.vishva {
             this.e = e;
             this.r = d;
         }
+    }
+    /*
+     * will be used to store a meshes, usually mesh picked for edit,
+     * physics parms if physics is enabled for it
+     */
+    export class PhysicsParm {
+        public type: number;
+        public mass: number;
+        public restitution: number;
+        public friction: number;
     }
 
 

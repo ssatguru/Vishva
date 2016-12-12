@@ -3,48 +3,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var util;
-            (function (util) {
-                var HREFsearch = (function () {
-                    function HREFsearch() {
-                        this.names = new Array();
-                        this.values = new Array();
-                        var search = window.location.search;
-                        search = search.substring(1);
-                        var parms = search.split("&");
-                        for (var index121 = 0; index121 < parms.length; index121++) {
-                            var parm = parms[index121];
-                            {
-                                var nameValues = parm.split("=");
-                                if (nameValues.length === 2) {
-                                    var name = nameValues[0];
-                                    var value = nameValues[1];
-                                    this.names.push(name);
-                                    this.values.push(value);
-                                }
-                            }
-                        }
-                    }
-                    HREFsearch.prototype.getParm = function (parm) {
-                        var i = this.names.indexOf(parm);
-                        if (i !== -1) {
-                            return this.values[i];
-                        }
-                        return null;
-                    };
-                    return HREFsearch;
-                }());
-                util.HREFsearch = HREFsearch;
-            })(util = babylonjs.util || (babylonjs.util = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
 /*
  * Sensors and Actuators
  */
@@ -1559,14 +1517,7 @@ var org;
                                 this.isMeshSelected = true;
                                 this.meshPicked = pickResult.pickedMesh;
                                 vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
-                                if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
-                                    this.meshPickedPhyParms = null;
-                                }
-                                else {
-                                    this.savePhyParms();
-                                    this.meshPicked.physicsImpostor.dispose();
-                                    this.meshPicked.physicsImpostor = null;
-                                }
+                                this.savePhyParms();
                                 this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
                                 this.editControl.enableTranslation();
                                 if (this.globalAxisMode) {
@@ -1616,17 +1567,27 @@ var org;
                         }
                     };
                     Vishva.prototype.savePhyParms = function () {
-                        this.meshPickedPhyParms = new PhysicsParm();
-                        this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
-                        this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
-                        this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
-                        this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+                        if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
+                            this.meshPickedPhyParms = null;
+                        }
+                        else {
+                            this.meshPickedPhyParms = new PhysicsParm();
+                            this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
+                            this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
+                            this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
+                            this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+                            this.meshPicked.physicsImpostor.dispose();
+                            this.meshPicked.physicsImpostor = null;
+                        }
                     };
                     Vishva.prototype.restorePhyParms = function () {
-                        this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
-                        this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
-                        this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
-                        this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+                        if (this.meshPickedPhyParms != null) {
+                            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
+                            this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
+                            this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
+                            this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+                            this.meshPickedPhyParms = null;
+                        }
                     };
                     /**
                      * switch the edit control to the new mesh
@@ -1637,11 +1598,9 @@ var org;
                         if (this.switchDisabled)
                             return;
                         vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-                        if (this.meshPickedPhyParms != null) {
-                            this.restorePhyParms();
-                            this.meshPickedPhyParms = null;
-                        }
+                        this.restorePhyParms();
                         this.meshPicked = mesh;
+                        this.savePhyParms();
                         this.editControl.switchTo(this.meshPicked);
                         vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
                         if (this.key.ctl)
@@ -1682,10 +1641,7 @@ var org;
                             this.vishvaGUI.closeEditMenu();
                         if (this.meshPicked != null) {
                             vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-                            if (this.meshPickedPhyParms != null) {
-                                this.restorePhyParms();
-                                this.meshPickedPhyParms = null;
-                            }
+                            this.restorePhyParms();
                         }
                     };
                     Vishva.prototype.switchFocusToAV = function () {
@@ -4679,6 +4635,48 @@ var org;
                 }());
                 vishva.MiscSerialized = MiscSerialized;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var util;
+            (function (util) {
+                var HREFsearch = (function () {
+                    function HREFsearch() {
+                        this.names = new Array();
+                        this.values = new Array();
+                        var search = window.location.search;
+                        search = search.substring(1);
+                        var parms = search.split("&");
+                        for (var index121 = 0; index121 < parms.length; index121++) {
+                            var parm = parms[index121];
+                            {
+                                var nameValues = parm.split("=");
+                                if (nameValues.length === 2) {
+                                    var name = nameValues[0];
+                                    var value = nameValues[1];
+                                    this.names.push(name);
+                                    this.values.push(value);
+                                }
+                            }
+                        }
+                    }
+                    HREFsearch.prototype.getParm = function (parm) {
+                        var i = this.names.indexOf(parm);
+                        if (i !== -1) {
+                            return this.values[i];
+                        }
+                        return null;
+                    };
+                    return HREFsearch;
+                }());
+                util.HREFsearch = HREFsearch;
+            })(util = babylonjs.util || (babylonjs.util = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));

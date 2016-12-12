@@ -580,14 +580,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.isMeshSelected = true;
                     this.meshPicked = pickResult.pickedMesh;
                     SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-                    if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
-                        this.meshPickedPhyParms = null;
-                    } else {
-                        this.savePhyParms();
-                        this.meshPicked.physicsImpostor.dispose();
-                        this.meshPicked.physicsImpostor = null;
-                    }
-
+                    this.savePhyParms();
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
                     this.editControl.enableTranslation();
                     if (this.globalAxisMode) {
@@ -632,18 +625,28 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private savePhyParms() {
-            this.meshPickedPhyParms = new PhysicsParm();
-            this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
-            this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
-            this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
-            this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+            if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
+                this.meshPickedPhyParms = null;
+            } else {
+                this.meshPickedPhyParms = new PhysicsParm();
+                this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
+                this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
+                this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
+                this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+                this.meshPicked.physicsImpostor.dispose();
+                this.meshPicked.physicsImpostor = null;
+            }
+
         }
 
         private restorePhyParms() {
-            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
-            this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
-            this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
-            this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+            if (this.meshPickedPhyParms != null) {
+                this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
+                this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
+                this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
+                this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+                this.meshPickedPhyParms = null;
+            }
         }
         /**
          * switch the edit control to the new mesh
@@ -653,11 +656,10 @@ namespace org.ssatguru.babylonjs.vishva {
         private swicthEditControl(mesh: AbstractMesh) {
             if (this.switchDisabled) return;
             SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-            if (this.meshPickedPhyParms != null) {
-                this.restorePhyParms();
-                this.meshPickedPhyParms = null;
-            }
+            this.restorePhyParms();
+            
             this.meshPicked = mesh;
+            this.savePhyParms();
             this.editControl.switchTo(<Mesh>this.meshPicked);
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
             if (this.key.ctl) this.multiSelect();
@@ -699,10 +701,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
             if (this.meshPicked != null) {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
-                if (this.meshPickedPhyParms != null) {
-                    this.restorePhyParms();
-                    this.meshPickedPhyParms = null;
-                }
+                this.restorePhyParms();
             }
         }
 
@@ -1181,7 +1180,7 @@ namespace org.ssatguru.babylonjs.vishva {
             light0.parent = this.meshPicked;
         }
 
-        
+
         meshPickedPhyParms: PhysicsParm = null;
         public togglePhyiscs() {
             if (!this.isMeshSelected) {
@@ -1198,26 +1197,26 @@ namespace org.ssatguru.babylonjs.vishva {
             } else {
                 this.meshPickedPhyParms = null;
             }
-            
+
         }
-        
-        private physTypes(){
-            console.log("BoxImpostor "+ PhysicsImpostor.BoxImpostor);
-            console.log("SphereImpostor "+PhysicsImpostor.SphereImpostor);
-            console.log("PlaneImpostor "+PhysicsImpostor.PlaneImpostor);
-            console.log("CylinderImpostor "+PhysicsImpostor.CylinderImpostor);
-            console.log("MeshImpostor "+PhysicsImpostor.MeshImpostor);
-            console.log("ParticleImpostor "+PhysicsImpostor.ParticleImpostor);
-            console.log("HeightmapImpostor "+PhysicsImpostor.HeightmapImpostor);
+
+        private physTypes() {
+            console.log("BoxImpostor " + PhysicsImpostor.BoxImpostor);
+            console.log("SphereImpostor " + PhysicsImpostor.SphereImpostor);
+            console.log("PlaneImpostor " + PhysicsImpostor.PlaneImpostor);
+            console.log("CylinderImpostor " + PhysicsImpostor.CylinderImpostor);
+            console.log("MeshImpostor " + PhysicsImpostor.MeshImpostor);
+            console.log("ParticleImpostor " + PhysicsImpostor.ParticleImpostor);
+            console.log("HeightmapImpostor " + PhysicsImpostor.HeightmapImpostor);
         }
-        
-        public getMeshPickedPhyParms(){
+
+        public getMeshPickedPhyParms() {
             return this.meshPickedPhyParms;
         }
-        public setMeshPickedPhyParms(parms: PhysicsParm){
+        public setMeshPickedPhyParms(parms: PhysicsParm) {
             this.meshPickedPhyParms = parms;
         }
-        
+
         public setSpaceLocal(lcl: any) {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"

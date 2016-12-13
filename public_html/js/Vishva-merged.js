@@ -3,6 +3,48 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var util;
+            (function (util) {
+                var HREFsearch = (function () {
+                    function HREFsearch() {
+                        this.names = new Array();
+                        this.values = new Array();
+                        var search = window.location.search;
+                        search = search.substring(1);
+                        var parms = search.split("&");
+                        for (var index121 = 0; index121 < parms.length; index121++) {
+                            var parm = parms[index121];
+                            {
+                                var nameValues = parm.split("=");
+                                if (nameValues.length === 2) {
+                                    var name = nameValues[0];
+                                    var value = nameValues[1];
+                                    this.names.push(name);
+                                    this.values.push(value);
+                                }
+                            }
+                        }
+                    }
+                    HREFsearch.prototype.getParm = function (parm) {
+                        var i = this.names.indexOf(parm);
+                        if (i !== -1) {
+                            return this.values[i];
+                        }
+                        return null;
+                    };
+                    return HREFsearch;
+                }());
+                util.HREFsearch = HREFsearch;
+            })(util = babylonjs.util || (babylonjs.util = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
 /*
  * Sensors and Actuators
  */
@@ -4635,48 +4677,6 @@ var org;
                 }());
                 vishva.MiscSerialized = MiscSerialized;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var util;
-            (function (util) {
-                var HREFsearch = (function () {
-                    function HREFsearch() {
-                        this.names = new Array();
-                        this.values = new Array();
-                        var search = window.location.search;
-                        search = search.substring(1);
-                        var parms = search.split("&");
-                        for (var index121 = 0; index121 < parms.length; index121++) {
-                            var parm = parms[index121];
-                            {
-                                var nameValues = parm.split("=");
-                                if (nameValues.length === 2) {
-                                    var name = nameValues[0];
-                                    var value = nameValues[1];
-                                    this.names.push(name);
-                                    this.values.push(value);
-                                }
-                            }
-                        }
-                    }
-                    HREFsearch.prototype.getParm = function (parm) {
-                        var i = this.names.indexOf(parm);
-                        if (i !== -1) {
-                            return this.values[i];
-                        }
-                        return null;
-                    };
-                    return HREFsearch;
-                }());
-                util.HREFsearch = HREFsearch;
-            })(util = babylonjs.util || (babylonjs.util = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));

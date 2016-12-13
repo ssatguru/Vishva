@@ -18,7 +18,7 @@
         <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet">
 
         <script src="lib/cannon.js"></script>
-        <script src="lib/babylon.max-2.5.js"></script>
+        <script src="lib/babylon.2.6-12-09-2016.js"></script>
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
         <script src="lib/colorpicker.min.js"></script>
@@ -303,7 +303,7 @@
                         <br>
                         <button id="transRefresh">refresh</button>
                     </div>
-                    
+
                     <div id="Physics" >
                         <table>
                             <tr>
@@ -332,14 +332,14 @@
                                 <td>restitution : <output for="phyRes" id="phyResVal"></output></td>
                                 <td>
                                     <input type="range" id="phyRes" min="0.0" max="1.0" step="0.1" value="0.0">
-                                    
+
                                 </td>
                             </tr>
                             <tr>
                                 <td>friction : <output for="phyFric" id="phyFricVal"></output> </td>
                                 <td>
                                     <input type="range" id="phyFric" min="0.0" max="1.0" step="0.1" value="0.0">
-                                   
+
                                 </td>
                             </tr>
                         </table>
@@ -347,9 +347,95 @@
                         <button id ="phyApply">apply</button>
                         <button id ="phyRestore">restore</button>
                     </div>
-                    
-                    <div id="Material" ></div>
-                    <div id="Lights" ></div>
+
+                    <div id="Material" >
+                        <select id="matSelect">
+                            <option value="wood">Wood</option>
+                            <option value="marble">Marble</option>
+                            <option value="fire">Fire</option>
+                        </select>
+                    </div>
+
+                    <div id="Lights" >
+                        <table>
+                            <tr>
+                                <td>attach</td>
+                                <td><input type="checkbox" id="lightAtt" ></td>
+                            </tr>
+                            <tr>
+                                <td>type</td>
+                                <td><select id="lightType" oninput="showOpt();">
+                                        <option value="spot">spot</option>
+                                        <option value="dir">directional</option>
+                                        <option value="point">point</option>
+                                        <option value="hemi">hemispheric</option>
+                                    </select></td>
+                            </tr>
+                            <tr>
+                                <td>diffuse</td>
+                                <td><input type="color" id="lightDiff" value="#ffffff"></td>
+                            </tr>
+                            <tr>
+                                <td>specular </td>
+                                <td>
+                                    <input type="color" id="lightSpec" value="#ffffff">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>intensity </td>
+                                <td>
+                                    <input type="range" id="lightInten" min="0.0" max="1.0" step="0.1" value="0.0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>range</td>
+                                <td>
+                                    <input type="text" id="lightRange" size="3" value="1">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>radius</td>
+                                <td>
+                                    <input type="text" id="lightRadius" size="3" value="1">
+                                </td>
+                            </tr>
+                            <tr class="opt spot">
+                                <td>angle</td>
+                                <td>
+                                    <input type="range" id="lightAngle" min="0.0" max="180.0" step="1" value="45.0">
+                                </td>
+                            </tr>
+                            <tr class="opt spot">
+                                <td>exponent</td>
+                                <td>
+                                    <input type="text" id="lightExp" size="3" value="1">
+                                </td>
+                            </tr>
+                             <tr class="opt hemi">
+                                <td>ground color</td>
+                                <td>
+                                    <input type="color" id="lightGndClr" value="#ffffff">
+                                </td>
+                            </tr>
+                            <tr class="opt hemi dir">
+                                <td>direction</td>
+                                <td>
+                                    <input type="text" id="lightdir" size="3" value="1">
+                                </td>
+                            </tr>
+                        </table>
+                        <br>
+                        <button id ="lightApply">apply</button>
+                        <button id ="lightRestore">restore</button>
+                        <script>
+                            function showOpt(){
+                                var cls = "." + $("#lightType").val();
+                                $(".opt").hide();
+                                $(cls).show();
+                            }
+                            showOpt();
+                        </script>
+                    </div>
 
                     <div id="meshAnimDiag" title="Animations">
                         <table>

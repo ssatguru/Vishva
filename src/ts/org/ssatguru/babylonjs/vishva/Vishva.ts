@@ -657,7 +657,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.switchDisabled) return;
             SNAManager.getSNAManager().enableSnAs(this.meshPicked);
             this.restorePhyParms();
-            
+
             this.meshPicked = mesh;
             this.savePhyParms();
             this.editControl.switchTo(<Mesh>this.meshPicked);
@@ -1217,6 +1217,91 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPickedPhyParms = parms;
         }
 
+        /*
+         * Checks if the selected Mesh has any lights attached
+         * if yes then returns that light 
+         * else return null
+         */
+        public getAttachedLight(): LightParm {
+            var childs: Node[] = this.meshPicked.getDescendants();
+            if (childs.length === 0) return null;
+            var light: Light = null;
+            for (let child of childs) {
+                if (child instanceof Light) {
+                    light = child;
+                    break;
+                }
+            }
+            if (light === null) return null;
+            var lightParm = new LightParm();
+            lightParm.diffuse = light.diffuse;
+            lightParm.specular = light.specular;
+            lightParm.range = light.range;
+            lightParm.radius = light.radius;
+            lightParm.intensity = light.intensity;
+            
+            if (light instanceof BABYLON.SpotLight) {
+                lightParm.type = "Spot"
+                lightParm.angle = light.angle;
+                lightParm.exponent = light.exponent;
+            }
+            if (light instanceof BABYLON.PointLight) {
+                lightParm.type = "Point"
+            }
+            if (light instanceof BABYLON.DirectionalLight) {
+                lightParm.type = "Dir"
+                lightParm.direction = light.direction;
+
+            }
+            if (light instanceof BABYLON.HemisphericLight) {
+                lightParm.type = "Hemi";
+                lightParm.direction = light.direction;
+                lightParm.gndClr = light.groundColor;
+            }
+            return lightParm;
+        }
+
+        public attachAlight(lightParm: LightParm) {
+            this.detachLight();
+            let light: Light = null;
+            let name: string = this.meshPicked.name + "-light";
+            if (lightParm.type === "Spot") {
+                light = new BABYLON.SpotLight(name, Vector3.Zero(), new Vector3(0, -1, 0), lightParm.angle * Math.PI / 180, lightParm.exponent, this.scene);
+            } else if (lightParm.type === "Point") {
+                light = new BABYLON.PointLight(name, Vector3.Zero(), this.scene);
+            } else if (lightParm.type === "Dir") {
+                //light = new BABYLON.DirectionalLight(name, lightParm.direction, this.scene);
+                light = new BABYLON.DirectionalLight(name, new Vector3(0,-1,0), this.scene);
+            } else if (lightParm.type === "Hemi") {
+                //light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
+                light = new BABYLON.HemisphericLight(name, new Vector3(0,-1,0), this.scene);
+                (<BABYLON.HemisphericLight>light).groundColor = lightParm.gndClr;
+            }
+            if (light !== null) {
+                light.diffuse = lightParm.diffuse;
+                light.specular = lightParm.specular;
+                light.range = lightParm.range;
+                light.radius = lightParm.radius;
+                light.intensity = lightParm.intensity;
+                light.parent = this.meshPicked;
+                
+            }
+        }
+        
+        public detachLight(){
+            var childs: Node[] = this.meshPicked.getDescendants();
+            if (childs.length === 0) return;
+            var light: Light = null;
+            for (let child of childs) {
+                if (child instanceof Light) {
+                    light = child;
+                    break;
+                }
+            }
+            if (light === null) return;
+            light.parent = null;
+            light.dispose();
+        }
         public setSpaceLocal(lcl: any) {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
@@ -2347,6 +2432,19 @@ namespace org.ssatguru.babylonjs.vishva {
         public friction: number;
     }
 
+    export class LightParm {
+        public type: string;
+        public diffuse: Color3;
+        public specular: Color3;
+        public intensity: number;
+        public range: number;
+        public radius: number;
+        public angle: number;
+        public exponent: number;
+        public gndClr: Color3;
+        public direction: Vector3;
+
+    }
 
 }
 

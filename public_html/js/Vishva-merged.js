@@ -1106,6 +1106,7 @@ var org;
                 var DirectionalLight = BABYLON.DirectionalLight;
                 var Engine = BABYLON.Engine;
                 var HemisphericLight = BABYLON.HemisphericLight;
+                var Light = BABYLON.Light;
                 var Matrix = BABYLON.Matrix;
                 var Mesh = BABYLON.Mesh;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
@@ -2176,6 +2177,95 @@ var org;
                     Vishva.prototype.setMeshPickedPhyParms = function (parms) {
                         this.meshPickedPhyParms = parms;
                     };
+                    /*
+                     * Checks if the selected Mesh has any lights attached
+                     * if yes then returns that light
+                     * else return null
+                     */
+                    Vishva.prototype.getAttachedLight = function () {
+                        var childs = this.meshPicked.getDescendants();
+                        if (childs.length === 0)
+                            return null;
+                        var light = null;
+                        for (var _i = 0, childs_1 = childs; _i < childs_1.length; _i++) {
+                            var child = childs_1[_i];
+                            if (child instanceof Light) {
+                                light = child;
+                                break;
+                            }
+                        }
+                        if (light === null)
+                            return null;
+                        var lightParm = new LightParm();
+                        lightParm.diffuse = light.diffuse;
+                        lightParm.specular = light.specular;
+                        lightParm.range = light.range;
+                        lightParm.radius = light.radius;
+                        lightParm.intensity = light.intensity;
+                        if (light instanceof BABYLON.SpotLight) {
+                            lightParm.type = "Spot";
+                            lightParm.angle = light.angle;
+                            lightParm.exponent = light.exponent;
+                        }
+                        if (light instanceof BABYLON.PointLight) {
+                            lightParm.type = "Point";
+                        }
+                        if (light instanceof BABYLON.DirectionalLight) {
+                            lightParm.type = "Dir";
+                            lightParm.direction = light.direction;
+                        }
+                        if (light instanceof BABYLON.HemisphericLight) {
+                            lightParm.type = "Hemi";
+                            lightParm.direction = light.direction;
+                            lightParm.gndClr = light.groundColor;
+                        }
+                        return lightParm;
+                    };
+                    Vishva.prototype.attachAlight = function (lightParm) {
+                        this.detachLight();
+                        var light = null;
+                        var name = this.meshPicked.name + "-light";
+                        if (lightParm.type === "Spot") {
+                            light = new BABYLON.SpotLight(name, Vector3.Zero(), new Vector3(0, -1, 0), lightParm.angle * Math.PI / 180, lightParm.exponent, this.scene);
+                        }
+                        else if (lightParm.type === "Point") {
+                            light = new BABYLON.PointLight(name, Vector3.Zero(), this.scene);
+                        }
+                        else if (lightParm.type === "Dir") {
+                            //light = new BABYLON.DirectionalLight(name, lightParm.direction, this.scene);
+                            light = new BABYLON.DirectionalLight(name, new Vector3(0, -1, 0), this.scene);
+                        }
+                        else if (lightParm.type === "Hemi") {
+                            //light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
+                            light = new BABYLON.HemisphericLight(name, new Vector3(0, -1, 0), this.scene);
+                            light.groundColor = lightParm.gndClr;
+                        }
+                        if (light !== null) {
+                            light.diffuse = lightParm.diffuse;
+                            light.specular = lightParm.specular;
+                            light.range = lightParm.range;
+                            light.radius = lightParm.radius;
+                            light.intensity = lightParm.intensity;
+                            light.parent = this.meshPicked;
+                        }
+                    };
+                    Vishva.prototype.detachLight = function () {
+                        var childs = this.meshPicked.getDescendants();
+                        if (childs.length === 0)
+                            return;
+                        var light = null;
+                        for (var _i = 0, childs_2 = childs; _i < childs_2.length; _i++) {
+                            var child = childs_2[_i];
+                            if (child instanceof Light) {
+                                light = child;
+                                break;
+                            }
+                        }
+                        if (light === null)
+                            return;
+                        light.parent = null;
+                        light.dispose();
+                    };
                     Vishva.prototype.setSpaceLocal = function (lcl) {
                         if (this.snapperOn) {
                             return "Cannot switch axis mode when snapper is on";
@@ -3200,6 +3290,12 @@ var org;
                     return PhysicsParm;
                 }());
                 vishva.PhysicsParm = PhysicsParm;
+                var LightParm = (function () {
+                    function LightParm() {
+                    }
+                    return LightParm;
+                }());
+                vishva.LightParm = LightParm;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3231,6 +3327,7 @@ var org;
                         this.firstTime = true;
                         this.addMenuOn = false;
                         this.propsDiag = null;
+                        this.isTabRestart = false;
                         this.vishva = vishva;
                         this.createJPOs();
                         //need to do add menu before main navigation menu
@@ -3988,6 +4085,63 @@ var org;
                             }
                         }
                     };
+                    VishvaGUI.prototype.initLightUI = function () {
+                        var _this = this;
+                        console.log("initLightUI");
+                        this.lightAtt = document.getElementById("lightAtt");
+                        this.lightType = document.getElementById("lightType");
+                        this.lightDiff = document.getElementById("lightDiff");
+                        this.lightSpec = document.getElementById("lightSpec");
+                        this.lightInten = document.getElementById("lightInten");
+                        this.lightRange = document.getElementById("lightRange");
+                        this.lightRadius = document.getElementById("lightAtt");
+                        this.lightAngle = document.getElementById("lightAngle");
+                        this.lightExp = document.getElementById("lightExp");
+                        this.lightGndClr = document.getElementById("lightGndClr");
+                        this.lightDir = document.getElementById("lightDir");
+                        var lightApply = document.getElementById("lightApply");
+                        lightApply.onclick = function () {
+                            _this.applyLight();
+                        };
+                    };
+                    VishvaGUI.prototype.updateLight = function () {
+                        console.log("updateLight");
+                        if (this.lightAtt === undefined)
+                            this.initLightUI();
+                        var lightParm = this.vishva.getAttachedLight();
+                        if (lightParm === null) {
+                            this.lightAtt.checked = false;
+                            return;
+                        }
+                        this.lightAtt.checked = true;
+                        this.lightType.value = lightParm.type;
+                        this.lightDiff.value = "#ffffff";
+                        this.lightSpec.value = "#ffffff";
+                        this.lightInten.value = Number(lightParm.intensity).toString();
+                        this.lightRange.value = Number(lightParm.range).toString();
+                        this.lightRadius.value = Number(lightParm.radius).toString();
+                        this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+                        this.lightExp.value = Number(lightParm.exponent).toString();
+                        this.lightGndClr.value = "#ffffff";
+                    };
+                    VishvaGUI.prototype.applyLight = function () {
+                        if (!this.lightAtt.checked) {
+                            this.vishva.detachLight();
+                            return;
+                        }
+                        var lightParm = new vishva_1.LightParm();
+                        lightParm.type = this.lightType.value;
+                        lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
+                        lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
+                        lightParm.intensity = parseFloat(this.lightInten.value);
+                        lightParm.range = parseFloat(this.lightRange.value);
+                        lightParm.radius = parseFloat(this.lightRadius.value);
+                        lightParm.angle = parseFloat(this.lightAngle.value);
+                        //lightParm.direction = parseFloat(this.lightDir.value);
+                        lightParm.exponent = parseFloat(this.lightExp.value);
+                        lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightDiff.value);
+                        this.vishva.attachAlight(lightParm);
+                    };
                     VishvaGUI.prototype.initPhyUI = function () {
                         var _this = this;
                         this.phyEna = document.getElementById("phyEna");
@@ -4553,6 +4707,7 @@ var org;
                         propsTabs.tabs({
                             //everytime we switch tabs, close open to re-adjust size
                             activate: function (e, ui) {
+                                _this.isTabRestart = true;
                                 _this.propsDiag.dialog("close");
                                 _this.propsDiag.dialog("open");
                             },
@@ -4572,9 +4727,14 @@ var org;
                             height: "auto",
                             closeOnEscape: false,
                             open: function (e, ui) {
-                                // refresh the active tab
-                                var activeTab = propsTabs.tabs("option", "active");
-                                _this.refreshTab(activeTab);
+                                if (!_this.isTabRestart) {
+                                    // refresh the active tab
+                                    var activeTab = propsTabs.tabs("option", "active");
+                                    _this.refreshTab(activeTab);
+                                }
+                                else {
+                                    _this.isTabRestart = false;
+                                }
                             },
                             close: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
@@ -4587,6 +4747,9 @@ var org;
                     VishvaGUI.prototype.refreshTab = function (tabIndex) {
                         if (tabIndex === 0 /* Transforms */) {
                             this.updateTransform();
+                        }
+                        else if (tabIndex === 3 /* Lights */) {
+                            this.updateLight();
                         }
                         else if (tabIndex === 4 /* Animations */) {
                             this.updateAnimations();

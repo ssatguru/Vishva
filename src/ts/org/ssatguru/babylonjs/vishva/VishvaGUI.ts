@@ -864,6 +864,82 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
+
+        lightAtt: HTMLInputElement;
+        lightType: HTMLSelectElement;
+        lightDiff: HTMLInputElement;
+        lightSpec: HTMLInputElement;
+        lightInten: HTMLInputElement;
+        lightRange: HTMLInputElement;
+        lightRadius: HTMLInputElement;
+        lightAngle: HTMLInputElement;
+        lightExp: HTMLInputElement;
+        lightGndClr: HTMLInputElement;
+        lightDir: HTMLInputElement;
+
+        private initLightUI() {
+            console.log("initLightUI");
+            this.lightAtt = <HTMLInputElement>document.getElementById("lightAtt");
+            this.lightType = <HTMLSelectElement>document.getElementById("lightType");
+            this.lightDiff = <HTMLInputElement>document.getElementById("lightDiff");
+            this.lightSpec = <HTMLInputElement>document.getElementById("lightSpec");
+            this.lightInten = <HTMLInputElement>document.getElementById("lightInten");
+            this.lightRange = <HTMLInputElement>document.getElementById("lightRange");
+            this.lightRadius = <HTMLInputElement>document.getElementById("lightAtt");
+            this.lightAngle = <HTMLInputElement>document.getElementById("lightAngle");
+            this.lightExp = <HTMLInputElement>document.getElementById("lightExp");
+            this.lightGndClr = <HTMLInputElement>document.getElementById("lightGndClr");
+            this.lightDir = <HTMLInputElement>document.getElementById("lightDir");
+            let lightApply: HTMLButtonElement =  <HTMLButtonElement>document.getElementById("lightApply");
+            lightApply.onclick = ()=>{
+                this.applyLight();
+                
+            }
+
+        }
+
+        private updateLight() {
+            console.log("updateLight");
+            if (this.lightAtt === undefined) this.initLightUI();
+            let lightParm: LightParm = this.vishva.getAttachedLight();
+            if (lightParm === null){
+                this.lightAtt.checked = false;
+                 return;
+            }
+            this.lightAtt.checked = true;
+            this.lightType.value = lightParm.type;
+            this.lightDiff.value = "#ffffff";
+            this.lightSpec.value = "#ffffff";
+            this.lightInten.value = Number(lightParm.intensity).toString();
+            this.lightRange.value = Number(lightParm.range).toString();
+            this.lightRadius.value = Number(lightParm.radius).toString();
+            this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+            this.lightExp.value = Number(lightParm.exponent).toString();
+            this.lightGndClr.value = "#ffffff";
+
+        }
+        
+        private applyLight(){
+            if (!this.lightAtt.checked){ 
+                this.vishva.detachLight();
+                return;
+            }
+            let lightParm : LightParm = new LightParm();
+            lightParm.type = this.lightType.value;
+            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
+            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
+            lightParm.intensity = parseFloat(this.lightInten.value);
+            lightParm.range = parseFloat(this.lightRange.value);
+            lightParm.radius = parseFloat(this.lightRadius.value);
+            lightParm.angle = parseFloat(this.lightAngle.value);
+            //lightParm.direction = parseFloat(this.lightDir.value);
+            lightParm.exponent = parseFloat(this.lightExp.value);
+            lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightDiff.value);
+            this.vishva.attachAlight(lightParm);
+            
+        }
+
+
         phyEna: HTMLInputElement;
         phyType: HTMLSelectElement;
         phyMass: HTMLInputElement;
@@ -967,18 +1043,18 @@ namespace org.ssatguru.babylonjs.vishva {
             };
             this.meshTransDiag.dialog(dos);
         }
-        
+
         transRefresh: HTMLButtonElement;
-        
+
         private updateTransform() {
-            if (this.transRefresh === undefined){
+            if (this.transRefresh === undefined) {
                 this.transRefresh = <HTMLButtonElement>document.getElementById("transRefresh");
-                this.transRefresh.onclick = ()=>{
+                this.transRefresh.onclick = () => {
                     this.updateTransform();
                     return false;
                 }
             }
-            
+
             var loc: Vector3 = this.vishva.getLocation();
             var rot: Vector3 = this.vishva.getRotation();
             var scl: Vector3 = this.vishva.getScale();
@@ -1468,6 +1544,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private propsDiag: JQuery = null;
 
+        private isTabRestart: boolean = false;
         private createPropsDiag() {
 
             //property tabs
@@ -1475,6 +1552,7 @@ namespace org.ssatguru.babylonjs.vishva {
             propsTabs.tabs({
                 //everytime we switch tabs, close open to re-adjust size
                 activate: (e, ui) => {
+                    this.isTabRestart = true;
                     this.propsDiag.dialog("close");
                     this.propsDiag.dialog("open");
                 },
@@ -1495,9 +1573,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 height: "auto",
                 closeOnEscape: false,
                 open: (e, ui) => {
-                    // refresh the active tab
-                    let activeTab = propsTabs.tabs("option", "active");
-                    this.refreshTab(activeTab);
+                    if (!this.isTabRestart) {
+                        // refresh the active tab
+                        let activeTab = propsTabs.tabs("option", "active");
+                        this.refreshTab(activeTab);
+                    } else {
+                        this.isTabRestart = false;
+                    }
                 },
                 close: (e, ui) => {
                     this.vishva.switchDisabled = false;
@@ -1514,6 +1596,8 @@ namespace org.ssatguru.babylonjs.vishva {
         private refreshTab(tabIndex: number) {
             if (tabIndex === propertyTabs.Transforms) {
                 this.updateTransform();
+            } else if (tabIndex === propertyTabs.Lights) {
+                this.updateLight();
             } else if (tabIndex === propertyTabs.Animations) {
                 this.updateAnimations();
             } else if (tabIndex === propertyTabs.Physics) {

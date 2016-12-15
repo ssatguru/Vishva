@@ -1648,6 +1648,8 @@ var org;
                         vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
                         if (this.key.ctl)
                             this.multiSelect();
+                        //refresh the properties dialog box if open
+                        this.vishvaGUI.refreshPropsDiag();
                     };
                     Vishva.prototype.multiSelect = function () {
                         if (this.meshesPicked == null) {
@@ -1682,6 +1684,8 @@ var org;
                         //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
                         if (this.autoEditMenu)
                             this.vishvaGUI.closeEditMenu();
+                        //close properties dialog if open
+                        this.vishvaGUI.closePropsDiag();
                         if (this.meshPicked != null) {
                             vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                             this.restorePhyParms();
@@ -2212,7 +2216,6 @@ var org;
                         }
                         if (light instanceof BABYLON.DirectionalLight) {
                             lightParm.type = "Dir";
-                            lightParm.direction = light.direction;
                         }
                         if (light instanceof BABYLON.HemisphericLight) {
                             lightParm.type = "Hemi";
@@ -2232,12 +2235,10 @@ var org;
                             light = new BABYLON.PointLight(name, Vector3.Zero(), this.scene);
                         }
                         else if (lightParm.type === "Dir") {
-                            //light = new BABYLON.DirectionalLight(name, lightParm.direction, this.scene);
                             light = new BABYLON.DirectionalLight(name, new Vector3(0, -1, 0), this.scene);
                         }
                         else if (lightParm.type === "Hemi") {
-                            //light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
-                            light = new BABYLON.HemisphericLight(name, new Vector3(0, -1, 0), this.scene);
+                            light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
                             light.groundColor = lightParm.gndClr;
                         }
                         if (light !== null) {
@@ -3292,7 +3293,19 @@ var org;
                 vishva.PhysicsParm = PhysicsParm;
                 var LightParm = (function () {
                     function LightParm() {
+                        this.type = "";
+                        this.diffuse = Color3.White();
+                        this.specular = Color3.White();
+                        this.intensity = 0;
+                        this.range = 0;
+                        this.radius = 0;
+                        this.angle = 0;
+                        this.exponent = 0;
+                        this.gndClr = Color3.White();
+                        this.direction = Vector3.Zero();
                     }
+                    ;
+                    ;
                     return LightParm;
                 }());
                 vishva.LightParm = LightParm;
@@ -4098,10 +4111,13 @@ var org;
                         this.lightAngle = document.getElementById("lightAngle");
                         this.lightExp = document.getElementById("lightExp");
                         this.lightGndClr = document.getElementById("lightGndClr");
-                        this.lightDir = document.getElementById("lightDir");
+                        this.lightDirX = document.getElementById("lightDirX");
+                        this.lightDirY = document.getElementById("lightDirY");
+                        this.lightDirZ = document.getElementById("lightDirZ");
                         var lightApply = document.getElementById("lightApply");
                         lightApply.onclick = function () {
                             _this.applyLight();
+                            _this.showAlertDiag("light applied");
                         };
                     };
                     VishvaGUI.prototype.updateLight = function () {
@@ -4111,18 +4127,23 @@ var org;
                         var lightParm = this.vishva.getAttachedLight();
                         if (lightParm === null) {
                             this.lightAtt.checked = false;
-                            return;
+                            lightParm = new vishva_1.LightParm();
                         }
-                        this.lightAtt.checked = true;
+                        else {
+                            this.lightAtt.checked = true;
+                        }
                         this.lightType.value = lightParm.type;
-                        this.lightDiff.value = "#ffffff";
-                        this.lightSpec.value = "#ffffff";
+                        this.lightDiff.value = lightParm.diffuse.toHexString();
+                        this.lightSpec.value = lightParm.specular.toHexString();
                         this.lightInten.value = Number(lightParm.intensity).toString();
                         this.lightRange.value = Number(lightParm.range).toString();
                         this.lightRadius.value = Number(lightParm.radius).toString();
                         this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
                         this.lightExp.value = Number(lightParm.exponent).toString();
-                        this.lightGndClr.value = "#ffffff";
+                        this.lightGndClr.value = lightParm.gndClr.toHexString();
+                        this.lightDirX.value = Number(lightParm.direction.x).toString();
+                        this.lightDirY.value = Number(lightParm.direction.y).toString();
+                        this.lightDirZ.value = Number(lightParm.direction.z).toString();
                     };
                     VishvaGUI.prototype.applyLight = function () {
                         if (!this.lightAtt.checked) {
@@ -4137,9 +4158,11 @@ var org;
                         lightParm.range = parseFloat(this.lightRange.value);
                         lightParm.radius = parseFloat(this.lightRadius.value);
                         lightParm.angle = parseFloat(this.lightAngle.value);
-                        //lightParm.direction = parseFloat(this.lightDir.value);
+                        lightParm.direction.x = parseFloat(this.lightDirX.value);
+                        lightParm.direction.y = parseFloat(this.lightDirY.value);
+                        lightParm.direction.z = parseFloat(this.lightDirZ.value);
                         lightParm.exponent = parseFloat(this.lightExp.value);
-                        lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightDiff.value);
+                        lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
                         this.vishva.attachAlight(lightParm);
                     };
                     VishvaGUI.prototype.initPhyUI = function () {
@@ -4163,10 +4186,12 @@ var org;
                         var phyRestore = document.getElementById("phyRestore");
                         phyApply.onclick = function (ev) {
                             _this.applyPhysics();
+                            _this.showAlertDiag("physics applied");
                             return false;
                         };
                         phyRestore.onclick = function (ev) {
                             _this.updatePhysics();
+                            _this.showAlertDiag("physics restored");
                             return false;
                         };
                     };
@@ -4713,6 +4738,7 @@ var org;
                             },
                             beforeActivate: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
+                                _this.vishva.enableKeys();
                                 _this.refreshTab(ui.newTab.index());
                             }
                         });
@@ -4738,11 +4764,29 @@ var org;
                             },
                             close: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
+                                _this.vishva.enableKeys();
                             }
                         };
                         this.propsDiag.dialog(dos);
                         this.propsDiag["jpo"] = this.rightCenter;
                         this.dialogs.push(this.propsDiag);
+                    };
+                    /*
+                     * called by vishva when editcontrol
+                     * is removed from mesh
+                     */
+                    VishvaGUI.prototype.closePropsDiag = function () {
+                        this.propsDiag.dialog("close");
+                    };
+                    /*
+                     * called by vishva when editcontrol
+                     * is switched to another mesh
+                     */
+                    VishvaGUI.prototype.refreshPropsDiag = function () {
+                        if (this.propsDiag.dialog("isOpen") === true) {
+                            this.propsDiag.dialog("close");
+                            this.propsDiag.dialog("open");
+                        }
                     };
                     VishvaGUI.prototype.refreshTab = function (tabIndex) {
                         if (tabIndex === 0 /* Transforms */) {
@@ -4752,9 +4796,11 @@ var org;
                             this.updateLight();
                         }
                         else if (tabIndex === 4 /* Animations */) {
+                            this.vishva.disableKeys();
                             this.updateAnimations();
                         }
                         else if (tabIndex === 1 /* Physics */) {
+                            this.vishva.disableKeys();
                             this.updatePhysics();
                         }
                     };

@@ -663,6 +663,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.editControl.switchTo(<Mesh>this.meshPicked);
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
             if (this.key.ctl) this.multiSelect();
+            //refresh the properties dialog box if open
+            this.vishvaGUI.refreshPropsDiag();
 
 
         }
@@ -699,6 +701,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
             if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
+            //close properties dialog if open
+            this.vishvaGUI.closePropsDiag();
             if (this.meshPicked != null) {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                 this.restorePhyParms();
@@ -1234,6 +1238,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (light === null) return null;
             var lightParm = new LightParm();
+            
             lightParm.diffuse = light.diffuse;
             lightParm.specular = light.specular;
             lightParm.range = light.range;
@@ -1250,8 +1255,6 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (light instanceof BABYLON.DirectionalLight) {
                 lightParm.type = "Dir"
-                lightParm.direction = light.direction;
-
             }
             if (light instanceof BABYLON.HemisphericLight) {
                 lightParm.type = "Hemi";
@@ -1270,11 +1273,9 @@ namespace org.ssatguru.babylonjs.vishva {
             } else if (lightParm.type === "Point") {
                 light = new BABYLON.PointLight(name, Vector3.Zero(), this.scene);
             } else if (lightParm.type === "Dir") {
-                //light = new BABYLON.DirectionalLight(name, lightParm.direction, this.scene);
                 light = new BABYLON.DirectionalLight(name, new Vector3(0,-1,0), this.scene);
             } else if (lightParm.type === "Hemi") {
-                //light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
-                light = new BABYLON.HemisphericLight(name, new Vector3(0,-1,0), this.scene);
+                light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
                 (<BABYLON.HemisphericLight>light).groundColor = lightParm.gndClr;
             }
             if (light !== null) {
@@ -2433,16 +2434,19 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export class LightParm {
-        public type: string;
-        public diffuse: Color3;
-        public specular: Color3;
-        public intensity: number;
-        public range: number;
-        public radius: number;
-        public angle: number;
-        public exponent: number;
-        public gndClr: Color3;
-        public direction: Vector3;
+        public type: string = "";
+        public diffuse: Color3 = Color3.White();;
+        public specular: Color3 = Color3.White();;
+        public intensity: number = 0;
+        public range: number = 0;
+        public radius: number =0;
+        public angle: number =0 ;
+        public exponent: number = 0;
+        public gndClr: Color3 = Color3.White();
+        public direction: Vector3 =Vector3.Zero();
+        
+
+            
 
     }
 

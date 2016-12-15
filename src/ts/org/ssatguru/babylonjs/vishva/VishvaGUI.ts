@@ -875,7 +875,9 @@ namespace org.ssatguru.babylonjs.vishva {
         lightAngle: HTMLInputElement;
         lightExp: HTMLInputElement;
         lightGndClr: HTMLInputElement;
-        lightDir: HTMLInputElement;
+        lightDirX: HTMLInputElement;
+        lightDirY: HTMLInputElement;
+        lightDirZ: HTMLInputElement;
 
         private initLightUI() {
             console.log("initLightUI");
@@ -889,11 +891,13 @@ namespace org.ssatguru.babylonjs.vishva {
             this.lightAngle = <HTMLInputElement>document.getElementById("lightAngle");
             this.lightExp = <HTMLInputElement>document.getElementById("lightExp");
             this.lightGndClr = <HTMLInputElement>document.getElementById("lightGndClr");
-            this.lightDir = <HTMLInputElement>document.getElementById("lightDir");
-            let lightApply: HTMLButtonElement =  <HTMLButtonElement>document.getElementById("lightApply");
-            lightApply.onclick = ()=>{
+            this.lightDirX = <HTMLInputElement>document.getElementById("lightDirX");
+            this.lightDirY = <HTMLInputElement>document.getElementById("lightDirY");
+            this.lightDirZ = <HTMLInputElement>document.getElementById("lightDirZ");
+            let lightApply: HTMLButtonElement = <HTMLButtonElement>document.getElementById("lightApply");
+            lightApply.onclick = () => {
                 this.applyLight();
-                
+                this.showAlertDiag("light applied");
             }
 
         }
@@ -902,29 +906,34 @@ namespace org.ssatguru.babylonjs.vishva {
             console.log("updateLight");
             if (this.lightAtt === undefined) this.initLightUI();
             let lightParm: LightParm = this.vishva.getAttachedLight();
-            if (lightParm === null){
+            if (lightParm === null) {
                 this.lightAtt.checked = false;
-                 return;
+                lightParm = new LightParm();
+            }else{
+                this.lightAtt.checked = true;
             }
-            this.lightAtt.checked = true;
             this.lightType.value = lightParm.type;
-            this.lightDiff.value = "#ffffff";
-            this.lightSpec.value = "#ffffff";
+            this.lightDiff.value = lightParm.diffuse.toHexString();
+            this.lightSpec.value = lightParm.specular.toHexString();
             this.lightInten.value = Number(lightParm.intensity).toString();
             this.lightRange.value = Number(lightParm.range).toString();
             this.lightRadius.value = Number(lightParm.radius).toString();
             this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
             this.lightExp.value = Number(lightParm.exponent).toString();
-            this.lightGndClr.value = "#ffffff";
+            this.lightGndClr.value = lightParm.gndClr.toHexString();
+            this.lightDirX.value = Number(lightParm.direction.x).toString();
+            this.lightDirY.value = Number(lightParm.direction.y).toString();
+            this.lightDirZ.value = Number(lightParm.direction.z).toString();
+
 
         }
-        
-        private applyLight(){
-            if (!this.lightAtt.checked){ 
+
+        private applyLight() {
+            if (!this.lightAtt.checked) {
                 this.vishva.detachLight();
                 return;
             }
-            let lightParm : LightParm = new LightParm();
+            let lightParm: LightParm = new LightParm();
             lightParm.type = this.lightType.value;
             lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
             lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
@@ -932,11 +941,13 @@ namespace org.ssatguru.babylonjs.vishva {
             lightParm.range = parseFloat(this.lightRange.value);
             lightParm.radius = parseFloat(this.lightRadius.value);
             lightParm.angle = parseFloat(this.lightAngle.value);
-            //lightParm.direction = parseFloat(this.lightDir.value);
+            lightParm.direction.x = parseFloat(this.lightDirX.value);
+            lightParm.direction.y = parseFloat(this.lightDirY.value);
+            lightParm.direction.z = parseFloat(this.lightDirZ.value);
             lightParm.exponent = parseFloat(this.lightExp.value);
-            lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightDiff.value);
+            lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
             this.vishva.attachAlight(lightParm);
-            
+
         }
 
 
@@ -974,11 +985,13 @@ namespace org.ssatguru.babylonjs.vishva {
 
             phyApply.onclick = (ev) => {
                 this.applyPhysics();
+                this.showAlertDiag("physics applied");
                 return false;
             }
 
             phyRestore.onclick = (ev) => {
                 this.updatePhysics();
+                this.showAlertDiag("physics restored");
                 return false;
             }
         }
@@ -1558,6 +1571,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 },
                 beforeActivate: (e, ui) => {
                     this.vishva.switchDisabled = false;
+                    this.vishva.enableKeys();
                     this.refreshTab(ui.newTab.index());
                 }
             });
@@ -1583,13 +1597,29 @@ namespace org.ssatguru.babylonjs.vishva {
                 },
                 close: (e, ui) => {
                     this.vishva.switchDisabled = false;
+                    this.vishva.enableKeys();
                 },
             };
             this.propsDiag.dialog(dos);
             this.propsDiag["jpo"] = this.rightCenter;
             this.dialogs.push(this.propsDiag);
-
-
+        }
+        /*
+         * called by vishva when editcontrol
+         * is removed from mesh
+         */
+        public closePropsDiag() {
+            this.propsDiag.dialog("close");
+        }
+        /*
+         * called by vishva when editcontrol
+         * is switched to another mesh
+         */
+        public refreshPropsDiag() {
+            if (this.propsDiag.dialog("isOpen") === true) {
+                this.propsDiag.dialog("close");
+                this.propsDiag.dialog("open");
+            }
         }
 
 
@@ -1599,8 +1629,10 @@ namespace org.ssatguru.babylonjs.vishva {
             } else if (tabIndex === propertyTabs.Lights) {
                 this.updateLight();
             } else if (tabIndex === propertyTabs.Animations) {
+                this.vishva.disableKeys();
                 this.updateAnimations();
             } else if (tabIndex === propertyTabs.Physics) {
+                this.vishva.disableKeys();
                 this.updatePhysics()
             }
         }

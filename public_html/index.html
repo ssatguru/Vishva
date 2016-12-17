@@ -37,7 +37,7 @@
                 background: #000000;
                 color: #ffffff;
             }
-            
+
 
             /* #sNaDiag */
             /* required as jquery dialog size does not re-adjust to content after it has been dragged */
@@ -133,42 +133,11 @@
             <div id="editDiv" title="Edit">
                 <ul id="editMenu">
                     <li id="showProps">Mesh Properties</li>
-                    <li>-</li>
-                    <li id="swAv">Use as Avatar</li>
-                    <li id="swGnd">Use as Ground</li>
-                    <li>-</li>
-                    <li id="parentMesh">Make Parent</li>
-                    <li id="removeParent">Remove Parent</li>
-                    <li id="removeChildren">Remove Children</li>
-                    <li>-</li>
-                    <li id="downMesh">Download Mesh</li>
-                    <li id="instMesh">Create Instance</li>
-                    <li id="cloneMesh">Clone Mesh</li>
-                    <li id="delMesh">Delete Mesh</li>
-                    <li id="visMesh">Toggle Visibility</li>
                     <li id="showInvis">Show all invisibles</li>
                     <li id="hideInvis">Hide all invisibles</li>
-                    <li id="togCol">Toggle Collision</li>
-                    <li id="togEna">Toggle Enable</li>
                     <li id="showDisa">Show all Disabled</li>
                     <li id="hideDisa">Hide all Disabled</li>
-                    <li>-</li>
-                    <li id="addWater">Add water</li>
-                    <li>-</li>
-                    <li id="local">Switch to Global Axis</li>
-                    <li id="undo">Undo</li>
-                    <li id="redo">Redo</li>
-                    <li id="snapTrans">Snap Translate On</li>
-                    <li id="snapRot">Snap Rotate On</li>
-                    <li id="snapSet">Snap Setting</li>
                     <li id="snapper">Snapper On</li>
-                    <li>-</li>
-                    <li id="sNa">Sensors & Actuators</li>
-                    <!--
-                    <li id="meshAnims">Animations</li>
-                    <li id="meshMat">Materials</li>
-                    <li id="meshTrans">Transform</li>
-                    -->
                 </ul>
             </div>
 
@@ -284,34 +253,64 @@
                         <li><a href="#Material">Material</a></li>
                         <li><a href="#Lights">Lights</a></li>
                         <li><a href="#meshAnimDiag">Animations</a></li>
+                        <li><a href="#meshAnimDiag">sensors</a></li>
+                        <li><a href="#meshAnimDiag">actuators</a></li>
                     </ul>
 
                     <div id="gen" >
                         <table>
                             <tr>
-                                <td>name</td>
-                                <td><input type="text" id="genName"></td>
+                                <td>
+                                    name <input type="text" id="genName">
+                                </td>
+                            </tr>
+                            <td>
+                                trans <input type="radio" name="oper">
+                                rot <input type="radio" name="oper">
+                                scale<input type="radio" name="oper">
+                                snap<input type="checkbox" id="snap">
+                                local axis <input type="checkbox" id="genlocalAxis">
+                                <br><br>
+                                <button id="snapSet">snap setting</button>
+                                <button id="undo">undo</button>
+                                <button id="redo">redo</button>
+                            </td>
+                            <tr>
+                                <td>
+                                    disable <input type="checkbox" id="genDisable">
+                                    collision <input type="checkbox" id="genColl">
+                                    visible <input type="checkbox" id="genVisi">
+                                    
+                                </td>
                             </tr>
                             <tr>
-                                <td>disable</td>
-                                <td><input type="checkbox" id="genDisable"></td>
+                                <td>
+                                    <button id="parentMesh">make parent</button>
+                                    <button id="removeParent">remove parent</button>
+                                    <button id="removeChildren">remove children</button>
+                                </td>
                             </tr>
                             <tr>
-                                <td>collision</td>
-                                <td><input type="checkbox" id="genColl"></td>
+                                <td>
+                                    <button id="cloneMesh">clone</button>
+                                    <button id="instMesh">instance</button>
+                                    <button id="downMesh">download</button>
+                                    <button id="delMesh">delete</button>
+                                </td>
                             </tr>
                             <tr>
-                                <td>visible</td>
-                                <td><input type="checkbox" id="genVisi"></td>
+                                <td>
+                                    <button id="swAv">use as avatar</button>
+                                    <button id="swGnd">use as ground</button>
+                                </td>
                             </tr>
                             <tr>
-                                <td>local axis</td>
-                                <td><input type="checkbox" id="genlocalAxis"></td>
+                                <td>
+                                    <button id="sNa">sensors and actuators</button>
+                                </td>
                             </tr>
                         </table>
                         <br>
-                        <button id ="genApply">apply</button>
-                        <button id ="genRestore">restore</button>
                     </div>
 
                     <div id="meshTransDiag" title="Transforms">

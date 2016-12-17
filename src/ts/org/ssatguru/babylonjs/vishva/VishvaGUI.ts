@@ -120,18 +120,15 @@ namespace org.ssatguru.babylonjs.vishva {
             var addMenu: HTMLUListElement = <HTMLUListElement>document.getElementById("AddMenu");
             addMenu.style.visibility = "visible";
             var f: (p1: MouseEvent) => any = (e) => { return this.onAddMenuItemClick(e) };
-            for (var index162 = 0; index162 < assetTypes.length; index162++) {
-                var assetType = assetTypes[index162];
-                {
-                    if (assetType === "sounds") {
-                        continue;
-                    }
-                    var li: HTMLLIElement = document.createElement("li");
-                    li.id = "add-" + assetType;
-                    li.innerText = assetType;
-                    li.onclick = f;
-                    addMenu.appendChild(li);
+            for (let assetType of assetTypes) {
+                if (assetType === "sounds") {
+                    continue;
                 }
+                var li: HTMLLIElement = document.createElement("li");
+                li.id = "add-" + assetType;
+                li.innerText = assetType;
+                li.onclick = f;
+                addMenu.appendChild(li);
             }
         }
 
@@ -158,14 +155,14 @@ namespace org.ssatguru.babylonjs.vishva {
             div.appendChild(table);
             document.body.appendChild(div);
             var jq: JQuery = <JQuery>(<any>$("#" + div.id));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
+            var dos: DialogOptions = {
                 autoOpen: false,
                 resizable: true,
                 position: this.centerBottom,
                 width: (<any>"100%"),
                 height: (<any>"auto"),
                 closeOnEscape: false
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            };
             jq.dialog(dos);
             jq["jpo"] = this.centerBottom;
             this.dialogs.push(jq);
@@ -207,6 +204,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.setSky(i.id);
             } else if (i.className === "primitives") {
                 this.vishva.addPrim(i.id);
+            } else if (i.className === "water") {
+                this.vishva.createWater();
             } else {
                 this.vishva.loadAsset(i.className, i.id);
             }
@@ -221,23 +220,23 @@ namespace org.ssatguru.babylonjs.vishva {
             var em: JQuery = <JQuery><any>editMenu;
             em.unbind("keydown");
             this.editDialog = <JQuery>(<any>$("#editDiv"));
-            var dos: DialogOptions = <DialogOptions>Object.defineProperty({
+            var dos: DialogOptions = {
                 autoOpen: false,
                 resizable: false,
                 position: this.leftCenter,
-                width: (<any>"auto"),
-                height: (<any>"auto"),
+                width: "auto",
+                height: "auto",
                 closeOnEscape: false
-            }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+            };
             this.editDialog.dialog(dos);
             this.editDialog["jpo"] = this.leftCenter;
             this.dialogs.push(this.editDialog);
         }
 
-        localAxis: HTMLElement = document.getElementById("local");
-
-        snapTrans: HTMLElement = document.getElementById("snapTrans");
-        snapRot: HTMLElement = document.getElementById("snapRot");
+        //        localAxis: HTMLElement = document.getElementById("local");
+        //
+        //        snapTrans: HTMLElement = document.getElementById("snapTrans");
+        //        snapRot: HTMLElement = document.getElementById("snapRot");
         snapper: HTMLElement = document.getElementById("snapper");
 
         public showEditMenu(): boolean {
@@ -248,28 +247,28 @@ namespace org.ssatguru.babylonjs.vishva {
             /* Update menu items that are assoicated with 
                Vishva entities whose state might have changed
             */
-            if (this.vishva.isSpaceLocal()) {
-                this.local = true;
-                this.localAxis.innerHTML = "Switch to Global Axis";
-            } else {
-                this.local = false;
-                this.localAxis.innerHTML = "Switch to Local Axis";
-            }
+            //            if (this.vishva.isSpaceLocal()) {
+            //                this.local = true;
+            //                this.localAxis.innerHTML = "Switch to Global Axis";
+            //            } else {
+            //                this.local = false;
+            //                this.localAxis.innerHTML = "Switch to Local Axis";
+            //            }
             if (this.vishva.isSnapperOn()) {
                 this.snapper.innerHTML = "Snapper Off";
             } else {
                 this.snapper.innerHTML = "Snapper On";
             }
-            if (this.vishva.isSnapTransOn()) {
-                this.snapTrans.innerHTML = "Snap Translate Off";
-            } else {
-                this.snapTrans.innerHTML = "Snap Translate On";
-            }
-            if (this.vishva.isSnapRotOn()) {
-                this.snapRot.innerHTML = "Snap Rotate Off";
-            } else {
-                this.snapRot.innerHTML = "Snap Rotate On";
-            }
+            //            if (this.vishva.isSnapTransOn()) {
+            //                this.snapTrans.innerHTML = "Snap Translate Off";
+            //            } else {
+            //                this.snapTrans.innerHTML = "Snap Translate On";
+            //            }
+            //            if (this.vishva.isSnapRotOn()) {
+            //                this.snapRot.innerHTML = "Snap Rotate Off";
+            //            } else {
+            //                this.snapRot.innerHTML = "Snap Rotate On";
+            //            }
             this.editDialog.dialog("open");
             return false;
         }
@@ -869,8 +868,7 @@ namespace org.ssatguru.babylonjs.vishva {
         genColl: HTMLInputElement;
         genVisi: HTMLInputElement;
         genlocalAxis: HTMLInputElement;
-        genApply: HTMLButtonElement;
-        genRestore:HTMLButtonElement;
+
 
         private initGeneral() {
             this.genName = <HTMLInputElement>document.getElementById("genName");
@@ -880,40 +878,131 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genName.onblur = () => {
                 this.vishva.enableKeys();
             }
-//            this.genName.onchange = () => {
-//                console.log("name changed");
-//                this.vishva.setName(this.genName.value);
-//            }
+            this.genName.onchange = () => {
+                console.log("name changed");
+                this.vishva.setName(this.genName.value);
+            }
             this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
-//            this.genDisable.onchange = () => {
-//                this.vishva.disableIt(this.genDisable.checked);
-//            }
+            this.genDisable.onchange = () => {
+                this.vishva.disableIt(this.genDisable.checked);
+            }
             this.genColl = <HTMLInputElement>document.getElementById("genColl");
-//            this.genColl.onchange = () => {
-//                this.vishva.enableCollision(this.genColl.checked);
-//            }
+            this.genColl.onchange = () => {
+                this.vishva.enableCollision(this.genColl.checked);
+            }
             this.genVisi = <HTMLInputElement>document.getElementById("genVisi");
-//            this.genVisi.onchange = () => {
-//                this.vishva.makeVisibile(this.genVisi.checked);
-//            }
+            this.genVisi.onchange = () => {
+                this.vishva.makeVisibile(this.genVisi.checked);
+            }
             this.genlocalAxis = <HTMLInputElement>document.getElementById("genlocalAxis");
-//            this.genlocalAxis.onchange = () => {
-//                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
-//                if (err !== null) {
-//                    this.showAlertDiag(err);
-//                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
-//                }
-//            }
-            this.genApply = <HTMLInputElement>document.getElementById("genApply");
-            this.genApply.onclick = () => {
-                this.applyGeneral();
-                this.showAlertDiag("changes applied");
+            this.genlocalAxis.onchange = () => {
+                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+                if (err !== null) {
+                    this.showAlertDiag(err);
+                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
+                }
             }
-            this.genRestore = <HTMLInputElement>document.getElementById("genRestore");
-            this.genRestore.onclick = () => {
-                this.showAlertDiag("sorry. not implemented yet");
-            }
-            
+            var undo: HTMLElement = document.getElementById("undo");
+            var redo: HTMLElement = document.getElementById("redo");
+
+
+            var parentMesh: HTMLElement = document.getElementById("parentMesh");
+            var removeParent: HTMLElement = document.getElementById("removeParent");
+            var removeChildren: HTMLElement = document.getElementById("removeChildren");
+
+            var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
+            var instMesh: HTMLElement = document.getElementById("instMesh");
+            var downAsset: HTMLElement = document.getElementById("downMesh");
+            var delMesh: HTMLElement = document.getElementById("delMesh");
+
+            var swAv: HTMLElement = document.getElementById("swAv");
+            var swGnd: HTMLElement = document.getElementById("swGnd");
+
+            var sNa: HTMLElement = document.getElementById("sNa");
+
+            undo.onclick = (e) => {
+                this.vishva.undo();
+                return false;
+            };
+            redo.onclick = (e) => {
+                this.vishva.redo();
+                return false;
+            };
+
+            parentMesh.onclick = (e) => {
+                var err: string = this.vishva.makeParent();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            removeParent.onclick = (e) => {
+                var err: string = this.vishva.removeParent();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            removeChildren.onclick = (e) => {
+                var err: string = this.vishva.removeChildren();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+
+            cloneMesh.onclick = (e) => {
+                var err: string = this.vishva.clone_mesh();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            instMesh.onclick = (e) => {
+                var err: string = this.vishva.instance_mesh();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            downAsset.onclick = (e) => {
+                var downloadURL: string = this.vishva.saveAsset();
+                if (downloadURL == null) {
+                    this.showAlertDiag("No Mesh Selected");
+                    return true;
+                }
+                this.downloadLink.href = downloadURL;
+                var env: JQuery = <JQuery>(<any>$("#saveDiv"));
+                env.dialog("open");
+                return false;
+            };
+            delMesh.onclick = (e) => {
+                var err: string = this.vishva.delete_mesh();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+
+            swAv.onclick = (e) => {
+                var err: string = this.vishva.switch_avatar();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return true;
+            };
+            swGnd.onclick = (e) => {
+                var err: string = this.vishva.switchGround();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return true;
+            };
+
+            sNa.onclick = (e) => {
+                this.show_sNaDiag();
+                return true;
+            };
         }
 
         private updateGeneral() {
@@ -925,18 +1014,21 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genlocalAxis.checked = this.vishva.isSpaceLocal();
         }
 
-        private applyGeneral() {
-            this.vishva.setName(this.genName.value);
-            this.vishva.disableIt(this.genDisable.checked);
-            this.vishva.enableCollision(this.genColl.checked);
-            this.vishva.makeVisibile(this.genVisi.checked);
-            var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
-            if (err !== null) {
-                this.showAlertDiag(err);
-                this.genlocalAxis.checked = !this.genlocalAxis.checked;
-            }
-            
-        }
+        //        private applyGeneral() {
+        //            var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+        //            if (err !== null) {
+        //                this.showAlertDiag(err);
+        //                this.genlocalAxis.checked = !this.genlocalAxis.checked;
+        //                return;
+        //            }
+        //            this.vishva.setName(this.genName.value);
+        //            this.vishva.disableIt(this.genDisable.checked);
+        //            this.vishva.enableCollision(this.genColl.checked);
+        //            this.vishva.makeVisibile(this.genVisi.checked);
+        //            
+        //             this.showAlertDiag("changes applied");
+        //            
+        //        }
 
 
         lightAtt: HTMLInputElement;
@@ -1350,34 +1442,13 @@ namespace org.ssatguru.babylonjs.vishva {
         private createEditMenu() {
             var showProps: HTMLElement = document.getElementById("showProps");
 
-            var swAv: HTMLElement = document.getElementById("swAv");
-            var swGnd: HTMLElement = document.getElementById("swGnd");
-
-            var instMesh: HTMLElement = document.getElementById("instMesh");
-            var parentMesh: HTMLElement = document.getElementById("parentMesh");
-            var removeParent: HTMLElement = document.getElementById("removeParent");
-            var removeChildren: HTMLElement = document.getElementById("removeChildren");
-            var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
-            var delMesh: HTMLElement = document.getElementById("delMesh");
-
-            var visMesh: HTMLElement = document.getElementById("visMesh");
             var showInvis: HTMLElement = document.getElementById("showInvis");
             var hideInvis: HTMLElement = document.getElementById("hideInvis");
-            var togCol: HTMLElement = document.getElementById("togCol");
-            let togEna: HTMLElement = document.getElementById("togEna");
             let showDisa: HTMLElement = document.getElementById("showDisa");
             let hideDisa: HTMLElement = document.getElementById("hideDisa");
 
-            var addWater: HTMLElement = document.getElementById("addWater");
 
-            var undo: HTMLElement = document.getElementById("undo");
-            var redo: HTMLElement = document.getElementById("redo");
-            var sNa: HTMLElement = document.getElementById("sNa");
-            /*
-            var meshAnims: HTMLElement = document.getElementById("meshAnims");
-            var meshMat: HTMLElement = document.getElementById("meshMat");
-            var meshTrans: HTMLElement = document.getElementById("meshTrans");
-            */
+
 
             showProps.onclick = (e) => {
                 if (!this.vishva.anyMeshSelected()) {
@@ -1391,102 +1462,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 return true;
             };
 
-            swGnd.onclick = (e) => {
-                var err: string = this.vishva.switchGround();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return true;
-            };
-            swAv.onclick = (e) => {
-                var err: string = this.vishva.switch_avatar();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return true;
-            };
-            var downAsset: HTMLElement = document.getElementById("downMesh");
-            downAsset.onclick = (e) => {
-                var downloadURL: string = this.vishva.saveAsset();
-                if (downloadURL == null) {
-                    this.showAlertDiag("No Mesh Selected");
-                    return true;
-                }
-                this.downloadLink.href = downloadURL;
-                var env: JQuery = <JQuery>(<any>$("#saveDiv"));
-                env.dialog("open");
-                return false;
-            };
-            parentMesh.onclick = (e) => {
-                var err: string = this.vishva.makeParent();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            removeParent.onclick = (e) => {
-                var err: string = this.vishva.removeParent();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            removeChildren.onclick = (e) => {
-                var err: string = this.vishva.removeChildren();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            instMesh.onclick = (e) => {
-                var err: string = this.vishva.instance_mesh();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            cloneMesh.onclick = (e) => {
-                var err: string = this.vishva.clone_mesh();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            delMesh.onclick = (e) => {
-                var err: string = this.vishva.delete_mesh();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            //            visMesh.onclick = (e) => {
-            //                var err: string = this.vishva.toggleMeshVisibility();
-            //                if (err != null) {
-            //                    this.showAlertDiag(err);
-            //                }
-            //                return false;
-            //            };
+
             showInvis.onclick = (e) => {
                 this.vishva.showAllInvisibles();
                 return false;
             };
             hideInvis.onclick = (e) => {
                 this.vishva.hideAllInvisibles();
-                return false;
-            };
-
-            togCol.onclick = (e) => {
-                var err: string = this.vishva.toggleCollision();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            togEna.onclick = (e) => {
-                var err: string = this.vishva.toggleEnable();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
                 return false;
             };
             showDisa.onclick = (e) => {
@@ -1498,23 +1480,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             };
 
-            addWater.onclick = (e) => {
-                this.vishva.createWater();
-                //                var err: string = this.vishva.addWater();
-                //                if (err != null) {
-                //                    this.showAlertDiag(err);
-                //                }
-                //                return false;
-            };
 
-            undo.onclick = (e) => {
-                this.vishva.undo();
-                return false;
-            };
-            redo.onclick = (e) => {
-                this.vishva.redo();
-                return false;
-            };
+
             this.snapper.onclick = (e) => {
                 var err: string = this.vishva.snapper();
                 if (err != null) {
@@ -1528,83 +1495,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return false;
             }
-            this.snapTrans.onclick = (e) => {
-                var err: string = this.vishva.snapTrans();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                    return false;
-                }
-                if (this.vishva.isSnapTransOn()) {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Snap Translate Off";
-                } else {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Snap Translate On";
-                }
-                return false;
-            }
-            this.snapRot.onclick = (e) => {
-                var err: string = this.vishva.snapRot();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                    return false;
-                }
-                if (this.vishva.isSnapRotOn()) {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Snap Rotate Off";
-                } else {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Snap Rotate On";
-                }
-                return false;
-            }
-            this.localAxis.onclick = (e) => {
-                var err: string = this.vishva.setSpaceLocal(!this.local);
-                if (err != null) {
-                    this.showAlertDiag(err);
-                    return false;
-                }
-                this.local = !this.local;
-                if (this.local) {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Switch to Global Axis";
-                } else {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Switch to Local Axis";
-                }
-                return true;
-            };
-            sNa.onclick = (e) => {
-                this.show_sNaDiag();
-                return true;
-            };
-            /*
-            meshMat.onclick = (e) => {
-                this.showAlertDiag("to be implemented");
-                return true;
-            };
-            meshAnims.onclick = (e) => {
-                if (!this.vishva.anyMeshSelected()) {
-                    this.showAlertDiag("no mesh selected");
-                    return true;
-                }
-                if (this.meshAnimDiag == null) {
-                    this.createAnimDiag();
-                }
-                this.vishva.switchDisabled = true;
-                this.updateAnimations();
-                this.meshAnimDiag.dialog("open");
-                return true;
-            };
             
-            meshTrans.onclick = (e) => {
-                if (!this.vishva.anyMeshSelected()) {
-                    this.showAlertDiag("no mesh selected");
-                    return true;
-                }
-                if (this.meshTransDiag == null) {
-                    this.createTransDiag();
-                }
-                this.vishva.switchDisabled = true;
-                this.updateTransform();
-                this.meshTransDiag.dialog("open");
-                return true;
-            };
-            */
         }
 
         private propsDiag: JQuery = null;
@@ -1635,8 +1526,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 autoOpen: false,
                 resizable: false,
                 position: this.rightCenter,
-                minWidth: 500,
-                width: 500,
+                minWidth: 700,
+                width: 700,
                 height: "auto",
                 closeOnEscape: false,
                 //on open calculate the values in the active tab
@@ -1691,7 +1582,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private refreshTab(tabIndex: number) {
             if (tabIndex === propertyTabs.General) {
-                //this.vishva.disableKeys();
                 this.updateGeneral();
             } else if (tabIndex === propertyTabs.Transforms) {
                 this.updateTransform();

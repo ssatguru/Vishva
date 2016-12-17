@@ -937,8 +937,14 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "no mesh selected";
             }
             this.meshPicked.checkCollisions = !this.meshPicked.checkCollisions;
+        }
 
-
+        public enableCollision(yes: boolean) {
+            this.meshPicked.checkCollisions = yes;
+        }
+        
+        public isCollideable(){
+            return this.meshPicked.checkCollisions
         }
 
         public toggleEnable() {
@@ -948,6 +954,15 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
             console.log("enable : " + this.meshPicked.isEnabled())
         }
+
+        public disableIt(yes: boolean) {
+            this.meshPicked.setEnabled(!yes);
+        }
+        
+        public isDisabled() : boolean {
+            return !this.meshPicked.isEnabled();
+        }
+
 
         public showAllDisabled() {
             for (let mesh of this.scene.meshes) {
@@ -964,18 +979,21 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        public toggleMeshVisibility() {
+        public makeVisibile(yes: boolean) {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
             var mesh = this.meshPicked;
-            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
-                Tags.RemoveTagsFrom(this.meshPicked, "invisible")
-                this.meshPicked.visibility = 1;
-                this.meshPicked.isPickable = true;
-                if (this.showingAllInvisibles)
-                    mesh.showBoundingBox = false;
-            } else {
+            if (yes) {
+                if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
+                    Tags.RemoveTagsFrom(this.meshPicked, "invisible")
+                    this.meshPicked.visibility = 1;
+                    this.meshPicked.isPickable = true;
+                    if (this.showingAllInvisibles)
+                        mesh.showBoundingBox = false;
+                }
+            }
+            else {
                 Tags.AddTagsTo(this.meshPicked, "invisible");
                 if (this.showingAllInvisibles) {
                     this.meshPicked.visibility = 0.5;
@@ -987,6 +1005,15 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
+        public isVisible() : boolean {
+            if (Tags.HasTags(this.meshPicked)) {
+                if (Tags.MatchesQuery(this.meshPicked, "invisible")) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
         showingAllInvisibles: boolean = false;
         public showAllInvisibles() {
             this.showingAllInvisibles = true;
@@ -1169,40 +1196,8 @@ namespace org.ssatguru.babylonjs.vishva {
             mesh.dispose();
         }
 
-        public attachLight() {
-            if (!this.isMeshSelected) {
-                return "no mesh selected";
-            }
-
-            var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
-            light0.range = 5;
-            //var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
-            //var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), this.scene);
-            light0.diffuse = new BABYLON.Color3(1, 1, 1);
-            light0.specular = new BABYLON.Color3(1, 1, 1);
-            //light0.groundColor = new BABYLON.Color3(0, 0, 0);
-            light0.parent = this.meshPicked;
-        }
-
 
         meshPickedPhyParms: PhysicsParm = null;
-        public togglePhyiscs() {
-            if (!this.isMeshSelected) {
-                return "no mesh selected";
-            }
-
-            if (this.meshPickedPhyParms === null) {
-                this.meshPickedPhyParms = new PhysicsParm();
-                this.meshPickedPhyParms.type = PhysicsImpostor.BoxImpostor;
-                this.meshPickedPhyParms.mass = 1;
-                this.meshPickedPhyParms.restitution = 0.9;
-                this.meshPickedPhyParms.friction = 0.5;
-
-            } else {
-                this.meshPickedPhyParms = null;
-            }
-
-        }
 
         private physTypes() {
             console.log("BoxImpostor " + PhysicsImpostor.BoxImpostor);
@@ -1238,13 +1233,13 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (light === null) return null;
             var lightParm = new LightParm();
-            
+
             lightParm.diffuse = light.diffuse;
             lightParm.specular = light.specular;
             lightParm.range = light.range;
             lightParm.radius = light.radius;
             lightParm.intensity = light.intensity;
-            
+
             if (light instanceof BABYLON.SpotLight) {
                 lightParm.type = "Spot"
                 lightParm.angle = light.angle;
@@ -1273,7 +1268,7 @@ namespace org.ssatguru.babylonjs.vishva {
             } else if (lightParm.type === "Point") {
                 light = new BABYLON.PointLight(name, Vector3.Zero(), this.scene);
             } else if (lightParm.type === "Dir") {
-                light = new BABYLON.DirectionalLight(name, new Vector3(0,-1,0), this.scene);
+                light = new BABYLON.DirectionalLight(name, new Vector3(0, -1, 0), this.scene);
             } else if (lightParm.type === "Hemi") {
                 light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
                 (<BABYLON.HemisphericLight>light).groundColor = lightParm.gndClr;
@@ -1285,11 +1280,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 light.radius = lightParm.radius;
                 light.intensity = lightParm.intensity;
                 light.parent = this.meshPicked;
-                
+
             }
         }
-        
-        public detachLight(){
+
+        public detachLight() {
             var childs: Node[] = this.meshPicked.getDescendants();
             if (childs.length === 0) return;
             var light: Light = null;
@@ -1303,13 +1298,13 @@ namespace org.ssatguru.babylonjs.vishva {
             light.parent = null;
             light.dispose();
         }
-        public setSpaceLocal(lcl: any) {
+        public setSpaceLocal(yes: boolean) : string {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
             }
-            if (this.editControl != null) this.editControl.setLocal(<boolean>lcl);
+            if (this.editControl != null) this.editControl.setLocal(yes);
             this.globalAxisMode = !this.globalAxisMode;
-            return;
+            return null;
         }
 
         public isSpaceLocal(): boolean {
@@ -1424,6 +1419,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public anyMeshSelected(): boolean {
             return this.isMeshSelected;
+        }
+        
+        public getName() : string {
+            return this.meshPicked.name;
+        }
+        
+        public setName(name : string)  {
+            this.meshPicked.name = name;
         }
 
         public getLocation(): Vector3 {
@@ -2272,8 +2275,10 @@ namespace org.ssatguru.babylonjs.vishva {
             Tags.AddTagsTo(this.avatar, "Vishva.avatar");
             Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
             this.avatarSkeleton.name = "Vishva.skeleton";
+
             this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
             this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
+
             var sm: StandardMaterial = <StandardMaterial>this.avatar.material;
             if (sm.diffuseTexture != null) {
                 var textureName: string = sm.diffuseTexture.name;
@@ -2439,14 +2444,14 @@ namespace org.ssatguru.babylonjs.vishva {
         public specular: Color3 = Color3.White();;
         public intensity: number = 0;
         public range: number = 0;
-        public radius: number =0;
-        public angle: number =0 ;
+        public radius: number = 0;
+        public angle: number = 0;
         public exponent: number = 0;
         public gndClr: Color3 = Color3.White();
-        public direction: Vector3 =Vector3.Zero();
-        
+        public direction: Vector3 = Vector3.Zero();
 
-            
+
+
 
     }
 

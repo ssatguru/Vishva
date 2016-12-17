@@ -864,6 +864,80 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
+        genName: HTMLInputElement;
+        genDisable: HTMLInputElement;
+        genColl: HTMLInputElement;
+        genVisi: HTMLInputElement;
+        genlocalAxis: HTMLInputElement;
+        genApply: HTMLButtonElement;
+        genRestore:HTMLButtonElement;
+
+        private initGeneral() {
+            this.genName = <HTMLInputElement>document.getElementById("genName");
+            this.genName.onfocus = () => {
+                this.vishva.disableKeys();
+            }
+            this.genName.onblur = () => {
+                this.vishva.enableKeys();
+            }
+//            this.genName.onchange = () => {
+//                console.log("name changed");
+//                this.vishva.setName(this.genName.value);
+//            }
+            this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
+//            this.genDisable.onchange = () => {
+//                this.vishva.disableIt(this.genDisable.checked);
+//            }
+            this.genColl = <HTMLInputElement>document.getElementById("genColl");
+//            this.genColl.onchange = () => {
+//                this.vishva.enableCollision(this.genColl.checked);
+//            }
+            this.genVisi = <HTMLInputElement>document.getElementById("genVisi");
+//            this.genVisi.onchange = () => {
+//                this.vishva.makeVisibile(this.genVisi.checked);
+//            }
+            this.genlocalAxis = <HTMLInputElement>document.getElementById("genlocalAxis");
+//            this.genlocalAxis.onchange = () => {
+//                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+//                if (err !== null) {
+//                    this.showAlertDiag(err);
+//                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
+//                }
+//            }
+            this.genApply = <HTMLInputElement>document.getElementById("genApply");
+            this.genApply.onclick = () => {
+                this.applyGeneral();
+                this.showAlertDiag("changes applied");
+            }
+            this.genRestore = <HTMLInputElement>document.getElementById("genRestore");
+            this.genRestore.onclick = () => {
+                this.showAlertDiag("sorry. not implemented yet");
+            }
+            
+        }
+
+        private updateGeneral() {
+            if (this.genName === undefined) this.initGeneral();
+            this.genName.value = this.vishva.getName();
+            this.genDisable.checked = this.vishva.isDisabled();
+            this.genColl.checked = this.vishva.isCollideable();
+            this.genVisi.checked = this.vishva.isVisible();
+            this.genlocalAxis.checked = this.vishva.isSpaceLocal();
+        }
+
+        private applyGeneral() {
+            this.vishva.setName(this.genName.value);
+            this.vishva.disableIt(this.genDisable.checked);
+            this.vishva.enableCollision(this.genColl.checked);
+            this.vishva.makeVisibile(this.genVisi.checked);
+            var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+            if (err !== null) {
+                this.showAlertDiag(err);
+                this.genlocalAxis.checked = !this.genlocalAxis.checked;
+            }
+            
+        }
+
 
         lightAtt: HTMLInputElement;
         lightType: HTMLSelectElement;
@@ -880,7 +954,6 @@ namespace org.ssatguru.babylonjs.vishva {
         lightDirZ: HTMLInputElement;
 
         private initLightUI() {
-            console.log("initLightUI");
             this.lightAtt = <HTMLInputElement>document.getElementById("lightAtt");
             this.lightType = <HTMLSelectElement>document.getElementById("lightType");
             this.lightDiff = <HTMLInputElement>document.getElementById("lightDiff");
@@ -909,7 +982,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (lightParm === null) {
                 this.lightAtt.checked = false;
                 lightParm = new LightParm();
-            }else{
+            } else {
                 this.lightAtt.checked = true;
             }
             this.lightType.value = lightParm.type;
@@ -1295,9 +1368,6 @@ namespace org.ssatguru.babylonjs.vishva {
             let showDisa: HTMLElement = document.getElementById("showDisa");
             let hideDisa: HTMLElement = document.getElementById("hideDisa");
 
-            //let togPhys: HTMLElement = document.getElementById("togPhys");
-
-            var attLight: HTMLElement = document.getElementById("attLight");
             var addWater: HTMLElement = document.getElementById("addWater");
 
             var undo: HTMLElement = document.getElementById("undo");
@@ -1389,13 +1459,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return false;
             };
-            visMesh.onclick = (e) => {
-                var err: string = this.vishva.toggleMeshVisibility();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
+            //            visMesh.onclick = (e) => {
+            //                var err: string = this.vishva.toggleMeshVisibility();
+            //                if (err != null) {
+            //                    this.showAlertDiag(err);
+            //                }
+            //                return false;
+            //            };
             showInvis.onclick = (e) => {
                 this.vishva.showAllInvisibles();
                 return false;
@@ -1425,24 +1495,6 @@ namespace org.ssatguru.babylonjs.vishva {
             };
             hideDisa.onclick = (e) => {
                 this.vishva.hideAllDisabled();
-                return false;
-            };
-
-            /*
-            togPhys.onclick = (e) => {
-                var err: string = this.vishva.togglePhyiscs();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
-                return false;
-            };
-            */
-
-            attLight.onclick = (e) => {
-                var err: string = this.vishva.attachLight();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                }
                 return false;
             };
 
@@ -1565,10 +1617,11 @@ namespace org.ssatguru.babylonjs.vishva {
             propsTabs.tabs({
                 //everytime we switch tabs, close open to re-adjust size
                 activate: (e, ui) => {
-                    this.isTabRestart = true;
-                    this.propsDiag.dialog("close");
-                    this.propsDiag.dialog("open");
+                    //this.isTabRestart = true;
+                    //this.propsDiag.dialog("close");
+                    //this.propsDiag.dialog("open");
                 },
+
                 beforeActivate: (e, ui) => {
                     this.vishva.switchDisabled = false;
                     this.vishva.enableKeys();
@@ -1582,10 +1635,15 @@ namespace org.ssatguru.babylonjs.vishva {
                 autoOpen: false,
                 resizable: false,
                 position: this.rightCenter,
-                minWidth: 350,
-                width: "auto",
+                minWidth: 500,
+                width: 500,
                 height: "auto",
                 closeOnEscape: false,
+                //on open calculate the values in the active tab
+                //also if we switched to another mesh vishav will close open
+                //by calling refreshPropsDiag()
+                //donot bother refreshing if we are just restarting
+                //dialog for height and width sizing after drag
                 open: (e, ui) => {
                     if (!this.isTabRestart) {
                         // refresh the active tab
@@ -1599,6 +1657,13 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.vishva.switchDisabled = false;
                     this.vishva.enableKeys();
                 },
+                //after drag the dialog box doesnot resize
+                //force resize by closing and opening
+                dragStop: (e, ui) => {
+                    this.isTabRestart = true;
+                    this.propsDiag.dialog("close");
+                    this.propsDiag.dialog("open");
+                }
             };
             this.propsDiag.dialog(dos);
             this.propsDiag["jpo"] = this.rightCenter;
@@ -1616,6 +1681,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * is switched to another mesh
          */
         public refreshPropsDiag() {
+            if (this.propsDiag === undefined) return;
             if (this.propsDiag.dialog("isOpen") === true) {
                 this.propsDiag.dialog("close");
                 this.propsDiag.dialog("open");
@@ -1624,7 +1690,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         private refreshTab(tabIndex: number) {
-            if (tabIndex === propertyTabs.Transforms) {
+            if (tabIndex === propertyTabs.General) {
+                //this.vishva.disableKeys();
+                this.updateGeneral();
+            } else if (tabIndex === propertyTabs.Transforms) {
                 this.updateTransform();
             } else if (tabIndex === propertyTabs.Lights) {
                 this.updateLight();
@@ -1639,6 +1708,7 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     const enum propertyTabs {
+        General,
         Transforms,
         Physics,
         Material,

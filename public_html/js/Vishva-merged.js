@@ -1110,7 +1110,6 @@ var org;
                 var Matrix = BABYLON.Matrix;
                 var Mesh = BABYLON.Mesh;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
-                var PointLight = BABYLON.PointLight;
                 var Quaternion = BABYLON.Quaternion;
                 var Scene = BABYLON.Scene;
                 var SceneLoader = BABYLON.SceneLoader;
@@ -1917,12 +1916,24 @@ var org;
                         }
                         this.meshPicked.checkCollisions = !this.meshPicked.checkCollisions;
                     };
+                    Vishva.prototype.enableCollision = function (yes) {
+                        this.meshPicked.checkCollisions = yes;
+                    };
+                    Vishva.prototype.isCollideable = function () {
+                        return this.meshPicked.checkCollisions;
+                    };
                     Vishva.prototype.toggleEnable = function () {
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
                         }
                         this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
                         console.log("enable : " + this.meshPicked.isEnabled());
+                    };
+                    Vishva.prototype.disableIt = function (yes) {
+                        this.meshPicked.setEnabled(!yes);
+                    };
+                    Vishva.prototype.isDisabled = function () {
+                        return !this.meshPicked.isEnabled();
                     };
                     Vishva.prototype.showAllDisabled = function () {
                         for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
@@ -1940,17 +1951,19 @@ var org;
                             }
                         }
                     };
-                    Vishva.prototype.toggleMeshVisibility = function () {
+                    Vishva.prototype.makeVisibile = function (yes) {
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
                         }
                         var mesh = this.meshPicked;
-                        if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
-                            Tags.RemoveTagsFrom(this.meshPicked, "invisible");
-                            this.meshPicked.visibility = 1;
-                            this.meshPicked.isPickable = true;
-                            if (this.showingAllInvisibles)
-                                mesh.showBoundingBox = false;
+                        if (yes) {
+                            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
+                                Tags.RemoveTagsFrom(this.meshPicked, "invisible");
+                                this.meshPicked.visibility = 1;
+                                this.meshPicked.isPickable = true;
+                                if (this.showingAllInvisibles)
+                                    mesh.showBoundingBox = false;
+                            }
                         }
                         else {
                             Tags.AddTagsTo(this.meshPicked, "invisible");
@@ -1964,6 +1977,14 @@ var org;
                                 this.meshPicked.isPickable = false;
                             }
                         }
+                    };
+                    Vishva.prototype.isVisible = function () {
+                        if (Tags.HasTags(this.meshPicked)) {
+                            if (Tags.MatchesQuery(this.meshPicked, "invisible")) {
+                                return false;
+                            }
+                        }
+                        return true;
                     };
                     Vishva.prototype.showAllInvisibles = function () {
                         this.showingAllInvisibles = true;
@@ -2138,34 +2159,6 @@ var org;
                         }
                         mesh.dispose();
                     };
-                    Vishva.prototype.attachLight = function () {
-                        if (!this.isMeshSelected) {
-                            return "no mesh selected";
-                        }
-                        var light0 = new PointLight("Omni0", Vector3.Zero(), this.scene);
-                        light0.range = 5;
-                        //var light0 = new BABYLON.SpotLight("Spot0", new BABYLON.Vector3(0, 0, 0), new BABYLON.Vector3(0, -1, 0), 0.8, 2, this.scene);
-                        //var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), this.scene);
-                        light0.diffuse = new BABYLON.Color3(1, 1, 1);
-                        light0.specular = new BABYLON.Color3(1, 1, 1);
-                        //light0.groundColor = new BABYLON.Color3(0, 0, 0);
-                        light0.parent = this.meshPicked;
-                    };
-                    Vishva.prototype.togglePhyiscs = function () {
-                        if (!this.isMeshSelected) {
-                            return "no mesh selected";
-                        }
-                        if (this.meshPickedPhyParms === null) {
-                            this.meshPickedPhyParms = new PhysicsParm();
-                            this.meshPickedPhyParms.type = PhysicsImpostor.BoxImpostor;
-                            this.meshPickedPhyParms.mass = 1;
-                            this.meshPickedPhyParms.restitution = 0.9;
-                            this.meshPickedPhyParms.friction = 0.5;
-                        }
-                        else {
-                            this.meshPickedPhyParms = null;
-                        }
-                    };
                     Vishva.prototype.physTypes = function () {
                         console.log("BoxImpostor " + PhysicsImpostor.BoxImpostor);
                         console.log("SphereImpostor " + PhysicsImpostor.SphereImpostor);
@@ -2267,14 +2260,14 @@ var org;
                         light.parent = null;
                         light.dispose();
                     };
-                    Vishva.prototype.setSpaceLocal = function (lcl) {
+                    Vishva.prototype.setSpaceLocal = function (yes) {
                         if (this.snapperOn) {
                             return "Cannot switch axis mode when snapper is on";
                         }
                         if (this.editControl != null)
-                            this.editControl.setLocal(lcl);
+                            this.editControl.setLocal(yes);
                         this.globalAxisMode = !this.globalAxisMode;
-                        return;
+                        return null;
                     };
                     Vishva.prototype.isSpaceLocal = function () {
                         //if (this.editControl != null) return this.editControl.isLocal(); else return true;
@@ -2376,6 +2369,12 @@ var org;
                     };
                     Vishva.prototype.anyMeshSelected = function () {
                         return this.isMeshSelected;
+                    };
+                    Vishva.prototype.getName = function () {
+                        return this.meshPicked.name;
+                    };
+                    Vishva.prototype.setName = function (name) {
+                        this.meshPicked.name = name;
                     };
                     Vishva.prototype.getLocation = function () {
                         return this.meshPicked.position;
@@ -4098,9 +4097,71 @@ var org;
                             }
                         }
                     };
+                    VishvaGUI.prototype.initGeneral = function () {
+                        var _this = this;
+                        this.genName = document.getElementById("genName");
+                        this.genName.onfocus = function () {
+                            _this.vishva.disableKeys();
+                        };
+                        this.genName.onblur = function () {
+                            _this.vishva.enableKeys();
+                        };
+                        //            this.genName.onchange = () => {
+                        //                console.log("name changed");
+                        //                this.vishva.setName(this.genName.value);
+                        //            }
+                        this.genDisable = document.getElementById("genDisable");
+                        //            this.genDisable.onchange = () => {
+                        //                this.vishva.disableIt(this.genDisable.checked);
+                        //            }
+                        this.genColl = document.getElementById("genColl");
+                        //            this.genColl.onchange = () => {
+                        //                this.vishva.enableCollision(this.genColl.checked);
+                        //            }
+                        this.genVisi = document.getElementById("genVisi");
+                        //            this.genVisi.onchange = () => {
+                        //                this.vishva.makeVisibile(this.genVisi.checked);
+                        //            }
+                        this.genlocalAxis = document.getElementById("genlocalAxis");
+                        //            this.genlocalAxis.onchange = () => {
+                        //                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+                        //                if (err !== null) {
+                        //                    this.showAlertDiag(err);
+                        //                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
+                        //                }
+                        //            }
+                        this.genApply = document.getElementById("genApply");
+                        this.genApply.onclick = function () {
+                            _this.applyGeneral();
+                            _this.showAlertDiag("changes applied");
+                        };
+                        this.genRestore = document.getElementById("genRestore");
+                        this.genRestore.onclick = function () {
+                            _this.showAlertDiag("sorry. not implemented yet");
+                        };
+                    };
+                    VishvaGUI.prototype.updateGeneral = function () {
+                        if (this.genName === undefined)
+                            this.initGeneral();
+                        this.genName.value = this.vishva.getName();
+                        this.genDisable.checked = this.vishva.isDisabled();
+                        this.genColl.checked = this.vishva.isCollideable();
+                        this.genVisi.checked = this.vishva.isVisible();
+                        this.genlocalAxis.checked = this.vishva.isSpaceLocal();
+                    };
+                    VishvaGUI.prototype.applyGeneral = function () {
+                        this.vishva.setName(this.genName.value);
+                        this.vishva.disableIt(this.genDisable.checked);
+                        this.vishva.enableCollision(this.genColl.checked);
+                        this.vishva.makeVisibile(this.genVisi.checked);
+                        var err = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+                        if (err !== null) {
+                            this.showAlertDiag(err);
+                            this.genlocalAxis.checked = !this.genlocalAxis.checked;
+                        }
+                    };
                     VishvaGUI.prototype.initLightUI = function () {
                         var _this = this;
-                        console.log("initLightUI");
                         this.lightAtt = document.getElementById("lightAtt");
                         this.lightType = document.getElementById("lightType");
                         this.lightDiff = document.getElementById("lightDiff");
@@ -4471,8 +4532,6 @@ var org;
                         var togEna = document.getElementById("togEna");
                         var showDisa = document.getElementById("showDisa");
                         var hideDisa = document.getElementById("hideDisa");
-                        //let togPhys: HTMLElement = document.getElementById("togPhys");
-                        var attLight = document.getElementById("attLight");
                         var addWater = document.getElementById("addWater");
                         var undo = document.getElementById("undo");
                         var redo = document.getElementById("redo");
@@ -4561,13 +4620,13 @@ var org;
                             }
                             return false;
                         };
-                        visMesh.onclick = function (e) {
-                            var err = _this.vishva.toggleMeshVisibility();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
+                        //            visMesh.onclick = (e) => {
+                        //                var err: string = this.vishva.toggleMeshVisibility();
+                        //                if (err != null) {
+                        //                    this.showAlertDiag(err);
+                        //                }
+                        //                return false;
+                        //            };
                         showInvis.onclick = function (e) {
                             _this.vishva.showAllInvisibles();
                             return false;
@@ -4596,22 +4655,6 @@ var org;
                         };
                         hideDisa.onclick = function (e) {
                             _this.vishva.hideAllDisabled();
-                            return false;
-                        };
-                        /*
-                        togPhys.onclick = (e) => {
-                            var err: string = this.vishva.togglePhyiscs();
-                            if (err != null) {
-                                this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        */
-                        attLight.onclick = function (e) {
-                            var err = _this.vishva.attachLight();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
                             return false;
                         };
                         addWater.onclick = function (e) {
@@ -4732,9 +4775,9 @@ var org;
                         propsTabs.tabs({
                             //everytime we switch tabs, close open to re-adjust size
                             activate: function (e, ui) {
-                                _this.isTabRestart = true;
-                                _this.propsDiag.dialog("close");
-                                _this.propsDiag.dialog("open");
+                                //this.isTabRestart = true;
+                                //this.propsDiag.dialog("close");
+                                //this.propsDiag.dialog("open");
                             },
                             beforeActivate: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
@@ -4748,10 +4791,15 @@ var org;
                             autoOpen: false,
                             resizable: false,
                             position: this.rightCenter,
-                            minWidth: 350,
-                            width: "auto",
+                            minWidth: 500,
+                            width: 500,
                             height: "auto",
                             closeOnEscape: false,
+                            //on open calculate the values in the active tab
+                            //also if we switched to another mesh vishav will close open
+                            //by calling refreshPropsDiag()
+                            //donot bother refreshing if we are just restarting
+                            //dialog for height and width sizing after drag
                             open: function (e, ui) {
                                 if (!_this.isTabRestart) {
                                     // refresh the active tab
@@ -4765,6 +4813,13 @@ var org;
                             close: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
                                 _this.vishva.enableKeys();
+                            },
+                            //after drag the dialog box doesnot resize
+                            //force resize by closing and opening
+                            dragStop: function (e, ui) {
+                                _this.isTabRestart = true;
+                                _this.propsDiag.dialog("close");
+                                _this.propsDiag.dialog("open");
                             }
                         };
                         this.propsDiag.dialog(dos);
@@ -4783,23 +4838,29 @@ var org;
                      * is switched to another mesh
                      */
                     VishvaGUI.prototype.refreshPropsDiag = function () {
+                        if (this.propsDiag === undefined)
+                            return;
                         if (this.propsDiag.dialog("isOpen") === true) {
                             this.propsDiag.dialog("close");
                             this.propsDiag.dialog("open");
                         }
                     };
                     VishvaGUI.prototype.refreshTab = function (tabIndex) {
-                        if (tabIndex === 0 /* Transforms */) {
+                        if (tabIndex === 0 /* General */) {
+                            //this.vishva.disableKeys();
+                            this.updateGeneral();
+                        }
+                        else if (tabIndex === 1 /* Transforms */) {
                             this.updateTransform();
                         }
-                        else if (tabIndex === 3 /* Lights */) {
+                        else if (tabIndex === 4 /* Lights */) {
                             this.updateLight();
                         }
-                        else if (tabIndex === 4 /* Animations */) {
+                        else if (tabIndex === 5 /* Animations */) {
                             this.vishva.disableKeys();
                             this.updateAnimations();
                         }
-                        else if (tabIndex === 1 /* Physics */) {
+                        else if (tabIndex === 2 /* Physics */) {
                             this.vishva.disableKeys();
                             this.updatePhysics();
                         }

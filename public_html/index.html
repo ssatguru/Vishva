@@ -18,7 +18,7 @@
         <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet">
 
         <script src="lib/cannon.js"></script>
-        <script src="lib/babylon.2.6-12-09-2016.js"></script>
+        <script src="lib/babylon.2.6-12-16-2016.js"></script>
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
         <script src="lib/colorpicker.min.js"></script>
@@ -37,10 +37,7 @@
                 background: #000000;
                 color: #ffffff;
             }
-            #gui-items{
-                visibility: hidden;
-
-            }
+            
 
             /* #sNaDiag */
             /* required as jquery dialog size does not re-adjust to content after it has been dragged */
@@ -81,6 +78,17 @@
             }
 
             #vCanvas {
+                min-height: 700px;
+                min-width: 500px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            #gui-items {
+                visibility: hidden;
                 position: absolute;
                 top: 0;
                 right: 0;
@@ -145,7 +153,6 @@
                     <li id="showDisa">Show all Disabled</li>
                     <li id="hideDisa">Hide all Disabled</li>
                     <li>-</li>
-                    <li id="attLight">Attach light</li>
                     <li id="addWater">Add water</li>
                     <li>-</li>
                     <li id="local">Switch to Global Axis</li>
@@ -264,14 +271,48 @@
             </div>
 
             <div id="propsDiag" title="mesh properties">
+
+                <!--
+               
+                -->
                 <div id="propsTabs">
+
                     <ul>
+                        <li><a href="#gen">General</a></li>
                         <li><a href="#meshTransDiag">Transforms</a></li>
                         <li><a href="#Physics">Physics</a></li>
                         <li><a href="#Material">Material</a></li>
                         <li><a href="#Lights">Lights</a></li>
                         <li><a href="#meshAnimDiag">Animations</a></li>
                     </ul>
+
+                    <div id="gen" >
+                        <table>
+                            <tr>
+                                <td>name</td>
+                                <td><input type="text" id="genName"></td>
+                            </tr>
+                            <tr>
+                                <td>disable</td>
+                                <td><input type="checkbox" id="genDisable"></td>
+                            </tr>
+                            <tr>
+                                <td>collision</td>
+                                <td><input type="checkbox" id="genColl"></td>
+                            </tr>
+                            <tr>
+                                <td>visible</td>
+                                <td><input type="checkbox" id="genVisi"></td>
+                            </tr>
+                            <tr>
+                                <td>local axis</td>
+                                <td><input type="checkbox" id="genlocalAxis"></td>
+                            </tr>
+                        </table>
+                        <br>
+                        <button id ="genApply">apply</button>
+                        <button id ="genRestore">restore</button>
+                    </div>
 
                     <div id="meshTransDiag" title="Transforms">
                         <table>
@@ -411,7 +452,7 @@
                                     <input type="text" id="lightExp" size="3" value="1">
                                 </td>
                             </tr>
-                             <tr class="opt Hemi">
+                            <tr class="opt Hemi">
                                 <td>ground color</td>
                                 <td>
                                     <input type="color" id="lightGndClr" value="#ffffff">
@@ -430,7 +471,7 @@
                         <button id ="lightApply">apply</button>
                         <button id ="lightRestore">restore</button>
                         <script>
-                            function showOpt(){
+                            function showOpt() {
                                 var cls = "." + $("#lightType").val();
                                 $(".opt").hide();
                                 $(cls).show();
@@ -538,46 +579,46 @@
         -->
         <script type="text/javascript" src="js/Vishva-merged.js"></script>
         <script type="text/javascript">
-            $(function () {
+                            $(function () {
 
-                //change all buttons to jquery button
-                $("button").button();
-                $("button").click(function (e) {
-                    $(this).blur();
-                });
+                                //change all buttons to jquery button
+                                $("button").button();
+                                $("button").click(function (e) {
+                                    $(this).blur();
+                                });
 
-                var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
-                var search = new HREFsearch();
+                                var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
+                                var search = new HREFsearch();
 
-                var world, worldFolder, sceneFolder, sceneFile, editEnabled;
+                                var world, worldFolder, sceneFolder, sceneFile, editEnabled;
 
-                world = search.getParm("world");
-                if (world != "empty") {
-                    if (!world) {
-                        if (config) {
-                            world = config.world;
-                        }
-                    }
+                                world = search.getParm("world");
+                                if (world != "empty") {
+                                    if (!world) {
+                                        if (config) {
+                                            world = config.world;
+                                        }
+                                    }
 
-                    if (worlds && world) {
-                        var worldData = worlds[world];
-                        if (worldData) {
-                            worldFolder = worldData.worldFolder;
-                            sceneFolder = worldData.sceneFolder;
-                            sceneFile = worldData.sceneFile;
-                            editEnabled = worldData.editEnabled;
-                        }
-                    }
+                                    if (worlds && world) {
+                                        var worldData = worlds[world];
+                                        if (worldData) {
+                                            worldFolder = worldData.worldFolder;
+                                            sceneFolder = worldData.sceneFolder;
+                                            sceneFile = worldData.sceneFile;
+                                            editEnabled = worldData.editEnabled;
+                                        }
+                                    }
 
-                    var scenePath = "vishva/worlds/" + worldFolder + "/"
-                            + sceneFolder + "/";
-                }
-                if (editEnabled == null)
-                    editEnabled = true;
-                var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
-                var vishva = new Vishva(scenePath, sceneFile, "vCanvas",
-                        editEnabled, assets);
-            });
+                                    var scenePath = "vishva/worlds/" + worldFolder + "/"
+                                            + sceneFolder + "/";
+                                }
+                                if (editEnabled == null)
+                                    editEnabled = true;
+                                var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
+                                var vishva = new Vishva(scenePath, sceneFile, "vCanvas",
+                                        editEnabled, assets);
+                            });
         </script>
     </body>
 

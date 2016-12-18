@@ -2400,11 +2400,19 @@ var org;
                         else
                             return this.meshPicked.skeleton;
                     };
+                    Vishva.prototype.createAnimRange = function (name, start, end) {
+                        this.meshPicked.skeleton.createAnimationRange(name, start, end);
+                    };
                     Vishva.prototype.getAnimationRanges = function () {
                         var skel = this.meshPicked.skeleton;
-                        var getAnimationRanges = skel["getAnimationRanges"];
-                        var ranges = getAnimationRanges.call(skel);
-                        return ranges;
+                        //            var getAnimationRanges: Function = <Function>skel["getAnimationRanges"];
+                        //            var ranges: AnimationRange[] = <AnimationRange[]>getAnimationRanges.call(skel);
+                        if (skel !== null) {
+                            var ranges = skel.getAnimationRanges();
+                            return ranges;
+                        }
+                        else
+                            return null;
                     };
                     Vishva.prototype.printAnimCount = function (skel) {
                         var bones = skel.bones;
@@ -2624,7 +2632,7 @@ var org;
                         if (!this.isMeshSelected) {
                             return null;
                         }
-                        this.renameWorldTextures();
+                        //this.renameWorldTextures();
                         var clone = this.meshPicked.clone(this.meshPicked.name, null);
                         clone.position = Vector3.Zero();
                         clone.rotation = Vector3.Zero();
@@ -3331,10 +3339,6 @@ var org;
                          * reset on window resize
                          */
                         this.dialogs = new Array();
-                        //        localAxis: HTMLElement = document.getElementById("local");
-                        //
-                        //        snapTrans: HTMLElement = document.getElementById("snapTrans");
-                        //        snapRot: HTMLElement = document.getElementById("snapRot");
                         this.snapper = document.getElementById("snapper");
                         this.animSelect = null;
                         this.firstTime = true;
@@ -3361,21 +3365,21 @@ var org;
                         window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
                     }
                     VishvaGUI.prototype.createJPOs = function () {
-                        this.centerBottom = Object.defineProperty({
+                        this.centerBottom = {
                             at: "center bottom",
                             my: "center bottom",
                             of: window
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
-                        this.leftCenter = Object.defineProperty({
+                        };
+                        this.leftCenter = {
                             at: "left center",
                             my: "left center",
                             of: window
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
-                        this.rightCenter = Object.defineProperty({
+                        };
+                        this.rightCenter = {
                             at: "right center",
                             my: "right center",
                             of: window
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.JQueryPositionOptions"] });
+                        };
                     };
                     /**
                      * resposition all dialogs to their original default postions without this,
@@ -3525,29 +3529,12 @@ var org;
                         /* Update menu items that are assoicated with
                            Vishva entities whose state might have changed
                         */
-                        //            if (this.vishva.isSpaceLocal()) {
-                        //                this.local = true;
-                        //                this.localAxis.innerHTML = "Switch to Global Axis";
-                        //            } else {
-                        //                this.local = false;
-                        //                this.localAxis.innerHTML = "Switch to Local Axis";
-                        //            }
                         if (this.vishva.isSnapperOn()) {
                             this.snapper.innerHTML = "Snapper Off";
                         }
                         else {
                             this.snapper.innerHTML = "Snapper On";
                         }
-                        //            if (this.vishva.isSnapTransOn()) {
-                        //                this.snapTrans.innerHTML = "Snap Translate Off";
-                        //            } else {
-                        //                this.snapTrans.innerHTML = "Snap Translate On";
-                        //            }
-                        //            if (this.vishva.isSnapRotOn()) {
-                        //                this.snapRot.innerHTML = "Snap Rotate Off";
-                        //            } else {
-                        //                this.snapRot.innerHTML = "Snap Rotate On";
-                        //            }
                         this.editDialog.dialog("open");
                         return false;
                     };
@@ -3680,17 +3667,7 @@ var org;
                         var _this = this;
                         //tabs
                         var sNaDetails = $("#sNaDetails");
-                        sNaDetails.tabs({
-                            /* required as jquery dialog's size does not re-adjust to content after it has been dragged
-                             Thus if the size of sensors tab is different from the size of actuators tab  the the content of
-                             actuator tab is cutoff if its size is greater
-                             so we close and open for it to recalculate the sizes.
-                             */
-                            activate: function (e, ui) {
-                                _this.sNaDialog.dialog("close");
-                                _this.sNaDialog.dialog("open");
-                            }
-                        });
+                        sNaDetails.tabs();
                         //dialog box
                         this.sNaDialog = $("#sNaDiag");
                         var dos = {};
@@ -3703,6 +3680,15 @@ var org;
                         dos.closeOnEscape = false;
                         dos.close = function (e, ui) {
                             _this.vishva.switchDisabled = false;
+                        };
+                        dos.dragStop = function (e, ui) {
+                            /* required as jquery dialog's size does not re-adjust to content after it has been dragged
+                             Thus if the size of sensors tab is different from the size of actuators tab  then the content of
+                             actuator tab is cutoff if its size is greater
+                             so we close and open for it to recalculate the sizes.
+                             */
+                            _this.sNaDialog.dialog("close");
+                            _this.sNaDialog.dialog("open");
                         };
                         this.sNaDialog.dialog(dos);
                         this.sensSel = document.getElementById("sensSel");
@@ -4010,9 +3996,27 @@ var org;
                         }
                     };
                     VishvaGUI.prototype.initAnimUI = function () {
+                        var _this = this;
+                        var animRangeName = document.getElementById("animRangeName");
+                        var animRangeStart = document.getElementById("animRangeStart");
+                        var animRangeEnd = document.getElementById("animRangeEnd");
+                        var animRangeMake = document.getElementById("animRangeMake");
+                        animRangeMake.onclick = function (e) {
+                            console.log("creating range");
+                            var name = animRangeName.value;
+                            var ars = parseInt(animRangeStart.value);
+                            if (isNaN(ars)) {
+                                _this.showAlertDiag("from frame is not a number");
+                            }
+                            var are = parseInt(animRangeEnd.value);
+                            if (isNaN(are)) {
+                                _this.showAlertDiag("to frame is not a number");
+                            }
+                            _this.vishva.createAnimRange(name, ars, are);
+                            _this.refreshAnimSelect();
+                        };
                         //if lready initialized then return
                         //if (this.animSelect !== null) return;
-                        var _this = this;
                         this.animSelect = document.getElementById("animList");
                         this.animSelect.onchange = function (e) {
                             var animName = _this.animSelect.value;
@@ -4073,27 +4077,50 @@ var org;
                                 skelName = "no name";
                         }
                         document.getElementById("skelName").innerText = skelName;
+                        this.refreshAnimSelect();
+                        //            var childs: HTMLCollection = this.animSelect.children;
+                        //            var l: number = (<number>childs.length | 0);
+                        //            for (var i: number = l - 1; i >= 0; i--) {
+                        //                childs[i].remove();
+                        //            }
+                        //            if (skelName != null) {
+                        //                var range: AnimationRange[] = this.vishva.getAnimationRanges();
+                        //                var animOpt: HTMLOptionElement;
+                        //                for (var index171 = 0; index171 < range.length; index171++) {
+                        //                    var ar = range[index171];
+                        //                    {
+                        //                        animOpt = document.createElement("option");
+                        //                        animOpt.value = ar.name;
+                        //                        animOpt.innerText = ar.name;
+                        //                        this.animSelect.appendChild(animOpt);
+                        //                    }
+                        //                }
+                        //                if (range[0] != null) {
+                        //                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
+                        //                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
+                        //                }
+                        //            }
+                    };
+                    VishvaGUI.prototype.refreshAnimSelect = function () {
                         var childs = this.animSelect.children;
                         var l = (childs.length | 0);
                         for (var i = l - 1; i >= 0; i--) {
                             childs[i].remove();
                         }
-                        if (skelName != null) {
-                            var range = this.vishva.getAnimationRanges();
-                            var animOpt;
-                            for (var index171 = 0; index171 < range.length; index171++) {
-                                var ar = range[index171];
-                                {
-                                    animOpt = document.createElement("option");
-                                    animOpt.value = ar.name;
-                                    animOpt.innerText = ar.name;
-                                    this.animSelect.appendChild(animOpt);
-                                }
-                            }
-                            if (range[0] != null) {
-                                document.getElementById("animFrom").innerText = (new Number(range[0].from)).toString();
-                                document.getElementById("animTo").innerText = (new Number(range[0].to)).toString();
-                            }
+                        var range = this.vishva.getAnimationRanges();
+                        if (range === null)
+                            return;
+                        var animOpt;
+                        for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
+                            var ar = range_1[_i];
+                            animOpt = document.createElement("option");
+                            animOpt.value = ar.name;
+                            animOpt.innerText = ar.name;
+                            this.animSelect.appendChild(animOpt);
+                        }
+                        if (range[0] != null) {
+                            document.getElementById("animFrom").innerText = (new Number(range[0].from)).toString();
+                            document.getElementById("animTo").innerText = (new Number(range[0].to)).toString();
                         }
                     };
                     VishvaGUI.prototype.initGeneral = function () {
@@ -4413,22 +4440,22 @@ var org;
                     VishvaGUI.prototype.createAlertDiag = function () {
                         this.alertDiv = document.getElementById("alertDiv");
                         this.alertDialog = $("#alertDiv");
-                        var dos = Object.defineProperty({
+                        var dos = {
                             title: "Information",
                             autoOpen: false,
                             width: "auto",
                             height: "auto",
                             closeOnEscape: false
-                        }, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.DialogEvents", "def.jqueryui.jqueryui.DialogOptions"] });
+                        };
                         this.alertDialog.dialog(dos);
                     };
                     VishvaGUI.prototype.showAlertDiag = function (msg) {
-                        this.alertDiv.innerHTML = msg;
+                        this.alertDiv.innerHTML = "<h3>" + msg + "</h3>";
                         this.alertDialog.dialog("open");
                     };
                     VishvaGUI.prototype.sliderOptions = function (min, max, value) {
                         var _this = this;
-                        var so = Object.defineProperty({}, '__interfaces', { configurable: true, value: ["def.jqueryui.jqueryui.SliderEvents", "def.jqueryui.jqueryui.SliderOptions"] });
+                        var so = {};
                         so.min = min;
                         so.max = max;
                         so.value = value;
@@ -4650,14 +4677,14 @@ var org;
                                 _this.refreshTab(ui.newTab.index());
                             }
                         });
-                        //dialog box
+                        //property dialog box
                         this.propsDiag = $("#propsDiag");
                         var dos = {
                             autoOpen: false,
                             resizable: false,
                             position: this.rightCenter,
-                            minWidth: 700,
-                            width: 700,
+                            minWidth: 475,
+                            width: 475,
                             height: "auto",
                             closeOnEscape: false,
                             //on open calculate the values in the active tab
@@ -4696,6 +4723,8 @@ var org;
                      * is removed from mesh
                      */
                     VishvaGUI.prototype.closePropsDiag = function () {
+                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
+                            return;
                         this.propsDiag.dialog("close");
                     };
                     /*
@@ -4703,7 +4732,7 @@ var org;
                      * is switched to another mesh
                      */
                     VishvaGUI.prototype.refreshPropsDiag = function () {
-                        if (this.propsDiag === undefined)
+                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
                             return;
                         if (this.propsDiag.dialog("isOpen") === true) {
                             this.propsDiag.dialog("close");

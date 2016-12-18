@@ -253,8 +253,6 @@
                         <li><a href="#Material">Material</a></li>
                         <li><a href="#Lights">Lights</a></li>
                         <li><a href="#meshAnimDiag">Animations</a></li>
-                        <li><a href="#meshAnimDiag">sensors</a></li>
-                        <li><a href="#meshAnimDiag">actuators</a></li>
                     </ul>
 
                     <div id="gen" >
@@ -310,10 +308,9 @@
                                 </td>
                             </tr>
                         </table>
-                        <br>
                     </div>
 
-                    <div id="meshTransDiag" title="Transforms">
+                    <div id="meshTransDiag">
                         <table>
                             <tr>
                                 <td></td>
@@ -482,6 +479,22 @@
                     <div id="meshAnimDiag" title="Animations">
                         <table>
                             <tr>
+                                <td>range name</td>
+                                <td><input type="text" id="animRangeName"></td>
+                            </tr>
+                            <tr>
+                                <td>from frame</td>
+                                <td><input type="text" id="animRangeStart" size="2" ></td>
+                            </tr>
+                            <tr>
+                                <td>to frame</td>
+                                <td><input type="text" id="animRangeEnd" size="2"></td>                                
+                            </tr>
+                        </table>
+                        <br><button id="animRangeMake">Create Range</button>
+                        <br>select a range
+                        <table>
+                            <tr>
                                 <td>skeleton name</td>
                                 <td>ranges</td>
                                 <td>from frame</td>
@@ -495,6 +508,7 @@
                             </tr>
                         </table>
                         <br>
+                        play selected range
                         <table>
                             <tr>
                                 <td>rate</td>
@@ -510,7 +524,6 @@
                             </tr>
                         </table>
                     </div>
-
                 </div>
             </div>
 

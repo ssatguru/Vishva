@@ -1452,11 +1452,17 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
 
+        public createAnimRange(name:string, start:number, end:number){
+            this.meshPicked.skeleton.createAnimationRange(name,start,end);
+        }
         public getAnimationRanges(): AnimationRange[] {
             var skel: Skeleton = this.meshPicked.skeleton;
-            var getAnimationRanges: Function = <Function>skel["getAnimationRanges"];
-            var ranges: AnimationRange[] = <AnimationRange[]>getAnimationRanges.call(skel);
-            return ranges;
+//            var getAnimationRanges: Function = <Function>skel["getAnimationRanges"];
+//            var ranges: AnimationRange[] = <AnimationRange[]>getAnimationRanges.call(skel);
+            if (skel !== null){
+                var ranges: AnimationRange[] = skel.getAnimationRanges()
+                return ranges;
+            }else return null;
         }
 
         public printAnimCount(skel: Skeleton) {
@@ -1471,6 +1477,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public playAnimation(animName: string, animRate: string, loop: boolean) {
+            
             var skel: Skeleton = this.meshPicked.skeleton;
             if (skel == null) return;
             var r: number = parseFloat(animRate);
@@ -1688,7 +1695,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!this.isMeshSelected) {
                 return null;
             }
-            this.renameWorldTextures();
+            //this.renameWorldTextures();
             var clone: Mesh = <Mesh>this.meshPicked.clone(this.meshPicked.name, null);
             clone.position = Vector3.Zero();
             clone.rotation = Vector3.Zero();

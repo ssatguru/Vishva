@@ -384,6 +384,8 @@ var org;
                 vishva.SNAserialized = SNAserialized;
                 var SensorAbstract = (function () {
                     function SensorAbstract(mesh, properties) {
+                        //action: Action;
+                        this.actions = new Array();
                         Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
                         this.properties = properties;
                         this.mesh = mesh;
@@ -402,6 +404,8 @@ var org;
                                 sensors.splice(i, 1);
                             }
                         }
+                        this.removeActions();
+                        //call any sesnor specific cleanup
                         this.cleanUp();
                     };
                     SensorAbstract.prototype.getSignalId = function () {
@@ -429,6 +433,25 @@ var org;
                     SensorAbstract.prototype.getType = function () {
                         return "SENSOR";
                     };
+                    /*
+                    * from this mesh's actionmanager remove all actions
+                    * added by this sensor
+                    * if at end no actions left in the actionmanager
+                    * then dispose of the actionmanager itself.
+                    */
+                    SensorAbstract.prototype.removeActions = function () {
+                        var actions = this.mesh.actionManager.actions;
+                        var i;
+                        for (var _i = 0, _a = this.actions; _i < _a.length; _i++) {
+                            var action = _a[_i];
+                            i = actions.indexOf(action);
+                            actions.splice(i, 1);
+                        }
+                        if (actions.length === 0) {
+                            this.mesh.actionManager.dispose();
+                            this.mesh.actionManager = null;
+                        }
+                    };
                     return SensorAbstract;
                 }());
                 vishva.SensorAbstract = SensorAbstract;
@@ -439,10 +462,15 @@ var org;
                         _super.call(this, mesh, properties);
                         Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
                         if (this.mesh.actionManager == null) {
-                            this.mesh.actionManager = new ActionManager(mesh.getScene());
+                            this.mesh.actionManager = new ActionManager(this.mesh.getScene());
                         }
-                        this.action = new ExecuteCodeAction(ActionManager.OnLeftPickTrigger, function (e) { return _this.emitSignal(e); });
-                        this.mesh.actionManager.registerAction(this.action);
+                        var action = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, function (e) {
+                            var pe = e.sourceEvent;
+                            if (pe.button === 0)
+                                _this.emitSignal(e);
+                        });
+                        this.mesh.actionManager.registerAction(action);
+                        this.actions.push(action);
                     }
                     SensorTouch.prototype.getName = function () {
                         return "Touch";
@@ -454,13 +482,6 @@ var org;
                         this.properties = properties;
                     };
                     SensorTouch.prototype.cleanUp = function () {
-                        var actions = this.mesh.actionManager.actions;
-                        var i = actions.indexOf(this.action);
-                        actions.splice(i, 1);
-                        if (actions.length === 0) {
-                            this.mesh.actionManager.dispose();
-                            this.mesh.actionManager = null;
-                        }
                     };
                     SensorTouch.prototype.processUpdateSpecific = function () {
                     };
@@ -470,17 +491,7 @@ var org;
                 var SensorCollision = (function (_super) {
                     __extends(SensorCollision, _super);
                     function SensorCollision(aMesh, properties) {
-                        var _this = this;
                         _super.call(this, aMesh, properties);
-                        this.properties = properties;
-                        if (this.mesh.actionManager == null) {
-                            this.mesh.actionManager = new ActionManager(aMesh.getScene());
-                        }
-                        var scene = aMesh.getScene();
-                        //var otherMesh = this.findAV(scene);
-                        var otherMesh = scene.getMeshesByTags("Vishva.avatar")[0];
-                        this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
-                        this.mesh.actionManager.registerAction(this.action);
                     }
                     SensorCollision.prototype.getName = function () {
                         return "Proximity";
@@ -492,15 +503,27 @@ var org;
                         this.properties = properties;
                     };
                     SensorCollision.prototype.cleanUp = function () {
-                        var actions = this.mesh.actionManager.actions;
-                        var i = actions.indexOf(this.action);
-                        actions.splice(i, 1);
-                        if (actions.length === 0) {
-                            this.mesh.actionManager.dispose();
-                            this.mesh.actionManager = null;
-                        }
                     };
                     SensorCollision.prototype.processUpdateSpecific = function () {
+                        var _this = this;
+                        var properties = this.properties;
+                        var scene = this.mesh.getScene();
+                        if (this.mesh.actionManager == null) {
+                            this.mesh.actionManager = new ActionManager(scene);
+                        }
+                        var otherMesh = scene.getMeshesByTags("Vishva.avatar")[0];
+                        if (properties.onEnter) {
+                            console.log("registrying onenter");
+                            var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
+                            this.mesh.actionManager.registerAction(action);
+                            this.actions.push(action);
+                        }
+                        if (properties.onExit) {
+                            console.log("registrying onexit");
+                            var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
+                            this.mesh.actionManager.registerAction(action);
+                            this.actions.push(action);
+                        }
                     };
                     SensorCollision.prototype.findAV = function (scene) {
                         for (var index140 = 0; index140 < scene.meshes.length; index140++) {
@@ -981,6 +1004,8 @@ var org;
                     __extends(SenCollisionProp, _super);
                     function SenCollisionProp() {
                         _super.apply(this, arguments);
+                        this.onEnter = false;
+                        this.onExit = false;
                     }
                     SenCollisionProp.prototype.unmarshall = function (obj) {
                         return obj;
@@ -3138,7 +3163,7 @@ var org;
                         var camera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
                         this.setCameraSettings(camera);
                         camera.attachControl(canvas, true);
-                        if (this.avatar != null) {
+                        if ((this.avatar !== null) && (this.avatar !== undefined)) {
                             camera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                             camera.alpha = -this.avatar.rotation.y - 4.69;
                         }
@@ -3172,7 +3197,7 @@ var org;
                         this.fixAnimationRanges(this.avatarSkeleton);
                         this.avatar.skeleton = this.avatarSkeleton;
                         this.checkAnimRange(this.avatarSkeleton);
-                        this.avatar.rotation.y = Math.PI;
+                        //this.avatar.rotation.y = Math.PI;
                         this.avatar.position = new Vector3(0, 0, 0);
                         this.avatar.checkCollisions = true;
                         this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
@@ -3181,8 +3206,8 @@ var org;
                         Tags.AddTagsTo(this.avatar, "Vishva.avatar");
                         Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
                         this.avatarSkeleton.name = "Vishva.skeleton";
-                        this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                         this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
+                        this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                         var sm = this.avatar.material;
                         if (sm.diffuseTexture != null) {
                             var textureName = sm.diffuseTexture.name;
@@ -3831,12 +3856,14 @@ var org;
                         var node = parmDiv.firstChild;
                         if (node != null)
                             parmDiv.removeChild(node);
+                        console.log(sensor.getProperties());
                         var tbl = this.formCreate(sensor.getProperties(), parmDiv.id);
                         parmDiv.appendChild(tbl);
                         var dbo = {};
                         dbo.text = "save";
                         dbo.click = function (e) {
                             _this.formRead(sensor.getProperties(), parmDiv.id);
+                            sensor.processUpdateGeneric();
                             _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
                             editSensDiag.dialog("close");
                             _this.vishva.enableKeys();

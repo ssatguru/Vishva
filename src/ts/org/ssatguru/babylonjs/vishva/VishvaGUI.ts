@@ -586,6 +586,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
             var node: Node = parmDiv.firstChild;
             if (node != null) parmDiv.removeChild(node);
+            console.log(sensor.getProperties());
             var tbl: HTMLTableElement = this.formCreate(sensor.getProperties(), parmDiv.id);
             parmDiv.appendChild(tbl);
 
@@ -593,6 +594,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dbo.text = "save";
             dbo.click = (e) => {
                 this.formRead(sensor.getProperties(), parmDiv.id);
+                sensor.processUpdateGeneric()
                 this.updateSensActTbl(this.vishva.getSensors(), this.sensTbl);
                 editSensDiag.dialog("close");
                 this.vishva.enableKeys();

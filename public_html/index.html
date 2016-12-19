@@ -278,7 +278,7 @@
                                     disable <input type="checkbox" id="genDisable">
                                     collision <input type="checkbox" id="genColl">
                                     visible <input type="checkbox" id="genVisi">
-                                    
+
                                 </td>
                             </tr>
                             <tr>
@@ -386,11 +386,34 @@
                     </div>
 
                     <div id="Material" >
-                        <select id="matSelect">
-                            <option value="wood">Wood</option>
-                            <option value="marble">Marble</option>
-                            <option value="fire">Fire</option>
-                        </select>
+                       
+                        <table>
+                            <tr>
+                                <td colspan="2">name <input type="text" id="matName" ></td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top;"> colors : 
+                                    <br><input type="color" id="matDcolor" >diffuse  
+                                    <br><input type="color" id="matEcolor" >emissive
+                                    <br><input type="color" id="matAcolor" >ambient
+                                    <br><input type="color" id="matScolor" >specular 
+                                    <br><input type="text" id="matSpower" size="1" >spec power 
+                                </td>
+                                <td style="vertical-align: top;"> 
+                                    textures : 
+                                    <br><button id="matDtext">diffuse</button>
+                                    <br><button id="matEtext">emissive</button>
+                                    <br><button id="matAtext">ambient</button>
+                                    <br><button id="matStext">specular</button>
+                                    <br><button id="matBtext">bump</button>
+                                    <br><button id="matLtext">light map</button>
+                                    <br><button id="matOtext">opacity</button>
+                                    <br><button id="matRLtext">reflection</button>
+                                    <br><button id="matRFtext">refraction</button>
+
+                                </td>
+                            </tr>
+                        </table>
                     </div>
 
                     <div id="Lights" >
@@ -529,15 +552,6 @@
 
 
 
-
-
-            <div id="matDiag">
-                <select id="matSelect">
-                    <option value="wood">Wood</option>
-                    <option value="marble">Marble</option>
-                    <option value="fire">Fire</option>
-                </select>
-            </div>
 
 
             <div id="saveDiv">

@@ -70,9 +70,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public createSensorByName(name: string, mesh: Mesh, prop: SNAproperties): Sensor {
             if (name === "Touch") {
-                if (prop != null) return new SensorTouch(mesh, prop); else return new SensorTouch(mesh, new SenTouchProp());
+                if (prop != null) return new SensorTouch(mesh, <SenTouchProp>prop); else return new SensorTouch(mesh, new SenTouchProp());
             } else if (name === "Proximity") {
-                if (prop != null) return new SensorCollision(mesh, prop); else return new SensorCollision(mesh, new SenCollisionProp());
+                if (prop != null) return new SensorCollision(mesh, <SenCollisionProp>prop); else return new SensorCollision(mesh, new SenCollisionProp());
             } else
                 return null;
         }
@@ -435,7 +435,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
         mesh: Mesh;
 
-        action: Action;
+        //action: Action;
+        actions:Action[] = new Array();
 
         public constructor(mesh: Mesh, properties: SNAproperties) {
             Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
@@ -457,6 +458,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     sensors.splice(i, 1);
                 }
             }
+            this.removeActions();
+            
+            //call any sesnor specific cleanup
             this.cleanUp();
         }
 
@@ -492,6 +496,27 @@ namespace org.ssatguru.babylonjs.vishva {
         public getType(): string {
             return "SENSOR";
         }
+        
+         /*
+         * from this mesh's actionmanager remove all actions 
+         * added by this sensor
+         * if at end no actions left in the actionmanager 
+         * then dispose of the actionmanager itself.
+         */
+        public removeActions() {
+            var actions: Action[] = this.mesh.actionManager.actions;
+            let i:number;
+            for (let action of this.actions){
+                i = actions.indexOf(action);
+                actions.splice(i, 1);
+            }
+            if (actions.length === 0) {
+                this.mesh.actionManager.dispose();
+                this.mesh.actionManager = null;
+            }
+        }
+        
+
     }
 
     export class SensorTouch extends SensorAbstract {
@@ -500,11 +525,18 @@ namespace org.ssatguru.babylonjs.vishva {
         public constructor(mesh: Mesh, properties: SNAproperties) {
             super(mesh, properties);
             Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
-            if (this.mesh.actionManager == null) {
-                this.mesh.actionManager = new ActionManager(mesh.getScene());
+             if (this.mesh.actionManager == null) {
+                this.mesh.actionManager = new ActionManager(this.mesh.getScene());
             }
-            this.action = new ExecuteCodeAction(ActionManager.OnLeftPickTrigger, (e) => { return this.emitSignal(e) });
-            this.mesh.actionManager.registerAction(this.action);
+            
+            let action:Action = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, (e) => { 
+                    let pe: PointerEvent = e.sourceEvent;
+                    if (pe.button === 0) this.emitSignal(e);
+                }
+            );
+            this.mesh.actionManager.registerAction(action);
+            this.actions.push(action)
+            
         }
 
         public getName(): string {
@@ -519,36 +551,25 @@ namespace org.ssatguru.babylonjs.vishva {
             this.properties = properties;
         }
 
+        
         public cleanUp() {
-            var actions: Array<Action> = this.mesh.actionManager.actions;
-            var i: number = actions.indexOf(this.action);
-            actions.splice(i, 1);
-            if (actions.length === 0) {
-                this.mesh.actionManager.dispose();
-                this.mesh.actionManager = null;
-            }
+            
         }
 
         public processUpdateSpecific() {
+           
         }
     }
 
 
 
     export class SensorCollision extends SensorAbstract {
-        properties: SenCollisionProp;
-
+        
+        
         public constructor(aMesh: Mesh, properties: SenCollisionProp) {
             super(aMesh, properties);
-            this.properties = properties;
-            if (this.mesh.actionManager == null) {
-                this.mesh.actionManager = new ActionManager(aMesh.getScene());
-            }
-            var scene: Scene = aMesh.getScene();
-            //var otherMesh = this.findAV(scene);
-            let otherMesh = scene.getMeshesByTags("Vishva.avatar" )[0];
-            this.action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
-            this.mesh.actionManager.registerAction(this.action);
+            
+            
         }
 
         public getName(): string {
@@ -560,20 +581,34 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public setProperties(properties: SNAproperties) {
-            this.properties = properties;
+            this.properties =  <SenCollisionProp> properties;
         }
 
         public cleanUp() {
-            var actions: Array<Action> = this.mesh.actionManager.actions;
-            var i: number = actions.indexOf(this.action);
-            actions.splice(i, 1);
-            if (actions.length === 0) {
-                this.mesh.actionManager.dispose();
-                this.mesh.actionManager = null;
-            }
         }
 
         public processUpdateSpecific() {
+            let properties : SenCollisionProp = <SenCollisionProp> this.properties;
+            var scene: Scene = this.mesh.getScene();
+            
+            if (this.mesh.actionManager == null) {
+                this.mesh.actionManager = new ActionManager(scene);
+            }
+
+
+            let otherMesh = scene.getMeshesByTags("Vishva.avatar" )[0];
+            
+            if (properties.onEnter){
+                let action:Action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
+                this.mesh.actionManager.registerAction(action);
+                this.actions.push(action);
+            }
+            
+            if (properties.onExit){
+                let action: Action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
+                this.mesh.actionManager.registerAction(action);
+                this.actions.push(action);
+            }
         }
 
         private findAV(scene: Scene): AbstractMesh {
@@ -675,6 +710,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public processUpdateGeneric() {
+            
             // check if signalId changed, if yes then resubscribe
             if (this.signalId != null && this.signalId !== this.properties.signalId) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalId);
@@ -684,6 +720,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.signalId = this.properties.signalId;
                 SNAManager.getSNAManager().subscribe(this, this.signalId);
             }
+            
             this.processUpdateSpecific();
         }
 
@@ -986,6 +1023,8 @@ export class ActuatorDisabler extends ActuatorAbstract {
         }
     }
 
+   
+    
     export class ActuatorSound extends ActuatorAbstract {
 
         sound: Sound;
@@ -1085,7 +1124,9 @@ export class ActuatorDisabler extends ActuatorAbstract {
         }
     }
 
-    export class SenCollisionProp extends SNAproperties {
+     export class SenCollisionProp extends SNAproperties {
+        onEnter : boolean = false;
+        onExit: boolean = false; 
         public unmarshall(obj: Object): SenCollisionProp {
             return <SenCollisionProp>obj;
         }

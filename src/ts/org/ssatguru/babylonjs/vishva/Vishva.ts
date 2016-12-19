@@ -2238,7 +2238,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
             this.setCameraSettings(camera);
             camera.attachControl(canvas, true);
-            if (this.avatar != null) {
+            if ((this.avatar !== null) && (this.avatar !== undefined)) {
                 camera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                 camera.alpha = -this.avatar.rotation.y - 4.69;
             } else {
@@ -2273,7 +2273,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.fixAnimationRanges(this.avatarSkeleton);
             this.avatar.skeleton = this.avatarSkeleton;
             this.checkAnimRange(this.avatarSkeleton);
-            this.avatar.rotation.y = Math.PI;
+            //this.avatar.rotation.y = Math.PI;
             this.avatar.position = new Vector3(0, 0, 0);
             this.avatar.checkCollisions = true;
             this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
@@ -2283,9 +2283,8 @@ namespace org.ssatguru.babylonjs.vishva {
             Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
             this.avatarSkeleton.name = "Vishva.skeleton";
 
-            this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
             this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
-
+            this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
             var sm: StandardMaterial = <StandardMaterial>this.avatar.material;
             if (sm.diffuseTexture != null) {
                 var textureName: string = sm.diffuseTexture.name;

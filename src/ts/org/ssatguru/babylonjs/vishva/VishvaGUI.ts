@@ -274,6 +274,11 @@ namespace org.ssatguru.babylonjs.vishva {
             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
             fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
             fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
+            
+            let envSnow: HTMLButtonElement =<HTMLButtonElement>document.getElementById("envSnow");
+            envSnow.onclick = (e) => {
+                this.vishva.createSnow();
+            };
 
             var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
             skyButton.onclick = (e) => {

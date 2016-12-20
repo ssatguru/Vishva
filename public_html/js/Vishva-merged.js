@@ -513,13 +513,11 @@ var org;
                         }
                         var otherMesh = scene.getMeshesByTags("Vishva.avatar")[0];
                         if (properties.onEnter) {
-                            console.log("registrying onenter");
                             var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
                             this.mesh.actionManager.registerAction(action);
                             this.actions.push(action);
                         }
                         if (properties.onExit) {
-                            console.log("registrying onexit");
                             var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
                             this.mesh.actionManager.registerAction(action);
                             this.actions.push(action);
@@ -1134,6 +1132,7 @@ var org;
                 var Light = BABYLON.Light;
                 var Matrix = BABYLON.Matrix;
                 var Mesh = BABYLON.Mesh;
+                var ParticleSystem = BABYLON.ParticleSystem;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
                 var Quaternion = BABYLON.Quaternion;
                 var Scene = BABYLON.Scene;
@@ -1172,6 +1171,8 @@ var org;
                         this.groundTexture = "vishva/internal/textures/ground.jpg";
                         this.primTexture = "vishva/internal/textures/Birch.jpg";
                         this.waterTexture = "vishva/internal/textures/waterbump.png";
+                        this.snowTexture = "vishva/internal/textures/flare.png";
+                        this.rainTexture = "vishva/internal/textures/raindrop-1.png";
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
                         this.RELATIVE_ASSET_LOCATION = "../../../../";
                         /**
@@ -3159,6 +3160,26 @@ var org;
                         Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
                         return skybox;
                     };
+                    Vishva.prototype.createSnow = function () {
+                        console.log("creating snow");
+                        var snowPart = new ParticleSystem("snow", 1000, this.scene);
+                        snowPart.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
+                        snowPart.emitter = new Vector3(0, 10, 0);
+                        snowPart.maxEmitBox = new Vector3(100, 10, 100);
+                        snowPart.minEmitBox = new Vector3(-100, 10, -100);
+                        snowPart.emitRate = 1000;
+                        snowPart.updateSpeed = 0.005;
+                        snowPart.minLifeTime = 1;
+                        snowPart.maxLifeTime = 5;
+                        snowPart.minSize = 0.1;
+                        snowPart.maxSize = 0.5;
+                        snowPart.color1 = new BABYLON.Color4(1, 1, 1, 1);
+                        snowPart.color2 = new BABYLON.Color4(1, 1, 1, 1);
+                        snowPart.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+                        //snowPart.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+                        snowPart.gravity = new BABYLON.Vector3(0, -9.81, 0);
+                        snowPart.start();
+                    };
                     Vishva.prototype.createCamera = function (scene, canvas) {
                         var camera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
                         this.setCameraSettings(camera);
@@ -3581,6 +3602,10 @@ var org;
                         shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
                         fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
                         fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
+                        var envSnow = document.getElementById("envSnow");
+                        envSnow.onclick = function (e) {
+                            _this.vishva.createSnow();
+                        };
                         var skyButton = document.getElementById("skyButton");
                         skyButton.onclick = function (e) {
                             var foo = document.getElementById("add-skyboxes");

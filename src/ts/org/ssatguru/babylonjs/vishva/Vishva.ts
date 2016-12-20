@@ -97,6 +97,9 @@ namespace org.ssatguru.babylonjs.vishva {
         primTexture: string = "vishva/internal/textures/Birch.jpg";
 
         waterTexture: string = "vishva/internal/textures/waterbump.png";
+        
+        snowTexture: string = "vishva/internal/textures/flare.png";
+        rainTexture: string = "vishva/internal/textures/raindrop-1.png";
 
         SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
 
@@ -2232,6 +2235,30 @@ namespace org.ssatguru.babylonjs.vishva {
             skybox.isPickable = false;
             Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
             return skybox;
+        }
+        
+        public createSnow(){
+            console.log("creating snow");
+            let snowPart = new ParticleSystem("snow", 1000, this.scene);
+            snowPart.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
+            snowPart.emitter = new Vector3(0,10,0);
+            snowPart.maxEmitBox = new Vector3(100,10,100);
+            snowPart.minEmitBox = new Vector3(-100,10,-100);
+            
+            snowPart.emitRate =1000;
+            snowPart.updateSpeed = 0.005;
+            snowPart.minLifeTime = 1;
+            snowPart.maxLifeTime = 5;
+            snowPart.minSize = 0.1;
+            snowPart.maxSize = 0.5;
+            snowPart.color1 = new BABYLON.Color4(1,1,1,1);
+            snowPart.color2 = new BABYLON.Color4(1,1,1,1);
+            snowPart.colorDead = new BABYLON.Color4(0,0,0,0);
+            //snowPart.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+            snowPart.gravity = new BABYLON.Vector3(0, -9.81, 0);
+            snowPart.start();
+            
+            
         }
 
         private createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {

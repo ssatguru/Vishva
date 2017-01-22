@@ -367,6 +367,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 console.log("no vishva av found. creating av");
                 this.loadAvatar();
             }
+            this.avatarSkeleton.enableBlending(0.1);
             SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
             this.snas = null;
             this.render();
@@ -398,7 +399,8 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.keysDisabled) return;
 
             //switch to first person?
-            if (this.mainCamera.radius < 0.75) {
+            if (this.mainCamera.radius <= 0.75) {
+                this.mainCamera.radius = 0.75;
                 this.avatar.visibility = 0;
                 this.mainCamera.checkCollisions = false;
             } else {

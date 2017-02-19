@@ -33,7 +33,9 @@
                 padding: 0;
                 margin: 0;
                 overflow: hidden;
-                font: 80% "Trebuchet MS", sans-serif;
+                font-size: 80%;
+                /*font-family: "Courier New", "Trebuchet MS", sans-serif;
+                font-family: "Courier New Bold";*/
                 background: #000000;
                 color: #ffffff;
             }
@@ -130,17 +132,6 @@
             <ul id="AddMenu" style="position: absolute; width: auto; ">
             </ul>
 
-            <div id="editDiv" title="Edit">
-                <ul id="editMenu">
-                    <li id="showProps">Mesh Properties</li>
-                    <li id="showInvis">Show all invisibles</li>
-                    <li id="hideInvis">Hide all invisibles</li>
-                    <li id="showDisa">Show all Disabled</li>
-                    <li id="hideDisa">Hide all Disabled</li>
-                    <li id="snapper">Snapper On</li>
-                </ul>
-            </div>
-
             <div id="envDiv" title="Environment">
                 <table style="width: 100%; text-align: center;">
                     <tr>
@@ -196,6 +187,18 @@
                     <tr>
                         <td>show edit menu on mesh selection</td>
                         <td><input id="autoEditMenu" type="checkbox"/></td>
+                    </tr>
+                    <tr>
+                        <td>show invisibles</td>
+                        <td><input type="checkbox" id="showInvis"></td>
+                    </tr>
+                    <tr>
+                        <td>show disabled</td>
+                        <td><input type="checkbox" id="showDisa"></td>
+                    </tr>
+                    <tr>
+                        <td>enable snapper</td>
+                        <td><input type="checkbox" id="snapper"></td>
                     </tr>
                 </table>
 
@@ -272,21 +275,26 @@
                                 </td>
                             </tr>
                             <td>
-                                trans <input type="radio" name="oper">
-                                rot <input type="radio" name="oper">
-                                scale<input type="radio" name="oper">
-                                snap<input type="checkbox" id="snap">
-                                local axis <input type="checkbox" id="genlocalAxis">
+                                <input type="checkbox" id="genlocalAxis">local axis
+                                <br>
+                                <input type="radio" name="oper" id="operTrans">trans
+                                <input type="radio" name="oper" id="operRot">rot
+                                <input type="radio" name="oper" id="operScale">scale
+                                <br>
+                                <input type="checkbox" id="snapTrans">snap trans
+                                <input type="text" id="snapTransValue" size="2"> meters
+                                <br>
+                                <input type="checkbox" id="snapRot">snap rot &nbsp; 
+                                <input type="text" id="snapRotValue" size="2"> degree
                                 <br><br>
-                                <button id="snapSet">snap setting</button>
                                 <button id="undo">undo</button>
                                 <button id="redo">redo</button>
                             </td>
                             <tr>
                                 <td>
-                                    disable <input type="checkbox" id="genDisable">
-                                    collision <input type="checkbox" id="genColl">
-                                    visible <input type="checkbox" id="genVisi">
+                                    <input type="checkbox" id="genDisable">disable
+                                    <input type="checkbox" id="genColl">collision
+                                    <input type="checkbox" id="genVisi">visible
 
                                 </td>
                             </tr>
@@ -358,8 +366,9 @@
                             </tr>
                             <tr>
                                 <td>type</td>
-                                <td><select id="phyType">
-                                        <option value="2">box</option>
+                                <td>
+                                    <select id="phyType" >
+                                        <option value="2" >box</option>
                                         <option value="1">sphere</option>
                                         <option value="3">plane</option>
                                         <option value="7">cylinder</option>
@@ -368,7 +377,8 @@
                                         <option value="8">particle</option>
                                         <option value="9">height map</option>
                                         -->
-                                    </select></td>
+                                    </select>
+                                </td>
                             </tr>
                             <tr>
                                 <td>mass</td>
@@ -395,7 +405,8 @@
                     </div>
 
                     <div id="Material" >
-                       
+                        <h3>TODO</h3>
+                       <!--
                         <table>
                             <tr>
                                 <td colspan="2">name <input type="text" id="matName" ></td>
@@ -423,6 +434,7 @@
                                 </td>
                             </tr>
                         </table>
+                       -->
                     </div>
 
                     <div id="Lights" >
@@ -509,6 +521,7 @@
                     </div>
 
                     <div id="meshAnimDiag" title="Animations">
+                        create range
                         <table>
                             <tr>
                                 <td>range name</td>
@@ -523,7 +536,8 @@
                                 <td><input type="text" id="animRangeEnd" size="2"></td>                                
                             </tr>
                         </table>
-                        <br><button id="animRangeMake">Create Range</button>
+                        <button id="animRangeMake">create</button>
+                        <br>
                         <br>select a range
                         <table>
                             <tr>

@@ -1378,6 +1378,7 @@ var org;
                             console.log("no vishva av found. creating av");
                             this.loadAvatar();
                         }
+                        this.avatarSkeleton.enableBlending(0.1);
                         vishva.SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
                         this.snas = null;
                         this.render();
@@ -1403,10 +1404,13 @@ var org;
                     Vishva.prototype.process = function () {
                         if (this.cameraAnimating)
                             return;
-                        if (this.keysDisabled)
+                        //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
+                        //except ofcourse the esc key
+                        if (this.keysDisabled && !this.key.esc)
                             return;
                         //switch to first person?
-                        if (this.mainCamera.radius < 0.75) {
+                        if (this.mainCamera.radius <= 0.75) {
+                            this.mainCamera.radius = 0.75;
                             this.avatar.visibility = 0;
                             this.mainCamera.checkCollisions = false;
                         }
@@ -1592,7 +1596,7 @@ var org;
                                     this.editControl.setLocal(false);
                                 }
                                 if (this.autoEditMenu) {
-                                    this.vishvaGUI.showEditMenu();
+                                    this.vishvaGUI.showPropDiag();
                                 }
                                 if (this.key.ctl)
                                     this.multiSelect();
@@ -1708,7 +1712,7 @@ var org;
                         this.editControl = null;
                         //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
                         if (this.autoEditMenu)
-                            this.vishvaGUI.closeEditMenu();
+                            this.vishvaGUI.closePropDiag();
                         //close properties dialog if open
                         this.vishvaGUI.closePropsDiag();
                         if (this.meshPicked != null) {
@@ -2286,6 +2290,24 @@ var org;
                         light.parent = null;
                         light.dispose();
                     };
+                    Vishva.prototype.setTransOn = function () {
+                        this.editControl.enableTranslation();
+                    };
+                    Vishva.prototype.isTransOn = function () {
+                        return this.editControl.isTranslationEnabled();
+                    };
+                    Vishva.prototype.setRotOn = function () {
+                        this.editControl.enableRotation();
+                    };
+                    Vishva.prototype.isRotOn = function () {
+                        return this.editControl.isRotationEnabled();
+                    };
+                    Vishva.prototype.setScaleOn = function () {
+                        this.editControl.enableScaling();
+                    };
+                    Vishva.prototype.isScaleOn = function () {
+                        return this.editControl.isScaleEnabled();
+                    };
                     Vishva.prototype.setSpaceLocal = function (yes) {
                         if (this.snapperOn) {
                             return "Cannot switch axis mode when snapper is on";
@@ -2309,11 +2331,11 @@ var org;
                             this.editControl.redo();
                         return;
                     };
-                    Vishva.prototype.snapTrans = function () {
+                    Vishva.prototype.snapTrans = function (yes) {
                         if (this.snapperOn) {
                             return "Cannot change snapping mode when snapper is on";
                         }
-                        this.snapTransOn = !this.snapTransOn;
+                        this.snapTransOn = yes;
                         if (this.editControl != null) {
                             if (!this.snapTransOn) {
                                 this.editControl.setTransSnap(false);
@@ -2328,7 +2350,10 @@ var org;
                     Vishva.prototype.isSnapTransOn = function () {
                         return this.snapTransOn;
                     };
-                    Vishva.prototype.snapRot = function () {
+                    Vishva.prototype.setSnapTransValue = function (val) {
+                        this.editControl.setTransSnapValue(val);
+                    };
+                    Vishva.prototype.snapRot = function (yes) {
                         if (this.snapperOn) {
                             return "Cannot change snapping mode when snapper is on";
                         }
@@ -2347,11 +2372,15 @@ var org;
                     Vishva.prototype.isSnapRotOn = function () {
                         return this.snapRotOn;
                     };
-                    Vishva.prototype.snapper = function () {
-                        if (!this.globalAxisMode) {
-                            return "Can only be turned on in Global Axis Mode";
+                    Vishva.prototype.setSnapRotValue = function (val) {
+                        var inrad = val * Math.PI / 180;
+                        this.editControl.setRotSnapValue(inrad);
+                    };
+                    Vishva.prototype.snapper = function (yes) {
+                        if (!this.globalAxisMode && yes) {
+                            return "Snapper can only be turned on in Global Axis Mode";
                         }
-                        this.snapperOn = !this.snapperOn;
+                        this.snapperOn = yes;
                         //if edit control is already up then lets switch snaps on
                         if (this.editControl != null) {
                             if (this.snapperOn) {
@@ -3385,7 +3414,6 @@ var org;
                          * reset on window resize
                          */
                         this.dialogs = new Array();
-                        this.snapper = document.getElementById("snapper");
                         this.animSelect = null;
                         this.firstTime = true;
                         this.addMenuOn = false;
@@ -3399,8 +3427,6 @@ var org;
                         this.createAddMenu();
                         //main navigation menu 
                         this.createNavMenu();
-                        this.createEditMenu();
-                        this.createEditDiag();
                         this.createDownloadDiag();
                         this.createUploadDiag();
                         this.createHelpDiag();
@@ -3550,42 +3576,23 @@ var org;
                         }
                         return true;
                     };
-                    VishvaGUI.prototype.createEditDiag = function () {
-                        var editMenu = $("#editMenu");
-                        editMenu.menu();
-                        var em = editMenu;
-                        em.unbind("keydown");
-                        this.editDialog = $("#editDiv");
-                        var dos = {
-                            autoOpen: false,
-                            resizable: false,
-                            position: this.leftCenter,
-                            width: "auto",
-                            height: "auto",
-                            closeOnEscape: false
-                        };
-                        this.editDialog.dialog(dos);
-                        this.editDialog["jpo"] = this.leftCenter;
-                        this.dialogs.push(this.editDialog);
-                    };
-                    VishvaGUI.prototype.showEditMenu = function () {
-                        var alreadyOpen = this.editDialog.dialog("isOpen");
-                        if (alreadyOpen)
-                            return alreadyOpen;
-                        /* Update menu items that are assoicated with
-                           Vishva entities whose state might have changed
-                        */
-                        if (this.vishva.isSnapperOn()) {
-                            this.snapper.innerHTML = "Snapper Off";
+                    VishvaGUI.prototype.showPropDiag = function () {
+                        if (this.propsDiag != null) {
+                            if (this.propsDiag.dialog("isOpen"))
+                                return true;
                         }
-                        else {
-                            this.snapper.innerHTML = "Snapper On";
+                        if (!this.vishva.anyMeshSelected()) {
+                            this.showAlertDiag("no mesh selected");
+                            return;
                         }
-                        this.editDialog.dialog("open");
-                        return false;
+                        if (this.propsDiag == null) {
+                            this.createPropsDiag();
+                        }
+                        this.propsDiag.dialog("open");
+                        return true;
                     };
-                    VishvaGUI.prototype.closeEditMenu = function () {
-                        this.editDialog.dialog("close");
+                    VishvaGUI.prototype.closePropDiag = function () {
+                        this.propsDiag.dialog("close");
                     };
                     /*
                      * Create Environment Dialog
@@ -3655,15 +3662,38 @@ var org;
                         this.settingDiag.dialog(dos);
                         this.settingDiag["jpo"] = this.rightCenter;
                         this.dialogs.push(this.settingDiag);
-                        var dbo = {};
-                        dbo.text = "save";
-                        dbo.click = function (e) {
+                        var dboSave = {};
+                        dboSave.text = "save";
+                        dboSave.click = function (e) {
                             _this.vishva.enableCameraCollision($("#camCol").prop("checked"));
                             _this.vishva.enableAutoEditMenu($("#autoEditMenu").prop("checked"));
+                            if ($("#showInvis").prop("checked")) {
+                                _this.vishva.showAllInvisibles();
+                            }
+                            else {
+                                _this.vishva.hideAllInvisibles();
+                            }
+                            if ($("#showDisa").prop("checked")) {
+                                _this.vishva.showAllDisabled();
+                            }
+                            else {
+                                _this.vishva.hideAllDisabled();
+                            }
+                            var err = _this.vishva.snapper($("#snapper").prop("checked"));
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                                return false;
+                            }
+                            _this.showAlertDiag("Saved");
+                            return true;
+                        };
+                        var dboCancel = {};
+                        dboCancel.text = "Cancel";
+                        dboCancel.click = function (e) {
                             _this.settingDiag.dialog("close");
                             return true;
                         };
-                        var dbos = [dbo];
+                        var dbos = [dboSave, dboCancel];
                         this.settingDiag.dialog("option", "buttons", dbos);
                     };
                     VishvaGUI.prototype.createDownloadDiag = function () {
@@ -4188,6 +4218,54 @@ var org;
                             console.log("name changed");
                             _this.vishva.setName(_this.genName.value);
                         };
+                        //Edit controls
+                        this.genOperTrans = document.getElementById("operTrans");
+                        this.genOperRot = document.getElementById("operRot");
+                        this.genOperScale = document.getElementById("operScale");
+                        this.genOperTrans.onclick = function () {
+                            _this.vishva.setTransOn();
+                        };
+                        this.genOperRot.onclick = function () {
+                            _this.vishva.setRotOn();
+                        };
+                        this.genOperScale.onclick = function () {
+                            _this.vishva.setScaleOn();
+                            if (!_this.vishva.isSpaceLocal()) {
+                                _this.showAlertDiag("note that scaling doesnot work with global axis");
+                            }
+                        };
+                        this.genSnapTrans = document.getElementById("snapTrans");
+                        this.genSnapTrans.onchange = function () {
+                            var err = _this.vishva.snapTrans(_this.genSnapTrans.checked);
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                                _this.genSnapTrans.checked = false;
+                            }
+                        };
+                        this.genSnapRot = document.getElementById("snapRot");
+                        this.genSnapRot.onchange = function () {
+                            var err = _this.vishva.snapRot(_this.genSnapRot.checked);
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                                _this.genSnapRot.checked = false;
+                            }
+                        };
+                        this.genSnapTransValue = document.getElementById("snapTransValue");
+                        this.genSnapTransValue.onchange = function () {
+                            _this.vishva.setSnapTransValue(Number(_this.genSnapTransValue.value));
+                        };
+                        this.genSnapRotValue = document.getElementById("snapRotValue");
+                        this.genSnapRotValue.onchange = function () {
+                            _this.vishva.setSnapRotValue(Number(_this.genSnapRotValue.value));
+                        };
+                        this.genlocalAxis = document.getElementById("genlocalAxis");
+                        this.genlocalAxis.onchange = function () {
+                            var err = _this.vishva.setSpaceLocal(_this.genlocalAxis.checked);
+                            if (err !== null) {
+                                _this.showAlertDiag(err);
+                                _this.genlocalAxis.checked = !_this.genlocalAxis.checked;
+                            }
+                        };
                         this.genDisable = document.getElementById("genDisable");
                         this.genDisable.onchange = function () {
                             _this.vishva.disableIt(_this.genDisable.checked);
@@ -4199,14 +4277,6 @@ var org;
                         this.genVisi = document.getElementById("genVisi");
                         this.genVisi.onchange = function () {
                             _this.vishva.makeVisibile(_this.genVisi.checked);
-                        };
-                        this.genlocalAxis = document.getElementById("genlocalAxis");
-                        this.genlocalAxis.onchange = function () {
-                            var err = _this.vishva.setSpaceLocal(_this.genlocalAxis.checked);
-                            if (err !== null) {
-                                _this.showAlertDiag(err);
-                                _this.genlocalAxis.checked = !_this.genlocalAxis.checked;
-                            }
                         };
                         var undo = document.getElementById("undo");
                         var redo = document.getElementById("redo");
@@ -4304,6 +4374,9 @@ var org;
                         if (this.genName === undefined)
                             this.initGeneral();
                         this.genName.value = this.vishva.getName();
+                        this.genOperTrans.checked = this.vishva.isTransOn();
+                        this.genOperRot.checked = this.vishva.isRotOn();
+                        this.genOperScale.checked = this.vishva.isScaleOn();
                         this.genDisable.checked = this.vishva.isDisabled();
                         this.genColl.checked = this.vishva.isCollideable();
                         this.genVisi.checked = this.vishva.isVisible();
@@ -4427,7 +4500,8 @@ var org;
                         }
                         else {
                             this.phyEna.checked = false;
-                            this.phyType.value = "0";
+                            //by default lets set the type to "box"
+                            this.phyType.value = "2";
                             this.phyMass.value = "1";
                             this.phyRes.value = "0";
                             this.phyResVal["value"] = "0.0";
@@ -4493,7 +4567,7 @@ var org;
                         this.alertDiv = document.getElementById("alertDiv");
                         this.alertDialog = $("#alertDiv");
                         var dos = {
-                            title: "Information",
+                            title: "Info",
                             autoOpen: false,
                             width: "auto",
                             height: "auto",
@@ -4617,11 +4691,11 @@ var org;
                         };
                         var navEdit = document.getElementById("navEdit");
                         navEdit.onclick = function (e) {
-                            if (_this.editDialog.dialog("isOpen") === true) {
-                                _this.closeEditMenu();
+                            if ((_this.propsDiag != null) && (_this.propsDiag.dialog("isOpen") === true)) {
+                                _this.closePropDiag();
                             }
                             else {
-                                _this.showEditMenu();
+                                _this.showPropDiag();
                             }
                             return true;
                         };
@@ -4663,55 +4737,6 @@ var org;
                             diag.dialog("close");
                         }
                     };
-                    VishvaGUI.prototype.createEditMenu = function () {
-                        var _this = this;
-                        var showProps = document.getElementById("showProps");
-                        var showInvis = document.getElementById("showInvis");
-                        var hideInvis = document.getElementById("hideInvis");
-                        var showDisa = document.getElementById("showDisa");
-                        var hideDisa = document.getElementById("hideDisa");
-                        showProps.onclick = function (e) {
-                            if (!_this.vishva.anyMeshSelected()) {
-                                _this.showAlertDiag("no mesh selected");
-                                return;
-                            }
-                            if (_this.propsDiag == null) {
-                                _this.createPropsDiag();
-                            }
-                            _this.propsDiag.dialog("open");
-                            return true;
-                        };
-                        showInvis.onclick = function (e) {
-                            _this.vishva.showAllInvisibles();
-                            return false;
-                        };
-                        hideInvis.onclick = function (e) {
-                            _this.vishva.hideAllInvisibles();
-                            return false;
-                        };
-                        showDisa.onclick = function (e) {
-                            _this.vishva.showAllDisabled();
-                            return false;
-                        };
-                        hideDisa.onclick = function (e) {
-                            _this.vishva.hideAllDisabled();
-                            return false;
-                        };
-                        this.snapper.onclick = function (e) {
-                            var err = _this.vishva.snapper();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                                return false;
-                            }
-                            if (_this.vishva.isSnapperOn()) {
-                                e.currentTarget.innerHTML = "Snapper Off";
-                            }
-                            else {
-                                e.currentTarget.innerHTML = "Snapper On";
-                            }
-                            return false;
-                        };
-                    };
                     VishvaGUI.prototype.createPropsDiag = function () {
                         var _this = this;
                         //property tabs
@@ -4734,7 +4759,7 @@ var org;
                         var dos = {
                             autoOpen: false,
                             resizable: false,
-                            position: this.rightCenter,
+                            position: this.leftCenter,
                             minWidth: 475,
                             width: 475,
                             height: "auto",
@@ -4767,11 +4792,11 @@ var org;
                             }
                         };
                         this.propsDiag.dialog(dos);
-                        this.propsDiag["jpo"] = this.rightCenter;
+                        this.propsDiag["jpo"] = this.leftCenter;
                         this.dialogs.push(this.propsDiag);
                     };
                     /*
-                     * called by vishva when editcontrol
+                     * also called by vishva when editcontrol
                      * is removed from mesh
                      */
                     VishvaGUI.prototype.closePropsDiag = function () {

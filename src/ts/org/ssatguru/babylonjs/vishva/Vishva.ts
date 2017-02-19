@@ -396,7 +396,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private process() {
             if (this.cameraAnimating) return;
-            if (this.keysDisabled) return;
+            
+            //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
+            //except ofcourse the esc key
+            if (this.keysDisabled && !this.key.esc) return;
 
             //switch to first person?
             if (this.mainCamera.radius <= 0.75) {
@@ -592,7 +595,7 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.editControl.setLocal(false);
                     }
                     if (this.autoEditMenu) {
-                        this.vishvaGUI.showEditMenu();
+                        this.vishvaGUI.showPropDiag();
                     }
                     if (this.key.ctl) this.multiSelect();
 
@@ -705,7 +708,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.editControl.detach();
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
-            if (this.autoEditMenu) this.vishvaGUI.closeEditMenu();
+            if (this.autoEditMenu) this.vishvaGUI.closePropDiag();
             //close properties dialog if open
             this.vishvaGUI.closePropsDiag();
             if (this.meshPicked != null) {
@@ -1303,6 +1306,26 @@ namespace org.ssatguru.babylonjs.vishva {
             light.parent = null;
             light.dispose();
         }
+        
+        public setTransOn(){
+            this.editControl.enableTranslation();
+        }
+        public isTransOn():boolean{
+            return this.editControl.isTranslationEnabled();
+        }
+        public setRotOn(){
+            this.editControl.enableRotation();
+        }
+        public isRotOn():boolean{
+            return this.editControl.isRotationEnabled();
+        }
+        public setScaleOn(){
+            this.editControl.enableScaling();
+        }
+        public isScaleOn():boolean{
+            return this.editControl.isScaleEnabled();
+        }
+        
         public setSpaceLocal(yes: boolean) : string {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
@@ -1328,11 +1351,11 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
 
-        public snapTrans() {
+        public snapTrans(yes : boolean):string {
             if (this.snapperOn) {
                 return "Cannot change snapping mode when snapper is on"
             }
-            this.snapTransOn = !this.snapTransOn;
+            this.snapTransOn = yes;
             if (this.editControl != null) {
                 if (!this.snapTransOn) {
                     this.editControl.setTransSnap(false);
@@ -1346,8 +1369,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public isSnapTransOn(): boolean {
             return this.snapTransOn;
         }
+        
+        public setSnapTransValue(val : number){
+            this.editControl.setTransSnapValue(val);
+        }
 
-        public snapRot() {
+        public snapRot(yes:boolean) :string {
             if (this.snapperOn) {
                 return "Cannot change snapping mode when snapper is on"
             }
@@ -1366,12 +1393,17 @@ namespace org.ssatguru.babylonjs.vishva {
         public isSnapRotOn(): boolean {
             return this.snapRotOn;
         }
+        public setSnapRotValue(val : number){
+            let inrad: number = val * Math.PI/180;
+            this.editControl.setRotSnapValue(inrad);
+        }
+        
 
-        public snapper() {
-            if (!this.globalAxisMode) {
-                return "Can only be turned on in Global Axis Mode"
+        public snapper(yes : boolean): string {
+            if (!this.globalAxisMode && yes) {
+                return "Snapper can only be turned on in Global Axis Mode"
             }
-            this.snapperOn = !this.snapperOn;
+            this.snapperOn = yes;
             //if edit control is already up then lets switch snaps on
             if (this.editControl != null) {
                 if (this.snapperOn) {

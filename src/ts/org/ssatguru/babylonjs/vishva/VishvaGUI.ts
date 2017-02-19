@@ -44,9 +44,6 @@ namespace org.ssatguru.babylonjs.vishva {
             //main navigation menu 
             this.createNavMenu();
 
-            this.createEditMenu();
-            this.createEditDiag();
-
             this.createDownloadDiag();
             this.createUploadDiag();
 
@@ -211,50 +208,26 @@ namespace org.ssatguru.babylonjs.vishva {
             return true;
         }
 
-        editDialog: JQuery;
+        public showPropDiag(): boolean {
 
-        private createEditDiag() {
-            var editMenu: JQuery = $("#editMenu");
-            editMenu.menu();
-            var em: JQuery = <JQuery><any>editMenu;
-            em.unbind("keydown");
-            this.editDialog = $("#editDiv");
-            var dos: DialogOptions = {
-                autoOpen: false,
-                resizable: false,
-                position: this.leftCenter,
-                width: "auto",
-                height: "auto",
-                closeOnEscape: false
-            };
-            this.editDialog.dialog(dos);
-            this.editDialog["jpo"] = this.leftCenter;
-            this.dialogs.push(this.editDialog);
-        }
-
-
-        snapper: HTMLElement = document.getElementById("snapper");
-
-        public showEditMenu(): boolean {
-
-            var alreadyOpen: boolean = <boolean>(<any>this.editDialog.dialog("isOpen"));
-            if (alreadyOpen) return alreadyOpen;
-
-            /* Update menu items that are assoicated with 
-               Vishva entities whose state might have changed
-            */
-
-            if (this.vishva.isSnapperOn()) {
-                this.snapper.innerHTML = "Snapper Off";
-            } else {
-                this.snapper.innerHTML = "Snapper On";
+            if (this.propsDiag != null) {
+                if (this.propsDiag.dialog("isOpen")) return true;
             }
-            this.editDialog.dialog("open");
-            return false;
+
+            if (!this.vishva.anyMeshSelected()) {
+                this.showAlertDiag("no mesh selected")
+                return;
+            }
+            if (this.propsDiag == null) {
+                this.createPropsDiag();
+            }
+            this.propsDiag.dialog("open");
+            return true;
+
         }
 
-        public closeEditMenu() {
-            this.editDialog.dialog("close");
+        public closePropDiag() {
+            this.propsDiag.dialog("close");
         }
 
         envDiag: JQuery;
@@ -274,8 +247,8 @@ namespace org.ssatguru.babylonjs.vishva {
             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
             fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
             fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
-            
-            let envSnow: HTMLButtonElement =<HTMLButtonElement>document.getElementById("envSnow");
+
+            let envSnow: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envSnow");
             envSnow.onclick = (e) => {
                 this.vishva.createSnow();
             };
@@ -336,17 +309,44 @@ namespace org.ssatguru.babylonjs.vishva {
             this.settingDiag["jpo"] = this.rightCenter;
             this.dialogs.push(this.settingDiag);
 
-            let dbo: DialogButtonOptions = {};
-            dbo.text = "save";
-            dbo.click = (e) => {
+            let dboSave: DialogButtonOptions = {};
+            dboSave.text = "save";
+            dboSave.click = (e) => {
 
                 this.vishva.enableCameraCollision($("#camCol").prop("checked"));
+
                 this.vishva.enableAutoEditMenu($("#autoEditMenu").prop("checked"));
 
-                this.settingDiag.dialog("close");
+                if ($("#showInvis").prop("checked")) {
+                    this.vishva.showAllInvisibles();
+                } else {
+                    this.vishva.hideAllInvisibles();
+                }
+                if ($("#showDisa").prop("checked")) {
+                    this.vishva.showAllDisabled();
+                } else {
+                    this.vishva.hideAllDisabled()
+                }
+
+                let err: string = this.vishva.snapper($("#snapper").prop("checked"));
+                if (err != null) {
+                    this.showAlertDiag(err);
+                    return false;
+                }
+
+                this.showAlertDiag("Saved");
                 return true;
             };
-            let dbos: DialogButtonOptions[] = [dbo];
+
+            let dboCancel: DialogButtonOptions = {};
+            dboCancel.text = "Cancel";
+            dboCancel.click = (e) => {
+                this.settingDiag.dialog("close");
+                return true;
+            }
+
+
+            let dbos: DialogButtonOptions[] = [dboSave, dboCancel];
 
             this.settingDiag.dialog("option", "buttons", dbos);
         }
@@ -846,30 +846,30 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (skelName.trim() === "") skelName = "no name";
             }
             document.getElementById("skelName").innerText = skelName;
-            
+
             this.refreshAnimSelect();
-//            var childs: HTMLCollection = this.animSelect.children;
-//            var l: number = (<number>childs.length | 0);
-//            for (var i: number = l - 1; i >= 0; i--) {
-//                childs[i].remove();
-//            }
-//            if (skelName != null) {
-//                var range: AnimationRange[] = this.vishva.getAnimationRanges();
-//                var animOpt: HTMLOptionElement;
-//                for (var index171 = 0; index171 < range.length; index171++) {
-//                    var ar = range[index171];
-//                    {
-//                        animOpt = document.createElement("option");
-//                        animOpt.value = ar.name;
-//                        animOpt.innerText = ar.name;
-//                        this.animSelect.appendChild(animOpt);
-//                    }
-//                }
-//                if (range[0] != null) {
-//                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
-//                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
-//                }
-//            }
+            //            var childs: HTMLCollection = this.animSelect.children;
+            //            var l: number = (<number>childs.length | 0);
+            //            for (var i: number = l - 1; i >= 0; i--) {
+            //                childs[i].remove();
+            //            }
+            //            if (skelName != null) {
+            //                var range: AnimationRange[] = this.vishva.getAnimationRanges();
+            //                var animOpt: HTMLOptionElement;
+            //                for (var index171 = 0; index171 < range.length; index171++) {
+            //                    var ar = range[index171];
+            //                    {
+            //                        animOpt = document.createElement("option");
+            //                        animOpt.value = ar.name;
+            //                        animOpt.innerText = ar.name;
+            //                        this.animSelect.appendChild(animOpt);
+            //                    }
+            //                }
+            //                if (range[0] != null) {
+            //                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
+            //                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
+            //                }
+            //            }
         }
 
         private refreshAnimSelect() {
@@ -881,7 +881,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var range: AnimationRange[] = this.vishva.getAnimationRanges();
             if (range === null) return;
-            
+
             var animOpt: HTMLOptionElement;
             for (let ar of range) {
                 animOpt = document.createElement("option");
@@ -900,10 +900,22 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         genName: HTMLInputElement;
+        
+        genOperTrans: HTMLInputElement;
+        genOperRot: HTMLInputElement;
+        genOperScale: HTMLInputElement;
+        genlocalAxis: HTMLInputElement;
+        
+        genSnapTrans:HTMLInputElement;
+        genSnapRot:HTMLInputElement;
+        
+        genSnapTransValue:HTMLInputElement;
+        genSnapRotValue:HTMLInputElement;
+        
         genDisable: HTMLInputElement;
         genColl: HTMLInputElement;
         genVisi: HTMLInputElement;
-        genlocalAxis: HTMLInputElement;
+        
 
 
         private initGeneral() {
@@ -918,6 +930,58 @@ namespace org.ssatguru.babylonjs.vishva {
                 console.log("name changed");
                 this.vishva.setName(this.genName.value);
             }
+            
+            //Edit controls
+            this.genOperTrans = <HTMLInputElement>document.getElementById("operTrans");
+            this.genOperRot = <HTMLInputElement>document.getElementById("operRot");
+            this.genOperScale = <HTMLInputElement>document.getElementById("operScale");
+            this.genOperTrans.onclick = () =>{
+                this.vishva.setTransOn();
+            }
+            this.genOperRot.onclick = () =>{
+                this.vishva.setRotOn();
+            }
+            this.genOperScale.onclick = () =>{
+                this.vishva.setScaleOn();
+                if (!this.vishva.isSpaceLocal()){
+                    this.showAlertDiag("note that scaling doesnot work with global axis");
+                }
+            }
+            
+            this.genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
+            this.genSnapTrans.onchange = () =>{
+                let err:string = this.vishva.snapTrans(this.genSnapTrans.checked);
+                if (err != null){
+                    this.showAlertDiag(err);
+                    this.genSnapTrans.checked = false;
+                }
+            }
+            this.genSnapRot = <HTMLInputElement>document.getElementById("snapRot");
+            this.genSnapRot.onchange = () =>{
+                let err:string = this.vishva.snapRot(this.genSnapRot.checked);
+                if (err != null){
+                    this.showAlertDiag(err);
+                    this.genSnapRot.checked = false;
+                }
+            }
+            this.genSnapTransValue = <HTMLInputElement>document.getElementById("snapTransValue");
+            this.genSnapTransValue.onchange = () =>{
+                this.vishva.setSnapTransValue(Number(this.genSnapTransValue.value));
+            }
+            this.genSnapRotValue = <HTMLInputElement>document.getElementById("snapRotValue");
+            this.genSnapRotValue.onchange = () =>{
+                this.vishva.setSnapRotValue(Number(this.genSnapRotValue.value));
+            }
+            
+            this.genlocalAxis = <HTMLInputElement>document.getElementById("genlocalAxis");
+            this.genlocalAxis.onchange = () => {
+                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
+                if (err !== null) {
+                    this.showAlertDiag(err);
+                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
+                }
+            }
+            
             this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
             this.genDisable.onchange = () => {
                 this.vishva.disableIt(this.genDisable.checked);
@@ -930,14 +994,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genVisi.onchange = () => {
                 this.vishva.makeVisibile(this.genVisi.checked);
             }
-            this.genlocalAxis = <HTMLInputElement>document.getElementById("genlocalAxis");
-            this.genlocalAxis.onchange = () => {
-                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
-                if (err !== null) {
-                    this.showAlertDiag(err);
-                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
-                }
-            }
+            
             var undo: HTMLElement = document.getElementById("undo");
             var redo: HTMLElement = document.getElementById("redo");
 
@@ -1044,6 +1101,11 @@ namespace org.ssatguru.babylonjs.vishva {
         private updateGeneral() {
             if (this.genName === undefined) this.initGeneral();
             this.genName.value = this.vishva.getName();
+            
+            this.genOperTrans.checked = this.vishva.isTransOn();
+            this.genOperRot.checked = this.vishva.isRotOn();
+            this.genOperScale.checked = this.vishva.isScaleOn();
+            
             this.genDisable.checked = this.vishva.isDisabled();
             this.genColl.checked = this.vishva.isCollideable();
             this.genVisi.checked = this.vishva.isVisible();
@@ -1201,7 +1263,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
             } else {
                 this.phyEna.checked = false;
-                this.phyType.value = "0";
+                //by default lets set the type to "box"
+                this.phyType.value = "2";
                 this.phyMass.value = "1";
                 this.phyRes.value = "0";
                 this.phyResVal["value"] = "0.0";
@@ -1278,7 +1341,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.alertDiv = document.getElementById("alertDiv");
             this.alertDialog = $("#alertDiv");
             var dos: DialogOptions = {
-                title: "Information",
+                title: "Info",
                 autoOpen: false,
                 width: "auto",
                 height: "auto",
@@ -1411,10 +1474,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var navEdit: HTMLElement = document.getElementById("navEdit");
             navEdit.onclick = (e) => {
-                if (this.editDialog.dialog("isOpen") === true) {
-                    this.closeEditMenu();
+                if ((this.propsDiag != null) && (this.propsDiag.dialog("isOpen") === true)) {
+                    this.closePropDiag();
                 } else {
-                    this.showEditMenu();
+                    this.showPropDiag();
                 }
                 return true;
             };
@@ -1459,65 +1522,6 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        private createEditMenu() {
-            var showProps: HTMLElement = document.getElementById("showProps");
-
-            var showInvis: HTMLElement = document.getElementById("showInvis");
-            var hideInvis: HTMLElement = document.getElementById("hideInvis");
-            let showDisa: HTMLElement = document.getElementById("showDisa");
-            let hideDisa: HTMLElement = document.getElementById("hideDisa");
-
-
-
-
-            showProps.onclick = (e) => {
-                if (!this.vishva.anyMeshSelected()) {
-                    this.showAlertDiag("no mesh selected")
-                    return;
-                }
-                if (this.propsDiag == null) {
-                    this.createPropsDiag();
-                }
-                this.propsDiag.dialog("open");
-                return true;
-            };
-
-
-            showInvis.onclick = (e) => {
-                this.vishva.showAllInvisibles();
-                return false;
-            };
-            hideInvis.onclick = (e) => {
-                this.vishva.hideAllInvisibles();
-                return false;
-            };
-            showDisa.onclick = (e) => {
-                this.vishva.showAllDisabled();
-                return false;
-            };
-            hideDisa.onclick = (e) => {
-                this.vishva.hideAllDisabled();
-                return false;
-            };
-
-
-
-            this.snapper.onclick = (e) => {
-                var err: string = this.vishva.snapper();
-                if (err != null) {
-                    this.showAlertDiag(err);
-                    return false;
-                }
-                if (this.vishva.isSnapperOn()) {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Snapper Off";
-                } else {
-                    (<HTMLElement>e.currentTarget).innerHTML = "Snapper On";
-                }
-                return false;
-            }
-
-        }
-
         private propsDiag: JQuery = null;
 
         private isTabRestart: boolean = false;
@@ -1545,7 +1549,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var dos: DialogOptions = {
                 autoOpen: false,
                 resizable: false,
-                position: this.rightCenter,
+                position: this.leftCenter,
                 minWidth: 475,
                 width: 475,
                 height: "auto",
@@ -1577,15 +1581,15 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             };
             this.propsDiag.dialog(dos);
-            this.propsDiag["jpo"] = this.rightCenter;
+            this.propsDiag["jpo"] = this.leftCenter;
             this.dialogs.push(this.propsDiag);
         }
         /*
-         * called by vishva when editcontrol
+         * also called by vishva when editcontrol
          * is removed from mesh
          */
         public closePropsDiag() {
-            if ((this.propsDiag === undefined) ||(this.propsDiag === null)) return;
+            if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
             this.propsDiag.dialog("close");
         }
         /*
@@ -1593,7 +1597,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * is switched to another mesh
          */
         public refreshPropsDiag() {
-            if ((this.propsDiag === undefined) ||(this.propsDiag === null)) return;
+            if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
             if (this.propsDiag.dialog("isOpen") === true) {
                 this.propsDiag.dialog("close");
                 this.propsDiag.dialog("open");

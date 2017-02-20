@@ -1378,7 +1378,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.snapperOn) {
                 return "Cannot change snapping mode when snapper is on"
             }
-            this.snapRotOn = !this.snapTransOn;
+            this.snapRotOn = yes;
             if (this.editControl != null) {
                 if (!this.snapRotOn) {
                     this.editControl.setRotSnap(false);
@@ -1827,9 +1827,9 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         /**
-         * resets each skel a assign unique id to each skeleton deserialization uses
-         * skeleton id to associate skel with mesh if id isn't unique wrong skels
-         * could get assigned to a mesh
+         * resets each skel a assign. unique id to each skeleton. deserialization uses
+         * skeleton id to associate skel with mesh. if id isn't unique wrong skels
+         * could get assigned to a mesh.
          * 
          * @param scene
          */

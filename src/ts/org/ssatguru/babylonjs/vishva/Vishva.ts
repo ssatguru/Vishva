@@ -369,8 +369,9 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!avFound) {
                 console.log("no vishva av found. creating av");
                 this.loadAvatar();
+            }else{
+                this.avatarSkeleton.enableBlending(0.1);
             }
-            this.avatarSkeleton.enableBlending(0.1);
             SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
             this.snas = null;
             this.render();
@@ -2357,6 +2358,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.fixAnimationRanges(this.avatarSkeleton);
             this.avatar.skeleton = this.avatarSkeleton;
             this.checkAnimRange(this.avatarSkeleton);
+            this.avatarSkeleton.enableBlending(0.1);
             //this.avatar.rotation.y = Math.PI;
             this.avatar.position = new Vector3(0, 0, 0);
             this.avatar.checkCollisions = true;

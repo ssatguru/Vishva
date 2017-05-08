@@ -100,6 +100,9 @@ namespace org.ssatguru.babylonjs.vishva {
         
         snowTexture: string = "vishva/internal/textures/flare.png";
         rainTexture: string = "vishva/internal/textures/raindrop-1.png";
+        
+        snowPart: ParticleSystem = null;
+        snowing:boolean = false;
 
         SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
 
@@ -1719,13 +1722,18 @@ namespace org.ssatguru.babylonjs.vishva {
                 return null;
             }
         }
-
+        debugVisible:boolean = false;
         public toggleDebug() {
-            if (this.scene.debugLayer.isVisible()) {
+            //if (this.scene.debugLayer.isVisible()) {
+            if (this.debugVisible) {
+                console.log("hiding debug");
                 this.scene.debugLayer.hide();
             } else {
+            console.log("showing debug");
                 this.scene.debugLayer.show();
             }
+            this.debugVisible = !this.debugVisible;
+            
         }
 
         public saveAsset(): string {
@@ -2271,27 +2279,42 @@ namespace org.ssatguru.babylonjs.vishva {
             return skybox;
         }
         
-        public createSnow(){
+       
+        public toggleSnow(){
             console.log("creating snow");
-            let snowPart = new ParticleSystem("snow", 1000, this.scene);
-            snowPart.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
-            snowPart.emitter = new Vector3(0,10,0);
-            snowPart.maxEmitBox = new Vector3(100,10,100);
-            snowPart.minEmitBox = new Vector3(-100,10,-100);
+            if (this.snowPart === null){
+                this.snowPart = this.createSnowPart();
+            }
+            if (this.snowing){
+                this.snowPart.stop();
+            }else{
+                this.snowPart.start();
+            }
+            this.snowing = !this.snowing;
+        }
+        
+        /**
+         * create a snow particle system
+         */
+        private createSnowPart():ParticleSystem {
+            let part = new ParticleSystem("snow", 1000, this.scene);
+            part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
+            part.emitter = new Vector3(0,10,0);
+            part.maxEmitBox = new Vector3(100,10,100);
+            part.minEmitBox = new Vector3(-100,10,-100);
             
-            snowPart.emitRate =1000;
-            snowPart.updateSpeed = 0.005;
-            snowPart.minLifeTime = 1;
-            snowPart.maxLifeTime = 5;
-            snowPart.minSize = 0.1;
-            snowPart.maxSize = 0.5;
-            snowPart.color1 = new BABYLON.Color4(1,1,1,1);
-            snowPart.color2 = new BABYLON.Color4(1,1,1,1);
-            snowPart.colorDead = new BABYLON.Color4(0,0,0,0);
-            //snowPart.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-            snowPart.gravity = new BABYLON.Vector3(0, -9.81, 0);
-            snowPart.start();
-            
+            part.emitRate =1000;
+            part.updateSpeed = 0.005;
+            part.minLifeTime = 1;
+            part.maxLifeTime = 5;
+            part.minSize = 0.1;
+            part.maxSize = 0.5;
+            part.color1 = new BABYLON.Color4(1,1,1,1);
+            part.color2 = new BABYLON.Color4(1,1,1,1);
+            part.colorDead = new BABYLON.Color4(0,0,0,0);
+            //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+            part.gravity = new BABYLON.Vector3(0, -9.81, 0);
+            return part;
             
         }
 

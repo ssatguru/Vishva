@@ -27,7 +27,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private static SMALL_ICON_SIZE: string = "width:64px;height:64px;";
 
-        private menuBarOn: boolean = false;
+        private menuBarOn: boolean = true;
 
         private STATE_IND: string = "state";
 
@@ -250,9 +250,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
             let envSnow: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envSnow");
             envSnow.onclick = (e) => {
-                this.vishva.createSnow();
+                this.vishva.toggleSnow();
             };
-
+            
+            let envRain: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envRain");
+            envRain.onclick = (e) => {
+                this.showAlertDiag("Sorry. To be implemented");
+            };
+            
             var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
             skyButton.onclick = (e) => {
                 var foo: HTMLElement = document.getElementById("add-skyboxes");
@@ -1344,6 +1349,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 title: "Info",
                 autoOpen: false,
                 width: "auto",
+                minWidth:200,
                 height: "auto",
                 closeOnEscape: false
             };
@@ -1410,7 +1416,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 of: showNavMenu
             };
             navMenuBar.position(jpo);
-            navMenuBar.hide(null);
+            //navMenuBar.hide(null);
+            navMenuBar.show(null);
             showNavMenu.onclick = (e) => {
                 if (this.menuBarOn) {
                     navMenuBar.hide("slide");

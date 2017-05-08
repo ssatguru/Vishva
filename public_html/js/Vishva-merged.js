@@ -1173,6 +1173,8 @@ var org;
                         this.waterTexture = "vishva/internal/textures/waterbump.png";
                         this.snowTexture = "vishva/internal/textures/flare.png";
                         this.rainTexture = "vishva/internal/textures/raindrop-1.png";
+                        this.snowPart = null;
+                        this.snowing = false;
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
                         this.RELATIVE_ASSET_LOCATION = "../../../../";
                         /**
@@ -1199,6 +1201,7 @@ var org;
                         this.animFunc2 = function () { return _this.justReFocus(); };
                         this.showingAllInvisibles = false;
                         this.meshPickedPhyParms = null;
+                        this.debugVisible = false;
                         this.editEnabled = false;
                         this.frames = 0;
                         this.f = 0;
@@ -2676,12 +2679,16 @@ var org;
                         }
                     };
                     Vishva.prototype.toggleDebug = function () {
-                        if (this.scene.debugLayer.isVisible()) {
+                        //if (this.scene.debugLayer.isVisible()) {
+                        if (this.debugVisible) {
+                            console.log("hiding debug");
                             this.scene.debugLayer.hide();
                         }
                         else {
+                            console.log("showing debug");
                             this.scene.debugLayer.show();
                         }
+                        this.debugVisible = !this.debugVisible;
                     };
                     Vishva.prototype.saveAsset = function () {
                         if (!this.isMeshSelected) {
@@ -3189,25 +3196,40 @@ var org;
                         Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
                         return skybox;
                     };
-                    Vishva.prototype.createSnow = function () {
+                    Vishva.prototype.toggleSnow = function () {
                         console.log("creating snow");
-                        var snowPart = new ParticleSystem("snow", 1000, this.scene);
-                        snowPart.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
-                        snowPart.emitter = new Vector3(0, 10, 0);
-                        snowPart.maxEmitBox = new Vector3(100, 10, 100);
-                        snowPart.minEmitBox = new Vector3(-100, 10, -100);
-                        snowPart.emitRate = 1000;
-                        snowPart.updateSpeed = 0.005;
-                        snowPart.minLifeTime = 1;
-                        snowPart.maxLifeTime = 5;
-                        snowPart.minSize = 0.1;
-                        snowPart.maxSize = 0.5;
-                        snowPart.color1 = new BABYLON.Color4(1, 1, 1, 1);
-                        snowPart.color2 = new BABYLON.Color4(1, 1, 1, 1);
-                        snowPart.colorDead = new BABYLON.Color4(0, 0, 0, 0);
-                        //snowPart.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-                        snowPart.gravity = new BABYLON.Vector3(0, -9.81, 0);
-                        snowPart.start();
+                        if (this.snowPart === null) {
+                            this.snowPart = this.createSnowPart();
+                        }
+                        if (this.snowing) {
+                            this.snowPart.stop();
+                        }
+                        else {
+                            this.snowPart.start();
+                        }
+                        this.snowing = !this.snowing;
+                    };
+                    /**
+                     * create a snow particle system
+                     */
+                    Vishva.prototype.createSnowPart = function () {
+                        var part = new ParticleSystem("snow", 1000, this.scene);
+                        part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
+                        part.emitter = new Vector3(0, 10, 0);
+                        part.maxEmitBox = new Vector3(100, 10, 100);
+                        part.minEmitBox = new Vector3(-100, 10, -100);
+                        part.emitRate = 1000;
+                        part.updateSpeed = 0.005;
+                        part.minLifeTime = 1;
+                        part.maxLifeTime = 5;
+                        part.minSize = 0.1;
+                        part.maxSize = 0.5;
+                        part.color1 = new BABYLON.Color4(1, 1, 1, 1);
+                        part.color2 = new BABYLON.Color4(1, 1, 1, 1);
+                        part.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+                        //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+                        part.gravity = new BABYLON.Vector3(0, -9.81, 0);
+                        return part;
                     };
                     Vishva.prototype.createCamera = function (scene, canvas) {
                         var camera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
@@ -3407,7 +3429,7 @@ var org;
                     function VishvaGUI(vishva) {
                         var _this = this;
                         this.local = true;
-                        this.menuBarOn = false;
+                        this.menuBarOn = true;
                         this.STATE_IND = "state";
                         /**
                          * this array will be used store all dialogs whose position needs to be
@@ -3611,7 +3633,11 @@ var org;
                         fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
                         var envSnow = document.getElementById("envSnow");
                         envSnow.onclick = function (e) {
-                            _this.vishva.createSnow();
+                            _this.vishva.toggleSnow();
+                        };
+                        var envRain = document.getElementById("envRain");
+                        envRain.onclick = function (e) {
+                            _this.showAlertDiag("Sorry. To be implemented");
                         };
                         var skyButton = document.getElementById("skyButton");
                         skyButton.onclick = function (e) {
@@ -4570,6 +4596,7 @@ var org;
                             title: "Info",
                             autoOpen: false,
                             width: "auto",
+                            minWidth: 200,
                             height: "auto",
                             closeOnEscape: false
                         };
@@ -4628,7 +4655,8 @@ var org;
                             of: showNavMenu
                         };
                         navMenuBar.position(jpo);
-                        navMenuBar.hide(null);
+                        //navMenuBar.hide(null);
+                        navMenuBar.show(null);
                         showNavMenu.onclick = function (e) {
                             if (_this.menuBarOn) {
                                 navMenuBar.hide("slide");

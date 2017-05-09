@@ -158,7 +158,7 @@
                         <td>toggle rainy</td>
                         <td><Button id="envRain">rain</button></td>
                     </tr>
-                   
+
                     <tr>
                         <td>fov</td>
                         <td><div id="fov"></div></td>
@@ -275,20 +275,34 @@
                                 </td>
                             </tr>
                             <td>
-                                <input type="checkbox" id="genlocalAxis">local axis
+                                <div style="float:left;">
+                                    <input type="checkbox" id="genlocalAxis">local axis
+                                </div>
+                                <div style="float:left;clear:left">
+                                    <input type="radio" name="oper" id="operTrans">trans
+                                    <input type="radio" name="oper" id="operRot">rot
+                                    <input type="radio" name="oper" id="operScale">scale
+                                </div>
+                                <!--                                <br>
+                                                                <input type="checkbox" id="snapTrans">snap trans
+                                                                <input type="text" id="snapTransValue" size="2"> meters
+                                                                <br>
+                                                                <input type="checkbox" id="snapRot">snap rot &nbsp; 
+                                                                <input type="text" id="snapRotValue" size="2"> degree
+                                                                <br><br>-->
+                                <div style="float:left;clear:left;">
+                                    <div><input type="checkbox" id="snapTrans">snap trans</div>
+                                    <div><input type="checkbox" id="snapRot">snap rot</div>
+                                </div>
+                                <div style="float:left;">
+                                    <div><input type="text" id="snapTransValue" size="1"> meters</div>
+                                    <div><input type="text" id="snapRotValue" size="1"> degree</div>
+                                </div>
                                 <br>
-                                <input type="radio" name="oper" id="operTrans">trans
-                                <input type="radio" name="oper" id="operRot">rot
-                                <input type="radio" name="oper" id="operScale">scale
-                                <br>
-                                <input type="checkbox" id="snapTrans">snap trans
-                                <input type="text" id="snapTransValue" size="2"> meters
-                                <br>
-                                <input type="checkbox" id="snapRot">snap rot &nbsp; 
-                                <input type="text" id="snapRotValue" size="2"> degree
-                                <br><br>
-                                <button id="undo">undo</button>
-                                <button id="redo">redo</button>
+                                <div style="float:left;clear:left;margin-top: 5px;">
+                                    <button id="undo">undo</button>
+                                    <button id="redo">redo</button>
+                                </div>
                             </td>
                             <tr>
                                 <td>
@@ -406,35 +420,35 @@
 
                     <div id="Material" >
                         <h3>TODO</h3>
-                       <!--
-                        <table>
-                            <tr>
-                                <td colspan="2">name <input type="text" id="matName" ></td>
-                            </tr>
-                            <tr>
-                                <td style="vertical-align: top;"> colors : 
-                                    <br><input type="color" id="matDcolor" >diffuse  
-                                    <br><input type="color" id="matEcolor" >emissive
-                                    <br><input type="color" id="matAcolor" >ambient
-                                    <br><input type="color" id="matScolor" >specular 
-                                    <br><input type="text" id="matSpower" size="1" >spec power 
-                                </td>
-                                <td style="vertical-align: top;"> 
-                                    textures : 
-                                    <br><button id="matDtext">diffuse</button>
-                                    <br><button id="matEtext">emissive</button>
-                                    <br><button id="matAtext">ambient</button>
-                                    <br><button id="matStext">specular</button>
-                                    <br><button id="matBtext">bump</button>
-                                    <br><button id="matLtext">light map</button>
-                                    <br><button id="matOtext">opacity</button>
-                                    <br><button id="matRLtext">reflection</button>
-                                    <br><button id="matRFtext">refraction</button>
-
-                                </td>
-                            </tr>
-                        </table>
-                       -->
+                        <!--
+                         <table>
+                             <tr>
+                                 <td colspan="2">name <input type="text" id="matName" ></td>
+                             </tr>
+                             <tr>
+                                 <td style="vertical-align: top;"> colors : 
+                                     <br><input type="color" id="matDcolor" >diffuse  
+                                     <br><input type="color" id="matEcolor" >emissive
+                                     <br><input type="color" id="matAcolor" >ambient
+                                     <br><input type="color" id="matScolor" >specular 
+                                     <br><input type="text" id="matSpower" size="1" >spec power 
+                                 </td>
+                                 <td style="vertical-align: top;"> 
+                                     textures : 
+                                     <br><button id="matDtext">diffuse</button>
+                                     <br><button id="matEtext">emissive</button>
+                                     <br><button id="matAtext">ambient</button>
+                                     <br><button id="matStext">specular</button>
+                                     <br><button id="matBtext">bump</button>
+                                     <br><button id="matLtext">light map</button>
+                                     <br><button id="matOtext">opacity</button>
+                                     <br><button id="matRLtext">reflection</button>
+                                     <br><button id="matRFtext">refraction</button>
+ 
+                                 </td>
+                             </tr>
+                         </table>
+                        -->
                     </div>
 
                     <div id="Lights" >

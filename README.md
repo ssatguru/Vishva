@@ -45,8 +45,6 @@ For a demo  see [http://ssatguru.appspot.com/BabylonJS-Vishva/webapp/index.html]
 
 ## built using
 * [BabylonJS](http://www.babylonjs.com/)
-* [Java](https://www.oracle.com/java/index.html)
-* [JSweet](http://www.jsweet.org/)
 * [JQuery UI](https://jqueryui.com/)
 * [FlexiColorPicker](https://github.com/DavidDurman/FlexiColorPicker)
 

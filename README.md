@@ -29,14 +29,14 @@ For those interested, the old java version is still available at [https://github
 * for more help see [wiki](https://github.com/ssatguru/Vishva/wiki)
 
 ## to build
-make sure you have typescript installed locally or globally
-run 
-a) "npm install"
+make sure you have typescript installed locally or globally  
+run  
+a) "npm install"  
     this will install any dependencies.  
 
-b) "npm run build" 
-This will 
-compile the src and output javascript to src/js, 
+b) "npm run build"   
+This will  
+compile the src and output javascript to src/js,  
 minify the javascript and output the minified javascript to public_html/js/Vishva-merged.min.js.  
 
 
@@ -45,8 +45,6 @@ For a demo  see [http://ssatguru.appspot.com/BabylonJS-Vishva/webapp/index.html]
 
 ## built using
 * [BabylonJS](http://www.babylonjs.com/)
-* [Java](https://www.oracle.com/java/index.html)
-* [JSweet](http://www.jsweet.org/)
 * [JQuery UI](https://jqueryui.com/)
 * [FlexiColorPicker](https://github.com/DavidDurman/FlexiColorPicker)
 

@@ -29,14 +29,14 @@ For those interested, the old java version is still available at [https://github
 * for more help see [wiki](https://github.com/ssatguru/Vishva/wiki)
 
 ## to build
-make sure you have typescript installed locally or globally
-run 
-a) "npm install"
+make sure you have typescript installed locally or globally  
+run  
+a) "npm install"  
     this will install any dependencies.  
 
-b) "npm run build" 
+b) "npm run build"   
 This will 
-compile the src and output javascript to src/js, 
+compile the src and output javascript to src/js,  
 minify the javascript and output the minified javascript to public_html/js/Vishva-merged.min.js.  
 
 

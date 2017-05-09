@@ -9,6 +9,6 @@
     "removeComments": false,
     "noImplicitAny": false,
     "rootDir":".",
-    "outDir":"../js"
+    "outFile":"../js/Vishva-merged.js"
   }
 }

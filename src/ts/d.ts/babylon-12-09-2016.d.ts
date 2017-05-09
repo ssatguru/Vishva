@@ -498,9 +498,11 @@ interface Window {
     Uint8Array: Uint8ArrayConstructor;
     Float32Array: Float32ArrayConstructor;
 }
+/* sat https://github.com/Microsoft/TypeScript/issues/14261
 interface AudioContext extends EventTarget {
     decodeAudioData(audioData: ArrayBuffer, successCallback: DecodeSuccessCallback, errorCallback?: any): void;
 }
+*/
 interface HTMLURL {
     createObjectURL(param1: any, param2?: any): any;
 }

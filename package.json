@@ -1,0 +1,19 @@
+{
+  "name": "Vishva",
+  "version": "1.0.0",
+  "keywords": [
+    "babylonjs",
+    "editor"
+  ],
+  "author": "satguru p srivastava",
+  "contributors": [],
+  "dependencies": {},
+  "devDependencies": {
+    "uglify-js": "^2.8.22"
+  },
+  "scripts": {
+    "compile": "tsc -p src/ts",
+    "min": "uglifyjs src/js/Vishva-merged.js -o public_html/js/Vishva-merged.min.js -mc",
+    "build": "npm run compile && npm run min"
+  }
+}

@@ -29,11 +29,16 @@ For those interested, the old java version is still available at [https://github
 * for more help see [wiki](https://github.com/ssatguru/Vishva/wiki)
 
 ## to build
+make sure you have typescript installed locally or globally
+run 
+a) "npm install"
+    this will install any dependencies.  
 
-run gulp to build. 
-This will compile the src and ouput javascript to public_html/js/Vishva-merged.js.  
-Source under "src" folder.  
-Dependencies under "public_html/lib" folder
+b) "npm run build" 
+This will 
+compile the src and output javascript to src/js, 
+minify the javascript and output the minified javascript to public_html/js/Vishva-merged.min.js.  
+
 
 ## demo
 For a demo  see [http://ssatguru.appspot.com/BabylonJS-Vishva/webapp/index.html](http://ssatguru.appspot.com/BabylonJS-Vishva/webapp/index.html)

@@ -80,7 +80,7 @@ namespace org.ssatguru.babylonjs.vishva {
          */
         private snapperOn: boolean = false;
 
-        private globalAxisMode: boolean = true;
+        private globalAxisMode: boolean = false;
 
         skyboxes: Array<string>;
 

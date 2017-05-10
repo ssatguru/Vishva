@@ -1199,6 +1199,8 @@ var org;
                         this.rainTexture = "vishva/internal/textures/raindrop-1.png";
                         this.snowPart = null;
                         this.snowing = false;
+                        this.rainPart = null;
+                        this.raining = false;
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
                         this.RELATIVE_ASSET_LOCATION = "../../../../";
                         /**
@@ -3282,6 +3284,41 @@ var org;
                         part.gravity = new BABYLON.Vector3(0, -9.81, 0);
                         return part;
                     };
+                    Vishva.prototype.toggleRain = function () {
+                        console.log("creating rain");
+                        if (this.rainPart === null) {
+                            this.rainPart = this.createRainPart();
+                        }
+                        if (this.raining) {
+                            this.rainPart.stop();
+                        }
+                        else {
+                            this.rainPart.start();
+                        }
+                        this.raining = !this.raining;
+                    };
+                    /**
+                     * create a snow particle system
+                     */
+                    Vishva.prototype.createRainPart = function () {
+                        var part = new ParticleSystem("snow", 1000, this.scene);
+                        part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
+                        part.emitter = new Vector3(0, 20, 0);
+                        part.maxEmitBox = new Vector3(100, 10, 100);
+                        part.minEmitBox = new Vector3(-100, 10, -100);
+                        part.emitRate = 2000;
+                        part.updateSpeed = 0.01;
+                        part.minLifeTime = 1;
+                        part.maxLifeTime = 5;
+                        part.minSize = 0.1;
+                        part.maxSize = 0.5;
+                        part.color1 = new BABYLON.Color4(0, 0, 1, 1);
+                        part.color2 = new BABYLON.Color4(0, 0, 1, 1);
+                        part.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+                        //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+                        part.gravity = new BABYLON.Vector3(0, -9.81, 0);
+                        return part;
+                    };
                     Vishva.prototype.createCamera = function (scene, canvas) {
                         var camera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
                         this.setCameraSettings(camera);
@@ -3689,7 +3726,8 @@ var org;
                         };
                         var envRain = document.getElementById("envRain");
                         envRain.onclick = function (e) {
-                            _this.showAlertDiag("Sorry. To be implemented");
+                            //this.showAlertDiag("Sorry. To be implemented");
+                            _this.vishva.toggleRain();
                         };
                         var skyButton = document.getElementById("skyButton");
                         skyButton.onclick = function (e) {

@@ -255,7 +255,8 @@ namespace org.ssatguru.babylonjs.vishva {
             
             let envRain: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envRain");
             envRain.onclick = (e) => {
-                this.showAlertDiag("Sorry. To be implemented");
+                //this.showAlertDiag("Sorry. To be implemented");
+                this.vishva.toggleRain();
             };
             
             var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");

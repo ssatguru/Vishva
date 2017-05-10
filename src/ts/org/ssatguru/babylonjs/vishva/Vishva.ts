@@ -103,6 +103,9 @@ namespace org.ssatguru.babylonjs.vishva {
         
         snowPart: ParticleSystem = null;
         snowing:boolean = false;
+        
+        rainPart: ParticleSystem = null;
+        raining:boolean = false;
 
         SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
 
@@ -2335,7 +2338,45 @@ namespace org.ssatguru.babylonjs.vishva {
             return part;
             
         }
+        
+        public toggleRain(){
+            console.log("creating rain");
+            if (this.rainPart === null){
+                this.rainPart = this.createRainPart();
+            }
+            if (this.raining){
+                this.rainPart.stop();
+            }else{
+                this.rainPart.start();
+            }
+            this.raining = !this.raining;
+        }
+        
+        /**
+         * create a snow particle system
+         */
+        private createRainPart():ParticleSystem {
+            let part = new ParticleSystem("snow", 1000, this.scene);
+            part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
+            part.emitter = new Vector3(0,20,0);
+            part.maxEmitBox = new Vector3(100,10,100);
+            part.minEmitBox = new Vector3(-100,10,-100);
+            
+            part.emitRate =2000;
+            part.updateSpeed = 0.01;
+            part.minLifeTime = 1;
+            part.maxLifeTime = 5;
+            part.minSize = 0.1;
+            part.maxSize = 0.5;
+            part.color1 = new BABYLON.Color4(0,0,1,1);
+            part.color2 = new BABYLON.Color4(0,0,1,1);
+            part.colorDead = new BABYLON.Color4(0,0,0,0);
+            //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+            part.gravity = new BABYLON.Vector3(0, -9.81, 0);
 
+            return part;
+            
+        }
         private createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
             var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
             this.setCameraSettings(camera);

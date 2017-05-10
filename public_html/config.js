@@ -2,5 +2,5 @@
  * 
  */
 config={
-	"world":"demo3"
+	"world":"demo1"
 };

@@ -1,8 +1,11 @@
 bugs
 05/09/2017 r
 - remove children removes attached light too.
-- able to slide dialog box below the screen, turn off "overflow: hidden;" in body css to see why, one solution - init all gui elements
-  setting "position:fixed;" instead of "position:absolute"   in gui-item's css seem to help also "display:non" for all jquery ui items
+- able to slide dialog box below the screen, 
+  turn off "overflow: hidden;" in body css to see why, 
+  one solution - init all gui elements
+  setting "position:fixed;" instead of "position:absolute"   in gui-item's css seems to help 
+  also "display:none" for all jquery ui items
 
 enhancements
 05/09/2017 

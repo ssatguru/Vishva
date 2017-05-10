@@ -170,6 +170,11 @@ namespace org.ssatguru.babylonjs.vishva {
         private autoEditMenu: boolean = true;
 
         private enablePhysics: boolean = true;
+        
+        //how far away from the center can the avatar go
+        //fog will start at the limitStart and will become dense at LimitEnd
+        private moveLimitStart=114;
+        private moveLimitEnd=124;
 
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
@@ -462,6 +467,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private wasJumping: boolean = false;
 
         private moveAVandCamera() {
+            let oldAvPos = this.avatar.position.clone();
             var anim: AnimData = this.idle;
             var moving: boolean = false;
             var speed: number = 0;
@@ -567,8 +573,18 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 this.prevAnim = anim;
             }
+            let avPos = this.avatar.position.length();
+            if (avPos > this.moveLimitStart){
+                this.scene.fogDensity = this.fogDensity + 0.01*(avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
+            }else{
+                this.scene.fogDensity = this.fogDensity;
+            }
+            if (avPos > this.moveLimitEnd){
+                this.avatar.position = oldAvPos;
+            }
             this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
+        fogDensity:number=0;
 
         private meshPicked: AbstractMesh;
 
@@ -2169,6 +2185,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
                     this.avatarSkeleton.name = "Vishva.skeleton";
                     this.checkAnimRange(this.avatarSkeleton);
+                    this.avatarSkeleton.enableBlending(0.1);
                 }
                 this.avatar.checkCollisions = true;
                 this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);

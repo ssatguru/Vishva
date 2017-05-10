@@ -1213,11 +1213,16 @@ var org;
                         //automatcally open edit menu whenever a mesh is selected
                         this.autoEditMenu = true;
                         this.enablePhysics = true;
+                        //how far away from the center can the avatar go
+                        //fog will start at the limitStart and will become dense at LimitEnd
+                        this.moveLimitStart = 114;
+                        this.moveLimitEnd = 124;
                         this.focusOnAv = true;
                         this.cameraAnimating = false;
                         this.jumpCycleMax = 25;
                         this.jumpCycle = this.jumpCycleMax;
                         this.wasJumping = false;
+                        this.fogDensity = 0;
                         this.isMeshSelected = false;
                         this.cameraTargetPos = new Vector3(0, 0, 0);
                         this.saveAVcameraPos = new Vector3(0, 0, 0);
@@ -1497,6 +1502,7 @@ var org;
                         }
                     };
                     Vishva.prototype.moveAVandCamera = function () {
+                        var oldAvPos = this.avatar.position.clone();
                         var anim = this.idle;
                         var moving = false;
                         var speed = 0;
@@ -1611,6 +1617,16 @@ var org;
                                 this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
                             }
                             this.prevAnim = anim;
+                        }
+                        var avPos = this.avatar.position.length();
+                        if (avPos > this.moveLimitStart) {
+                            this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart);
+                        }
+                        else {
+                            this.scene.fogDensity = this.fogDensity;
+                        }
+                        if (avPos > this.moveLimitEnd) {
+                            this.avatar.position = oldAvPos;
                         }
                         this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                     };
@@ -3123,6 +3139,7 @@ var org;
                                 Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
                                 this.avatarSkeleton.name = "Vishva.skeleton";
                                 this.checkAnimRange(this.avatarSkeleton);
+                                this.avatarSkeleton.enableBlending(0.1);
                             }
                             this.avatar.checkCollisions = true;
                             this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);

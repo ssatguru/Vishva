@@ -1,9 +1,9 @@
-declare module org.ssatguru.babylonjs.component {
+declare namespace org.ssatguru.babylonjs.component {
     import AbstractMesh = BABYLON.AbstractMesh;
     import Camera = BABYLON.Camera;
     import Mesh = BABYLON.Mesh;
     import Vector3 = BABYLON.Vector3;
-    class EditControl { 
+    class EditControl {
         private meshPicked;
         private canvas;
         private scene;
@@ -40,6 +40,8 @@ declare module org.ssatguru.babylonjs.component {
         isEditing(): boolean;
         private detachControl(cam, can);
         private prevOverMesh;
+        private pointerIsOver;
+        isPointerOver(): boolean;
         private onPointerOver();
         private restoreColor(mesh);
         editing: boolean;
@@ -54,6 +56,7 @@ declare module org.ssatguru.babylonjs.component {
         private onPointerMove(evt);
         private doTranslation(newPos);
         private doScaling(newPos);
+        eulerian: boolean;
         private doRotation(newPos);
         private getPosOnPickPlane();
         private hideBaxis();
@@ -64,10 +67,11 @@ declare module org.ssatguru.babylonjs.component {
         disableTranslation(): void;
         private rotEnabled;
         isRotationEnabled(): boolean;
+        returnEuler(euler: boolean): void;
         enableRotation(): void;
         disableRotation(): void;
         private scaleEnabled;
-        isScaleEnabled(): boolean;
+        isScalingEnabled(): boolean;
         enableScaling(): void;
         disableScaling(): void;
         private bXaxis;
@@ -140,6 +144,7 @@ declare module org.ssatguru.babylonjs.component {
     class Act {
         private p;
         private r;
+        private rE;
         private s;
         constructor(mesh: AbstractMesh);
         perform(mesh: AbstractMesh): void;

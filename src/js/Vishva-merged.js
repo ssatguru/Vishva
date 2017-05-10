@@ -2342,7 +2342,7 @@ var org;
                         this.editControl.enableScaling();
                     };
                     Vishva.prototype.isScaleOn = function () {
-                        return this.editControl.isScaleEnabled();
+                        return this.editControl.isScalingEnabled();
                     };
                     Vishva.prototype.setSpaceLocal = function (yes) {
                         if (this.snapperOn) {
@@ -4691,7 +4691,6 @@ var org;
                             of: showNavMenu
                         };
                         navMenuBar.position(jpo);
-                        //navMenuBar.hide(null);
                         navMenuBar.show(null);
                         showNavMenu.onclick = function (e) {
                             if (_this.menuBarOn) {

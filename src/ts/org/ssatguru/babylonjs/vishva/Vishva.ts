@@ -1327,7 +1327,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.editControl.enableScaling();
         }
         public isScaleOn():boolean{
-            return this.editControl.isScaleEnabled();
+            return this.editControl.isScalingEnabled();
         }
         
         public setSpaceLocal(yes: boolean) : string {

@@ -167,7 +167,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         cameraCollision: boolean = true;
         //automatcally open edit menu whenever a mesh is selected
-        private autoEditMenu: boolean = false;
+        private autoEditMenu: boolean = true;
 
         private enablePhysics: boolean = true;
 
@@ -2531,14 +2531,14 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export class LightParm {
-        public type: string = "";
+        public type: string = "Spot";
         public diffuse: Color3 = Color3.White();;
         public specular: Color3 = Color3.White();;
-        public intensity: number = 0;
-        public range: number = 0;
-        public radius: number = 0;
-        public angle: number = 0;
-        public exponent: number = 0;
+        public intensity: number = 1;
+        public range: number = 5;
+        public radius: number =5;
+        public angle: number = 45;
+        public exponent: number = 1;
         public gndClr: Color3 = Color3.White();
         public direction: Vector3 = Vector3.Zero();
 

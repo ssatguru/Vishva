@@ -1169,7 +1169,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.lightInten.value = Number(lightParm.intensity).toString();
             this.lightRange.value = Number(lightParm.range).toString();
             this.lightRadius.value = Number(lightParm.radius).toString();
-            this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+            //this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+            this.lightAngle.value = Number(lightParm.angle).toString();
             this.lightExp.value = Number(lightParm.exponent).toString();
             this.lightGndClr.value = lightParm.gndClr.toHexString();
             this.lightDirX.value = Number(lightParm.direction.x).toString();
@@ -1416,7 +1417,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 of: showNavMenu
             };
             navMenuBar.position(jpo);
-            //navMenuBar.hide(null);
             navMenuBar.show(null);
             showNavMenu.onclick = (e) => {
                 if (this.menuBarOn) {

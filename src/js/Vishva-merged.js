@@ -1211,7 +1211,7 @@ var org;
                         this.showBoundingBox = false;
                         this.cameraCollision = true;
                         //automatcally open edit menu whenever a mesh is selected
-                        this.autoEditMenu = false;
+                        this.autoEditMenu = true;
                         this.enablePhysics = true;
                         this.focusOnAv = true;
                         this.cameraAnimating = false;
@@ -3432,14 +3432,14 @@ var org;
                 vishva.PhysicsParm = PhysicsParm;
                 var LightParm = (function () {
                     function LightParm() {
-                        this.type = "";
+                        this.type = "Spot";
                         this.diffuse = Color3.White();
                         this.specular = Color3.White();
-                        this.intensity = 0;
-                        this.range = 0;
-                        this.radius = 0;
-                        this.angle = 0;
-                        this.exponent = 0;
+                        this.intensity = 1;
+                        this.range = 5;
+                        this.radius = 5;
+                        this.angle = 45;
+                        this.exponent = 1;
                         this.gndClr = Color3.White();
                         this.direction = Vector3.Zero();
                     }
@@ -4482,7 +4482,8 @@ var org;
                         this.lightInten.value = Number(lightParm.intensity).toString();
                         this.lightRange.value = Number(lightParm.range).toString();
                         this.lightRadius.value = Number(lightParm.radius).toString();
-                        this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+                        //this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+                        this.lightAngle.value = Number(lightParm.angle).toString();
                         this.lightExp.value = Number(lightParm.exponent).toString();
                         this.lightGndClr.value = lightParm.gndClr.toHexString();
                         this.lightDirX.value = Number(lightParm.direction.x).toString();

@@ -32,7 +32,7 @@
                 height: 100%;
                 padding: 0;
                 margin: 0;
-                overflow: hidden;
+                /*overflow: hidden;*/
                 font-size: 80%;
                 /*font-family: "Courier New", "Trebuchet MS", sans-serif;
                 font-family: "Courier New Bold";*/
@@ -89,13 +89,25 @@
                 height: 100%;
             }
 
-            #gui-items {
+            #gui-items-1 {
                 visibility: hidden;
-                position: absolute;
+                /*position: absolute;*/
+                position: fixed;
                 top: 0;
                 right: 0;
                 width: 100%;
-                height: 100%;
+                height:100%;
+            }
+
+            #gui-items-2 {
+                visibility: hidden;
+                /*position: absolute;*/
+                position: fixed;
+                display:none;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height:100%;
             }
 
         </style>
@@ -105,7 +117,7 @@
 
         <canvas id="vCanvas" oncontextmenu="return false;" tabindex="1"></canvas>
 
-        <div id="gui-items">
+        <div id="gui-items-1">
 
             <div id="loadingMsg"
                  style="text-align: center; display: inline-block; position: fixed; top: 0; bottom: 0; left: 0; right: 0; width: 200px; height: 100px; margin: auto;">
@@ -115,11 +127,11 @@
                 <h2 id="loadingStatus">...</h2>
             </div>
 
-            <div style="padding: 4px; position: absolute; top: 0px; left: 0px;  ">
+            <div style="padding: 4px; position: absolute; top: 0px; left: 0px;display:block;  ">
                 <button id="showNavMenu">&#9776;</button>
             </div>
 
-            <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;">
+            <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;display:block;">
                 <button id="downWorld">Save</button>
                 <button id="navAdd">Add</button>
                 <button id="navEnv">Environment</button>
@@ -128,7 +140,11 @@
                 <button id="helpLink">Help</button>
                 <button id="debugLink">Debug</button>
             </div>
-
+        </div>
+        
+        <!-- all elements used by jquery ui -->
+        <div id="gui-items-2">
+        
             <ul id="AddMenu" style="position: absolute; width: auto; ">
             </ul>
 
@@ -251,7 +267,7 @@
                 <div id="editActDiag.parms"></div>
             </div>
 
-            <div id="propsDiag" title="mesh properties">
+            <div id="propsDiag" title="mesh properties" >
 
                 <!--
                
@@ -283,13 +299,6 @@
                                     <input type="radio" name="oper" id="operRot">rot
                                     <input type="radio" name="oper" id="operScale">scale
                                 </div>
-                                <!--                                <br>
-                                                                <input type="checkbox" id="snapTrans">snap trans
-                                                                <input type="text" id="snapTransValue" size="2"> meters
-                                                                <br>
-                                                                <input type="checkbox" id="snapRot">snap rot &nbsp; 
-                                                                <input type="text" id="snapRotValue" size="2"> degree
-                                                                <br><br>-->
                                 <div style="float:left;clear:left;">
                                     <div><input type="checkbox" id="snapTrans">snap trans</div>
                                     <div><input type="checkbox" id="snapRot">snap rot</div>

@@ -74,7 +74,7 @@ var org;
                 var Vector3 = BABYLON.Vector3;
                 var SNAManager = (function () {
                     function SNAManager() {
-                        this.sensorList = ["Touch", "Contact"];
+                        this.sensorList = ["Touch", "Proximity"];
                         this.actuatorList = ["Animator", "Mover", "Rotator", "Sound", "Cloaker", "Disabler"];
                         this.snaDisabledList = new Array();
                         this.sig2actMap = new Object();
@@ -109,11 +109,11 @@ var org;
                             else
                                 return new SensorTouch(mesh, new SenTouchProp());
                         }
-                        else if (name === "Contact") {
+                        else if (name === "Proximity") {
                             if (prop != null)
-                                return new SensorContact(mesh, prop);
+                                return new SensorCollision(mesh, prop);
                             else
-                                return new SensorContact(mesh, new SenContactProp());
+                                return new SensorCollision(mesh, new SenCollisionProp());
                         }
                         else
                             return null;
@@ -496,23 +496,23 @@ var org;
                     return SensorTouch;
                 }(SensorAbstract));
                 vishva.SensorTouch = SensorTouch;
-                var SensorContact = (function (_super) {
-                    __extends(SensorContact, _super);
-                    function SensorContact(aMesh, properties) {
+                var SensorCollision = (function (_super) {
+                    __extends(SensorCollision, _super);
+                    function SensorCollision(aMesh, properties) {
                         return _super.call(this, aMesh, properties) || this;
                     }
-                    SensorContact.prototype.getName = function () {
-                        return "Contact";
+                    SensorCollision.prototype.getName = function () {
+                        return "Proximity";
                     };
-                    SensorContact.prototype.getProperties = function () {
+                    SensorCollision.prototype.getProperties = function () {
                         return this.properties;
                     };
-                    SensorContact.prototype.setProperties = function (properties) {
+                    SensorCollision.prototype.setProperties = function (properties) {
                         this.properties = properties;
                     };
-                    SensorContact.prototype.cleanUp = function () {
+                    SensorCollision.prototype.cleanUp = function () {
                     };
-                    SensorContact.prototype.processUpdateSpecific = function () {
+                    SensorCollision.prototype.processUpdateSpecific = function () {
                         var _this = this;
                         var properties = this.properties;
                         var scene = this.mesh.getScene();
@@ -531,7 +531,7 @@ var org;
                             this.actions.push(action);
                         }
                     };
-                    SensorContact.prototype.findAV = function (scene) {
+                    SensorCollision.prototype.findAV = function (scene) {
                         for (var index140 = 0; index140 < scene.meshes.length; index140++) {
                             var mesh = scene.meshes[index140];
                             {
@@ -544,9 +544,9 @@ var org;
                         }
                         return null;
                     };
-                    return SensorContact;
+                    return SensorCollision;
                 }(SensorAbstract));
-                vishva.SensorContact = SensorContact;
+                vishva.SensorCollision = SensorCollision;
                 var ActuatorAbstract = (function () {
                     function ActuatorAbstract(mesh, prop) {
                         this.actuating = false;
@@ -1015,20 +1015,20 @@ var org;
                     return SenTouchProp;
                 }(SNAproperties));
                 vishva.SenTouchProp = SenTouchProp;
-                var SenContactProp = (function (_super) {
-                    __extends(SenContactProp, _super);
-                    function SenContactProp() {
+                var SenCollisionProp = (function (_super) {
+                    __extends(SenCollisionProp, _super);
+                    function SenCollisionProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
                         _this.onEnter = false;
                         _this.onExit = false;
                         return _this;
                     }
-                    SenContactProp.prototype.unmarshall = function (obj) {
+                    SenCollisionProp.prototype.unmarshall = function (obj) {
                         return obj;
                     };
-                    return SenContactProp;
+                    return SenCollisionProp;
                 }(SNAproperties));
-                vishva.SenContactProp = SenContactProp;
+                vishva.SenCollisionProp = SenCollisionProp;
                 var ActProperties = (function (_super) {
                     __extends(ActProperties, _super);
                     function ActProperties() {
@@ -3259,10 +3259,6 @@ var org;
                         }
                         else {
                             this.snowPart.start();
-                            if (this.raining) {
-                                this.rainPart.stop();
-                                this.raining = false;
-                            }
                         }
                         this.snowing = !this.snowing;
                     };
@@ -3298,10 +3294,6 @@ var org;
                         }
                         else {
                             this.rainPart.start();
-                            if (this.snowing) {
-                                this.snowPart.stop();
-                                this.snowing = false;
-                            }
                         }
                         this.raining = !this.raining;
                     };
@@ -3309,14 +3301,15 @@ var org;
                      * create a snow particle system
                      */
                     Vishva.prototype.createRainPart = function () {
-                        var part = new ParticleSystem("rain", 4000, this.scene);
+                        var part = new ParticleSystem("snow", 4000, this.scene);
                         part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
                         part.emitter = new Vector3(0, 40, 0);
                         part.maxEmitBox = new Vector3(100, 40, 100);
                         part.minEmitBox = new Vector3(-100, 40, -100);
                         part.emitRate = 1000;
+                        
                         part.updateSpeed = 0.02;
-                        part.minLifeTime = 5;
+                        part.minLifeTime =5;
                         part.maxLifeTime = 10;
                         part.minSize = 0.1;
                         part.maxSize = 0.8;

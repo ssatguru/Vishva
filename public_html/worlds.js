@@ -4,5 +4,11 @@ var worlds = {
 		"sceneFolder": "demo",
 		"sceneFile": "demo1",
 		"editEnabled": true
+	},
+	"sna": {
+		"worldFolder": "demos",
+		"sceneFolder": "demo",
+		"sceneFile": "sna",
+		"editEnabled": true
 	}
 };

@@ -30,7 +30,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         sensorList: string[] = ["Touch", "Contact"];
 
-        actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound", "Cloaker","Disabler"];
+        actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound", "Cloaker","Disabler","Enabler"];
 
         snaDisabledList: Array<AbstractMesh> = new Array();
 
@@ -94,6 +94,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (prop != null) return new ActuatorCloaker(mesh, <ActCloakerProp>prop); else return new ActuatorCloaker(mesh, new ActCloakerProp());
             } else if (name === "Disabler") {
                 if (prop != null) return new ActuatorDisabler(mesh, <ActDisablerProp>prop); else return new ActuatorDisabler(mesh, new ActDisablerProp());                
+            } else if (name === "Enabler") {
+                if (prop != null) return new ActuatorEnabler(mesh, <ActEnablerProp>prop); else return new ActuatorEnabler(mesh, new ActEnablerProp());                
             } else
                 return null;
         }
@@ -1023,7 +1025,52 @@ export class ActuatorDisabler extends ActuatorAbstract {
         }
     }
 
-   
+   export class ActuatorEnabler extends ActuatorAbstract {
+
+
+        public constructor(mesh: Mesh, prop: ActEnablerProp) {
+            super(mesh, prop);
+        }
+
+        public actuate() {
+            let enable :boolean = false;
+            if (this.properties.toggle) {
+                if (this.properties.state_toggle) {
+                    enable = true
+                } else {
+                    enable = false;
+                    }
+                this.properties.state_toggle = !this.properties.state_toggle;
+            } else {
+                enable =true;
+                }
+            this.mesh.setEnabled(enable);
+            this.onActuateEnd();
+
+        }
+
+        public stop() {
+            this.mesh.setEnabled(false)
+        }
+
+        public isReady(): boolean {
+            return true;
+        }
+
+        public getName(): string {
+            return "Enabler";
+        }
+
+        public processUpdateSpecific() {
+            if (this.properties.autoStart) {
+                var started: boolean = this.start();
+            }
+        }
+
+        public cleanUp() {
+            this.properties.loop = false;
+        }
+    }
     
     export class ActuatorSound extends ActuatorAbstract {
 
@@ -1216,6 +1263,12 @@ export class ActuatorDisabler extends ActuatorAbstract {
     
      export class ActDisablerProp extends ActProperties {
         public unmarshall(obj: Object): ActDisablerProp {
+            return null;
+        }
+    }
+    
+    export class ActEnablerProp extends ActProperties {
+        public unmarshall(obj: Object): ActEnablerProp {
             return null;
         }
     }

@@ -75,7 +75,7 @@ var org;
                 var SNAManager = (function () {
                     function SNAManager() {
                         this.sensorList = ["Touch", "Contact"];
-                        this.actuatorList = ["Animator", "Mover", "Rotator", "Sound", "Cloaker", "Disabler"];
+                        this.actuatorList = ["Animator", "Mover", "Rotator", "Sound", "Cloaker", "Disabler", "Enabler"];
                         this.snaDisabledList = new Array();
                         this.sig2actMap = new Object();
                         this.prevUID = "";
@@ -110,7 +110,6 @@ var org;
                                 return new SensorTouch(mesh, new SenTouchProp());
                         }
                         else if (name === "Contact") {
-                            console.log("found contact");
                             if (prop != null)
                                 return new SensorContact(mesh, prop);
                             else
@@ -159,6 +158,12 @@ var org;
                                 return new ActuatorDisabler(mesh, prop);
                             else
                                 return new ActuatorDisabler(mesh, new ActDisablerProp());
+                        }
+                        else if (name === "Enabler") {
+                            if (prop != null)
+                                return new ActuatorEnabler(mesh, prop);
+                            else
+                                return new ActuatorEnabler(mesh, new ActEnablerProp());
                         }
                         else
                             return null;
@@ -913,6 +918,48 @@ var org;
                     return ActuatorDisabler;
                 }(ActuatorAbstract));
                 vishva.ActuatorDisabler = ActuatorDisabler;
+                var ActuatorEnabler = (function (_super) {
+                    __extends(ActuatorEnabler, _super);
+                    function ActuatorEnabler(mesh, prop) {
+                        return _super.call(this, mesh, prop) || this;
+                    }
+                    ActuatorEnabler.prototype.actuate = function () {
+                        var enable = false;
+                        if (this.properties.toggle) {
+                            if (this.properties.state_toggle) {
+                                enable = true;
+                            }
+                            else {
+                                enable = false;
+                            }
+                            this.properties.state_toggle = !this.properties.state_toggle;
+                        }
+                        else {
+                            enable = true;
+                        }
+                        this.mesh.setEnabled(enable);
+                        this.onActuateEnd();
+                    };
+                    ActuatorEnabler.prototype.stop = function () {
+                        this.mesh.setEnabled(false);
+                    };
+                    ActuatorEnabler.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorEnabler.prototype.getName = function () {
+                        return "Enabler";
+                    };
+                    ActuatorEnabler.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorEnabler.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorEnabler;
+                }(ActuatorAbstract));
+                vishva.ActuatorEnabler = ActuatorEnabler;
                 var ActuatorSound = (function (_super) {
                     __extends(ActuatorSound, _super);
                     function ActuatorSound(mesh, prop) {
@@ -1136,6 +1183,17 @@ var org;
                     return ActDisablerProp;
                 }(ActProperties));
                 vishva.ActDisablerProp = ActDisablerProp;
+                var ActEnablerProp = (function (_super) {
+                    __extends(ActEnablerProp, _super);
+                    function ActEnablerProp() {
+                        return _super !== null && _super.apply(this, arguments) || this;
+                    }
+                    ActEnablerProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return ActEnablerProp;
+                }(ActProperties));
+                vishva.ActEnablerProp = ActEnablerProp;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));

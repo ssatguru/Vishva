@@ -8,6 +8,11 @@ bugs
   also "display:none" for all jquery ui items
 - on switching avatar skel animation do not have animation blend
 
+05/10/2017
+- mesh instance parenting serialization problem
+  make a meshm create instance of it, create new mesh makes this parent of the other two save and load
+  instance mesh is no longer child of the last mesh
+
 enhancements
 05/09/2017 
 1 physics add test and test reset button to immediately test the effect of physics

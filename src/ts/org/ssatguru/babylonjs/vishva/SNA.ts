@@ -28,7 +28,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         actuators: Object;
 
-        sensorList: string[] = ["Touch", "Proximity"];
+        sensorList: string[] = ["Touch", "Contact"];
 
         actuatorList: string[] = ["Animator", "Mover", "Rotator", "Sound", "Cloaker","Disabler"];
 
@@ -71,8 +71,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public createSensorByName(name: string, mesh: Mesh, prop: SNAproperties): Sensor {
             if (name === "Touch") {
                 if (prop != null) return new SensorTouch(mesh, <SenTouchProp>prop); else return new SensorTouch(mesh, new SenTouchProp());
-            } else if (name === "Proximity") {
-                if (prop != null) return new SensorCollision(mesh, <SenCollisionProp>prop); else return new SensorCollision(mesh, new SenCollisionProp());
+            } else if (name === "Contact") {
+                if (prop != null) return new SensorContact(mesh, <SenContactProp>prop); else return new SensorContact(mesh, new SenContactProp());
             } else
                 return null;
         }
@@ -563,17 +563,17 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-    export class SensorCollision extends SensorAbstract {
+    export class SensorContact extends SensorAbstract {
         
         
-        public constructor(aMesh: Mesh, properties: SenCollisionProp) {
+        public constructor(aMesh: Mesh, properties: SenContactProp) {
             super(aMesh, properties);
             
             
         }
 
         public getName(): string {
-            return "Proximity";
+            return "Contact";
         }
 
         public getProperties(): SNAproperties {
@@ -581,14 +581,14 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public setProperties(properties: SNAproperties) {
-            this.properties =  <SenCollisionProp> properties;
+            this.properties =  <SenContactProp> properties;
         }
 
         public cleanUp() {
         }
 
         public processUpdateSpecific() {
-            let properties : SenCollisionProp = <SenCollisionProp> this.properties;
+            let properties : SenContactProp = <SenContactProp> this.properties;
             var scene: Scene = this.mesh.getScene();
             
             if (this.mesh.actionManager == null) {
@@ -1124,11 +1124,11 @@ export class ActuatorDisabler extends ActuatorAbstract {
         }
     }
 
-     export class SenCollisionProp extends SNAproperties {
+     export class SenContactProp extends SNAproperties {
         onEnter : boolean = false;
         onExit: boolean = false; 
-        public unmarshall(obj: Object): SenCollisionProp {
-            return <SenCollisionProp>obj;
+        public unmarshall(obj: Object): SenContactProp {
+            return <SenContactProp>obj;
         }
     }
 
@@ -1215,7 +1215,7 @@ export class ActuatorDisabler extends ActuatorAbstract {
     }
     
      export class ActDisablerProp extends ActProperties {
-        public unmarshall(obj: Object): ActCloakerProp {
+        public unmarshall(obj: Object): ActDisablerProp {
             return null;
         }
     }

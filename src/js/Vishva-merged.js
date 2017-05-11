@@ -110,6 +110,7 @@ var org;
                                 return new SensorTouch(mesh, new SenTouchProp());
                         }
                         else if (name === "Contact") {
+                            console.log("found contact");
                             if (prop != null)
                                 return new SensorContact(mesh, prop);
                             else
@@ -394,7 +395,7 @@ var org;
                     function SensorAbstract(mesh, properties) {
                         //action: Action;
                         this.actions = new Array();
-                        Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
+                        //Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
                         this.properties = properties;
                         this.mesh = mesh;
                         var sensors = this.mesh["sensors"];
@@ -499,7 +500,9 @@ var org;
                 var SensorContact = (function (_super) {
                     __extends(SensorContact, _super);
                     function SensorContact(aMesh, properties) {
-                        return _super.call(this, aMesh, properties) || this;
+                        var _this = _super.call(this, aMesh, properties) || this;
+                        _this.processUpdateSpecific();
+                        return _this;
                     }
                     SensorContact.prototype.getName = function () {
                         return "Contact";

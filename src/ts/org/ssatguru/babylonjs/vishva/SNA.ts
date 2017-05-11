@@ -439,7 +439,7 @@ namespace org.ssatguru.babylonjs.vishva {
         actions:Action[] = new Array();
 
         public constructor(mesh: Mesh, properties: SNAproperties) {
-            Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
+            //Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
             this.properties = properties;
             this.mesh = mesh;
             var sensors: Array<Sensor> = <Array<Sensor>>this.mesh["sensors"];
@@ -568,7 +568,7 @@ namespace org.ssatguru.babylonjs.vishva {
         
         public constructor(aMesh: Mesh, properties: SenContactProp) {
             super(aMesh, properties);
-            
+            this.processUpdateSpecific();
             
         }
 

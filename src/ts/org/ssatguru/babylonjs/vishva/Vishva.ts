@@ -2310,6 +2310,10 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.snowPart.stop();
             }else{
                 this.snowPart.start();
+                if (this.raining){
+                    this.rainPart.stop();
+                    this.raining=false;
+                }
             }
             this.snowing = !this.snowing;
         }
@@ -2348,6 +2352,10 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.rainPart.stop();
             }else{
                 this.rainPart.start();
+                if (this.snowing){
+                    this.snowPart.stop();
+                    this.snowing=false;
+                }
             }
             this.raining = !this.raining;
         }
@@ -2356,19 +2364,18 @@ namespace org.ssatguru.babylonjs.vishva {
          * create a snow particle system
          */
         private createRainPart():ParticleSystem {
-            let part = new ParticleSystem("snow", 1000, this.scene);
+            let part = new ParticleSystem("rain", 4000, this.scene);
             part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
-            part.emitter = new Vector3(0,20,0);
-            part.maxEmitBox = new Vector3(100,10,100);
-            part.minEmitBox = new Vector3(-100,10,-100);
-            
-            part.emitRate =2000;
-            part.updateSpeed = 0.01;
-            part.minLifeTime = 1;
-            part.maxLifeTime = 5;
+            part.emitter = new Vector3(0,40,0);
+            part.maxEmitBox = new Vector3(100,40,100);
+            part.minEmitBox = new Vector3(-100,40,-100);
+            part.emitRate =1000;
+            part.updateSpeed = 0.02;
+            part.minLifeTime = 5;
+            part.maxLifeTime = 10;
             part.minSize = 0.1;
-            part.maxSize = 0.5;
-            part.color1 = new BABYLON.Color4(0,0,1,1);
+            part.maxSize = 0.8;
+            part.color1 = new BABYLON.Color4(1,1,1,0.5);
             part.color2 = new BABYLON.Color4(0,0,1,1);
             part.colorDead = new BABYLON.Color4(0,0,0,0);
             //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;

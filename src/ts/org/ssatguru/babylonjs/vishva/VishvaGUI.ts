@@ -252,13 +252,13 @@ namespace org.ssatguru.babylonjs.vishva {
             envSnow.onclick = (e) => {
                 this.vishva.toggleSnow();
             };
-            
+
             let envRain: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envRain");
             envRain.onclick = (e) => {
                 //this.showAlertDiag("Sorry. To be implemented");
                 this.vishva.toggleRain();
             };
-            
+
             var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
             skyButton.onclick = (e) => {
                 var foo: HTMLElement = document.getElementById("add-skyboxes");
@@ -906,22 +906,22 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         genName: HTMLInputElement;
-        
+
         genOperTrans: HTMLInputElement;
         genOperRot: HTMLInputElement;
         genOperScale: HTMLInputElement;
         genlocalAxis: HTMLInputElement;
-        
-        genSnapTrans:HTMLInputElement;
-        genSnapRot:HTMLInputElement;
-        
-        genSnapTransValue:HTMLInputElement;
-        genSnapRotValue:HTMLInputElement;
-        
+
+        genSnapTrans: HTMLInputElement;
+        genSnapRot: HTMLInputElement;
+
+        genSnapTransValue: HTMLInputElement;
+        genSnapRotValue: HTMLInputElement;
+
         genDisable: HTMLInputElement;
         genColl: HTMLInputElement;
         genVisi: HTMLInputElement;
-        
+
 
 
         private initGeneral() {
@@ -936,49 +936,49 @@ namespace org.ssatguru.babylonjs.vishva {
                 console.log("name changed");
                 this.vishva.setName(this.genName.value);
             }
-            
+
             //Edit controls
             this.genOperTrans = <HTMLInputElement>document.getElementById("operTrans");
             this.genOperRot = <HTMLInputElement>document.getElementById("operRot");
             this.genOperScale = <HTMLInputElement>document.getElementById("operScale");
-            this.genOperTrans.onclick = () =>{
+            this.genOperTrans.onclick = () => {
                 this.vishva.setTransOn();
             }
-            this.genOperRot.onclick = () =>{
+            this.genOperRot.onclick = () => {
                 this.vishva.setRotOn();
             }
-            this.genOperScale.onclick = () =>{
+            this.genOperScale.onclick = () => {
                 this.vishva.setScaleOn();
-                if (!this.vishva.isSpaceLocal()){
+                if (!this.vishva.isSpaceLocal()) {
                     this.showAlertDiag("note that scaling doesnot work with global axis");
                 }
             }
-            
+
             this.genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
-            this.genSnapTrans.onchange = () =>{
-                let err:string = this.vishva.snapTrans(this.genSnapTrans.checked);
-                if (err != null){
+            this.genSnapTrans.onchange = () => {
+                let err: string = this.vishva.snapTrans(this.genSnapTrans.checked);
+                if (err != null) {
                     this.showAlertDiag(err);
                     this.genSnapTrans.checked = false;
                 }
             }
             this.genSnapRot = <HTMLInputElement>document.getElementById("snapRot");
-            this.genSnapRot.onchange = () =>{
-                let err:string = this.vishva.snapRot(this.genSnapRot.checked);
-                if (err != null){
+            this.genSnapRot.onchange = () => {
+                let err: string = this.vishva.snapRot(this.genSnapRot.checked);
+                if (err != null) {
                     this.showAlertDiag(err);
                     this.genSnapRot.checked = false;
                 }
             }
             this.genSnapTransValue = <HTMLInputElement>document.getElementById("snapTransValue");
-            this.genSnapTransValue.onchange = () =>{
+            this.genSnapTransValue.onchange = () => {
                 this.vishva.setSnapTransValue(Number(this.genSnapTransValue.value));
             }
             this.genSnapRotValue = <HTMLInputElement>document.getElementById("snapRotValue");
-            this.genSnapRotValue.onchange = () =>{
+            this.genSnapRotValue.onchange = () => {
                 this.vishva.setSnapRotValue(Number(this.genSnapRotValue.value));
             }
-            
+
             this.genlocalAxis = <HTMLInputElement>document.getElementById("genlocalAxis");
             this.genlocalAxis.onchange = () => {
                 var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
@@ -987,7 +987,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.genlocalAxis.checked = !this.genlocalAxis.checked;
                 }
             }
-            
+
             this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
             this.genDisable.onchange = () => {
                 this.vishva.disableIt(this.genDisable.checked);
@@ -1000,7 +1000,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genVisi.onchange = () => {
                 this.vishva.makeVisibile(this.genVisi.checked);
             }
-            
+
             var undo: HTMLElement = document.getElementById("undo");
             var redo: HTMLElement = document.getElementById("redo");
 
@@ -1107,11 +1107,11 @@ namespace org.ssatguru.babylonjs.vishva {
         private updateGeneral() {
             if (this.genName === undefined) this.initGeneral();
             this.genName.value = this.vishva.getName();
-            
+
             this.genOperTrans.checked = this.vishva.isTransOn();
             this.genOperRot.checked = this.vishva.isRotOn();
             this.genOperScale.checked = this.vishva.isScaleOn();
-            
+
             this.genDisable.checked = this.vishva.isDisabled();
             this.genColl.checked = this.vishva.isCollideable();
             this.genVisi.checked = this.vishva.isVisible();
@@ -1351,7 +1351,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 title: "Info",
                 autoOpen: false,
                 width: "auto",
-                minWidth:200,
+                minWidth: 200,
                 height: "auto",
                 closeOnEscape: false
             };
@@ -1532,23 +1532,36 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private propsDiag: JQuery = null;
 
-        private isTabRestart: boolean = false;
+        private fixingDragIssue: boolean = false;
         private createPropsDiag() {
 
             //property tabs
-            let propsTabs = $("#propsTabs");
-            propsTabs.tabs({
-                //everytime we switch tabs, close open to re-adjust size
-                activate: (e, ui) => {
-                    //this.isTabRestart = true;
-                    //this.propsDiag.dialog("close");
-                    //this.propsDiag.dialog("open");
-                },
+            let propsAcc = $("#propsAcc");
 
+            //            propsTabs.tabs({
+            //                //everytime we switch tabs, close open to re-adjust size
+            //                activate: (e, ui) => {
+            //                    //this.fixingDragIssue = true;
+            //                    //this.propsDiag.dialog("close");
+            //                    //this.propsDiag.dialog("open");
+            //                },
+            //
+            //                beforeActivate: (e, ui) => {
+            //                    this.vishva.switchDisabled = false;
+            //                    this.vishva.enableKeys();
+            //                    this.refreshTab(ui.newTab.index());
+            //                }
+            //            });
+            //            
+            propsAcc.accordion({
+                animate: 100,
+                heightStyle: "content",
+                collapsible: true,
                 beforeActivate: (e, ui) => {
                     this.vishva.switchDisabled = false;
                     this.vishva.enableKeys();
-                    this.refreshTab(ui.newTab.index());
+                    this.refreshPanel(this.getPanelIndex(ui.newHeader));
+
                 }
             });
 
@@ -1558,22 +1571,22 @@ namespace org.ssatguru.babylonjs.vishva {
                 autoOpen: false,
                 resizable: false,
                 position: this.leftCenter,
-                minWidth: 475,
-                width: 475,
+                minWidth: 420,
+                width: 420,
                 height: "auto",
                 closeOnEscape: false,
-                //on open calculate the values in the active tab
-                //also if we switched to another mesh vishav will close open
+                //a) on open set the values of the fields in the active panel.
+                //b) also if we switched from another mesh vishav will close open
                 //by calling refreshPropsDiag()
-                //donot bother refreshing if we are just restarting
-                //dialog for height and width sizing after drag
+                //c) donot bother refreshing values if we are just restarting
+                //dialog for height and width re-sizing after drag
                 open: (e, ui) => {
-                    if (!this.isTabRestart) {
+                    if (!this.fixingDragIssue) {
                         // refresh the active tab
-                        let activeTab = propsTabs.tabs("option", "active");
-                        this.refreshTab(activeTab);
+                        let activePanel = propsAcc.accordion("option", "active");
+                        this.refreshPanel(activePanel);
                     } else {
-                        this.isTabRestart = false;
+                        this.fixingDragIssue = false;
                     }
                 },
                 close: (e, ui) => {
@@ -1583,7 +1596,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 //after drag the dialog box doesnot resize
                 //force resize by closing and opening
                 dragStop: (e, ui) => {
-                    this.isTabRestart = true;
+                    this.fixingDragIssue = true;
                     this.propsDiag.dialog("close");
                     this.propsDiag.dialog("open");
                 }
@@ -1602,7 +1615,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         /*
          * called by vishva when editcontrol
-         * is switched to another mesh
+         * is switched from another mesh
          */
         public refreshPropsDiag() {
             if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
@@ -1612,25 +1625,34 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        private getPanelIndex(ui: JQuery): number {
+            if (ui.text() == "General") return propertyPanel.General;
+            if (ui.text() == "Transforms") return propertyPanel.Transforms;
+            if (ui.text() == "Physics") return propertyPanel.Physics;
+            if (ui.text() == "Material") return propertyPanel.Material;
+            if (ui.text() == "Lights") return propertyPanel.Lights;
+            if (ui.text() == "Animations") return propertyPanel.Animations;
 
-        private refreshTab(tabIndex: number) {
-            if (tabIndex === propertyTabs.General) {
+        }
+
+        private refreshPanel(panelIndex: number) {
+            if (panelIndex === propertyPanel.General) {
                 this.updateGeneral();
-            } else if (tabIndex === propertyTabs.Transforms) {
+            } else if (panelIndex === propertyPanel.Transforms) {
                 this.updateTransform();
-            } else if (tabIndex === propertyTabs.Lights) {
+            } else if (panelIndex === propertyPanel.Lights) {
                 this.updateLight();
-            } else if (tabIndex === propertyTabs.Animations) {
+            } else if (panelIndex === propertyPanel.Animations) {
                 this.vishva.disableKeys();
                 this.updateAnimations();
-            } else if (tabIndex === propertyTabs.Physics) {
+            } else if (panelIndex === propertyPanel.Physics) {
                 this.vishva.disableKeys();
                 this.updatePhysics()
             }
         }
     }
 
-    const enum propertyTabs {
+    const enum propertyPanel {
         General,
         Transforms,
         Physics,

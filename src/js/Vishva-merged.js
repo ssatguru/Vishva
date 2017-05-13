@@ -3598,7 +3598,7 @@ var org;
                         this.firstTime = true;
                         this.addMenuOn = false;
                         this.propsDiag = null;
-                        this.isTabRestart = false;
+                        this.fixingDragIssue = false;
                         this.vishva = vishva;
                         this.createJPOs();
                         //need to do add menu before main navigation menu
@@ -4927,18 +4927,30 @@ var org;
                     VishvaGUI.prototype.createPropsDiag = function () {
                         var _this = this;
                         //property tabs
-                        var propsTabs = $("#propsTabs");
-                        propsTabs.tabs({
-                            //everytime we switch tabs, close open to re-adjust size
-                            activate: function (e, ui) {
-                                //this.isTabRestart = true;
-                                //this.propsDiag.dialog("close");
-                                //this.propsDiag.dialog("open");
-                            },
+                        var propsAcc = $("#propsAcc");
+                        //            propsTabs.tabs({
+                        //                //everytime we switch tabs, close open to re-adjust size
+                        //                activate: (e, ui) => {
+                        //                    //this.fixingDragIssue = true;
+                        //                    //this.propsDiag.dialog("close");
+                        //                    //this.propsDiag.dialog("open");
+                        //                },
+                        //
+                        //                beforeActivate: (e, ui) => {
+                        //                    this.vishva.switchDisabled = false;
+                        //                    this.vishva.enableKeys();
+                        //                    this.refreshTab(ui.newTab.index());
+                        //                }
+                        //            });
+                        //            
+                        propsAcc.accordion({
+                            animate: 100,
+                            heightStyle: "content",
+                            collapsible: true,
                             beforeActivate: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
                                 _this.vishva.enableKeys();
-                                _this.refreshTab(ui.newTab.index());
+                                _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
                             }
                         });
                         //property dialog box
@@ -4947,23 +4959,23 @@ var org;
                             autoOpen: false,
                             resizable: false,
                             position: this.leftCenter,
-                            minWidth: 475,
-                            width: 475,
+                            minWidth: 420,
+                            width: 420,
                             height: "auto",
                             closeOnEscape: false,
-                            //on open calculate the values in the active tab
-                            //also if we switched to another mesh vishav will close open
+                            //a) on open set the values of the fields in the active panel.
+                            //b) also if we switched from another mesh vishav will close open
                             //by calling refreshPropsDiag()
-                            //donot bother refreshing if we are just restarting
-                            //dialog for height and width sizing after drag
+                            //c) donot bother refreshing values if we are just restarting
+                            //dialog for height and width re-sizing after drag
                             open: function (e, ui) {
-                                if (!_this.isTabRestart) {
+                                if (!_this.fixingDragIssue) {
                                     // refresh the active tab
-                                    var activeTab = propsTabs.tabs("option", "active");
-                                    _this.refreshTab(activeTab);
+                                    var activePanel = propsAcc.accordion("option", "active");
+                                    _this.refreshPanel(activePanel);
                                 }
                                 else {
-                                    _this.isTabRestart = false;
+                                    _this.fixingDragIssue = false;
                                 }
                             },
                             close: function (e, ui) {
@@ -4973,7 +4985,7 @@ var org;
                             //after drag the dialog box doesnot resize
                             //force resize by closing and opening
                             dragStop: function (e, ui) {
-                                _this.isTabRestart = true;
+                                _this.fixingDragIssue = true;
                                 _this.propsDiag.dialog("close");
                                 _this.propsDiag.dialog("open");
                             }
@@ -4993,7 +5005,7 @@ var org;
                     };
                     /*
                      * called by vishva when editcontrol
-                     * is switched to another mesh
+                     * is switched from another mesh
                      */
                     VishvaGUI.prototype.refreshPropsDiag = function () {
                         if ((this.propsDiag === undefined) || (this.propsDiag === null))
@@ -5003,21 +5015,35 @@ var org;
                             this.propsDiag.dialog("open");
                         }
                     };
-                    VishvaGUI.prototype.refreshTab = function (tabIndex) {
-                        if (tabIndex === 0 /* General */) {
+                    VishvaGUI.prototype.getPanelIndex = function (ui) {
+                        if (ui.text() == "General")
+                            return 0 /* General */;
+                        if (ui.text() == "Transforms")
+                            return 1 /* Transforms */;
+                        if (ui.text() == "Physics")
+                            return 2 /* Physics */;
+                        if (ui.text() == "Material")
+                            return 3 /* Material */;
+                        if (ui.text() == "Lights")
+                            return 4 /* Lights */;
+                        if (ui.text() == "Animations")
+                            return 5 /* Animations */;
+                    };
+                    VishvaGUI.prototype.refreshPanel = function (panelIndex) {
+                        if (panelIndex === 0 /* General */) {
                             this.updateGeneral();
                         }
-                        else if (tabIndex === 1 /* Transforms */) {
+                        else if (panelIndex === 1 /* Transforms */) {
                             this.updateTransform();
                         }
-                        else if (tabIndex === 4 /* Lights */) {
+                        else if (panelIndex === 4 /* Lights */) {
                             this.updateLight();
                         }
-                        else if (tabIndex === 5 /* Animations */) {
+                        else if (panelIndex === 5 /* Animations */) {
                             this.vishva.disableKeys();
                             this.updateAnimations();
                         }
-                        else if (tabIndex === 2 /* Physics */) {
+                        else if (panelIndex === 2 /* Physics */) {
                             this.vishva.disableKeys();
                             this.updatePhysics();
                         }

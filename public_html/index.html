@@ -273,21 +273,13 @@
             <div id="propsDiag" title="mesh properties" >
 
                 <!--
-               
+                properties accordion
                 -->
-                <div id="propsTabs">
+                <div id="propsAcc" >
 
-                    <ul>
-                        <li><a href="#gen">General</a></li>
-                        <li><a href="#meshTransDiag">Transforms</a></li>
-                        <li><a href="#Physics">Physics</a></li>
-                        <li><a href="#Material">Material</a></li>
-                        <li><a href="#Lights">Lights</a></li>
-                        <li><a href="#meshAnimDiag">Animations</a></li>
-                    </ul>
-
+                    <h3>General</h3>
                     <div id="gen" >
-                        <table>
+                        <table >
                             <tr>
                                 <td>
                                     name <input type="text" id="genName">
@@ -352,7 +344,8 @@
                             </tr>
                         </table>
                     </div>
-
+                    
+                    <h3>Transforms</h3>
                     <div id="meshTransDiag">
                         <table>
                             <tr>
@@ -383,7 +376,8 @@
                         <br>
                         <button id="transRefresh">refresh</button>
                     </div>
-
+                    
+                    <h3>Physics</h3>
                     <div id="Physics" >
                         <table>
                             <tr>
@@ -429,7 +423,8 @@
                         <button id ="phyApply">apply</button>
                         <button id ="phyRestore">restore</button>
                     </div>
-
+                    
+                    <h3>Material</h3>
                     <div id="Material" >
                         <h3>TODO</h3>
                         <!--
@@ -462,7 +457,8 @@
                          </table>
                         -->
                     </div>
-
+                    
+                    <h3>Lights</h3>
                     <div id="Lights" >
                         <table>
                             <tr>
@@ -545,7 +541,8 @@
                             showOpt();
                         </script>
                     </div>
-
+                    
+                    <h3>Animations</h3>
                     <div id="meshAnimDiag" title="Animations">
                         create range
                         <table>

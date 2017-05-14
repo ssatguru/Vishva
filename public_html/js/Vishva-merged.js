@@ -1210,6 +1210,7 @@ var org;
                 var AssetsManager = BABYLON.AssetsManager;
                 var Color3 = BABYLON.Color3;
                 var CubeTexture = BABYLON.CubeTexture;
+                var CSG = BABYLON.CSG;
                 var DirectionalLight = BABYLON.DirectionalLight;
                 var Engine = BABYLON.Engine;
                 var HemisphericLight = BABYLON.HemisphericLight;
@@ -1745,7 +1746,7 @@ var org;
                                     }
                                 }
                                 else {
-                                    this.swicthEditControl(pickResult.pickedMesh);
+                                    this.switchEditControl(pickResult.pickedMesh);
                                     if (this.snapperOn)
                                         this.snapToGlobal();
                                 }
@@ -1780,7 +1781,7 @@ var org;
                      *
                      * @param mesh
                      */
-                    Vishva.prototype.swicthEditControl = function (mesh) {
+                    Vishva.prototype.switchEditControl = function (mesh) {
                         if (this.switchDisabled)
                             return;
                         vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
@@ -2075,7 +2076,7 @@ var org;
                         //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
                         this.animateCopy(inst);
                         this.meshPicked = inst;
-                        this.swicthEditControl(inst);
+                        this.switchEditControl(inst);
                         //TODO think
                         //inst.receiveShadows = true;
                         (this.shadowGenerator.getShadowMap().renderList).push(inst);
@@ -2285,7 +2286,7 @@ var org;
                             clonedMeshesPicked.push(clone);
                             this.meshesPicked = clonedMeshesPicked;
                         }
-                        this.swicthEditControl(clone);
+                        this.switchEditControl(clone);
                         return null;
                     };
                     Vishva.prototype.clonetheMesh = function (mesh) {
@@ -2347,10 +2348,44 @@ var org;
                             }
                             var ms = this.meshesPicked;
                             var newMesh = Mesh.MergeMeshes(ms, false);
-                            this.swicthEditControl(newMesh);
+                            this.switchEditControl(newMesh);
                             this.animateCopy(newMesh);
+                            return null;
                         }
-                        return null;
+                        else {
+                            return "please select two or more mesh";
+                        }
+                    };
+                    Vishva.prototype.csgOperation = function (op) {
+                        if (this.meshesPicked != null) {
+                            if (this.meshesPicked.length > 2) {
+                                return "please select only two mesh";
+                            }
+                            console.log("subtracting");
+                            var csg1 = CSG.FromMesh(this.meshPicked);
+                            var csg2 = CSG.FromMesh(this.meshesPicked[0]);
+                            var csg3 = void 0;
+                            if (op === "subtract") {
+                                csg3 = csg2.subtract(csg1);
+                            }
+                            else if (op === "intersect") {
+                                csg3 = csg2.intersect(csg1);
+                            }
+                            else if (op === "union") {
+                                csg3 = csg2.union(csg1);
+                            }
+                            else {
+                                return "invalid operation";
+                            }
+                            var name_1 = new Number(Date.now()).toString();
+                            var newMesh = csg3.toMesh(name_1, this.meshesPicked[0].material, this.scene, false);
+                            this.switchEditControl(newMesh);
+                            this.animateCopy(newMesh);
+                            return null;
+                        }
+                        else {
+                            return "please select two mesh";
+                        }
                     };
                     Vishva.prototype.physTypes = function () {
                         console.log("BoxImpostor " + PhysicsImpostor.BoxImpostor);
@@ -4519,6 +4554,8 @@ var org;
                         var cloneMesh = document.getElementById("cloneMesh");
                         var instMesh = document.getElementById("instMesh");
                         var mergeMesh = document.getElementById("mergeMesh");
+                        var subMesh = document.getElementById("subMesh");
+                        var interMesh = document.getElementById("interMesh");
                         var downAsset = document.getElementById("downMesh");
                         var delMesh = document.getElementById("delMesh");
                         var swAv = document.getElementById("swAv");
@@ -4569,6 +4606,20 @@ var org;
                         };
                         mergeMesh.onclick = function (e) {
                             var err = _this.vishva.mergeMeshes();
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                            }
+                            return false;
+                        };
+                        subMesh.onclick = function (e) {
+                            var err = _this.vishva.csgOperation("subtract");
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                            }
+                            return false;
+                        };
+                        interMesh.onclick = function (e) {
+                            var err = _this.vishva.csgOperation("intersect");
                             if (err != null) {
                                 _this.showAlertDiag(err);
                             }

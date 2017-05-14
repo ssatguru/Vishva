@@ -1012,6 +1012,8 @@ namespace org.ssatguru.babylonjs.vishva {
             var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
             var instMesh: HTMLElement = document.getElementById("instMesh");
             var mergeMesh: HTMLElement = document.getElementById("mergeMesh");
+            var subMesh: HTMLElement = document.getElementById("subMesh");
+            var interMesh: HTMLElement = document.getElementById("interMesh");
             var downAsset: HTMLElement = document.getElementById("downMesh");
             var delMesh: HTMLElement = document.getElementById("delMesh");
 
@@ -1067,6 +1069,21 @@ namespace org.ssatguru.babylonjs.vishva {
             };
             mergeMesh.onclick = (e) => {
                 var err: string = this.vishva.mergeMeshes();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            
+            subMesh.onclick = (e) => {
+                var err: string = this.vishva.csgOperation("subtract");
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            interMesh.onclick = (e) => {
+                var err: string = this.vishva.csgOperation("intersect");
                 if (err != null) {
                     this.showAlertDiag(err);
                 }

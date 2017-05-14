@@ -17,6 +17,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Camera = BABYLON.Camera;
     import Color3 = BABYLON.Color3;
     import CubeTexture = BABYLON.CubeTexture;
+    import CSG = BABYLON.CSG;
     import DirectionalLight = BABYLON.DirectionalLight;
     import Engine = BABYLON.Engine;
     import ExecuteCodeAction = BABYLON.ExecuteCodeAction;
@@ -1276,9 +1277,39 @@ namespace org.ssatguru.babylonjs.vishva {
                 let newMesh:Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
                 this.switchEditControl(newMesh);
                 this.animateCopy(newMesh);
-                
+                return null;
+            }else{
+                return "please select two or more mesh" ;
             }
-            return null;
+        }
+      
+        public csgOperation(op:string):string {
+             if (this.meshesPicked != null) {
+                 if (this.meshesPicked.length > 2){
+                     return "please select only two mesh";
+                 }
+                 console.log("subtracting");
+                 let csg1: CSG = CSG.FromMesh(<Mesh>this.meshPicked);
+                 let csg2: CSG = CSG.FromMesh(<Mesh>this.meshesPicked[0]);
+                 let csg3:CSG;
+                 if (op === "subtract"){
+                     csg3  =csg2.subtract(csg1);
+                 }else if (op === "intersect"){
+                     csg3 = csg2.intersect(csg1);
+                 }else if (op === "union"){
+                     csg3 = csg2.union(csg1);
+                 }else{
+                     return "invalid operation";
+                 }
+                 let name: string = (<number>new Number(Date.now())).toString();
+                 let newMesh:Mesh = csg3.toMesh(name, this.meshesPicked[0].material , this.scene, false);
+                 
+                 this.switchEditControl(newMesh);
+                 this.animateCopy(newMesh);
+                 return null;
+             }else{
+                 return "please select two mesh" ;
+             }
         }
 
         meshPickedPhyParms: PhysicsParm = null;

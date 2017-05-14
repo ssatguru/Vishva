@@ -141,16 +141,16 @@
                 <button id="helpLink">Help</button>
                 <button id="debugLink">Debug</button>
             </div>
-            
+
             <ul id="AddMenu" style="position: absolute; width: auto; ">
             </ul>
-            
+
         </div>
-        
+
         <!-- all elements used by jquery ui -->
         <div id="gui-items-2">
-        
-            
+
+
 
             <div id="envDiv" title="Environment">
                 <table style="width: 100%; text-align: center;">
@@ -329,6 +329,8 @@
                                     <button id="cloneMesh">clone</button>
                                     <button id="instMesh">instance</button>
                                     <button id="mergeMesh">merge</button>
+                                    <button id="subMesh">subtract</button>
+                                    <button id="interMesh">intersect</button>
                                     <button id="downMesh">download</button>
                                     <button id="delMesh">delete</button>
                                 </td>
@@ -346,7 +348,7 @@
                             </tr>
                         </table>
                     </div>
-                    
+
                     <h3>Transforms</h3>
                     <div id="meshTransDiag">
                         <table>
@@ -378,7 +380,7 @@
                         <br>
                         <button id="transRefresh">refresh</button>
                     </div>
-                    
+
                     <h3>Physics</h3>
                     <div id="Physics" >
                         <table>
@@ -425,41 +427,39 @@
                         <button id ="phyApply">apply</button>
                         <button id ="phyRestore">restore</button>
                     </div>
-                    
+
                     <h3>Material</h3>
                     <div id="Material" >
-                        <h3>TODO</h3>
+                        Textures
+                        <select>
+                            <option value="diffuse">diffuse</option>
+                            <option value="emissive">emissive</option>
+                            <option value="ambient">ambient</option>
+                            <option value="specular">specular</option>
+                            <option value="bump">bump</option>
+                            <option value="lightMap">light map</option>
+                            <option value="opacity">opacity</option>
+                            <option value="reflection">reflection</option>
+                            <option value="refraction">refraction</option>
+                        </select>
+                        <br>
+                        <img height="64" width="64"/>
                         <!--
-                         <table>
-                             <tr>
-                                 <td colspan="2">name <input type="text" id="matName" ></td>
-                             </tr>
-                             <tr>
-                                 <td style="vertical-align: top;"> colors : 
-                                     <br><input type="color" id="matDcolor" >diffuse  
-                                     <br><input type="color" id="matEcolor" >emissive
-                                     <br><input type="color" id="matAcolor" >ambient
-                                     <br><input type="color" id="matScolor" >specular 
-                                     <br><input type="text" id="matSpower" size="1" >spec power 
-                                 </td>
-                                 <td style="vertical-align: top;"> 
-                                     textures : 
-                                     <br><button id="matDtext">diffuse</button>
-                                     <br><button id="matEtext">emissive</button>
-                                     <br><button id="matAtext">ambient</button>
-                                     <br><button id="matStext">specular</button>
-                                     <br><button id="matBtext">bump</button>
-                                     <br><button id="matLtext">light map</button>
-                                     <br><button id="matOtext">opacity</button>
-                                     <br><button id="matRLtext">reflection</button>
-                                     <br><button id="matRFtext">refraction</button>
- 
-                                 </td>
-                             </tr>
-                         </table>
+                        <table>
+                            <tr>
+                                <td style="vertical-align: top;"> colors : 
+                                    <br><input type="color" id="matDcolor" >diffuse  
+                                    <br><input type="color" id="matEcolor" >emissive
+                                    <br><input type="color" id="matAcolor" >ambient
+                                    <br><input type="color" id="matScolor" >specular 
+                                    <br><input type="text" id="matSpower" size="1" >spec power 
+                                </td>
+                               
+                            </tr>
+                        </table>
                         -->
                     </div>
-                    
+
                     <h3>Lights</h3>
                     <div id="Lights" >
                         <table>
@@ -543,7 +543,7 @@
                             showOpt();
                         </script>
                     </div>
-                    
+
                     <h3>Animations</h3>
                     <div id="meshAnimDiag" title="Animations">
                         create range

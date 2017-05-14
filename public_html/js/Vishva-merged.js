@@ -719,9 +719,7 @@ var org;
                 var ActuatorMover = (function (_super) {
                     __extends(ActuatorMover, _super);
                     function ActuatorMover(mesh, parms) {
-                        var _this = _super.call(this, mesh, parms) || this;
-                        Object.defineProperty(_this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
-                        return _this;
+                        return _super.call(this, mesh, parms) || this;
                     }
                     ActuatorMover.prototype.actuate = function () {
                         var _this = this;
@@ -1207,6 +1205,7 @@ var org;
             var vishva;
             (function (vishva) {
                 var EditControl = org.ssatguru.babylonjs.component.EditControl;
+                var Animation = BABYLON.Animation;
                 var ArcRotateCamera = BABYLON.ArcRotateCamera;
                 var AssetsManager = BABYLON.AssetsManager;
                 var Color3 = BABYLON.Color3;
@@ -1714,7 +1713,7 @@ var org;
                                     this.vishvaGUI.showPropDiag();
                                 }
                                 if (this.key.ctl)
-                                    this.multiSelect();
+                                    this.multiSelect(null, this.meshPicked);
                                 if (this.snapperOn) {
                                     this.setSnapperOn();
                                 }
@@ -1734,7 +1733,7 @@ var org;
                             else {
                                 if (pickResult.pickedMesh === this.meshPicked) {
                                     if (this.key.ctl) {
-                                        this.multiSelect();
+                                        this.multiSelect(null, this.meshPicked);
                                     }
                                     else {
                                         // if already selected then focus on it
@@ -1786,27 +1785,53 @@ var org;
                             return;
                         vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                         this.restorePhyParms();
+                        var prevMesh = this.meshPicked;
                         this.meshPicked = mesh;
                         this.savePhyParms();
                         this.editControl.switchTo(this.meshPicked);
                         vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
                         if (this.key.ctl)
-                            this.multiSelect();
+                            this.multiSelect(prevMesh, this.meshPicked);
                         //refresh the properties dialog box if open
                         this.vishvaGUI.refreshPropsDiag();
                     };
-                    Vishva.prototype.multiSelect = function () {
+                    //        private multiSelect() {
+                    //            if (this.meshesPicked == null) {
+                    //                this.meshesPicked = new Array<AbstractMesh>();
+                    //                
+                    //            }
+                    //            //if already selected then unselect it
+                    //            var i: number = this.meshesPicked.indexOf(this.meshPicked);
+                    //            if (i >= 0) {
+                    //                this.meshesPicked.splice(i, 1);
+                    //                this.meshPicked.showBoundingBox = false;
+                    //            } else {
+                    //                this.meshesPicked.push(this.meshPicked);
+                    //                this.meshPicked.showBoundingBox = true;
+                    //            }
+                    //        }
+                    Vishva.prototype.multiSelect = function (prevMesh, currentMesh) {
                         if (this.meshesPicked == null) {
                             this.meshesPicked = new Array();
                         }
-                        var i = this.meshesPicked.indexOf(this.meshPicked);
+                        //if previous mesh isn't selected then select it too
+                        var i;
+                        if (prevMesh != null) {
+                            i = this.meshesPicked.indexOf(prevMesh);
+                            if (!(i >= 0)) {
+                                this.meshesPicked.push(prevMesh);
+                                prevMesh.showBoundingBox = true;
+                            }
+                        }
+                        //if current mesh was already selected then unselect it
+                        i = this.meshesPicked.indexOf(currentMesh);
                         if (i >= 0) {
                             this.meshesPicked.splice(i, 1);
                             this.meshPicked.showBoundingBox = false;
                         }
                         else {
-                            this.meshesPicked.push(this.meshPicked);
-                            this.meshPicked.showBoundingBox = true;
+                            this.meshesPicked.push(currentMesh);
+                            currentMesh.showBoundingBox = true;
                         }
                     };
                     Vishva.prototype.removeEditControl = function () {
@@ -2047,7 +2072,8 @@ var org;
                         }
                         var name = new Number(Date.now()).toString();
                         var inst = this.meshPicked.createInstance(name);
-                        inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
+                        //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
+                        this.animateCopy(inst);
                         this.meshPicked = inst;
                         this.swicthEditControl(inst);
                         //TODO think
@@ -2242,15 +2268,14 @@ var org;
                         }
                         var clonedMeshesPicked = new Array();
                         var clone;
+                        //check if multiple meshes selected. If yes clone all except the last
                         if (this.meshesPicked != null) {
-                            for (var index124 = 0; index124 < this.meshesPicked.length; index124++) {
-                                var mesh = this.meshesPicked[index124];
-                                {
-                                    if (mesh !== this.meshPicked) {
-                                        if (!(mesh != null && mesh instanceof BABYLON.InstancedMesh)) {
-                                            clone = this.clonetheMesh(mesh);
-                                            clonedMeshesPicked.push(clone);
-                                        }
+                            for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
+                                var mesh = _a[_i];
+                                if (mesh !== this.meshPicked) {
+                                    if (!(mesh != null && mesh instanceof BABYLON.InstancedMesh)) {
+                                        clone = this.clonetheMesh(mesh);
+                                        clonedMeshesPicked.push(clone);
                                     }
                                 }
                             }
@@ -2268,12 +2293,19 @@ var org;
                         var clone = mesh.clone(name, null, true);
                         delete clone["sensors"];
                         delete clone["actuators"];
-                        clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
+                        this.animateCopy(clone);
+                        //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
                         //TODO think
                         //clone.receiveShadows = true;
                         mesh.showBoundingBox = false;
                         (this.shadowGenerator.getShadowMap().renderList).push(clone);
                         return clone;
+                    };
+                    //play a small scaling animation when cloning or instancing a mesh.
+                    Vishva.prototype.animateCopy = function (mesh) {
+                        var startScale = new Vector3(1.5, 1.5, 1.5);
+                        var endScale = new Vector3(1, 1, 1);
+                        Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
                     };
                     Vishva.prototype.delete_mesh = function () {
                         if (!this.isMeshSelected) {
@@ -2303,6 +2335,22 @@ var org;
                             meshes.splice(i, 1);
                         }
                         mesh.dispose();
+                    };
+                    Vishva.prototype.mergeMeshes = function () {
+                        if (this.meshesPicked != null) {
+                            //TODO - check for instance meshes
+                            for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
+                                var mesh = _a[_i];
+                                if (mesh instanceof BABYLON.InstancedMesh) {
+                                    return "some of your meshes are instance meshes. cannot merge those";
+                                }
+                            }
+                            var ms = this.meshesPicked;
+                            var newMesh = Mesh.MergeMeshes(ms, false);
+                            this.swicthEditControl(newMesh);
+                            this.animateCopy(newMesh);
+                        }
+                        return null;
                     };
                     Vishva.prototype.physTypes = function () {
                         console.log("BoxImpostor " + PhysicsImpostor.BoxImpostor);
@@ -4470,6 +4518,7 @@ var org;
                         var removeChildren = document.getElementById("removeChildren");
                         var cloneMesh = document.getElementById("cloneMesh");
                         var instMesh = document.getElementById("instMesh");
+                        var mergeMesh = document.getElementById("mergeMesh");
                         var downAsset = document.getElementById("downMesh");
                         var delMesh = document.getElementById("delMesh");
                         var swAv = document.getElementById("swAv");
@@ -4513,6 +4562,13 @@ var org;
                         };
                         instMesh.onclick = function (e) {
                             var err = _this.vishva.instance_mesh();
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                            }
+                            return false;
+                        };
+                        mergeMesh.onclick = function (e) {
+                            var err = _this.vishva.mergeMeshes();
                             if (err != null) {
                                 _this.showAlertDiag(err);
                             }
@@ -4818,10 +4874,10 @@ var org;
                         navMenuBar.show(null);
                         showNavMenu.onclick = function (e) {
                             if (_this.menuBarOn) {
-                                navMenuBar.hide("slide");
+                                navMenuBar.hide("slide", 100);
                             }
                             else {
-                                navMenuBar.show("slide");
+                                navMenuBar.show("slide", 100);
                             }
                             _this.menuBarOn = !_this.menuBarOn;
                             return true;
@@ -4843,15 +4899,15 @@ var org;
                                 _this.firstTime = false;
                             }
                             if (_this.addMenuOn) {
-                                addMenu.menu().hide("slide", slideDown);
+                                addMenu.menu().hide("slide", slideDown, 100);
                             }
                             else {
-                                addMenu.show("slide", slideDown);
+                                addMenu.show("slide", slideDown, 100);
                             }
                             _this.addMenuOn = !_this.addMenuOn;
                             $(document).one("click", function (jqe) {
                                 if (_this.addMenuOn) {
-                                    addMenu.menu().hide("slide", slideDown);
+                                    addMenu.menu().hide("slide", slideDown, 100);
                                     _this.addMenuOn = false;
                                 }
                                 return true;
@@ -5138,4 +5194,3 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
-//# sourceMappingURL=Vishva-merged.js.map

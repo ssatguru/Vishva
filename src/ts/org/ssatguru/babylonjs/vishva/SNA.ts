@@ -820,7 +820,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public constructor(mesh: Mesh, parms: ActMoverParm) {
             super(mesh, parms);
-            Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
         }
 
         public actuate() {

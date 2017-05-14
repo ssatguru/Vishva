@@ -1011,6 +1011,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
             var instMesh: HTMLElement = document.getElementById("instMesh");
+            var mergeMesh: HTMLElement = document.getElementById("mergeMesh");
             var downAsset: HTMLElement = document.getElementById("downMesh");
             var delMesh: HTMLElement = document.getElementById("delMesh");
 
@@ -1059,6 +1060,13 @@ namespace org.ssatguru.babylonjs.vishva {
             };
             instMesh.onclick = (e) => {
                 var err: string = this.vishva.instance_mesh();
+                if (err != null) {
+                    this.showAlertDiag(err);
+                }
+                return false;
+            };
+            mergeMesh.onclick = (e) => {
+                var err: string = this.vishva.mergeMeshes();
                 if (err != null) {
                     this.showAlertDiag(err);
                 }
@@ -1421,9 +1429,9 @@ namespace org.ssatguru.babylonjs.vishva {
             navMenuBar.show(null);
             showNavMenu.onclick = (e) => {
                 if (this.menuBarOn) {
-                    navMenuBar.hide("slide");
+                    navMenuBar.hide("slide",100);
                 } else {
-                    navMenuBar.show("slide");
+                    navMenuBar.show("slide",100);
                 }
                 this.menuBarOn = !this.menuBarOn;
                 return true;
@@ -1446,14 +1454,14 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.firstTime = false;
                 }
                 if (this.addMenuOn) {
-                    addMenu.menu().hide("slide", slideDown);
+                    addMenu.menu().hide("slide", slideDown,100);
                 } else {
-                    addMenu.show("slide", slideDown);
+                    addMenu.show("slide", slideDown,100);
                 }
                 this.addMenuOn = !this.addMenuOn;
                 $(document).one("click", (jqe) => {
                     if (this.addMenuOn) {
-                        addMenu.menu().hide("slide", slideDown);
+                        addMenu.menu().hide("slide", slideDown,100);
                         this.addMenuOn = false;
                     }
                     return true;

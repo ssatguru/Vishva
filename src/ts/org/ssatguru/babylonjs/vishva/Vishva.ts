@@ -97,15 +97,15 @@ namespace org.ssatguru.babylonjs.vishva {
         primTexture: string = "vishva/internal/textures/Birch.jpg";
 
         waterTexture: string = "vishva/internal/textures/waterbump.png";
-        
+
         snowTexture: string = "vishva/internal/textures/flare.png";
         rainTexture: string = "vishva/internal/textures/raindrop-1.png";
-        
+
         snowPart: ParticleSystem = null;
-        snowing:boolean = false;
-        
+        snowing: boolean = false;
+
         rainPart: ParticleSystem = null;
-        raining:boolean = false;
+        raining: boolean = false;
 
         SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
 
@@ -173,11 +173,11 @@ namespace org.ssatguru.babylonjs.vishva {
         private autoEditMenu: boolean = true;
 
         private enablePhysics: boolean = true;
-        
+
         //how far away from the center can the avatar go
         //fog will start at the limitStart and will become dense at LimitEnd
-        private moveLimitStart=114;
-        private moveLimitEnd=124;
+        private moveLimitStart = 114;
+        private moveLimitEnd = 124;
 
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
@@ -377,7 +377,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!avFound) {
                 console.log("no vishva av found. creating av");
                 this.loadAvatar();
-            }else{
+            } else {
                 this.avatarSkeleton.enableBlending(0.1);
             }
             SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
@@ -408,7 +408,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private process() {
             if (this.cameraAnimating) return;
-            
+
             //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
             //except ofcourse the esc key
             if (this.keysDisabled && !this.key.esc) return;
@@ -577,21 +577,23 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.prevAnim = anim;
             }
             let avPos = this.avatar.position.length();
-            if (avPos > this.moveLimitStart){
-                this.scene.fogDensity = this.fogDensity + 0.01*(avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
-            }else{
+            if (avPos > this.moveLimitStart) {
+                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
+            } else {
                 this.scene.fogDensity = this.fogDensity;
             }
-            if (avPos > this.moveLimitEnd){
+            if (avPos > this.moveLimitEnd) {
                 this.avatar.position = oldAvPos;
             }
             this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
-        fogDensity:number=0;
+        fogDensity: number = 0;
 
         private meshPicked: AbstractMesh;
 
+
         private meshesPicked: Array<AbstractMesh>;
+
 
         private isMeshSelected: boolean = false;
 
@@ -620,7 +622,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if (this.autoEditMenu) {
                         this.vishvaGUI.showPropDiag();
                     }
-                    if (this.key.ctl) this.multiSelect();
+                    if (this.key.ctl) this.multiSelect(null,this.meshPicked);
 
                     if (this.snapperOn) {
                         this.setSnapperOn();
@@ -638,7 +640,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 } else {
                     if (pickResult.pickedMesh === this.meshPicked) {
                         if (this.key.ctl) {
-                            this.multiSelect();
+                            this.multiSelect(null, this.meshPicked);
                         } else {
                             // if already selected then focus on it
                             if (this.focusOnAv) {
@@ -648,7 +650,7 @@ namespace org.ssatguru.babylonjs.vishva {
                             this.focusOnMesh(this.meshPicked, 50);
                         }
                     } else {
-                        this.swicthEditControl(pickResult.pickedMesh);
+                        this.switchEditControl(pickResult.pickedMesh);
                         if (this.snapperOn) this.snapToGlobal()
                     }
                 }
@@ -684,34 +686,63 @@ namespace org.ssatguru.babylonjs.vishva {
          * 
          * @param mesh
          */
-        private swicthEditControl(mesh: AbstractMesh) {
+        private switchEditControl(mesh: AbstractMesh) {
             if (this.switchDisabled) return;
             SNAManager.getSNAManager().enableSnAs(this.meshPicked);
             this.restorePhyParms();
-
+            let prevMesh:AbstractMesh = this.meshPicked;
             this.meshPicked = mesh;
             this.savePhyParms();
             this.editControl.switchTo(<Mesh>this.meshPicked);
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-            if (this.key.ctl) this.multiSelect();
+            if (this.key.ctl) this.multiSelect(prevMesh,this.meshPicked);
             //refresh the properties dialog box if open
             this.vishvaGUI.refreshPropsDiag();
 
 
         }
 
-        private multiSelect() {
+        //        private multiSelect() {
+        //            if (this.meshesPicked == null) {
+        //                this.meshesPicked = new Array<AbstractMesh>();
+        //                
+        //            }
+        //            //if already selected then unselect it
+        //            var i: number = this.meshesPicked.indexOf(this.meshPicked);
+        //            if (i >= 0) {
+        //                this.meshesPicked.splice(i, 1);
+        //                this.meshPicked.showBoundingBox = false;
+        //            } else {
+        //                this.meshesPicked.push(this.meshPicked);
+        //                this.meshPicked.showBoundingBox = true;
+        //            }
+        //        }
+        
+        private multiSelect(prevMesh: AbstractMesh, currentMesh: AbstractMesh) {
             if (this.meshesPicked == null) {
                 this.meshesPicked = new Array<AbstractMesh>();
+
             }
-            var i: number = this.meshesPicked.indexOf(this.meshPicked);
+            //if previous mesh isn't selected then select it too
+            var i: number;
+            if (prevMesh != null) {
+                i = this.meshesPicked.indexOf(prevMesh);
+                if (!(i >= 0)) {
+                    this.meshesPicked.push(prevMesh);
+                    prevMesh.showBoundingBox = true;
+                }
+            }
+            
+            //if current mesh was already selected then unselect it
+            i = this.meshesPicked.indexOf(currentMesh);
             if (i >= 0) {
                 this.meshesPicked.splice(i, 1);
                 this.meshPicked.showBoundingBox = false;
             } else {
-                this.meshesPicked.push(this.meshPicked);
-                this.meshPicked.showBoundingBox = true;
+                this.meshesPicked.push(currentMesh);
+                currentMesh.showBoundingBox = true;
             }
+
         }
 
         private removeEditControl() {
@@ -954,9 +985,10 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             var name: string = (<number>new Number(Date.now())).toString();
             var inst: InstancedMesh = (<Mesh>this.meshPicked).createInstance(name);
-            inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
+            //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
+            this.animateCopy(inst);
             this.meshPicked = inst;
-            this.swicthEditControl(inst);
+            this.switchEditControl(inst);
             //TODO think
             //inst.receiveShadows = true;
             (this.shadowGenerator.getShadowMap().renderList).push(inst);
@@ -973,8 +1005,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public enableCollision(yes: boolean) {
             this.meshPicked.checkCollisions = yes;
         }
-        
-        public isCollideable(){
+
+        public isCollideable() {
             return this.meshPicked.checkCollisions
         }
 
@@ -989,8 +1021,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public disableIt(yes: boolean) {
             this.meshPicked.setEnabled(!yes);
         }
-        
-        public isDisabled() : boolean {
+
+        public isDisabled(): boolean {
             return !this.meshPicked.isEnabled();
         }
 
@@ -1036,7 +1068,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
-        public isVisible() : boolean {
+        public isVisible(): boolean {
             if (Tags.HasTags(this.meshPicked)) {
                 if (Tags.MatchesQuery(this.meshPicked, "invisible")) {
                     return false;
@@ -1044,7 +1076,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             return true;
         }
-        
+
         showingAllInvisibles: boolean = false;
         public showAllInvisibles() {
             this.showingAllInvisibles = true;
@@ -1161,15 +1193,13 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             var clonedMeshesPicked: Array<AbstractMesh> = new Array<AbstractMesh>();
             var clone: AbstractMesh;
+            //check if multiple meshes selected. If yes clone all except the last
             if (this.meshesPicked != null) {
-                for (var index124 = 0; index124 < this.meshesPicked.length; index124++) {
-                    var mesh = this.meshesPicked[index124];
-                    {
-                        if (mesh !== this.meshPicked) {
-                            if (!(mesh != null && mesh instanceof BABYLON.InstancedMesh)) {
-                                clone = this.clonetheMesh(mesh);
-                                clonedMeshesPicked.push(clone);
-                            }
+                for (let mesh of this.meshesPicked) {
+                    if (mesh !== this.meshPicked) {
+                        if (!(mesh != null && mesh instanceof BABYLON.InstancedMesh)) {
+                            clone = this.clonetheMesh(mesh);
+                            clonedMeshesPicked.push(clone);
                         }
                     }
                 }
@@ -1179,7 +1209,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 clonedMeshesPicked.push(clone);
                 this.meshesPicked = clonedMeshesPicked;
             }
-            this.swicthEditControl(clone);
+            this.switchEditControl(clone);
             return null;
         }
 
@@ -1188,12 +1218,19 @@ namespace org.ssatguru.babylonjs.vishva {
             var clone: AbstractMesh = mesh.clone(name, null, true);
             delete clone["sensors"];
             delete clone["actuators"];
-            clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
+            this.animateCopy(clone);
+            //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
             //TODO think
             //clone.receiveShadows = true;
             mesh.showBoundingBox = false;
             (this.shadowGenerator.getShadowMap().renderList).push(clone);
             return clone;
+        }
+        //play a small scaling animation when cloning or instancing a mesh.
+        private animateCopy(mesh: AbstractMesh): void {
+            let startScale: Vector3 = new Vector3(1.5, 1.5, 1.5);
+            let endScale: Vector3 = new Vector3(1, 1, 1);
+            Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
         }
 
         public delete_mesh(): string {
@@ -1227,6 +1264,22 @@ namespace org.ssatguru.babylonjs.vishva {
             mesh.dispose();
         }
 
+        public mergeMeshes() {
+            if (this.meshesPicked != null) {
+                //TODO - check for instance meshes
+                for (let mesh of this.meshesPicked){
+                    if (mesh instanceof BABYLON.InstancedMesh){
+                        return "some of your meshes are instance meshes. cannot merge those";
+                    }
+                }
+                let ms: any = this.meshesPicked;
+                let newMesh:Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
+                this.switchEditControl(newMesh);
+                this.animateCopy(newMesh);
+                
+            }
+            return null;
+        }
 
         meshPickedPhyParms: PhysicsParm = null;
 
@@ -1329,27 +1382,27 @@ namespace org.ssatguru.babylonjs.vishva {
             light.parent = null;
             light.dispose();
         }
-        
-        public setTransOn(){
+
+        public setTransOn() {
             this.editControl.enableTranslation();
         }
-        public isTransOn():boolean{
+        public isTransOn(): boolean {
             return this.editControl.isTranslationEnabled();
         }
-        public setRotOn(){
+        public setRotOn() {
             this.editControl.enableRotation();
         }
-        public isRotOn():boolean{
+        public isRotOn(): boolean {
             return this.editControl.isRotationEnabled();
         }
-        public setScaleOn(){
+        public setScaleOn() {
             this.editControl.enableScaling();
         }
-        public isScaleOn():boolean{
+        public isScaleOn(): boolean {
             return this.editControl.isScalingEnabled();
         }
-        
-        public setSpaceLocal(yes: boolean) : string {
+
+        public setSpaceLocal(yes: boolean): string {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
             }
@@ -1374,7 +1427,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
 
-        public snapTrans(yes : boolean):string {
+        public snapTrans(yes: boolean): string {
             if (this.snapperOn) {
                 return "Cannot change snapping mode when snapper is on"
             }
@@ -1392,12 +1445,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public isSnapTransOn(): boolean {
             return this.snapTransOn;
         }
-        
-        public setSnapTransValue(val : number){
+
+        public setSnapTransValue(val: number) {
             this.editControl.setTransSnapValue(val);
         }
 
-        public snapRot(yes:boolean) :string {
+        public snapRot(yes: boolean): string {
             if (this.snapperOn) {
                 return "Cannot change snapping mode when snapper is on"
             }
@@ -1416,13 +1469,13 @@ namespace org.ssatguru.babylonjs.vishva {
         public isSnapRotOn(): boolean {
             return this.snapRotOn;
         }
-        public setSnapRotValue(val : number){
-            let inrad: number = val * Math.PI/180;
+        public setSnapRotValue(val: number) {
+            let inrad: number = val * Math.PI / 180;
             this.editControl.setRotSnapValue(inrad);
         }
-        
 
-        public snapper(yes : boolean): string {
+
+        public snapper(yes: boolean): string {
             if (!this.globalAxisMode && yes) {
                 return "Snapper can only be turned on in Global Axis Mode"
             }
@@ -1480,12 +1533,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public anyMeshSelected(): boolean {
             return this.isMeshSelected;
         }
-        
-        public getName() : string {
+
+        public getName(): string {
             return this.meshPicked.name;
         }
-        
-        public setName(name : string)  {
+
+        public setName(name: string) {
             this.meshPicked.name = name;
         }
 
@@ -1512,17 +1565,17 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
 
-        public createAnimRange(name:string, start:number, end:number){
-            this.meshPicked.skeleton.createAnimationRange(name,start,end);
+        public createAnimRange(name: string, start: number, end: number) {
+            this.meshPicked.skeleton.createAnimationRange(name, start, end);
         }
         public getAnimationRanges(): AnimationRange[] {
             var skel: Skeleton = this.meshPicked.skeleton;
-//            var getAnimationRanges: Function = <Function>skel["getAnimationRanges"];
-//            var ranges: AnimationRange[] = <AnimationRange[]>getAnimationRanges.call(skel);
-            if (skel !== null){
+            //            var getAnimationRanges: Function = <Function>skel["getAnimationRanges"];
+            //            var ranges: AnimationRange[] = <AnimationRange[]>getAnimationRanges.call(skel);
+            if (skel !== null) {
                 var ranges: AnimationRange[] = skel.getAnimationRanges()
                 return ranges;
-            }else return null;
+            } else return null;
         }
 
         public printAnimCount(skel: Skeleton) {
@@ -1537,7 +1590,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public playAnimation(animName: string, animRate: string, loop: boolean) {
-            
+
             var skel: Skeleton = this.meshPicked.skeleton;
             if (skel == null) return;
             var r: number = parseFloat(animRate);
@@ -1742,18 +1795,18 @@ namespace org.ssatguru.babylonjs.vishva {
                 return null;
             }
         }
-        debugVisible:boolean = false;
+        debugVisible: boolean = false;
         public toggleDebug() {
             //if (this.scene.debugLayer.isVisible()) {
             if (this.debugVisible) {
                 console.log("hiding debug");
                 this.scene.debugLayer.hide();
             } else {
-            console.log("showing debug");
+                console.log("showing debug");
                 this.scene.debugLayer.show();
             }
             this.debugVisible = !this.debugVisible;
-            
+
         }
 
         public saveAsset(): string {
@@ -2299,90 +2352,90 @@ namespace org.ssatguru.babylonjs.vishva {
             Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
             return skybox;
         }
-        
-       
-        public toggleSnow(){
+
+
+        public toggleSnow() {
             console.log("creating snow");
-            if (this.snowPart === null){
+            if (this.snowPart === null) {
                 this.snowPart = this.createSnowPart();
             }
-            if (this.snowing){
+            if (this.snowing) {
                 this.snowPart.stop();
-            }else{
+            } else {
                 this.snowPart.start();
-                if (this.raining){
+                if (this.raining) {
                     this.rainPart.stop();
-                    this.raining=false;
+                    this.raining = false;
                 }
             }
             this.snowing = !this.snowing;
         }
-        
+
         /**
          * create a snow particle system
          */
-        private createSnowPart():ParticleSystem {
+        private createSnowPart(): ParticleSystem {
             let part = new ParticleSystem("snow", 1000, this.scene);
             part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
-            part.emitter = new Vector3(0,10,0);
-            part.maxEmitBox = new Vector3(100,10,100);
-            part.minEmitBox = new Vector3(-100,10,-100);
-            
-            part.emitRate =1000;
+            part.emitter = new Vector3(0, 10, 0);
+            part.maxEmitBox = new Vector3(100, 10, 100);
+            part.minEmitBox = new Vector3(-100, 10, -100);
+
+            part.emitRate = 1000;
             part.updateSpeed = 0.005;
             part.minLifeTime = 1;
             part.maxLifeTime = 5;
             part.minSize = 0.1;
             part.maxSize = 0.5;
-            part.color1 = new BABYLON.Color4(1,1,1,1);
-            part.color2 = new BABYLON.Color4(1,1,1,1);
-            part.colorDead = new BABYLON.Color4(0,0,0,0);
+            part.color1 = new BABYLON.Color4(1, 1, 1, 1);
+            part.color2 = new BABYLON.Color4(1, 1, 1, 1);
+            part.colorDead = new BABYLON.Color4(0, 0, 0, 0);
             //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
             part.gravity = new BABYLON.Vector3(0, -9.81, 0);
             return part;
-            
+
         }
-        
-        public toggleRain(){
+
+        public toggleRain() {
             console.log("creating rain");
-            if (this.rainPart === null){
+            if (this.rainPart === null) {
                 this.rainPart = this.createRainPart();
             }
-            if (this.raining){
+            if (this.raining) {
                 this.rainPart.stop();
-            }else{
+            } else {
                 this.rainPart.start();
-                if (this.snowing){
+                if (this.snowing) {
                     this.snowPart.stop();
-                    this.snowing=false;
+                    this.snowing = false;
                 }
             }
             this.raining = !this.raining;
         }
-        
+
         /**
          * create a snow particle system
          */
-        private createRainPart():ParticleSystem {
+        private createRainPart(): ParticleSystem {
             let part = new ParticleSystem("rain", 4000, this.scene);
             part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
-            part.emitter = new Vector3(0,40,0);
-            part.maxEmitBox = new Vector3(100,40,100);
-            part.minEmitBox = new Vector3(-100,40,-100);
-            part.emitRate =1000;
+            part.emitter = new Vector3(0, 40, 0);
+            part.maxEmitBox = new Vector3(100, 40, 100);
+            part.minEmitBox = new Vector3(-100, 40, -100);
+            part.emitRate = 1000;
             part.updateSpeed = 0.02;
             part.minLifeTime = 5;
             part.maxLifeTime = 10;
             part.minSize = 0.1;
             part.maxSize = 0.8;
-            part.color1 = new BABYLON.Color4(1,1,1,0.5);
-            part.color2 = new BABYLON.Color4(0,0,1,1);
-            part.colorDead = new BABYLON.Color4(0,0,0,0);
+            part.color1 = new BABYLON.Color4(1, 1, 1, 0.5);
+            part.color2 = new BABYLON.Color4(0, 0, 1, 1);
+            part.colorDead = new BABYLON.Color4(0, 0, 0, 0);
             //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
             part.gravity = new BABYLON.Vector3(0, -9.81, 0);
 
             return part;
-            
+
         }
         private createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
             var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
@@ -2601,7 +2654,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public specular: Color3 = Color3.White();;
         public intensity: number = 1;
         public range: number = 5;
-        public radius: number =5;
+        public radius: number = 5;
         public angle: number = 45;
         public exponent: number = 1;
         public gndClr: Color3 = Color3.White();

@@ -13,7 +13,7 @@
   },
   "scripts": {
     "compile": "tsc -p src/ts",
-    "min": "uglifyjs src/js/Vishva-merged.js -o public_html/js/Vishva-merged.min.js -mc",
+    "min": "uglifyjs public_html/js/Vishva-merged.js -o public_html/js/Vishva-merged.min.js -mc",
     "build": "npm run compile && npm run min"
   }
 }

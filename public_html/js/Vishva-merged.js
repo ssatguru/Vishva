@@ -2347,9 +2347,14 @@ var org;
                                 }
                             }
                             var ms = this.meshesPicked;
-                            var newMesh = Mesh.MergeMeshes(ms, false);
-                            this.switchEditControl(newMesh);
-                            this.animateCopy(newMesh);
+                            var mergedMesh = Mesh.MergeMeshes(ms, false);
+                            var newPivot = this.meshPicked.position.multiplyByFloats(-1, -1, -1);
+                            //mergedMesh.setPivotMatrix(Matrix.Translation(newPivot.x, newPivot.y, newPivot.z));
+                            mergedMesh.setPivotPoint(this.meshPicked.position.clone());
+                            //mergedMesh.computeWorldMatrix(true);
+                            mergedMesh.position = this.meshPicked.position.clone();
+                            this.switchEditControl(mergedMesh);
+                            this.animateCopy(mergedMesh);
                             return null;
                         }
                         else {

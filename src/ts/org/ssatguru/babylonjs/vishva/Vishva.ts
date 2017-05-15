@@ -1274,9 +1274,14 @@ namespace org.ssatguru.babylonjs.vishva {
                     }
                 }
                 let ms: any = this.meshesPicked;
-                let newMesh:Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
-                this.switchEditControl(newMesh);
-                this.animateCopy(newMesh);
+                let mergedMesh:Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
+                let newPivot: Vector3 = this.meshPicked.position.multiplyByFloats(-1,-1,-1);
+                //mergedMesh.setPivotMatrix(Matrix.Translation(newPivot.x, newPivot.y, newPivot.z));
+                mergedMesh.setPivotPoint( this.meshPicked.position.clone());
+                //mergedMesh.computeWorldMatrix(true);
+                mergedMesh.position = this.meshPicked.position.clone();
+                this.switchEditControl(mergedMesh);
+                this.animateCopy(mergedMesh);
                 return null;
             }else{
                 return "please select two or more mesh" ;

@@ -1559,7 +1559,10 @@ var org;
                             }
                         }
                         else if (this.key.up || this.key.down) {
-                            if (!this.editControl.isEditing()) {
+                            if (this.editControl == null) {
+                                this.switchFocusToAV();
+                            }
+                            else if (!this.editControl.isEditing()) {
                                 this.switchFocusToAV();
                             }
                         }
@@ -1846,9 +1849,9 @@ var org;
                             this.meshesPicked = null;
                         }
                         this.isMeshSelected = false;
-                        if (!this.focusOnAv) {
-                            this.switchFocusToAV();
-                        }
+                        //            if (!this.focusOnAv) {
+                        //                this.switchFocusToAV();
+                        //            }
                         this.editControl.detach();
                         this.editControl = null;
                         //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -1875,7 +1878,8 @@ var org;
                         this.mainCamera.detachControl(this.canvas);
                         this.frames = frames;
                         this.f = frames;
-                        this.delta2 = mesh.absolutePosition.subtract(this.mainCamera.target).scale(1 / this.frames);
+                        //this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+                        this.delta2 = mesh.getAbsolutePivotPoint().subtract(this.mainCamera.target).scale(1 / this.frames);
                         this.cameraAnimating = true;
                         this.scene.registerBeforeRender(this.animFunc2);
                     };

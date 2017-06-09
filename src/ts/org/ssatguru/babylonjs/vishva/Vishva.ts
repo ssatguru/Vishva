@@ -458,7 +458,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     }
                 }
             } else if (this.key.up || this.key.down) {
-                if (!this.editControl.isEditing()) {
+                 if (this.editControl == null) {
+                     this.switchFocusToAV();
+                 }else if (!this.editControl.isEditing()) {
                     this.switchFocusToAV();
                 }
             }
@@ -757,9 +759,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshesPicked = null;
             }
             this.isMeshSelected = false;
-            if (!this.focusOnAv) {
-                this.switchFocusToAV();
-            }
+//            if (!this.focusOnAv) {
+//                this.switchFocusToAV();
+//            }
             this.editControl.detach();
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -791,7 +793,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.mainCamera.detachControl(this.canvas);
             this.frames = frames;
             this.f = frames;
-            this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+            //this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+            this.delta2 = mesh.getAbsolutePivotPoint().subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
             this.cameraAnimating = true;
             this.scene.registerBeforeRender(this.animFunc2);
         }

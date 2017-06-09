@@ -1558,7 +1558,7 @@ var org;
                                 }
                             }
                         }
-                        else if (this.key.up || this.key.down) {
+                        else if (this.key.up || this.key.down || this.key.esc) {
                             if (this.editControl == null) {
                                 this.switchFocusToAV();
                             }

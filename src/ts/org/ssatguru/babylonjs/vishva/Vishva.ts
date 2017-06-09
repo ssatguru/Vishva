@@ -457,7 +457,7 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.moveAVandCamera();
                     }
                 }
-            } else if (this.key.up || this.key.down) {
+            } else if (this.key.up || this.key.down || this.key.esc) {
                  if (this.editControl == null) {
                      this.switchFocusToAV();
                  }else if (!this.editControl.isEditing()) {

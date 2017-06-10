@@ -1288,6 +1288,7 @@ var org;
                         this.jumpCycle = this.jumpCycleMax;
                         this.wasJumping = false;
                         this.fogDensity = 0;
+                        this.meshesPicked = null;
                         this.isMeshSelected = false;
                         this.cameraTargetPos = new Vector3(0, 0, 0);
                         this.saveAVcameraPos = new Vector3(0, 0, 0);
@@ -1566,6 +1567,9 @@ var org;
                                 this.switchFocusToAV();
                             }
                         }
+                        if (this.key.esc) {
+                            this.multiUnSelectAll();
+                        }
                         this.resetKeys();
                     };
                     Vishva.prototype.resetKeys = function () {
@@ -1710,7 +1714,15 @@ var org;
                         if (evt.button !== 2)
                             return;
                         if (pickResult.hit) {
+                            if (this.key.ctl) {
+                                if ((!this.isMeshSelected) || (pickResult.pickedMesh !== this.meshPicked)) {
+                                    this.multiSelect(pickResult.pickedMesh);
+                                    return;
+                                }
+                            }
                             if (!this.isMeshSelected) {
+                                //if in multiselect then remove from multiselect
+                                this.multiUnSelect(this.meshPicked);
                                 // if none selected then select the one clicked
                                 this.isMeshSelected = true;
                                 this.meshPicked = pickResult.pickedMesh;
@@ -1725,8 +1737,7 @@ var org;
                                 if (this.autoEditMenu) {
                                     this.vishvaGUI.showPropDiag();
                                 }
-                                if (this.key.ctl)
-                                    this.multiSelect(null, this.meshPicked);
+                                //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
                                 if (this.snapperOn) {
                                     this.setSnapperOn();
                                 }
@@ -1751,7 +1762,8 @@ var org;
                             else {
                                 if (pickResult.pickedMesh === this.meshPicked) {
                                     if (this.key.ctl) {
-                                        this.multiSelect(null, this.meshPicked);
+                                        return;
+                                        //this.multiSelect(null, this.meshPicked);
                                     }
                                     else {
                                         // if already selected then focus on it
@@ -1763,6 +1775,8 @@ var org;
                                     }
                                 }
                                 else {
+                                    //if in multiselect then remove from multiselect
+                                    this.multiUnSelect(pickResult.pickedMesh);
                                     this.switchEditControl(pickResult.pickedMesh);
                                     if (this.snapperOn)
                                         this.snapToGlobal();
@@ -1809,8 +1823,7 @@ var org;
                         this.switchToQuats(this.meshPicked);
                         this.editControl.switchTo(this.meshPicked);
                         vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
-                        if (this.key.ctl)
-                            this.multiSelect(prevMesh, this.meshPicked);
+                        //if (this.key.ctl) this.multiSelect(prevMesh, this.meshPicked);
                         //refresh the properties dialog box if open
                         this.vishvaGUI.refreshPropsDiag();
                     };
@@ -1838,7 +1851,7 @@ var org;
                     //                this.meshPicked.showBoundingBox = true;
                     //            }
                     //        }
-                    Vishva.prototype.multiSelect = function (prevMesh, currentMesh) {
+                    Vishva.prototype.multiSelect_old = function (prevMesh, currentMesh) {
                         if (this.meshesPicked == null) {
                             this.meshesPicked = new Array();
                         }
@@ -1862,16 +1875,42 @@ var org;
                             currentMesh.showBoundingBox = true;
                         }
                     };
-                    Vishva.prototype.removeEditControl = function () {
-                        if (this.meshesPicked != null) {
-                            for (var index148 = 0; index148 < this.meshesPicked.length; index148++) {
-                                var mesh = this.meshesPicked[index148];
-                                {
-                                    mesh.showBoundingBox = false;
-                                }
-                            }
-                            this.meshesPicked = null;
+                    Vishva.prototype.multiSelect = function (currentMesh) {
+                        console.log("mutliselect");
+                        if (this.meshesPicked == null) {
+                            this.meshesPicked = new Array();
                         }
+                        //if current mesh was already selected then unselect it
+                        //else select it
+                        if (!this.multiUnSelect(currentMesh)) {
+                            this.meshesPicked.push(currentMesh);
+                            currentMesh.showBoundingBox = true;
+                        }
+                    };
+                    //if mesh was already selected then unselect it
+                    //return true if the mesh was unselected
+                    Vishva.prototype.multiUnSelect = function (mesh) {
+                        if (this.meshesPicked == null)
+                            return false;
+                        var i = this.meshesPicked.indexOf(mesh);
+                        if (i >= 0) {
+                            this.meshesPicked.splice(i, 1);
+                            mesh.showBoundingBox = false;
+                            return true;
+                        }
+                        return false;
+                    };
+                    Vishva.prototype.multiUnSelectAll = function () {
+                        if (this.meshesPicked === null)
+                            return;
+                        for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
+                            var mesh = _a[_i];
+                            mesh.showBoundingBox = false;
+                        }
+                        this.meshesPicked = null;
+                    };
+                    Vishva.prototype.removeEditControl = function () {
+                        this.multiUnSelectAll();
                         this.isMeshSelected = false;
                         //            if (!this.focusOnAv) {
                         //                this.switchFocusToAV();

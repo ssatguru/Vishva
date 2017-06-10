@@ -465,6 +465,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.switchFocusToAV();
                 }
             }
+            if (this.key.esc){
+                this.multiUnSelectAll();
+            }
             this.resetKeys();
         }
         private resetKeys() {
@@ -604,7 +607,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private meshPicked: AbstractMesh;
 
 
-        private meshesPicked: Array<AbstractMesh>;
+        private meshesPicked: Array<AbstractMesh> = null;
 
 
         private isMeshSelected: boolean = false;
@@ -620,7 +623,15 @@ namespace org.ssatguru.babylonjs.vishva {
             evt.preventDefault();
             if (evt.button !== 2) return;
             if (pickResult.hit) {
+                if (this.key.ctl){
+                    if ((!this.isMeshSelected) || (pickResult.pickedMesh !== this.meshPicked)){
+                         this.multiSelect(pickResult.pickedMesh);
+                         return;
+                    }
+                }
                 if (!this.isMeshSelected) {
+                    //if in multiselect then remove from multiselect
+                    this.multiUnSelect(this.meshPicked);
                     // if none selected then select the one clicked
                     this.isMeshSelected = true;
                     this.meshPicked = pickResult.pickedMesh;
@@ -635,7 +646,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if (this.autoEditMenu) {
                         this.vishvaGUI.showPropDiag();
                     }
-                    if (this.key.ctl) this.multiSelect(null, this.meshPicked);
+                    //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
 
                     if (this.snapperOn) {
                         this.setSnapperOn();
@@ -657,7 +668,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 } else {
                     if (pickResult.pickedMesh === this.meshPicked) {
                         if (this.key.ctl) {
-                            this.multiSelect(null, this.meshPicked);
+                            return;
+                            //this.multiSelect(null, this.meshPicked);
                         } else {
                             // if already selected then focus on it
                             if (this.isFocusOnAv) {
@@ -667,6 +679,8 @@ namespace org.ssatguru.babylonjs.vishva {
                             this.focusOnMesh(this.meshPicked, 50);
                         }
                     } else {
+                        //if in multiselect then remove from multiselect
+                        this.multiUnSelect(pickResult.pickedMesh);
                         this.switchEditControl(pickResult.pickedMesh);
                         if (this.snapperOn) this.snapToGlobal()
                     }
@@ -713,7 +727,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.switchToQuats(this.meshPicked);
             this.editControl.switchTo(<Mesh>this.meshPicked);
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-            if (this.key.ctl) this.multiSelect(prevMesh, this.meshPicked);
+            //if (this.key.ctl) this.multiSelect(prevMesh, this.meshPicked);
             //refresh the properties dialog box if open
             this.vishvaGUI.refreshPropsDiag();
         }
@@ -743,7 +757,7 @@ namespace org.ssatguru.babylonjs.vishva {
         //            }
         //        }
 
-        private multiSelect(prevMesh: AbstractMesh, currentMesh: AbstractMesh) {
+        private multiSelect_old(prevMesh: AbstractMesh, currentMesh: AbstractMesh) {
             if (this.meshesPicked == null) {
                 this.meshesPicked = new Array<AbstractMesh>();
 
@@ -769,17 +783,43 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
         }
+        private multiSelect( currentMesh: AbstractMesh) {
+            console.log("mutliselect" );
+            if (this.meshesPicked == null) {
+                this.meshesPicked = new Array<AbstractMesh>();
 
-        private removeEditControl() {
-            if (this.meshesPicked != null) {
-                for (var index148 = 0; index148 < this.meshesPicked.length; index148++) {
-                    var mesh = this.meshesPicked[index148];
-                    {
-                        mesh.showBoundingBox = false;
-                    }
-                }
-                this.meshesPicked = null;
             }
+
+            //if current mesh was already selected then unselect it
+            //else select it
+            if (!this.multiUnSelect(currentMesh)) {
+                this.meshesPicked.push(currentMesh);
+                currentMesh.showBoundingBox = true;
+            }
+        }
+        
+        //if mesh was already selected then unselect it
+        //return true if the mesh was unselected
+        private multiUnSelect( mesh: AbstractMesh):boolean{
+             if (this.meshesPicked == null) return false;
+            let i = this.meshesPicked.indexOf(mesh);
+            if (i >= 0) {
+                this.meshesPicked.splice(i, 1);
+                mesh.showBoundingBox = false;
+                return true;
+            } 
+            return false;
+        }
+        private multiUnSelectAll(){
+            if (this.meshesPicked === null) return;                
+            for(let mesh of this.meshesPicked){
+                mesh.showBoundingBox = false;
+            }
+            this.meshesPicked = null;
+        }
+        
+        private removeEditControl() {
+            this.multiUnSelectAll();
             this.isMeshSelected = false;
             //            if (!this.focusOnAv) {
             //                this.switchFocusToAV();

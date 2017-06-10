@@ -68,10 +68,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         private snapTransOn: boolean = false;
-        private snapTransValue: number = 1;
-
         private snapRotOn: boolean = false;
-        private snapRotValue: number = Math.PI / 4;
+        private snapScaleOn: boolean = false;
+
         /*
          * snapper mode snaps mesh to global grid points
          * evertime a mesh is selected it will be snapped to
@@ -80,6 +79,9 @@ namespace org.ssatguru.babylonjs.vishva {
          * 
          */
         private snapperOn: boolean = false;
+        private snapTransValue: number = 1;
+        private snapRotValue: number = Math.PI / 4;
+        private snapScaleValue: number = 0.5;
 
         private globalAxisMode: boolean = false;
 
@@ -403,7 +405,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.engine.runRenderLoop(() => this.scene.render());
         }
 
-        focusOnAv: boolean = true;
+        isFocusOnAv: boolean = true;
 
         cameraAnimating: boolean = false;
 
@@ -429,30 +431,26 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.isMeshSelected) {
                 if (this.key.focus) {
                     //this.key.focus = false;
-                    if (this.focusOnAv) {
-                        this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                        this.focusOnAv = false;
-                    }
-                    this.focusOnMesh(this.meshPicked, 25);
+                    this.setFocusOnMesh();
                 }
                 if (this.key.esc) {
-                    //this.key.esc = false;
+                    this.key.esc = false;
                     this.removeEditControl();
                 }
                 if (this.key.trans) {
                     //this.key.trans = false;
-                    this.editControl.enableTranslation();
+                    this.setTransOn();
                 }
                 if (this.key.rot) {
                     //this.key.rot = false;
-                    this.editControl.enableRotation();
+                    this.setRotOn();
                 }
                 if (this.key.scale) {
                     //this.key.scale = false;
-                    this.editControl.enableScaling();
+                    this.setScaleOn();
                 }
             }
-            if (this.focusOnAv) {
+            if (this.isFocusOnAv) {
                 if (this.editControl == null) {
                     this.moveAVandCamera();
                 } else {
@@ -650,6 +648,10 @@ namespace org.ssatguru.babylonjs.vishva {
                             this.editControl.setRotSnap(true);
                             this.editControl.setRotSnapValue(this.snapRotValue);
                         };
+                        if (this.snapScaleOn) {
+                            this.editControl.setScaleSnap(true);
+                            this.editControl.setScaleSnapValue(this.snapScaleValue);
+                        };
                     }
 
                 } else {
@@ -658,9 +660,9 @@ namespace org.ssatguru.babylonjs.vishva {
                             this.multiSelect(null, this.meshPicked);
                         } else {
                             // if already selected then focus on it
-                            if (this.focusOnAv) {
+                            if (this.isFocusOnAv) {
                                 this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                this.focusOnAv = false;
+                                this.isFocusOnAv = false;
                             }
                             this.focusOnMesh(this.meshPicked, 50);
                         }
@@ -782,6 +784,12 @@ namespace org.ssatguru.babylonjs.vishva {
             //            if (!this.focusOnAv) {
             //                this.switchFocusToAV();
             //            }
+            
+            //if scaling is on then we might have changed space to local            
+            //restore space to what is was before scaling
+            if (this.editControl.isScalingEnabled()){
+                this.setSpaceLocal(this.wasSpaceLocal);
+            }
             this.editControl.detach();
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -792,6 +800,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                 this.restorePhyParms();
             }
+            
         }
 
         private switchFocusToAV() {
@@ -843,7 +852,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             this.f--;
             if (this.f < 0) {
-                this.focusOnAv = true;
+                this.isFocusOnAv = true;
                 this.cameraAnimating = false;
                 this.scene.unregisterBeforeRender(this.animFunc);
                 this.mainCamera.attachControl(this.canvas);
@@ -883,10 +892,10 @@ namespace org.ssatguru.babylonjs.vishva {
             var event: KeyboardEvent = <KeyboardEvent>e;
             if (event.keyCode === 16) this.key.shift = true;
             if (event.keyCode === 17) this.key.ctl = true;
-            
+
             if (event.keyCode === 32) this.key.jump = false;
             if (event.keyCode === 27) this.key.esc = false;
-            
+
             var chr: string = String.fromCharCode(event.keyCode);
             if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
             if ((chr === "A") || (event.keyCode === 37)) this.key.left = true;
@@ -1449,28 +1458,62 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public setTransOn() {
+            //if scaling is on then we might have changed space to local            
+            //restore space to what is was before scaling
+            if (this.editControl.isScalingEnabled()){
+                this.setSpaceLocal(this.wasSpaceLocal);
+            }
             this.editControl.enableTranslation();
         }
         public isTransOn(): boolean {
             return this.editControl.isTranslationEnabled();
         }
         public setRotOn() {
+            //if scaling is on then we might have changed space to local            
+            //restore space to what is was before scaling
+            if (this.editControl.isScalingEnabled()){
+                this.setSpaceLocal(this.wasSpaceLocal);
+            }
             this.editControl.enableRotation();
         }
         public isRotOn(): boolean {
             return this.editControl.isRotationEnabled();
         }
+        
+        wasSpaceLocal:boolean;
         public setScaleOn() {
+            //make space local for scaling
+            //remember what the space was so we can restore it back later on
+            if (!this.isSpaceLocal()){
+                this.setSpaceLocal(true);
+                this.wasSpaceLocal=false;
+            }else{
+                this.wasSpaceLocal=true;
+            }
             this.editControl.enableScaling();
         }
+        
         public isScaleOn(): boolean {
             return this.editControl.isScalingEnabled();
         }
 
-        public setSpaceLocal(yes: boolean): string {
+        public setFocusOnMesh() {
+            if (this.isFocusOnAv) {
+                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                this.isFocusOnAv = false;
+            }
+            this.focusOnMesh(this.meshPicked, 25);
+        }
+        
+        public toggleSpace(): string {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
             }
+            this.setSpaceLocal(!this.isSpaceLocal());
+            return null;
+        }
+
+        public setSpaceLocal(yes: boolean): string {
             if (this.editControl != null) this.editControl.setLocal(yes);
             this.globalAxisMode = !this.globalAxisMode;
             return null;
@@ -1539,12 +1582,35 @@ namespace org.ssatguru.babylonjs.vishva {
             this.editControl.setRotSnapValue(inrad);
         }
 
+        public isSnapScaleOn(): boolean {
+            return this.snapScaleOn;
+        }
+        public setSnapScaleValue(val: number) {
+            this.editControl.setScaleSnapValue(val);
+        }
+        public snapScale(yes: boolean): string {
+            if (this.snapperOn) {
+                return "Cannot change snapping mode when snapper is on"
+            }
+            this.snapScaleOn = yes;
+            if (this.editControl != null) {
+                if (!this.snapScaleOn) {
+                    this.editControl.setScaleSnap(false);
+                } else {
+                    this.editControl.setScaleSnap(true);
+                    this.editControl.setScaleSnapValue(this.snapScaleValue);
+                }
+            }
+            return;
+        }
 
         public snapper(yes: boolean): string {
             if (!this.globalAxisMode && yes) {
-                return "Snapper can only be turned on in Global Axis Mode"
+              this.globalAxisMode = true;
+              this.wasSpaceLocal=false;
             }
             this.snapperOn = yes;
+            
             //if edit control is already up then lets switch snaps on
             if (this.editControl != null) {
                 if (this.snapperOn) {
@@ -1559,14 +1625,17 @@ namespace org.ssatguru.babylonjs.vishva {
         private setSnapperOn() {
             this.editControl.setRotSnap(true);
             this.editControl.setTransSnap(true);
+            this.editControl.setScaleSnap(true);
             this.editControl.setRotSnapValue(this.snapRotValue);
             this.editControl.setTransSnapValue(this.snapTransValue);
+            this.editControl.setScaleSnapValue(this.snapScaleValue);
             this.snapToGlobal();
         }
 
         private setSnapperOff() {
             this.editControl.setRotSnap(false);
             this.editControl.setTransSnap(false);
+            this.editControl.setScaleSnap(false);
         }
 
         public isSnapperOn(): boolean {
@@ -2315,7 +2384,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
                 this.avatar.rotationQuaternion = null;
                 this.saveAVcameraPos = this.mainCamera.position;
-                this.focusOnAv = false;
+                this.isFocusOnAv = false;
                 this.removeEditControl();
                 SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
             } else {

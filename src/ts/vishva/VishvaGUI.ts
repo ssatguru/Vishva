@@ -403,7 +403,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 autoOpen: false,
                 resizable: false,
                 width: 500,
-                closeOnEscape: false
+                closeOnEscape: false,
+                closeText: ""
             };
             this.helpDiag.dialog(dos);
         }
@@ -907,22 +908,24 @@ namespace org.ssatguru.babylonjs.vishva {
 
         genName: HTMLInputElement;
 
-        genOperTrans: HTMLInputElement;
-        genOperRot: HTMLInputElement;
-        genOperScale: HTMLInputElement;
-        genlocalAxis: HTMLInputElement;
+        genOperTrans: HTMLElement;
+        genOperRot: HTMLElement;
+        genOperScale: HTMLElement;
+        genOperFocus: HTMLElement;
+        
+        genlocalAxis: HTMLElement;
 
         genSnapTrans: HTMLInputElement;
         genSnapRot: HTMLInputElement;
-
+        genSnapScale: HTMLInputElement;
+        
         genSnapTransValue: HTMLInputElement;
         genSnapRotValue: HTMLInputElement;
+        genSnapScaleValue: HTMLInputElement;
 
         genDisable: HTMLInputElement;
         genColl: HTMLInputElement;
         genVisi: HTMLInputElement;
-
-
 
         private initGeneral() {
             this.genName = <HTMLInputElement>document.getElementById("genName");
@@ -938,9 +941,11 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
             //Edit controls
-            this.genOperTrans = <HTMLInputElement>document.getElementById("operTrans");
-            this.genOperRot = <HTMLInputElement>document.getElementById("operRot");
-            this.genOperScale = <HTMLInputElement>document.getElementById("operScale");
+            this.genOperTrans = document.getElementById("operTrans");
+            this.genOperRot = document.getElementById("operRot");
+            this.genOperScale = document.getElementById("operScale");
+            this.genOperFocus = document.getElementById("operFocus");
+            
             this.genOperTrans.onclick = () => {
                 this.vishva.setTransOn();
             }
@@ -953,7 +958,19 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.showAlertDiag("note that scaling doesnot work with global axis");
                 }
             }
-
+            this.genOperFocus.onclick = () => {
+                this.vishva.setFocusOnMesh();
+            }
+            
+            this.genlocalAxis = document.getElementById("genlocalAxis");
+            this.genlocalAxis.onclick = () => {
+                let err: string = this.vishva.toggleSpace();
+                if (err !== null) {
+                    this.showAlertDiag(err);
+                }
+            }
+            
+            //Snap CheckBox
             this.genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
             this.genSnapTrans.onchange = () => {
                 let err: string = this.vishva.snapTrans(this.genSnapTrans.checked);
@@ -970,6 +987,16 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.genSnapRot.checked = false;
                 }
             }
+            this.genSnapScale = <HTMLInputElement>document.getElementById("snapScale");
+            this.genSnapScale.onchange = () => {
+                let err: string = this.vishva.snapScale(this.genSnapScale.checked);
+                if (err != null) {
+                    this.showAlertDiag(err);
+                    this.genSnapScale.checked = false;
+                }
+            }
+            
+            //Snap Values
             this.genSnapTransValue = <HTMLInputElement>document.getElementById("snapTransValue");
             this.genSnapTransValue.onchange = () => {
                 this.vishva.setSnapTransValue(Number(this.genSnapTransValue.value));
@@ -978,16 +1005,12 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genSnapRotValue.onchange = () => {
                 this.vishva.setSnapRotValue(Number(this.genSnapRotValue.value));
             }
-
-            this.genlocalAxis = <HTMLInputElement>document.getElementById("genlocalAxis");
-            this.genlocalAxis.onchange = () => {
-                var err: string = this.vishva.setSpaceLocal(this.genlocalAxis.checked);
-                if (err !== null) {
-                    this.showAlertDiag(err);
-                    this.genlocalAxis.checked = !this.genlocalAxis.checked;
-                }
+            this.genSnapScaleValue = <HTMLInputElement>document.getElementById("snapScaleValue");
+            this.genSnapScaleValue.onchange = () => {
+                this.vishva.setSnapScaleValue(Number(this.genSnapScaleValue.value));
             }
-
+            
+            //
             this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
             this.genDisable.onchange = () => {
                 this.vishva.disableIt(this.genDisable.checked);
@@ -1133,14 +1156,9 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.genName === undefined) this.initGeneral();
             this.genName.value = this.vishva.getName();
 
-            this.genOperTrans.checked = this.vishva.isTransOn();
-            this.genOperRot.checked = this.vishva.isRotOn();
-            this.genOperScale.checked = this.vishva.isScaleOn();
-
             this.genDisable.checked = this.vishva.isDisabled();
             this.genColl.checked = this.vishva.isCollideable();
             this.genVisi.checked = this.vishva.isVisible();
-            this.genlocalAxis.checked = this.vishva.isSpaceLocal();
         }
 
         lightAtt: HTMLInputElement;

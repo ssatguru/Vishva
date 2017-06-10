@@ -56,7 +56,9 @@
             /* remove button outlines */
             /* the button outline on dialog box close button on top-right are not done properly */
             .ui-button:focus { outline:none !important }
-
+            .ui-button {
+                font-weight: lighter;
+            }
             /* reduce the overlay for modal dialogs */
             .ui-widget-overlay {
                 opacity: 0.2;
@@ -80,7 +82,7 @@
             .ui-menu {
                 width: 200px;
             }
-            
+
             /*input {margin: 1px;}*/
             table {
                 border-radius: 10px;
@@ -94,7 +96,21 @@
                 padding-right: 15px;
                 border-collapse: collapse;
             }
-
+            
+/*            .noBorder{
+                border: 0px ;
+            }*/
+            
+            table table, table table td {
+                border: 0px ;
+                padding: 0px;
+                padding-left: 0px;
+                padding-right: 1px;
+                padding-top: 1px;
+                padding-bottom: 1px;
+                border-collapse: collapse;
+            }
+            
             #vCanvas {
                 min-height: 700px;
                 min-width: 500px;
@@ -303,33 +319,51 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <div style="float:left;">
-                                        <input type="checkbox" id="genlocalAxis">local axis
-                                    </div>
                                     <div style="float:left;clear:left">
+                                        <button id="genlocalAxis" title="switch local/global axis">l/g</button>
                                         <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
                                         <button id="operRot" ><span class="ui-icon ui-icon-arrowrefresh-1-e" title="rotate"></span>  </button>
                                         <button id="operScale" ><span class="ui-icon ui-icon-arrow-4-diag" title="scale"></span>  </button>
+                                        <button id="operFocus" ><span class="ui-icon  ui-icon-zoomin" title="focus"></span>  </button>
                                         <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
                                         <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
                                     </div>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>
-                                    <div style="float:left;clear:left;">
-                                        <div><input type="checkbox" id="snapTrans">snap trans</div>
-                                        <div><input type="checkbox" id="snapRot">snap rot</div>
-                                        <div><input type="checkbox" id="snapScale">snap scale</div>
-                                    </div>
-                                    <div style="float:left;">
-                                        <div><input type="text" id="snapTransValue" size="1"> meters</div>
-                                        <div><input type="text" id="snapRotValue" size="1"> degree</div>
-                                        <div><input type="text" id="snapScaleValue" size="1"> factor</div>
-                                    </div>
-                                    <br>
+                            <tr class="noBorder">
+                                <td class="noBorder">
+                                    <table>
+                                        <tr>
+                                            <td><div><input type="checkbox" id="snapTrans">snap trans</div></td>
+                                            <td><div><input type="text" id="snapTransValue" size="1"> meters</div></td>
+                                        </tr>
+                                        <tr>
+                                            <td><div><div><input type="checkbox" id="snapRot">snap rot</div></td>
+                                            <td><div><input type="text" id="snapRotValue" size="1"> degree</div></td>
+                                        </tr>
+                                        <tr>
+                                            <td><div><input type="checkbox" id="snapScale">snap scale</div></td>
+                                            <td><div><input type="text" id="snapScaleValue" size="1"> factor</div></td>
+                                        </tr>
+                                    </table>
+                                    <!--
+                                    <td>
+                                        <div style="float:left;clear:left;">
+                                            <div><input type="checkbox" id="snapTrans">snap trans</div>
+                                            <div><input type="checkbox" id="snapRot">snap rot</div>
+                                            <div><input type="checkbox" id="snapScale">snap scale</div>
+                                        </div>
+                                        <div style="float:left;">
+                                            <div><input type="text" id="snapTransValue" size="1"> meters</div>
+                                            <div><input type="text" id="snapRotValue" size="1"> degree</div>
+                                            <div><input type="text" id="snapScaleValue" size="1"> factor</div>
+                                        </div>
+                                        <br>
+                                    </td>
+                                    -->
                                 </td>
                             </tr>
+
                             <tr>
                                 <td>
                                     <input type="checkbox" id="genDisable">disable
@@ -348,8 +382,8 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <button id="parentMesh">make parent</button>
-                                    <button id="removeParent">remove parent</button>
+                                    <button id="parentMesh">parent</button>
+                                    <button id="removeParent">un parent</button>
                                     <button id="removeChildren">remove children</button>
                                 </td>
                             </tr>
@@ -408,7 +442,7 @@
                             </tr>
                         </table>
                         <br>
-                        <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title=refresh"></span></button>
+                        <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
                     </div>
 
                     <h3>Physics</h3>
@@ -685,13 +719,15 @@
         <script type="text/javascript">
                             $(function () {
                                 //turn on tooltips except for dialog close buttons
-                                $(document).tooltip({items: '*:not(.ui-dialog-titlebar-close)'});
+                                //$(document).tooltip({items: '*:not(.ui-dialog-titlebar-close)'});
+                                $(document).tooltip();
 
                                 //change all buttons to jquery button
                                 $("button").button();
                                 $("button").click(function (e) {
                                     $(this).blur();
                                 });
+                                $('input').addClass("ui-corner-all");
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
                                 var search = new HREFsearch();

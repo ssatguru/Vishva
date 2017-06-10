@@ -1238,9 +1238,8 @@ var org;
                         var _this = this;
                         this.actuator = "none";
                         this.snapTransOn = false;
-                        this.snapTransValue = 1;
                         this.snapRotOn = false;
-                        this.snapRotValue = Math.PI / 4;
+                        this.snapScaleOn = false;
                         /*
                          * snapper mode snaps mesh to global grid points
                          * evertime a mesh is selected it will be snapped to
@@ -1249,6 +1248,9 @@ var org;
                          *
                          */
                         this.snapperOn = false;
+                        this.snapTransValue = 1;
+                        this.snapRotValue = Math.PI / 4;
+                        this.snapScaleValue = 0.5;
                         this.globalAxisMode = false;
                         this.skyboxTextures = "vishva/internal/textures/skybox-default/default";
                         this.avatarFolder = "vishva/internal/avatar/";
@@ -1280,7 +1282,7 @@ var org;
                         //fog will start at the limitStart and will become dense at LimitEnd
                         this.moveLimitStart = 114;
                         this.moveLimitEnd = 124;
-                        this.focusOnAv = true;
+                        this.isFocusOnAv = true;
                         this.cameraAnimating = false;
                         this.jumpCycleMax = 25;
                         this.jumpCycle = this.jumpCycleMax;
@@ -1527,30 +1529,26 @@ var org;
                         if (this.isMeshSelected) {
                             if (this.key.focus) {
                                 //this.key.focus = false;
-                                if (this.focusOnAv) {
-                                    this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                    this.focusOnAv = false;
-                                }
-                                this.focusOnMesh(this.meshPicked, 25);
+                                this.setFocusOnMesh();
                             }
                             if (this.key.esc) {
-                                //this.key.esc = false;
+                                this.key.esc = false;
                                 this.removeEditControl();
                             }
                             if (this.key.trans) {
                                 //this.key.trans = false;
-                                this.editControl.enableTranslation();
+                                this.setTransOn();
                             }
                             if (this.key.rot) {
                                 //this.key.rot = false;
-                                this.editControl.enableRotation();
+                                this.setRotOn();
                             }
                             if (this.key.scale) {
                                 //this.key.scale = false;
-                                this.editControl.enableScaling();
+                                this.setScaleOn();
                             }
                         }
-                        if (this.focusOnAv) {
+                        if (this.isFocusOnAv) {
                             if (this.editControl == null) {
                                 this.moveAVandCamera();
                             }
@@ -1743,6 +1741,11 @@ var org;
                                         this.editControl.setRotSnapValue(this.snapRotValue);
                                     }
                                     ;
+                                    if (this.snapScaleOn) {
+                                        this.editControl.setScaleSnap(true);
+                                        this.editControl.setScaleSnapValue(this.snapScaleValue);
+                                    }
+                                    ;
                                 }
                             }
                             else {
@@ -1752,9 +1755,9 @@ var org;
                                     }
                                     else {
                                         // if already selected then focus on it
-                                        if (this.focusOnAv) {
+                                        if (this.isFocusOnAv) {
                                             this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                            this.focusOnAv = false;
+                                            this.isFocusOnAv = false;
                                         }
                                         this.focusOnMesh(this.meshPicked, 50);
                                     }
@@ -1873,6 +1876,11 @@ var org;
                         //            if (!this.focusOnAv) {
                         //                this.switchFocusToAV();
                         //            }
+                        //if scaling is on then we might have changed space to local            
+                        //restore space to what is was before scaling
+                        if (this.editControl.isScalingEnabled()) {
+                            this.setSpaceLocal(this.wasSpaceLocal);
+                        }
                         this.editControl.detach();
                         this.editControl = null;
                         //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -1914,7 +1922,7 @@ var org;
                             this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
                         this.f--;
                         if (this.f < 0) {
-                            this.focusOnAv = true;
+                            this.isFocusOnAv = true;
                             this.cameraAnimating = false;
                             this.scene.unregisterBeforeRender(this.animFunc);
                             this.mainCamera.attachControl(this.canvas);
@@ -2523,27 +2531,57 @@ var org;
                         light.dispose();
                     };
                     Vishva.prototype.setTransOn = function () {
+                        //if scaling is on then we might have changed space to local            
+                        //restore space to what is was before scaling
+                        if (this.editControl.isScalingEnabled()) {
+                            this.setSpaceLocal(this.wasSpaceLocal);
+                        }
                         this.editControl.enableTranslation();
                     };
                     Vishva.prototype.isTransOn = function () {
                         return this.editControl.isTranslationEnabled();
                     };
                     Vishva.prototype.setRotOn = function () {
+                        //if scaling is on then we might have changed space to local            
+                        //restore space to what is was before scaling
+                        if (this.editControl.isScalingEnabled()) {
+                            this.setSpaceLocal(this.wasSpaceLocal);
+                        }
                         this.editControl.enableRotation();
                     };
                     Vishva.prototype.isRotOn = function () {
                         return this.editControl.isRotationEnabled();
                     };
                     Vishva.prototype.setScaleOn = function () {
+                        //make space local for scaling
+                        //remember what the space was so we can restore it back later on
+                        if (!this.isSpaceLocal()) {
+                            this.setSpaceLocal(true);
+                            this.wasSpaceLocal = false;
+                        }
+                        else {
+                            this.wasSpaceLocal = true;
+                        }
                         this.editControl.enableScaling();
                     };
                     Vishva.prototype.isScaleOn = function () {
                         return this.editControl.isScalingEnabled();
                     };
-                    Vishva.prototype.setSpaceLocal = function (yes) {
+                    Vishva.prototype.setFocusOnMesh = function () {
+                        if (this.isFocusOnAv) {
+                            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                            this.isFocusOnAv = false;
+                        }
+                        this.focusOnMesh(this.meshPicked, 25);
+                    };
+                    Vishva.prototype.toggleSpace = function () {
                         if (this.snapperOn) {
                             return "Cannot switch axis mode when snapper is on";
                         }
+                        this.setSpaceLocal(!this.isSpaceLocal());
+                        return null;
+                    };
+                    Vishva.prototype.setSpaceLocal = function (yes) {
                         if (this.editControl != null)
                             this.editControl.setLocal(yes);
                         this.globalAxisMode = !this.globalAxisMode;
@@ -2608,9 +2646,32 @@ var org;
                         var inrad = val * Math.PI / 180;
                         this.editControl.setRotSnapValue(inrad);
                     };
+                    Vishva.prototype.isSnapScaleOn = function () {
+                        return this.snapScaleOn;
+                    };
+                    Vishva.prototype.setSnapScaleValue = function (val) {
+                        this.editControl.setScaleSnapValue(val);
+                    };
+                    Vishva.prototype.snapScale = function (yes) {
+                        if (this.snapperOn) {
+                            return "Cannot change snapping mode when snapper is on";
+                        }
+                        this.snapScaleOn = yes;
+                        if (this.editControl != null) {
+                            if (!this.snapScaleOn) {
+                                this.editControl.setScaleSnap(false);
+                            }
+                            else {
+                                this.editControl.setScaleSnap(true);
+                                this.editControl.setScaleSnapValue(this.snapScaleValue);
+                            }
+                        }
+                        return;
+                    };
                     Vishva.prototype.snapper = function (yes) {
                         if (!this.globalAxisMode && yes) {
-                            return "Snapper can only be turned on in Global Axis Mode";
+                            this.globalAxisMode = true;
+                            this.wasSpaceLocal = false;
                         }
                         this.snapperOn = yes;
                         //if edit control is already up then lets switch snaps on
@@ -2627,13 +2688,16 @@ var org;
                     Vishva.prototype.setSnapperOn = function () {
                         this.editControl.setRotSnap(true);
                         this.editControl.setTransSnap(true);
+                        this.editControl.setScaleSnap(true);
                         this.editControl.setRotSnapValue(this.snapRotValue);
                         this.editControl.setTransSnapValue(this.snapTransValue);
+                        this.editControl.setScaleSnapValue(this.snapScaleValue);
                         this.snapToGlobal();
                     };
                     Vishva.prototype.setSnapperOff = function () {
                         this.editControl.setRotSnap(false);
                         this.editControl.setTransSnap(false);
+                        this.editControl.setScaleSnap(false);
                     };
                     Vishva.prototype.isSnapperOn = function () {
                         return this.snapperOn;
@@ -3328,7 +3392,7 @@ var org;
                             this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
                             this.avatar.rotationQuaternion = null;
                             this.saveAVcameraPos = this.mainCamera.position;
-                            this.focusOnAv = false;
+                            this.isFocusOnAv = false;
                             this.removeEditControl();
                             vishva.SNAManager.getSNAManager().disableSnAs(this.avatar);
                         }
@@ -4037,7 +4101,8 @@ var org;
                             autoOpen: false,
                             resizable: false,
                             width: 500,
-                            closeOnEscape: false
+                            closeOnEscape: false,
+                            closeText: ""
                         };
                         this.helpDiag.dialog(dos);
                     };
@@ -4524,6 +4589,7 @@ var org;
                         this.genOperTrans = document.getElementById("operTrans");
                         this.genOperRot = document.getElementById("operRot");
                         this.genOperScale = document.getElementById("operScale");
+                        this.genOperFocus = document.getElementById("operFocus");
                         this.genOperTrans.onclick = function () {
                             _this.vishva.setTransOn();
                         };
@@ -4536,6 +4602,17 @@ var org;
                                 _this.showAlertDiag("note that scaling doesnot work with global axis");
                             }
                         };
+                        this.genOperFocus.onclick = function () {
+                            _this.vishva.setFocusOnMesh();
+                        };
+                        this.genlocalAxis = document.getElementById("genlocalAxis");
+                        this.genlocalAxis.onclick = function () {
+                            var err = _this.vishva.toggleSpace();
+                            if (err !== null) {
+                                _this.showAlertDiag(err);
+                            }
+                        };
+                        //Snap CheckBox
                         this.genSnapTrans = document.getElementById("snapTrans");
                         this.genSnapTrans.onchange = function () {
                             var err = _this.vishva.snapTrans(_this.genSnapTrans.checked);
@@ -4552,6 +4629,15 @@ var org;
                                 _this.genSnapRot.checked = false;
                             }
                         };
+                        this.genSnapScale = document.getElementById("snapScale");
+                        this.genSnapScale.onchange = function () {
+                            var err = _this.vishva.snapScale(_this.genSnapScale.checked);
+                            if (err != null) {
+                                _this.showAlertDiag(err);
+                                _this.genSnapScale.checked = false;
+                            }
+                        };
+                        //Snap Values
                         this.genSnapTransValue = document.getElementById("snapTransValue");
                         this.genSnapTransValue.onchange = function () {
                             _this.vishva.setSnapTransValue(Number(_this.genSnapTransValue.value));
@@ -4560,14 +4646,11 @@ var org;
                         this.genSnapRotValue.onchange = function () {
                             _this.vishva.setSnapRotValue(Number(_this.genSnapRotValue.value));
                         };
-                        this.genlocalAxis = document.getElementById("genlocalAxis");
-                        this.genlocalAxis.onchange = function () {
-                            var err = _this.vishva.setSpaceLocal(_this.genlocalAxis.checked);
-                            if (err !== null) {
-                                _this.showAlertDiag(err);
-                                _this.genlocalAxis.checked = !_this.genlocalAxis.checked;
-                            }
+                        this.genSnapScaleValue = document.getElementById("snapScaleValue");
+                        this.genSnapScaleValue.onchange = function () {
+                            _this.vishva.setSnapScaleValue(Number(_this.genSnapScaleValue.value));
                         };
+                        //
                         this.genDisable = document.getElementById("genDisable");
                         this.genDisable.onchange = function () {
                             _this.vishva.disableIt(_this.genDisable.checked);
@@ -4700,13 +4783,9 @@ var org;
                         if (this.genName === undefined)
                             this.initGeneral();
                         this.genName.value = this.vishva.getName();
-                        this.genOperTrans.checked = this.vishva.isTransOn();
-                        this.genOperRot.checked = this.vishva.isRotOn();
-                        this.genOperScale.checked = this.vishva.isScaleOn();
                         this.genDisable.checked = this.vishva.isDisabled();
                         this.genColl.checked = this.vishva.isCollideable();
                         this.genVisi.checked = this.vishva.isVisible();
-                        this.genlocalAxis.checked = this.vishva.isSpaceLocal();
                     };
                     VishvaGUI.prototype.initLightUI = function () {
                         var _this = this;

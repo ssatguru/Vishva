@@ -52,7 +52,7 @@
                           
              }
             */
-            
+
             /* remove button outlines */
             /* the button outline on dialog box close button on top-right are not done properly */
             .ui-button:focus { outline:none !important }
@@ -62,6 +62,17 @@
                 opacity: 0.2;
             }
 
+            /* to flip some jquery icons - like undo redo */
+            .flip {
+                -moz-transform: scaleX(-1);
+                -o-transform: scaleX(-1);
+                -webkit-transform: scaleX(-1);
+                transform: scaleX(-1);
+                filter: FlipH;
+            }
+            /* to display mutliple icons on same line */
+            .ui-icon.inline { display:inline-block; }​
+
             .navMenu {
                 position: absolute;
             }
@@ -69,7 +80,8 @@
             .ui-menu {
                 width: 200px;
             }
-
+            
+            /*input {margin: 1px;}*/
             table {
                 border-radius: 10px;
                 background: red;
@@ -136,13 +148,13 @@
             </div>
 
             <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;display:block;">
-                <button id="downWorld">Save</button>
-                <button id="navAdd">Add</button>
-                <button id="navEnv">Environment</button>
-                <button id="navEdit">Edit</button>
-                <button id="navSettings">Settings</button>
-                <button id="helpLink">Help</button>
-                <button id="debugLink">Debug</button>
+                <button id="downWorld"><span class="ui-icon  ui-icon-disk" title="save"></span></button>
+                <button id="navAdd"><span class="ui-icon ui-icon-plusthick" title="add"></span> </button>
+                <button id="navEnv"><span class="ui-icon ui-icon-image" title="environment"></span> </button>
+                <button id="navEdit"><span class="ui-icon ui-icon-wrench" title="edit"></span> </button>
+                <button id="navSettings"><span class="ui-icon ui-icon-gear" title="settings"></span> </button>
+                <button id="helpLink"><span class="ui-icon ui-icon-help" title="help"></span> </button>
+                <button id="debugLink"><span class="ui-icon ui-icon-info" title="debug"></span> </button>
             </div>
 
             <ul id="AddMenu" style="position: absolute; width: auto; ">
@@ -289,35 +301,49 @@
                                     name <input type="text" id="genName">
                                 </td>
                             </tr>
-                            <td>
-                                <div style="float:left;">
-                                    <input type="checkbox" id="genlocalAxis">local axis
-                                </div>
-                                <div style="float:left;clear:left">
-                                    <input type="radio" name="oper" id="operTrans">trans
-                                    <input type="radio" name="oper" id="operRot">rot
-                                    <input type="radio" name="oper" id="operScale">scale
-                                </div>
-                                <div style="float:left;clear:left;">
-                                    <div><input type="checkbox" id="snapTrans">snap trans</div>
-                                    <div><input type="checkbox" id="snapRot">snap rot</div>
-                                </div>
-                                <div style="float:left;">
-                                    <div><input type="text" id="snapTransValue" size="1"> meters</div>
-                                    <div><input type="text" id="snapRotValue" size="1"> degree</div>
-                                </div>
-                                <br>
-                                <div style="float:left;clear:left;margin-top: 5px;">
-                                    <button id="undo">undo</button>
-                                    <button id="redo">redo</button>
-                                </div>
-                            </td>
+                            <tr>
+                                <td>
+                                    <div style="float:left;">
+                                        <input type="checkbox" id="genlocalAxis">local axis
+                                    </div>
+                                    <div style="float:left;clear:left">
+                                        <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
+                                        <button id="operRot" ><span class="ui-icon ui-icon-arrowrefresh-1-e" title="rotate"></span>  </button>
+                                        <button id="operScale" ><span class="ui-icon ui-icon-arrow-4-diag" title="scale"></span>  </button>
+                                        <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
+                                        <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="float:left;clear:left;">
+                                        <div><input type="checkbox" id="snapTrans">snap trans</div>
+                                        <div><input type="checkbox" id="snapRot">snap rot</div>
+                                        <div><input type="checkbox" id="snapScale">snap scale</div>
+                                    </div>
+                                    <div style="float:left;">
+                                        <div><input type="text" id="snapTransValue" size="1"> meters</div>
+                                        <div><input type="text" id="snapRotValue" size="1"> degree</div>
+                                        <div><input type="text" id="snapScaleValue" size="1"> factor</div>
+                                    </div>
+                                    <br>
+                                </td>
+                            </tr>
                             <tr>
                                 <td>
                                     <input type="checkbox" id="genDisable">disable
                                     <input type="checkbox" id="genColl">collision
                                     <input type="checkbox" id="genVisi">visible
 
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button id="cloneMesh"><span class="ui-icon ui-icon-copy" title="clone"></span> </button>
+                                    <button id="instMesh"><span class="flip ui-icon  ui-icon-newwin" title="instance"></span></button>
+                                    <button id="downMesh"><span class="ui-icon ui-icon-arrowthickstop-1-s" title="download"></span> </button>
+                                    <button id="delMesh"><span class="ui-icon ui-icon-trash" title="delete"></span> </button>
                                 </td>
                             </tr>
                             <tr>
@@ -329,24 +355,25 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <button id="cloneMesh">clone</button>
-                                    <button id="instMesh">instance</button>
-                                    <button id="mergeMesh">merge</button>
-                                    <button id="subMesh">subtract</button>
+                                    <button id="mergeMesh"><span class="ui-icon  ui-icon-link" title="merge meshes"></span> </button>
+                                    <button id="subMesh"><span class="ui-icon  ui-icon-scissors" title="subtract a mesh from another"></span> </button>
                                     <button id="interMesh">intersect</button>
-                                    <button id="downMesh">download</button>
-                                    <button id="delMesh">delete</button>
+
+
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <button id="swAv">use as avatar</button>
-                                    <button id="swGnd">use as ground</button>
+                                    <button id="swAv"><span class="ui-icon ui-icon-person" title="use as avatar"></span> </button>
+                                    <button id="swGnd"><span class="ui-icon ui-icon-grip-solid-horizontal" title="use as ground"></span> </button>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    <button id="sNa">sensors and actuators</button>
+                                    <button id="sNa" >
+                                        <span class="ui-icon inline ui-icon-signal-diag" title="add sensors or actuators"></span>
+                                        <span class="ui-icon inline  ui-icon-gear" title="add sensors or actuators"></span>     
+                                    </button>
                                 </td>
                             </tr>
                         </table>
@@ -381,7 +408,7 @@
                             </tr>
                         </table>
                         <br>
-                        <button id="transRefresh">refresh</button>
+                        <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title=refresh"></span></button>
                     </div>
 
                     <h3>Physics</h3>
@@ -657,6 +684,8 @@
         <script type="text/javascript" src="js/Vishva-merged.js"></script>
         <script type="text/javascript">
                             $(function () {
+                                //turn on tooltips except for dialog close buttons
+                                $(document).tooltip({items: '*:not(.ui-dialog-titlebar-close)'});
 
                                 //change all buttons to jquery button
                                 $("button").button();

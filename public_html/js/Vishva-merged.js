@@ -1510,8 +1510,10 @@ var org;
                             return;
                         //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
                         //except ofcourse the esc key
-                        if (this.keysDisabled && !this.key.esc)
+                        if (this.keysDisabled && !this.key.esc) {
+                            this.resetKeys();
                             return;
+                        }
                         //switch to first person?
                         if (this.mainCamera.radius <= 0.75) {
                             this.mainCamera.radius = 0.75;
@@ -1524,7 +1526,7 @@ var org;
                         }
                         if (this.isMeshSelected) {
                             if (this.key.focus) {
-                                this.key.focus = false;
+                                //this.key.focus = false;
                                 if (this.focusOnAv) {
                                     this.saveAVcameraPos.copyFrom(this.mainCamera.position);
                                     this.focusOnAv = false;
@@ -1532,19 +1534,19 @@ var org;
                                 this.focusOnMesh(this.meshPicked, 25);
                             }
                             if (this.key.esc) {
-                                this.key.esc = false;
+                                //this.key.esc = false;
                                 this.removeEditControl();
                             }
                             if (this.key.trans) {
-                                this.key.trans = false;
+                                //this.key.trans = false;
                                 this.editControl.enableTranslation();
                             }
                             if (this.key.rot) {
-                                this.key.rot = false;
+                                //this.key.rot = false;
                                 this.editControl.enableRotation();
                             }
                             if (this.key.scale) {
-                                this.key.scale = false;
+                                //this.key.scale = false;
                                 this.editControl.enableScaling();
                             }
                         }
@@ -1566,6 +1568,14 @@ var org;
                                 this.switchFocusToAV();
                             }
                         }
+                        this.resetKeys();
+                    };
+                    Vishva.prototype.resetKeys = function () {
+                        this.key.focus = false;
+                        this.key.esc = false;
+                        this.key.trans = false;
+                        this.key.rot = false;
+                        this.key.scale = false;
                     };
                     Vishva.prototype.moveAVandCamera = function () {
                         var oldAvPos = this.avatar.position.clone();
@@ -1708,6 +1718,7 @@ var org;
                                 this.meshPicked = pickResult.pickedMesh;
                                 vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
                                 this.savePhyParms();
+                                this.switchToQuats(this.meshPicked);
                                 this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
                                 this.editControl.enableTranslation();
                                 if (this.globalAxisMode) {
@@ -1792,12 +1803,22 @@ var org;
                         var prevMesh = this.meshPicked;
                         this.meshPicked = mesh;
                         this.savePhyParms();
+                        this.switchToQuats(this.meshPicked);
                         this.editControl.switchTo(this.meshPicked);
                         vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
                         if (this.key.ctl)
                             this.multiSelect(prevMesh, this.meshPicked);
                         //refresh the properties dialog box if open
                         this.vishvaGUI.refreshPropsDiag();
+                    };
+                    /**
+                     * if not set then set the mesh rotation in qauternion
+                     */
+                    Vishva.prototype.switchToQuats = function (m) {
+                        if ((m.rotationQuaternion === undefined) || (m.rotationQuaternion === null)) {
+                            var r = m.rotation;
+                            m.rotationQuaternion = Quaternion.RotationYawPitchRoll(r.y, r.x, r.z);
+                        }
                     };
                     //        private multiSelect() {
                     //            if (this.meshesPicked == null) {
@@ -1947,6 +1968,7 @@ var org;
                             this.key.stepLeft = true;
                         if (chr === "E")
                             this.key.stepRight = true;
+                        //
                         if (chr === "1")
                             this.key.trans = false;
                         if (chr === "2")
@@ -1962,10 +1984,12 @@ var org;
                             this.key.shift = false;
                         if (event.keyCode === 17)
                             this.key.ctl = false;
+                        //
                         if (event.keyCode === 32)
                             this.key.jump = true;
                         if (event.keyCode === 27)
                             this.key.esc = true;
+                        //
                         var chr = String.fromCharCode(event.keyCode);
                         if ((chr === "W") || (event.keyCode === 38))
                             this.key.up = false;
@@ -1979,6 +2003,7 @@ var org;
                             this.key.stepLeft = false;
                         if (chr === "E")
                             this.key.stepRight = false;
+                        //
                         if (chr === "1")
                             this.key.trans = true;
                         if (chr === "2")

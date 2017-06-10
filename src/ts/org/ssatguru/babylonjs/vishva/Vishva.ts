@@ -412,7 +412,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
             //except ofcourse the esc key
-            if (this.keysDisabled && !this.key.esc) return;
+            if (this.keysDisabled && !this.key.esc) {
+                this.resetKeys();
+                return;
+            }
 
             //switch to first person?
             if (this.mainCamera.radius <= 0.75) {
@@ -425,7 +428,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (this.isMeshSelected) {
                 if (this.key.focus) {
-                    this.key.focus = false;
+                    //this.key.focus = false;
                     if (this.focusOnAv) {
                         this.saveAVcameraPos.copyFrom(this.mainCamera.position);
                         this.focusOnAv = false;
@@ -433,19 +436,19 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.focusOnMesh(this.meshPicked, 25);
                 }
                 if (this.key.esc) {
-                    this.key.esc = false;
+                    //this.key.esc = false;
                     this.removeEditControl();
                 }
                 if (this.key.trans) {
-                    this.key.trans = false;
+                    //this.key.trans = false;
                     this.editControl.enableTranslation();
                 }
                 if (this.key.rot) {
-                    this.key.rot = false;
+                    //this.key.rot = false;
                     this.editControl.enableRotation();
                 }
                 if (this.key.scale) {
-                    this.key.scale = false;
+                    //this.key.scale = false;
                     this.editControl.enableScaling();
                 }
             }
@@ -458,12 +461,20 @@ namespace org.ssatguru.babylonjs.vishva {
                     }
                 }
             } else if (this.key.up || this.key.down || this.key.esc) {
-                 if (this.editControl == null) {
-                     this.switchFocusToAV();
-                 }else if (!this.editControl.isEditing()) {
+                if (this.editControl == null) {
+                    this.switchFocusToAV();
+                } else if (!this.editControl.isEditing()) {
                     this.switchFocusToAV();
                 }
             }
+            this.resetKeys();
+        }
+        private resetKeys() {
+            this.key.focus = false;
+            this.key.esc = false;
+            this.key.trans = false;
+            this.key.rot = false;
+            this.key.scale = false;
         }
 
         private jumpCycleMax: number = 25;
@@ -617,6 +628,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.meshPicked = pickResult.pickedMesh;
                     SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
                     this.savePhyParms();
+                    this.switchToQuats(this.meshPicked);
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
                     this.editControl.enableTranslation();
                     if (this.globalAxisMode) {
@@ -625,7 +637,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if (this.autoEditMenu) {
                         this.vishvaGUI.showPropDiag();
                     }
-                    if (this.key.ctl) this.multiSelect(null,this.meshPicked);
+                    if (this.key.ctl) this.multiSelect(null, this.meshPicked);
 
                     if (this.snapperOn) {
                         this.setSnapperOn();
@@ -693,16 +705,24 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.switchDisabled) return;
             SNAManager.getSNAManager().enableSnAs(this.meshPicked);
             this.restorePhyParms();
-            let prevMesh:AbstractMesh = this.meshPicked;
+            let prevMesh: AbstractMesh = this.meshPicked;
             this.meshPicked = mesh;
             this.savePhyParms();
+            this.switchToQuats(this.meshPicked);
             this.editControl.switchTo(<Mesh>this.meshPicked);
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-            if (this.key.ctl) this.multiSelect(prevMesh,this.meshPicked);
+            if (this.key.ctl) this.multiSelect(prevMesh, this.meshPicked);
             //refresh the properties dialog box if open
             this.vishvaGUI.refreshPropsDiag();
-
-
+        }
+        /**
+         * if not set then set the mesh rotation in qauternion
+         */
+        private switchToQuats(m: AbstractMesh) {
+            if ((m.rotationQuaternion === undefined) || (m.rotationQuaternion === null)) {
+                let r: Vector3 = m.rotation;
+                m.rotationQuaternion = Quaternion.RotationYawPitchRoll(r.y, r.x, r.z);
+            }
         }
 
         //        private multiSelect() {
@@ -720,7 +740,7 @@ namespace org.ssatguru.babylonjs.vishva {
         //                this.meshPicked.showBoundingBox = true;
         //            }
         //        }
-        
+
         private multiSelect(prevMesh: AbstractMesh, currentMesh: AbstractMesh) {
             if (this.meshesPicked == null) {
                 this.meshesPicked = new Array<AbstractMesh>();
@@ -735,7 +755,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     prevMesh.showBoundingBox = true;
                 }
             }
-            
+
             //if current mesh was already selected then unselect it
             i = this.meshesPicked.indexOf(currentMesh);
             if (i >= 0) {
@@ -759,9 +779,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshesPicked = null;
             }
             this.isMeshSelected = false;
-//            if (!this.focusOnAv) {
-//                this.switchFocusToAV();
-//            }
+            //            if (!this.focusOnAv) {
+            //                this.switchFocusToAV();
+            //            }
             this.editControl.detach();
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -863,8 +883,10 @@ namespace org.ssatguru.babylonjs.vishva {
             var event: KeyboardEvent = <KeyboardEvent>e;
             if (event.keyCode === 16) this.key.shift = true;
             if (event.keyCode === 17) this.key.ctl = true;
+            
             if (event.keyCode === 32) this.key.jump = false;
             if (event.keyCode === 27) this.key.esc = false;
+            
             var chr: string = String.fromCharCode(event.keyCode);
             if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
             if ((chr === "A") || (event.keyCode === 37)) this.key.left = true;
@@ -872,6 +894,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if ((chr === "S") || (event.keyCode === 40)) this.key.down = true;
             if (chr === "Q") this.key.stepLeft = true;
             if (chr === "E") this.key.stepRight = true;
+            //
             if (chr === "1") this.key.trans = false;
             if (chr === "2") this.key.rot = false;
             if (chr === "3") this.key.scale = false;
@@ -882,8 +905,10 @@ namespace org.ssatguru.babylonjs.vishva {
             var event: KeyboardEvent = <KeyboardEvent>e;
             if (event.keyCode === 16) this.key.shift = false;
             if (event.keyCode === 17) this.key.ctl = false;
+            //
             if (event.keyCode === 32) this.key.jump = true;
             if (event.keyCode === 27) this.key.esc = true;
+            //
             var chr: string = String.fromCharCode(event.keyCode);
             if ((chr === "W") || (event.keyCode === 38)) this.key.up = false;
             if ((chr === "A") || (event.keyCode === 37)) this.key.left = false;
@@ -891,6 +916,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if ((chr === "S") || (event.keyCode === 40)) this.key.down = false;
             if (chr === "Q") this.key.stepLeft = false;
             if (chr === "E") this.key.stepRight = false;
+            //
             if (chr === "1") this.key.trans = true;
             if (chr === "2") this.key.rot = true;
             if (chr === "3") this.key.scale = true;
@@ -1271,53 +1297,53 @@ namespace org.ssatguru.babylonjs.vishva {
         public mergeMeshes() {
             if (this.meshesPicked != null) {
                 //TODO - check for instance meshes
-                for (let mesh of this.meshesPicked){
-                    if (mesh instanceof BABYLON.InstancedMesh){
+                for (let mesh of this.meshesPicked) {
+                    if (mesh instanceof BABYLON.InstancedMesh) {
                         return "some of your meshes are instance meshes. cannot merge those";
                     }
                 }
                 let ms: any = this.meshesPicked;
-                let mergedMesh:Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
-                let newPivot: Vector3 = this.meshPicked.position.multiplyByFloats(-1,-1,-1);
+                let mergedMesh: Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
+                let newPivot: Vector3 = this.meshPicked.position.multiplyByFloats(-1, -1, -1);
                 //mergedMesh.setPivotMatrix(Matrix.Translation(newPivot.x, newPivot.y, newPivot.z));
-                mergedMesh.setPivotPoint( this.meshPicked.position.clone());
+                mergedMesh.setPivotPoint(this.meshPicked.position.clone());
                 //mergedMesh.computeWorldMatrix(true);
                 mergedMesh.position = this.meshPicked.position.clone();
                 this.switchEditControl(mergedMesh);
                 this.animateCopy(mergedMesh);
                 return null;
-            }else{
-                return "please select two or more mesh" ;
+            } else {
+                return "please select two or more mesh";
             }
         }
-      
-        public csgOperation(op:string):string {
-             if (this.meshesPicked != null) {
-                 if (this.meshesPicked.length > 2){
-                     return "please select only two mesh";
-                 }
-                 console.log("subtracting");
-                 let csg1: CSG = CSG.FromMesh(<Mesh>this.meshPicked);
-                 let csg2: CSG = CSG.FromMesh(<Mesh>this.meshesPicked[0]);
-                 let csg3:CSG;
-                 if (op === "subtract"){
-                     csg3  =csg2.subtract(csg1);
-                 }else if (op === "intersect"){
-                     csg3 = csg2.intersect(csg1);
-                 }else if (op === "union"){
-                     csg3 = csg2.union(csg1);
-                 }else{
-                     return "invalid operation";
-                 }
-                 let name: string = (<number>new Number(Date.now())).toString();
-                 let newMesh:Mesh = csg3.toMesh(name, this.meshesPicked[0].material , this.scene, false);
-                 
-                 this.switchEditControl(newMesh);
-                 this.animateCopy(newMesh);
-                 return null;
-             }else{
-                 return "please select two mesh" ;
-             }
+
+        public csgOperation(op: string): string {
+            if (this.meshesPicked != null) {
+                if (this.meshesPicked.length > 2) {
+                    return "please select only two mesh";
+                }
+                console.log("subtracting");
+                let csg1: CSG = CSG.FromMesh(<Mesh>this.meshPicked);
+                let csg2: CSG = CSG.FromMesh(<Mesh>this.meshesPicked[0]);
+                let csg3: CSG;
+                if (op === "subtract") {
+                    csg3 = csg2.subtract(csg1);
+                } else if (op === "intersect") {
+                    csg3 = csg2.intersect(csg1);
+                } else if (op === "union") {
+                    csg3 = csg2.union(csg1);
+                } else {
+                    return "invalid operation";
+                }
+                let name: string = (<number>new Number(Date.now())).toString();
+                let newMesh: Mesh = csg3.toMesh(name, this.meshesPicked[0].material, this.scene, false);
+
+                this.switchEditControl(newMesh);
+                this.animateCopy(newMesh);
+                return null;
+            } else {
+                return "please select two mesh";
+            }
         }
 
         meshPickedPhyParms: PhysicsParm = null;

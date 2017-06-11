@@ -2778,6 +2778,13 @@ var org;
                     Vishva.prototype.getScale = function () {
                         return this.meshPicked.scaling;
                     };
+                    Vishva.prototype.bakeTransforms = function () {
+                        var savePos = this.meshPicked.position.clone();
+                        this.meshPicked.position.copyFromFloats(0, 0, 0);
+                        this.meshPicked.bakeCurrentTransformIntoVertices();
+                        this.meshPicked.position = savePos;
+                        this.meshPicked.computeWorldMatrix(true);
+                    };
                     Vishva.prototype.getSkelName = function () {
                         if (this.meshPicked.skeleton == null)
                             return null;
@@ -4989,6 +4996,14 @@ var org;
                             this.transRefresh = document.getElementById("transRefresh");
                             this.transRefresh.onclick = function () {
                                 _this.updateTransform();
+                                return false;
+                            };
+                        }
+                        if (this.transBake === undefined) {
+                            this.transBake = document.getElementById("transBake");
+                            this.transBake.onclick = function () {
+                                _this.updateTransform();
+                                _this.vishva.bakeTransforms();
                                 return false;
                             };
                         }

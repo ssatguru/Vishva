@@ -1354,17 +1354,26 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshTransDiag.dialog(dos);
         }
 
-        transRefresh: HTMLButtonElement;
-
+        transRefresh: HTMLElement;
+        transBake: HTMLElement;
+        
         private updateTransform() {
             if (this.transRefresh === undefined) {
-                this.transRefresh = <HTMLButtonElement>document.getElementById("transRefresh");
+                this.transRefresh = document.getElementById("transRefresh");
                 this.transRefresh.onclick = () => {
                     this.updateTransform();
                     return false;
                 }
             }
-
+            if (this.transBake === undefined) {
+                this.transBake = document.getElementById("transBake");
+                this.transBake.onclick = () => {
+                    this.updateTransform();
+                    this.vishva.bakeTransforms();
+                    return false;
+                }
+            }
+            
             var loc: Vector3 = this.vishva.getLocation();
             var rot: Vector3 = this.vishva.getRotation();
             var scl: Vector3 = this.vishva.getScale();

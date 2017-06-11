@@ -1730,6 +1730,14 @@ namespace org.ssatguru.babylonjs.vishva {
         public getScale(): Vector3 {
             return this.meshPicked.scaling;
         }
+        
+        public bakeTransforms(){
+            let savePos:Vector3 = this.meshPicked.position.clone();
+            this.meshPicked.position.copyFromFloats(0,0,0);
+            (<Mesh>this.meshPicked).bakeCurrentTransformIntoVertices();
+            this.meshPicked.position = savePos;
+            this.meshPicked.computeWorldMatrix(true);
+        }
 
         public getSkelName(): string {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton.name;

@@ -208,28 +208,6 @@ namespace org.ssatguru.babylonjs.vishva {
             return true;
         }
 
-        public showPropDiag(): boolean {
-
-            if (this.propsDiag != null) {
-                if (this.propsDiag.dialog("isOpen")) return true;
-            }
-
-            if (!this.vishva.anyMeshSelected()) {
-                this.showAlertDiag("no mesh selected")
-                return;
-            }
-            if (this.propsDiag == null) {
-                this.createPropsDiag();
-            }
-            this.propsDiag.dialog("open");
-            return true;
-
-        }
-
-        public closePropDiag() {
-            this.propsDiag.dialog("close");
-        }
-
         envDiag: JQuery;
         /*
          * Create Environment Dialog
@@ -760,15 +738,156 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
+        
+        /**
+         * Mesh properties section
+         */
+
+        public showPropDiag(): boolean {
+
+            if (this.propsDiag != null) {
+                if (this.propsDiag.dialog("isOpen")) return true;
+            }
+
+            if (!this.vishva.anyMeshSelected()) {
+                this.showAlertDiag("no mesh selected")
+                return;
+            }
+            if (this.propsDiag == null) {
+                this.createPropsDiag();
+            }
+            this.propsDiag.dialog("open");
+            return true;
+
+        }
+
+        public closePropDiag() {
+            this.propsDiag.dialog("close");
+        }
+
+
+        private propsDiag: JQuery = null;
+
+        private fixingDragIssue: boolean = false;
+        private createPropsDiag() {
+
+            //property tabs
+            let propsAcc = $("#propsAcc");
+
+            //            propsTabs.tabs({
+            //                //everytime we switch tabs, close open to re-adjust size
+            //                activate: (e, ui) => {
+            //                    //this.fixingDragIssue = true;
+            //                    //this.propsDiag.dialog("close");
+            //                    //this.propsDiag.dialog("open");
+            //                },
+            //
+            //                beforeActivate: (e, ui) => {
+            //                    this.vishva.switchDisabled = false;
+            //                    this.vishva.enableKeys();
+            //                    this.refreshTab(ui.newTab.index());
+            //                }
+            //            });
+            //            
+            propsAcc.accordion({
+                animate: 100,
+                heightStyle: "content",
+                collapsible: true,
+                beforeActivate: (e, ui) => {
+                    this.vishva.switchDisabled = false;
+                    this.vishva.enableKeys();
+                    this.refreshPanel(this.getPanelIndex(ui.newHeader));
+
+                }
+            });
+
+            //property dialog box
+            this.propsDiag = $("#propsDiag");
+            var dos: DialogOptions = {
+                autoOpen: false,
+                resizable: false,
+                position: this.leftCenter,
+                minWidth: 420,
+                width: 420,
+                height: "auto",
+                closeOnEscape: false,
+                //a) on open set the values of the fields in the active panel.
+                //b) also if we switched from another mesh vishav will close open
+                //by calling refreshPropsDiag()
+                //c) donot bother refreshing values if we are just restarting
+                //dialog for height and width re-sizing after drag
+                open: (e, ui) => {
+                    if (!this.fixingDragIssue) {
+                        // refresh the active tab
+                        let activePanel = propsAcc.accordion("option", "active");
+                        this.refreshPanel(activePanel);
+                    } else {
+                        this.fixingDragIssue = false;
+                    }
+                },
+                close: (e, ui) => {
+                    this.vishva.switchDisabled = false;
+                    this.vishva.enableKeys();
+                },
+                //after drag the dialog box doesnot resize
+                //force resize by closing and opening
+                dragStop: (e, ui) => {
+                    this.fixingDragIssue = true;
+                    this.propsDiag.dialog("close");
+                    this.propsDiag.dialog("open");
+                }
+            };
+            this.propsDiag.dialog(dos);
+            this.propsDiag["jpo"] = this.leftCenter;
+            this.dialogs.push(this.propsDiag);
+        }
+        /*
+         * also called by vishva when editcontrol
+         * is removed from mesh
+         */
+        public closePropsDiag() {
+            if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
+            this.propsDiag.dialog("close");
+        }
+        /*
+         * called by vishva when editcontrol
+         * is switched from another mesh
+         */
+        public refreshPropsDiag() {
+            if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
+            if (this.propsDiag.dialog("isOpen") === true) {
+                this.propsDiag.dialog("close");
+                this.propsDiag.dialog("open");
+            }
+        }
+
+        private getPanelIndex(ui: JQuery): number {
+            if (ui.text() == "General") return propertyPanel.General;
+            if (ui.text() == "Physics") return propertyPanel.Physics;
+            if (ui.text() == "Material") return propertyPanel.Material;
+            if (ui.text() == "Lights") return propertyPanel.Lights;
+            if (ui.text() == "Animations") return propertyPanel.Animations;
+
+        }
+
+        private refreshPanel(panelIndex: number) {
+            if (panelIndex === propertyPanel.General) {
+                this.updateGeneral();
+            } else if (panelIndex === propertyPanel.Lights) {
+                this.updateLight();
+            } else if (panelIndex === propertyPanel.Animations) {
+                this.vishva.disableKeys();
+                this.updateAnimations();
+            } else if (panelIndex === propertyPanel.Physics) {
+                this.vishva.disableKeys();
+                this.updatePhysics()
+            }
+        }
 
         meshAnimDiag: JQuery;
-
         animSelect: HTMLSelectElement = null;
-
         animRate: HTMLInputElement;
-
         animLoop: HTMLInputElement;
-
         skel: Skeleton;
 
         private initAnimUI() {
@@ -905,8 +1024,19 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
 
+        
+        
+
+
+        private toString(d: number): string {
+            return (<number>new Number(d)).toFixed(2).toString();
+        }
+
 
         genName: HTMLInputElement;
+        
+        transRefresh: HTMLElement;
+        transBake: HTMLElement;
 
         genOperTrans: HTMLElement;
         genOperRot: HTMLElement;
@@ -936,11 +1066,27 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.enableKeys();
             }
             this.genName.onchange = () => {
-                console.log("name changed");
                 this.vishva.setName(this.genName.value);
             }
+            
+            //transforms
+             if (this.transRefresh === undefined) {
+                this.transRefresh = document.getElementById("transRefresh");
+                this.transRefresh.onclick = () => {
+                    this.updateTransform();
+                    return false;
+                }
+            }
+            if (this.transBake === undefined) {
+                this.transBake = document.getElementById("transBake");
+                this.transBake.onclick = () => {
+                    this.vishva.bakeTransforms();
+                    this.updateTransform();
+                    return false;
+                }
+            }
 
-            //Edit controls
+            //edit controls
             this.genOperTrans = document.getElementById("operTrans");
             this.genOperRot = document.getElementById("operRot");
             this.genOperScale = document.getElementById("operScale");
@@ -1155,10 +1301,33 @@ namespace org.ssatguru.babylonjs.vishva {
         private updateGeneral() {
             if (this.genName === undefined) this.initGeneral();
             this.genName.value = this.vishva.getName();
+            
+            this.updateTransform();
 
             this.genDisable.checked = this.vishva.isDisabled();
             this.genColl.checked = this.vishva.isCollideable();
             this.genVisi.checked = this.vishva.isVisible();
+            
+        }
+        
+        private updateTransform() { 
+            
+            var loc: Vector3 = this.vishva.getLocation();
+            var rot: Vector3 = this.vishva.getRotation();
+            var scl: Vector3 = this.vishva.getScale();
+            
+            (<HTMLInputElement>document.getElementById("loc.x")).value = this.toString(loc.x);
+            (<HTMLInputElement>document.getElementById("loc.y")).value = this.toString(loc.y);
+            (<HTMLInputElement>document.getElementById("loc.z")).value = this.toString(loc.z);
+            
+            (<HTMLInputElement>document.getElementById("rot.x")).value = this.toString(rot.x);
+            (<HTMLInputElement>document.getElementById("rot.y")).value = this.toString(rot.y);
+            (<HTMLInputElement>document.getElementById("rot.z")).value = this.toString(rot.z);
+            
+            (<HTMLInputElement>document.getElementById("scl.x")).value = this.toString(scl.x);
+            (<HTMLInputElement>document.getElementById("scl.y")).value = this.toString(scl.y);
+            (<HTMLInputElement>document.getElementById("scl.z")).value = this.toString(scl.z);
+
         }
 
         lightAtt: HTMLInputElement;
@@ -1337,61 +1506,28 @@ namespace org.ssatguru.babylonjs.vishva {
             this.vishva.setMeshPickedPhyParms(phyParms);
         }
 
-        meshTransDiag: JQuery;
+//        meshTransDiag: JQuery;
+//
+//        private createTransDiag() {
+//            this.meshTransDiag = $("#meshTransDiag");
+//            var dos: DialogOptions = {};
+//            dos.autoOpen = false;
+//            dos.modal = false;
+//            dos.resizable = false;
+//            dos.width = "auto";
+//            dos.height = (<any>"auto");
+//            dos.closeOnEscape = false;
+//            dos.close = (e, ui) => {
+//                this.vishva.switchDisabled = false;
+//            };
+//            this.meshTransDiag.dialog(dos);
+//        }
 
-        private createTransDiag() {
-            this.meshTransDiag = $("#meshTransDiag");
-            var dos: DialogOptions = {};
-            dos.autoOpen = false;
-            dos.modal = false;
-            dos.resizable = false;
-            dos.width = "auto";
-            dos.height = (<any>"auto");
-            dos.closeOnEscape = false;
-            dos.close = (e, ui) => {
-                this.vishva.switchDisabled = false;
-            };
-            this.meshTransDiag.dialog(dos);
-        }
-
-        transRefresh: HTMLElement;
-        transBake: HTMLElement;
-        
-        private updateTransform() {
-            if (this.transRefresh === undefined) {
-                this.transRefresh = document.getElementById("transRefresh");
-                this.transRefresh.onclick = () => {
-                    this.updateTransform();
-                    return false;
-                }
-            }
-            if (this.transBake === undefined) {
-                this.transBake = document.getElementById("transBake");
-                this.transBake.onclick = () => {
-                    this.updateTransform();
-                    this.vishva.bakeTransforms();
-                    return false;
-                }
-            }
-            
-            var loc: Vector3 = this.vishva.getLocation();
-            var rot: Vector3 = this.vishva.getRotation();
-            var scl: Vector3 = this.vishva.getScale();
-            document.getElementById("loc.x").innerText = this.toString(loc.x);
-            document.getElementById("loc.y").innerText = this.toString(loc.y);
-            document.getElementById("loc.z").innerText = this.toString(loc.z);
-            document.getElementById("rot.x").innerText = this.toString(rot.x);
-            document.getElementById("rot.y").innerText = this.toString(rot.y);
-            document.getElementById("rot.z").innerText = this.toString(rot.z);
-            document.getElementById("scl.x").innerText = this.toString(scl.x);
-            document.getElementById("scl.y").innerText = this.toString(scl.y);
-            document.getElementById("scl.z").innerText = this.toString(scl.z);
-        }
-
-        private toString(d: number): string {
-            return (<number>new Number(d)).toFixed(2).toString();
-        }
-
+        /**
+         * End of Mesh Properties section
+         */
+         
+         
         alertDialog: JQuery;
 
         alertDiv: HTMLElement;
@@ -1450,6 +1586,10 @@ namespace org.ssatguru.babylonjs.vishva {
             var colors: number[] = [rgb.r, rgb.g, rgb.b];
             this.vishva.setGroundColor(colors);
         }
+        
+        /**
+         * Main Navigation Menu Section
+         */
 
         firstTime: boolean = true;
 
@@ -1581,132 +1721,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 diag.dialog("close");
             }
         }
-
-        private propsDiag: JQuery = null;
-
-        private fixingDragIssue: boolean = false;
-        private createPropsDiag() {
-
-            //property tabs
-            let propsAcc = $("#propsAcc");
-
-            //            propsTabs.tabs({
-            //                //everytime we switch tabs, close open to re-adjust size
-            //                activate: (e, ui) => {
-            //                    //this.fixingDragIssue = true;
-            //                    //this.propsDiag.dialog("close");
-            //                    //this.propsDiag.dialog("open");
-            //                },
-            //
-            //                beforeActivate: (e, ui) => {
-            //                    this.vishva.switchDisabled = false;
-            //                    this.vishva.enableKeys();
-            //                    this.refreshTab(ui.newTab.index());
-            //                }
-            //            });
-            //            
-            propsAcc.accordion({
-                animate: 100,
-                heightStyle: "content",
-                collapsible: true,
-                beforeActivate: (e, ui) => {
-                    this.vishva.switchDisabled = false;
-                    this.vishva.enableKeys();
-                    this.refreshPanel(this.getPanelIndex(ui.newHeader));
-
-                }
-            });
-
-            //property dialog box
-            this.propsDiag = $("#propsDiag");
-            var dos: DialogOptions = {
-                autoOpen: false,
-                resizable: false,
-                position: this.leftCenter,
-                minWidth: 420,
-                width: 420,
-                height: "auto",
-                closeOnEscape: false,
-                //a) on open set the values of the fields in the active panel.
-                //b) also if we switched from another mesh vishav will close open
-                //by calling refreshPropsDiag()
-                //c) donot bother refreshing values if we are just restarting
-                //dialog for height and width re-sizing after drag
-                open: (e, ui) => {
-                    if (!this.fixingDragIssue) {
-                        // refresh the active tab
-                        let activePanel = propsAcc.accordion("option", "active");
-                        this.refreshPanel(activePanel);
-                    } else {
-                        this.fixingDragIssue = false;
-                    }
-                },
-                close: (e, ui) => {
-                    this.vishva.switchDisabled = false;
-                    this.vishva.enableKeys();
-                },
-                //after drag the dialog box doesnot resize
-                //force resize by closing and opening
-                dragStop: (e, ui) => {
-                    this.fixingDragIssue = true;
-                    this.propsDiag.dialog("close");
-                    this.propsDiag.dialog("open");
-                }
-            };
-            this.propsDiag.dialog(dos);
-            this.propsDiag["jpo"] = this.leftCenter;
-            this.dialogs.push(this.propsDiag);
-        }
-        /*
-         * also called by vishva when editcontrol
-         * is removed from mesh
-         */
-        public closePropsDiag() {
-            if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
-            this.propsDiag.dialog("close");
-        }
-        /*
-         * called by vishva when editcontrol
-         * is switched from another mesh
-         */
-        public refreshPropsDiag() {
-            if ((this.propsDiag === undefined) || (this.propsDiag === null)) return;
-            if (this.propsDiag.dialog("isOpen") === true) {
-                this.propsDiag.dialog("close");
-                this.propsDiag.dialog("open");
-            }
-        }
-
-        private getPanelIndex(ui: JQuery): number {
-            if (ui.text() == "General") return propertyPanel.General;
-            if (ui.text() == "Transforms") return propertyPanel.Transforms;
-            if (ui.text() == "Physics") return propertyPanel.Physics;
-            if (ui.text() == "Material") return propertyPanel.Material;
-            if (ui.text() == "Lights") return propertyPanel.Lights;
-            if (ui.text() == "Animations") return propertyPanel.Animations;
-
-        }
-
-        private refreshPanel(panelIndex: number) {
-            if (panelIndex === propertyPanel.General) {
-                this.updateGeneral();
-            } else if (panelIndex === propertyPanel.Transforms) {
-                this.updateTransform();
-            } else if (panelIndex === propertyPanel.Lights) {
-                this.updateLight();
-            } else if (panelIndex === propertyPanel.Animations) {
-                this.vishva.disableKeys();
-                this.updateAnimations();
-            } else if (panelIndex === propertyPanel.Physics) {
-                this.vishva.disableKeys();
-                this.updatePhysics()
-            }
-        }
+        
     }
 
     const enum propertyPanel {
         General,
-        Transforms,
         Physics,
         Material,
         Lights,

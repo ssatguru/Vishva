@@ -1196,25 +1196,16 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.computeWorldMatrix(true);
             var invParentMatrix: Matrix = Matrix.Invert(this.meshPicked.getWorldMatrix());
             var m: Matrix;
-            console.log("this.meshPicked quat");
-            console.log(this.meshPicked.rotationQuaternion);
-            console.log("this.meshPicked euler ");
-            console.log(this.meshPicked.rotation);
             for (var index122 = 0; index122 < this.meshesPicked.length; index122++) {
                 var mesh = this.meshesPicked[index122];
                 {
                     mesh.computeWorldMatrix(true);
-                    console.log("mesh quat");
-                    console.log(mesh.rotationQuaternion);
-                    console.log("mesh euler");
-                    console.log(mesh.rotation);
                     if (mesh === this.meshPicked.parent) {
                         m = this.meshPicked.getWorldMatrix();
                         m.decompose(this.meshPicked.scaling, this.meshPicked.rotationQuaternion, this.meshPicked.position);
                         this.meshPicked.parent = null;
                     }
                     if (mesh !== this.meshPicked) {
-                        console.log("transforming");
                         mesh.showBoundingBox = false;
                         m = mesh.getWorldMatrix().multiply(invParentMatrix);
                         m.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
@@ -1345,14 +1336,15 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public mergeMeshes() {
             if (this.meshesPicked != null) {
-                //TODO - check for instance meshes
                 for (let mesh of this.meshesPicked) {
                     if (mesh instanceof BABYLON.InstancedMesh) {
                         return "some of your meshes are instance meshes. cannot merge those";
                     }
                 }
+                this.meshesPicked.push(this.meshPicked);
                 let ms: any = this.meshesPicked;
                 let mergedMesh: Mesh = Mesh.MergeMeshes(<Mesh[]>ms, false);
+                this.meshesPicked.pop();
                 let newPivot: Vector3 = this.meshPicked.position.multiplyByFloats(-1, -1, -1);
                 //mergedMesh.setPivotMatrix(Matrix.Translation(newPivot.x, newPivot.y, newPivot.z));
                 mergedMesh.setPivotPoint(this.meshPicked.position.clone());

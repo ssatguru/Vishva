@@ -96,21 +96,17 @@
                 padding-right: 15px;
                 border-collapse: collapse;
             }
-            
-/*            .noBorder{
-                border: 0px ;
-            }*/
-            
+
             table table, table table td {
-                border: 0px ;
-                padding: 0px;
-                padding-left: 0px;
-                padding-right: 1px;
-                padding-top: 1px;
-                padding-bottom: 1px;
-                border-collapse: collapse;
+                padding: 2px;
+                padding-left: 4px;
+                padding-right: 4px;
+                margin: 2px;
+                /*                padding-top: 1px;
+                                padding-bottom: 1px;
+                                border-collapse: collapse;*/
             }
-            
+
             #vCanvas {
                 min-height: 700px;
                 min-width: 500px;
@@ -303,7 +299,6 @@
             </div>
 
             <div id="propsDiag" title="mesh properties" >
-
                 <!--
                 properties accordion
                 -->
@@ -319,6 +314,46 @@
                             </tr>
                             <tr>
                                 <td>
+                                    <table>
+                                        <tr>
+                                            <td></td>
+                                            <td>x</td>
+                                            <td>y</td>
+                                            <td>z</td>
+                                            <td>snap</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>location</td>
+                                            <td><input type="text" size="2" id="loc.x"></td>
+                                            <td><input type="text" size="2" id="loc.y"></td>
+                                            <td><input type="text" size="2" id="loc.z"></td>                                            
+                                            <td><input type="text" size="2" id="snapTransValue"></td>
+                                            <td><input type="checkbox" id="snapTrans"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>rotation</td>
+                                            <td><input type="text" size="2" id="rot.x"></td>
+                                            <td><input type="text" size="2" id="rot.y"></td>
+                                            <td><input type="text" size="2" id="rot.z"></td>
+                                            <td><input type="text" size="2" id="snapRotValue"></td>
+                                            <td><input type="checkbox" id="snapRot"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>scale</td>
+                                            <td><input type="text" size="2" id="scl.x"></td>
+                                            <td><input type="text" size="2" id="scl.y"></td>
+                                            <td><input type="text" size="2" id="scl.z"></td>
+                                            <td><input type="text" size="2" id="snapScaleValue"></td>
+                                            <td><input type="checkbox" id="snapScale"></td>                                            
+                                        </tr>
+                                    </table>
+                                    <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
+                                    <button id="transBake">bake</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <div style="float:left;clear:left">
                                         <button id="genlocalAxis" title="switch local/global axis">l/g</button>
                                         <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
@@ -330,40 +365,6 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="noBorder">
-                                <td class="noBorder">
-                                    <table>
-                                        <tr>
-                                            <td><div><input type="checkbox" id="snapTrans">snap trans</div></td>
-                                            <td><div><input type="text" id="snapTransValue" size="1"> meters</div></td>
-                                        </tr>
-                                        <tr>
-                                            <td><div><div><input type="checkbox" id="snapRot">snap rot</div></td>
-                                            <td><div><input type="text" id="snapRotValue" size="1"> degree</div></td>
-                                        </tr>
-                                        <tr>
-                                            <td><div><input type="checkbox" id="snapScale">snap scale</div></td>
-                                            <td><div><input type="text" id="snapScaleValue" size="1"> factor</div></td>
-                                        </tr>
-                                    </table>
-                                    <!--
-                                    <td>
-                                        <div style="float:left;clear:left;">
-                                            <div><input type="checkbox" id="snapTrans">snap trans</div>
-                                            <div><input type="checkbox" id="snapRot">snap rot</div>
-                                            <div><input type="checkbox" id="snapScale">snap scale</div>
-                                        </div>
-                                        <div style="float:left;">
-                                            <div><input type="text" id="snapTransValue" size="1"> meters</div>
-                                            <div><input type="text" id="snapRotValue" size="1"> degree</div>
-                                            <div><input type="text" id="snapScaleValue" size="1"> factor</div>
-                                        </div>
-                                        <br>
-                                    </td>
-                                    -->
-                                </td>
-                            </tr>
-
                             <tr>
                                 <td>
                                     <input type="checkbox" id="genDisable">disable
@@ -383,7 +384,7 @@
                             <tr>
                                 <td>
                                     <button id="parentMesh">parent</button>
-                                    <button id="removeParent">un parent</button>
+                                    <button id="removeParent">remove parent</button>
                                     <button id="removeChildren">remove children</button>
                                 </td>
                             </tr>
@@ -411,39 +412,6 @@
                                 </td>
                             </tr>
                         </table>
-                    </div>
-
-                    <h3>Transforms</h3>
-                    <div id="meshTransDiag">
-                        <table>
-                            <tr>
-                                <td></td>
-                                <td>x</td>
-                                <td>y</td>
-                                <td>z</td>
-                            </tr>
-                            <tr>
-                                <td>location</td>
-                                <td id="loc.x"></td>
-                                <td id="loc.y"></td>
-                                <td id="loc.z"></td>
-                            </tr>
-                            <tr>
-                                <td>rotation</td>
-                                <td id="rot.x"></td>
-                                <td id="rot.y"></td>
-                                <td id="rot.z"></td>
-                            </tr>
-                            <tr>
-                                <td>scale</td>
-                                <td id="scl.x"></td>
-                                <td id="scl.y"></td>
-                                <td id="scl.z"></td>
-                            </tr>
-                        </table>
-                        <br>
-                        <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
-                        <button id="transBake">bake</button>
                     </div>
 
                     <h3>Physics</h3>
@@ -728,7 +696,7 @@
                                 $("button").click(function (e) {
                                     $(this).blur();
                                 });
-                                $('input').addClass("ui-corner-all");
+//                                $('input').addClass("ui-corner-all");
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
                                 var search = new HREFsearch();

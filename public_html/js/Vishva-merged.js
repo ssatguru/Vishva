@@ -2272,25 +2272,16 @@ var org;
                         this.meshPicked.computeWorldMatrix(true);
                         var invParentMatrix = Matrix.Invert(this.meshPicked.getWorldMatrix());
                         var m;
-                        console.log("this.meshPicked quat");
-                        console.log(this.meshPicked.rotationQuaternion);
-                        console.log("this.meshPicked euler ");
-                        console.log(this.meshPicked.rotation);
                         for (var index122 = 0; index122 < this.meshesPicked.length; index122++) {
                             var mesh = this.meshesPicked[index122];
                             {
                                 mesh.computeWorldMatrix(true);
-                                console.log("mesh quat");
-                                console.log(mesh.rotationQuaternion);
-                                console.log("mesh euler");
-                                console.log(mesh.rotation);
                                 if (mesh === this.meshPicked.parent) {
                                     m = this.meshPicked.getWorldMatrix();
                                     m.decompose(this.meshPicked.scaling, this.meshPicked.rotationQuaternion, this.meshPicked.position);
                                     this.meshPicked.parent = null;
                                 }
                                 if (mesh !== this.meshPicked) {
-                                    console.log("transforming");
                                     mesh.showBoundingBox = false;
                                     m = mesh.getWorldMatrix().multiply(invParentMatrix);
                                     m.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
@@ -2415,15 +2406,16 @@ var org;
                     };
                     Vishva.prototype.mergeMeshes = function () {
                         if (this.meshesPicked != null) {
-                            //TODO - check for instance meshes
                             for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
                                 var mesh = _a[_i];
                                 if (mesh instanceof BABYLON.InstancedMesh) {
                                     return "some of your meshes are instance meshes. cannot merge those";
                                 }
                             }
+                            this.meshesPicked.push(this.meshPicked);
                             var ms = this.meshesPicked;
                             var mergedMesh = Mesh.MergeMeshes(ms, false);
+                            this.meshesPicked.pop();
                             var newPivot = this.meshPicked.position.multiplyByFloats(-1, -1, -1);
                             //mergedMesh.setPivotMatrix(Matrix.Translation(newPivot.x, newPivot.y, newPivot.z));
                             mergedMesh.setPivotPoint(this.meshPicked.position.clone());
@@ -3821,11 +3813,14 @@ var org;
                          * reset on window resize
                          */
                         this.dialogs = new Array();
-                        this.animSelect = null;
-                        this.firstTime = true;
-                        this.addMenuOn = false;
                         this.propsDiag = null;
                         this.fixingDragIssue = false;
+                        this.animSelect = null;
+                        /**
+                         * Main Navigation Menu Section
+                         */
+                        this.firstTime = true;
+                        this.addMenuOn = false;
                         this.vishva = vishva;
                         this.createJPOs();
                         //need to do add menu before main navigation menu
@@ -3982,24 +3977,6 @@ var org;
                             this.vishva.loadAsset(i.className, i.id);
                         }
                         return true;
-                    };
-                    VishvaGUI.prototype.showPropDiag = function () {
-                        if (this.propsDiag != null) {
-                            if (this.propsDiag.dialog("isOpen"))
-                                return true;
-                        }
-                        if (!this.vishva.anyMeshSelected()) {
-                            this.showAlertDiag("no mesh selected");
-                            return;
-                        }
-                        if (this.propsDiag == null) {
-                            this.createPropsDiag();
-                        }
-                        this.propsDiag.dialog("open");
-                        return true;
-                    };
-                    VishvaGUI.prototype.closePropDiag = function () {
-                        this.propsDiag.dialog("close");
                     };
                     /*
                      * Create Environment Dialog
@@ -4490,6 +4467,146 @@ var org;
                             }
                         }
                     };
+                    /**
+                     * Mesh properties section
+                     */
+                    VishvaGUI.prototype.showPropDiag = function () {
+                        if (this.propsDiag != null) {
+                            if (this.propsDiag.dialog("isOpen"))
+                                return true;
+                        }
+                        if (!this.vishva.anyMeshSelected()) {
+                            this.showAlertDiag("no mesh selected");
+                            return;
+                        }
+                        if (this.propsDiag == null) {
+                            this.createPropsDiag();
+                        }
+                        this.propsDiag.dialog("open");
+                        return true;
+                    };
+                    VishvaGUI.prototype.closePropDiag = function () {
+                        this.propsDiag.dialog("close");
+                    };
+                    VishvaGUI.prototype.createPropsDiag = function () {
+                        var _this = this;
+                        //property tabs
+                        var propsAcc = $("#propsAcc");
+                        //            propsTabs.tabs({
+                        //                //everytime we switch tabs, close open to re-adjust size
+                        //                activate: (e, ui) => {
+                        //                    //this.fixingDragIssue = true;
+                        //                    //this.propsDiag.dialog("close");
+                        //                    //this.propsDiag.dialog("open");
+                        //                },
+                        //
+                        //                beforeActivate: (e, ui) => {
+                        //                    this.vishva.switchDisabled = false;
+                        //                    this.vishva.enableKeys();
+                        //                    this.refreshTab(ui.newTab.index());
+                        //                }
+                        //            });
+                        //            
+                        propsAcc.accordion({
+                            animate: 100,
+                            heightStyle: "content",
+                            collapsible: true,
+                            beforeActivate: function (e, ui) {
+                                _this.vishva.switchDisabled = false;
+                                _this.vishva.enableKeys();
+                                _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
+                            }
+                        });
+                        //property dialog box
+                        this.propsDiag = $("#propsDiag");
+                        var dos = {
+                            autoOpen: false,
+                            resizable: false,
+                            position: this.leftCenter,
+                            minWidth: 420,
+                            width: 420,
+                            height: "auto",
+                            closeOnEscape: false,
+                            //a) on open set the values of the fields in the active panel.
+                            //b) also if we switched from another mesh vishav will close open
+                            //by calling refreshPropsDiag()
+                            //c) donot bother refreshing values if we are just restarting
+                            //dialog for height and width re-sizing after drag
+                            open: function (e, ui) {
+                                if (!_this.fixingDragIssue) {
+                                    // refresh the active tab
+                                    var activePanel = propsAcc.accordion("option", "active");
+                                    _this.refreshPanel(activePanel);
+                                }
+                                else {
+                                    _this.fixingDragIssue = false;
+                                }
+                            },
+                            close: function (e, ui) {
+                                _this.vishva.switchDisabled = false;
+                                _this.vishva.enableKeys();
+                            },
+                            //after drag the dialog box doesnot resize
+                            //force resize by closing and opening
+                            dragStop: function (e, ui) {
+                                _this.fixingDragIssue = true;
+                                _this.propsDiag.dialog("close");
+                                _this.propsDiag.dialog("open");
+                            }
+                        };
+                        this.propsDiag.dialog(dos);
+                        this.propsDiag["jpo"] = this.leftCenter;
+                        this.dialogs.push(this.propsDiag);
+                    };
+                    /*
+                     * also called by vishva when editcontrol
+                     * is removed from mesh
+                     */
+                    VishvaGUI.prototype.closePropsDiag = function () {
+                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
+                            return;
+                        this.propsDiag.dialog("close");
+                    };
+                    /*
+                     * called by vishva when editcontrol
+                     * is switched from another mesh
+                     */
+                    VishvaGUI.prototype.refreshPropsDiag = function () {
+                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
+                            return;
+                        if (this.propsDiag.dialog("isOpen") === true) {
+                            this.propsDiag.dialog("close");
+                            this.propsDiag.dialog("open");
+                        }
+                    };
+                    VishvaGUI.prototype.getPanelIndex = function (ui) {
+                        if (ui.text() == "General")
+                            return 0 /* General */;
+                        if (ui.text() == "Physics")
+                            return 1 /* Physics */;
+                        if (ui.text() == "Material")
+                            return 2 /* Material */;
+                        if (ui.text() == "Lights")
+                            return 3 /* Lights */;
+                        if (ui.text() == "Animations")
+                            return 4 /* Animations */;
+                    };
+                    VishvaGUI.prototype.refreshPanel = function (panelIndex) {
+                        if (panelIndex === 0 /* General */) {
+                            this.updateGeneral();
+                        }
+                        else if (panelIndex === 3 /* Lights */) {
+                            this.updateLight();
+                        }
+                        else if (panelIndex === 4 /* Animations */) {
+                            this.vishva.disableKeys();
+                            this.updateAnimations();
+                        }
+                        else if (panelIndex === 1 /* Physics */) {
+                            this.vishva.disableKeys();
+                            this.updatePhysics();
+                        }
+                    };
                     VishvaGUI.prototype.initAnimUI = function () {
                         var _this = this;
                         var animRangeName = document.getElementById("animRangeName");
@@ -4618,6 +4735,9 @@ var org;
                             document.getElementById("animTo").innerText = new Number(range[0].to).toString();
                         }
                     };
+                    VishvaGUI.prototype.toString = function (d) {
+                        return new Number(d).toFixed(2).toString();
+                    };
                     VishvaGUI.prototype.initGeneral = function () {
                         var _this = this;
                         this.genName = document.getElementById("genName");
@@ -4628,10 +4748,25 @@ var org;
                             _this.vishva.enableKeys();
                         };
                         this.genName.onchange = function () {
-                            console.log("name changed");
                             _this.vishva.setName(_this.genName.value);
                         };
-                        //Edit controls
+                        //transforms
+                        if (this.transRefresh === undefined) {
+                            this.transRefresh = document.getElementById("transRefresh");
+                            this.transRefresh.onclick = function () {
+                                _this.updateTransform();
+                                return false;
+                            };
+                        }
+                        if (this.transBake === undefined) {
+                            this.transBake = document.getElementById("transBake");
+                            this.transBake.onclick = function () {
+                                _this.vishva.bakeTransforms();
+                                _this.updateTransform();
+                                return false;
+                            };
+                        }
+                        //edit controls
                         this.genOperTrans = document.getElementById("operTrans");
                         this.genOperRot = document.getElementById("operRot");
                         this.genOperScale = document.getElementById("operScale");
@@ -4829,9 +4964,24 @@ var org;
                         if (this.genName === undefined)
                             this.initGeneral();
                         this.genName.value = this.vishva.getName();
+                        this.updateTransform();
                         this.genDisable.checked = this.vishva.isDisabled();
                         this.genColl.checked = this.vishva.isCollideable();
                         this.genVisi.checked = this.vishva.isVisible();
+                    };
+                    VishvaGUI.prototype.updateTransform = function () {
+                        var loc = this.vishva.getLocation();
+                        var rot = this.vishva.getRotation();
+                        var scl = this.vishva.getScale();
+                        document.getElementById("loc.x").value = this.toString(loc.x);
+                        document.getElementById("loc.y").value = this.toString(loc.y);
+                        document.getElementById("loc.z").value = this.toString(loc.z);
+                        document.getElementById("rot.x").value = this.toString(rot.x);
+                        document.getElementById("rot.y").value = this.toString(rot.y);
+                        document.getElementById("rot.z").value = this.toString(rot.z);
+                        document.getElementById("scl.x").value = this.toString(scl.x);
+                        document.getElementById("scl.y").value = this.toString(scl.y);
+                        document.getElementById("scl.z").value = this.toString(scl.z);
                     };
                     VishvaGUI.prototype.initLightUI = function () {
                         var _this = this;
@@ -4974,54 +5124,6 @@ var org;
                             phyParms = null;
                         }
                         this.vishva.setMeshPickedPhyParms(phyParms);
-                    };
-                    VishvaGUI.prototype.createTransDiag = function () {
-                        var _this = this;
-                        this.meshTransDiag = $("#meshTransDiag");
-                        var dos = {};
-                        dos.autoOpen = false;
-                        dos.modal = false;
-                        dos.resizable = false;
-                        dos.width = "auto";
-                        dos.height = "auto";
-                        dos.closeOnEscape = false;
-                        dos.close = function (e, ui) {
-                            _this.vishva.switchDisabled = false;
-                        };
-                        this.meshTransDiag.dialog(dos);
-                    };
-                    VishvaGUI.prototype.updateTransform = function () {
-                        var _this = this;
-                        if (this.transRefresh === undefined) {
-                            this.transRefresh = document.getElementById("transRefresh");
-                            this.transRefresh.onclick = function () {
-                                _this.updateTransform();
-                                return false;
-                            };
-                        }
-                        if (this.transBake === undefined) {
-                            this.transBake = document.getElementById("transBake");
-                            this.transBake.onclick = function () {
-                                _this.updateTransform();
-                                _this.vishva.bakeTransforms();
-                                return false;
-                            };
-                        }
-                        var loc = this.vishva.getLocation();
-                        var rot = this.vishva.getRotation();
-                        var scl = this.vishva.getScale();
-                        document.getElementById("loc.x").innerText = this.toString(loc.x);
-                        document.getElementById("loc.y").innerText = this.toString(loc.y);
-                        document.getElementById("loc.z").innerText = this.toString(loc.z);
-                        document.getElementById("rot.x").innerText = this.toString(rot.x);
-                        document.getElementById("rot.y").innerText = this.toString(rot.y);
-                        document.getElementById("rot.z").innerText = this.toString(rot.z);
-                        document.getElementById("scl.x").innerText = this.toString(scl.x);
-                        document.getElementById("scl.y").innerText = this.toString(scl.y);
-                        document.getElementById("scl.z").innerText = this.toString(scl.z);
-                    };
-                    VishvaGUI.prototype.toString = function (d) {
-                        return new Number(d).toFixed(2).toString();
                     };
                     VishvaGUI.prototype.createAlertDiag = function () {
                         this.alertDiv = document.getElementById("alertDiv");
@@ -5196,130 +5298,6 @@ var org;
                         }
                         else {
                             diag.dialog("close");
-                        }
-                    };
-                    VishvaGUI.prototype.createPropsDiag = function () {
-                        var _this = this;
-                        //property tabs
-                        var propsAcc = $("#propsAcc");
-                        //            propsTabs.tabs({
-                        //                //everytime we switch tabs, close open to re-adjust size
-                        //                activate: (e, ui) => {
-                        //                    //this.fixingDragIssue = true;
-                        //                    //this.propsDiag.dialog("close");
-                        //                    //this.propsDiag.dialog("open");
-                        //                },
-                        //
-                        //                beforeActivate: (e, ui) => {
-                        //                    this.vishva.switchDisabled = false;
-                        //                    this.vishva.enableKeys();
-                        //                    this.refreshTab(ui.newTab.index());
-                        //                }
-                        //            });
-                        //            
-                        propsAcc.accordion({
-                            animate: 100,
-                            heightStyle: "content",
-                            collapsible: true,
-                            beforeActivate: function (e, ui) {
-                                _this.vishva.switchDisabled = false;
-                                _this.vishva.enableKeys();
-                                _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
-                            }
-                        });
-                        //property dialog box
-                        this.propsDiag = $("#propsDiag");
-                        var dos = {
-                            autoOpen: false,
-                            resizable: false,
-                            position: this.leftCenter,
-                            minWidth: 420,
-                            width: 420,
-                            height: "auto",
-                            closeOnEscape: false,
-                            //a) on open set the values of the fields in the active panel.
-                            //b) also if we switched from another mesh vishav will close open
-                            //by calling refreshPropsDiag()
-                            //c) donot bother refreshing values if we are just restarting
-                            //dialog for height and width re-sizing after drag
-                            open: function (e, ui) {
-                                if (!_this.fixingDragIssue) {
-                                    // refresh the active tab
-                                    var activePanel = propsAcc.accordion("option", "active");
-                                    _this.refreshPanel(activePanel);
-                                }
-                                else {
-                                    _this.fixingDragIssue = false;
-                                }
-                            },
-                            close: function (e, ui) {
-                                _this.vishva.switchDisabled = false;
-                                _this.vishva.enableKeys();
-                            },
-                            //after drag the dialog box doesnot resize
-                            //force resize by closing and opening
-                            dragStop: function (e, ui) {
-                                _this.fixingDragIssue = true;
-                                _this.propsDiag.dialog("close");
-                                _this.propsDiag.dialog("open");
-                            }
-                        };
-                        this.propsDiag.dialog(dos);
-                        this.propsDiag["jpo"] = this.leftCenter;
-                        this.dialogs.push(this.propsDiag);
-                    };
-                    /*
-                     * also called by vishva when editcontrol
-                     * is removed from mesh
-                     */
-                    VishvaGUI.prototype.closePropsDiag = function () {
-                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
-                            return;
-                        this.propsDiag.dialog("close");
-                    };
-                    /*
-                     * called by vishva when editcontrol
-                     * is switched from another mesh
-                     */
-                    VishvaGUI.prototype.refreshPropsDiag = function () {
-                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
-                            return;
-                        if (this.propsDiag.dialog("isOpen") === true) {
-                            this.propsDiag.dialog("close");
-                            this.propsDiag.dialog("open");
-                        }
-                    };
-                    VishvaGUI.prototype.getPanelIndex = function (ui) {
-                        if (ui.text() == "General")
-                            return 0 /* General */;
-                        if (ui.text() == "Transforms")
-                            return 1 /* Transforms */;
-                        if (ui.text() == "Physics")
-                            return 2 /* Physics */;
-                        if (ui.text() == "Material")
-                            return 3 /* Material */;
-                        if (ui.text() == "Lights")
-                            return 4 /* Lights */;
-                        if (ui.text() == "Animations")
-                            return 5 /* Animations */;
-                    };
-                    VishvaGUI.prototype.refreshPanel = function (panelIndex) {
-                        if (panelIndex === 0 /* General */) {
-                            this.updateGeneral();
-                        }
-                        else if (panelIndex === 1 /* Transforms */) {
-                            this.updateTransform();
-                        }
-                        else if (panelIndex === 4 /* Lights */) {
-                            this.updateLight();
-                        }
-                        else if (panelIndex === 5 /* Animations */) {
-                            this.vishva.disableKeys();
-                            this.updateAnimations();
-                        }
-                        else if (panelIndex === 2 /* Physics */) {
-                            this.vishva.disableKeys();
-                            this.updatePhysics();
                         }
                     };
                     return VishvaGUI;

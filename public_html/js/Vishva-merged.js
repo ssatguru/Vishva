@@ -2612,6 +2612,24 @@ var org;
                         this.setSpaceLocal(!this.isSpaceLocal());
                         return null;
                     };
+                    Vishva.prototype.setSpace = function (space) {
+                        if (this.snapperOn) {
+                            return "Cannot switch space when snapper is on";
+                        }
+                        if (space === "local") {
+                            this.setSpaceLocal(true);
+                        }
+                        else {
+                            this.setSpaceLocal(false);
+                        }
+                        return null;
+                    };
+                    Vishva.prototype.getSpace = function () {
+                        if (this.isSpaceLocal())
+                            return "local";
+                        else
+                            return "world";
+                    };
                     Vishva.prototype.setSpaceLocal = function (yes) {
                         if (this.editControl != null)
                             this.editControl.setLocal(yes);
@@ -4740,6 +4758,7 @@ var org;
                     };
                     VishvaGUI.prototype.initGeneral = function () {
                         var _this = this;
+                        //name
                         this.genName = document.getElementById("genName");
                         this.genName.onfocus = function () {
                             _this.vishva.disableKeys();
@@ -4749,6 +4768,14 @@ var org;
                         };
                         this.genName.onchange = function () {
                             _this.vishva.setName(_this.genName.value);
+                        };
+                        //space
+                        this.genSpace = document.getElementById("genSpace");
+                        this.genSpace.onchange = function () {
+                            var err = _this.vishva.setSpace(_this.genSpace.value);
+                            if (err !== null) {
+                                _this.showAlertDiag(err);
+                            }
                         };
                         //transforms
                         if (this.transRefresh === undefined) {
@@ -4785,13 +4812,6 @@ var org;
                         };
                         this.genOperFocus.onclick = function () {
                             _this.vishva.setFocusOnMesh();
-                        };
-                        this.genlocalAxis = document.getElementById("genlocalAxis");
-                        this.genlocalAxis.onclick = function () {
-                            var err = _this.vishva.toggleSpace();
-                            if (err !== null) {
-                                _this.showAlertDiag(err);
-                            }
                         };
                         //Snap CheckBox
                         this.genSnapTrans = document.getElementById("snapTrans");
@@ -4964,6 +4984,7 @@ var org;
                         if (this.genName === undefined)
                             this.initGeneral();
                         this.genName.value = this.vishva.getName();
+                        this.genSpace.value = this.vishva.getSpace();
                         this.updateTransform();
                         this.genDisable.checked = this.vishva.isDisabled();
                         this.genColl.checked = this.vishva.isCollideable();

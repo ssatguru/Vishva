@@ -1034,6 +1034,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         genName: HTMLInputElement;
+        genSpace: HTMLSelectElement;
         
         transRefresh: HTMLElement;
         transBake: HTMLElement;
@@ -1042,8 +1043,6 @@ namespace org.ssatguru.babylonjs.vishva {
         genOperRot: HTMLElement;
         genOperScale: HTMLElement;
         genOperFocus: HTMLElement;
-        
-        genlocalAxis: HTMLElement;
 
         genSnapTrans: HTMLInputElement;
         genSnapRot: HTMLInputElement;
@@ -1058,6 +1057,7 @@ namespace org.ssatguru.babylonjs.vishva {
         genVisi: HTMLInputElement;
 
         private initGeneral() {
+            //name
             this.genName = <HTMLInputElement>document.getElementById("genName");
             this.genName.onfocus = () => {
                 this.vishva.disableKeys();
@@ -1067,6 +1067,15 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.genName.onchange = () => {
                 this.vishva.setName(this.genName.value);
+            }
+            
+            //space
+            this.genSpace = <HTMLSelectElement> document.getElementById("genSpace");
+            this.genSpace.onchange = () => {
+                let err: string = this.vishva.setSpace(this.genSpace.value);
+                if (err !== null) {
+                    this.showAlertDiag(err);
+                }
             }
             
             //transforms
@@ -1108,13 +1117,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.setFocusOnMesh();
             }
             
-            this.genlocalAxis = document.getElementById("genlocalAxis");
-            this.genlocalAxis.onclick = () => {
-                let err: string = this.vishva.toggleSpace();
-                if (err !== null) {
-                    this.showAlertDiag(err);
-                }
-            }
+            
             
             //Snap CheckBox
             this.genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
@@ -1301,6 +1304,8 @@ namespace org.ssatguru.babylonjs.vishva {
         private updateGeneral() {
             if (this.genName === undefined) this.initGeneral();
             this.genName.value = this.vishva.getName();
+            
+            this.genSpace.value = this.vishva.getSpace();
             
             this.updateTransform();
 

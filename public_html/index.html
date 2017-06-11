@@ -310,6 +310,23 @@
                             <tr>
                                 <td>
                                     name <input type="text" id="genName">
+                                    space 
+                                    <select id="genSpace" >
+                                        <option value="local" >local</option>
+                                        <option value="world">world</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div style="float:left;clear:left">
+                                        <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
+                                        <button id="operRot" ><span class="ui-icon ui-icon-arrowrefresh-1-e" title="rotate"></span>  </button>
+                                        <button id="operScale" ><span class="ui-icon ui-icon-arrow-4-diag" title="scale"></span>  </button>
+                                        <button id="operFocus" ><span class="ui-icon  ui-icon-zoomin" title="focus"></span>  </button>
+                                        <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
+                                        <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
@@ -324,7 +341,7 @@
                                             <td></td>
                                         </tr>
                                         <tr>
-                                            <td>location</td>
+                                            <td>position</td>
                                             <td><input type="text" size="2" id="loc.x"></td>
                                             <td><input type="text" size="2" id="loc.y"></td>
                                             <td><input type="text" size="2" id="loc.z"></td>                                            
@@ -340,7 +357,7 @@
                                             <td><input type="checkbox" id="snapRot"></td>
                                         </tr>
                                         <tr>
-                                            <td>scale</td>
+                                            <td>scaling</td>
                                             <td><input type="text" size="2" id="scl.x"></td>
                                             <td><input type="text" size="2" id="scl.y"></td>
                                             <td><input type="text" size="2" id="scl.z"></td>
@@ -350,19 +367,6 @@
                                     </table>
                                     <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
                                     <button id="transBake">bake</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div style="float:left;clear:left">
-                                        <button id="genlocalAxis" title="switch local/global axis">l/g</button>
-                                        <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
-                                        <button id="operRot" ><span class="ui-icon ui-icon-arrowrefresh-1-e" title="rotate"></span>  </button>
-                                        <button id="operScale" ><span class="ui-icon ui-icon-arrow-4-diag" title="scale"></span>  </button>
-                                        <button id="operFocus" ><span class="ui-icon  ui-icon-zoomin" title="focus"></span>  </button>
-                                        <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
-                                        <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
-                                    </div>
                                 </td>
                             </tr>
                             <tr>
@@ -463,21 +467,46 @@
 
                     <h3>Material</h3>
                     <div id="Material" >
-                        Textures
-                        <select>
-                            <option value="diffuse">diffuse</option>
-                            <option value="emissive">emissive</option>
-                            <option value="ambient">ambient</option>
-                            <option value="specular">specular</option>
-                            <option value="bump">bump</option>
-                            <option value="lightMap">light map</option>
-                            <option value="opacity">opacity</option>
-                            <option value="reflection">reflection</option>
-                            <option value="refraction">refraction</option>
-                        </select>
-                        <br>
-                        <img height="64" width="64"/>
+                        <table>
+                            <tr>
+                                <td>
+                                    visibility
+                                </td>
+                                <td>
+                                    <div id="matVis"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    color
+                                </td>
+                                <td>
+                                    <div id="matVis"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Textures
+                                </td>
+                                <td>
+                                    <select>
+                                        <option value="diffuse">diffuse</option>
+                                        <option value="emissive">emissive</option>
+                                        <option value="ambient">ambient</option>
+                                        <option value="specular">specular</option>
+                                        <option value="bump">bump</option>
+                                        <option value="lightMap">light map</option>
+                                        <option value="opacity">opacity</option>
+                                        <option value="reflection">reflection</option>
+                                        <option value="refraction">refraction</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+
+                        
                         <!--
+                        <img height="64" width="64"/>
                         <table>
                             <tr>
                                 <td style="vertical-align: top;"> colors : 

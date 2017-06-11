@@ -1544,7 +1544,23 @@ namespace org.ssatguru.babylonjs.vishva {
             this.setSpaceLocal(!this.isSpaceLocal());
             return null;
         }
-
+        
+        public setSpace(space:string): string {
+            if (this.snapperOn) {
+                return "Cannot switch space when snapper is on"
+            }
+            if (space === "local"){
+                this.setSpaceLocal(true);
+            }else{
+                this.setSpaceLocal(false);
+            }
+            return null;
+        }
+        
+        public getSpace():string{
+            if (this.isSpaceLocal()) return "local";
+            else return "world";
+        }
         public setSpaceLocal(yes: boolean): string {
             if (this.editControl != null) this.editControl.setLocal(yes);
             this.globalAxisMode = !this.globalAxisMode;

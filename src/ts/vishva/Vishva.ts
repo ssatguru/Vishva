@@ -137,29 +137,7 @@ namespace org.ssatguru.babylonjs.vishva {
          */
         public switchDisabled: boolean = false;
 
-        walk: AnimData;
 
-        walkBack: AnimData;
-
-        idle: AnimData;
-
-        run: AnimData;
-
-        jump: AnimData;
-
-        turnLeft: AnimData;
-
-        turnRight: AnimData;
-
-        strafeLeft: AnimData;
-
-        strafeRight: AnimData;
-
-        anims: AnimData[];
-
-        avatarSpeed: number = 0.05;
-
-        prevAnim: AnimData = null;
 
         key: Key;
 
@@ -477,13 +455,23 @@ namespace org.ssatguru.babylonjs.vishva {
             this.key.rot = false;
             this.key.scale = false;
         }
-
+        
+        walk: AnimData;
+        walkBack: AnimData;
+        idle: AnimData;
+        run: AnimData;
+        jump: AnimData;
+        turnLeft: AnimData;
+        turnRight: AnimData;
+        strafeLeft: AnimData;
+        strafeRight: AnimData;
+        anims: AnimData[];
+        avatarSpeed: number = 0.05;
+        prevAnim: AnimData = null;
         private jumpCycleMax: number = 25;
-
         private jumpCycle: number = this.jumpCycleMax;
-
         private wasJumping: boolean = false;
-
+        
         private moveAVandCamera() {
             let oldAvPos = this.avatar.position.clone();
             var anim: AnimData = this.idle;
@@ -602,6 +590,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
+        
+        
         fogDensity: number = 0;
 
         private meshPicked: AbstractMesh;
@@ -937,6 +927,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (event.keyCode === 27) this.key.esc = false;
 
             var chr: string = String.fromCharCode(event.keyCode);
+            //WASD or arrow keys
             if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
             if ((chr === "A") || (event.keyCode === 37)) this.key.left = true;
             if ((chr === "D") || (event.keyCode === 39)) this.key.right = true;
@@ -2807,14 +2798,11 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export class AnimData {
+        
         public name: string;
-
         public s: number;
-
         public e: number;
-
         public r: number;
-
         public exist: boolean = false;
 
         public constructor(name: string, s: number, e: number, d: number) {

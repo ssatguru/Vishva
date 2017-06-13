@@ -1548,7 +1548,7 @@ var org;
                         //how far away from the center can the avatar go
                         //fog will start at the limitStart and will become dense at LimitEnd
                         this.moveLimitStart = 114;
-                        this.moveLimitEnd = 224;
+                        this.moveLimitEnd = 124;
                         this.oldAvPos = new Vector3(0, 0, 0);
                         /*
                         private jumpCycleMax: number = 25;

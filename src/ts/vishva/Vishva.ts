@@ -452,7 +452,7 @@ namespace org.ssatguru.babylonjs.vishva {
         //how far away from the center can the avatar go
         //fog will start at the limitStart and will become dense at LimitEnd
         private moveLimitStart = 114;
-        private moveLimitEnd = 224;
+        private moveLimitEnd = 124;
         
         oldAvPos:Vector3 = new Vector3(0,0,0);
         private moveAVandCamera() {

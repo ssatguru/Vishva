@@ -1,27 +1,20 @@
 
 namespace org.ssatguru.babylonjs.vishva {
     import EditControl = org.ssatguru.babylonjs.component.EditControl;
+    import CharacterControl = org.ssatguru.babylonjs.component.CharacterControl;
     import AbstractMesh = BABYLON.AbstractMesh;
-    import Action = BABYLON.Action;
-    import ActionEvent = BABYLON.ActionEvent;
-    import ActionManager = BABYLON.ActionManager;
-    import Animatable = BABYLON.Animatable;
     import Animation = BABYLON.Animation;
     import AnimationRange = BABYLON.AnimationRange;
     import ArcRotateCamera = BABYLON.ArcRotateCamera;
     import AssetsManager = BABYLON.AssetsManager;
-    import Axis = BABYLON.Axis;
     import BaseTexture = BABYLON.BaseTexture;
     import Bone = BABYLON.Bone;
     import BoundingInfo = BABYLON.BoundingInfo;
-    import Camera = BABYLON.Camera;
     import Color3 = BABYLON.Color3;
     import CubeTexture = BABYLON.CubeTexture;
     import CSG = BABYLON.CSG;
     import DirectionalLight = BABYLON.DirectionalLight;
     import Engine = BABYLON.Engine;
-    import ExecuteCodeAction = BABYLON.ExecuteCodeAction;
-    import GroundMesh = BABYLON.GroundMesh;
     import HemisphericLight = BABYLON.HemisphericLight;
     import IAssetTask = BABYLON.IAssetTask;
     import IShadowLight = BABYLON.IShadowLight;
@@ -35,15 +28,12 @@ namespace org.ssatguru.babylonjs.vishva {
     import ParticleSystem = BABYLON.ParticleSystem;
     import PhysicsImpostor = BABYLON.PhysicsImpostor;
     import PickingInfo = BABYLON.PickingInfo;
-    import PointLight = BABYLON.PointLight
     import Quaternion = BABYLON.Quaternion;
     import Scene = BABYLON.Scene;
     import SceneLoader = BABYLON.SceneLoader;
     import SceneSerializer = BABYLON.SceneSerializer;
     import ShadowGenerator = BABYLON.ShadowGenerator;
-    import IShadowGenerator = BABYLON.IShadowGenerator;
     import Skeleton = BABYLON.Skeleton;
-    import Sound = BABYLON.Sound;
     import StandardMaterial = BABYLON.StandardMaterial;
     import Tags = BABYLON.Tags;
     import TextFileAssetTask = BABYLON.TextFileAssetTask;
@@ -155,10 +145,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private enablePhysics: boolean = true;
 
-        //how far away from the center can the avatar go
-        //fog will start at the limitStart and will become dense at LimitEnd
-        private moveLimitStart = 114;
-        private moveLimitEnd = 124;
+       
 
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
@@ -357,14 +344,19 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (!avFound) {
                 console.log("no vishva av found. creating av");
+                //remember loadAvatar is async. process
                 this.loadAvatar();
             } else {
                 this.avatarSkeleton.enableBlending(0.1);
+                this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
             }
             SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
             this.snas = null;
+
             this.render();
         }
+
+        cc: CharacterControl;
 
         private render() {
             this.scene.registerBeforeRender(() => { return this.process() });
@@ -431,6 +423,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (this.isFocusOnAv) {
                 if (this.editControl == null) {
                     this.moveAVandCamera();
+                    
                 } else {
                     if (!this.editControl.isEditing()) {
                         this.moveAVandCamera();
@@ -443,7 +436,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.switchFocusToAV();
                 }
             }
-            if (this.key.esc){
+            if (this.key.esc) {
                 this.multiUnSelectAll();
             }
             this.resetKeys();
@@ -456,23 +449,36 @@ namespace org.ssatguru.babylonjs.vishva {
             this.key.scale = false;
         }
         
-        walk: AnimData;
-        walkBack: AnimData;
-        idle: AnimData;
-        run: AnimData;
-        jump: AnimData;
-        turnLeft: AnimData;
-        turnRight: AnimData;
-        strafeLeft: AnimData;
-        strafeRight: AnimData;
-        anims: AnimData[];
-        avatarSpeed: number = 0.05;
-        prevAnim: AnimData = null;
+        //how far away from the center can the avatar go
+        //fog will start at the limitStart and will become dense at LimitEnd
+        private moveLimitStart = 114;
+        private moveLimitEnd = 224;
+        
+        oldAvPos:Vector3 = new Vector3(0,0,0);
+        private moveAVandCamera() {
+            this.oldAvPos.copyFrom(this.avatar.position);
+            
+            if (!this.cc.moveAVandCamera()) return;
+            
+            let avPos = this.avatar.position.length();
+            if (avPos > this.moveLimitStart) {
+                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
+            } else {
+                this.scene.fogDensity = this.fogDensity;
+            }
+            if (avPos > this.moveLimitEnd) {
+                this.avatar.position.copyFrom(this.oldAvPos);
+            }
+
+        }
+
+
+        /*
         private jumpCycleMax: number = 25;
         private jumpCycle: number = this.jumpCycleMax;
         private wasJumping: boolean = false;
         
-        private moveAVandCamera() {
+        private moveAVandCamera_old() {
             let oldAvPos = this.avatar.position.clone();
             var anim: AnimData = this.idle;
             var moving: boolean = false;
@@ -590,8 +596,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
-        
-        
+        */
+
         fogDensity: number = 0;
 
         private meshPicked: AbstractMesh;
@@ -613,10 +619,10 @@ namespace org.ssatguru.babylonjs.vishva {
             evt.preventDefault();
             if (evt.button !== 2) return;
             if (pickResult.hit) {
-                if (this.key.ctl){
-                    if ((!this.isMeshSelected) || (pickResult.pickedMesh !== this.meshPicked)){
-                         this.multiSelect(pickResult.pickedMesh);
-                         return;
+                if (this.key.ctl) {
+                    if ((!this.isMeshSelected) || (pickResult.pickedMesh !== this.meshPicked)) {
+                        this.multiSelect(pickResult.pickedMesh);
+                        return;
                     }
                 }
                 if (!this.isMeshSelected) {
@@ -773,8 +779,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
         }
-        private multiSelect( currentMesh: AbstractMesh) {
-            console.log("mutliselect" );
+        private multiSelect(currentMesh: AbstractMesh) {
+            console.log("mutliselect");
             if (this.meshesPicked == null) {
                 this.meshesPicked = new Array<AbstractMesh>();
 
@@ -787,37 +793,37 @@ namespace org.ssatguru.babylonjs.vishva {
                 currentMesh.showBoundingBox = true;
             }
         }
-        
+
         //if mesh was already selected then unselect it
         //return true if the mesh was unselected
-        private multiUnSelect( mesh: AbstractMesh):boolean{
-             if (this.meshesPicked == null) return false;
+        private multiUnSelect(mesh: AbstractMesh): boolean {
+            if (this.meshesPicked == null) return false;
             let i = this.meshesPicked.indexOf(mesh);
             if (i >= 0) {
                 this.meshesPicked.splice(i, 1);
                 mesh.showBoundingBox = false;
                 return true;
-            } 
+            }
             return false;
         }
-        private multiUnSelectAll(){
-            if (this.meshesPicked === null) return;                
-            for(let mesh of this.meshesPicked){
+        private multiUnSelectAll() {
+            if (this.meshesPicked === null) return;
+            for (let mesh of this.meshesPicked) {
                 mesh.showBoundingBox = false;
             }
             this.meshesPicked = null;
         }
-        
+
         private removeEditControl() {
             this.multiUnSelectAll();
             this.isMeshSelected = false;
             //            if (!this.focusOnAv) {
             //                this.switchFocusToAV();
             //            }
-            
+
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-            if (this.editControl.isScalingEnabled()){
+            if (this.editControl.isScalingEnabled()) {
                 this.setSpaceLocal(this.wasSpaceLocal);
             }
             this.editControl.detach();
@@ -830,7 +836,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                 this.restorePhyParms();
             }
-            
+
         }
 
         private switchFocusToAV() {
@@ -901,17 +907,31 @@ namespace org.ssatguru.babylonjs.vishva {
 
         //////////////////////////////////////////////////////////
 
+        anims: AnimData[];
         private initAnims() {
-            this.walk = new AnimData("walk", 7, 35, 1);
-            this.walkBack = new AnimData("walkBack", 39, 65, 0.5);
-            this.idle = new AnimData("idle", 203, 283, 1);
-            this.run = new AnimData("run", 69, 95, 1);
-            this.jump = new AnimData("jump", 101, 103, 0.5);
-            this.turnLeft = new AnimData("turnLeft", 107, 151, 0.5);
-            this.turnRight = new AnimData("turnRight", 155, 199, 0.5);
-            this.strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
-            this.strafeRight = new AnimData("strafeRight", 0, 0, 1);
-            this.anims = [this.walk, this.walkBack, this.idle, this.run, this.jump, this.turnLeft, this.turnRight, this.strafeLeft, this.strafeRight];
+            let walk: AnimData;
+            let walkBack: AnimData;
+            let idle: AnimData;
+            let run: AnimData;
+            let jump: AnimData;
+            let turnLeft: AnimData;
+            let turnRight: AnimData;
+            let strafeLeft: AnimData;
+            let strafeRight: AnimData;
+            let avatarSpeed: number = 0.05;
+            let prevAnim: AnimData = null;
+
+            walk = new AnimData("walk", 7, 35, 1);
+            walkBack = new AnimData("walkBack", 39, 65, 0.5);
+            idle = new AnimData("idle", 203, 283, 1);
+            run = new AnimData("run", 69, 95, 1);
+            jump = new AnimData("jump", 101, 103, 0.5);
+            turnLeft = new AnimData("turnLeft", 107, 151, 0.5);
+            turnRight = new AnimData("turnRight", 155, 199, 0.5);
+            strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
+            strafeRight = new AnimData("strafeRight", 0, 0, 1);
+            
+            this.anims = [walk, walkBack, idle, run, jump, turnLeft, turnRight, strafeLeft, strafeRight];
         }
 
         private onWindowResize(event: Event) {
@@ -920,20 +940,16 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private onKeyDown(e: Event) {
             var event: KeyboardEvent = <KeyboardEvent>e;
-            if (event.keyCode === 16) this.key.shift = true;
+            
             if (event.keyCode === 17) this.key.ctl = true;
-
-            if (event.keyCode === 32) this.key.jump = false;
+           
             if (event.keyCode === 27) this.key.esc = false;
 
             var chr: string = String.fromCharCode(event.keyCode);
             //WASD or arrow keys
             if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
-            if ((chr === "A") || (event.keyCode === 37)) this.key.left = true;
-            if ((chr === "D") || (event.keyCode === 39)) this.key.right = true;
             if ((chr === "S") || (event.keyCode === 40)) this.key.down = true;
-            if (chr === "Q") this.key.stepLeft = true;
-            if (chr === "E") this.key.stepRight = true;
+
             //
             if (chr === "1") this.key.trans = false;
             if (chr === "2") this.key.rot = false;
@@ -943,19 +959,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private onKeyUp(e: Event) {
             var event: KeyboardEvent = <KeyboardEvent>e;
-            if (event.keyCode === 16) this.key.shift = false;
             if (event.keyCode === 17) this.key.ctl = false;
-            //
-            if (event.keyCode === 32) this.key.jump = true;
             if (event.keyCode === 27) this.key.esc = true;
             //
             var chr: string = String.fromCharCode(event.keyCode);
             if ((chr === "W") || (event.keyCode === 38)) this.key.up = false;
-            if ((chr === "A") || (event.keyCode === 37)) this.key.left = false;
-            if ((chr === "D") || (event.keyCode === 39)) this.key.right = false;
             if ((chr === "S") || (event.keyCode === 40)) this.key.down = false;
-            if (chr === "Q") this.key.stepLeft = false;
-            if (chr === "E") this.key.stepRight = false;
             //
             if (chr === "1") this.key.trans = true;
             if (chr === "2") this.key.rot = true;
@@ -1483,7 +1492,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public setTransOn() {
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-            if (this.editControl.isScalingEnabled()){
+            if (this.editControl.isScalingEnabled()) {
                 this.setSpaceLocal(this.wasSpaceLocal);
             }
             this.editControl.enableTranslation();
@@ -1494,7 +1503,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public setRotOn() {
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-            if (this.editControl.isScalingEnabled()){
+            if (this.editControl.isScalingEnabled()) {
                 this.setSpaceLocal(this.wasSpaceLocal);
             }
             this.editControl.enableRotation();
@@ -1502,20 +1511,20 @@ namespace org.ssatguru.babylonjs.vishva {
         public isRotOn(): boolean {
             return this.editControl.isRotationEnabled();
         }
-        
-        wasSpaceLocal:boolean;
+
+        wasSpaceLocal: boolean;
         public setScaleOn() {
             //make space local for scaling
             //remember what the space was so we can restore it back later on
-            if (!this.isSpaceLocal()){
+            if (!this.isSpaceLocal()) {
                 this.setSpaceLocal(true);
-                this.wasSpaceLocal=false;
-            }else{
-                this.wasSpaceLocal=true;
+                this.wasSpaceLocal = false;
+            } else {
+                this.wasSpaceLocal = true;
             }
             this.editControl.enableScaling();
         }
-        
+
         public isScaleOn(): boolean {
             return this.editControl.isScalingEnabled();
         }
@@ -1527,7 +1536,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.focusOnMesh(this.meshPicked, 25);
         }
-        
+
         public toggleSpace(): string {
             if (this.snapperOn) {
                 return "Cannot switch axis mode when snapper is on"
@@ -1535,20 +1544,20 @@ namespace org.ssatguru.babylonjs.vishva {
             this.setSpaceLocal(!this.isSpaceLocal());
             return null;
         }
-        
-        public setSpace(space:string): string {
+
+        public setSpace(space: string): string {
             if (this.snapperOn) {
                 return "Cannot switch space when snapper is on"
             }
-            if (space === "local"){
+            if (space === "local") {
                 this.setSpaceLocal(true);
-            }else{
+            } else {
                 this.setSpaceLocal(false);
             }
             return null;
         }
-        
-        public getSpace():string{
+
+        public getSpace(): string {
             if (this.isSpaceLocal()) return "local";
             else return "world";
         }
@@ -1645,11 +1654,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public snapper(yes: boolean): string {
             if (!this.globalAxisMode && yes) {
-              this.globalAxisMode = true;
-              this.wasSpaceLocal=false;
+                this.globalAxisMode = true;
+                this.wasSpaceLocal = false;
             }
             this.snapperOn = yes;
-            
+
             //if edit control is already up then lets switch snaps on
             if (this.editControl != null) {
                 if (this.snapperOn) {
@@ -1729,10 +1738,10 @@ namespace org.ssatguru.babylonjs.vishva {
         public getScale(): Vector3 {
             return this.meshPicked.scaling;
         }
-        
-        public bakeTransforms(){
-            let savePos:Vector3 = this.meshPicked.position.clone();
-            this.meshPicked.position.copyFromFloats(0,0,0);
+
+        public bakeTransforms() {
+            let savePos: Vector3 = this.meshPicked.position.clone();
+            this.meshPicked.position.copyFromFloats(0, 0, 0);
             (<Mesh>this.meshPicked).bakeCurrentTransformIntoVertices();
             this.meshPicked.position = savePos;
             this.meshPicked.computeWorldMatrix(true);
@@ -2350,7 +2359,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.scene = null;
             this.avatarSkeleton = null;
             this.avatar = null;
-            this.prevAnim = null;
+            //TODO Charcter Controller check implication
+            // this.prevAnim = null; 
             SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.onSceneLoaded(scene) });
         }
 
@@ -2402,11 +2412,12 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.material = water;
         }
 
-        public switch_avatar(): string {
+        public switchAvatar(): string {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
             if (this.isAvatar(<Mesh>this.meshPicked)) {
+                //old avatar
                 SNAManager.getSNAManager().enableSnAs(this.avatar);
                 this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
                 this.avatar.isPickable = true;
@@ -2415,6 +2426,8 @@ namespace org.ssatguru.babylonjs.vishva {
                     Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
                     this.avatarSkeleton.name = "";
                 }
+                
+                //new avatar
                 this.avatar = <Mesh>this.meshPicked;
                 this.avatarSkeleton = this.avatar.skeleton;
                 Tags.AddTagsTo(this.avatar, "Vishva.avatar");
@@ -2434,6 +2447,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.isFocusOnAv = false;
                 this.removeEditControl();
                 SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
+                
+                //make character control to use the new avatar
+                this.cc.setAvatar(this.avatar);
+                this.cc.setAvatarSkeleton(this.avatarSkeleton);
+                //this.cc.setAnims(this.anims);
             } else {
                 return "cannot use this as avatar";
             }
@@ -2675,6 +2693,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 var textureName: string = sm.diffuseTexture.name;
                 sm.diffuseTexture.name = this.avatarFolder + textureName;
             }
+
+            this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
         }
 
         private setAnimationRange(skel: Skeleton) {
@@ -2798,7 +2818,7 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export class AnimData {
-        
+
         public name: string;
         public s: number;
         public e: number;

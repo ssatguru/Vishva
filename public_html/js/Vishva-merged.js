@@ -14,6 +14,272 @@ var org;
     (function (ssatguru) {
         var babylonjs;
         (function (babylonjs) {
+            var component;
+            (function (component) {
+                var Vector3 = BABYLON.Vector3;
+                var CharacterControl = (function () {
+                    function CharacterControl(avatar, avatarSkeleton, anims, camera) {
+                        var _this = this;
+                        this.avatarSpeed = 0.05;
+                        this.prevAnim = null;
+                        this.jumpCycleMax = 25;
+                        this.jumpCycle = this.jumpCycleMax;
+                        this.wasJumping = false;
+                        this.move = false;
+                        this.avatarSkeleton = avatarSkeleton;
+                        this.initAnims(anims);
+                        this.camera = camera;
+                        this.avatar = avatar;
+                        this.key = new Key();
+                        window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); }, false);
+                        window.addEventListener("keyup", function (e) { return _this.onKeyUp(e); }, false);
+                    }
+                    CharacterControl.prototype.setAvatar = function (avatar) {
+                        this.avatar = avatar;
+                    };
+                    CharacterControl.prototype.setAvatarSkeleton = function (avatarSkeleton) {
+                        this.avatarSkeleton = avatarSkeleton;
+                    };
+                    CharacterControl.prototype.setAnims = function (anims) {
+                        this.initAnims(anims);
+                    };
+                    CharacterControl.prototype.initAnims = function (anims) {
+                        this.walk = anims[0];
+                        this.walkBack = anims[1];
+                        this.idle = anims[2];
+                        this.run = anims[3];
+                        this.jump = anims[4];
+                        this.turnLeft = anims[5];
+                        this.turnRight = anims[6];
+                        this.strafeLeft = anims[7];
+                        this.strafeRight = anims[8];
+                    };
+                    CharacterControl.prototype.moveAVandCamera = function () {
+                        //skip everything if no movement key pressed
+                        if (!this.move) {
+                            if (this.prevAnim != this.idle) {
+                                this.prevAnim = this.idle;
+                                if (this.idle.exist)
+                                    this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                            }
+                            return false;
+                        }
+                        var anim = this.idle;
+                        var moving = false;
+                        var speed = 0;
+                        var upSpeed = 0.05;
+                        var dir = 1;
+                        var forward;
+                        var backwards;
+                        var stepLeft;
+                        var stepRight;
+                        var up;
+                        if (this.key.up) {
+                            if (this.key.shift) {
+                                speed = this.avatarSpeed * 2;
+                                anim = this.run;
+                            }
+                            else {
+                                speed = this.avatarSpeed;
+                                anim = this.walk;
+                            }
+                            if (this.key.jump) {
+                                this.wasJumping = true;
+                            }
+                            if (this.wasJumping) {
+                                upSpeed *= 2;
+                                if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                    dir = 1;
+                                    if (this.jumpCycle < 0) {
+                                        this.jumpCycle = this.jumpCycleMax;
+                                        upSpeed /= 2;
+                                        this.key.jump = false;
+                                        this.wasJumping = false;
+                                    }
+                                }
+                                else {
+                                    anim = this.jump;
+                                    dir = -1;
+                                }
+                                this.jumpCycle--;
+                            }
+                            //TODO testing physics
+                            forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                            this.avatar.moveWithCollisions(forward);
+                            //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
+                            moving = true;
+                        }
+                        else if (this.key.down) {
+                            backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                            this.avatar.moveWithCollisions(backwards);
+                            moving = true;
+                            anim = this.walkBack;
+                            if (this.key.jump)
+                                this.key.jump = false;
+                        }
+                        else if (this.key.stepLeft) {
+                            anim = this.strafeLeft;
+                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            this.avatar.moveWithCollisions(stepLeft);
+                            moving = true;
+                        }
+                        else if (this.key.stepRight) {
+                            anim = this.strafeRight;
+                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            this.avatar.moveWithCollisions(stepRight);
+                            moving = true;
+                        }
+                        if (!moving) {
+                            if (this.key.jump) {
+                                this.wasJumping = true;
+                            }
+                            if (this.wasJumping) {
+                                upSpeed *= 2;
+                                if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                    dir = 1;
+                                    if (this.jumpCycle < 0) {
+                                        this.jumpCycle = this.jumpCycleMax;
+                                        upSpeed /= 2;
+                                        this.key.jump = false;
+                                        this.wasJumping = false;
+                                    }
+                                }
+                                else {
+                                    anim = this.jump;
+                                    dir = -1;
+                                }
+                                this.jumpCycle--;
+                            }
+                            else
+                                dir = dir / 2;
+                            this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
+                        }
+                        if (!this.key.stepLeft && !this.key.stepRight) {
+                            if (this.key.left) {
+                                this.camera.alpha = this.camera.alpha + 0.022;
+                                if (!moving) {
+                                    this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                                    anim = this.turnLeft;
+                                }
+                            }
+                            else if (this.key.right) {
+                                this.camera.alpha = this.camera.alpha - 0.022;
+                                if (!moving) {
+                                    this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                                    anim = this.turnRight;
+                                }
+                            }
+                        }
+                        if (moving) {
+                            this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                        }
+                        if (this.prevAnim !== anim) {
+                            if (anim.exist) {
+                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                            }
+                            this.prevAnim = anim;
+                        }
+                        this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        return true;
+                    };
+                    CharacterControl.prototype.onKeyDown = function (e) {
+                        var event = e;
+                        var chr = String.fromCharCode(event.keyCode);
+                        if (event.keyCode === 32)
+                            this.key.jump = false;
+                        else if (event.keyCode === 16)
+                            this.key.shift = true;
+                        else if ((chr === "W") || (event.keyCode === 38))
+                            this.key.up = true;
+                        else if ((chr === "A") || (event.keyCode === 37))
+                            this.key.left = true;
+                        else if ((chr === "D") || (event.keyCode === 39))
+                            this.key.right = true;
+                        else if ((chr === "S") || (event.keyCode === 40))
+                            this.key.down = true;
+                        else if (chr === "Q")
+                            this.key.stepLeft = true;
+                        else if (chr === "E")
+                            this.key.stepRight = true;
+                        this.move = this.anyMovement();
+                    };
+                    CharacterControl.prototype.anyMovement = function () {
+                        if (this.key.up || this.key.down || this.key.left || this.key.right || this.key.stepLeft || this.key.stepRight || this.key.jump) {
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    };
+                    CharacterControl.prototype.onKeyUp = function (e) {
+                        var event = e;
+                        var chr = String.fromCharCode(event.keyCode);
+                        if (event.keyCode === 32)
+                            this.key.jump = true;
+                        else if (event.keyCode === 16) {
+                            this.key.shift = false;
+                        }
+                        else if ((chr === "W") || (event.keyCode === 38))
+                            this.key.up = false;
+                        else if ((chr === "A") || (event.keyCode === 37))
+                            this.key.left = false;
+                        else if ((chr === "D") || (event.keyCode === 39))
+                            this.key.right = false;
+                        else if ((chr === "S") || (event.keyCode === 40))
+                            this.key.down = false;
+                        else if (chr === "Q")
+                            this.key.stepLeft = false;
+                        else if (chr === "E")
+                            this.key.stepRight = false;
+                        this.move = this.anyMovement();
+                    };
+                    return CharacterControl;
+                }());
+                component.CharacterControl = CharacterControl;
+                var AnimData = (function () {
+                    function AnimData(name, s, e, d) {
+                        this.exist = false;
+                        this.s = 0;
+                        this.e = 0;
+                        this.r = 0;
+                        this.name = name;
+                        this.s = s;
+                        this.e = e;
+                        this.r = d;
+                    }
+                    return AnimData;
+                }());
+                component.AnimData = AnimData;
+                var Key = (function () {
+                    function Key() {
+                        this.up = false;
+                        this.down = false;
+                        this.right = false;
+                        this.left = false;
+                        this.stepRight = false;
+                        this.stepLeft = false;
+                        this.jump = false;
+                        this.shift = false;
+                        this.trans = false;
+                        this.rot = false;
+                        this.scale = false;
+                        this.esc = false;
+                        this.ctl = false;
+                        this.focus = false;
+                    }
+                    return Key;
+                }());
+                component.Key = Key;
+            })(component = babylonjs.component || (babylonjs.component = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
             var util;
             (function (util) {
                 var HREFsearch = (function () {
@@ -1205,6 +1471,7 @@ var org;
             var vishva;
             (function (vishva) {
                 var EditControl = org.ssatguru.babylonjs.component.EditControl;
+                var CharacterControl = org.ssatguru.babylonjs.component.CharacterControl;
                 var Animation = BABYLON.Animation;
                 var ArcRotateCamera = BABYLON.ArcRotateCamera;
                 var AssetsManager = BABYLON.AssetsManager;
@@ -1270,23 +1537,143 @@ var org;
                          * use this to prevent users from switching to another mesh during edit.
                          */
                         this.switchDisabled = false;
-                        this.avatarSpeed = 0.05;
-                        this.prevAnim = null;
                         this.keysDisabled = false;
                         this.showBoundingBox = false;
                         this.cameraCollision = true;
                         //automatcally open edit menu whenever a mesh is selected
                         this.autoEditMenu = true;
                         this.enablePhysics = true;
+                        this.isFocusOnAv = true;
+                        this.cameraAnimating = false;
                         //how far away from the center can the avatar go
                         //fog will start at the limitStart and will become dense at LimitEnd
                         this.moveLimitStart = 114;
-                        this.moveLimitEnd = 124;
-                        this.isFocusOnAv = true;
-                        this.cameraAnimating = false;
-                        this.jumpCycleMax = 25;
-                        this.jumpCycle = this.jumpCycleMax;
-                        this.wasJumping = false;
+                        this.moveLimitEnd = 224;
+                        this.oldAvPos = new Vector3(0, 0, 0);
+                        /*
+                        private jumpCycleMax: number = 25;
+                        private jumpCycle: number = this.jumpCycleMax;
+                        private wasJumping: boolean = false;
+                        
+                        private moveAVandCamera_old() {
+                            let oldAvPos = this.avatar.position.clone();
+                            var anim: AnimData = this.idle;
+                            var moving: boolean = false;
+                            var speed: number = 0;
+                            var upSpeed: number = 0.05;
+                            var dir: number = 1;
+                            var forward: Vector3;
+                            var backwards: Vector3;
+                            var stepLeft: Vector3;
+                            var stepRight: Vector3;
+                            var up: Vector3;
+                            if (this.key.up) {
+                                if (this.key.shift) {
+                                    speed = this.avatarSpeed * 2;
+                                    anim = this.run;
+                                } else {
+                                    speed = this.avatarSpeed;
+                                    anim = this.walk;
+                                }
+                                if (this.key.jump) {
+                                    this.wasJumping = true;
+                                }
+                                if (this.wasJumping) {
+                                    upSpeed *= 2;
+                                    if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                        dir = 1;
+                                        if (this.jumpCycle < 0) {
+                                            this.jumpCycle = this.jumpCycleMax;
+                                            upSpeed /= 2;
+                                            this.key.jump = false;
+                                            this.wasJumping = false;
+                                        }
+                                    } else {
+                                        anim = this.jump;
+                                        dir = -1;
+                                    }
+                                    this.jumpCycle--;
+                                }
+                                //TODO testing physics
+                                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                                this.avatar.moveWithCollisions(forward);
+                                //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
+                                moving = true;
+                            } else if (this.key.down) {
+                                backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                                this.avatar.moveWithCollisions(backwards);
+                                moving = true;
+                                anim = this.walkBack;
+                                if (this.key.jump) this.key.jump = false;
+                            } else if (this.key.stepLeft) {
+                                anim = this.strafeLeft;
+                                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                                this.avatar.moveWithCollisions(stepLeft);
+                                moving = true;
+                            } else if (this.key.stepRight) {
+                                anim = this.strafeRight;
+                                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                                this.avatar.moveWithCollisions(stepRight);
+                                moving = true;
+                            }
+                            if (!moving) {
+                                if (this.key.jump) {
+                                    this.wasJumping = true;
+                                }
+                                if (this.wasJumping) {
+                                    upSpeed *= 2;
+                                    if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                        dir = 1;
+                                        if (this.jumpCycle < 0) {
+                                            this.jumpCycle = this.jumpCycleMax;
+                                            upSpeed /= 2;
+                                            this.key.jump = false;
+                                            this.wasJumping = false;
+                                        }
+                                    } else {
+                                        anim = this.jump;
+                                        dir = -1;
+                                    }
+                                    this.jumpCycle--;
+                                } else dir = dir / 2;
+                                this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
+                            }
+                            if (!this.key.stepLeft && !this.key.stepRight) {
+                                if (this.key.left) {
+                                    this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
+                                    if (!moving) {
+                                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                                        anim = this.turnLeft;
+                                    }
+                                } else if (this.key.right) {
+                                    this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
+                                    if (!moving) {
+                                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                                        anim = this.turnRight;
+                                    }
+                                }
+                            }
+                            if (moving) {
+                                this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
+                            }
+                            if (this.prevAnim !== anim) {
+                                if (anim.exist) {
+                                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                                }
+                                this.prevAnim = anim;
+                            }
+                            let avPos = this.avatar.position.length();
+                            if (avPos > this.moveLimitStart) {
+                                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
+                            } else {
+                                this.scene.fogDensity = this.fogDensity;
+                            }
+                            if (avPos > this.moveLimitEnd) {
+                                this.avatar.position = oldAvPos;
+                            }
+                            this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        }
+                        */
                         this.fogDensity = 0;
                         this.meshesPicked = null;
                         this.isMeshSelected = false;
@@ -1481,10 +1868,12 @@ var org;
                         }
                         if (!avFound) {
                             console.log("no vishva av found. creating av");
+                            //remember loadAvatar is async. process
                             this.loadAvatar();
                         }
                         else {
                             this.avatarSkeleton.enableBlending(0.1);
+                            this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
                         }
                         vishva.SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
                         this.snas = null;
@@ -1580,122 +1969,9 @@ var org;
                         this.key.scale = false;
                     };
                     Vishva.prototype.moveAVandCamera = function () {
-                        var oldAvPos = this.avatar.position.clone();
-                        var anim = this.idle;
-                        var moving = false;
-                        var speed = 0;
-                        var upSpeed = 0.05;
-                        var dir = 1;
-                        var forward;
-                        var backwards;
-                        var stepLeft;
-                        var stepRight;
-                        var up;
-                        if (this.key.up) {
-                            if (this.key.shift) {
-                                speed = this.avatarSpeed * 2;
-                                anim = this.run;
-                            }
-                            else {
-                                speed = this.avatarSpeed;
-                                anim = this.walk;
-                            }
-                            if (this.key.jump) {
-                                this.wasJumping = true;
-                            }
-                            if (this.wasJumping) {
-                                upSpeed *= 2;
-                                if (this.jumpCycle < this.jumpCycleMax / 2) {
-                                    dir = 1;
-                                    if (this.jumpCycle < 0) {
-                                        this.jumpCycle = this.jumpCycleMax;
-                                        upSpeed /= 2;
-                                        this.key.jump = false;
-                                        this.wasJumping = false;
-                                    }
-                                }
-                                else {
-                                    anim = this.jump;
-                                    dir = -1;
-                                }
-                                this.jumpCycle--;
-                            }
-                            //TODO testing physics
-                            forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
-                            this.avatar.moveWithCollisions(forward);
-                            //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
-                            moving = true;
-                        }
-                        else if (this.key.down) {
-                            backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                            this.avatar.moveWithCollisions(backwards);
-                            moving = true;
-                            anim = this.walkBack;
-                            if (this.key.jump)
-                                this.key.jump = false;
-                        }
-                        else if (this.key.stepLeft) {
-                            anim = this.strafeLeft;
-                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            this.avatar.moveWithCollisions(stepLeft);
-                            moving = true;
-                        }
-                        else if (this.key.stepRight) {
-                            anim = this.strafeRight;
-                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            this.avatar.moveWithCollisions(stepRight);
-                            moving = true;
-                        }
-                        if (!moving) {
-                            if (this.key.jump) {
-                                this.wasJumping = true;
-                            }
-                            if (this.wasJumping) {
-                                upSpeed *= 2;
-                                if (this.jumpCycle < this.jumpCycleMax / 2) {
-                                    dir = 1;
-                                    if (this.jumpCycle < 0) {
-                                        this.jumpCycle = this.jumpCycleMax;
-                                        upSpeed /= 2;
-                                        this.key.jump = false;
-                                        this.wasJumping = false;
-                                    }
-                                }
-                                else {
-                                    anim = this.jump;
-                                    dir = -1;
-                                }
-                                this.jumpCycle--;
-                            }
-                            else
-                                dir = dir / 2;
-                            this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
-                        }
-                        if (!this.key.stepLeft && !this.key.stepRight) {
-                            if (this.key.left) {
-                                this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
-                                if (!moving) {
-                                    this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                                    anim = this.turnLeft;
-                                }
-                            }
-                            else if (this.key.right) {
-                                this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
-                                if (!moving) {
-                                    this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                                    anim = this.turnRight;
-                                }
-                            }
-                        }
-                        if (moving) {
-                            this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                        }
-                        if (this.prevAnim !== anim) {
-                            if (anim.exist) {
-                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                            }
-                            this.prevAnim = anim;
-                        }
+                        this.oldAvPos.copyFrom(this.avatar.position);
+                        if (!this.cc.moveAVandCamera())
+                            return;
                         var avPos = this.avatar.position.length();
                         if (avPos > this.moveLimitStart) {
                             this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart);
@@ -1704,9 +1980,8 @@ var org;
                             this.scene.fogDensity = this.fogDensity;
                         }
                         if (avPos > this.moveLimitEnd) {
-                            this.avatar.position = oldAvPos;
+                            this.avatar.position.copyFrom(this.oldAvPos);
                         }
-                        this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                     };
                     Vishva.prototype.pickObject = function (evt, pickResult) {
                         // prevent curosr from changing to a edit caret in Chrome
@@ -1976,45 +2251,44 @@ var org;
                             this.mainCamera.attachControl(this.canvas);
                         }
                     };
-                    //////////////////////////////////////////////////////////
                     Vishva.prototype.initAnims = function () {
-                        this.walk = new AnimData("walk", 7, 35, 1);
-                        this.walkBack = new AnimData("walkBack", 39, 65, 0.5);
-                        this.idle = new AnimData("idle", 203, 283, 1);
-                        this.run = new AnimData("run", 69, 95, 1);
-                        this.jump = new AnimData("jump", 101, 103, 0.5);
-                        this.turnLeft = new AnimData("turnLeft", 107, 151, 0.5);
-                        this.turnRight = new AnimData("turnRight", 155, 199, 0.5);
-                        this.strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
-                        this.strafeRight = new AnimData("strafeRight", 0, 0, 1);
-                        this.anims = [this.walk, this.walkBack, this.idle, this.run, this.jump, this.turnLeft, this.turnRight, this.strafeLeft, this.strafeRight];
+                        var walk;
+                        var walkBack;
+                        var idle;
+                        var run;
+                        var jump;
+                        var turnLeft;
+                        var turnRight;
+                        var strafeLeft;
+                        var strafeRight;
+                        var avatarSpeed = 0.05;
+                        var prevAnim = null;
+                        walk = new AnimData("walk", 7, 35, 1);
+                        walkBack = new AnimData("walkBack", 39, 65, 0.5);
+                        idle = new AnimData("idle", 203, 283, 1);
+                        run = new AnimData("run", 69, 95, 1);
+                        jump = new AnimData("jump", 101, 103, 0.5);
+                        turnLeft = new AnimData("turnLeft", 107, 151, 0.5);
+                        turnRight = new AnimData("turnRight", 155, 199, 0.5);
+                        strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
+                        strafeRight = new AnimData("strafeRight", 0, 0, 1);
+                        this.anims = [walk, walkBack, idle, run, jump, turnLeft, turnRight, strafeLeft, strafeRight];
                     };
                     Vishva.prototype.onWindowResize = function (event) {
                         this.engine.resize();
                     };
                     Vishva.prototype.onKeyDown = function (e) {
                         var event = e;
-                        if (event.keyCode === 16)
-                            this.key.shift = true;
                         if (event.keyCode === 17)
                             this.key.ctl = true;
-                        if (event.keyCode === 32)
-                            this.key.jump = false;
                         if (event.keyCode === 27)
                             this.key.esc = false;
                         var chr = String.fromCharCode(event.keyCode);
+                        //WASD or arrow keys
                         if ((chr === "W") || (event.keyCode === 38))
                             this.key.up = true;
-                        if ((chr === "A") || (event.keyCode === 37))
-                            this.key.left = true;
-                        if ((chr === "D") || (event.keyCode === 39))
-                            this.key.right = true;
                         if ((chr === "S") || (event.keyCode === 40))
                             this.key.down = true;
-                        if (chr === "Q")
-                            this.key.stepLeft = true;
-                        if (chr === "E")
-                            this.key.stepRight = true;
                         //
                         if (chr === "1")
                             this.key.trans = false;
@@ -2027,29 +2301,16 @@ var org;
                     };
                     Vishva.prototype.onKeyUp = function (e) {
                         var event = e;
-                        if (event.keyCode === 16)
-                            this.key.shift = false;
                         if (event.keyCode === 17)
                             this.key.ctl = false;
-                        //
-                        if (event.keyCode === 32)
-                            this.key.jump = true;
                         if (event.keyCode === 27)
                             this.key.esc = true;
                         //
                         var chr = String.fromCharCode(event.keyCode);
                         if ((chr === "W") || (event.keyCode === 38))
                             this.key.up = false;
-                        if ((chr === "A") || (event.keyCode === 37))
-                            this.key.left = false;
-                        if ((chr === "D") || (event.keyCode === 39))
-                            this.key.right = false;
                         if ((chr === "S") || (event.keyCode === 40))
                             this.key.down = false;
-                        if (chr === "Q")
-                            this.key.stepLeft = false;
-                        if (chr === "E")
-                            this.key.stepRight = false;
                         //
                         if (chr === "1")
                             this.key.trans = true;
@@ -3377,7 +3638,8 @@ var org;
                         this.scene = null;
                         this.avatarSkeleton = null;
                         this.avatar = null;
-                        this.prevAnim = null;
+                        //TODO Charcter Controller check implication
+                        // this.prevAnim = null; 
                         SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, function (scene) { return _this.onSceneLoaded(scene); });
                     };
                     Vishva.prototype.createWater = function () {
@@ -3419,11 +3681,12 @@ var org;
                         water.addToRenderList(this.skybox);
                         this.meshPicked.material = water;
                     };
-                    Vishva.prototype.switch_avatar = function () {
+                    Vishva.prototype.switchAvatar = function () {
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
                         }
                         if (this.isAvatar(this.meshPicked)) {
+                            //old avatar
                             vishva.SNAManager.getSNAManager().enableSnAs(this.avatar);
                             this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
                             this.avatar.isPickable = true;
@@ -3432,6 +3695,7 @@ var org;
                                 Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
                                 this.avatarSkeleton.name = "";
                             }
+                            //new avatar
                             this.avatar = this.meshPicked;
                             this.avatarSkeleton = this.avatar.skeleton;
                             Tags.AddTagsTo(this.avatar, "Vishva.avatar");
@@ -3451,6 +3715,10 @@ var org;
                             this.isFocusOnAv = false;
                             this.removeEditControl();
                             vishva.SNAManager.getSNAManager().disableSnAs(this.avatar);
+                            //make character control to use the new avatar
+                            this.cc.setAvatar(this.avatar);
+                            this.cc.setAvatarSkeleton(this.avatarSkeleton);
+                            //this.cc.setAnims(this.anims);
                         }
                         else {
                             return "cannot use this as avatar";
@@ -3680,6 +3948,7 @@ var org;
                             var textureName = sm.diffuseTexture.name;
                             sm.diffuseTexture.name = this.avatarFolder + textureName;
                         }
+                        this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
                     };
                     Vishva.prototype.setAnimationRange = function (skel) {
                         for (var index149 = 0; index149 < this.anims.length; index149++) {
@@ -4962,7 +5231,7 @@ var org;
                             return false;
                         };
                         swAv.onclick = function (e) {
-                            var err = _this.vishva.switch_avatar();
+                            var err = _this.vishva.switchAvatar();
                             if (err != null) {
                                 _this.showAlertDiag(err);
                             }

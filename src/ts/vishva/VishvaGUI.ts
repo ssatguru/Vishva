@@ -1281,7 +1281,7 @@ namespace org.ssatguru.babylonjs.vishva {
             };
 
             swAv.onclick = (e) => {
-                var err: string = this.vishva.switch_avatar();
+                var err: string = this.vishva.switchAvatar();
                 if (err != null) {
                     this.showAlertDiag(err);
                 }

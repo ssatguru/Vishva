@@ -1518,7 +1518,7 @@ var org;
                         this.snapTransValue = 1;
                         this.snapRotValue = Math.PI / 4;
                         this.snapScaleValue = 0.5;
-                        this.globalAxisMode = false;
+                        this.spaceWorld = false;
                         this.skyboxTextures = "vishva/internal/textures/skybox-default/default";
                         this.avatarFolder = "vishva/internal/avatar/";
                         this.avatarFile = "starterAvatars.babylon";
@@ -2006,7 +2006,7 @@ var org;
                                 this.switchToQuats(this.meshPicked);
                                 this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
                                 this.editControl.enableTranslation();
-                                if (this.globalAxisMode) {
+                                if (this.spaceWorld) {
                                     this.editControl.setLocal(false);
                                 }
                                 if (this.autoEditMenu) {
@@ -2151,7 +2151,6 @@ var org;
                         }
                     };
                     Vishva.prototype.multiSelect = function (currentMesh) {
-                        console.log("mutliselect");
                         if (this.meshesPicked == null) {
                             this.meshesPicked = new Array();
                         }
@@ -2436,7 +2435,6 @@ var org;
                             return "no mesh selected";
                         }
                         this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
-                        console.log("enable : " + this.meshPicked.isEnabled());
                     };
                     Vishva.prototype.disableIt = function (yes) {
                         this.meshPicked.setEnabled(!yes);
@@ -2695,7 +2693,6 @@ var org;
                             if (this.meshesPicked.length > 2) {
                                 return "please select only two mesh";
                             }
-                            console.log("subtracting");
                             var csg1 = CSG.FromMesh(this.meshPicked);
                             var csg2 = CSG.FromMesh(this.meshesPicked[0]);
                             var csg3 = void 0;
@@ -2866,13 +2863,6 @@ var org;
                         }
                         this.focusOnMesh(this.meshPicked, 25);
                     };
-                    Vishva.prototype.toggleSpace = function () {
-                        if (this.snapperOn) {
-                            return "Cannot switch axis mode when snapper is on";
-                        }
-                        this.setSpaceLocal(!this.isSpaceLocal());
-                        return null;
-                    };
                     Vishva.prototype.setSpace = function (space) {
                         if (this.snapperOn) {
                             return "Cannot switch space when snapper is on";
@@ -2894,12 +2884,12 @@ var org;
                     Vishva.prototype.setSpaceLocal = function (yes) {
                         if (this.editControl != null)
                             this.editControl.setLocal(yes);
-                        this.globalAxisMode = !this.globalAxisMode;
+                        this.spaceWorld = !yes;
                         return null;
                     };
                     Vishva.prototype.isSpaceLocal = function () {
                         //if (this.editControl != null) return this.editControl.isLocal(); else return true;
-                        return !this.globalAxisMode;
+                        return !this.spaceWorld;
                     };
                     Vishva.prototype.undo = function () {
                         if (this.editControl != null)
@@ -2979,8 +2969,8 @@ var org;
                         return;
                     };
                     Vishva.prototype.snapper = function (yes) {
-                        if (!this.globalAxisMode && yes) {
-                            this.globalAxisMode = true;
+                        if (!this.spaceWorld && yes) {
+                            this.spaceWorld = true;
                             this.wasSpaceLocal = false;
                         }
                         this.snapperOn = yes;
@@ -3291,11 +3281,9 @@ var org;
                     Vishva.prototype.toggleDebug = function () {
                         //if (this.scene.debugLayer.isVisible()) {
                         if (this.debugVisible) {
-                            console.log("hiding debug");
                             this.scene.debugLayer.hide();
                         }
                         else {
-                            console.log("showing debug");
                             this.scene.debugLayer.show();
                         }
                         this.debugVisible = !this.debugVisible;
@@ -3816,7 +3804,6 @@ var org;
                         return skybox;
                     };
                     Vishva.prototype.toggleSnow = function () {
-                        console.log("creating snow");
                         if (this.snowPart === null) {
                             this.snowPart = this.createSnowPart();
                         }
@@ -3855,7 +3842,6 @@ var org;
                         return part;
                     };
                     Vishva.prototype.toggleRain = function () {
-                        console.log("creating rain");
                         if (this.rainPart === null) {
                             this.rainPart = this.createRainPart();
                         }

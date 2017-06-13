@@ -73,7 +73,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private snapRotValue: number = Math.PI / 4;
         private snapScaleValue: number = 0.5;
 
-        private globalAxisMode: boolean = false;
+        private spaceWorld: boolean = false;
 
         skyboxes: Array<string>;
 
@@ -636,7 +636,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.switchToQuats(this.meshPicked);
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
                     this.editControl.enableTranslation();
-                    if (this.globalAxisMode) {
+                    if (this.spaceWorld) {
                         this.editControl.setLocal(false);
                     }
                     if (this.autoEditMenu) {
@@ -780,7 +780,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
         }
         private multiSelect(currentMesh: AbstractMesh) {
-            console.log("mutliselect");
             if (this.meshesPicked == null) {
                 this.meshesPicked = new Array<AbstractMesh>();
 
@@ -1094,7 +1093,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "no mesh selected";
             }
             this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
-            console.log("enable : " + this.meshPicked.isEnabled())
         }
 
         public disableIt(yes: boolean) {
@@ -1363,7 +1361,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (this.meshesPicked.length > 2) {
                     return "please select only two mesh";
                 }
-                console.log("subtracting");
                 let csg1: CSG = CSG.FromMesh(<Mesh>this.meshPicked);
                 let csg2: CSG = CSG.FromMesh(<Mesh>this.meshesPicked[0]);
                 let csg3: CSG;
@@ -1537,13 +1534,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.focusOnMesh(this.meshPicked, 25);
         }
 
-        public toggleSpace(): string {
-            if (this.snapperOn) {
-                return "Cannot switch axis mode when snapper is on"
-            }
-            this.setSpaceLocal(!this.isSpaceLocal());
-            return null;
-        }
+     
 
         public setSpace(space: string): string {
             if (this.snapperOn) {
@@ -1563,13 +1554,13 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         public setSpaceLocal(yes: boolean): string {
             if (this.editControl != null) this.editControl.setLocal(yes);
-            this.globalAxisMode = !this.globalAxisMode;
+            this.spaceWorld = !yes;
             return null;
         }
 
         public isSpaceLocal(): boolean {
             //if (this.editControl != null) return this.editControl.isLocal(); else return true;
-            return !this.globalAxisMode;
+            return !this.spaceWorld;
         }
 
         public undo() {
@@ -1653,8 +1644,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public snapper(yes: boolean): string {
-            if (!this.globalAxisMode && yes) {
-                this.globalAxisMode = true;
+            if (!this.spaceWorld && yes) {
+                this.spaceWorld = true;
                 this.wasSpaceLocal = false;
             }
             this.snapperOn = yes;
@@ -1989,10 +1980,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public toggleDebug() {
             //if (this.scene.debugLayer.isVisible()) {
             if (this.debugVisible) {
-                console.log("hiding debug");
                 this.scene.debugLayer.hide();
             } else {
-                console.log("showing debug");
                 this.scene.debugLayer.show();
             }
             this.debugVisible = !this.debugVisible;
@@ -2554,7 +2543,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         public toggleSnow() {
-            console.log("creating snow");
             if (this.snowPart === null) {
                 this.snowPart = this.createSnowPart();
             }
@@ -2596,7 +2584,6 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public toggleRain() {
-            console.log("creating rain");
             if (this.rainPart === null) {
                 this.rainPart = this.createRainPart();
             }

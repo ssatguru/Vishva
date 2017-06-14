@@ -751,10 +751,10 @@ namespace org.ssatguru.babylonjs.vishva {
         //            var i: number = this.meshesPicked.indexOf(this.meshPicked);
         //            if (i >= 0) {
         //                this.meshesPicked.splice(i, 1);
-        //                this.meshPicked.showBoundingBox = false;
+        //                this.meshPicked.renderOutline = false;
         //            } else {
         //                this.meshesPicked.push(this.meshPicked);
-        //                this.meshPicked.showBoundingBox = true;
+        //                this.meshPicked.renderOutline = true;
         //            }
         //        }
 
@@ -769,7 +769,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 i = this.meshesPicked.indexOf(prevMesh);
                 if (!(i >= 0)) {
                     this.meshesPicked.push(prevMesh);
-                    prevMesh.showBoundingBox = true;
+                    prevMesh.renderOutline = true;
+                    prevMesh.outlineWidth=0.1;
                 }
             }
 
@@ -777,10 +778,11 @@ namespace org.ssatguru.babylonjs.vishva {
             i = this.meshesPicked.indexOf(currentMesh);
             if (i >= 0) {
                 this.meshesPicked.splice(i, 1);
-                this.meshPicked.showBoundingBox = false;
+                this.meshPicked.renderOutline = false;
             } else {
                 this.meshesPicked.push(currentMesh);
-                currentMesh.showBoundingBox = true;
+                currentMesh.renderOutline = true;
+                currentMesh.outlineWidth=0.1;
             }
 
         }
@@ -794,7 +796,8 @@ namespace org.ssatguru.babylonjs.vishva {
             //else select it
             if (!this.multiUnSelect(currentMesh)) {
                 this.meshesPicked.push(currentMesh);
-                currentMesh.showBoundingBox = true;
+                currentMesh.renderOutline = true;
+                currentMesh.outlineWidth=0.1;
             }
         }
 
@@ -805,7 +808,7 @@ namespace org.ssatguru.babylonjs.vishva {
             let i = this.meshesPicked.indexOf(mesh);
             if (i >= 0) {
                 this.meshesPicked.splice(i, 1);
-                mesh.showBoundingBox = false;
+                mesh.renderOutline = false;
                 return true;
             }
             return false;
@@ -813,7 +816,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private multiUnSelectAll() {
             if (this.meshesPicked === null) return;
             for (let mesh of this.meshesPicked) {
-                mesh.showBoundingBox = false;
+                mesh.renderOutline = false;
             }
             this.meshesPicked = null;
         }
@@ -1113,14 +1116,15 @@ namespace org.ssatguru.babylonjs.vishva {
         public showAllDisabled() {
             for (let mesh of this.scene.meshes) {
                 if (!mesh.isEnabled()) {
-                    mesh.showBoundingBox = true;
+                    mesh.renderOutline = true;
+                    mesh.outlineWidth=0.1;
                 }
             }
         }
         public hideAllDisabled() {
             for (let mesh of this.scene.meshes) {
                 if (!mesh.isEnabled()) {
-                    mesh.showBoundingBox = false;
+                    mesh.renderOutline = false;
                 }
             }
         }
@@ -1136,14 +1140,15 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.meshPicked.visibility = 1;
                     this.meshPicked.isPickable = true;
                     if (this.showingAllInvisibles)
-                        mesh.showBoundingBox = false;
+                        mesh.renderOutline = false;
                 }
             }
             else {
                 Tags.AddTagsTo(this.meshPicked, "invisible");
                 if (this.showingAllInvisibles) {
                     this.meshPicked.visibility = 0.5;
-                    mesh.showBoundingBox = true;
+                    mesh.renderOutline = true;
+                    mesh.outlineWidth=0.1;
                     this.meshPicked.isPickable = true;
                 } else {
                     this.meshPicked.visibility = 0;
@@ -1168,7 +1173,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (Tags.HasTags(mesh)) {
                     if (Tags.MatchesQuery(mesh, "invisible")) {
                         mesh.visibility = 0.5;
-                        mesh.showBoundingBox = true;
+                        mesh.renderOutline = true;
+                        mesh.outlineWidth = 0.1;
                         mesh.isPickable = true;
                     }
                 }
@@ -1183,7 +1189,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if (Tags.HasTags(mesh)) {
                         if (Tags.MatchesQuery(mesh, "invisible")) {
                             mesh.visibility = 0;
-                            mesh.showBoundingBox = false;
+                            mesh.renderOutline = false;
                             mesh.isPickable = false;
                         }
                     }
@@ -1210,14 +1216,14 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.meshPicked.parent = null;
                     }
                     if (mesh !== this.meshPicked) {
-                        mesh.showBoundingBox = false;
+                        mesh.renderOutline = false;
                         m = mesh.getWorldMatrix().multiply(invParentMatrix);
                         m.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
                         mesh.parent = this.meshPicked;
                     }
                 }
             }
-            this.meshPicked.showBoundingBox = false;
+            this.meshPicked.renderOutline = false;
             this.meshesPicked = null;
             return null;
         }
@@ -1296,7 +1302,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
             //TODO think
             //clone.receiveShadows = true;
-            mesh.showBoundingBox = false;
+            mesh.renderOutline = false;
             (this.shadowGenerator.getShadowMap().renderList).push(clone);
             return clone;
         }

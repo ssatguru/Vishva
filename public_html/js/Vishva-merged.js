@@ -23,7 +23,7 @@ var org;
                         //slopeLimit in degrees
                         this.slopeLimit = 45;
                         //slopeLimit in radians
-                        this._slopeLimit = 0.785;
+                        this.sl = 0.785;
                         this.avatarSpeed = 0.05;
                         this.prevAnim = null;
                         this.jumpCycleMax = 25;
@@ -58,7 +58,7 @@ var org;
                     };
                     CharacterControl.prototype.setSlopeLimit = function (slopeLimit) {
                         this.slopeLimit = slopeLimit;
-                        this._slopeLimit = Math.PI * slopeLimit / 180;
+                        this.sl = Math.PI * slopeLimit / 180;
                     };
                     CharacterControl.prototype.start = function () {
                         this.key.reset();
@@ -86,7 +86,6 @@ var org;
                         //skip everything if no movement key pressed
                         if (!this.anyMovement()) {
                             if (!this.grounded) {
-                                console.log(this.scene.getEngine().getDeltaTime());
                                 this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
                                 //this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
                                 this.downSpeed = this.gravity * this.stillTime;
@@ -100,9 +99,8 @@ var org;
                                     //if we are sliding down check slope
                                     var diff = this.oldPos.subtract(this.avatar.position).length();
                                     var ht = this.oldPos.y - this.avatar.position.y;
-                                    var ratio = ht / diff;
-                                    var slope = Math.asin(ratio);
-                                    if (slope <= this._slopeLimit) {
+                                    var slope = Math.asin(ht / diff);
+                                    if (slope <= this.sl) {
                                         this.grounded = true;
                                         this.stillTime = 0;
                                         this.avatar.position.copyFrom(this.oldPos);
@@ -2199,10 +2197,10 @@ var org;
                     //            var i: number = this.meshesPicked.indexOf(this.meshPicked);
                     //            if (i >= 0) {
                     //                this.meshesPicked.splice(i, 1);
-                    //                this.meshPicked.showBoundingBox = false;
+                    //                this.meshPicked.renderOutline = false;
                     //            } else {
                     //                this.meshesPicked.push(this.meshPicked);
-                    //                this.meshPicked.showBoundingBox = true;
+                    //                this.meshPicked.renderOutline = true;
                     //            }
                     //        }
                     Vishva.prototype.multiSelect_old = function (prevMesh, currentMesh) {
@@ -2215,18 +2213,20 @@ var org;
                             i = this.meshesPicked.indexOf(prevMesh);
                             if (!(i >= 0)) {
                                 this.meshesPicked.push(prevMesh);
-                                prevMesh.showBoundingBox = true;
+                                prevMesh.renderOutline = true;
+                                prevMesh.outlineWidth = 0.1;
                             }
                         }
                         //if current mesh was already selected then unselect it
                         i = this.meshesPicked.indexOf(currentMesh);
                         if (i >= 0) {
                             this.meshesPicked.splice(i, 1);
-                            this.meshPicked.showBoundingBox = false;
+                            this.meshPicked.renderOutline = false;
                         }
                         else {
                             this.meshesPicked.push(currentMesh);
-                            currentMesh.showBoundingBox = true;
+                            currentMesh.renderOutline = true;
+                            currentMesh.outlineWidth = 0.1;
                         }
                     };
                     Vishva.prototype.multiSelect = function (currentMesh) {
@@ -2237,7 +2237,8 @@ var org;
                         //else select it
                         if (!this.multiUnSelect(currentMesh)) {
                             this.meshesPicked.push(currentMesh);
-                            currentMesh.showBoundingBox = true;
+                            currentMesh.renderOutline = true;
+                            currentMesh.outlineWidth = 0.1;
                         }
                     };
                     //if mesh was already selected then unselect it
@@ -2248,7 +2249,7 @@ var org;
                         var i = this.meshesPicked.indexOf(mesh);
                         if (i >= 0) {
                             this.meshesPicked.splice(i, 1);
-                            mesh.showBoundingBox = false;
+                            mesh.renderOutline = false;
                             return true;
                         }
                         return false;
@@ -2258,7 +2259,7 @@ var org;
                             return;
                         for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
                             var mesh = _a[_i];
-                            mesh.showBoundingBox = false;
+                            mesh.renderOutline = false;
                         }
                         this.meshesPicked = null;
                     };
@@ -2526,7 +2527,8 @@ var org;
                         for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
                             var mesh = _a[_i];
                             if (!mesh.isEnabled()) {
-                                mesh.showBoundingBox = true;
+                                mesh.renderOutline = true;
+                                mesh.outlineWidth = 0.1;
                             }
                         }
                     };
@@ -2534,7 +2536,7 @@ var org;
                         for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
                             var mesh = _a[_i];
                             if (!mesh.isEnabled()) {
-                                mesh.showBoundingBox = false;
+                                mesh.renderOutline = false;
                             }
                         }
                     };
@@ -2549,14 +2551,15 @@ var org;
                                 this.meshPicked.visibility = 1;
                                 this.meshPicked.isPickable = true;
                                 if (this.showingAllInvisibles)
-                                    mesh.showBoundingBox = false;
+                                    mesh.renderOutline = false;
                             }
                         }
                         else {
                             Tags.AddTagsTo(this.meshPicked, "invisible");
                             if (this.showingAllInvisibles) {
                                 this.meshPicked.visibility = 0.5;
-                                mesh.showBoundingBox = true;
+                                mesh.renderOutline = true;
+                                mesh.outlineWidth = 0.1;
                                 this.meshPicked.isPickable = true;
                             }
                             else {
@@ -2580,7 +2583,8 @@ var org;
                             if (Tags.HasTags(mesh)) {
                                 if (Tags.MatchesQuery(mesh, "invisible")) {
                                     mesh.visibility = 0.5;
-                                    mesh.showBoundingBox = true;
+                                    mesh.renderOutline = true;
+                                    mesh.outlineWidth = 0.1;
                                     mesh.isPickable = true;
                                 }
                             }
@@ -2594,7 +2598,7 @@ var org;
                                 if (Tags.HasTags(mesh)) {
                                     if (Tags.MatchesQuery(mesh, "invisible")) {
                                         mesh.visibility = 0;
-                                        mesh.showBoundingBox = false;
+                                        mesh.renderOutline = false;
                                         mesh.isPickable = false;
                                     }
                                 }
@@ -2621,14 +2625,14 @@ var org;
                                     this.meshPicked.parent = null;
                                 }
                                 if (mesh !== this.meshPicked) {
-                                    mesh.showBoundingBox = false;
+                                    mesh.renderOutline = false;
                                     m = mesh.getWorldMatrix().multiply(invParentMatrix);
                                     m.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
                                     mesh.parent = this.meshPicked;
                                 }
                             }
                         }
-                        this.meshPicked.showBoundingBox = false;
+                        this.meshPicked.renderOutline = false;
                         this.meshesPicked = null;
                         return null;
                     };
@@ -2704,7 +2708,7 @@ var org;
                         //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
                         //TODO think
                         //clone.receiveShadows = true;
-                        mesh.showBoundingBox = false;
+                        mesh.renderOutline = false;
                         (this.shadowGenerator.getShadowMap().renderList).push(clone);
                         return clone;
                     };

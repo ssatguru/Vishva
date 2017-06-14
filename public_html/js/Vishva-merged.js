@@ -18,21 +18,31 @@ var org;
             (function (component) {
                 var Vector3 = BABYLON.Vector3;
                 var CharacterControl = (function () {
-                    function CharacterControl(avatar, avatarSkeleton, anims, camera) {
+                    function CharacterControl(avatar, avatarSkeleton, anims, camera, scene) {
                         var _this = this;
+                        this.cameraDetached = false;
                         this.avatarSpeed = 0.05;
                         this.prevAnim = null;
                         this.jumpCycleMax = 25;
                         this.jumpCycle = this.jumpCycleMax;
                         this.wasJumping = false;
+                        this.gravity = 9.8;
+                        this.oldPos = new Vector3(0, 0, 0);
+                        this.grounded = false;
+                        this.downSpeed = 0;
+                        this.time = 0;
+                        this.stillTime = 0;
+                        this.velocity = new Vector3(0, 0, 0);
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
                         this.initAnims(anims);
                         this.camera = camera;
                         this.avatar = avatar;
+                        this.scene = scene;
                         this.key = new Key();
                         window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); }, false);
                         window.addEventListener("keyup", function (e) { return _this.onKeyUp(e); }, false);
+                        this.renderer = function () { _this.moveAVandCamera(); };
                     }
                     CharacterControl.prototype.setAvatar = function (avatar) {
                         this.avatar = avatar;
@@ -42,6 +52,22 @@ var org;
                     };
                     CharacterControl.prototype.setAnims = function (anims) {
                         this.initAnims(anims);
+                    };
+                    CharacterControl.prototype.detachCamera = function () {
+                        this.cameraDetached = true;
+                    };
+                    CharacterControl.prototype.attachCamera = function () {
+                        this.cameraDetached = false;
+                    };
+                    CharacterControl.prototype.start = function () {
+                        this.key.reset();
+                        this.time = 0;
+                        this.stillTime = 0;
+                        this.grounded = false;
+                        this.scene.registerBeforeRender(this.renderer);
+                    };
+                    CharacterControl.prototype.stop = function () {
+                        this.scene.unregisterBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.initAnims = function (anims) {
                         this.walk = anims[0];
@@ -55,15 +81,31 @@ var org;
                         this.strafeRight = anims[8];
                     };
                     CharacterControl.prototype.moveAVandCamera = function () {
+                        this.oldPos.copyFrom(this.avatar.position);
                         //skip everything if no movement key pressed
-                        if (!this.move) {
+                        if (!this.anyMovement()) {
+                            if (!this.grounded) {
+                                this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
+                                this.downSpeed = this.gravity * (Math.pow(this.stillTime, 2)) / 2;
+                                this.velocity.copyFromFloats(0, -this.downSpeed, 0);
+                                this.avatar.moveWithCollisions(this.velocity);
+                                if (this.oldPos.y === this.avatar.position.y) {
+                                    this.grounded = true;
+                                    this.stillTime = 0;
+                                }
+                                this.moveCamera();
+                            }
                             if (this.prevAnim != this.idle) {
                                 this.prevAnim = this.idle;
                                 if (this.idle.exist)
                                     this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
                             }
-                            return false;
+                            return;
                         }
+                        this.stillTime = 0;
+                        this.grounded = false;
+                        this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
+                        this.downSpeed = this.gravity * (Math.pow(this.time, 2)) / 2;
                         var anim = this.idle;
                         var moving = false;
                         var speed = 0;
@@ -73,7 +115,6 @@ var org;
                         var backwards;
                         var stepLeft;
                         var stepRight;
-                        var up;
                         if (this.key.up) {
                             if (this.key.shift) {
                                 speed = this.avatarSpeed * 2;
@@ -102,15 +143,20 @@ var org;
                                     dir = -1;
                                 }
                                 this.jumpCycle--;
+                                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                             }
-                            //TODO testing physics
-                            forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                            else {
+                                //TODO testing physics
+                                //forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                                forward = this.avatar.calcMovePOV(0, -this.downSpeed, speed);
+                            }
                             this.avatar.moveWithCollisions(forward);
                             //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
                             moving = true;
                         }
                         else if (this.key.down) {
-                            backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                            //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                            backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
                             this.avatar.moveWithCollisions(backwards);
                             moving = true;
                             anim = this.walkBack;
@@ -119,13 +165,15 @@ var org;
                         }
                         else if (this.key.stepLeft) {
                             anim = this.strafeLeft;
-                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, this.downSpeed, 0);
                             this.avatar.moveWithCollisions(stepLeft);
                             moving = true;
                         }
                         else if (this.key.stepRight) {
                             anim = this.strafeRight;
-                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, this.downSpeed, 0);
                             this.avatar.moveWithCollisions(stepRight);
                             moving = true;
                         }
@@ -179,8 +227,16 @@ var org;
                             }
                             this.prevAnim = anim;
                         }
-                        this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-                        return true;
+                        this.moveCamera();
+                        if (this.oldPos.y <= this.avatar.position.y) {
+                            this.time = 0;
+                        }
+                        return;
+                    };
+                    CharacterControl.prototype.moveCamera = function () {
+                        if (!this.cameraDetached) {
+                            this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        }
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {
                         var event = e;
@@ -260,13 +316,17 @@ var org;
                         this.stepLeft = false;
                         this.jump = false;
                         this.shift = false;
-                        this.trans = false;
-                        this.rot = false;
-                        this.scale = false;
-                        this.esc = false;
-                        this.ctl = false;
-                        this.focus = false;
                     }
+                    Key.prototype.reset = function () {
+                        this.up = false;
+                        this.down = false;
+                        this.right = false;
+                        this.left = false;
+                        this.stepRight = false;
+                        this.stepLeft = false;
+                        this.jump = false;
+                        this.shift = false;
+                    };
                     return Key;
                 }());
                 component.Key = Key;
@@ -1873,7 +1933,8 @@ var org;
                         }
                         else {
                             this.avatarSkeleton.enableBlending(0.1);
-                            this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
+                            this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
+                            this.cc.start();
                         }
                         vishva.SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
                         this.snas = null;
@@ -1907,14 +1968,16 @@ var org;
                             return;
                         }
                         //switch to first person?
-                        if (this.mainCamera.radius <= 0.75) {
-                            this.mainCamera.radius = 0.75;
-                            this.avatar.visibility = 0;
-                            this.mainCamera.checkCollisions = false;
-                        }
-                        else {
-                            this.avatar.visibility = 1;
-                            this.mainCamera.checkCollisions = this.cameraCollision;
+                        if (this.isFocusOnAv) {
+                            if (this.mainCamera.radius <= 0.75) {
+                                this.mainCamera.radius = 0.75;
+                                this.avatar.visibility = 0;
+                                this.mainCamera.checkCollisions = false;
+                            }
+                            else {
+                                this.avatar.visibility = 1;
+                                this.mainCamera.checkCollisions = this.cameraCollision;
+                            }
                         }
                         if (this.isMeshSelected) {
                             if (this.key.focus) {
@@ -1940,11 +2003,11 @@ var org;
                         }
                         if (this.isFocusOnAv) {
                             if (this.editControl == null) {
-                                this.moveAVandCamera();
+                                //this.moveAVandCamera();
                             }
                             else {
                                 if (!this.editControl.isEditing()) {
-                                    this.moveAVandCamera();
+                                    //this.moveAVandCamera();
                                 }
                             }
                         }
@@ -2042,11 +2105,13 @@ var org;
                                     }
                                     else {
                                         // if already selected then focus on it
-                                        if (this.isFocusOnAv) {
-                                            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                            this.isFocusOnAv = false;
-                                        }
-                                        this.focusOnMesh(this.meshPicked, 50);
+                                        this.setFocusOnMesh();
+                                        //                            if (this.isFocusOnAv) {
+                                        //                                this.cc.stop();
+                                        //                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                                        //                                this.isFocusOnAv = false;
+                                        //                            }
+                                        //                            this.focusOnMesh(this.meshPicked, 50);
                                     }
                                 }
                                 else {
@@ -2239,6 +2304,7 @@ var org;
                             this.cameraAnimating = false;
                             this.scene.unregisterBeforeRender(this.animFunc);
                             this.mainCamera.attachControl(this.canvas);
+                            this.cc.start();
                         }
                     };
                     Vishva.prototype.justReFocus = function () {
@@ -2858,6 +2924,7 @@ var org;
                     };
                     Vishva.prototype.setFocusOnMesh = function () {
                         if (this.isFocusOnAv) {
+                            this.cc.stop();
                             this.saveAVcameraPos.copyFrom(this.mainCamera.position);
                             this.isFocusOnAv = false;
                         }
@@ -3934,7 +4001,8 @@ var org;
                             var textureName = sm.diffuseTexture.name;
                             sm.diffuseTexture.name = this.avatarFolder + textureName;
                         }
-                        this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
+                        this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
+                        this.cc.start();
                     };
                     Vishva.prototype.setAnimationRange = function (skel) {
                         for (var index149 = 0; index149 < this.anims.length; index149++) {

@@ -145,7 +145,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private enablePhysics: boolean = true;
 
-       
+
 
         public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
             this.editEnabled = false;
@@ -348,7 +348,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.loadAvatar();
             } else {
                 this.avatarSkeleton.enableBlending(0.1);
-                this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
+                this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
+                this.cc.start();
             }
             SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
             this.snas = null;
@@ -390,13 +391,15 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
             //switch to first person?
-            if (this.mainCamera.radius <= 0.75) {
-                this.mainCamera.radius = 0.75;
-                this.avatar.visibility = 0;
-                this.mainCamera.checkCollisions = false;
-            } else {
-                this.avatar.visibility = 1;
-                this.mainCamera.checkCollisions = this.cameraCollision;
+            if (this.isFocusOnAv) {
+                if (this.mainCamera.radius <= 0.75) {
+                    this.mainCamera.radius = 0.75;
+                    this.avatar.visibility = 0;
+                    this.mainCamera.checkCollisions = false;
+                } else {
+                    this.avatar.visibility = 1;
+                    this.mainCamera.checkCollisions = this.cameraCollision;
+                }
             }
             if (this.isMeshSelected) {
                 if (this.key.focus) {
@@ -422,11 +425,11 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (this.isFocusOnAv) {
                 if (this.editControl == null) {
-                    this.moveAVandCamera();
-                    
+                    //this.moveAVandCamera();
+
                 } else {
                     if (!this.editControl.isEditing()) {
-                        this.moveAVandCamera();
+                        //this.moveAVandCamera();
                     }
                 }
             } else if (this.key.up || this.key.down || this.key.esc) {
@@ -448,18 +451,18 @@ namespace org.ssatguru.babylonjs.vishva {
             this.key.rot = false;
             this.key.scale = false;
         }
-        
+
         //how far away from the center can the avatar go
         //fog will start at the limitStart and will become dense at LimitEnd
         private moveLimitStart = 114;
         private moveLimitEnd = 124;
-        
-        oldAvPos:Vector3 = new Vector3(0,0,0);
+
+        oldAvPos: Vector3 = new Vector3(0, 0, 0);
         private moveAVandCamera() {
             this.oldAvPos.copyFrom(this.avatar.position);
-            
+
             if (!this.cc.moveAVandCamera()) return;
-            
+
             let avPos = this.avatar.position.length();
             if (avPos > this.moveLimitStart) {
                 this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
@@ -668,11 +671,13 @@ namespace org.ssatguru.babylonjs.vishva {
                             //this.multiSelect(null, this.meshPicked);
                         } else {
                             // if already selected then focus on it
-                            if (this.isFocusOnAv) {
-                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                this.isFocusOnAv = false;
-                            }
-                            this.focusOnMesh(this.meshPicked, 50);
+                            this.setFocusOnMesh();
+//                            if (this.isFocusOnAv) {
+//                                this.cc.stop();
+//                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+//                                this.isFocusOnAv = false;
+//                            }
+//                            this.focusOnMesh(this.meshPicked, 50);
                         }
                     } else {
                         //if in multiselect then remove from multiselect
@@ -891,6 +896,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.cameraAnimating = false;
                 this.scene.unregisterBeforeRender(this.animFunc);
                 this.mainCamera.attachControl(this.canvas);
+                this.cc.start();
             }
         }
 
@@ -929,7 +935,7 @@ namespace org.ssatguru.babylonjs.vishva {
             turnRight = new AnimData("turnRight", 155, 199, 0.5);
             strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
             strafeRight = new AnimData("strafeRight", 0, 0, 1);
-            
+
             this.anims = [walk, walkBack, idle, run, jump, turnLeft, turnRight, strafeLeft, strafeRight];
         }
 
@@ -939,9 +945,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private onKeyDown(e: Event) {
             var event: KeyboardEvent = <KeyboardEvent>e;
-            
+
             if (event.keyCode === 17) this.key.ctl = true;
-           
+
             if (event.keyCode === 27) this.key.esc = false;
 
             var chr: string = String.fromCharCode(event.keyCode);
@@ -1528,13 +1534,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public setFocusOnMesh() {
             if (this.isFocusOnAv) {
+                this.cc.stop();
                 this.saveAVcameraPos.copyFrom(this.mainCamera.position);
                 this.isFocusOnAv = false;
             }
             this.focusOnMesh(this.meshPicked, 25);
         }
 
-     
+
 
         public setSpace(space: string): string {
             if (this.snapperOn) {
@@ -2415,7 +2422,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
                     this.avatarSkeleton.name = "";
                 }
-                
+
                 //new avatar
                 this.avatar = <Mesh>this.meshPicked;
                 this.avatarSkeleton = this.avatar.skeleton;
@@ -2436,7 +2443,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.isFocusOnAv = false;
                 this.removeEditControl();
                 SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
-                
+
                 //make character control to use the new avatar
                 this.cc.setAvatar(this.avatar);
                 this.cc.setAvatarSkeleton(this.avatarSkeleton);
@@ -2681,7 +2688,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 sm.diffuseTexture.name = this.avatarFolder + textureName;
             }
 
-            this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera);
+            this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
+            this.cc.start();
+
         }
 
         private setAnimationRange(skel: Skeleton) {

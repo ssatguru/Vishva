@@ -5,25 +5,30 @@ namespace org.ssatguru.babylonjs.component {
     import ArcRotateCamera = BABYLON.ArcRotateCamera;
     import Vector3 = BABYLON.Vector3;
     import Mesh = BABYLON.Mesh;
-
+    import Scene = BABYLON.Scene;
     export class CharacterControl {
 
         avatarSkeleton: Skeleton;
         camera: ArcRotateCamera;
         avatar: Mesh;
         key: Key;
-
-        constructor(avatar: Mesh, avatarSkeleton: Skeleton, anims: AnimData[], camera: ArcRotateCamera) {
+        scene: Scene;
+        cameraDetached: boolean = false;
+        private renderer: () => void;
+        constructor(avatar: Mesh, avatarSkeleton: Skeleton, anims: AnimData[], camera: ArcRotateCamera, scene: Scene) {
 
             this.avatarSkeleton = avatarSkeleton;
             this.initAnims(anims);
             this.camera = camera;
-            this.avatar = avatar;
 
+            this.avatar = avatar;
+            this.scene = scene;
             this.key = new Key();
 
             window.addEventListener("keydown", (e) => { return this.onKeyDown(e) }, false);
             window.addEventListener("keyup", (e) => { return this.onKeyUp(e) }, false);
+            this.renderer = () => { this.moveAVandCamera() }
+
         }
 
         public setAvatar(avatar: Mesh) {
@@ -36,6 +41,27 @@ namespace org.ssatguru.babylonjs.component {
 
         public setAnims(anims: AnimData[]) {
             this.initAnims(anims);
+        }
+
+        public detachCamera() {
+            this.cameraDetached = true;
+        }
+
+        public attachCamera() {
+            this.cameraDetached = false;
+        }
+
+        public start() {
+            this.key.reset();
+            this.time = 0;
+            this.stillTime = 0;
+            this.grounded = false;
+            this.scene.registerBeforeRender(this.renderer);
+        }
+
+        public stop() {
+            this.scene.unregisterBeforeRender(this.renderer);
+
         }
 
         walk: AnimData;
@@ -67,16 +93,45 @@ namespace org.ssatguru.babylonjs.component {
         private jumpCycle: number = this.jumpCycleMax;
         private wasJumping: boolean = false;
 
+        gravity: number = 9.8;
+        oldPos: Vector3 = new Vector3(0, 0, 0);
+        grounded: boolean = false;
+        downSpeed: number = 0;
+        time: number = 0;
+        stillTime: number = 0;
+        velocity: Vector3 = new Vector3(0, 0, 0);
+
         public moveAVandCamera(): boolean {
+            this.oldPos.copyFrom(this.avatar.position);
+
             //skip everything if no movement key pressed
-            if (!this.move) {
+            if (!this.anyMovement()) {
+                if (!this.grounded) {
+                    this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
+                    this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
+                    this.velocity.copyFromFloats(0, -this.downSpeed, 0);
+                    this.avatar.moveWithCollisions(this.velocity);
+                    if (this.oldPos.y === this.avatar.position.y) {
+                        this.grounded = true;
+                        this.stillTime = 0;
+                    }
+                    this.moveCamera();
+                }
+
                 if (this.prevAnim != this.idle) {
                     this.prevAnim = this.idle
                     if (this.idle.exist)
                         this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
                 }
-                return false;
+
+                return;
             }
+            this.stillTime = 0;
+            this.grounded = false;
+
+            this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
+            this.downSpeed = this.gravity * (this.time ** 2) / 2;
+
             var anim: AnimData = this.idle;
             var moving: boolean = false;
             var speed: number = 0;
@@ -86,7 +141,7 @@ namespace org.ssatguru.babylonjs.component {
             var backwards: Vector3;
             var stepLeft: Vector3;
             var stepRight: Vector3;
-            var up: Vector3;
+
             if (this.key.up) {
                 if (this.key.shift) {
                     speed = this.avatarSpeed * 2;
@@ -113,26 +168,32 @@ namespace org.ssatguru.babylonjs.component {
                         dir = -1;
                     }
                     this.jumpCycle--;
+                    forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                } else {
+                    //TODO testing physics
+                    //forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                    forward = this.avatar.calcMovePOV(0, -this.downSpeed, speed);
                 }
-                //TODO testing physics
-                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                 this.avatar.moveWithCollisions(forward);
                 //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
                 moving = true;
             } else if (this.key.down) {
-                backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
+                backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
                 this.avatar.moveWithCollisions(backwards);
                 moving = true;
                 anim = this.walkBack;
                 if (this.key.jump) this.key.jump = false;
             } else if (this.key.stepLeft) {
                 anim = this.strafeLeft;
-                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
+                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, this.downSpeed, 0);
                 this.avatar.moveWithCollisions(stepLeft);
                 moving = true;
             } else if (this.key.stepRight) {
                 anim = this.strafeRight;
-                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
+                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, this.downSpeed, 0);
                 this.avatar.moveWithCollisions(stepRight);
                 moving = true;
             }
@@ -182,18 +243,27 @@ namespace org.ssatguru.babylonjs.component {
                 }
                 this.prevAnim = anim;
             }
+            this.moveCamera();
 
-            this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-            return true;
+            if (this.oldPos.y <= this.avatar.position.y) {
+                this.time = 0;
+            }
+            return;
         }
 
-        move:boolean = false;
+        private moveCamera() {
+            if (!this.cameraDetached) {
+                this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+            }
+        }
+
+        move: boolean = false;
         private onKeyDown(e: Event) {
 
             var event: KeyboardEvent = <KeyboardEvent>e;
             var chr: string = String.fromCharCode(event.keyCode);
 
-            if (event.keyCode === 32) this.key.jump = false; 
+            if (event.keyCode === 32) this.key.jump = false;
             else if (event.keyCode === 16) this.key.shift = true;
             //WASD or arrow keys
             else if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
@@ -203,12 +273,13 @@ namespace org.ssatguru.babylonjs.component {
             else if (chr === "Q") this.key.stepLeft = true;
             else if (chr === "E") this.key.stepRight = true;
             this.move = this.anyMovement();
+
         }
 
         public anyMovement(): boolean {
-            if (this.key.up || this.key.down || this.key.left || this.key.right || this.key.stepLeft || this.key.stepRight || this.key.jump){
+            if (this.key.up || this.key.down || this.key.left || this.key.right || this.key.stepLeft || this.key.stepRight || this.key.jump) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -220,15 +291,16 @@ namespace org.ssatguru.babylonjs.component {
 
             if (event.keyCode === 32) this.key.jump = true
             else if (event.keyCode === 16) { this.key.shift = false; }
-             //WASD or arrow keys
+            //WASD or arrow keys
             else if ((chr === "W") || (event.keyCode === 38)) this.key.up = false;
             else if ((chr === "A") || (event.keyCode === 37)) this.key.left = false;
             else if ((chr === "D") || (event.keyCode === 39)) this.key.right = false;
             else if ((chr === "S") || (event.keyCode === 40)) this.key.down = false;
             else if (chr === "Q") this.key.stepLeft = false;
             else if (chr === "E") this.key.stepRight = false;
-            
+
             this.move = this.anyMovement();
+
         }
     }
 
@@ -271,17 +343,6 @@ namespace org.ssatguru.babylonjs.component {
 
         public shift: boolean;
 
-        public trans: boolean;
-
-        public rot: boolean;
-
-        public scale: boolean;
-
-        public esc: boolean;
-
-        public ctl: boolean;
-
-        public focus: boolean;
 
         constructor() {
             this.up = false;
@@ -292,12 +353,17 @@ namespace org.ssatguru.babylonjs.component {
             this.stepLeft = false;
             this.jump = false;
             this.shift = false;
-            this.trans = false;
-            this.rot = false;
-            this.scale = false;
-            this.esc = false;
-            this.ctl = false;
-            this.focus = false;
+        }
+
+        reset() {
+            this.up = false;
+            this.down = false;
+            this.right = false;
+            this.left = false;
+            this.stepRight = false;
+            this.stepLeft = false;
+            this.jump = false;
+            this.shift = false;
         }
     }
 }

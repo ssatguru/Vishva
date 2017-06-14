@@ -6,6 +6,7 @@ namespace org.ssatguru.babylonjs.component {
     import Vector3 = BABYLON.Vector3;
     import Mesh = BABYLON.Mesh;
     import Scene = BABYLON.Scene;
+    
     export class CharacterControl {
 
         avatarSkeleton: Skeleton;
@@ -13,8 +14,12 @@ namespace org.ssatguru.babylonjs.component {
         avatar: Mesh;
         key: Key;
         scene: Scene;
-        cameraDetached: boolean = false;
+        //slopeLimit in degrees
+        slopeLimit:number=45;
+        //slopeLimit in radians
+        sl:number=0.785;
         private renderer: () => void;
+        
         constructor(avatar: Mesh, avatarSkeleton: Skeleton, anims: AnimData[], camera: ArcRotateCamera, scene: Scene) {
 
             this.avatarSkeleton = avatarSkeleton;
@@ -42,14 +47,12 @@ namespace org.ssatguru.babylonjs.component {
         public setAnims(anims: AnimData[]) {
             this.initAnims(anims);
         }
-
-        public detachCamera() {
-            this.cameraDetached = true;
+        
+        public setSlopeLimit(slopeLimit:number){
+            this.slopeLimit = slopeLimit;
+            this.sl = Math.PI*slopeLimit/180;
         }
-
-        public attachCamera() {
-            this.cameraDetached = false;
-        }
+   
 
         public start() {
             this.key.reset();
@@ -108,12 +111,24 @@ namespace org.ssatguru.babylonjs.component {
             if (!this.anyMovement()) {
                 if (!this.grounded) {
                     this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
-                    this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
+                    //this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
+                    this.downSpeed = this.gravity * this.stillTime ;
                     this.velocity.copyFromFloats(0, -this.downSpeed, 0);
                     this.avatar.moveWithCollisions(this.velocity);
                     if (this.oldPos.y === this.avatar.position.y) {
                         this.grounded = true;
                         this.stillTime = 0;
+                    }else if (this.avatar.position.y < this.oldPos.y ) {
+                        //if we are sliding down check slope
+                        let diff:number = this.oldPos.subtract(this.avatar.position).length();
+                        let ht:number = this.oldPos.y - this.avatar.position.y;
+                        let slope: number = Math.asin(ht/diff);
+                        if (slope <= this.sl){
+                            this.grounded = true;
+                            this.stillTime = 0;
+                            this.avatar.position.copyFrom(this.oldPos);
+                        }
+                    
                     }
                     this.moveCamera();
                 }
@@ -130,7 +145,8 @@ namespace org.ssatguru.babylonjs.component {
             this.grounded = false;
 
             this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
-            this.downSpeed = this.gravity * (this.time ** 2) / 2;
+            //this.downSpeed = this.gravity * (this.time ** 2) / 2;
+            this.downSpeed = this.gravity * this.time;
 
             var anim: AnimData = this.idle;
             var moving: boolean = false;
@@ -252,9 +268,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         private moveCamera() {
-            if (!this.cameraDetached) {
                 this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-            }
         }
 
         move: boolean = false;

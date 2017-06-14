@@ -20,7 +20,10 @@ var org;
                 var CharacterControl = (function () {
                     function CharacterControl(avatar, avatarSkeleton, anims, camera, scene) {
                         var _this = this;
-                        this.cameraDetached = false;
+                        //slopeLimit in degrees
+                        this.slopeLimit = 45;
+                        //slopeLimit in radians
+                        this._slopeLimit = 0.785;
                         this.avatarSpeed = 0.05;
                         this.prevAnim = null;
                         this.jumpCycleMax = 25;
@@ -53,11 +56,9 @@ var org;
                     CharacterControl.prototype.setAnims = function (anims) {
                         this.initAnims(anims);
                     };
-                    CharacterControl.prototype.detachCamera = function () {
-                        this.cameraDetached = true;
-                    };
-                    CharacterControl.prototype.attachCamera = function () {
-                        this.cameraDetached = false;
+                    CharacterControl.prototype.setSlopeLimit = function (slopeLimit) {
+                        this.slopeLimit = slopeLimit;
+                        this._slopeLimit = Math.PI * slopeLimit / 180;
                     };
                     CharacterControl.prototype.start = function () {
                         this.key.reset();
@@ -85,13 +86,27 @@ var org;
                         //skip everything if no movement key pressed
                         if (!this.anyMovement()) {
                             if (!this.grounded) {
+                                console.log(this.scene.getEngine().getDeltaTime());
                                 this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
-                                this.downSpeed = this.gravity * (Math.pow(this.stillTime, 2)) / 2;
+                                //this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
+                                this.downSpeed = this.gravity * this.stillTime;
                                 this.velocity.copyFromFloats(0, -this.downSpeed, 0);
                                 this.avatar.moveWithCollisions(this.velocity);
                                 if (this.oldPos.y === this.avatar.position.y) {
                                     this.grounded = true;
                                     this.stillTime = 0;
+                                }
+                                else if (this.avatar.position.y < this.oldPos.y) {
+                                    //if we are sliding down check slope
+                                    var diff = this.oldPos.subtract(this.avatar.position).length();
+                                    var ht = this.oldPos.y - this.avatar.position.y;
+                                    var ratio = ht / diff;
+                                    var slope = Math.asin(ratio);
+                                    if (slope <= this._slopeLimit) {
+                                        this.grounded = true;
+                                        this.stillTime = 0;
+                                        this.avatar.position.copyFrom(this.oldPos);
+                                    }
                                 }
                                 this.moveCamera();
                             }
@@ -105,7 +120,8 @@ var org;
                         this.stillTime = 0;
                         this.grounded = false;
                         this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
-                        this.downSpeed = this.gravity * (Math.pow(this.time, 2)) / 2;
+                        //this.downSpeed = this.gravity * (this.time ** 2) / 2;
+                        this.downSpeed = this.gravity * this.time;
                         var anim = this.idle;
                         var moving = false;
                         var speed = 0;
@@ -234,9 +250,7 @@ var org;
                         return;
                     };
                     CharacterControl.prototype.moveCamera = function () {
-                        if (!this.cameraDetached) {
-                            this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-                        }
+                        this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {
                         var event = e;

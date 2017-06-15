@@ -72,6 +72,8 @@ namespace org.ssatguru.babylonjs.vishva {
         private snapTransValue: number = 1;
         private snapRotValue: number = Math.PI / 4;
         private snapScaleValue: number = 0.5;
+        //outlinewidth
+        private ow  = 0.01;
 
         private spaceWorld: boolean = false;
 
@@ -628,10 +630,10 @@ namespace org.ssatguru.babylonjs.vishva {
                         return;
                     }
                 }
+                // if none selected then select the one clicked
                 if (!this.isMeshSelected) {
                     //if in multiselect then remove from multiselect
-                    this.multiUnSelect(this.meshPicked);
-                    // if none selected then select the one clicked
+                    this.multiUnSelect(pickResult.pickedMesh);
                     this.isMeshSelected = true;
                     this.meshPicked = pickResult.pickedMesh;
                     SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
@@ -770,7 +772,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (!(i >= 0)) {
                     this.meshesPicked.push(prevMesh);
                     prevMesh.renderOutline = true;
-                    prevMesh.outlineWidth=0.1;
+                    prevMesh.outlineWidth=this.ow;
                 }
             }
 
@@ -782,7 +784,7 @@ namespace org.ssatguru.babylonjs.vishva {
             } else {
                 this.meshesPicked.push(currentMesh);
                 currentMesh.renderOutline = true;
-                currentMesh.outlineWidth=0.1;
+                currentMesh.outlineWidth=this.ow;
             }
 
         }
@@ -797,7 +799,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!this.multiUnSelect(currentMesh)) {
                 this.meshesPicked.push(currentMesh);
                 currentMesh.renderOutline = true;
-                currentMesh.outlineWidth=0.1;
+                currentMesh.outlineWidth=this.ow;
             }
         }
 
@@ -1117,7 +1119,7 @@ namespace org.ssatguru.babylonjs.vishva {
             for (let mesh of this.scene.meshes) {
                 if (!mesh.isEnabled()) {
                     mesh.renderOutline = true;
-                    mesh.outlineWidth=0.1;
+                    mesh.outlineWidth=this.ow;
                 }
             }
         }
@@ -1148,7 +1150,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 if (this.showingAllInvisibles) {
                     this.meshPicked.visibility = 0.5;
                     mesh.renderOutline = true;
-                    mesh.outlineWidth=0.1;
+                    mesh.outlineWidth=this.ow;
                     this.meshPicked.isPickable = true;
                 } else {
                     this.meshPicked.visibility = 0;
@@ -1174,7 +1176,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if (Tags.MatchesQuery(mesh, "invisible")) {
                         mesh.visibility = 0.5;
                         mesh.renderOutline = true;
-                        mesh.outlineWidth = 0.1;
+                        mesh.outlineWidth = this.ow;
                         mesh.isPickable = true;
                     }
                 }
@@ -2419,6 +2421,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "no mesh selected";
             }
             if (this.isAvatar(<Mesh>this.meshPicked)) {
+                this.cc.stop();
                 //old avatar
                 SNAManager.getSNAManager().enableSnAs(this.avatar);
                 this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
@@ -2446,7 +2449,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
                 this.avatar.rotationQuaternion = null;
                 this.saveAVcameraPos = this.mainCamera.position;
-                this.isFocusOnAv = false;
+                this.isFocusOnAv = true;
                 this.removeEditControl();
                 SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
 
@@ -2454,6 +2457,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.cc.setAvatar(this.avatar);
                 this.cc.setAvatarSkeleton(this.avatarSkeleton);
                 //this.cc.setAnims(this.anims);
+                this.cc.start();
             } else {
                 return "cannot use this as avatar";
             }
@@ -2473,15 +2477,13 @@ namespace org.ssatguru.babylonjs.vishva {
          * @param skel
          */
         private checkAnimRange(skel: Skeleton) {
-            for (var index146 = 0; index146 < this.anims.length; index146++) {
-                var anim = this.anims[index146];
-                {
-                    if (skel.getAnimationRange(anim.name) != null) {
+            for(let anim of this.anims){
+                if (skel.getAnimationRange(anim.name) != null) {
                         anim.exist = true;
                     } else {
+                        console.log(anim.name + " not found")
                         anim.exist = false;
                     }
-                }
             }
         }
 
@@ -2709,9 +2711,9 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         /**
-         * workaround for bug in blender exporter 4.4.3 animation ranges are off by
-         * 1 4.4.4 issue with actions with just 2 frames -> from = to
-         * 
+         * workaround for bug in blender exporter 4.4.3 animation ranges are off by 1 
+         * 4.4.4 issue with actions with just 2 frames -> from = to
+         * looks like this was fixed in exporter 5.3
          * @param skel
          */
         private fixAnimationRanges(skel: Skeleton) {
@@ -2721,6 +2723,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 var range = ranges[index150];
                 {
                     if (range.from === range.to) {
+                        console.log("animation issue found in " + range.name + " from " + range.from);
                         range.to++;
                     }
                 }

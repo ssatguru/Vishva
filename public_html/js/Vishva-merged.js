@@ -1590,6 +1590,8 @@ var org;
                         this.snapTransValue = 1;
                         this.snapRotValue = Math.PI / 4;
                         this.snapScaleValue = 0.5;
+                        //outlinewidth
+                        this.ow = 0.01;
                         this.spaceWorld = false;
                         this.skyboxTextures = "vishva/internal/textures/skybox-default/default";
                         this.avatarFolder = "vishva/internal/avatar/";
@@ -2070,10 +2072,10 @@ var org;
                                     return;
                                 }
                             }
+                            // if none selected then select the one clicked
                             if (!this.isMeshSelected) {
                                 //if in multiselect then remove from multiselect
-                                this.multiUnSelect(this.meshPicked);
-                                // if none selected then select the one clicked
+                                this.multiUnSelect(pickResult.pickedMesh);
                                 this.isMeshSelected = true;
                                 this.meshPicked = pickResult.pickedMesh;
                                 vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
@@ -2214,7 +2216,7 @@ var org;
                             if (!(i >= 0)) {
                                 this.meshesPicked.push(prevMesh);
                                 prevMesh.renderOutline = true;
-                                prevMesh.outlineWidth = 0.1;
+                                prevMesh.outlineWidth = this.ow;
                             }
                         }
                         //if current mesh was already selected then unselect it
@@ -2226,7 +2228,7 @@ var org;
                         else {
                             this.meshesPicked.push(currentMesh);
                             currentMesh.renderOutline = true;
-                            currentMesh.outlineWidth = 0.1;
+                            currentMesh.outlineWidth = this.ow;
                         }
                     };
                     Vishva.prototype.multiSelect = function (currentMesh) {
@@ -2238,7 +2240,7 @@ var org;
                         if (!this.multiUnSelect(currentMesh)) {
                             this.meshesPicked.push(currentMesh);
                             currentMesh.renderOutline = true;
-                            currentMesh.outlineWidth = 0.1;
+                            currentMesh.outlineWidth = this.ow;
                         }
                     };
                     //if mesh was already selected then unselect it
@@ -2528,7 +2530,7 @@ var org;
                             var mesh = _a[_i];
                             if (!mesh.isEnabled()) {
                                 mesh.renderOutline = true;
-                                mesh.outlineWidth = 0.1;
+                                mesh.outlineWidth = this.ow;
                             }
                         }
                     };
@@ -2559,7 +2561,7 @@ var org;
                             if (this.showingAllInvisibles) {
                                 this.meshPicked.visibility = 0.5;
                                 mesh.renderOutline = true;
-                                mesh.outlineWidth = 0.1;
+                                mesh.outlineWidth = this.ow;
                                 this.meshPicked.isPickable = true;
                             }
                             else {
@@ -2584,7 +2586,7 @@ var org;
                                 if (Tags.MatchesQuery(mesh, "invisible")) {
                                     mesh.visibility = 0.5;
                                     mesh.renderOutline = true;
-                                    mesh.outlineWidth = 0.1;
+                                    mesh.outlineWidth = this.ow;
                                     mesh.isPickable = true;
                                 }
                             }
@@ -3759,6 +3761,7 @@ var org;
                             return "no mesh selected";
                         }
                         if (this.isAvatar(this.meshPicked)) {
+                            this.cc.stop();
                             //old avatar
                             vishva.SNAManager.getSNAManager().enableSnAs(this.avatar);
                             this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
@@ -3785,13 +3788,14 @@ var org;
                             this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
                             this.avatar.rotationQuaternion = null;
                             this.saveAVcameraPos = this.mainCamera.position;
-                            this.isFocusOnAv = false;
+                            this.isFocusOnAv = true;
                             this.removeEditControl();
                             vishva.SNAManager.getSNAManager().disableSnAs(this.avatar);
                             //make character control to use the new avatar
                             this.cc.setAvatar(this.avatar);
                             this.cc.setAvatarSkeleton(this.avatarSkeleton);
                             //this.cc.setAnims(this.anims);
+                            this.cc.start();
                         }
                         else {
                             return "cannot use this as avatar";
@@ -3810,15 +3814,14 @@ var org;
                      * @param skel
                      */
                     Vishva.prototype.checkAnimRange = function (skel) {
-                        for (var index146 = 0; index146 < this.anims.length; index146++) {
-                            var anim = this.anims[index146];
-                            {
-                                if (skel.getAnimationRange(anim.name) != null) {
-                                    anim.exist = true;
-                                }
-                                else {
-                                    anim.exist = false;
-                                }
+                        for (var _i = 0, _a = this.anims; _i < _a.length; _i++) {
+                            var anim = _a[_i];
+                            if (skel.getAnimationRange(anim.name) != null) {
+                                anim.exist = true;
+                            }
+                            else {
+                                console.log(anim.name + " not found");
+                                anim.exist = false;
                             }
                         }
                     };
@@ -4031,9 +4034,9 @@ var org;
                         }
                     };
                     /**
-                     * workaround for bug in blender exporter 4.4.3 animation ranges are off by
-                     * 1 4.4.4 issue with actions with just 2 frames -> from = to
-                     *
+                     * workaround for bug in blender exporter 4.4.3 animation ranges are off by 1
+                     * 4.4.4 issue with actions with just 2 frames -> from = to
+                     * looks like this was fixed in exporter 5.3
                      * @param skel
                      */
                     Vishva.prototype.fixAnimationRanges = function (skel) {
@@ -4043,6 +4046,7 @@ var org;
                             var range = ranges[index150];
                             {
                                 if (range.from === range.to) {
+                                    console.log("animation issue found in " + range.name + " from " + range.from);
                                     range.to++;
                                 }
                             }

@@ -180,14 +180,14 @@ var org;
                         else if (this.key.stepLeft) {
                             anim = this.strafeLeft;
                             //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, this.downSpeed, 0);
+                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
                             this.avatar.moveWithCollisions(stepLeft);
                             moving = true;
                         }
                         else if (this.key.stepRight) {
                             anim = this.strafeRight;
                             //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, this.downSpeed, 0);
+                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
                             this.avatar.moveWithCollisions(stepRight);
                             moving = true;
                         }

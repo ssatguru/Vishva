@@ -3146,12 +3146,12 @@ var org;
                             return this.meshPicked.skeleton;
                     };
                     Vishva.prototype.createAnimRange = function (name, start, end) {
+                        //remove the range if it already exist
+                        this.meshPicked.skeleton.deleteAnimationRange(name, false);
                         this.meshPicked.skeleton.createAnimationRange(name, start, end);
                     };
                     Vishva.prototype.getAnimationRanges = function () {
                         var skel = this.meshPicked.skeleton;
-                        //            var getAnimationRanges: Function = <Function>skel["getAnimationRanges"];
-                        //            var ranges: AnimationRange[] = <AnimationRange[]>getAnimationRanges.call(skel);
                         if (skel !== null) {
                             var ranges = skel.getAnimationRanges();
                             return ranges;
@@ -3614,6 +3614,7 @@ var org;
                         this.file = file;
                         SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
                     };
+                    //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
                         var boundingRadius = this.getBoundingRadius(meshes);
                         {
@@ -4034,22 +4035,27 @@ var org;
                         }
                     };
                     /**
-                     * workaround for bug in blender exporter 4.4.3 animation ranges are off by 1
+                     * workaround for bugs in blender exporter
+                     * 4.4.3 animation ranges are off by 1
                      * 4.4.4 issue with actions with just 2 frames -> from = to
                      * looks like this was fixed in exporter 5.3
+                     * 5.3.0 aniamtion ranges again off by 1
+                     * TODO this should be moved to load asset function. Wrong to assume that all asset have been created using blender exporter
+                     *
                      * @param skel
                      */
                     Vishva.prototype.fixAnimationRanges = function (skel) {
                         var getAnimationRanges = skel["getAnimationRanges"];
                         var ranges = getAnimationRanges.call(skel);
-                        for (var index150 = 0; index150 < ranges.length; index150++) {
-                            var range = ranges[index150];
-                            {
-                                if (range.from === range.to) {
-                                    console.log("animation issue found in " + range.name + " from " + range.from);
-                                    range.to++;
-                                }
-                            }
+                        for (var _i = 0, ranges_1 = ranges; _i < ranges_1.length; _i++) {
+                            var range = ranges_1[_i];
+                            //fix for 4.4.4
+                            //                if (range.from === range.to) {
+                            //                    console.log("animation issue found in " + range.name + " from " + range.from);
+                            //                    range.to++;
+                            //                }
+                            //fix for 5.3
+                            range.from++;
                         }
                     };
                     Vishva.prototype.setCameraSettings = function (camera) {
@@ -4976,6 +4982,7 @@ var org;
                         var animRangeStart = document.getElementById("animRangeStart");
                         var animRangeEnd = document.getElementById("animRangeEnd");
                         var animRangeMake = document.getElementById("animRangeMake");
+                        //create
                         animRangeMake.onclick = function (e) {
                             console.log("creating range");
                             var name = animRangeName.value;
@@ -4990,8 +4997,7 @@ var org;
                             _this.vishva.createAnimRange(name, ars, are);
                             _this.refreshAnimSelect();
                         };
-                        //if lready initialized then return
-                        //if (this.animSelect !== null) return;
+                        //select
                         this.animSelect = document.getElementById("animList");
                         this.animSelect.onchange = function (e) {
                             var animName = _this.animSelect.value;
@@ -5002,6 +5008,7 @@ var org;
                             }
                             return true;
                         };
+                        //play
                         this.animRate = document.getElementById("animRate");
                         this.animLoop = document.getElementById("animLoop");
                         document.getElementById("playAnim").onclick = function (e) {

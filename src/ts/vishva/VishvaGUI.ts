@@ -896,7 +896,8 @@ namespace org.ssatguru.babylonjs.vishva {
             var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
             var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
             var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
-
+            
+            //create
             animRangeMake.onclick = (e) => {
                 console.log("creating range");
                 var name = animRangeName.value;
@@ -912,9 +913,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.refreshAnimSelect();
             }
 
-            //if lready initialized then return
-            //if (this.animSelect !== null) return;
 
+            //select
             this.animSelect = <HTMLSelectElement>document.getElementById("animList");
             this.animSelect.onchange = (e) => {
                 var animName: string = this.animSelect.value;
@@ -925,6 +925,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return true;
             };
+            
+            //play
             this.animRate = <HTMLInputElement>document.getElementById("animRate");
             this.animLoop = <HTMLInputElement>document.getElementById("animLoop");
             document.getElementById("playAnim").onclick = (e) => {

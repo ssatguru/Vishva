@@ -54,7 +54,11 @@ namespace org.ssatguru.babylonjs.component {
         }
    
 
+        private started:boolean = false;
+        
         public start() {
+            if (this.started) return;
+            this.started = true;
             this.key.reset();
             this.time = 0;
             this.stillTime = 0;
@@ -63,8 +67,9 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public stop() {
+            if (!this.started) return;
+            this.started=false;
             this.scene.unregisterBeforeRender(this.renderer);
-
         }
 
         walk: AnimData;

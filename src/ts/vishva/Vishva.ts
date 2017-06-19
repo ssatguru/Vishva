@@ -2759,9 +2759,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public disableKeys() {
             this.keysDisabled = true;
+            this.cc.stop();
         }
         public enableKeys() {
             this.keysDisabled = false;
+            if (this.isFocusOnAv) this.cc.start();
         }
 
         public enableCameraCollision(yesNo: boolean) {

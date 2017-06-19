@@ -24,6 +24,7 @@ var org;
                         this.slopeLimit = 45;
                         //slopeLimit in radians
                         this.sl = 0.785;
+                        this.started = false;
                         this.avatarSpeed = 0.05;
                         this.prevAnim = null;
                         this.jumpCycleMax = 25;
@@ -61,6 +62,9 @@ var org;
                         this.sl = Math.PI * slopeLimit / 180;
                     };
                     CharacterControl.prototype.start = function () {
+                        if (this.started)
+                            return;
+                        this.started = true;
                         this.key.reset();
                         this.time = 0;
                         this.stillTime = 0;
@@ -68,6 +72,9 @@ var org;
                         this.scene.registerBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.stop = function () {
+                        if (!this.started)
+                            return;
+                        this.started = false;
                         this.scene.unregisterBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.initAnims = function (anims) {
@@ -4077,9 +4084,12 @@ var org;
                     };
                     Vishva.prototype.disableKeys = function () {
                         this.keysDisabled = true;
+                        this.cc.stop();
                     };
                     Vishva.prototype.enableKeys = function () {
                         this.keysDisabled = false;
+                        if (this.isFocusOnAv)
+                            this.cc.start();
                     };
                     Vishva.prototype.enableCameraCollision = function (yesNo) {
                         this.cameraCollision = yesNo;
@@ -4182,6 +4192,8 @@ var org;
                          * reset on window resize
                          */
                         this.dialogs = new Array();
+                        //TODO persist this setting
+                        this.enableToolTips = true;
                         this.propsDiag = null;
                         this.fixingDragIssue = false;
                         this.animSelect = null;
@@ -4191,6 +4203,9 @@ var org;
                         this.firstTime = true;
                         this.addMenuOn = false;
                         this.vishva = vishva;
+                        //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
+                        $("input").on("focus", function () { _this.vishva.disableKeys(); });
+                        $("input").on("blur", function () { _this.vishva.enableKeys(); });
                         this.createJPOs();
                         //need to do add menu before main navigation menu
                         //the content of add menu is not static
@@ -4295,6 +4310,7 @@ var org;
                             position: this.centerBottom,
                             width: "100%",
                             height: "auto",
+                            closeText: "",
                             closeOnEscape: false
                         };
                         jq.dialog(dos);
@@ -4400,6 +4416,7 @@ var org;
                             position: this.rightCenter,
                             minWidth: 350,
                             height: "auto",
+                            closeText: "",
                             closeOnEscape: false
                         };
                         this.envDiag.dialog(dos);
@@ -4409,12 +4426,26 @@ var org;
                     VishvaGUI.prototype.createSettingDiag = function () {
                         var _this = this;
                         this.settingDiag = $("#settingDiag");
+                        this.camCol = $("#camCol");
+                        this.autoEditMenu = $("#autoEditMenu");
+                        this.showToolTips = $("#showToolTips");
+                        $(document).tooltip({
+                            open: function (event, ui) {
+                                if (!_this.enableToolTips) {
+                                    ui.tooltip.stop().remove();
+                                }
+                            }
+                        });
+                        this.showInvis = $("#showInvis");
+                        this.showDisa = $("#showDisa");
+                        this.snapper = $("#snapper");
                         var dos = {
                             autoOpen: false,
                             resizable: false,
                             position: this.rightCenter,
                             minWidth: 350,
                             height: "auto",
+                            closeText: "",
                             closeOnEscape: false
                         };
                         this.settingDiag.dialog(dos);
@@ -4423,26 +4454,28 @@ var org;
                         var dboSave = {};
                         dboSave.text = "save";
                         dboSave.click = function (e) {
-                            _this.vishva.enableCameraCollision($("#camCol").prop("checked"));
-                            _this.vishva.enableAutoEditMenu($("#autoEditMenu").prop("checked"));
-                            if ($("#showInvis").prop("checked")) {
+                            _this.vishva.enableCameraCollision(_this.camCol.prop("checked"));
+                            _this.vishva.enableAutoEditMenu(_this.autoEditMenu.prop("checked"));
+                            _this.enableToolTips = _this.showToolTips.prop("checked");
+                            if (_this.showInvis.prop("checked")) {
                                 _this.vishva.showAllInvisibles();
                             }
                             else {
                                 _this.vishva.hideAllInvisibles();
                             }
-                            if ($("#showDisa").prop("checked")) {
+                            if (_this.showDisa.prop("checked")) {
                                 _this.vishva.showAllDisabled();
                             }
                             else {
                                 _this.vishva.hideAllDisabled();
                             }
-                            var err = _this.vishva.snapper($("#snapper").prop("checked"));
+                            var err = _this.vishva.snapper(_this.snapper.prop("checked"));
                             if (err != null) {
                                 _this.showAlertDiag(err);
                                 return false;
                             }
-                            _this.showAlertDiag("Saved");
+                            _this.settingDiag.dialog("close");
+                            //this.showAlertDiag("Saved");
                             return true;
                         };
                         var dboCancel = {};
@@ -4453,6 +4486,11 @@ var org;
                         };
                         var dbos = [dboSave, dboCancel];
                         this.settingDiag.dialog("option", "buttons", dbos);
+                    };
+                    VishvaGUI.prototype.updateSettings = function () {
+                        this.camCol.prop("checked", this.vishva.isCameraCollisionOn());
+                        this.autoEditMenu.prop("checked", this.vishva.isAutoEditMenuOn());
+                        this.showToolTips.prop("checked", this.enableToolTips);
                     };
                     VishvaGUI.prototype.createDownloadDiag = function () {
                         this.downloadLink = document.getElementById("downloadLink");
@@ -4517,6 +4555,7 @@ var org;
                         dos.height = "auto";
                         dos.title = "Sensors and Actuators";
                         dos.closeOnEscape = false;
+                        dos.closeText = "";
                         dos.close = function (e, ui) {
                             _this.vishva.switchDisabled = false;
                         };
@@ -4651,6 +4690,7 @@ var org;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.title = "Edit Sensor";
+                        dos.closeText = "";
                         dos.closeOnEscape = false;
                         editSensDiag.dialog(dos);
                     };
@@ -4694,6 +4734,7 @@ var org;
                         dos.resizable = false;
                         dos.width = "auto";
                         dos.title = "Edit Actuator";
+                        dos.closeText = "";
                         dos.closeOnEscape = false;
                         editActDiag.dialog(dos);
                     };
@@ -4882,7 +4923,7 @@ var org;
                             collapsible: true,
                             beforeActivate: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
-                                _this.vishva.enableKeys();
+                                //TODO remove this.vishva.enableKeys();
                                 _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
                             }
                         });
@@ -4894,7 +4935,8 @@ var org;
                             position: this.leftCenter,
                             minWidth: 420,
                             width: 420,
-                            height: "auto",
+                            // height: "auto",
+                            height: 650,
                             closeOnEscape: false,
                             //a) on open set the values of the fields in the active panel.
                             //b) also if we switched from another mesh vishav will close open
@@ -4911,9 +4953,10 @@ var org;
                                     _this.fixingDragIssue = false;
                                 }
                             },
+                            closeText: "",
                             close: function (e, ui) {
                                 _this.vishva.switchDisabled = false;
-                                _this.vishva.enableKeys();
+                                //TODO remove this.vishva.enableKeys();
                             },
                             //after drag the dialog box doesnot resize
                             //force resize by closing and opening
@@ -4968,11 +5011,11 @@ var org;
                             this.updateLight();
                         }
                         else if (panelIndex === 4 /* Animations */) {
-                            this.vishva.disableKeys();
+                            //TODO remove this.vishva.disableKeys();
                             this.updateAnimations();
                         }
                         else if (panelIndex === 1 /* Physics */) {
-                            this.vishva.disableKeys();
+                            //TODO remove this.vishva.disableKeys();
                             this.updatePhysics();
                         }
                     };
@@ -4984,7 +5027,6 @@ var org;
                         var animRangeMake = document.getElementById("animRangeMake");
                         //create
                         animRangeMake.onclick = function (e) {
-                            console.log("creating range");
                             var name = animRangeName.value;
                             var ars = parseInt(animRangeStart.value);
                             if (isNaN(ars)) {
@@ -5039,6 +5081,7 @@ var org;
                         dos.width = "auto";
                         dos.height = "auto";
                         dos.closeOnEscape = false;
+                        dos.closeText = "";
                         dos.close = function (e, ui) {
                             _this.vishva.switchDisabled = false;
                         };
@@ -5112,12 +5155,13 @@ var org;
                         var _this = this;
                         //name
                         this.genName = document.getElementById("genName");
-                        this.genName.onfocus = function () {
-                            _this.vishva.disableKeys();
-                        };
-                        this.genName.onblur = function () {
-                            _this.vishva.enableKeys();
-                        };
+                        //TODO remove
+                        //            this.genName.onfocus = () => {
+                        //                this.vishva.disableKeys();
+                        //            }
+                        //            this.genName.onblur = () => {
+                        //                this.vishva.enableKeys();
+                        //            }
                         this.genName.onchange = function () {
                             _this.vishva.setName(_this.genName.value);
                         };
@@ -5507,6 +5551,7 @@ var org;
                             width: "auto",
                             minWidth: 200,
                             height: "auto",
+                            closeText: "",
                             closeOnEscape: false
                         };
                         this.alertDialog.dialog(dos);
@@ -5641,8 +5686,7 @@ var org;
                                 _this.createSettingDiag();
                             }
                             if (_this.settingDiag.dialog("isOpen") === false) {
-                                $("#camCol").prop("checked", _this.vishva.isCameraCollisionOn());
-                                $("#autoEditMenu").prop("checked", _this.vishva.isAutoEditMenuOn());
+                                _this.updateSettings();
                                 _this.settingDiag.dialog("open");
                             }
                             else {

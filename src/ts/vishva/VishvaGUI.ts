@@ -34,6 +34,10 @@ namespace org.ssatguru.babylonjs.vishva {
         public constructor(vishva: Vishva) {
             this.vishva = vishva;
 
+            //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
+            $("input").on("focus", () => { this.vishva.disableKeys(); });
+            $("input").on("blur", () => { this.vishva.enableKeys(); });
+
             this.createJPOs();
 
             //need to do add menu before main navigation menu
@@ -157,6 +161,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 position: this.centerBottom,
                 width: (<any>"100%"),
                 height: (<any>"auto"),
+                closeText: "",
                 closeOnEscape: false
             };
             jq.dialog(dos);
@@ -269,6 +274,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 position: this.rightCenter,
                 minWidth: 350,
                 height: "auto",
+                closeText: "",
                 closeOnEscape: false
             };
             this.envDiag.dialog(dos);
@@ -279,14 +285,39 @@ namespace org.ssatguru.babylonjs.vishva {
          * Create Setting Dialog
          */
         settingDiag: JQuery;
+        camCol: JQuery;
+        autoEditMenu: JQuery;
+        showToolTips: JQuery;
+        //TODO persist this setting
+        enableToolTips: boolean = true;
+        showInvis: JQuery;
+        showDisa: JQuery;
+        snapper: JQuery;
+
         private createSettingDiag() {
+
             this.settingDiag = $("#settingDiag");
+            this.camCol = $("#camCol");
+            this.autoEditMenu = $("#autoEditMenu");
+            this.showToolTips = $("#showToolTips");
+            $(document).tooltip({
+                open: (event, ui: any) => {
+                    if (!this.enableToolTips){
+                        ui.tooltip.stop().remove();
+                    }
+                }
+            });
+            this.showInvis = $("#showInvis");
+            this.showDisa = $("#showDisa");
+            this.snapper = $("#snapper");
+
             let dos: DialogOptions = {
                 autoOpen: false,
                 resizable: false,
                 position: this.rightCenter,
                 minWidth: 350,
                 height: (<any>"auto"),
+                closeText: "",
                 closeOnEscape: false
             };
             this.settingDiag.dialog(dos);
@@ -297,28 +328,32 @@ namespace org.ssatguru.babylonjs.vishva {
             dboSave.text = "save";
             dboSave.click = (e) => {
 
-                this.vishva.enableCameraCollision($("#camCol").prop("checked"));
+                this.vishva.enableCameraCollision(this.camCol.prop("checked"));
 
-                this.vishva.enableAutoEditMenu($("#autoEditMenu").prop("checked"));
+                this.vishva.enableAutoEditMenu(this.autoEditMenu.prop("checked"));
+            
+                this.enableToolTips = this.showToolTips.prop("checked");
+              
 
-                if ($("#showInvis").prop("checked")) {
+                if (this.showInvis.prop("checked")) {
                     this.vishva.showAllInvisibles();
                 } else {
                     this.vishva.hideAllInvisibles();
                 }
-                if ($("#showDisa").prop("checked")) {
+                if (this.showDisa.prop("checked")) {
                     this.vishva.showAllDisabled();
                 } else {
                     this.vishva.hideAllDisabled()
                 }
 
-                let err: string = this.vishva.snapper($("#snapper").prop("checked"));
+                let err: string = this.vishva.snapper(this.snapper.prop("checked"));
                 if (err != null) {
                     this.showAlertDiag(err);
                     return false;
                 }
 
-                this.showAlertDiag("Saved");
+                this.settingDiag.dialog("close");
+                //this.showAlertDiag("Saved");
                 return true;
             };
 
@@ -335,8 +370,17 @@ namespace org.ssatguru.babylonjs.vishva {
             this.settingDiag.dialog("option", "buttons", dbos);
         }
 
-        downloadDialog: JQuery;
+        private updateSettings() {
 
+            this.camCol.prop("checked", this.vishva.isCameraCollisionOn());
+
+            this.autoEditMenu.prop("checked", this.vishva.isAutoEditMenuOn());
+
+            this.showToolTips.prop("checked", this.enableToolTips);
+
+        }
+
+        downloadDialog: JQuery;
         private createDownloadDiag() {
             this.downloadLink = <HTMLAnchorElement>document.getElementById("downloadLink");
             this.downloadDialog = <JQuery>(<any>$("#saveDiv"));
@@ -418,6 +462,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.height = "auto";
             dos.title = "Sensors and Actuators";
             dos.closeOnEscape = false;
+            dos.closeText= "";
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -555,6 +600,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Edit Sensor";
+            dos.closeText= "";
             dos.closeOnEscape = false;
             editSensDiag.dialog(dos);
         }
@@ -603,6 +649,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Edit Actuator";
+            dos.closeText="";
             dos.closeOnEscape = false;
             editActDiag.dialog(dos);
         }
@@ -738,7 +785,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
-        
+
         /**
          * Mesh properties section
          */
@@ -795,7 +842,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 collapsible: true,
                 beforeActivate: (e, ui) => {
                     this.vishva.switchDisabled = false;
-                    this.vishva.enableKeys();
+                    //TODO remove this.vishva.enableKeys();
                     this.refreshPanel(this.getPanelIndex(ui.newHeader));
 
                 }
@@ -809,7 +856,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 position: this.leftCenter,
                 minWidth: 420,
                 width: 420,
-                height: "auto",
+                // height: "auto",
+                height: 650,
                 closeOnEscape: false,
                 //a) on open set the values of the fields in the active panel.
                 //b) also if we switched from another mesh vishav will close open
@@ -825,9 +873,10 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.fixingDragIssue = false;
                     }
                 },
+                closeText: "",
                 close: (e, ui) => {
                     this.vishva.switchDisabled = false;
-                    this.vishva.enableKeys();
+                    //TODO remove this.vishva.enableKeys();
                 },
                 //after drag the dialog box doesnot resize
                 //force resize by closing and opening
@@ -876,10 +925,10 @@ namespace org.ssatguru.babylonjs.vishva {
             } else if (panelIndex === propertyPanel.Lights) {
                 this.updateLight();
             } else if (panelIndex === propertyPanel.Animations) {
-                this.vishva.disableKeys();
+                //TODO remove this.vishva.disableKeys();
                 this.updateAnimations();
             } else if (panelIndex === propertyPanel.Physics) {
-                this.vishva.disableKeys();
+                //TODO remove this.vishva.disableKeys();
                 this.updatePhysics()
             }
         }
@@ -896,10 +945,10 @@ namespace org.ssatguru.babylonjs.vishva {
             var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
             var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
             var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
-            
+
             //create
             animRangeMake.onclick = (e) => {
-                console.log("creating range");
+
                 var name = animRangeName.value;
                 var ars: number = parseInt(animRangeStart.value);
                 if (isNaN(ars)) {
@@ -925,7 +974,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return true;
             };
-            
+
             //play
             this.animRate = <HTMLInputElement>document.getElementById("animRate");
             this.animLoop = <HTMLInputElement>document.getElementById("animLoop");
@@ -955,6 +1004,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.width = "auto";
             dos.height = (<any>"auto");
             dos.closeOnEscape = false;
+            dos.closeText= "";
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -1026,8 +1076,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
 
-        
-        
+
+
 
 
         private toString(d: number): string {
@@ -1037,7 +1087,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         genName: HTMLInputElement;
         genSpace: HTMLSelectElement;
-        
+
         transRefresh: HTMLElement;
         transBake: HTMLElement;
 
@@ -1049,7 +1099,7 @@ namespace org.ssatguru.babylonjs.vishva {
         genSnapTrans: HTMLInputElement;
         genSnapRot: HTMLInputElement;
         genSnapScale: HTMLInputElement;
-        
+
         genSnapTransValue: HTMLInputElement;
         genSnapRotValue: HTMLInputElement;
         genSnapScaleValue: HTMLInputElement;
@@ -1061,27 +1111,28 @@ namespace org.ssatguru.babylonjs.vishva {
         private initGeneral() {
             //name
             this.genName = <HTMLInputElement>document.getElementById("genName");
-            this.genName.onfocus = () => {
-                this.vishva.disableKeys();
-            }
-            this.genName.onblur = () => {
-                this.vishva.enableKeys();
-            }
+            //TODO remove
+            //            this.genName.onfocus = () => {
+            //                this.vishva.disableKeys();
+            //            }
+            //            this.genName.onblur = () => {
+            //                this.vishva.enableKeys();
+            //            }
             this.genName.onchange = () => {
                 this.vishva.setName(this.genName.value);
             }
-            
+
             //space
-            this.genSpace = <HTMLSelectElement> document.getElementById("genSpace");
+            this.genSpace = <HTMLSelectElement>document.getElementById("genSpace");
             this.genSpace.onchange = () => {
                 let err: string = this.vishva.setSpace(this.genSpace.value);
                 if (err !== null) {
                     this.showAlertDiag(err);
                 }
             }
-            
+
             //transforms
-             if (this.transRefresh === undefined) {
+            if (this.transRefresh === undefined) {
                 this.transRefresh = document.getElementById("transRefresh");
                 this.transRefresh.onclick = () => {
                     this.updateTransform();
@@ -1102,7 +1153,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genOperRot = document.getElementById("operRot");
             this.genOperScale = document.getElementById("operScale");
             this.genOperFocus = document.getElementById("operFocus");
-            
+
             this.genOperTrans.onclick = () => {
                 this.vishva.setTransOn();
             }
@@ -1118,9 +1169,9 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genOperFocus.onclick = () => {
                 this.vishva.setFocusOnMesh();
             }
-            
-            
-            
+
+
+
             //Snap CheckBox
             this.genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
             this.genSnapTrans.onchange = () => {
@@ -1146,7 +1197,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.genSnapScale.checked = false;
                 }
             }
-            
+
             //Snap Values
             this.genSnapTransValue = <HTMLInputElement>document.getElementById("snapTransValue");
             this.genSnapTransValue.onchange = () => {
@@ -1160,7 +1211,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.genSnapScaleValue.onchange = () => {
                 this.vishva.setSnapScaleValue(Number(this.genSnapScaleValue.value));
             }
-            
+
             //
             this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
             this.genDisable.onchange = () => {
@@ -1248,7 +1299,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 return false;
             };
-            
+
             subMesh.onclick = (e) => {
                 var err: string = this.vishva.csgOperation("subtract");
                 if (err != null) {
@@ -1306,31 +1357,31 @@ namespace org.ssatguru.babylonjs.vishva {
         private updateGeneral() {
             if (this.genName === undefined) this.initGeneral();
             this.genName.value = this.vishva.getName();
-            
+
             this.genSpace.value = this.vishva.getSpace();
-            
+
             this.updateTransform();
 
             this.genDisable.checked = this.vishva.isDisabled();
             this.genColl.checked = this.vishva.isCollideable();
             this.genVisi.checked = this.vishva.isVisible();
-            
+
         }
-        
-        private updateTransform() { 
-            
+
+        private updateTransform() {
+
             var loc: Vector3 = this.vishva.getLocation();
             var rot: Vector3 = this.vishva.getRotation();
             var scl: Vector3 = this.vishva.getScale();
-            
+
             (<HTMLInputElement>document.getElementById("loc.x")).value = this.toString(loc.x);
             (<HTMLInputElement>document.getElementById("loc.y")).value = this.toString(loc.y);
             (<HTMLInputElement>document.getElementById("loc.z")).value = this.toString(loc.z);
-            
+
             (<HTMLInputElement>document.getElementById("rot.x")).value = this.toString(rot.x);
             (<HTMLInputElement>document.getElementById("rot.y")).value = this.toString(rot.y);
             (<HTMLInputElement>document.getElementById("rot.z")).value = this.toString(rot.z);
-            
+
             (<HTMLInputElement>document.getElementById("scl.x")).value = this.toString(scl.x);
             (<HTMLInputElement>document.getElementById("scl.y")).value = this.toString(scl.y);
             (<HTMLInputElement>document.getElementById("scl.z")).value = this.toString(scl.z);
@@ -1513,28 +1564,28 @@ namespace org.ssatguru.babylonjs.vishva {
             this.vishva.setMeshPickedPhyParms(phyParms);
         }
 
-//        meshTransDiag: JQuery;
-//
-//        private createTransDiag() {
-//            this.meshTransDiag = $("#meshTransDiag");
-//            var dos: DialogOptions = {};
-//            dos.autoOpen = false;
-//            dos.modal = false;
-//            dos.resizable = false;
-//            dos.width = "auto";
-//            dos.height = (<any>"auto");
-//            dos.closeOnEscape = false;
-//            dos.close = (e, ui) => {
-//                this.vishva.switchDisabled = false;
-//            };
-//            this.meshTransDiag.dialog(dos);
-//        }
+        //        meshT        ran        sDiag: JQuery;
+        //
+        //        private cr        eateTransDiag() {
+        //            this.meshTransDiag = $("        #meshTransDiag");
+        //            var dos: Di        alogOptions = {};
+        //            dos.        autoOpen = false;
+        //            d        os.modal = false;
+        //            dos.r        esizable = false;
+        //            do        s.width = "auto";
+        //            dos.height         = (<any>"auto");
+        //            dos.close        OnEscape = false;
+        //            dos.clo        se = (e, ui) => {
+        //                this.vishva.switch        Disabled = false;        
+        //            };
+        //            this.meshTrans        Diag.dialog(dos);
+        //        }
 
         /**
          * End of Mesh Properties section
          */
-         
-         
+
+
         alertDialog: JQuery;
 
         alertDiv: HTMLElement;
@@ -1548,6 +1599,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 width: "auto",
                 minWidth: 200,
                 height: "auto",
+                closeText: "",
                 closeOnEscape: false
             };
             this.alertDialog.dialog(dos);
@@ -1593,7 +1645,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var colors: number[] = [rgb.r, rgb.g, rgb.b];
             this.vishva.setGroundColor(colors);
         }
-        
+
         /**
          * Main Navigation Menu Section
          */
@@ -1620,9 +1672,9 @@ namespace org.ssatguru.babylonjs.vishva {
             navMenuBar.show(null);
             showNavMenu.onclick = (e) => {
                 if (this.menuBarOn) {
-                    navMenuBar.hide("slide",100);
+                    navMenuBar.hide("slide", 100);
                 } else {
-                    navMenuBar.show("slide",100);
+                    navMenuBar.show("slide", 100);
                 }
                 this.menuBarOn = !this.menuBarOn;
                 return true;
@@ -1645,14 +1697,14 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.firstTime = false;
                 }
                 if (this.addMenuOn) {
-                    addMenu.menu().hide("slide", slideDown,100);
+                    addMenu.menu().hide("slide", slideDown, 100);
                 } else {
-                    addMenu.show("slide", slideDown,100);
+                    addMenu.show("slide", slideDown, 100);
                 }
                 this.addMenuOn = !this.addMenuOn;
                 $(document).one("click", (jqe) => {
                     if (this.addMenuOn) {
-                        addMenu.menu().hide("slide", slideDown,100);
+                        addMenu.menu().hide("slide", slideDown, 100);
                         this.addMenuOn = false;
                     }
                     return true;
@@ -1695,8 +1747,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.createSettingDiag();
                 }
                 if (this.settingDiag.dialog("isOpen") === false) {
-                    $("#camCol").prop("checked", this.vishva.isCameraCollisionOn());
-                    $("#autoEditMenu").prop("checked", this.vishva.isAutoEditMenuOn());
+                    this.updateSettings();
                     this.settingDiag.dialog("open");
                 } else {
                     this.settingDiag.dialog("close");
@@ -1728,7 +1779,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 diag.dialog("close");
             }
         }
-        
+
     }
 
     const enum propertyPanel {

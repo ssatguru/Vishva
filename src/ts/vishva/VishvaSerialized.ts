@@ -10,6 +10,7 @@ namespace org.ssatguru.babylonjs.vishva {
     export class VishvaSerialized{
         public snas: SNAserialized[];
         public settings: SettingsSerialized;
+        public guiSettings:Object;
         public misc:MiscSerialized;
         
         public constructor(){

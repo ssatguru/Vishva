@@ -25,7 +25,7 @@ namespace org.ssatguru.babylonjs.component {
             this.avatarSkeleton = avatarSkeleton;
             this.initAnims(anims);
             this.camera = camera;
-
+            
             this.avatar = avatar;
             this.scene = scene;
             this.key = new Key();
@@ -63,6 +63,8 @@ namespace org.ssatguru.babylonjs.component {
             this.time = 0;
             this.stillTime = 0;
             this.grounded = false;
+            this.updateTargetValue();
+            this.camera.target = this.cameraTarget;
             this.scene.registerBeforeRender(this.renderer);
         }
 
@@ -135,7 +137,7 @@ namespace org.ssatguru.babylonjs.component {
                         }
                     
                     }
-                    this.moveCamera();
+                    this.updateTargetValue();
                 }
 
                 if (this.prevAnim != this.idle) {
@@ -264,16 +266,16 @@ namespace org.ssatguru.babylonjs.component {
                 }
                 this.prevAnim = anim;
             }
-            this.moveCamera();
+            this.updateTargetValue();
 
             if (this.oldPos.y <= this.avatar.position.y) {
                 this.time = 0;
             }
             return;
         }
-
-        private moveCamera() {
-                this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+        cameraTarget:Vector3 = new Vector3(0,0,0);
+        private updateTargetValue() {
+            this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
 
         move: boolean = false;

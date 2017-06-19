@@ -37,6 +37,7 @@ var org;
                         this.time = 0;
                         this.stillTime = 0;
                         this.velocity = new Vector3(0, 0, 0);
+                        this.cameraTarget = new Vector3(0, 0, 0);
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
                         this.initAnims(anims);
@@ -69,6 +70,8 @@ var org;
                         this.time = 0;
                         this.stillTime = 0;
                         this.grounded = false;
+                        this.updateTargetValue();
+                        this.camera.target = this.cameraTarget;
                         this.scene.registerBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.stop = function () {
@@ -113,7 +116,7 @@ var org;
                                         this.avatar.position.copyFrom(this.oldPos);
                                     }
                                 }
-                                this.moveCamera();
+                                this.updateTargetValue();
                             }
                             if (this.prevAnim != this.idle) {
                                 this.prevAnim = this.idle;
@@ -248,14 +251,14 @@ var org;
                             }
                             this.prevAnim = anim;
                         }
-                        this.moveCamera();
+                        this.updateTargetValue();
                         if (this.oldPos.y <= this.avatar.position.y) {
                             this.time = 0;
                         }
                         return;
                     };
-                    CharacterControl.prototype.moveCamera = function () {
-                        this.camera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                    CharacterControl.prototype.updateTargetValue = function () {
+                        this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {
                         var event = e;
@@ -1803,6 +1806,9 @@ var org;
                         task.onError = function (obj) { return _this.onTaskFailure(obj); };
                         am.load();
                     };
+                    Vishva.prototype.getGuiSettings = function () {
+                        return this.vishvaSerialized.guiSettings;
+                    };
                     Vishva.prototype.onTaskSuccess = function (obj) {
                         var _this = this;
                         var tfat = obj;
@@ -2280,9 +2286,9 @@ var org;
                         //            }
                         //if scaling is on then we might have changed space to local            
                         //restore space to what is was before scaling
-                        if (this.editControl.isScalingEnabled()) {
-                            this.setSpaceLocal(this.wasSpaceLocal);
-                        }
+                        //            if (this.editControl.isScalingEnabled()) {
+                        //                this.setSpaceLocal(this.wasSpaceLocal);
+                        //            }
                         this.editControl.detach();
                         this.editControl = null;
                         //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -2915,9 +2921,10 @@ var org;
                     Vishva.prototype.setTransOn = function () {
                         //if scaling is on then we might have changed space to local            
                         //restore space to what is was before scaling
-                        if (this.editControl.isScalingEnabled()) {
-                            this.setSpaceLocal(this.wasSpaceLocal);
-                        }
+                        //            if (this.editControl.isScalingEnabled()) {
+                        //                this.setSpaceLocal(this.wasSpaceLocal);
+                        //            }
+                        this.editControl.setLocal(!this.spaceWorld);
                         this.editControl.enableTranslation();
                     };
                     Vishva.prototype.isTransOn = function () {
@@ -2926,24 +2933,26 @@ var org;
                     Vishva.prototype.setRotOn = function () {
                         //if scaling is on then we might have changed space to local            
                         //restore space to what is was before scaling
-                        if (this.editControl.isScalingEnabled()) {
-                            this.setSpaceLocal(this.wasSpaceLocal);
-                        }
+                        //            if (this.editControl.isScalingEnabled()) {
+                        //                this.setSpaceLocal(this.wasSpaceLocal);
+                        //            }
+                        this.editControl.setLocal(!this.spaceWorld);
                         this.editControl.enableRotation();
                     };
                     Vishva.prototype.isRotOn = function () {
                         return this.editControl.isRotationEnabled();
                     };
+                    //wasSpaceLocal: boolean;
                     Vishva.prototype.setScaleOn = function () {
                         //make space local for scaling
                         //remember what the space was so we can restore it back later on
-                        if (!this.isSpaceLocal()) {
-                            this.setSpaceLocal(true);
-                            this.wasSpaceLocal = false;
-                        }
-                        else {
-                            this.wasSpaceLocal = true;
-                        }
+                        //            if (!this.isSpaceLocal()) {
+                        //                this.setSpaceLocal(true);
+                        //                this.wasSpaceLocal = false;
+                        //            } else {
+                        //                this.wasSpaceLocal = true;
+                        //            }
+                        this.editControl.setLocal(true);
                         this.editControl.enableScaling();
                     };
                     Vishva.prototype.isScaleOn = function () {
@@ -2958,6 +2967,7 @@ var org;
                         this.focusOnMesh(this.meshPicked, 25);
                     };
                     Vishva.prototype.setSpace = function (space) {
+                        console.log("setSPace parm " + space);
                         if (this.snapperOn) {
                             return "Cannot switch space when snapper is on";
                         }
@@ -2976,7 +2986,7 @@ var org;
                             return "world";
                     };
                     Vishva.prototype.setSpaceLocal = function (yes) {
-                        if (this.editControl != null)
+                        if ((this.editControl != null) && (!this.editControl.isScalingEnabled()))
                             this.editControl.setLocal(yes);
                         this.spaceWorld = !yes;
                         return null;
@@ -3065,7 +3075,7 @@ var org;
                     Vishva.prototype.snapper = function (yes) {
                         if (!this.spaceWorld && yes) {
                             this.spaceWorld = true;
-                            this.wasSpaceLocal = false;
+                            //                this.wasSpaceLocal = false;
                         }
                         this.snapperOn = yes;
                         //if edit control is already up then lets switch snaps on
@@ -3410,6 +3420,7 @@ var org;
                         var vishvaSerialzed = new vishva.VishvaSerialized();
                         vishvaSerialzed.settings.cameraCollision = this.cameraCollision;
                         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
+                        vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
                         vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
                         //serialize sna first
                         //we might add tags to meshes in scene during sna serialize.
@@ -4203,6 +4214,14 @@ var org;
                         this.firstTime = true;
                         this.addMenuOn = false;
                         this.vishva = vishva;
+                        this.setSettings();
+                        $(document).tooltip({
+                            open: function (event, ui) {
+                                if (!_this.enableToolTips) {
+                                    ui.tooltip.stop().remove();
+                                }
+                            }
+                        });
                         //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
                         $("input").on("focus", function () { _this.vishva.disableKeys(); });
                         $("input").on("blur", function () { _this.vishva.enableKeys(); });
@@ -4429,13 +4448,6 @@ var org;
                         this.camCol = $("#camCol");
                         this.autoEditMenu = $("#autoEditMenu");
                         this.showToolTips = $("#showToolTips");
-                        $(document).tooltip({
-                            open: function (event, ui) {
-                                if (!_this.enableToolTips) {
-                                    ui.tooltip.stop().remove();
-                                }
-                            }
-                        });
                         this.showInvis = $("#showInvis");
                         this.showDisa = $("#showDisa");
                         this.snapper = $("#snapper");
@@ -5171,6 +5183,7 @@ var org;
                             var err = _this.vishva.setSpace(_this.genSpace.value);
                             if (err !== null) {
                                 _this.showAlertDiag(err);
+                                _this.genSpace.value = _this.vishva.getSpace();
                             }
                         };
                         //transforms
@@ -5717,11 +5730,26 @@ var org;
                             diag.dialog("close");
                         }
                     };
+                    VishvaGUI.prototype.getSettings = function () {
+                        var guiSettings = new GuiSettings();
+                        guiSettings.enableToolTips = this.enableToolTips;
+                        return guiSettings;
+                    };
+                    VishvaGUI.prototype.setSettings = function () {
+                        var guiSettings = this.vishva.getGuiSettings();
+                        this.enableToolTips = guiSettings.enableToolTips;
+                    };
                     return VishvaGUI;
                 }());
                 VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
                 VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
                 vishva_1.VishvaGUI = VishvaGUI;
+                var GuiSettings = (function () {
+                    function GuiSettings() {
+                    }
+                    return GuiSettings;
+                }());
+                vishva_1.GuiSettings = GuiSettings;
                 var RGB = (function () {
                     function RGB() {
                         this.r = 0;

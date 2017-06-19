@@ -33,6 +33,16 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public constructor(vishva: Vishva) {
             this.vishva = vishva;
+            this.setSettings();
+            
+             $(document).tooltip({
+                open: (event, ui: any) => {
+                    if (!this.enableToolTips){
+                        ui.tooltip.stop().remove();
+                    }
+                }
+            });
+            
 
             //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
             $("input").on("focus", () => { this.vishva.disableKeys(); });
@@ -300,13 +310,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.camCol = $("#camCol");
             this.autoEditMenu = $("#autoEditMenu");
             this.showToolTips = $("#showToolTips");
-            $(document).tooltip({
-                open: (event, ui: any) => {
-                    if (!this.enableToolTips){
-                        ui.tooltip.stop().remove();
-                    }
-                }
-            });
             this.showInvis = $("#showInvis");
             this.showDisa = $("#showDisa");
             this.snapper = $("#snapper");
@@ -1128,6 +1131,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 let err: string = this.vishva.setSpace(this.genSpace.value);
                 if (err !== null) {
                     this.showAlertDiag(err);
+                    this.genSpace.value = this.vishva.getSpace();
                 }
             }
 
@@ -1779,7 +1783,22 @@ namespace org.ssatguru.babylonjs.vishva {
                 diag.dialog("close");
             }
         }
+        
+        public getSettings(){
+            let guiSettings  = new GuiSettings();
+            guiSettings.enableToolTips = this.enableToolTips;
+            return guiSettings;
+        }
+        
+        private setSettings(){
+            let guiSettings: GuiSettings = <GuiSettings>this.vishva.getGuiSettings();
+            this.enableToolTips = guiSettings.enableToolTips;
+        }
 
+    }
+    
+    export class GuiSettings{
+        enableToolTips:boolean;
     }
 
     const enum propertyPanel {

@@ -196,6 +196,10 @@ namespace org.ssatguru.babylonjs.vishva {
         snas: SNAserialized[];
 
         vishvaSerialized: VishvaSerialized;
+        
+        public getGuiSettings():Object{
+            return this.vishvaSerialized.guiSettings;
+        }
 
         private onTaskSuccess(obj: any) {
             var tfat: TextFileAssetTask = <TextFileAssetTask>obj;
@@ -832,9 +836,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-            if (this.editControl.isScalingEnabled()) {
-                this.setSpaceLocal(this.wasSpaceLocal);
-            }
+//            if (this.editControl.isScalingEnabled()) {
+//                this.setSpaceLocal(this.wasSpaceLocal);
+//            }
             this.editControl.detach();
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -1503,9 +1507,10 @@ namespace org.ssatguru.babylonjs.vishva {
         public setTransOn() {
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-            if (this.editControl.isScalingEnabled()) {
-                this.setSpaceLocal(this.wasSpaceLocal);
-            }
+//            if (this.editControl.isScalingEnabled()) {
+//                this.setSpaceLocal(this.wasSpaceLocal);
+//            }
+            this.editControl.setLocal(!this.spaceWorld);
             this.editControl.enableTranslation();
         }
         public isTransOn(): boolean {
@@ -1514,25 +1519,27 @@ namespace org.ssatguru.babylonjs.vishva {
         public setRotOn() {
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-            if (this.editControl.isScalingEnabled()) {
-                this.setSpaceLocal(this.wasSpaceLocal);
-            }
+//            if (this.editControl.isScalingEnabled()) {
+//                this.setSpaceLocal(this.wasSpaceLocal);
+//            }
+            this.editControl.setLocal(!this.spaceWorld);
             this.editControl.enableRotation();
         }
         public isRotOn(): boolean {
             return this.editControl.isRotationEnabled();
         }
 
-        wasSpaceLocal: boolean;
+        //wasSpaceLocal: boolean;
         public setScaleOn() {
             //make space local for scaling
             //remember what the space was so we can restore it back later on
-            if (!this.isSpaceLocal()) {
-                this.setSpaceLocal(true);
-                this.wasSpaceLocal = false;
-            } else {
-                this.wasSpaceLocal = true;
-            }
+//            if (!this.isSpaceLocal()) {
+//                this.setSpaceLocal(true);
+//                this.wasSpaceLocal = false;
+//            } else {
+//                this.wasSpaceLocal = true;
+//            }
+            this.editControl.setLocal(true);
             this.editControl.enableScaling();
         }
 
@@ -1552,6 +1559,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         public setSpace(space: string): string {
+            console.log("setSPace parm " + space);
             if (this.snapperOn) {
                 return "Cannot switch space when snapper is on"
             }
@@ -1568,7 +1576,7 @@ namespace org.ssatguru.babylonjs.vishva {
             else return "world";
         }
         public setSpaceLocal(yes: boolean): string {
-            if (this.editControl != null) this.editControl.setLocal(yes);
+            if ((this.editControl != null) && (!this.editControl.isScalingEnabled())) this.editControl.setLocal(yes);
             this.spaceWorld = !yes;
             return null;
         }
@@ -1661,7 +1669,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public snapper(yes: boolean): string {
             if (!this.spaceWorld && yes) {
                 this.spaceWorld = true;
-                this.wasSpaceLocal = false;
+//                this.wasSpaceLocal = false;
             }
             this.snapperOn = yes;
 
@@ -2036,6 +2044,7 @@ namespace org.ssatguru.babylonjs.vishva {
             let vishvaSerialzed = new VishvaSerialized();
             vishvaSerialzed.settings.cameraCollision = this.cameraCollision;
             vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
+            vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
             vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
             //serialize sna first
             //we might add tags to meshes in scene during sna serialize.

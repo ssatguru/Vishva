@@ -160,7 +160,7 @@
             </div>
 
             <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;display:block;">
-                <button id="downWorld"><span class="ui-icon  ui-icon-disk" title="save"></span></button>
+                <button id="downWorld"><span class="ui-icon  ui-icon ui-icon-arrowthickstop-1-s" title="download scene"></span></button>
                 <button id="navAdd"><span class="ui-icon ui-icon-plusthick" title="add"></span> </button>
                 <button id="navEnv"><span class="ui-icon ui-icon-image" title="environment"></span> </button>
                 <button id="navEdit"><span class="ui-icon ui-icon-wrench" title="edit"></span> </button>
@@ -313,9 +313,9 @@
                         <table >
                             <tr>
                                 <td>
-                                    name <input type="text" id="genName">
+                                    name <input type="text" id="genName" >
                                     space 
-                                    <select id="genSpace" >
+                                    <select id="genSpace" title="space for translation and rotation">
                                         <option value="local" >local</option>
                                         <option value="world">world</option>
                                     </select>
@@ -346,25 +346,25 @@
                                         </tr>
                                         <tr>
                                             <td>position</td>
-                                            <td><input type="text" size="2" id="loc.x"></td>
-                                            <td><input type="text" size="2" id="loc.y"></td>
-                                            <td><input type="text" size="2" id="loc.z"></td>                                            
+                                            <td><input type="text" size="2" id="loc.x" disabled></td>
+                                            <td><input type="text" size="2" id="loc.y" disabled></td>
+                                            <td><input type="text" size="2" id="loc.z" disabled></td>                                            
                                             <td><input type="text" size="2" id="snapTransValue"></td>
                                             <td><input type="checkbox" id="snapTrans"></td>
                                         </tr>
                                         <tr>
                                             <td>rotation</td>
-                                            <td><input type="text" size="2" id="rot.x"></td>
-                                            <td><input type="text" size="2" id="rot.y"></td>
-                                            <td><input type="text" size="2" id="rot.z"></td>
+                                            <td><input type="text" size="2" id="rot.x" disabled></td>
+                                            <td><input type="text" size="2" id="rot.y" disabled></td>
+                                            <td><input type="text" size="2" id="rot.z" disabled></td>
                                             <td><input type="text" size="2" id="snapRotValue"></td>
                                             <td><input type="checkbox" id="snapRot"></td>
                                         </tr>
                                         <tr>
                                             <td>scaling</td>
-                                            <td><input type="text" size="2" id="scl.x"></td>
-                                            <td><input type="text" size="2" id="scl.y"></td>
-                                            <td><input type="text" size="2" id="scl.z"></td>
+                                            <td><input type="text" size="2" id="scl.x" disabled></td>
+                                            <td><input type="text" size="2" id="scl.y" disabled></td>
+                                            <td><input type="text" size="2" id="scl.z" disabled></td>
                                             <td><input type="text" size="2" id="snapScaleValue"></td>
                                             <td><input type="checkbox" id="snapScale"></td>                                            
                                         </tr>
@@ -385,7 +385,7 @@
                                 <td>
                                     <button id="cloneMesh"><span class="ui-icon ui-icon-copy" title="clone"></span> </button>
                                     <button id="instMesh"><span class="flip ui-icon  ui-icon-newwin" title="instance"></span></button>
-                                    <button id="downMesh"><span class="ui-icon ui-icon-arrowthickstop-1-s" title="download"></span> </button>
+                                    <button id="downMesh"><span class="ui-icon ui-icon-arrowthickstop-1-s" title="download mesh"></span> </button>
                                     <button id="delMesh"><span class="ui-icon ui-icon-trash" title="delete"></span> </button>
                                 </td>
                             </tr>
@@ -611,7 +611,7 @@
                     </div>
 
                     <h3>Animations</h3>
-                    <div id="meshAnimDiag" title="Animations">
+                    <div id="meshAnimDiag" >
                         create range
                         <table>
                             <tr>
@@ -720,15 +720,13 @@
         <script type="text/javascript" src="js/Vishva-merged.js"></script>
         <script type="text/javascript">
                             $(function () {
-                                //turn on tooltips except for dialog close buttons
-                                //$(document).tooltip({items: '*:not(.ui-dialog-titlebar-close)'});
-                                $(document).tooltip();
 
                                 //change all buttons to jquery button
                                 $("button").button();
                                 $("button").click(function (e) {
                                     $(this).blur();
                                 });
+                                
 //                                $('input').addClass("ui-corner-all");
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;

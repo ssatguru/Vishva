@@ -36,6 +36,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import SceneSerializer = BABYLON.SceneSerializer;
     import ShadowGenerator = BABYLON.ShadowGenerator;
     import Skeleton = BABYLON.Skeleton;
+    import SkeletonViewer = BABYLON.Debug.SkeletonViewer;
     import StandardMaterial = BABYLON.StandardMaterial;
     import Tags = BABYLON.Tags;
     import TextFileAssetTask = BABYLON.TextFileAssetTask;
@@ -284,38 +285,38 @@ namespace org.ssatguru.babylonjs.vishva {
                 hl.intensity = 0.4;
                 this.sun = hl;
                 Tags.AddTagsTo(hl, "Vishva.sun");
-                
+
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                 this.sunDR.intensity = 0.5;
-                this.sunDR.position = new Vector3(0,0,0);
+                this.sunDR.position = new Vector3(0, 0, 0);
                 let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
 
                 this.shadowGenerator.useBlurVarianceShadowMap = true;
                 this.shadowGenerator.bias = 1.0E-6;
 
-//                this.shadowGenerator.useBlurExponentialShadowMap = true;
-//                this.shadowGenerator.bias =1.0E-6;
-//                this.shadowGenerator.depthScale = 2500;
-//                sl.shadowMinZ = 1;
-//                sl.shadowMaxZ = 2500;
+                //                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                //                this.shadowGenerator.bias =1.0E-6;
+                //                this.shadowGenerator.depthScale = 2500;
+                //                sl.shadowMinZ = 1;
+                //                sl.shadowMaxZ = 2500;
 
             } else {
                 for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
                         this.sunDR = <DirectionalLight>light;
                         this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
-                        
+
                         this.shadowGenerator.useBlurVarianceShadowMap = true;
                         this.shadowGenerator.bias = 1.0E-6;
 
-//                        this.shadowGenerator.useBlurExponentialShadowMap = true;
-//                        this.shadowGenerator.bias = 1.0E-6;
-//                        this.shadowGenerator.depthScale = 2500;
-//                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-//                        sl.shadowMinZ = 1;
-//                        sl.shadowMaxZ = 2500;
-                        
+                        //                        this.shadowGenerator.useBlurExpon                        entialShadowMap = true;
+                        //                        this.shadowG                        enerator.bias = 1.0E-6;
+                        //                        this.shadowGener                        ator.depthScale = 2500;
+                        //                        let sl: IShadowLight = <IShadowL                        ight>(<any>this.sunDR);
+                        //                                                sl.shadowMinZ = 1;
+                        //                        sl.shadowMaxZ = 2500;
+
                     }
                 }
             }
@@ -344,7 +345,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.mainCamera = this.createCamera(this.scene, this.canvas);
                 this.scene.activeCamera = this.mainCamera;
             }
-           
+
 
             //TODO
             this.mainCamera.checkCollisions = true;
@@ -737,7 +738,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshPicked.physicsImpostor = null;
             }
         }
-        
+
         private restorePhyParms() {
             if (this.meshPickedPhyParms != null) {
                 this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
@@ -747,6 +748,28 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshPickedPhyParms = null;
             }
         }
+
+        savePos: Vector3;
+        saveRot: Quaternion;
+        public testPhysics(phyParm: PhysicsParm) {
+            this.resetPhysics();
+            this.savePos = this.meshPicked.position.clone();
+            this.saveRot = this.meshPicked.rotationQuaternion.clone();
+            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
+            this.meshPicked.physicsImpostor.setParam("mass", phyParm.mass);
+            this.meshPicked.physicsImpostor.setParam("friction", phyParm.friction);
+            this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
+        }
+        public resetPhysics() {
+            if (this.meshPicked.physicsImpostor != null) {
+                this.meshPicked.position.copyFrom(this.savePos);
+                this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
+                this.meshPicked.physicsImpostor.dispose();
+                this.meshPicked.physicsImpostor = null;
+            }
+        }
+
+
         /**
          * switch the edit control to the new mesh
          * 
@@ -1796,6 +1819,18 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSkeleton(): Skeleton {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
+        skelViewer:SkeletonViewer =null;
+        public toggleSkelView(){
+            if (this.meshPicked.skeleton == null) return ;
+            if (this.skelViewer === null || this.skelViewer.mesh !== this.meshPicked){
+                this.skelViewer = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
+                this.skelViewer.isEnabled = true;
+            }else{
+                this.skelViewer.dispose();
+                this.skelViewer = null;
+            }
+            
+        }
 
         public createAnimRange(name: string, start: number, end: number) {
             //remove the range if it already exist
@@ -2595,11 +2630,11 @@ namespace org.ssatguru.babylonjs.vishva {
                     grnd.freezeWorldMatrix();
                     grnd.receiveShadows = true;
                     this.ground = grnd;
-                    
+
                     //HeightmapImpostor doesnot seem to work.
-//                    if (this.enablePhysics) {
-//                        this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.1 }, this.scene);
-//                    }
+                    //                    if (this.enablePhysics) {
+                    //                        this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+                    //                    }
                 }
 
             }, scene);

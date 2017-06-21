@@ -34,15 +34,15 @@ namespace org.ssatguru.babylonjs.vishva {
         public constructor(vishva: Vishva) {
             this.vishva = vishva;
             this.setSettings();
-            
-             $(document).tooltip({
+
+            $(document).tooltip({
                 open: (event, ui: any) => {
-                    if (!this.enableToolTips){
+                    if (!this.enableToolTips) {
                         ui.tooltip.stop().remove();
                     }
                 }
             });
-            
+
 
             //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
             $("input").on("focus", () => { this.vishva.disableKeys(); });
@@ -334,9 +334,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.vishva.enableCameraCollision(this.camCol.prop("checked"));
 
                 this.vishva.enableAutoEditMenu(this.autoEditMenu.prop("checked"));
-            
+
                 this.enableToolTips = this.showToolTips.prop("checked");
-              
+
 
                 if (this.showInvis.prop("checked")) {
                     this.vishva.showAllInvisibles();
@@ -465,7 +465,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.height = "auto";
             dos.title = "Sensors and Actuators";
             dos.closeOnEscape = false;
-            dos.closeText= "";
+            dos.closeText = "";
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -603,7 +603,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Edit Sensor";
-            dos.closeText= "";
+            dos.closeText = "";
             dos.closeOnEscape = false;
             editSensDiag.dialog(dos);
         }
@@ -652,7 +652,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.resizable = false;
             dos.width = "auto";
             dos.title = "Edit Actuator";
-            dos.closeText="";
+            dos.closeText = "";
             dos.closeOnEscape = false;
             editActDiag.dialog(dos);
         }
@@ -943,11 +943,17 @@ namespace org.ssatguru.babylonjs.vishva {
         skel: Skeleton;
 
         private initAnimUI() {
-
+            var animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
             var animRangeName: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeName");
             var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
             var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
             var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
+            
+            //enable/disable skeleton view
+            animSkelView.onclick = (e) => {
+                if (this.skel == null)  return;
+                this.vishva.toggleSkelView();
+            }
 
             //create
             animRangeMake.onclick = (e) => {
@@ -1007,7 +1013,7 @@ namespace org.ssatguru.babylonjs.vishva {
             dos.width = "auto";
             dos.height = (<any>"auto");
             dos.closeOnEscape = false;
-            dos.closeText= "";
+            dos.closeText = "";
             dos.close = (e, ui) => {
                 this.vishva.switchDisabled = false;
             };
@@ -1508,7 +1514,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
             let phyApply = <HTMLButtonElement>document.getElementById("phyApply");
-            let phyRestore = <HTMLButtonElement>document.getElementById("phyRestore");
+            let phyTest = <HTMLButtonElement>document.getElementById("phyTest");
+            let phyReset = <HTMLButtonElement>document.getElementById("phyReset");
 
             phyApply.onclick = (ev) => {
                 this.applyPhysics();
@@ -1516,9 +1523,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             }
 
-            phyRestore.onclick = (ev) => {
-                this.updatePhysics();
-                this.showAlertDiag("physics restored");
+            phyTest.onclick = (ev) => {
+                this.testPhysics();
+                return false;
+            }
+            
+            phyReset.onclick = (ev) => {
+                this.resetPhysics()
                 return false;
             }
         }
@@ -1566,6 +1577,22 @@ namespace org.ssatguru.babylonjs.vishva {
                 phyParms = null;
             }
             this.vishva.setMeshPickedPhyParms(phyParms);
+        }
+
+        private testPhysics() {
+            let phyParms: PhysicsParm;
+
+            phyParms = new PhysicsParm();
+            phyParms.type = parseInt(this.phyType.value);
+            phyParms.mass = parseFloat(this.phyMass.value);
+            phyParms.restitution = parseFloat(this.phyRes.value);
+            phyParms.friction = parseFloat(this.phyFric.value);
+
+            this.vishva.testPhysics(phyParms);
+        }
+        
+        private resetPhysics(){
+            this.vishva.resetPhysics();
         }
 
         //        meshT        ran        sDiag: JQuery;
@@ -1783,23 +1810,23 @@ namespace org.ssatguru.babylonjs.vishva {
                 diag.dialog("close");
             }
         }
-        
-        public getSettings(){
-            let guiSettings  = new GuiSettings();
+
+        public getSettings() {
+            let guiSettings = new GuiSettings();
             guiSettings.enableToolTips = this.enableToolTips;
             return guiSettings;
         }
-        
-        private setSettings(){
+
+        private setSettings() {
             let guiSettings: GuiSettings = <GuiSettings>this.vishva.getGuiSettings();
             if (guiSettings !== null)
-            this.enableToolTips = guiSettings.enableToolTips;
+                this.enableToolTips = guiSettings.enableToolTips;
         }
 
     }
-    
-    export class GuiSettings{
-        enableToolTips:boolean;
+
+    export class GuiSettings {
+        enableToolTips: boolean;
     }
 
     const enum propertyPanel {

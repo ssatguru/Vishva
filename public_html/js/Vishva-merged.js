@@ -1585,6 +1585,7 @@ var org;
                 var SceneLoader = BABYLON.SceneLoader;
                 var SceneSerializer = BABYLON.SceneSerializer;
                 var ShadowGenerator = BABYLON.ShadowGenerator;
+                var SkeletonViewer = BABYLON.Debug.SkeletonViewer;
                 var StandardMaterial = BABYLON.StandardMaterial;
                 var Tags = BABYLON.Tags;
                 var Texture = BABYLON.Texture;
@@ -1781,6 +1782,7 @@ var org;
                         this.animFunc2 = function () { return _this.justReFocus(); };
                         this.showingAllInvisibles = false;
                         this.meshPickedPhyParms = null;
+                        this.skelViewer = null;
                         this.debugVisible = false;
                         this.editEnabled = false;
                         this.frames = 0;
@@ -1925,11 +1927,11 @@ var org;
                                     this.shadowGenerator = light.getShadowGenerator();
                                     this.shadowGenerator.useBlurVarianceShadowMap = true;
                                     this.shadowGenerator.bias = 1.0E-6;
-                                    //                        this.shadowGenerator.useBlurExponentialShadowMap = true;
-                                    //                        this.shadowGenerator.bias = 1.0E-6;
-                                    //                        this.shadowGenerator.depthScale = 2500;
-                                    //                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                                    //                        sl.shadowMinZ = 1;
+                                    //                        this.shadowGenerator.useBlurExpon                        entialShadowMap = true;
+                                    //                        this.shadowG                        enerator.bias = 1.0E-6;
+                                    //                        this.shadowGener                        ator.depthScale = 2500;
+                                    //                        let sl: IShadowLight = <IShadowL                        ight>(<any>this.sunDR);
+                                    //                                                sl.shadowMinZ = 1;
                                     //                        sl.shadowMaxZ = 2500;
                                 }
                             }
@@ -2205,6 +2207,23 @@ var org;
                             this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
                             this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
                             this.meshPickedPhyParms = null;
+                        }
+                    };
+                    Vishva.prototype.testPhysics = function (phyParm) {
+                        this.resetPhysics();
+                        this.savePos = this.meshPicked.position.clone();
+                        this.saveRot = this.meshPicked.rotationQuaternion.clone();
+                        this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
+                        this.meshPicked.physicsImpostor.setParam("mass", phyParm.mass);
+                        this.meshPicked.physicsImpostor.setParam("friction", phyParm.friction);
+                        this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
+                    };
+                    Vishva.prototype.resetPhysics = function () {
+                        if (this.meshPicked.physicsImpostor != null) {
+                            this.meshPicked.position.copyFrom(this.savePos);
+                            this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
+                            this.meshPicked.physicsImpostor.dispose();
+                            this.meshPicked.physicsImpostor = null;
                         }
                     };
                     /**
@@ -3194,6 +3213,18 @@ var org;
                             return null;
                         else
                             return this.meshPicked.skeleton;
+                    };
+                    Vishva.prototype.toggleSkelView = function () {
+                        if (this.meshPicked.skeleton == null)
+                            return;
+                        if (this.skelViewer === null || this.skelViewer.mesh !== this.meshPicked) {
+                            this.skelViewer = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
+                            this.skelViewer.isEnabled = true;
+                        }
+                        else {
+                            this.skelViewer.dispose();
+                            this.skelViewer = null;
+                        }
                     };
                     Vishva.prototype.createAnimRange = function (name, start, end) {
                         //remove the range if it already exist
@@ -5098,10 +5129,17 @@ var org;
                     };
                     VishvaGUI.prototype.initAnimUI = function () {
                         var _this = this;
+                        var animSkelView = document.getElementById("animSkelView");
                         var animRangeName = document.getElementById("animRangeName");
                         var animRangeStart = document.getElementById("animRangeStart");
                         var animRangeEnd = document.getElementById("animRangeEnd");
                         var animRangeMake = document.getElementById("animRangeMake");
+                        //enable/disable skeleton view
+                        animSkelView.onclick = function (e) {
+                            if (_this.skel == null)
+                                return;
+                            _this.vishva.toggleSkelView();
+                        };
                         //create
                         animRangeMake.onclick = function (e) {
                             var name = animRangeName.value;
@@ -5563,15 +5601,19 @@ var org;
                             _this.phyFricVal["value"] = _this.formatValue(_this.phyFric.value);
                         };
                         var phyApply = document.getElementById("phyApply");
-                        var phyRestore = document.getElementById("phyRestore");
+                        var phyTest = document.getElementById("phyTest");
+                        var phyReset = document.getElementById("phyReset");
                         phyApply.onclick = function (ev) {
                             _this.applyPhysics();
                             _this.showAlertDiag("physics applied");
                             return false;
                         };
-                        phyRestore.onclick = function (ev) {
-                            _this.updatePhysics();
-                            _this.showAlertDiag("physics restored");
+                        phyTest.onclick = function (ev) {
+                            _this.testPhysics();
+                            return false;
+                        };
+                        phyReset.onclick = function (ev) {
+                            _this.resetPhysics();
                             return false;
                         };
                     };
@@ -5619,6 +5661,18 @@ var org;
                             phyParms = null;
                         }
                         this.vishva.setMeshPickedPhyParms(phyParms);
+                    };
+                    VishvaGUI.prototype.testPhysics = function () {
+                        var phyParms;
+                        phyParms = new vishva_1.PhysicsParm();
+                        phyParms.type = parseInt(this.phyType.value);
+                        phyParms.mass = parseFloat(this.phyMass.value);
+                        phyParms.restitution = parseFloat(this.phyRes.value);
+                        phyParms.friction = parseFloat(this.phyFric.value);
+                        this.vishva.testPhysics(phyParms);
+                    };
+                    VishvaGUI.prototype.resetPhysics = function () {
+                        this.vishva.resetPhysics();
                     };
                     VishvaGUI.prototype.createAlertDiag = function () {
                         this.alertDiv = document.getElementById("alertDiv");

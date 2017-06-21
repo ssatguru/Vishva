@@ -740,6 +740,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private restorePhyParms() {
+            //reset any physics test which might have been done
+            this.resetPhysics();
             if (this.meshPickedPhyParms != null) {
                 this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
                 this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
@@ -751,8 +753,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
         savePos: Vector3;
         saveRot: Quaternion;
+        didPhysTest:boolean = false;
         public testPhysics(phyParm: PhysicsParm) {
             this.resetPhysics();
+            this.didPhysTest = true;
             this.savePos = this.meshPicked.position.clone();
             this.saveRot = this.meshPicked.rotationQuaternion.clone();
             this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
@@ -761,7 +765,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
         }
         public resetPhysics() {
-            if (this.meshPicked.physicsImpostor != null) {
+            if (this.didPhysTest) {
+                this.didPhysTest=false;
                 this.meshPicked.position.copyFrom(this.savePos);
                 this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
                 this.meshPicked.physicsImpostor.dispose();

@@ -1778,6 +1778,7 @@ var org;
                         this.isMeshSelected = false;
                         this.cameraTargetPos = new Vector3(0, 0, 0);
                         this.saveAVcameraPos = new Vector3(0, 0, 0);
+                        this.didPhysTest = false;
                         this.animFunc = function () { return _this.animateCamera(); };
                         this.animFunc2 = function () { return _this.justReFocus(); };
                         this.showingAllInvisibles = false;
@@ -2201,6 +2202,8 @@ var org;
                         }
                     };
                     Vishva.prototype.restorePhyParms = function () {
+                        //reset any physics test which might have been done
+                        this.resetPhysics();
                         if (this.meshPickedPhyParms != null) {
                             this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
                             this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
@@ -2211,6 +2214,7 @@ var org;
                     };
                     Vishva.prototype.testPhysics = function (phyParm) {
                         this.resetPhysics();
+                        this.didPhysTest = true;
                         this.savePos = this.meshPicked.position.clone();
                         this.saveRot = this.meshPicked.rotationQuaternion.clone();
                         this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
@@ -2219,7 +2223,8 @@ var org;
                         this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
                     };
                     Vishva.prototype.resetPhysics = function () {
-                        if (this.meshPicked.physicsImpostor != null) {
+                        if (this.didPhysTest) {
+                            this.didPhysTest = false;
                             this.meshPicked.position.copyFrom(this.savePos);
                             this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
                             this.meshPicked.physicsImpostor.dispose();

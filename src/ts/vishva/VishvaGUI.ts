@@ -59,7 +59,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.createNavMenu();
 
             this.createDownloadDiag();
-            this.createUploadDiag();
+            //this.createUploadDiag();
 
             this.createHelpDiag();
             this.createAlertDiag();
@@ -1792,6 +1792,7 @@ namespace org.ssatguru.babylonjs.vishva {
         
         private setSettings(){
             let guiSettings: GuiSettings = <GuiSettings>this.vishva.getGuiSettings();
+            if (guiSettings !== null)
             this.enableToolTips = guiSettings.enableToolTips;
         }
 

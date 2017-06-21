@@ -15,6 +15,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import CSG = BABYLON.CSG;
     import DirectionalLight = BABYLON.DirectionalLight;
     import Engine = BABYLON.Engine;
+    import GroundMesh = BABYLON.GroundMesh;
     import HemisphericLight = BABYLON.HemisphericLight;
     import IAssetTask = BABYLON.IAssetTask;
     import IShadowLight = BABYLON.IShadowLight;
@@ -23,6 +24,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Material = BABYLON.Material;
     import Matrix = BABYLON.Matrix;
     import Mesh = BABYLON.Mesh;
+    import MeshBuilder = BABYLON.MeshBuilder;
     import MultiMaterial = BABYLON.MultiMaterial;
     import Node = BABYLON.Node;
     import ParticleSystem = BABYLON.ParticleSystem;
@@ -88,7 +90,7 @@ namespace org.ssatguru.babylonjs.vishva {
         avatarFile: string = "starterAvatars.babylon";
 
         groundTexture: string = "vishva/internal/textures/ground.jpg";
-
+        groundHeightMap: string = "vishva/internal/textures/ground_heightMap.png";
         primTexture: string = "vishva/internal/textures/Birch.jpg";
 
         waterTexture: string = "vishva/internal/textures/waterbump.png";
@@ -195,10 +197,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
         snas: SNAserialized[];
 
-        vishvaSerialized: VishvaSerialized;
-        
-        public getGuiSettings():Object{
-            return this.vishvaSerialized.guiSettings;
+        vishvaSerialized: VishvaSerialized = null;
+
+        public getGuiSettings(): Object {
+            if (this.vishvaSerialized !== null)
+                return this.vishvaSerialized.guiSettings;
+            else return null;
         }
 
         private onTaskSuccess(obj: any) {
@@ -280,19 +284,38 @@ namespace org.ssatguru.babylonjs.vishva {
                 hl.intensity = 0.4;
                 this.sun = hl;
                 Tags.AddTagsTo(hl, "Vishva.sun");
+                
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                 this.sunDR.intensity = 0.5;
-                var sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                this.sunDR.position = new Vector3(0,0,0);
+                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
+
                 this.shadowGenerator.useBlurVarianceShadowMap = true;
                 this.shadowGenerator.bias = 1.0E-6;
+
+//                this.shadowGenerator.useBlurExponentialShadowMap = true;
+//                this.shadowGenerator.bias =1.0E-6;
+//                this.shadowGenerator.depthScale = 2500;
+//                sl.shadowMinZ = 1;
+//                sl.shadowMaxZ = 2500;
+
             } else {
                 for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
                         this.sunDR = <DirectionalLight>light;
                         this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
-                        this.shadowGenerator.bias = 1.0E-6;
+                        
                         this.shadowGenerator.useBlurVarianceShadowMap = true;
+                        this.shadowGenerator.bias = 1.0E-6;
+
+//                        this.shadowGenerator.useBlurExponentialShadowMap = true;
+//                        this.shadowGenerator.bias = 1.0E-6;
+//                        this.shadowGenerator.depthScale = 2500;
+//                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+//                        sl.shadowMinZ = 1;
+//                        sl.shadowMaxZ = 2500;
+                        
                     }
                 }
             }
@@ -321,6 +344,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.mainCamera = this.createCamera(this.scene, this.canvas);
                 this.scene.activeCamera = this.mainCamera;
             }
+           
 
             //TODO
             this.mainCamera.checkCollisions = true;
@@ -328,13 +352,15 @@ namespace org.ssatguru.babylonjs.vishva {
 
             if (!groundFound) {
                 console.log("no vishva ground found. creating ground");
-                this.ground = this.createGround(this.scene);
+                //this.ground = this.createGround_old(this.scene);
+                this.createGround(this.scene);
             } else {
                 //in case this wasn't set in serialized scene
                 this.ground.receiveShadows = true;
-            }
-            if (this.enablePhysics) {
-                this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+
+                if (this.enablePhysics) {
+                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+                }
             }
 
             if (!skyFound) {
@@ -430,6 +456,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
             if (this.isFocusOnAv) {
+                //this.sunDR.position.copyFromFloats(this.avatar.position.x, 128, this.avatar.position.y);
                 if (this.editControl == null) {
                     //this.moveAVandCamera();
 
@@ -695,6 +722,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        //we donot want physics enabled during edit
+        //so save and remove physics parms defore edit and restore them after edit.
         private savePhyParms() {
             if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
                 this.meshPickedPhyParms = null;
@@ -707,9 +736,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshPicked.physicsImpostor.dispose();
                 this.meshPicked.physicsImpostor = null;
             }
-
         }
-
+        
         private restorePhyParms() {
             if (this.meshPickedPhyParms != null) {
                 this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
@@ -836,9 +864,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-//            if (this.editControl.isScalingEnabled()) {
-//                this.setSpaceLocal(this.wasSpaceLocal);
-//            }
+            //            if (this.editControl.isScalingEnabled()) {
+            //                this.setSpaceLocal(this.wasSpaceLocal);
+            //            }
             this.editControl.detach();
             this.editControl = null;
             //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
@@ -1507,9 +1535,9 @@ namespace org.ssatguru.babylonjs.vishva {
         public setTransOn() {
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-//            if (this.editControl.isScalingEnabled()) {
-//                this.setSpaceLocal(this.wasSpaceLocal);
-//            }
+            //            if (this.editControl.isScalingEnabled()) {
+            //                this.setSpaceLocal(this.wasSpaceLocal);
+            //            }
             this.editControl.setLocal(!this.spaceWorld);
             this.editControl.enableTranslation();
         }
@@ -1519,9 +1547,9 @@ namespace org.ssatguru.babylonjs.vishva {
         public setRotOn() {
             //if scaling is on then we might have changed space to local            
             //restore space to what is was before scaling
-//            if (this.editControl.isScalingEnabled()) {
-//                this.setSpaceLocal(this.wasSpaceLocal);
-//            }
+            //            if (this.editControl.isScalingEnabled()) {
+            //                this.setSpaceLocal(this.wasSpaceLocal);
+            //            }
             this.editControl.setLocal(!this.spaceWorld);
             this.editControl.enableRotation();
         }
@@ -1533,12 +1561,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public setScaleOn() {
             //make space local for scaling
             //remember what the space was so we can restore it back later on
-//            if (!this.isSpaceLocal()) {
-//                this.setSpaceLocal(true);
-//                this.wasSpaceLocal = false;
-//            } else {
-//                this.wasSpaceLocal = true;
-//            }
+            //            if (!this.isSpaceLocal()) {
+            //                this.setSpaceLocal(true);
+            //                this.wasSpaceLocal = false;
+            //            } else {
+            //                this.wasSpaceLocal = true;
+            //            }
             this.editControl.setLocal(true);
             this.editControl.enableScaling();
         }
@@ -1669,7 +1697,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public snapper(yes: boolean): string {
             if (!this.spaceWorld && yes) {
                 this.spaceWorld = true;
-//                this.wasSpaceLocal = false;
+                //                this.wasSpaceLocal = false;
             }
             this.snapperOn = yes;
 
@@ -2533,7 +2561,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-        private createGround(scene: Scene): Mesh {
+        private createGround_old(scene: Scene): Mesh {
             var groundMaterial: StandardMaterial = new StandardMaterial("groundMat", scene);
             groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
             (<Texture>groundMaterial.diffuseTexture).uScale = 6.0;
@@ -2548,6 +2576,43 @@ namespace org.ssatguru.babylonjs.vishva {
             grnd.freezeWorldMatrix();
             grnd.receiveShadows = true;
             return grnd;
+        }
+
+        private createGround(scene: Scene) {
+            let groundMaterial: StandardMaterial = this.createGroundMaterial(scene);
+            MeshBuilder.CreateGroundFromHeightMap("ground", this.groundHeightMap, {
+                width: 256,
+                height: 256,
+                minHeight: 0,
+                maxHeight: 20,
+                subdivisions: 32,
+                onReady: (grnd: GroundMesh) => {
+                    console.log("ground created");
+                    grnd.material = groundMaterial;
+                    grnd.checkCollisions = true;
+                    grnd.isPickable = false;
+                    Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+                    grnd.freezeWorldMatrix();
+                    grnd.receiveShadows = true;
+                    this.ground = grnd;
+                    
+                    //HeightmapImpostor doesnot seem to work.
+//                    if (this.enablePhysics) {
+//                        this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+//                    }
+                }
+
+            }, scene);
+        }
+
+        private createGroundMaterial(scene: Scene): StandardMaterial {
+            let groundMaterial: StandardMaterial = new StandardMaterial("groundMat", scene);
+            groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
+            (<Texture>groundMaterial.diffuseTexture).uScale = 6.0;
+            (<Texture>groundMaterial.diffuseTexture).vScale = 6.0;
+            groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
+            groundMaterial.specularColor = new Color3(0, 0, 0);
+            return groundMaterial;
         }
 
         private createSkyBox(scene: Scene): Mesh {
@@ -2649,14 +2714,13 @@ namespace org.ssatguru.babylonjs.vishva {
 
         }
         private createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
-            var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
+            //lets create a camera located way high so that it doesnotcollide with any terrain
+            var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 1000, 0), scene);
             this.setCameraSettings(camera);
             camera.attachControl(canvas, true);
             if ((this.avatar !== null) && (this.avatar !== undefined)) {
                 camera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                 camera.alpha = -this.avatar.rotation.y - 4.69;
-            } else {
-                camera.target = Vector3.Zero();
             }
             camera.checkCollisions = this.cameraCollision;
             camera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
@@ -2689,7 +2753,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.checkAnimRange(this.avatarSkeleton);
             this.avatarSkeleton.enableBlending(0.1);
             //this.avatar.rotation.y = Math.PI;
-            this.avatar.position = new Vector3(0, 0, 0);
+            this.avatar.position = new Vector3(0, 20, 0);
             this.avatar.checkCollisions = true;
             this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
             this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
@@ -2700,6 +2764,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
             this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
+
             var sm: StandardMaterial = <StandardMaterial>this.avatar.material;
             if (sm.diffuseTexture != null) {
                 var textureName: string = sm.diffuseTexture.name;
@@ -2736,10 +2801,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             for (let range of ranges) {
                 //fix for 4.4.4
-//                if (range.from === range.to) {
-//                    console.log("animation issue found in " + range.name + " from " + range.from);
-//                    range.to++;
-//                }
+                //                if (range.from === range.to) {
+                //                    console.log("animation issue found in " + range.name + " from " + range.from);
+                //                    range.to++;
+                //                }
                 //fix for 5.3
                 range.from++;
 

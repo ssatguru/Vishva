@@ -6,7 +6,7 @@ namespace org.ssatguru.babylonjs.component {
     import Vector3 = BABYLON.Vector3;
     import Mesh = BABYLON.Mesh;
     import Scene = BABYLON.Scene;
-    
+
     export class CharacterControl {
 
         avatarSkeleton: Skeleton;
@@ -15,17 +15,18 @@ namespace org.ssatguru.babylonjs.component {
         key: Key;
         scene: Scene;
         //slopeLimit in degrees
-        slopeLimit:number=45;
+        slopeLimit: number = 45;
         //slopeLimit in radians
         sl:number=0.785;
+
         private renderer: () => void;
-        
+
         constructor(avatar: Mesh, avatarSkeleton: Skeleton, anims: AnimData[], camera: ArcRotateCamera, scene: Scene) {
 
             this.avatarSkeleton = avatarSkeleton;
             this.initAnims(anims);
             this.camera = camera;
-            
+
             this.avatar = avatar;
             this.scene = scene;
             this.key = new Key();
@@ -47,21 +48,24 @@ namespace org.ssatguru.babylonjs.component {
         public setAnims(anims: AnimData[]) {
             this.initAnims(anims);
         }
-        
-        public setSlopeLimit(slopeLimit:number){
-            this.slopeLimit = slopeLimit;
-            this.sl = Math.PI*slopeLimit/180;
-        }
-   
 
-        private started:boolean = false;
-        
+        public setSlopeLimit(slopeLimit: number) {
+            this.slopeLimit = slopeLimit;
+            this.sl = Math.PI * slopeLimit / 180;
+        }
+
+
+        private started: boolean = false;
+
         public start() {
+            //console.log("cc start()");
             if (this.started) return;
+            //console.log("cc starting");
             this.started = true;
             this.key.reset();
             this.time = 0;
-            this.stillTime = 0;
+            //first time we enter render loop, delta time shows zero !!
+            this.stillTime = 0.001;
             this.grounded = false;
             this.updateTargetValue();
             this.camera.target = this.cameraTarget;
@@ -69,8 +73,10 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         public stop() {
+            //console.log("cc stop()");
             if (!this.started) return;
-            this.started=false;
+            //console.log("cc stoping");
+            this.started = false;
             this.scene.unregisterBeforeRender(this.renderer);
         }
 
@@ -119,23 +125,23 @@ namespace org.ssatguru.babylonjs.component {
                 if (!this.grounded) {
                     this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
                     //this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
-                    this.downSpeed = this.gravity * this.stillTime ;
+                    this.downSpeed = this.gravity * this.stillTime;
                     this.velocity.copyFromFloats(0, -this.downSpeed, 0);
                     this.avatar.moveWithCollisions(this.velocity);
                     if (this.oldPos.y === this.avatar.position.y) {
                         this.grounded = true;
                         this.stillTime = 0;
-                    }else if (this.avatar.position.y < this.oldPos.y ) {
+                    } else if (this.avatar.position.y < this.oldPos.y) {
                         //if we are sliding down check slope
-                        let diff:number = this.oldPos.subtract(this.avatar.position).length();
-                        let ht:number = this.oldPos.y - this.avatar.position.y;
-                        let slope: number = Math.asin(ht/diff);
-                        if (slope <= this.sl){
+                        let diff: number = this.oldPos.subtract(this.avatar.position).length();
+                        let ht: number = this.oldPos.y - this.avatar.position.y;
+                        let slope: number = Math.asin(ht / diff);
+                        if (slope <= this.sl) {
                             this.grounded = true;
                             this.stillTime = 0;
                             this.avatar.position.copyFrom(this.oldPos);
                         }
-                    
+
                     }
                     this.updateTargetValue();
                 }
@@ -150,11 +156,9 @@ namespace org.ssatguru.babylonjs.component {
             }
             this.stillTime = 0;
             this.grounded = false;
-
             this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
             //this.downSpeed = this.gravity * (this.time ** 2) / 2;
             this.downSpeed = this.gravity * this.time;
-
             var anim: AnimData = this.idle;
             var moving: boolean = false;
             var speed: number = 0;
@@ -193,12 +197,9 @@ namespace org.ssatguru.babylonjs.component {
                     this.jumpCycle--;
                     forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                 } else {
-                    //TODO testing physics
-                    //forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                     forward = this.avatar.calcMovePOV(0, -this.downSpeed, speed);
                 }
                 this.avatar.moveWithCollisions(forward);
-                //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
                 moving = true;
             } else if (this.key.down) {
                 //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
@@ -260,6 +261,15 @@ namespace org.ssatguru.babylonjs.component {
             if (moving) {
                 this.avatar.rotation.y = -4.69 - this.camera.alpha;
             }
+            if (this.avatar.position.y < this.oldPos.y) {
+                //if we are sliding down check slope
+                let diff: number = this.oldPos.subtract(this.avatar.position).length();
+                let ht: number = this.oldPos.y - this.avatar.position.y;
+                let slope: number = Math.asin(ht / diff);
+                if (slope <= this.sl) {
+                    this.time = 0;
+                }
+            }
             if (this.prevAnim !== anim) {
                 if (anim.exist) {
                     this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
@@ -273,7 +283,7 @@ namespace org.ssatguru.babylonjs.component {
             }
             return;
         }
-        cameraTarget:Vector3 = new Vector3(0,0,0);
+        cameraTarget: Vector3 = new Vector3(0, 0, 0);
         private updateTargetValue() {
             this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }

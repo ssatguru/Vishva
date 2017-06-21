@@ -63,20 +63,25 @@ var org;
                         this.sl = Math.PI * slopeLimit / 180;
                     };
                     CharacterControl.prototype.start = function () {
+                        //console.log("cc start()");
                         if (this.started)
                             return;
+                        //console.log("cc starting");
                         this.started = true;
                         this.key.reset();
                         this.time = 0;
-                        this.stillTime = 0;
+                        //first time we enter render loop, delta time shows zero !!
+                        this.stillTime = 0.001;
                         this.grounded = false;
                         this.updateTargetValue();
                         this.camera.target = this.cameraTarget;
                         this.scene.registerBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.stop = function () {
+                        //console.log("cc stop()");
                         if (!this.started)
                             return;
+                        //console.log("cc stoping");
                         this.started = false;
                         this.scene.unregisterBeforeRender(this.renderer);
                     };
@@ -170,12 +175,9 @@ var org;
                                 forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                             }
                             else {
-                                //TODO testing physics
-                                //forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
                                 forward = this.avatar.calcMovePOV(0, -this.downSpeed, speed);
                             }
                             this.avatar.moveWithCollisions(forward);
-                            //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
                             moving = true;
                         }
                         else if (this.key.down) {
@@ -244,6 +246,15 @@ var org;
                         }
                         if (moving) {
                             this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                        }
+                        if (this.avatar.position.y < this.oldPos.y) {
+                            //if we are sliding down check slope
+                            var diff = this.oldPos.subtract(this.avatar.position).length();
+                            var ht = this.oldPos.y - this.avatar.position.y;
+                            var slope = Math.asin(ht / diff);
+                            if (slope <= this.sl) {
+                                this.time = 0;
+                            }
                         }
                         if (this.prevAnim !== anim) {
                             if (anim.exist) {
@@ -1566,6 +1577,7 @@ var org;
                 var Light = BABYLON.Light;
                 var Matrix = BABYLON.Matrix;
                 var Mesh = BABYLON.Mesh;
+                var MeshBuilder = BABYLON.MeshBuilder;
                 var ParticleSystem = BABYLON.ParticleSystem;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
                 var Quaternion = BABYLON.Quaternion;
@@ -1607,6 +1619,7 @@ var org;
                         this.avatarFolder = "vishva/internal/avatar/";
                         this.avatarFile = "starterAvatars.babylon";
                         this.groundTexture = "vishva/internal/textures/ground.jpg";
+                        this.groundHeightMap = "vishva/internal/textures/ground_heightMap.png";
                         this.primTexture = "vishva/internal/textures/Birch.jpg";
                         this.waterTexture = "vishva/internal/textures/waterbump.png";
                         this.snowTexture = "vishva/internal/textures/flare.png";
@@ -1627,6 +1640,7 @@ var org;
                         //automatcally open edit menu whenever a mesh is selected
                         this.autoEditMenu = true;
                         this.enablePhysics = true;
+                        this.vishvaSerialized = null;
                         this.isFocusOnAv = true;
                         this.cameraAnimating = false;
                         //how far away from the center can the avatar go
@@ -1807,7 +1821,10 @@ var org;
                         am.load();
                     };
                     Vishva.prototype.getGuiSettings = function () {
-                        return this.vishvaSerialized.guiSettings;
+                        if (this.vishvaSerialized !== null)
+                            return this.vishvaSerialized.guiSettings;
+                        else
+                            return null;
                     };
                     Vishva.prototype.onTaskSuccess = function (obj) {
                         var _this = this;
@@ -1889,10 +1906,16 @@ var org;
                             Tags.AddTagsTo(hl, "Vishva.sun");
                             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                             this.sunDR.intensity = 0.5;
+                            this.sunDR.position = new Vector3(0, 0, 0);
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
                             this.shadowGenerator.useBlurVarianceShadowMap = true;
                             this.shadowGenerator.bias = 1.0E-6;
+                            //                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                            //                this.shadowGenerator.bias =1.0E-6;
+                            //                this.shadowGenerator.depthScale = 2500;
+                            //                sl.shadowMinZ = 1;
+                            //                sl.shadowMaxZ = 2500;
                         }
                         else {
                             for (var _f = 0, _g = scene.lights; _f < _g.length; _f++) {
@@ -1900,8 +1923,14 @@ var org;
                                 if (light.id === "Vishva.dl01") {
                                     this.sunDR = light;
                                     this.shadowGenerator = light.getShadowGenerator();
-                                    this.shadowGenerator.bias = 1.0E-6;
                                     this.shadowGenerator.useBlurVarianceShadowMap = true;
+                                    this.shadowGenerator.bias = 1.0E-6;
+                                    //                        this.shadowGenerator.useBlurExponentialShadowMap = true;
+                                    //                        this.shadowGenerator.bias = 1.0E-6;
+                                    //                        this.shadowGenerator.depthScale = 2500;
+                                    //                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                                    //                        sl.shadowMinZ = 1;
+                                    //                        sl.shadowMaxZ = 2500;
                                 }
                             }
                         }
@@ -1933,14 +1962,15 @@ var org;
                         this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         if (!groundFound) {
                             console.log("no vishva ground found. creating ground");
-                            this.ground = this.createGround(this.scene);
+                            //this.ground = this.createGround_old(this.scene);
+                            this.createGround(this.scene);
                         }
                         else {
                             //in case this wasn't set in serialized scene
                             this.ground.receiveShadows = true;
-                        }
-                        if (this.enablePhysics) {
-                            this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+                            if (this.enablePhysics) {
+                                this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+                            }
                         }
                         if (!skyFound) {
                             console.log("no vishva sky found. creating sky");
@@ -2029,6 +2059,7 @@ var org;
                             }
                         }
                         if (this.isFocusOnAv) {
+                            //this.sunDR.position.copyFromFloats(this.avatar.position.x, 128, this.avatar.position.y);
                             if (this.editControl == null) {
                                 //this.moveAVandCamera();
                             }
@@ -2151,6 +2182,8 @@ var org;
                             }
                         }
                     };
+                    //we donot want physics enabled during edit
+                    //so save and remove physics parms defore edit and restore them after edit.
                     Vishva.prototype.savePhyParms = function () {
                         if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
                             this.meshPickedPhyParms = null;
@@ -3879,7 +3912,7 @@ var org;
                             }
                         }
                     };
-                    Vishva.prototype.createGround = function (scene) {
+                    Vishva.prototype.createGround_old = function (scene) {
                         var groundMaterial = new StandardMaterial("groundMat", scene);
                         groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
                         groundMaterial.diffuseTexture.uScale = 6.0;
@@ -3894,6 +3927,40 @@ var org;
                         grnd.freezeWorldMatrix();
                         grnd.receiveShadows = true;
                         return grnd;
+                    };
+                    Vishva.prototype.createGround = function (scene) {
+                        var _this = this;
+                        var groundMaterial = this.createGroundMaterial(scene);
+                        MeshBuilder.CreateGroundFromHeightMap("ground", this.groundHeightMap, {
+                            width: 256,
+                            height: 256,
+                            minHeight: 0,
+                            maxHeight: 20,
+                            subdivisions: 32,
+                            onReady: function (grnd) {
+                                console.log("ground created");
+                                grnd.material = groundMaterial;
+                                grnd.checkCollisions = true;
+                                grnd.isPickable = false;
+                                Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+                                grnd.freezeWorldMatrix();
+                                grnd.receiveShadows = true;
+                                _this.ground = grnd;
+                                //HeightmapImpostor doesnot seem to work.
+                                //                    if (this.enablePhysics) {
+                                //                        this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+                                //                    }
+                            }
+                        }, scene);
+                    };
+                    Vishva.prototype.createGroundMaterial = function (scene) {
+                        var groundMaterial = new StandardMaterial("groundMat", scene);
+                        groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
+                        groundMaterial.diffuseTexture.uScale = 6.0;
+                        groundMaterial.diffuseTexture.vScale = 6.0;
+                        groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
+                        groundMaterial.specularColor = new Color3(0, 0, 0);
+                        return groundMaterial;
                     };
                     Vishva.prototype.createSkyBox = function (scene) {
                         var skybox = Mesh.CreateBox("skyBox", 1000.0, scene);
@@ -3987,15 +4054,13 @@ var org;
                         return part;
                     };
                     Vishva.prototype.createCamera = function (scene, canvas) {
-                        var camera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 0, 0), scene);
+                        //lets create a camera located way high so that it doesnotcollide with any terrain
+                        var camera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 1000, 0), scene);
                         this.setCameraSettings(camera);
                         camera.attachControl(canvas, true);
                         if ((this.avatar !== null) && (this.avatar !== undefined)) {
                             camera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                             camera.alpha = -this.avatar.rotation.y - 4.69;
-                        }
-                        else {
-                            camera.target = Vector3.Zero();
                         }
                         camera.checkCollisions = this.cameraCollision;
                         camera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
@@ -4026,7 +4091,7 @@ var org;
                         this.checkAnimRange(this.avatarSkeleton);
                         this.avatarSkeleton.enableBlending(0.1);
                         //this.avatar.rotation.y = Math.PI;
-                        this.avatar.position = new Vector3(0, 0, 0);
+                        this.avatar.position = new Vector3(0, 20, 0);
                         this.avatar.checkCollisions = true;
                         this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
                         this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
@@ -4233,7 +4298,7 @@ var org;
                         //main navigation menu 
                         this.createNavMenu();
                         this.createDownloadDiag();
-                        this.createUploadDiag();
+                        //this.createUploadDiag();
                         this.createHelpDiag();
                         this.createAlertDiag();
                         this.create_sNaDiag();
@@ -5737,7 +5802,8 @@ var org;
                     };
                     VishvaGUI.prototype.setSettings = function () {
                         var guiSettings = this.vishva.getGuiSettings();
-                        this.enableToolTips = guiSettings.enableToolTips;
+                        if (guiSettings !== null)
+                            this.enableToolTips = guiSettings.enableToolTips;
                     };
                     return VishvaGUI;
                 }());

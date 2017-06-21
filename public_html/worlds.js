@@ -5,10 +5,10 @@ var worlds = {
 		"sceneFile": "demo1",
 		"editEnabled": true
 	},
-	"sna": {
+	"demo2": {
 		"worldFolder": "demos",
 		"sceneFolder": "demo",
-		"sceneFile": "sna",
+		"sceneFile": "demo2",
 		"editEnabled": true
 	}
 };

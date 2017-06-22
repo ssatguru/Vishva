@@ -1889,7 +1889,6 @@ namespace org.ssatguru.babylonjs.vishva {
             var r: number = parseFloat(animRate);
             if (isNaN(r)) r = 1;
             skel.beginAnimation(animName, loop, r);
-            this.scene.beginAnimation()
         }
 
         public stopAnimation() {

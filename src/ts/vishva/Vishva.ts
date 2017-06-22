@@ -1824,19 +1824,39 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSkeleton(): Skeleton {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
-        skelViewer:SkeletonViewer =null;
+        
+        skelViewerArr : SkeletonViewer[]=[];
         public toggleSkelView(){
             if (this.meshPicked.skeleton == null) return ;
-            if (this.skelViewer === null || this.skelViewer.mesh !== this.meshPicked){
-                this.skelViewer = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
-                this.skelViewer.isEnabled = true;
+            let sv = this.findSkelViewer(this.skelViewerArr, this.meshPicked);
+            if (sv === null) {
+                sv = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
+                sv.isEnabled = true;
+                this.skelViewerArr.push(sv);
             }else{
-                this.skelViewer.dispose();
-                this.skelViewer = null;
+                this.delSkelViewer(this.skelViewerArr, sv);
+                sv.dispose();
+                sv = null;
             }
-            
         }
-
+        
+        private findSkelViewer(sva : SkeletonViewer[], mesh:AbstractMesh) : SkeletonViewer{
+            for (let sv of sva){
+                if (sv.mesh === mesh) return sv;
+            }
+            return null;
+        }
+        private delSkelViewer(sva : SkeletonViewer[],sv: SkeletonViewer) {
+            let i: number = sva.indexOf(sv);
+            if (i >= 0) sva.splice(i,1);
+        }
+        
+        public animRest(){
+            if (this.meshPicked.skeleton == null) return ;
+            this.scene.stopAnimation(this.meshPicked.skeleton);
+            this.meshPicked.skeleton.returnToRest();
+        }
+        
         public createAnimRange(name: string, start: number, end: number) {
             //remove the range if it already exist
             this.meshPicked.skeleton.deleteAnimationRange(name, false);
@@ -1869,6 +1889,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var r: number = parseFloat(animRate);
             if (isNaN(r)) r = 1;
             skel.beginAnimation(animName, loop, r);
+            this.scene.beginAnimation()
         }
 
         public stopAnimation() {

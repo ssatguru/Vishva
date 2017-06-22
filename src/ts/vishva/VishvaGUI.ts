@@ -944,6 +944,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private initAnimUI() {
             var animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
+            var animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
             var animRangeName: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeName");
             var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
             var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
@@ -951,8 +952,12 @@ namespace org.ssatguru.babylonjs.vishva {
             
             //enable/disable skeleton view
             animSkelView.onclick = (e) => {
-                if (this.skel == null)  return;
                 this.vishva.toggleSkelView();
+            }
+            
+            //show rest pose
+            animRest.onclick = (e) => {
+                this.vishva.animRest();
             }
 
             //create

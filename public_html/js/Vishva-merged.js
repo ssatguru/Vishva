@@ -1783,7 +1783,7 @@ var org;
                         this.animFunc2 = function () { return _this.justReFocus(); };
                         this.showingAllInvisibles = false;
                         this.meshPickedPhyParms = null;
-                        this.skelViewer = null;
+                        this.skelViewerArr = [];
                         this.debugVisible = false;
                         this.editEnabled = false;
                         this.frames = 0;
@@ -3222,14 +3222,36 @@ var org;
                     Vishva.prototype.toggleSkelView = function () {
                         if (this.meshPicked.skeleton == null)
                             return;
-                        if (this.skelViewer === null || this.skelViewer.mesh !== this.meshPicked) {
-                            this.skelViewer = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
-                            this.skelViewer.isEnabled = true;
+                        var sv = this.findSkelViewer(this.skelViewerArr, this.meshPicked);
+                        if (sv === null) {
+                            sv = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
+                            sv.isEnabled = true;
+                            this.skelViewerArr.push(sv);
                         }
                         else {
-                            this.skelViewer.dispose();
-                            this.skelViewer = null;
+                            this.delSkelViewer(this.skelViewerArr, sv);
+                            sv.dispose();
+                            sv = null;
                         }
+                    };
+                    Vishva.prototype.findSkelViewer = function (sva, mesh) {
+                        for (var _i = 0, sva_1 = sva; _i < sva_1.length; _i++) {
+                            var sv = sva_1[_i];
+                            if (sv.mesh === mesh)
+                                return sv;
+                        }
+                        return null;
+                    };
+                    Vishva.prototype.delSkelViewer = function (sva, sv) {
+                        var i = sva.indexOf(sv);
+                        if (i >= 0)
+                            sva.splice(i, 1);
+                    };
+                    Vishva.prototype.animRest = function () {
+                        if (this.meshPicked.skeleton == null)
+                            return;
+                        this.scene.stopAnimation(this.meshPicked.skeleton);
+                        this.meshPicked.skeleton.returnToRest();
                     };
                     Vishva.prototype.createAnimRange = function (name, start, end) {
                         //remove the range if it already exist
@@ -5135,15 +5157,18 @@ var org;
                     VishvaGUI.prototype.initAnimUI = function () {
                         var _this = this;
                         var animSkelView = document.getElementById("animSkelView");
+                        var animRest = document.getElementById("animRest");
                         var animRangeName = document.getElementById("animRangeName");
                         var animRangeStart = document.getElementById("animRangeStart");
                         var animRangeEnd = document.getElementById("animRangeEnd");
                         var animRangeMake = document.getElementById("animRangeMake");
                         //enable/disable skeleton view
                         animSkelView.onclick = function (e) {
-                            if (_this.skel == null)
-                                return;
                             _this.vishva.toggleSkelView();
+                        };
+                        //show rest pose
+                        animRest.onclick = function (e) {
+                            _this.vishva.animRest();
                         };
                         //create
                         animRangeMake.onclick = function (e) {

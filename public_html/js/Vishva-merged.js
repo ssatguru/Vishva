@@ -1778,11 +1778,12 @@ var org;
                         this.isMeshSelected = false;
                         this.cameraTargetPos = new Vector3(0, 0, 0);
                         this.saveAVcameraPos = new Vector3(0, 0, 0);
-                        this.didPhysTest = false;
                         this.animFunc = function () { return _this.animateCamera(); };
                         this.animFunc2 = function () { return _this.justReFocus(); };
                         this.showingAllInvisibles = false;
+                        // PHYSICS
                         this.meshPickedPhyParms = null;
+                        this.didPhysTest = false;
                         this.skelViewerArr = [];
                         this.debugVisible = false;
                         this.editEnabled = false;
@@ -1914,11 +1915,11 @@ var org;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
                             this.shadowGenerator.useBlurVarianceShadowMap = true;
                             this.shadowGenerator.bias = 1.0E-6;
-                            //                this.shadowGenerator.useBlurExponentialShadowMap = true;
-                            //                this.shadowGenerator.bias =1.0E-6;
-                            //                this.shadowGenerator.depthScale = 2500;
-                            //                sl.shadowMinZ = 1;
-                            //                sl.shadowMaxZ = 2500;
+                            //                                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                            //                                this.shadowGenerator.bias =1.0E-6;
+                            //                                this.shadowGenerator.depthScale = 2500;
+                            //                                sl.shadowMinZ = 1;
+                            //                                sl.shadowMaxZ = 2500;
                         }
                         else {
                             for (var _f = 0, _g = scene.lights; _f < _g.length; _f++) {
@@ -1928,12 +1929,12 @@ var org;
                                     this.shadowGenerator = light.getShadowGenerator();
                                     this.shadowGenerator.useBlurVarianceShadowMap = true;
                                     this.shadowGenerator.bias = 1.0E-6;
-                                    //                        this.shadowGenerator.useBlurExpon                        entialShadowMap = true;
-                                    //                        this.shadowG                        enerator.bias = 1.0E-6;
-                                    //                        this.shadowGener                        ator.depthScale = 2500;
-                                    //                        let sl: IShadowLight = <IShadowL                        ight>(<any>this.sunDR);
+                                    //                                                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                                    //                                                this.shadowGenerator.bias = 1.0E-6;
+                                    //                                                this.shadowGenerator.depthScale = 2500;
+                                    //                                                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                                     //                                                sl.shadowMinZ = 1;
-                                    //                        sl.shadowMaxZ = 2500;
+                                    //                                                sl.shadowMaxZ = 2500;
                                 }
                             }
                         }
@@ -2183,52 +2184,6 @@ var org;
                                         this.snapToGlobal();
                                 }
                             }
-                        }
-                    };
-                    //we donot want physics enabled during edit
-                    //so save and remove physics parms defore edit and restore them after edit.
-                    Vishva.prototype.savePhyParms = function () {
-                        if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
-                            this.meshPickedPhyParms = null;
-                        }
-                        else {
-                            this.meshPickedPhyParms = new PhysicsParm();
-                            this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
-                            this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
-                            this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
-                            this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
-                            this.meshPicked.physicsImpostor.dispose();
-                            this.meshPicked.physicsImpostor = null;
-                        }
-                    };
-                    Vishva.prototype.restorePhyParms = function () {
-                        //reset any physics test which might have been done
-                        this.resetPhysics();
-                        if (this.meshPickedPhyParms != null) {
-                            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
-                            this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
-                            this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
-                            this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
-                            this.meshPickedPhyParms = null;
-                        }
-                    };
-                    Vishva.prototype.testPhysics = function (phyParm) {
-                        this.resetPhysics();
-                        this.didPhysTest = true;
-                        this.savePos = this.meshPicked.position.clone();
-                        this.saveRot = this.meshPicked.rotationQuaternion.clone();
-                        this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
-                        this.meshPicked.physicsImpostor.setParam("mass", phyParm.mass);
-                        this.meshPicked.physicsImpostor.setParam("friction", phyParm.friction);
-                        this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
-                    };
-                    Vishva.prototype.resetPhysics = function () {
-                        if (this.didPhysTest) {
-                            this.didPhysTest = false;
-                            this.meshPicked.position.copyFrom(this.savePos);
-                            this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
-                            this.meshPicked.physicsImpostor.dispose();
-                            this.meshPicked.physicsImpostor = null;
                         }
                     };
                     /**
@@ -2889,6 +2844,61 @@ var org;
                     Vishva.prototype.setMeshPickedPhyParms = function (parms) {
                         this.meshPickedPhyParms = parms;
                     };
+                    //we donot want physics enabled during edit
+                    //so save and remove physics parms defore edit and restore them after edit.
+                    Vishva.prototype.savePhyParms = function () {
+                        if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
+                            this.meshPickedPhyParms = null;
+                        }
+                        else {
+                            this.meshPickedPhyParms = new PhysicsParm();
+                            this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
+                            this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
+                            this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
+                            this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+                            this.meshPicked.physicsImpostor.dispose();
+                            this.meshPicked.physicsImpostor = null;
+                        }
+                    };
+                    Vishva.prototype.restorePhyParms = function () {
+                        //reset any physics test which might have been done
+                        this.resetPhysics();
+                        if (this.meshPickedPhyParms != null) {
+                            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
+                            this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
+                            this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
+                            this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+                            this.meshPickedPhyParms = null;
+                        }
+                    };
+                    Vishva.prototype.testPhysics = function (phyParm) {
+                        this.resetPhysics();
+                        this.didPhysTest = true;
+                        this.savePos = this.meshPicked.position.clone();
+                        this.saveRot = this.meshPicked.rotationQuaternion.clone();
+                        this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
+                        this.meshPicked.physicsImpostor.setParam("mass", phyParm.mass);
+                        this.meshPicked.physicsImpostor.setParam("friction", phyParm.friction);
+                        this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
+                    };
+                    Vishva.prototype.resetPhysics = function () {
+                        if (this.didPhysTest) {
+                            this.didPhysTest = false;
+                            this.meshPicked.position.copyFrom(this.savePos);
+                            this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
+                            this.meshPicked.physicsImpostor.dispose();
+                            this.meshPicked.physicsImpostor = null;
+                        }
+                    };
+                    //MATERIAL
+                    Vishva.prototype.setMeshVisibility = function (vis) {
+                        this.meshPicked.visibility = vis;
+                    };
+                    Vishva.prototype.getMeshVisibility = function () {
+                        return this.meshPicked.visibility;
+                    };
+                    //
+                    // LIGHTS
                     /*
                      * Checks if the selected Mesh has any lights attached
                      * if yes then returns that light
@@ -3207,6 +3217,7 @@ var org;
                         this.meshPicked.position = savePos;
                         this.meshPicked.computeWorldMatrix(true);
                     };
+                    // ANIMATIONS
                     Vishva.prototype.getSkelName = function () {
                         if (this.meshPicked.skeleton == null)
                             return null;
@@ -5146,12 +5157,13 @@ var org;
                             this.updateLight();
                         }
                         else if (panelIndex === 4 /* Animations */) {
-                            //TODO remove this.vishva.disableKeys();
                             this.updateAnimations();
                         }
                         else if (panelIndex === 1 /* Physics */) {
-                            //TODO remove this.vishva.disableKeys();
                             this.updatePhysics();
+                        }
+                        else if (panelIndex === 2 /* Material */) {
+                            this.updateMat();
                         }
                     };
                     VishvaGUI.prototype.initAnimUI = function () {
@@ -5612,6 +5624,22 @@ var org;
                         lightParm.exponent = parseFloat(this.lightExp.value);
                         lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
                         this.vishva.attachAlight(lightParm);
+                    };
+                    VishvaGUI.prototype.initMatUI = function () {
+                        var _this = this;
+                        this.matVisVal = document.getElementById("matVisVal");
+                        this.matVis = document.getElementById("matVis");
+                        this.matVisVal["value"] = "1.00";
+                        this.matVis.oninput = function () {
+                            _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
+                            _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
+                        };
+                    };
+                    VishvaGUI.prototype.updateMat = function () {
+                        if (this.matVis == undefined)
+                            this.initMatUI();
+                        this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
+                        this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
                     };
                     VishvaGUI.prototype.initPhyUI = function () {
                         var _this = this;

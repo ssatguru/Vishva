@@ -295,11 +295,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.shadowGenerator.useBlurVarianceShadowMap = true;
                 this.shadowGenerator.bias = 1.0E-6;
 
-                //                this.shadowGenerator.useBlurExponentialShadowMap = true;
-                //                this.shadowGenerator.bias =1.0E-6;
-                //                this.shadowGenerator.depthScale = 2500;
-                //                sl.shadowMinZ = 1;
-                //                sl.shadowMaxZ = 2500;
+//                                this.shadowGenerator.useBlurExponentialShadowMap = true;
+//                                this.shadowGenerator.bias =1.0E-6;
+//                                this.shadowGenerator.depthScale = 2500;
+//                                sl.shadowMinZ = 1;
+//                                sl.shadowMaxZ = 2500;
 
             } else {
                 for (let light of scene.lights) {
@@ -310,12 +310,12 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.shadowGenerator.useBlurVarianceShadowMap = true;
                         this.shadowGenerator.bias = 1.0E-6;
 
-                        //                        this.shadowGenerator.useBlurExpon                        entialShadowMap = true;
-                        //                        this.shadowG                        enerator.bias = 1.0E-6;
-                        //                        this.shadowGener                        ator.depthScale = 2500;
-                        //                        let sl: IShadowLight = <IShadowL                        ight>(<any>this.sunDR);
-                        //                                                sl.shadowMinZ = 1;
-                        //                        sl.shadowMaxZ = 2500;
+//                                                this.shadowGenerator.useBlurExponentialShadowMap = true;
+//                                                this.shadowGenerator.bias = 1.0E-6;
+//                                                this.shadowGenerator.depthScale = 2500;
+//                                                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+//                                                sl.shadowMinZ = 1;
+//                                                sl.shadowMaxZ = 2500;
 
                     }
                 }
@@ -723,56 +723,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        //we donot want physics enabled during edit
-        //so save and remove physics parms defore edit and restore them after edit.
-        private savePhyParms() {
-            if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
-                this.meshPickedPhyParms = null;
-            } else {
-                this.meshPickedPhyParms = new PhysicsParm();
-                this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
-                this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
-                this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
-                this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
-                this.meshPicked.physicsImpostor.dispose();
-                this.meshPicked.physicsImpostor = null;
-            }
-        }
-
-        private restorePhyParms() {
-            //reset any physics test which might have been done
-            this.resetPhysics();
-            if (this.meshPickedPhyParms != null) {
-                this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
-                this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
-                this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
-                this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
-                this.meshPickedPhyParms = null;
-            }
-        }
-
-        savePos: Vector3;
-        saveRot: Quaternion;
-        didPhysTest:boolean = false;
-        public testPhysics(phyParm: PhysicsParm) {
-            this.resetPhysics();
-            this.didPhysTest = true;
-            this.savePos = this.meshPicked.position.clone();
-            this.saveRot = this.meshPicked.rotationQuaternion.clone();
-            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
-            this.meshPicked.physicsImpostor.setParam("mass", phyParm.mass);
-            this.meshPicked.physicsImpostor.setParam("friction", phyParm.friction);
-            this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
-        }
-        public resetPhysics() {
-            if (this.didPhysTest) {
-                this.didPhysTest=false;
-                this.meshPicked.position.copyFrom(this.savePos);
-                this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
-                this.meshPicked.physicsImpostor.dispose();
-                this.meshPicked.physicsImpostor = null;
-            }
-        }
+        
 
 
         /**
@@ -1457,7 +1408,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "please select two mesh";
             }
         }
-
+        
+        // PHYSICS
         meshPickedPhyParms: PhysicsParm = null;
 
         private physTypes() {
@@ -1476,6 +1428,67 @@ namespace org.ssatguru.babylonjs.vishva {
         public setMeshPickedPhyParms(parms: PhysicsParm) {
             this.meshPickedPhyParms = parms;
         }
+        
+        //we donot want physics enabled during edit
+        //so save and remove physics parms defore edit and restore them after edit.
+        private savePhyParms() {
+            if ((this.meshPicked.physicsImpostor === undefined) || (this.meshPicked.physicsImpostor === null)) {
+                this.meshPickedPhyParms = null;
+            } else {
+                this.meshPickedPhyParms = new PhysicsParm();
+                this.meshPickedPhyParms.type = this.meshPicked.physicsImpostor.type;
+                this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
+                this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
+                this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+                this.meshPicked.physicsImpostor.dispose();
+                this.meshPicked.physicsImpostor = null;
+            }
+        }
+
+        private restorePhyParms() {
+            //reset any physics test which might have been done
+            this.resetPhysics();
+            if (this.meshPickedPhyParms != null) {
+                this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, this.meshPickedPhyParms.type);
+                this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
+                this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
+                this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+                this.meshPickedPhyParms = null;
+            }
+        }
+
+        savePos: Vector3;
+        saveRot: Quaternion;
+        didPhysTest:boolean = false;
+        public testPhysics(phyParm: PhysicsParm) {
+            this.resetPhysics();
+            this.didPhysTest = true;
+            this.savePos = this.meshPicked.position.clone();
+            this.saveRot = this.meshPicked.rotationQuaternion.clone();
+            this.meshPicked.physicsImpostor = new PhysicsImpostor(this.meshPicked, phyParm.type);
+            this.meshPicked.physicsImpostor.setParam("mass", phyParm.mass);
+            this.meshPicked.physicsImpostor.setParam("friction", phyParm.friction);
+            this.meshPicked.physicsImpostor.setParam("restitution", phyParm.restitution);
+        }
+        public resetPhysics() {
+            if (this.didPhysTest) {
+                this.didPhysTest=false;
+                this.meshPicked.position.copyFrom(this.savePos);
+                this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
+                this.meshPicked.physicsImpostor.dispose();
+                this.meshPicked.physicsImpostor = null;
+            }
+        }
+        
+        //MATERIAL
+        public setMeshVisibility(vis:number){
+            this.meshPicked.visibility = vis;
+        }
+        public getMeshVisibility():number{
+            return  this.meshPicked.visibility;
+        }
+        //
+        // LIGHTS
 
         /*
          * Checks if the selected Mesh has any lights attached
@@ -1816,7 +1829,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.position = savePos;
             this.meshPicked.computeWorldMatrix(true);
         }
-
+        
+        // ANIMATIONS
         public getSkelName(): string {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton.name;
         }

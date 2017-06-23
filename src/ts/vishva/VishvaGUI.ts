@@ -928,11 +928,11 @@ namespace org.ssatguru.babylonjs.vishva {
             } else if (panelIndex === propertyPanel.Lights) {
                 this.updateLight();
             } else if (panelIndex === propertyPanel.Animations) {
-                //TODO remove this.vishva.disableKeys();
                 this.updateAnimations();
             } else if (panelIndex === propertyPanel.Physics) {
-                //TODO remove this.vishva.disableKeys();
                 this.updatePhysics()
+            } else if (panelIndex === propertyPanel.Material) {
+                this.updateMat();
             }
         }
 
@@ -1487,15 +1487,30 @@ namespace org.ssatguru.babylonjs.vishva {
             this.vishva.attachAlight(lightParm);
 
         }
-
+        matVis:HTMLInputElement;
+        matVisVal: HTMLElement;
+        private initMatUI(){
+            this.matVisVal = <HTMLElement>document.getElementById("matVisVal");
+            this.matVis = <HTMLInputElement>document.getElementById("matVis");
+            this.matVisVal["value"] = "1.00";
+            this.matVis.oninput = () =>{
+                this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
+                this.vishva.setMeshVisibility(parseFloat(this.matVis.value));
+            }
+        }
+        private updateMat(){
+            if (this.matVis == undefined) this.initMatUI();
+            this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
+            this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
+        }
 
         phyEna: HTMLInputElement;
         phyType: HTMLSelectElement;
         phyMass: HTMLInputElement;
-        phyRes: HTMLInputElement;
         phyResVal: HTMLElement;
-        phyFric: HTMLInputElement;
+        phyRes: HTMLInputElement;
         phyFricVal: HTMLElement;
+        phyFric: HTMLInputElement;
 
         private initPhyUI() {
             this.phyEna = <HTMLInputElement>document.getElementById("phyEna");

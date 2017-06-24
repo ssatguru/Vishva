@@ -269,7 +269,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             trnCol.style.backgroundColor = trnColor;
             
             trnCol.onclick =() =>{
-                trnColDiag.open();
+                let trnColor:string = this.vishva.getGroundColor();
+                trnColDiag.open(trnColor);
             }
 
 //            var colorEle: HTMLElement = document.getElementById("color-picker");
@@ -1496,17 +1497,31 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
         matVis:HTMLInputElement;
         matVisVal: HTMLElement;
+        
+        matColType:HTMLSelectElement;
         matCol:HTMLElement;
         matColDiag:org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
         private initMatUI(){
             
             this.matVisVal = document.getElementById("matVisVal");
             this.matVis = <HTMLInputElement>document.getElementById("matVis");
+            
+            this.matColType = <HTMLSelectElement>document.getElementById("matColType");
+           
             this.matCol = document.getElementById("matCol");
             this.matColDiag = new ColorPickerDiag("mesh color","matColDiag", "matColCP", this.centerBottom,(hex,hsv,rgb)=>{
                 this.matCol.style.background=hex;
-                this.vishva.setMeshColor(hex);
+                this.vishva.setMeshColor(this.matColType.value,hex);
             })
+             this.matColType.onchange = () =>{
+                let col:string = this.vishva.getMeshColor(this.matColType.value);
+                this.matCol.style.background = col
+                this.matColDiag.setColor(col);
+            }
+            
+            this.matCol.onclick = () =>{
+                this.matColDiag.open(this.vishva.getMeshColor(this.matColType.value));
+            }
             
             this.matVisVal["value"] = "1.00";
             this.matVis.oninput = () =>{
@@ -1514,16 +1529,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.vishva.setMeshVisibility(parseFloat(this.matVis.value));
             }
             
-            this.matCol.onclick = () =>{
-                this.matColDiag.open();
-            }
+            
         }
         
         private updateMat(){
             if (this.matVis == undefined) this.initMatUI();
             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
-            this.matCol.style.background = this.vishva.getMeshColor();
+            this.matCol.style.background = this.vishva.getMeshColor(this.matColType.value);
             
         }
 

@@ -405,8 +405,9 @@ var org;
                             this.diag.dialog(dos);
                             this.diag["jpo"] = jpo;
                         }
-                        ColorPickerDiag.prototype.open = function () {
+                        ColorPickerDiag.prototype.open = function (hex) {
                             this.diag.dialog("open");
+                            this.setColor(hex);
                         };
                         ColorPickerDiag.prototype.setColor = function (hex) {
                             this.cp.setHex(hex);
@@ -676,7 +677,8 @@ var org;
                             trnColDiag.setColor(trnColor);
                             trnCol.style.backgroundColor = trnColor;
                             trnCol.onclick = function () {
-                                trnColDiag.open();
+                                var trnColor = _this.vishva.getGroundColor();
+                                trnColDiag.open(trnColor);
                             };
                             //            var colorEle: HTMLElement = document.getElementById("color-picker");
                             //            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
@@ -1756,18 +1758,24 @@ var org;
                             var _this = this;
                             this.matVisVal = document.getElementById("matVisVal");
                             this.matVis = document.getElementById("matVis");
+                            this.matColType = document.getElementById("matColType");
                             this.matCol = document.getElementById("matCol");
                             this.matColDiag = new ColorPickerDiag("mesh color", "matColDiag", "matColCP", this.centerBottom, function (hex, hsv, rgb) {
                                 _this.matCol.style.background = hex;
-                                _this.vishva.setMeshColor(hex);
+                                _this.vishva.setMeshColor(_this.matColType.value, hex);
                             });
+                            this.matColType.onchange = function () {
+                                var col = _this.vishva.getMeshColor(_this.matColType.value);
+                                _this.matCol.style.background = col;
+                                _this.matColDiag.setColor(col);
+                            };
+                            this.matCol.onclick = function () {
+                                _this.matColDiag.open(_this.vishva.getMeshColor(_this.matColType.value));
+                            };
                             this.matVisVal["value"] = "1.00";
                             this.matVis.oninput = function () {
                                 _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
                                 _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
-                            };
-                            this.matCol.onclick = function () {
-                                _this.matColDiag.open();
                             };
                         };
                         VishvaGUI.prototype.updateMat = function () {
@@ -1775,7 +1783,7 @@ var org;
                                 this.initMatUI();
                             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
                             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
-                            this.matCol.style.background = this.vishva.getMeshColor();
+                            this.matCol.style.background = this.vishva.getMeshColor(this.matColType.value);
                         };
                         VishvaGUI.prototype.initPhyUI = function () {
                             var _this = this;
@@ -4629,13 +4637,35 @@ var org;
                     Vishva.prototype.getMeshVisibility = function () {
                         return this.meshPicked.visibility;
                     };
-                    Vishva.prototype.setMeshColor = function (hex) {
+                    Vishva.prototype.setMeshColor = function (colType, hex) {
                         var sm = this.meshPicked.material;
-                        sm.diffuseColor = Color3.FromHexString(hex);
+                        var col = Color3.FromHexString(hex);
+                        if (colType === "diffuse")
+                            sm.diffuseColor = col;
+                        else if (colType === "emissive")
+                            sm.emissiveColor = col;
+                        else if (colType === "specular")
+                            sm.specularColor = col;
+                        else if (colType === "ambient")
+                            sm.ambientColor = col;
+                        else {
+                            console.error("invalid color type [" + colType + "]");
+                        }
                     };
-                    Vishva.prototype.getMeshColor = function () {
+                    Vishva.prototype.getMeshColor = function (colType) {
                         var sm = this.meshPicked.material;
-                        return sm.diffuseColor.toHexString();
+                        if (colType === "diffuse")
+                            return sm.diffuseColor.toHexString();
+                        else if (colType === "emissive")
+                            return sm.emissiveColor.toHexString();
+                        else if (colType === "specular")
+                            return sm.specularColor.toHexString();
+                        else if (colType === "ambient")
+                            return sm.ambientColor.toHexString();
+                        else {
+                            console.error("invalid color type [" + colType + "]");
+                            return null;
+                        }
                     };
                     //
                     // LIGHTS

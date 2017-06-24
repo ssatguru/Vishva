@@ -42,7 +42,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import TextFileAssetTask = BABYLON.TextFileAssetTask;
     import Texture = BABYLON.Texture;
     import Vector3 = BABYLON.Vector3;
-    import VishvaGUI=org.ssatguru.babylonjs.vishva.gui.VishvaGUI;
+    import VishvaGUI = org.ssatguru.babylonjs.vishva.gui.VishvaGUI;
     import WaterMaterial = BABYLON.WaterMaterial;
     //import VishvaSerialized = org.ssatguru.babylonjs.vishva.VishvaSerialized;
 
@@ -296,11 +296,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.shadowGenerator.useBlurVarianceShadowMap = true;
                 this.shadowGenerator.bias = 1.0E-6;
 
-//                                this.shadowGenerator.useBlurExponentialShadowMap = true;
-//                                this.shadowGenerator.bias =1.0E-6;
-//                                this.shadowGenerator.depthScale = 2500;
-//                                sl.shadowMinZ = 1;
-//                                sl.shadowMaxZ = 2500;
+                //                                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                //                                this.shadowGenerator.bias =1.0E-6;
+                //                                this.shadowGenerator.depthScale = 2500;
+                //                                sl.shadowMinZ = 1;
+                //                                sl.shadowMaxZ = 2500;
 
             } else {
                 for (let light of scene.lights) {
@@ -311,12 +311,12 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.shadowGenerator.useBlurVarianceShadowMap = true;
                         this.shadowGenerator.bias = 1.0E-6;
 
-//                                                this.shadowGenerator.useBlurExponentialShadowMap = true;
-//                                                this.shadowGenerator.bias = 1.0E-6;
-//                                                this.shadowGenerator.depthScale = 2500;
-//                                                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-//                                                sl.shadowMinZ = 1;
-//                                                sl.shadowMaxZ = 2500;
+                        //                                                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                        //                                                this.shadowGenerator.bias = 1.0E-6;
+                        //                                                this.shadowGenerator.depthScale = 2500;
+                        //                                                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                        //                                                sl.shadowMinZ = 1;
+                        //                                                sl.shadowMaxZ = 2500;
 
                     }
                 }
@@ -724,7 +724,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        
+
 
 
         /**
@@ -1409,7 +1409,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "please select two mesh";
             }
         }
-        
+
         // PHYSICS
         meshPickedPhyParms: PhysicsParm = null;
 
@@ -1429,7 +1429,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public setMeshPickedPhyParms(parms: PhysicsParm) {
             this.meshPickedPhyParms = parms;
         }
-        
+
         //we donot want physics enabled during edit
         //so save and remove physics parms defore edit and restore them after edit.
         private savePhyParms() {
@@ -1460,7 +1460,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         savePos: Vector3;
         saveRot: Quaternion;
-        didPhysTest:boolean = false;
+        didPhysTest: boolean = false;
         public testPhysics(phyParm: PhysicsParm) {
             this.resetPhysics();
             this.didPhysTest = true;
@@ -1473,32 +1473,54 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         public resetPhysics() {
             if (this.didPhysTest) {
-                this.didPhysTest=false;
+                this.didPhysTest = false;
                 this.meshPicked.position.copyFrom(this.savePos);
                 this.meshPicked.rotationQuaternion.copyFrom(this.saveRot);
                 this.meshPicked.physicsImpostor.dispose();
                 this.meshPicked.physicsImpostor = null;
             }
         }
-        
+
         //MATERIAL
-        public setMeshVisibility(vis:number){
+        public setMeshVisibility(vis: number) {
             this.meshPicked.visibility = vis;
         }
-        public getMeshVisibility():number{
-            return  this.meshPicked.visibility;
+        public getMeshVisibility(): number {
+            return this.meshPicked.visibility;
         }
-        
-        public setMeshColor(hex:string){
+
+        public setMeshColor(colType: string,hex: string) {
             let sm: StandardMaterial = <StandardMaterial>this.meshPicked.material;
-            sm.diffuseColor = Color3.FromHexString(hex);
-            
+            let col:Color3 = Color3.FromHexString(hex);
+            if (colType === "diffuse")
+                sm.diffuseColor = col;
+            else if (colType === "emissive")
+                sm.emissiveColor = col;
+            else if (colType === "specular")
+                sm.specularColor = col;
+            else if (colType === "ambient")
+                sm.ambientColor = col;
+            else {
+                console.error("invalid color type [" + colType + "]");
+            }
+
         }
-        
-        public getMeshColor():string{
+
+        public getMeshColor(colType: string): string {
             let sm: StandardMaterial = <StandardMaterial>this.meshPicked.material;
-            return sm.diffuseColor.toHexString();
-            
+            if (colType === "diffuse")
+                return sm.diffuseColor.toHexString();
+            else if (colType === "emissive")
+                return sm.emissiveColor.toHexString();
+            else if (colType === "specular")
+                return sm.specularColor.toHexString();
+            else if (colType === "ambient")
+                return sm.ambientColor.toHexString();
+            else {
+                console.error("invalid color type [" + colType + "]");
+                return null;
+            }
+
         }
         //
         // LIGHTS
@@ -1842,7 +1864,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.position = savePos;
             this.meshPicked.computeWorldMatrix(true);
         }
-        
+
         // ANIMATIONS
         public getSkelName(): string {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton.name;
@@ -1851,39 +1873,39 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSkeleton(): Skeleton {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
-        
-        skelViewerArr : SkeletonViewer[]=[];
-        public toggleSkelView(){
-            if (this.meshPicked.skeleton == null) return ;
+
+        skelViewerArr: SkeletonViewer[] = [];
+        public toggleSkelView() {
+            if (this.meshPicked.skeleton == null) return;
             let sv = this.findSkelViewer(this.skelViewerArr, this.meshPicked);
             if (sv === null) {
                 sv = new SkeletonViewer(this.meshPicked.skeleton, this.meshPicked, this.scene);
                 sv.isEnabled = true;
                 this.skelViewerArr.push(sv);
-            }else{
+            } else {
                 this.delSkelViewer(this.skelViewerArr, sv);
                 sv.dispose();
                 sv = null;
             }
         }
-        
-        private findSkelViewer(sva : SkeletonViewer[], mesh:AbstractMesh) : SkeletonViewer{
-            for (let sv of sva){
+
+        private findSkelViewer(sva: SkeletonViewer[], mesh: AbstractMesh): SkeletonViewer {
+            for (let sv of sva) {
                 if (sv.mesh === mesh) return sv;
             }
             return null;
         }
-        private delSkelViewer(sva : SkeletonViewer[],sv: SkeletonViewer) {
+        private delSkelViewer(sva: SkeletonViewer[], sv: SkeletonViewer) {
             let i: number = sva.indexOf(sv);
-            if (i >= 0) sva.splice(i,1);
+            if (i >= 0) sva.splice(i, 1);
         }
-        
-        public animRest(){
-            if (this.meshPicked.skeleton == null) return ;
+
+        public animRest() {
+            if (this.meshPicked.skeleton == null) return;
             this.scene.stopAnimation(this.meshPicked.skeleton);
             this.meshPicked.skeleton.returnToRest();
         }
-        
+
         public createAnimRange(name: string, start: number, end: number) {
             //remove the range if it already exist
             this.meshPicked.skeleton.deleteAnimationRange(name, false);
@@ -2102,12 +2124,12 @@ namespace org.ssatguru.babylonjs.vishva {
             var gmat: StandardMaterial = <StandardMaterial>this.ground.material;
             gmat.diffuseColor = color;
         }
-        
-        public setGroundColor(hex:string){
+
+        public setGroundColor(hex: string) {
             let sm: StandardMaterial = <StandardMaterial>this.ground.material;
             sm.diffuseColor = Color3.FromHexString(hex);
         }
-        public getGroundColor():string{
+        public getGroundColor(): string {
             let sm: StandardMaterial = <StandardMaterial>this.ground.material;
             return sm.diffuseColor.toHexString();
         }

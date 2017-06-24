@@ -123,13 +123,17 @@
 .cp-fancy .picker-indicator {
     width: 24px;
     height: 24px;
-    background-image: url(http://cdn1.iconfinder.com/data/icons/fugue/bonus/icons-24/target.png);
+	/* background-image: url(http://cdn1.iconfinder.com/data/icons/fugue/bonus/icons-24/target.png);*/
+	background-image: url(colorpickerTarget.png);
 }
+    
+	
 .cp-fancy .slide-indicator {
     width: 30px;
     height: 31px;
     left: 30px;
-    background-image: url(http://cdn1.iconfinder.com/data/icons/bluecoral/Left.png);
+    /* background-image: url(http://cdn1.iconfinder.com/data/icons/bluecoral/Left.png);*/
+	background-image: url(colorpickerLeft.png);
 }
 
 /* Normal skin */

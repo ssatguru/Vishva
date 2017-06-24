@@ -29,8 +29,9 @@ namespace org.ssatguru.babylonjs.vishva.gui{
             this.diag["jpo"] = jpo;
         }
         
-        public open(){
+        public open(hex:string){
             this.diag.dialog("open");
+            this.setColor(hex);
         }
         
         public setColor(hex:string){

@@ -42,6 +42,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import TextFileAssetTask = BABYLON.TextFileAssetTask;
     import Texture = BABYLON.Texture;
     import Vector3 = BABYLON.Vector3;
+    import VishvaGUI=org.ssatguru.babylonjs.vishva.gui.VishvaGUI;
     import WaterMaterial = BABYLON.WaterMaterial;
     //import VishvaSerialized = org.ssatguru.babylonjs.vishva.VishvaSerialized;
 
@@ -1487,6 +1488,18 @@ namespace org.ssatguru.babylonjs.vishva {
         public getMeshVisibility():number{
             return  this.meshPicked.visibility;
         }
+        
+        public setMeshColor(hex:string){
+            let sm: StandardMaterial = <StandardMaterial>this.meshPicked.material;
+            sm.diffuseColor = Color3.FromHexString(hex);
+            
+        }
+        
+        public getMeshColor():string{
+            let sm: StandardMaterial = <StandardMaterial>this.meshPicked.material;
+            return sm.diffuseColor.toHexString();
+            
+        }
         //
         // LIGHTS
 
@@ -2080,7 +2093,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return skyname.substring(i + 1);
         }
 
-        public setGroundColor(gcolor: any) {
+        public setGroundColor_old(gcolor: any) {
             var ground_color: number[] = <number[]>gcolor;
             var r: number = ground_color[0] / 255;
             var g: number = ground_color[1] / 255;
@@ -2089,8 +2102,17 @@ namespace org.ssatguru.babylonjs.vishva {
             var gmat: StandardMaterial = <StandardMaterial>this.ground.material;
             gmat.diffuseColor = color;
         }
+        
+        public setGroundColor(hex:string){
+            let sm: StandardMaterial = <StandardMaterial>this.ground.material;
+            sm.diffuseColor = Color3.FromHexString(hex);
+        }
+        public getGroundColor():string{
+            let sm: StandardMaterial = <StandardMaterial>this.ground.material;
+            return sm.diffuseColor.toHexString();
+        }
 
-        public getGroundColor(): number[] {
+        public getGroundColor_old(): number[] {
             var ground_color: number[] = new Array(3);
             var gmat: StandardMaterial = <StandardMaterial>this.ground.material;
             if (gmat.diffuseColor != null) {

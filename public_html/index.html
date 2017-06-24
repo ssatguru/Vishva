@@ -6,7 +6,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-        
+
         <meta name="Vishva" content="">
         <meta name="Satguru Srivatavaa" content="">
         <link rel="icon" href="../../favicon.ico">
@@ -18,26 +18,26 @@
         <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet">
 
         <script src="lib/cannon.js"></script>
-        
-         <!--<script src="lib/babylon.2.6-12-16-2016.js"></script>--> 
+
+        <!--<script src="lib/babylon.2.6-12-16-2016.js"></script>--> 
         <!--<script src="lib/babylon2.6-01-18-2017.js"></script>--> 
-         <script src="lib/babylon3.0-03-20-2017.js"></script> 
-         
-         <!-- following uses bluerExponential Shadowmaps -->
-         <!--<script src="lib/babylon3.0-04-20-2017.js"></script>--> 
+        <script src="lib/babylon3.0-03-20-2017.js"></script> 
+
+        <!-- following uses bluerExponential Shadowmaps -->
+        <!--<script src="lib/babylon3.0-04-20-2017.js"></script>--> 
         <!--<script src="lib/babylon2.6-05-12-2017.js"></script>--> 
         <!--<script src="lib/babylon-06-19-2017.max.js"></script>-->
-        
+
         <!-- the latest -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
-        
+
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
         <script src="lib/colorpicker.min.js"></script>
 
         <link href="lib/colorpicker.themes.css" rel="stylesheet">
         <script type="text/javascript" src="lib/colorpicker.js"></script>
-        
+
         <style>
             html, body {
                 width: 100%;
@@ -231,7 +231,13 @@
                     </tr>
                     <tr>
                         <td>terrain color</td>
-                        <td><div ondragstart="return false;" id="color-picker" class="cp-small"></div></td>
+                        <td>
+                            <!--<div ondragstart="return false;" id="color-picker" class="cp-small"></div>-->
+                            <div id="trnCol" style="width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer"></div>
+                            <div id="trnColDiag" style="align-content: center">
+                                <div id ="trnColCP" class="cp-fancy"></div>
+                            </div>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -246,7 +252,7 @@
                         <td>show edit menu on mesh selection</td>
                         <td><input id="autoEditMenu" type="checkbox"/></td>
                     </tr>
-                      <tr>
+                    <tr>
                         <td>show tooltips</td>
                         <td><input id="showToolTips" type="checkbox"/></td>
                     </tr>
@@ -497,8 +503,10 @@
                                     color (ToDo)
                                 </td>
                                 <td>
-                                    <div id="matVisCol" style="width:64px;height:16px;background:white;cursor: pointer"></div>
-                                    
+                                    <div id="matCol" style="width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer"></div>
+                                    <div id="matColDiag">
+                                        <div id ="matColCP" class="cp-fancy"></div>
+                                    </div>
                                 </td>
                             </tr>
                             <tr>
@@ -521,7 +529,7 @@
                             </tr>
                         </table>
 
-                        
+
                         <!--
                         <img height="64" width="64"/>
                         <table>
@@ -625,9 +633,9 @@
 
                     <h3>Animations</h3>
                     <div id="meshAnimDiag" >
-                         <button id="animSkelView">toggle skeleton</button>
-                         <button id="animRest">show rest pose</button>
-                         <br>
+                        <button id="animSkelView">toggle skeleton</button>
+                        <button id="animRest">show rest pose</button>
+                        <br>
                         <br>create range
                         <table>
                             <tr>
@@ -742,7 +750,7 @@
                                 $("button").click(function (e) {
                                     $(this).blur();
                                 });
-                                
+
 //                                $('input').addClass("ui-corner-all");
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;

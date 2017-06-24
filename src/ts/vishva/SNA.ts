@@ -15,6 +15,8 @@ namespace org.ssatguru.babylonjs.vishva {
     import Matrix = BABYLON.Matrix;
     import Mesh = BABYLON.Mesh;
     import Scene = BABYLON.Scene;
+    import SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+    import Range = org.ssatguru.babylonjs.vishva.gui.Range;
     import Skeleton = BABYLON.Skeleton;
     import Sound = BABYLON.Sound;
     import Tags = BABYLON.Tags;

@@ -1,18 +1,12 @@
-namespace org.ssatguru.babylonjs.vishva {
+namespace org.ssatguru.babylonjs.vishva.gui {
     import AnimationRange = BABYLON.AnimationRange;
-
+    import ColorPickerDiag = org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
     import Skeleton = BABYLON.Skeleton;
-
     import Vector3 = BABYLON.Vector3;
-
     import DialogButtonOptions = JQueryUI.DialogButtonOptions;
-
     import DialogOptions = JQueryUI.DialogOptions;
-
     import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
-
     import SliderOptions = JQueryUI.SliderOptions;
-
     import SliderUIParams = JQueryUI.SliderUIParams;
 
     export class VishvaGUI {
@@ -264,18 +258,31 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.showAlertDiag("Sorry. To be implemneted soon");
                 return true;
             };
-
-            var colorEle: HTMLElement = document.getElementById("color-picker");
-            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
-            var setRGB: Function = <Function>cp["setRgb"];
-            var color: number[] = this.vishva.getGroundColor();
-            if (color != null) {
-                var rgb: RGB = new RGB();
-                rgb.r = color[0];
-                rgb.g = color[1];
-                rgb.b = color[2];
-                cp.setRgb(rgb);
+            
+            let trnCol:HTMLElement = document.getElementById("trnCol");
+            let trnColDiag: ColorPickerDiag = new ColorPickerDiag("terrain color", "trnColDiag", "trnColCP", this.centerBottom,(hex,hsv,rgb)=>{
+                trnCol.style.backgroundColor = hex;
+                this.vishva.setGroundColor(hex);
+            });
+            let trnColor:string = this.vishva.getGroundColor();
+            trnColDiag.setColor(trnColor);
+            trnCol.style.backgroundColor = trnColor;
+            
+            trnCol.onclick =() =>{
+                trnColDiag.open();
             }
+
+//            var colorEle: HTMLElement = document.getElementById("color-picker");
+//            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
+//            var setRGB: Function = <Function>cp["setRgb"];
+//            var color: number[] = this.vishva.getGroundColor();
+//            if (color != null) {
+//                var rgb: RGB = new RGB();
+//                rgb.r = color[0];
+//                rgb.g = color[1];
+//                rgb.b = color[2];
+//                cp.setRgb(rgb);
+//            }
 
             this.envDiag = $("#envDiv");
             var dos: DialogOptions = {
@@ -1489,19 +1496,35 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         matVis:HTMLInputElement;
         matVisVal: HTMLElement;
+        matCol:HTMLElement;
+        matColDiag:org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
         private initMatUI(){
-            this.matVisVal = <HTMLElement>document.getElementById("matVisVal");
+            
+            this.matVisVal = document.getElementById("matVisVal");
             this.matVis = <HTMLInputElement>document.getElementById("matVis");
+            this.matCol = document.getElementById("matCol");
+            this.matColDiag = new ColorPickerDiag("mesh color","matColDiag", "matColCP", this.centerBottom,(hex,hsv,rgb)=>{
+                this.matCol.style.background=hex;
+                this.vishva.setMeshColor(hex);
+            })
+            
             this.matVisVal["value"] = "1.00";
             this.matVis.oninput = () =>{
                 this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
                 this.vishva.setMeshVisibility(parseFloat(this.matVis.value));
             }
+            
+            this.matCol.onclick = () =>{
+                this.matColDiag.open();
+            }
         }
+        
         private updateMat(){
             if (this.matVis == undefined) this.initMatUI();
             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
+            this.matCol.style.background = this.vishva.getMeshColor();
+            
         }
 
         phyEna: HTMLInputElement;
@@ -1692,10 +1715,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
-            var colors: number[] = [rgb.r, rgb.g, rgb.b];
-            this.vishva.setGroundColor(colors);
-        }
+//        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
+//            var colors: number[] = [rgb.r, rgb.g, rgb.b];
+//            this.vishva.setGroundColor(colors);
+//        }
 
         /**
          * Main Navigation Menu Section

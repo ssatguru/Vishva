@@ -367,6 +367,1735 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+var org;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var ColorPickerDiag = (function () {
+                        function ColorPickerDiag(title, diagSelector, colorSelector, jpo, f) {
+                            this.diag = $("#" + diagSelector);
+                            var colorEle = document.getElementById(colorSelector);
+                            this.cp = new ColorPicker(colorEle, f);
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: jpo,
+                                //minWidth: 350,
+                                height: "auto",
+                                closeText: "",
+                                closeOnEscape: false,
+                                title: title
+                            };
+                            this.diag.dialog(dos);
+                            this.diag["jpo"] = jpo;
+                        }
+                        ColorPickerDiag.prototype.open = function () {
+                            this.diag.dialog("open");
+                        };
+                        ColorPickerDiag.prototype.setColor = function (hex) {
+                            this.cp.setHex(hex);
+                        };
+                        return ColorPickerDiag;
+                    }());
+                    gui.ColorPickerDiag = ColorPickerDiag;
+                    var RGB = (function () {
+                        function RGB() {
+                            this.r = 0;
+                            this.g = 0;
+                            this.b = 0;
+                        }
+                        return RGB;
+                    }());
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_1) {
+                var gui;
+                (function (gui) {
+                    var ColorPickerDiag = org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
+                    var VishvaGUI = (function () {
+                        function VishvaGUI(vishva) {
+                            var _this = this;
+                            this.local = true;
+                            this.menuBarOn = true;
+                            this.STATE_IND = "state";
+                            /**
+                             * this array will be used store all dialogs whose position needs to be
+                             * reset on window resize
+                             */
+                            this.dialogs = new Array();
+                            //TODO persist this setting
+                            this.enableToolTips = true;
+                            this.propsDiag = null;
+                            this.fixingDragIssue = false;
+                            this.animSelect = null;
+                            //        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
+                            //            var colors: number[] = [rgb.r, rgb.g, rgb.b];
+                            //            this.vishva.setGroundColor(colors);
+                            //        }
+                            /**
+                             * Main Navigation Menu Section
+                             */
+                            this.firstTime = true;
+                            this.addMenuOn = false;
+                            this.vishva = vishva;
+                            this.setSettings();
+                            $(document).tooltip({
+                                open: function (event, ui) {
+                                    if (!_this.enableToolTips) {
+                                        ui.tooltip.stop().remove();
+                                    }
+                                }
+                            });
+                            //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
+                            $("input").on("focus", function () { _this.vishva.disableKeys(); });
+                            $("input").on("blur", function () { _this.vishva.enableKeys(); });
+                            this.createJPOs();
+                            //need to do add menu before main navigation menu
+                            //the content of add menu is not static
+                            //it changes based on the asset.js file
+                            this.createAddMenu();
+                            //main navigation menu 
+                            this.createNavMenu();
+                            this.createDownloadDiag();
+                            //this.createUploadDiag();
+                            this.createHelpDiag();
+                            this.createAlertDiag();
+                            this.create_sNaDiag();
+                            this.createEditSensDiag();
+                            this.createEditActDiag();
+                            window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
+                        }
+                        VishvaGUI.prototype.createJPOs = function () {
+                            this.centerBottom = {
+                                at: "center bottom",
+                                my: "center bottom",
+                                of: window
+                            };
+                            this.leftCenter = {
+                                at: "left center",
+                                my: "left center",
+                                of: window
+                            };
+                            this.rightCenter = {
+                                at: "right center",
+                                my: "right center",
+                                of: window
+                            };
+                        };
+                        /**
+                         * resposition all dialogs to their original default postions without this,
+                         * a window resize could end up moving some dialogs outside the window and
+                         * thus make them disappear
+                         * the default position of each dialog will be stored in a new property called "jpo"
+                         * this would be created whenever/wherever the dialog is defined
+                         *
+                         * @param evt
+                         */
+                        VishvaGUI.prototype.onWindowResize = function (evt) {
+                            for (var index161 = 0; index161 < this.dialogs.length; index161++) {
+                                var jq = this.dialogs[index161];
+                                {
+                                    var jpo = jq["jpo"];
+                                    if (jpo != null) {
+                                        jq.dialog("option", "position", jpo);
+                                        var open = jq.dialog("isOpen");
+                                        if (open) {
+                                            jq.dialog("close");
+                                            jq.dialog("open");
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                        VishvaGUI.prototype.createAddMenu = function () {
+                            var _this = this;
+                            var assetTypes = Object.keys(this.vishva.assets);
+                            var addMenu = document.getElementById("AddMenu");
+                            addMenu.style.visibility = "visible";
+                            var f = function (e) { return _this.onAddMenuItemClick(e); };
+                            for (var _i = 0, assetTypes_1 = assetTypes; _i < assetTypes_1.length; _i++) {
+                                var assetType = assetTypes_1[_i];
+                                if (assetType === "sounds") {
+                                    continue;
+                                }
+                                var li = document.createElement("li");
+                                li.id = "add-" + assetType;
+                                li.innerText = assetType;
+                                li.onclick = f;
+                                addMenu.appendChild(li);
+                            }
+                        };
+                        VishvaGUI.prototype.onAddMenuItemClick = function (e) {
+                            var li = e.target;
+                            var jq = li["diag"];
+                            if (jq == null) {
+                                var assetType = li.innerHTML;
+                                jq = this.createAssetDiag(assetType);
+                                li["diag"] = jq;
+                            }
+                            jq.dialog("open");
+                            return true;
+                        };
+                        VishvaGUI.prototype.createAssetDiag = function (assetType) {
+                            var div = document.createElement("div");
+                            div.id = assetType + "Div";
+                            div.setAttribute("title", assetType);
+                            var table = document.createElement("table");
+                            table.id = assetType + "Tbl";
+                            var items = this.vishva.assets[assetType];
+                            this.updateAssetTable(table, assetType, items);
+                            div.appendChild(table);
+                            document.body.appendChild(div);
+                            var jq = $("#" + div.id);
+                            var dos = {
+                                autoOpen: false,
+                                resizable: true,
+                                position: this.centerBottom,
+                                width: "100%",
+                                height: "auto",
+                                closeText: "",
+                                closeOnEscape: false
+                            };
+                            jq.dialog(dos);
+                            jq["jpo"] = this.centerBottom;
+                            this.dialogs.push(jq);
+                            return jq;
+                        };
+                        VishvaGUI.prototype.updateAssetTable = function (tbl, assetType, items) {
+                            var _this = this;
+                            if (tbl.rows.length > 0) {
+                                return;
+                            }
+                            var f = function (e) { return _this.onAssetImgClick(e); };
+                            var row = tbl.insertRow();
+                            for (var index163 = 0; index163 < items.length; index163++) {
+                                var item = items[index163];
+                                {
+                                    var img = document.createElement("img");
+                                    img.id = item;
+                                    img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                                    img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
+                                    img.className = assetType;
+                                    img.onclick = f;
+                                    var cell = row.insertCell();
+                                    cell.appendChild(img);
+                                }
+                            }
+                            var row2 = tbl.insertRow();
+                            for (var index164 = 0; index164 < items.length; index164++) {
+                                var item = items[index164];
+                                {
+                                    var cell = row2.insertCell();
+                                    cell.innerText = item;
+                                }
+                            }
+                        };
+                        VishvaGUI.prototype.onAssetImgClick = function (e) {
+                            var i = e.target;
+                            if (i.className === "skyboxes") {
+                                this.vishva.setSky(i.id);
+                            }
+                            else if (i.className === "primitives") {
+                                this.vishva.addPrim(i.id);
+                            }
+                            else if (i.className === "water") {
+                                this.vishva.createWater();
+                            }
+                            else {
+                                this.vishva.loadAsset(i.className, i.id);
+                            }
+                            return true;
+                        };
+                        /*
+                         * Create Environment Dialog
+                         */
+                        VishvaGUI.prototype.createEnvDiag = function () {
+                            var _this = this;
+                            var sunPos = $("#sunPos");
+                            var light = $("#light");
+                            var shade = $("#shade");
+                            var fog = $("#fog");
+                            var fov = $("#fov");
+                            sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
+                            light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
+                            shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
+                            fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
+                            fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
+                            var envSnow = document.getElementById("envSnow");
+                            envSnow.onclick = function (e) {
+                                _this.vishva.toggleSnow();
+                            };
+                            var envRain = document.getElementById("envRain");
+                            envRain.onclick = function (e) {
+                                //this.showAlertDiag("Sorry. To be implemented");
+                                _this.vishva.toggleRain();
+                            };
+                            var skyButton = document.getElementById("skyButton");
+                            skyButton.onclick = function (e) {
+                                var foo = document.getElementById("add-skyboxes");
+                                foo.click();
+                                return true;
+                            };
+                            var trnButton = document.getElementById("trnButton");
+                            trnButton.onclick = function (e) {
+                                _this.showAlertDiag("Sorry. To be implemneted soon");
+                                return true;
+                            };
+                            var trnCol = document.getElementById("trnCol");
+                            var trnColDiag = new ColorPickerDiag("terrain color", "trnColDiag", "trnColCP", this.centerBottom, function (hex, hsv, rgb) {
+                                trnCol.style.backgroundColor = hex;
+                                _this.vishva.setGroundColor(hex);
+                            });
+                            var trnColor = this.vishva.getGroundColor();
+                            trnColDiag.setColor(trnColor);
+                            trnCol.style.backgroundColor = trnColor;
+                            trnCol.onclick = function () {
+                                trnColDiag.open();
+                            };
+                            //            var colorEle: HTMLElement = document.getElementById("color-picker");
+                            //            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
+                            //            var setRGB: Function = <Function>cp["setRgb"];
+                            //            var color: number[] = this.vishva.getGroundColor();
+                            //            if (color != null) {
+                            //                var rgb: RGB = new RGB();
+                            //                rgb.r = color[0];
+                            //                rgb.g = color[1];
+                            //                rgb.b = color[2];
+                            //                cp.setRgb(rgb);
+                            //            }
+                            this.envDiag = $("#envDiv");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: this.rightCenter,
+                                minWidth: 350,
+                                height: "auto",
+                                closeText: "",
+                                closeOnEscape: false
+                            };
+                            this.envDiag.dialog(dos);
+                            this.envDiag["jpo"] = this.rightCenter;
+                            this.dialogs.push(this.envDiag);
+                        };
+                        VishvaGUI.prototype.createSettingDiag = function () {
+                            var _this = this;
+                            this.settingDiag = $("#settingDiag");
+                            this.camCol = $("#camCol");
+                            this.autoEditMenu = $("#autoEditMenu");
+                            this.showToolTips = $("#showToolTips");
+                            this.showInvis = $("#showInvis");
+                            this.showDisa = $("#showDisa");
+                            this.snapper = $("#snapper");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: this.rightCenter,
+                                minWidth: 350,
+                                height: "auto",
+                                closeText: "",
+                                closeOnEscape: false
+                            };
+                            this.settingDiag.dialog(dos);
+                            this.settingDiag["jpo"] = this.rightCenter;
+                            this.dialogs.push(this.settingDiag);
+                            var dboSave = {};
+                            dboSave.text = "save";
+                            dboSave.click = function (e) {
+                                _this.vishva.enableCameraCollision(_this.camCol.prop("checked"));
+                                _this.vishva.enableAutoEditMenu(_this.autoEditMenu.prop("checked"));
+                                _this.enableToolTips = _this.showToolTips.prop("checked");
+                                if (_this.showInvis.prop("checked")) {
+                                    _this.vishva.showAllInvisibles();
+                                }
+                                else {
+                                    _this.vishva.hideAllInvisibles();
+                                }
+                                if (_this.showDisa.prop("checked")) {
+                                    _this.vishva.showAllDisabled();
+                                }
+                                else {
+                                    _this.vishva.hideAllDisabled();
+                                }
+                                var err = _this.vishva.snapper(_this.snapper.prop("checked"));
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                    return false;
+                                }
+                                _this.settingDiag.dialog("close");
+                                //this.showAlertDiag("Saved");
+                                return true;
+                            };
+                            var dboCancel = {};
+                            dboCancel.text = "Cancel";
+                            dboCancel.click = function (e) {
+                                _this.settingDiag.dialog("close");
+                                return true;
+                            };
+                            var dbos = [dboSave, dboCancel];
+                            this.settingDiag.dialog("option", "buttons", dbos);
+                        };
+                        VishvaGUI.prototype.updateSettings = function () {
+                            this.camCol.prop("checked", this.vishva.isCameraCollisionOn());
+                            this.autoEditMenu.prop("checked", this.vishva.isAutoEditMenuOn());
+                            this.showToolTips.prop("checked", this.enableToolTips);
+                        };
+                        VishvaGUI.prototype.createDownloadDiag = function () {
+                            this.downloadLink = document.getElementById("downloadLink");
+                            this.downloadDialog = $("#saveDiv");
+                            this.downloadDialog.dialog();
+                            this.downloadDialog.dialog("close");
+                        };
+                        VishvaGUI.prototype.createUploadDiag = function () {
+                            var _this = this;
+                            var loadFileInput = document.getElementById("loadFileInput");
+                            var loadFileOk = document.getElementById("loadFileOk");
+                            loadFileOk.onclick = (function (loadFileInput) {
+                                return function (e) {
+                                    var fl = loadFileInput.files;
+                                    if (fl.length === 0) {
+                                        alert("no file slected");
+                                        return null;
+                                    }
+                                    var file = null;
+                                    for (var index165 = 0; index165 < fl.length; index165++) {
+                                        var f = fl[index165];
+                                        {
+                                            file = f;
+                                        }
+                                    }
+                                    _this.vishva.loadAssetFile(file);
+                                    _this.loadDialog.dialog("close");
+                                    return true;
+                                };
+                            })(loadFileInput);
+                            this.loadDialog = $("#loadDiv");
+                            this.loadDialog.dialog();
+                            this.loadDialog.dialog("close");
+                        };
+                        VishvaGUI.prototype.createHelpDiag = function () {
+                            this.helpDiag = $("#helpDiv");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                width: 500,
+                                closeOnEscape: false,
+                                closeText: ""
+                            };
+                            this.helpDiag.dialog(dos);
+                        };
+                        /*
+                         * A dialog box to show the list of available sensors
+                         * actuators, each in seperate tabs
+                         */
+                        VishvaGUI.prototype.create_sNaDiag = function () {
+                            var _this = this;
+                            //tabs
+                            var sNaDetails = $("#sNaDetails");
+                            sNaDetails.tabs();
+                            //dialog box
+                            this.sNaDialog = $("#sNaDiag");
+                            var dos = {};
+                            dos.autoOpen = false;
+                            dos.modal = false;
+                            dos.resizable = false;
+                            dos.width = "auto";
+                            dos.height = "auto";
+                            dos.title = "Sensors and Actuators";
+                            dos.closeOnEscape = false;
+                            dos.closeText = "";
+                            dos.close = function (e, ui) {
+                                _this.vishva.switchDisabled = false;
+                            };
+                            dos.dragStop = function (e, ui) {
+                                /* required as jquery dialog's size does not re-adjust to content after it has been dragged
+                                 Thus if the size of sensors tab is different from the size of actuators tab  then the content of
+                                 actuator tab is cutoff if its size is greater
+                                 so we close and open for it to recalculate the sizes.
+                                 */
+                                _this.sNaDialog.dialog("close");
+                                _this.sNaDialog.dialog("open");
+                            };
+                            this.sNaDialog.dialog(dos);
+                            this.sensSel = document.getElementById("sensSel");
+                            this.actSel = document.getElementById("actSel");
+                            var sensors = this.vishva.getSensorList();
+                            var actuators = this.vishva.getActuatorList();
+                            for (var _i = 0, sensors_1 = sensors; _i < sensors_1.length; _i++) {
+                                var sensor = sensors_1[_i];
+                                var opt = document.createElement("option");
+                                opt.value = sensor;
+                                opt.innerHTML = sensor;
+                                this.sensSel.add(opt);
+                            }
+                            for (var _a = 0, actuators_1 = actuators; _a < actuators_1.length; _a++) {
+                                var actuator = actuators_1[_a];
+                                var opt = document.createElement("option");
+                                opt.value = actuator;
+                                opt.innerHTML = actuator;
+                                this.actSel.add(opt);
+                            }
+                            this.sensTbl = document.getElementById("sensTbl");
+                            this.actTbl = document.getElementById("actTbl");
+                        };
+                        VishvaGUI.prototype.show_sNaDiag = function () {
+                            var _this = this;
+                            var sens = this.vishva.getSensors();
+                            if (sens == null) {
+                                this.showAlertDiag("no mesh selected");
+                                return;
+                            }
+                            var acts = this.vishva.getActuators();
+                            if (acts == null) {
+                                this.showAlertDiag("no mesh selected");
+                                return;
+                            }
+                            this.vishva.switchDisabled = true;
+                            this.updateSensActTbl(sens, this.sensTbl);
+                            this.updateSensActTbl(acts, this.actTbl);
+                            var addSens = document.getElementById("addSens");
+                            addSens.onclick = function (e) {
+                                var s = _this.sensSel.item(_this.sensSel.selectedIndex);
+                                var sensor = s.value;
+                                _this.vishva.addSensorbyName(sensor);
+                                _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
+                                _this.sNaDialog.dialog("close");
+                                _this.sNaDialog.dialog("open");
+                                return true;
+                            };
+                            var addAct = document.getElementById("addAct");
+                            addAct.onclick = function (e) {
+                                var a = _this.actSel.item(_this.actSel.selectedIndex);
+                                var actuator = a.value;
+                                _this.vishva.addActuaorByName(actuator);
+                                _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
+                                _this.sNaDialog.dialog("close");
+                                _this.sNaDialog.dialog("open");
+                                return true;
+                            };
+                            this.sNaDialog.dialog("open");
+                        };
+                        /*
+                         * fill up the sensor and actuator tables
+                         * with a list of sensors and actuators
+                         */
+                        VishvaGUI.prototype.updateSensActTbl = function (sensAct, tbl) {
+                            var _this = this;
+                            var l = tbl.rows.length;
+                            for (var i = l - 1; i > 0; i--) {
+                                tbl.deleteRow(i);
+                            }
+                            l = sensAct.length;
+                            for (var i = 0; i < l; i++) {
+                                var row = tbl.insertRow();
+                                var cell = row.insertCell();
+                                cell.innerHTML = sensAct[i].getName();
+                                cell = row.insertCell();
+                                cell.innerHTML = sensAct[i].getProperties().signalId;
+                                cell = row.insertCell();
+                                var editBut = document.createElement("BUTTON");
+                                editBut.innerHTML = "edit";
+                                var jq = $(editBut);
+                                jq.button();
+                                var d = i;
+                                editBut.id = d.toString();
+                                editBut["sa"] = sensAct[i];
+                                cell.appendChild(editBut);
+                                editBut.onclick = function (e) {
+                                    var el = e.currentTarget;
+                                    var sa = el["sa"];
+                                    if (sa.getType() === "SENSOR") {
+                                        _this.showEditSensDiag(sa);
+                                    }
+                                    else {
+                                        _this.showEditActDiag(sa);
+                                    }
+                                    return true;
+                                };
+                                cell = row.insertCell();
+                                var delBut = document.createElement("BUTTON");
+                                delBut.innerHTML = "del";
+                                var jq2 = $(delBut);
+                                jq2.button();
+                                delBut.id = d.toString();
+                                delBut["row"] = row;
+                                delBut["sa"] = sensAct[i];
+                                cell.appendChild(delBut);
+                                delBut.onclick = function (e) {
+                                    var el = e.currentTarget;
+                                    var r = el["row"];
+                                    tbl.deleteRow(r.rowIndex);
+                                    _this.vishva.removeSensorActuator(el["sa"]);
+                                    return true;
+                                };
+                            }
+                        };
+                        VishvaGUI.prototype.createEditSensDiag = function () {
+                            var editSensDiag = $("#editSensDiag");
+                            var dos = {};
+                            dos.autoOpen = false;
+                            dos.modal = true;
+                            dos.resizable = false;
+                            dos.width = "auto";
+                            dos.title = "Edit Sensor";
+                            dos.closeText = "";
+                            dos.closeOnEscape = false;
+                            editSensDiag.dialog(dos);
+                        };
+                        /*
+                        * show a dialog box to edit sensor properties
+                        * dynamically creates an appropriate form.
+                        *
+                        */
+                        VishvaGUI.prototype.showEditSensDiag = function (sensor) {
+                            var _this = this;
+                            this.vishva.disableKeys();
+                            var sensNameEle = document.getElementById("editSensDiag.sensName");
+                            sensNameEle.innerHTML = sensor.getName();
+                            var editSensDiag = $("#editSensDiag");
+                            editSensDiag.dialog("open");
+                            var parmDiv = document.getElementById("editSensDiag.parms");
+                            var node = parmDiv.firstChild;
+                            if (node != null)
+                                parmDiv.removeChild(node);
+                            console.log(sensor.getProperties());
+                            var tbl = this.formCreate(sensor.getProperties(), parmDiv.id);
+                            parmDiv.appendChild(tbl);
+                            var dbo = {};
+                            dbo.text = "save";
+                            dbo.click = function (e) {
+                                _this.formRead(sensor.getProperties(), parmDiv.id);
+                                sensor.processUpdateGeneric();
+                                _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
+                                editSensDiag.dialog("close");
+                                _this.vishva.enableKeys();
+                                return true;
+                            };
+                            var dbos = [dbo];
+                            editSensDiag.dialog("option", "buttons", dbos);
+                        };
+                        VishvaGUI.prototype.createEditActDiag = function () {
+                            var editActDiag = $("#editActDiag");
+                            var dos = {};
+                            dos.autoOpen = false;
+                            dos.modal = true;
+                            dos.resizable = false;
+                            dos.width = "auto";
+                            dos.title = "Edit Actuator";
+                            dos.closeText = "";
+                            dos.closeOnEscape = false;
+                            editActDiag.dialog(dos);
+                        };
+                        /*
+                         * show a dialog box to edit actuator properties
+                         * dynamically creates an appropriate form.
+                         *
+                         */
+                        VishvaGUI.prototype.showEditActDiag = function (actuator) {
+                            var _this = this;
+                            this.vishva.disableKeys();
+                            var actNameEle = document.getElementById("editActDiag.actName");
+                            actNameEle.innerHTML = actuator.getName();
+                            var editActDiag = $("#editActDiag");
+                            editActDiag.dialog("open");
+                            var parmDiv = document.getElementById("editActDiag.parms");
+                            var node = parmDiv.firstChild;
+                            if (node != null) {
+                                parmDiv.removeChild(node);
+                            }
+                            if (actuator.getName() === "Sound") {
+                                var prop = actuator.getProperties();
+                                prop.soundFile.values = this.vishva.getSoundFiles();
+                            }
+                            var tbl = this.formCreate(actuator.getProperties(), parmDiv.id);
+                            parmDiv.appendChild(tbl);
+                            var dbo = {};
+                            dbo.text = "save";
+                            dbo.click = function (e) {
+                                _this.formRead(actuator.getProperties(), parmDiv.id);
+                                actuator.processUpdateGeneric();
+                                _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
+                                editActDiag.dialog("close");
+                                _this.vishva.enableKeys();
+                                return true;
+                            };
+                            var dbos = [dbo];
+                            editActDiag.dialog("option", "buttons", dbos);
+                        };
+                        /*
+                         * auto generate forms based on properties
+                         */
+                        VishvaGUI.prototype.formCreate = function (snaP, idPrefix) {
+                            idPrefix = idPrefix + ".";
+                            var tbl = document.createElement("table");
+                            var keys = Object.keys(snaP);
+                            for (var index168 = 0; index168 < keys.length; index168++) {
+                                var key = keys[index168];
+                                {
+                                    if (key.split("_")[0] === this.STATE_IND)
+                                        continue;
+                                    var row = tbl.insertRow();
+                                    var cell = row.insertCell();
+                                    cell.innerHTML = key;
+                                    cell = row.insertCell();
+                                    var t = typeof snaP[key];
+                                    if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
+                                        var keyValue = snaP[key];
+                                        var options = keyValue.values;
+                                        var sel = document.createElement("select");
+                                        sel.id = idPrefix + key;
+                                        for (var index169 = 0; index169 < options.length; index169++) {
+                                            var option = options[index169];
+                                            {
+                                                var opt = document.createElement("option");
+                                                if (option === keyValue.value) {
+                                                    opt.selected = true;
+                                                }
+                                                opt.innerText = option;
+                                                sel.add(opt);
+                                            }
+                                        }
+                                        cell.appendChild(sel);
+                                    }
+                                    else {
+                                        var inp = document.createElement("input");
+                                        inp.id = idPrefix + key;
+                                        inp.className = "ui-widget-content ui-corner-all";
+                                        inp.value = snaP[key];
+                                        if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                            var r = snaP[key];
+                                            inp.type = "range";
+                                            inp.max = new Number(r.max).toString();
+                                            inp.min = new Number(r.min).toString();
+                                            inp.step = new Number(r.step).toString();
+                                            inp.value = new Number(r.value).toString();
+                                        }
+                                        else if ((t === "string") || (t === "number")) {
+                                            inp.type = "text";
+                                            inp.value = snaP[key];
+                                        }
+                                        else if (t === "boolean") {
+                                            var check = snaP[key];
+                                            inp.type = "checkbox";
+                                            if (check)
+                                                inp.setAttribute("checked", "true");
+                                        }
+                                        cell.appendChild(inp);
+                                    }
+                                }
+                            }
+                            return tbl;
+                        };
+                        VishvaGUI.prototype.formRead = function (snaP, idPrefix) {
+                            idPrefix = idPrefix + ".";
+                            var keys = Object.keys(snaP);
+                            for (var index170 = 0; index170 < keys.length; index170++) {
+                                var key = keys[index170];
+                                {
+                                    if (key.split("_")[0] === this.STATE_IND)
+                                        continue;
+                                    var t = typeof snaP[key];
+                                    if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
+                                        var s = snaP[key];
+                                        var sel = document.getElementById(idPrefix + key);
+                                        s.value = sel.value;
+                                    }
+                                    else {
+                                        var ie = document.getElementById(idPrefix + key);
+                                        if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                            var r = snaP[key];
+                                            r.value = parseFloat(ie.value);
+                                        }
+                                        else if ((t === "string") || (t === "number")) {
+                                            if (t === "number") {
+                                                var v = parseFloat(ie.value);
+                                                if (isNaN(v))
+                                                    snaP[key] = 0;
+                                                else
+                                                    snaP[key] = v;
+                                            }
+                                            else {
+                                                snaP[key] = ie.value;
+                                            }
+                                        }
+                                        else if (t === "boolean") {
+                                            snaP[key] = ie.checked;
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                        /**
+                         * Mesh properties section
+                         */
+                        VishvaGUI.prototype.showPropDiag = function () {
+                            if (this.propsDiag != null) {
+                                if (this.propsDiag.dialog("isOpen"))
+                                    return true;
+                            }
+                            if (!this.vishva.anyMeshSelected()) {
+                                this.showAlertDiag("no mesh selected");
+                                return;
+                            }
+                            if (this.propsDiag == null) {
+                                this.createPropsDiag();
+                            }
+                            this.propsDiag.dialog("open");
+                            return true;
+                        };
+                        VishvaGUI.prototype.closePropDiag = function () {
+                            this.propsDiag.dialog("close");
+                        };
+                        VishvaGUI.prototype.createPropsDiag = function () {
+                            var _this = this;
+                            //property tabs
+                            var propsAcc = $("#propsAcc");
+                            //            propsTabs.tabs({
+                            //                //everytime we switch tabs, close open to re-adjust size
+                            //                activate: (e, ui) => {
+                            //                    //this.fixingDragIssue = true;
+                            //                    //this.propsDiag.dialog("close");
+                            //                    //this.propsDiag.dialog("open");
+                            //                },
+                            //
+                            //                beforeActivate: (e, ui) => {
+                            //                    this.vishva.switchDisabled = false;
+                            //                    this.vishva.enableKeys();
+                            //                    this.refreshTab(ui.newTab.index());
+                            //                }
+                            //            });
+                            //            
+                            propsAcc.accordion({
+                                animate: 100,
+                                heightStyle: "content",
+                                collapsible: true,
+                                beforeActivate: function (e, ui) {
+                                    _this.vishva.switchDisabled = false;
+                                    //TODO remove this.vishva.enableKeys();
+                                    _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
+                                }
+                            });
+                            //property dialog box
+                            this.propsDiag = $("#propsDiag");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: this.leftCenter,
+                                minWidth: 420,
+                                width: 420,
+                                // height: "auto",
+                                height: 650,
+                                closeOnEscape: false,
+                                //a) on open set the values of the fields in the active panel.
+                                //b) also if we switched from another mesh vishav will close open
+                                //by calling refreshPropsDiag()
+                                //c) donot bother refreshing values if we are just restarting
+                                //dialog for height and width re-sizing after drag
+                                open: function (e, ui) {
+                                    if (!_this.fixingDragIssue) {
+                                        // refresh the active tab
+                                        var activePanel = propsAcc.accordion("option", "active");
+                                        _this.refreshPanel(activePanel);
+                                    }
+                                    else {
+                                        _this.fixingDragIssue = false;
+                                    }
+                                },
+                                closeText: "",
+                                close: function (e, ui) {
+                                    _this.vishva.switchDisabled = false;
+                                    //TODO remove this.vishva.enableKeys();
+                                },
+                                //after drag the dialog box doesnot resize
+                                //force resize by closing and opening
+                                dragStop: function (e, ui) {
+                                    _this.fixingDragIssue = true;
+                                    _this.propsDiag.dialog("close");
+                                    _this.propsDiag.dialog("open");
+                                }
+                            };
+                            this.propsDiag.dialog(dos);
+                            this.propsDiag["jpo"] = this.leftCenter;
+                            this.dialogs.push(this.propsDiag);
+                        };
+                        /*
+                         * also called by vishva when editcontrol
+                         * is removed from mesh
+                         */
+                        VishvaGUI.prototype.closePropsDiag = function () {
+                            if ((this.propsDiag === undefined) || (this.propsDiag === null))
+                                return;
+                            this.propsDiag.dialog("close");
+                        };
+                        /*
+                         * called by vishva when editcontrol
+                         * is switched from another mesh
+                         */
+                        VishvaGUI.prototype.refreshPropsDiag = function () {
+                            if ((this.propsDiag === undefined) || (this.propsDiag === null))
+                                return;
+                            if (this.propsDiag.dialog("isOpen") === true) {
+                                this.propsDiag.dialog("close");
+                                this.propsDiag.dialog("open");
+                            }
+                        };
+                        VishvaGUI.prototype.getPanelIndex = function (ui) {
+                            if (ui.text() == "General")
+                                return 0 /* General */;
+                            if (ui.text() == "Physics")
+                                return 1 /* Physics */;
+                            if (ui.text() == "Material")
+                                return 2 /* Material */;
+                            if (ui.text() == "Lights")
+                                return 3 /* Lights */;
+                            if (ui.text() == "Animations")
+                                return 4 /* Animations */;
+                        };
+                        VishvaGUI.prototype.refreshPanel = function (panelIndex) {
+                            if (panelIndex === 0 /* General */) {
+                                this.updateGeneral();
+                            }
+                            else if (panelIndex === 3 /* Lights */) {
+                                this.updateLight();
+                            }
+                            else if (panelIndex === 4 /* Animations */) {
+                                this.updateAnimations();
+                            }
+                            else if (panelIndex === 1 /* Physics */) {
+                                this.updatePhysics();
+                            }
+                            else if (panelIndex === 2 /* Material */) {
+                                this.updateMat();
+                            }
+                        };
+                        VishvaGUI.prototype.initAnimUI = function () {
+                            var _this = this;
+                            var animSkelView = document.getElementById("animSkelView");
+                            var animRest = document.getElementById("animRest");
+                            var animRangeName = document.getElementById("animRangeName");
+                            var animRangeStart = document.getElementById("animRangeStart");
+                            var animRangeEnd = document.getElementById("animRangeEnd");
+                            var animRangeMake = document.getElementById("animRangeMake");
+                            //enable/disable skeleton view
+                            animSkelView.onclick = function (e) {
+                                _this.vishva.toggleSkelView();
+                            };
+                            //show rest pose
+                            animRest.onclick = function (e) {
+                                _this.vishva.animRest();
+                            };
+                            //create
+                            animRangeMake.onclick = function (e) {
+                                var name = animRangeName.value;
+                                var ars = parseInt(animRangeStart.value);
+                                if (isNaN(ars)) {
+                                    _this.showAlertDiag("from frame is not a number");
+                                }
+                                var are = parseInt(animRangeEnd.value);
+                                if (isNaN(are)) {
+                                    _this.showAlertDiag("to frame is not a number");
+                                }
+                                _this.vishva.createAnimRange(name, ars, are);
+                                _this.refreshAnimSelect();
+                            };
+                            //select
+                            this.animSelect = document.getElementById("animList");
+                            this.animSelect.onchange = function (e) {
+                                var animName = _this.animSelect.value;
+                                if (animName != null) {
+                                    var range = _this.skel.getAnimationRange(animName);
+                                    document.getElementById("animFrom").innerText = new Number(range.from).toString();
+                                    document.getElementById("animTo").innerText = new Number(range.to).toString();
+                                }
+                                return true;
+                            };
+                            //play
+                            this.animRate = document.getElementById("animRate");
+                            this.animLoop = document.getElementById("animLoop");
+                            document.getElementById("playAnim").onclick = function (e) {
+                                if (_this.skel == null)
+                                    return true;
+                                var animName = _this.animSelect.value;
+                                var rate = _this.animRate.value;
+                                if (animName != null) {
+                                    _this.vishva.playAnimation(animName, rate, _this.animLoop.checked);
+                                }
+                                return true;
+                            };
+                            document.getElementById("stopAnim").onclick = function (e) {
+                                if (_this.skel == null)
+                                    return true;
+                                _this.vishva.stopAnimation();
+                                return true;
+                            };
+                        };
+                        VishvaGUI.prototype.createAnimDiag = function () {
+                            var _this = this;
+                            this.initAnimUI();
+                            this.meshAnimDiag = $("#meshAnimDiag");
+                            var dos = {};
+                            dos.autoOpen = false;
+                            dos.modal = false;
+                            dos.resizable = false;
+                            dos.width = "auto";
+                            dos.height = "auto";
+                            dos.closeOnEscape = false;
+                            dos.closeText = "";
+                            dos.close = function (e, ui) {
+                                _this.vishva.switchDisabled = false;
+                            };
+                            this.meshAnimDiag.dialog(dos);
+                        };
+                        VishvaGUI.prototype.updateAnimations = function () {
+                            this.vishva.switchDisabled = true;
+                            this.initAnimUI();
+                            this.skel = this.vishva.getSkeleton();
+                            var skelName;
+                            if (this.skel == null) {
+                                document.getElementById("skelName").innerText = "no skeleton";
+                                return;
+                            }
+                            else {
+                                skelName = this.skel.name;
+                                if (skelName.trim() === "")
+                                    skelName = "no name";
+                            }
+                            document.getElementById("skelName").innerText = skelName;
+                            this.refreshAnimSelect();
+                            //            var childs: HTMLCollection = this.animSelect.children;
+                            //            var l: number = (<number>childs.length | 0);
+                            //            for (var i: number = l - 1; i >= 0; i--) {
+                            //                childs[i].remove();
+                            //            }
+                            //            if (skelName != null) {
+                            //                var range: AnimationRange[] = this.vishva.getAnimationRanges();
+                            //                var animOpt: HTMLOptionElement;
+                            //                for (var index171 = 0; index171 < range.length; index171++) {
+                            //                    var ar = range[index171];
+                            //                    {
+                            //                        animOpt = document.createElement("option");
+                            //                        animOpt.value = ar.name;
+                            //                        animOpt.innerText = ar.name;
+                            //                        this.animSelect.appendChild(animOpt);
+                            //                    }
+                            //                }
+                            //                if (range[0] != null) {
+                            //                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
+                            //                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
+                            //                }
+                            //            }
+                        };
+                        VishvaGUI.prototype.refreshAnimSelect = function () {
+                            var childs = this.animSelect.children;
+                            var l = (childs.length | 0);
+                            for (var i = l - 1; i >= 0; i--) {
+                                childs[i].remove();
+                            }
+                            var range = this.vishva.getAnimationRanges();
+                            if (range === null)
+                                return;
+                            var animOpt;
+                            for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
+                                var ar = range_1[_i];
+                                animOpt = document.createElement("option");
+                                animOpt.value = ar.name;
+                                animOpt.innerText = ar.name;
+                                this.animSelect.appendChild(animOpt);
+                            }
+                            if (range[0] != null) {
+                                document.getElementById("animFrom").innerText = new Number(range[0].from).toString();
+                                document.getElementById("animTo").innerText = new Number(range[0].to).toString();
+                            }
+                        };
+                        VishvaGUI.prototype.toString = function (d) {
+                            return new Number(d).toFixed(2).toString();
+                        };
+                        VishvaGUI.prototype.initGeneral = function () {
+                            var _this = this;
+                            //name
+                            this.genName = document.getElementById("genName");
+                            //TODO remove
+                            //            this.genName.onfocus = () => {
+                            //                this.vishva.disableKeys();
+                            //            }
+                            //            this.genName.onblur = () => {
+                            //                this.vishva.enableKeys();
+                            //            }
+                            this.genName.onchange = function () {
+                                _this.vishva.setName(_this.genName.value);
+                            };
+                            //space
+                            this.genSpace = document.getElementById("genSpace");
+                            this.genSpace.onchange = function () {
+                                var err = _this.vishva.setSpace(_this.genSpace.value);
+                                if (err !== null) {
+                                    _this.showAlertDiag(err);
+                                    _this.genSpace.value = _this.vishva.getSpace();
+                                }
+                            };
+                            //transforms
+                            if (this.transRefresh === undefined) {
+                                this.transRefresh = document.getElementById("transRefresh");
+                                this.transRefresh.onclick = function () {
+                                    _this.updateTransform();
+                                    return false;
+                                };
+                            }
+                            if (this.transBake === undefined) {
+                                this.transBake = document.getElementById("transBake");
+                                this.transBake.onclick = function () {
+                                    _this.vishva.bakeTransforms();
+                                    _this.updateTransform();
+                                    return false;
+                                };
+                            }
+                            //edit controls
+                            this.genOperTrans = document.getElementById("operTrans");
+                            this.genOperRot = document.getElementById("operRot");
+                            this.genOperScale = document.getElementById("operScale");
+                            this.genOperFocus = document.getElementById("operFocus");
+                            this.genOperTrans.onclick = function () {
+                                _this.vishva.setTransOn();
+                            };
+                            this.genOperRot.onclick = function () {
+                                _this.vishva.setRotOn();
+                            };
+                            this.genOperScale.onclick = function () {
+                                _this.vishva.setScaleOn();
+                                if (!_this.vishva.isSpaceLocal()) {
+                                    _this.showAlertDiag("note that scaling doesnot work with global axis");
+                                }
+                            };
+                            this.genOperFocus.onclick = function () {
+                                _this.vishva.setFocusOnMesh();
+                            };
+                            //Snap CheckBox
+                            this.genSnapTrans = document.getElementById("snapTrans");
+                            this.genSnapTrans.onchange = function () {
+                                var err = _this.vishva.snapTrans(_this.genSnapTrans.checked);
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                    _this.genSnapTrans.checked = false;
+                                }
+                            };
+                            this.genSnapRot = document.getElementById("snapRot");
+                            this.genSnapRot.onchange = function () {
+                                var err = _this.vishva.snapRot(_this.genSnapRot.checked);
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                    _this.genSnapRot.checked = false;
+                                }
+                            };
+                            this.genSnapScale = document.getElementById("snapScale");
+                            this.genSnapScale.onchange = function () {
+                                var err = _this.vishva.snapScale(_this.genSnapScale.checked);
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                    _this.genSnapScale.checked = false;
+                                }
+                            };
+                            //Snap Values
+                            this.genSnapTransValue = document.getElementById("snapTransValue");
+                            this.genSnapTransValue.onchange = function () {
+                                _this.vishva.setSnapTransValue(Number(_this.genSnapTransValue.value));
+                            };
+                            this.genSnapRotValue = document.getElementById("snapRotValue");
+                            this.genSnapRotValue.onchange = function () {
+                                _this.vishva.setSnapRotValue(Number(_this.genSnapRotValue.value));
+                            };
+                            this.genSnapScaleValue = document.getElementById("snapScaleValue");
+                            this.genSnapScaleValue.onchange = function () {
+                                _this.vishva.setSnapScaleValue(Number(_this.genSnapScaleValue.value));
+                            };
+                            //
+                            this.genDisable = document.getElementById("genDisable");
+                            this.genDisable.onchange = function () {
+                                _this.vishva.disableIt(_this.genDisable.checked);
+                            };
+                            this.genColl = document.getElementById("genColl");
+                            this.genColl.onchange = function () {
+                                _this.vishva.enableCollision(_this.genColl.checked);
+                            };
+                            this.genVisi = document.getElementById("genVisi");
+                            this.genVisi.onchange = function () {
+                                _this.vishva.makeVisibile(_this.genVisi.checked);
+                            };
+                            var undo = document.getElementById("undo");
+                            var redo = document.getElementById("redo");
+                            var parentMesh = document.getElementById("parentMesh");
+                            var removeParent = document.getElementById("removeParent");
+                            var removeChildren = document.getElementById("removeChildren");
+                            var cloneMesh = document.getElementById("cloneMesh");
+                            var instMesh = document.getElementById("instMesh");
+                            var mergeMesh = document.getElementById("mergeMesh");
+                            var subMesh = document.getElementById("subMesh");
+                            var interMesh = document.getElementById("interMesh");
+                            var downAsset = document.getElementById("downMesh");
+                            var delMesh = document.getElementById("delMesh");
+                            var swAv = document.getElementById("swAv");
+                            var swGnd = document.getElementById("swGnd");
+                            var sNa = document.getElementById("sNa");
+                            undo.onclick = function (e) {
+                                _this.vishva.undo();
+                                return false;
+                            };
+                            redo.onclick = function (e) {
+                                _this.vishva.redo();
+                                return false;
+                            };
+                            parentMesh.onclick = function (e) {
+                                var err = _this.vishva.makeParent();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            removeParent.onclick = function (e) {
+                                var err = _this.vishva.removeParent();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            removeChildren.onclick = function (e) {
+                                var err = _this.vishva.removeChildren();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            cloneMesh.onclick = function (e) {
+                                var err = _this.vishva.clone_mesh();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            instMesh.onclick = function (e) {
+                                var err = _this.vishva.instance_mesh();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            mergeMesh.onclick = function (e) {
+                                var err = _this.vishva.mergeMeshes();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            subMesh.onclick = function (e) {
+                                var err = _this.vishva.csgOperation("subtract");
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            interMesh.onclick = function (e) {
+                                var err = _this.vishva.csgOperation("intersect");
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            downAsset.onclick = function (e) {
+                                var downloadURL = _this.vishva.saveAsset();
+                                if (downloadURL == null) {
+                                    _this.showAlertDiag("No Mesh Selected");
+                                    return true;
+                                }
+                                _this.downloadLink.href = downloadURL;
+                                var env = $("#saveDiv");
+                                env.dialog("open");
+                                return false;
+                            };
+                            delMesh.onclick = function (e) {
+                                var err = _this.vishva.delete_mesh();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            swAv.onclick = function (e) {
+                                var err = _this.vishva.switchAvatar();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return true;
+                            };
+                            swGnd.onclick = function (e) {
+                                var err = _this.vishva.switchGround();
+                                if (err != null) {
+                                    _this.showAlertDiag(err);
+                                }
+                                return true;
+                            };
+                            sNa.onclick = function (e) {
+                                _this.show_sNaDiag();
+                                return true;
+                            };
+                        };
+                        VishvaGUI.prototype.updateGeneral = function () {
+                            if (this.genName === undefined)
+                                this.initGeneral();
+                            this.genName.value = this.vishva.getName();
+                            this.genSpace.value = this.vishva.getSpace();
+                            this.updateTransform();
+                            this.genDisable.checked = this.vishva.isDisabled();
+                            this.genColl.checked = this.vishva.isCollideable();
+                            this.genVisi.checked = this.vishva.isVisible();
+                        };
+                        VishvaGUI.prototype.updateTransform = function () {
+                            var loc = this.vishva.getLocation();
+                            var rot = this.vishva.getRotation();
+                            var scl = this.vishva.getScale();
+                            document.getElementById("loc.x").value = this.toString(loc.x);
+                            document.getElementById("loc.y").value = this.toString(loc.y);
+                            document.getElementById("loc.z").value = this.toString(loc.z);
+                            document.getElementById("rot.x").value = this.toString(rot.x);
+                            document.getElementById("rot.y").value = this.toString(rot.y);
+                            document.getElementById("rot.z").value = this.toString(rot.z);
+                            document.getElementById("scl.x").value = this.toString(scl.x);
+                            document.getElementById("scl.y").value = this.toString(scl.y);
+                            document.getElementById("scl.z").value = this.toString(scl.z);
+                        };
+                        VishvaGUI.prototype.initLightUI = function () {
+                            var _this = this;
+                            this.lightAtt = document.getElementById("lightAtt");
+                            this.lightType = document.getElementById("lightType");
+                            this.lightDiff = document.getElementById("lightDiff");
+                            this.lightSpec = document.getElementById("lightSpec");
+                            this.lightInten = document.getElementById("lightInten");
+                            this.lightRange = document.getElementById("lightRange");
+                            this.lightRadius = document.getElementById("lightAtt");
+                            this.lightAngle = document.getElementById("lightAngle");
+                            this.lightExp = document.getElementById("lightExp");
+                            this.lightGndClr = document.getElementById("lightGndClr");
+                            this.lightDirX = document.getElementById("lightDirX");
+                            this.lightDirY = document.getElementById("lightDirY");
+                            this.lightDirZ = document.getElementById("lightDirZ");
+                            var lightApply = document.getElementById("lightApply");
+                            lightApply.onclick = function () {
+                                _this.applyLight();
+                                _this.showAlertDiag("light applied");
+                            };
+                        };
+                        VishvaGUI.prototype.updateLight = function () {
+                            console.log("updateLight");
+                            if (this.lightAtt === undefined)
+                                this.initLightUI();
+                            var lightParm = this.vishva.getAttachedLight();
+                            if (lightParm === null) {
+                                this.lightAtt.checked = false;
+                                lightParm = new vishva_1.LightParm();
+                            }
+                            else {
+                                this.lightAtt.checked = true;
+                            }
+                            this.lightType.value = lightParm.type;
+                            this.lightDiff.value = lightParm.diffuse.toHexString();
+                            this.lightSpec.value = lightParm.specular.toHexString();
+                            this.lightInten.value = Number(lightParm.intensity).toString();
+                            this.lightRange.value = Number(lightParm.range).toString();
+                            this.lightRadius.value = Number(lightParm.radius).toString();
+                            //this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+                            this.lightAngle.value = Number(lightParm.angle).toString();
+                            this.lightExp.value = Number(lightParm.exponent).toString();
+                            this.lightGndClr.value = lightParm.gndClr.toHexString();
+                            this.lightDirX.value = Number(lightParm.direction.x).toString();
+                            this.lightDirY.value = Number(lightParm.direction.y).toString();
+                            this.lightDirZ.value = Number(lightParm.direction.z).toString();
+                        };
+                        VishvaGUI.prototype.applyLight = function () {
+                            if (!this.lightAtt.checked) {
+                                this.vishva.detachLight();
+                                return;
+                            }
+                            var lightParm = new vishva_1.LightParm();
+                            lightParm.type = this.lightType.value;
+                            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
+                            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
+                            lightParm.intensity = parseFloat(this.lightInten.value);
+                            lightParm.range = parseFloat(this.lightRange.value);
+                            lightParm.radius = parseFloat(this.lightRadius.value);
+                            lightParm.angle = parseFloat(this.lightAngle.value);
+                            lightParm.direction.x = parseFloat(this.lightDirX.value);
+                            lightParm.direction.y = parseFloat(this.lightDirY.value);
+                            lightParm.direction.z = parseFloat(this.lightDirZ.value);
+                            lightParm.exponent = parseFloat(this.lightExp.value);
+                            lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
+                            this.vishva.attachAlight(lightParm);
+                        };
+                        VishvaGUI.prototype.initMatUI = function () {
+                            var _this = this;
+                            this.matVisVal = document.getElementById("matVisVal");
+                            this.matVis = document.getElementById("matVis");
+                            this.matCol = document.getElementById("matCol");
+                            this.matColDiag = new ColorPickerDiag("mesh color", "matColDiag", "matColCP", this.centerBottom, function (hex, hsv, rgb) {
+                                _this.matCol.style.background = hex;
+                                _this.vishva.setMeshColor(hex);
+                            });
+                            this.matVisVal["value"] = "1.00";
+                            this.matVis.oninput = function () {
+                                _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
+                                _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
+                            };
+                            this.matCol.onclick = function () {
+                                _this.matColDiag.open();
+                            };
+                        };
+                        VishvaGUI.prototype.updateMat = function () {
+                            if (this.matVis == undefined)
+                                this.initMatUI();
+                            this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
+                            this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
+                            this.matCol.style.background = this.vishva.getMeshColor();
+                        };
+                        VishvaGUI.prototype.initPhyUI = function () {
+                            var _this = this;
+                            this.phyEna = document.getElementById("phyEna");
+                            this.phyType = document.getElementById("phyType");
+                            this.phyMass = document.getElementById("phyMass");
+                            this.phyRes = document.getElementById("phyRes");
+                            this.phyResVal = document.getElementById("phyResVal");
+                            this.phyResVal["value"] = "0.0";
+                            this.phyRes.oninput = function () {
+                                _this.phyResVal["value"] = _this.formatValue(_this.phyRes.value);
+                            };
+                            this.phyFric = document.getElementById("phyFric");
+                            this.phyFricVal = document.getElementById("phyFricVal");
+                            this.phyFricVal["value"] = "0.0";
+                            this.phyFric.oninput = function () {
+                                _this.phyFricVal["value"] = _this.formatValue(_this.phyFric.value);
+                            };
+                            var phyApply = document.getElementById("phyApply");
+                            var phyTest = document.getElementById("phyTest");
+                            var phyReset = document.getElementById("phyReset");
+                            phyApply.onclick = function (ev) {
+                                _this.applyPhysics();
+                                _this.showAlertDiag("physics applied");
+                                return false;
+                            };
+                            phyTest.onclick = function (ev) {
+                                _this.testPhysics();
+                                return false;
+                            };
+                            phyReset.onclick = function (ev) {
+                                _this.resetPhysics();
+                                return false;
+                            };
+                        };
+                        VishvaGUI.prototype.formatValue = function (val) {
+                            if (val === "1")
+                                return "1.0";
+                            if (val === "0")
+                                return "0.0";
+                            return val;
+                        };
+                        VishvaGUI.prototype.updatePhysics = function () {
+                            if (this.phyEna === undefined)
+                                this.initPhyUI();
+                            var phyParms = this.vishva.getMeshPickedPhyParms();
+                            if (phyParms !== null) {
+                                this.phyEna.setAttribute("checked", "true");
+                                this.phyType.value = Number(phyParms.type).toString();
+                                this.phyMass.value = Number(phyParms.mass).toString();
+                                this.phyRes.value = Number(phyParms.restitution).toString();
+                                this.phyResVal["value"] = this.formatValue(this.phyRes.value);
+                                this.phyFric.value = Number(phyParms.friction).toString();
+                                this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
+                            }
+                            else {
+                                this.phyEna.checked = false;
+                                //by default lets set the type to "box"
+                                this.phyType.value = "2";
+                                this.phyMass.value = "1";
+                                this.phyRes.value = "0";
+                                this.phyResVal["value"] = "0.0";
+                                this.phyFric.value = "0";
+                                this.phyFricVal["value"] = "0.0";
+                            }
+                        };
+                        VishvaGUI.prototype.applyPhysics = function () {
+                            var phyParms;
+                            if (this.phyEna.checked) {
+                                phyParms = new vishva_1.PhysicsParm();
+                                phyParms.type = parseInt(this.phyType.value);
+                                phyParms.mass = parseFloat(this.phyMass.value);
+                                phyParms.restitution = parseFloat(this.phyRes.value);
+                                phyParms.friction = parseFloat(this.phyFric.value);
+                            }
+                            else {
+                                phyParms = null;
+                            }
+                            this.vishva.setMeshPickedPhyParms(phyParms);
+                        };
+                        VishvaGUI.prototype.testPhysics = function () {
+                            var phyParms;
+                            phyParms = new vishva_1.PhysicsParm();
+                            phyParms.type = parseInt(this.phyType.value);
+                            phyParms.mass = parseFloat(this.phyMass.value);
+                            phyParms.restitution = parseFloat(this.phyRes.value);
+                            phyParms.friction = parseFloat(this.phyFric.value);
+                            this.vishva.testPhysics(phyParms);
+                        };
+                        VishvaGUI.prototype.resetPhysics = function () {
+                            this.vishva.resetPhysics();
+                        };
+                        VishvaGUI.prototype.createAlertDiag = function () {
+                            this.alertDiv = document.getElementById("alertDiv");
+                            this.alertDialog = $("#alertDiv");
+                            var dos = {
+                                title: "Info",
+                                autoOpen: false,
+                                width: "auto",
+                                minWidth: 200,
+                                height: "auto",
+                                closeText: "",
+                                closeOnEscape: false
+                            };
+                            this.alertDialog.dialog(dos);
+                        };
+                        VishvaGUI.prototype.showAlertDiag = function (msg) {
+                            this.alertDiv.innerHTML = "<h3>" + msg + "</h3>";
+                            this.alertDialog.dialog("open");
+                        };
+                        VishvaGUI.prototype.sliderOptions = function (min, max, value) {
+                            var _this = this;
+                            var so = {};
+                            so.min = min;
+                            so.max = max;
+                            so.value = value;
+                            so.slide = function (e, ui) { return _this.handleSlide(e, ui); };
+                            return so;
+                        };
+                        VishvaGUI.prototype.handleSlide = function (e, ui) {
+                            var slider = e.target.id;
+                            if (slider === "fov") {
+                                this.vishva.setFov(ui.value);
+                            }
+                            else if (slider === "sunPos") {
+                                this.vishva.setSunPos(ui.value);
+                            }
+                            else {
+                                var v = ui.value / 100;
+                                if (slider === "light") {
+                                    this.vishva.setLight(v);
+                                }
+                                else if (slider === "shade") {
+                                    this.vishva.setShade(v);
+                                }
+                                else if (slider === "fog") {
+                                    this.vishva.setFog(v / 10);
+                                }
+                            }
+                            return true;
+                        };
+                        VishvaGUI.prototype.createNavMenu = function () {
+                            var _this = this;
+                            //button to show navigation menu
+                            var showNavMenu = document.getElementById("showNavMenu");
+                            showNavMenu.style.visibility = "visible";
+                            //navigation menu sliding setup
+                            document.getElementById("navMenubar").style.visibility = "visible";
+                            var navMenuBar = $("#navMenubar");
+                            var jpo = {
+                                my: "left center",
+                                at: "right center",
+                                of: showNavMenu
+                            };
+                            navMenuBar.position(jpo);
+                            navMenuBar.show(null);
+                            showNavMenu.onclick = function (e) {
+                                if (_this.menuBarOn) {
+                                    navMenuBar.hide("slide", 100);
+                                }
+                                else {
+                                    navMenuBar.show("slide", 100);
+                                }
+                                _this.menuBarOn = !_this.menuBarOn;
+                                return true;
+                            };
+                            //add menu sliding setup
+                            var slideDown = JSON.parse("{\"direction\":\"up\"}");
+                            var navAdd = document.getElementById("navAdd");
+                            var addMenu = $("#AddMenu");
+                            addMenu.menu();
+                            addMenu.hide(null);
+                            navAdd.onclick = function (e) {
+                                if (_this.firstTime) {
+                                    var jpo = {
+                                        my: "left top",
+                                        at: "left bottom",
+                                        of: navAdd
+                                    };
+                                    addMenu.menu().position(jpo);
+                                    _this.firstTime = false;
+                                }
+                                if (_this.addMenuOn) {
+                                    addMenu.menu().hide("slide", slideDown, 100);
+                                }
+                                else {
+                                    addMenu.show("slide", slideDown, 100);
+                                }
+                                _this.addMenuOn = !_this.addMenuOn;
+                                $(document).one("click", function (jqe) {
+                                    if (_this.addMenuOn) {
+                                        addMenu.menu().hide("slide", slideDown, 100);
+                                        _this.addMenuOn = false;
+                                    }
+                                    return true;
+                                });
+                                e.cancelBubble = true;
+                                return true;
+                            };
+                            var downWorld = document.getElementById("downWorld");
+                            downWorld.onclick = function (e) {
+                                var downloadURL = _this.vishva.saveWorld();
+                                if (downloadURL == null)
+                                    return true;
+                                _this.downloadLink.href = downloadURL;
+                                _this.downloadDialog.dialog("open");
+                                return false;
+                            };
+                            var navEnv = document.getElementById("navEnv");
+                            navEnv.onclick = function (e) {
+                                if (_this.envDiag == undefined) {
+                                    _this.createEnvDiag();
+                                }
+                                _this.toggleDiag(_this.envDiag);
+                                return false;
+                            };
+                            var navEdit = document.getElementById("navEdit");
+                            navEdit.onclick = function (e) {
+                                if ((_this.propsDiag != null) && (_this.propsDiag.dialog("isOpen") === true)) {
+                                    _this.closePropDiag();
+                                }
+                                else {
+                                    _this.showPropDiag();
+                                }
+                                return true;
+                            };
+                            var navSettings = document.getElementById("navSettings");
+                            navSettings.onclick = function (e) {
+                                if (_this.settingDiag == undefined) {
+                                    _this.createSettingDiag();
+                                }
+                                if (_this.settingDiag.dialog("isOpen") === false) {
+                                    _this.updateSettings();
+                                    _this.settingDiag.dialog("open");
+                                }
+                                else {
+                                    _this.settingDiag.dialog("close");
+                                }
+                                return false;
+                            };
+                            var helpLink = document.getElementById("helpLink");
+                            helpLink.onclick = function (e) {
+                                _this.toggleDiag(_this.helpDiag);
+                                return true;
+                            };
+                            var debugLink = document.getElementById("debugLink");
+                            debugLink.onclick = function (e) {
+                                _this.vishva.toggleDebug();
+                                return true;
+                            };
+                        };
+                        /*
+                         * open diag if close
+                         * close diag if open
+                         */
+                        VishvaGUI.prototype.toggleDiag = function (diag) {
+                            if (diag.dialog("isOpen") === false) {
+                                diag.dialog("open");
+                            }
+                            else {
+                                diag.dialog("close");
+                            }
+                        };
+                        VishvaGUI.prototype.getSettings = function () {
+                            var guiSettings = new GuiSettings();
+                            guiSettings.enableToolTips = this.enableToolTips;
+                            return guiSettings;
+                        };
+                        VishvaGUI.prototype.setSettings = function () {
+                            var guiSettings = this.vishva.getGuiSettings();
+                            if (guiSettings !== null)
+                                this.enableToolTips = guiSettings.enableToolTips;
+                        };
+                        return VishvaGUI;
+                    }());
+                    VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
+                    VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
+                    gui.VishvaGUI = VishvaGUI;
+                    var GuiSettings = (function () {
+                        function GuiSettings() {
+                        }
+                        return GuiSettings;
+                    }());
+                    gui.GuiSettings = GuiSettings;
+                    var RGB = (function () {
+                        function RGB() {
+                            this.r = 0;
+                            this.g = 0;
+                            this.b = 0;
+                        }
+                        return RGB;
+                    }());
+                    gui.RGB = RGB;
+                    var Range = (function () {
+                        function Range(min, max, value, step) {
+                            this.type = "Range";
+                            this.min = 0;
+                            this.max = 0;
+                            this.value = 0;
+                            this.step = 0;
+                            this.min = min;
+                            this.max = max;
+                            this.value = value;
+                            this.step = step;
+                        }
+                        return Range;
+                    }());
+                    gui.Range = Range;
+                    var SelectType = (function () {
+                        function SelectType() {
+                            this.type = "SelectType";
+                        }
+                        return SelectType;
+                    }());
+                    gui.SelectType = SelectType;
+                })(gui = vishva_1.gui || (vishva_1.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
 var org;
 (function (org) {
     var ssatguru;
@@ -427,6 +2156,8 @@ var org;
                 var Animation = BABYLON.Animation;
                 var Axis = BABYLON.Axis;
                 var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
+                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var Range = org.ssatguru.babylonjs.vishva.gui.Range;
                 var Sound = BABYLON.Sound;
                 var Tags = BABYLON.Tags;
                 var Quaternion = BABYLON.Quaternion;
@@ -1491,7 +3222,7 @@ var org;
                     __extends(AnimatorProp, _super);
                     function AnimatorProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.animationRange = new vishva.SelectType();
+                        _this.animationRange = new SelectType();
                         _this.rate = 1;
                         return _this;
                     }
@@ -1505,9 +3236,9 @@ var org;
                     __extends(ActSoundProp, _super);
                     function ActSoundProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.soundFile = new vishva.SelectType();
+                        _this.soundFile = new SelectType();
                         _this.attachToMesh = false;
-                        _this.volume = new vishva.Range(0.0, 1.0, 1.0, 0.1);
+                        _this.volume = new Range(0.0, 1.0, 1.0, 0.1);
                         return _this;
                     }
                     ActSoundProp.prototype.unmarshall = function (obj) {
@@ -1590,6 +3321,7 @@ var org;
                 var Tags = BABYLON.Tags;
                 var Texture = BABYLON.Texture;
                 var Vector3 = BABYLON.Vector3;
+                var VishvaGUI = org.ssatguru.babylonjs.vishva.gui.VishvaGUI;
                 var WaterMaterial = BABYLON.WaterMaterial;
                 //import VishvaSerialized = org.ssatguru.babylonjs.vishva.VishvaSerialized;
                 /**
@@ -2010,7 +3742,7 @@ var org;
                         var _this = this;
                         this.backfaceCulling(this.scene.materials);
                         if (this.editEnabled) {
-                            this.vishvaGUI = new vishva.VishvaGUI(this);
+                            this.vishvaGUI = new VishvaGUI(this);
                         }
                         else {
                             this.vishvaGUI = null;
@@ -2897,6 +4629,14 @@ var org;
                     Vishva.prototype.getMeshVisibility = function () {
                         return this.meshPicked.visibility;
                     };
+                    Vishva.prototype.setMeshColor = function (hex) {
+                        var sm = this.meshPicked.material;
+                        sm.diffuseColor = Color3.FromHexString(hex);
+                    };
+                    Vishva.prototype.getMeshColor = function () {
+                        var sm = this.meshPicked.material;
+                        return sm.diffuseColor.toHexString();
+                    };
                     //
                     // LIGHTS
                     /*
@@ -3462,7 +5202,7 @@ var org;
                         var i = skyname.lastIndexOf("/");
                         return skyname.substring(i + 1);
                     };
-                    Vishva.prototype.setGroundColor = function (gcolor) {
+                    Vishva.prototype.setGroundColor_old = function (gcolor) {
                         var ground_color = gcolor;
                         var r = ground_color[0] / 255;
                         var g = ground_color[1] / 255;
@@ -3471,7 +5211,15 @@ var org;
                         var gmat = this.ground.material;
                         gmat.diffuseColor = color;
                     };
+                    Vishva.prototype.setGroundColor = function (hex) {
+                        var sm = this.ground.material;
+                        sm.diffuseColor = Color3.FromHexString(hex);
+                    };
                     Vishva.prototype.getGroundColor = function () {
+                        var sm = this.ground.material;
+                        return sm.diffuseColor.toHexString();
+                    };
+                    Vishva.prototype.getGroundColor_old = function () {
                         var ground_color = new Array(3);
                         var gmat = this.ground.material;
                         if (gmat.diffuseColor != null) {
@@ -4314,1651 +6062,6 @@ var org;
                     return LightParm;
                 }());
                 vishva.LightParm = LightParm;
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva_1) {
-                var VishvaGUI = (function () {
-                    function VishvaGUI(vishva) {
-                        var _this = this;
-                        this.local = true;
-                        this.menuBarOn = true;
-                        this.STATE_IND = "state";
-                        /**
-                         * this array will be used store all dialogs whose position needs to be
-                         * reset on window resize
-                         */
-                        this.dialogs = new Array();
-                        //TODO persist this setting
-                        this.enableToolTips = true;
-                        this.propsDiag = null;
-                        this.fixingDragIssue = false;
-                        this.animSelect = null;
-                        /**
-                         * Main Navigation Menu Section
-                         */
-                        this.firstTime = true;
-                        this.addMenuOn = false;
-                        this.vishva = vishva;
-                        this.setSettings();
-                        $(document).tooltip({
-                            open: function (event, ui) {
-                                if (!_this.enableToolTips) {
-                                    ui.tooltip.stop().remove();
-                                }
-                            }
-                        });
-                        //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
-                        $("input").on("focus", function () { _this.vishva.disableKeys(); });
-                        $("input").on("blur", function () { _this.vishva.enableKeys(); });
-                        this.createJPOs();
-                        //need to do add menu before main navigation menu
-                        //the content of add menu is not static
-                        //it changes based on the asset.js file
-                        this.createAddMenu();
-                        //main navigation menu 
-                        this.createNavMenu();
-                        this.createDownloadDiag();
-                        //this.createUploadDiag();
-                        this.createHelpDiag();
-                        this.createAlertDiag();
-                        this.create_sNaDiag();
-                        this.createEditSensDiag();
-                        this.createEditActDiag();
-                        window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
-                    }
-                    VishvaGUI.prototype.createJPOs = function () {
-                        this.centerBottom = {
-                            at: "center bottom",
-                            my: "center bottom",
-                            of: window
-                        };
-                        this.leftCenter = {
-                            at: "left center",
-                            my: "left center",
-                            of: window
-                        };
-                        this.rightCenter = {
-                            at: "right center",
-                            my: "right center",
-                            of: window
-                        };
-                    };
-                    /**
-                     * resposition all dialogs to their original default postions without this,
-                     * a window resize could end up moving some dialogs outside the window and
-                     * thus make them disappear
-                     * the default position of each dialog will be stored in a new property called "jpo"
-                     * this would be created whenever/wherever the dialog is defined
-                     *
-                     * @param evt
-                     */
-                    VishvaGUI.prototype.onWindowResize = function (evt) {
-                        for (var index161 = 0; index161 < this.dialogs.length; index161++) {
-                            var jq = this.dialogs[index161];
-                            {
-                                var jpo = jq["jpo"];
-                                if (jpo != null) {
-                                    jq.dialog("option", "position", jpo);
-                                    var open = jq.dialog("isOpen");
-                                    if (open) {
-                                        jq.dialog("close");
-                                        jq.dialog("open");
-                                    }
-                                }
-                            }
-                        }
-                    };
-                    VishvaGUI.prototype.createAddMenu = function () {
-                        var _this = this;
-                        var assetTypes = Object.keys(this.vishva.assets);
-                        var addMenu = document.getElementById("AddMenu");
-                        addMenu.style.visibility = "visible";
-                        var f = function (e) { return _this.onAddMenuItemClick(e); };
-                        for (var _i = 0, assetTypes_1 = assetTypes; _i < assetTypes_1.length; _i++) {
-                            var assetType = assetTypes_1[_i];
-                            if (assetType === "sounds") {
-                                continue;
-                            }
-                            var li = document.createElement("li");
-                            li.id = "add-" + assetType;
-                            li.innerText = assetType;
-                            li.onclick = f;
-                            addMenu.appendChild(li);
-                        }
-                    };
-                    VishvaGUI.prototype.onAddMenuItemClick = function (e) {
-                        var li = e.target;
-                        var jq = li["diag"];
-                        if (jq == null) {
-                            var assetType = li.innerHTML;
-                            jq = this.createAssetDiag(assetType);
-                            li["diag"] = jq;
-                        }
-                        jq.dialog("open");
-                        return true;
-                    };
-                    VishvaGUI.prototype.createAssetDiag = function (assetType) {
-                        var div = document.createElement("div");
-                        div.id = assetType + "Div";
-                        div.setAttribute("title", assetType);
-                        var table = document.createElement("table");
-                        table.id = assetType + "Tbl";
-                        var items = this.vishva.assets[assetType];
-                        this.updateAssetTable(table, assetType, items);
-                        div.appendChild(table);
-                        document.body.appendChild(div);
-                        var jq = $("#" + div.id);
-                        var dos = {
-                            autoOpen: false,
-                            resizable: true,
-                            position: this.centerBottom,
-                            width: "100%",
-                            height: "auto",
-                            closeText: "",
-                            closeOnEscape: false
-                        };
-                        jq.dialog(dos);
-                        jq["jpo"] = this.centerBottom;
-                        this.dialogs.push(jq);
-                        return jq;
-                    };
-                    VishvaGUI.prototype.updateAssetTable = function (tbl, assetType, items) {
-                        var _this = this;
-                        if (tbl.rows.length > 0) {
-                            return;
-                        }
-                        var f = function (e) { return _this.onAssetImgClick(e); };
-                        var row = tbl.insertRow();
-                        for (var index163 = 0; index163 < items.length; index163++) {
-                            var item = items[index163];
-                            {
-                                var img = document.createElement("img");
-                                img.id = item;
-                                img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                                img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
-                                img.className = assetType;
-                                img.onclick = f;
-                                var cell = row.insertCell();
-                                cell.appendChild(img);
-                            }
-                        }
-                        var row2 = tbl.insertRow();
-                        for (var index164 = 0; index164 < items.length; index164++) {
-                            var item = items[index164];
-                            {
-                                var cell = row2.insertCell();
-                                cell.innerText = item;
-                            }
-                        }
-                    };
-                    VishvaGUI.prototype.onAssetImgClick = function (e) {
-                        var i = e.target;
-                        if (i.className === "skyboxes") {
-                            this.vishva.setSky(i.id);
-                        }
-                        else if (i.className === "primitives") {
-                            this.vishva.addPrim(i.id);
-                        }
-                        else if (i.className === "water") {
-                            this.vishva.createWater();
-                        }
-                        else {
-                            this.vishva.loadAsset(i.className, i.id);
-                        }
-                        return true;
-                    };
-                    /*
-                     * Create Environment Dialog
-                     */
-                    VishvaGUI.prototype.createEnvDiag = function () {
-                        var _this = this;
-                        var sunPos = $("#sunPos");
-                        var light = $("#light");
-                        var shade = $("#shade");
-                        var fog = $("#fog");
-                        var fov = $("#fov");
-                        sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
-                        light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
-                        shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
-                        fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
-                        fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
-                        var envSnow = document.getElementById("envSnow");
-                        envSnow.onclick = function (e) {
-                            _this.vishva.toggleSnow();
-                        };
-                        var envRain = document.getElementById("envRain");
-                        envRain.onclick = function (e) {
-                            //this.showAlertDiag("Sorry. To be implemented");
-                            _this.vishva.toggleRain();
-                        };
-                        var skyButton = document.getElementById("skyButton");
-                        skyButton.onclick = function (e) {
-                            var foo = document.getElementById("add-skyboxes");
-                            foo.click();
-                            return true;
-                        };
-                        var trnButton = document.getElementById("trnButton");
-                        trnButton.onclick = function (e) {
-                            _this.showAlertDiag("Sorry. To be implemneted soon");
-                            return true;
-                        };
-                        var colorEle = document.getElementById("color-picker");
-                        var cp = new ColorPicker(colorEle, function (hex, hsv, rgb) { return _this.colorPickerHandler(hex, hsv, rgb); });
-                        var setRGB = cp["setRgb"];
-                        var color = this.vishva.getGroundColor();
-                        if (color != null) {
-                            var rgb = new RGB();
-                            rgb.r = color[0];
-                            rgb.g = color[1];
-                            rgb.b = color[2];
-                            cp.setRgb(rgb);
-                        }
-                        this.envDiag = $("#envDiv");
-                        var dos = {
-                            autoOpen: false,
-                            resizable: false,
-                            position: this.rightCenter,
-                            minWidth: 350,
-                            height: "auto",
-                            closeText: "",
-                            closeOnEscape: false
-                        };
-                        this.envDiag.dialog(dos);
-                        this.envDiag["jpo"] = this.rightCenter;
-                        this.dialogs.push(this.envDiag);
-                    };
-                    VishvaGUI.prototype.createSettingDiag = function () {
-                        var _this = this;
-                        this.settingDiag = $("#settingDiag");
-                        this.camCol = $("#camCol");
-                        this.autoEditMenu = $("#autoEditMenu");
-                        this.showToolTips = $("#showToolTips");
-                        this.showInvis = $("#showInvis");
-                        this.showDisa = $("#showDisa");
-                        this.snapper = $("#snapper");
-                        var dos = {
-                            autoOpen: false,
-                            resizable: false,
-                            position: this.rightCenter,
-                            minWidth: 350,
-                            height: "auto",
-                            closeText: "",
-                            closeOnEscape: false
-                        };
-                        this.settingDiag.dialog(dos);
-                        this.settingDiag["jpo"] = this.rightCenter;
-                        this.dialogs.push(this.settingDiag);
-                        var dboSave = {};
-                        dboSave.text = "save";
-                        dboSave.click = function (e) {
-                            _this.vishva.enableCameraCollision(_this.camCol.prop("checked"));
-                            _this.vishva.enableAutoEditMenu(_this.autoEditMenu.prop("checked"));
-                            _this.enableToolTips = _this.showToolTips.prop("checked");
-                            if (_this.showInvis.prop("checked")) {
-                                _this.vishva.showAllInvisibles();
-                            }
-                            else {
-                                _this.vishva.hideAllInvisibles();
-                            }
-                            if (_this.showDisa.prop("checked")) {
-                                _this.vishva.showAllDisabled();
-                            }
-                            else {
-                                _this.vishva.hideAllDisabled();
-                            }
-                            var err = _this.vishva.snapper(_this.snapper.prop("checked"));
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                                return false;
-                            }
-                            _this.settingDiag.dialog("close");
-                            //this.showAlertDiag("Saved");
-                            return true;
-                        };
-                        var dboCancel = {};
-                        dboCancel.text = "Cancel";
-                        dboCancel.click = function (e) {
-                            _this.settingDiag.dialog("close");
-                            return true;
-                        };
-                        var dbos = [dboSave, dboCancel];
-                        this.settingDiag.dialog("option", "buttons", dbos);
-                    };
-                    VishvaGUI.prototype.updateSettings = function () {
-                        this.camCol.prop("checked", this.vishva.isCameraCollisionOn());
-                        this.autoEditMenu.prop("checked", this.vishva.isAutoEditMenuOn());
-                        this.showToolTips.prop("checked", this.enableToolTips);
-                    };
-                    VishvaGUI.prototype.createDownloadDiag = function () {
-                        this.downloadLink = document.getElementById("downloadLink");
-                        this.downloadDialog = $("#saveDiv");
-                        this.downloadDialog.dialog();
-                        this.downloadDialog.dialog("close");
-                    };
-                    VishvaGUI.prototype.createUploadDiag = function () {
-                        var _this = this;
-                        var loadFileInput = document.getElementById("loadFileInput");
-                        var loadFileOk = document.getElementById("loadFileOk");
-                        loadFileOk.onclick = (function (loadFileInput) {
-                            return function (e) {
-                                var fl = loadFileInput.files;
-                                if (fl.length === 0) {
-                                    alert("no file slected");
-                                    return null;
-                                }
-                                var file = null;
-                                for (var index165 = 0; index165 < fl.length; index165++) {
-                                    var f = fl[index165];
-                                    {
-                                        file = f;
-                                    }
-                                }
-                                _this.vishva.loadAssetFile(file);
-                                _this.loadDialog.dialog("close");
-                                return true;
-                            };
-                        })(loadFileInput);
-                        this.loadDialog = $("#loadDiv");
-                        this.loadDialog.dialog();
-                        this.loadDialog.dialog("close");
-                    };
-                    VishvaGUI.prototype.createHelpDiag = function () {
-                        this.helpDiag = $("#helpDiv");
-                        var dos = {
-                            autoOpen: false,
-                            resizable: false,
-                            width: 500,
-                            closeOnEscape: false,
-                            closeText: ""
-                        };
-                        this.helpDiag.dialog(dos);
-                    };
-                    /*
-                     * A dialog box to show the list of available sensors
-                     * actuators, each in seperate tabs
-                     */
-                    VishvaGUI.prototype.create_sNaDiag = function () {
-                        var _this = this;
-                        //tabs
-                        var sNaDetails = $("#sNaDetails");
-                        sNaDetails.tabs();
-                        //dialog box
-                        this.sNaDialog = $("#sNaDiag");
-                        var dos = {};
-                        dos.autoOpen = false;
-                        dos.modal = false;
-                        dos.resizable = false;
-                        dos.width = "auto";
-                        dos.height = "auto";
-                        dos.title = "Sensors and Actuators";
-                        dos.closeOnEscape = false;
-                        dos.closeText = "";
-                        dos.close = function (e, ui) {
-                            _this.vishva.switchDisabled = false;
-                        };
-                        dos.dragStop = function (e, ui) {
-                            /* required as jquery dialog's size does not re-adjust to content after it has been dragged
-                             Thus if the size of sensors tab is different from the size of actuators tab  then the content of
-                             actuator tab is cutoff if its size is greater
-                             so we close and open for it to recalculate the sizes.
-                             */
-                            _this.sNaDialog.dialog("close");
-                            _this.sNaDialog.dialog("open");
-                        };
-                        this.sNaDialog.dialog(dos);
-                        this.sensSel = document.getElementById("sensSel");
-                        this.actSel = document.getElementById("actSel");
-                        var sensors = this.vishva.getSensorList();
-                        var actuators = this.vishva.getActuatorList();
-                        for (var _i = 0, sensors_1 = sensors; _i < sensors_1.length; _i++) {
-                            var sensor = sensors_1[_i];
-                            var opt = document.createElement("option");
-                            opt.value = sensor;
-                            opt.innerHTML = sensor;
-                            this.sensSel.add(opt);
-                        }
-                        for (var _a = 0, actuators_1 = actuators; _a < actuators_1.length; _a++) {
-                            var actuator = actuators_1[_a];
-                            var opt = document.createElement("option");
-                            opt.value = actuator;
-                            opt.innerHTML = actuator;
-                            this.actSel.add(opt);
-                        }
-                        this.sensTbl = document.getElementById("sensTbl");
-                        this.actTbl = document.getElementById("actTbl");
-                    };
-                    VishvaGUI.prototype.show_sNaDiag = function () {
-                        var _this = this;
-                        var sens = this.vishva.getSensors();
-                        if (sens == null) {
-                            this.showAlertDiag("no mesh selected");
-                            return;
-                        }
-                        var acts = this.vishva.getActuators();
-                        if (acts == null) {
-                            this.showAlertDiag("no mesh selected");
-                            return;
-                        }
-                        this.vishva.switchDisabled = true;
-                        this.updateSensActTbl(sens, this.sensTbl);
-                        this.updateSensActTbl(acts, this.actTbl);
-                        var addSens = document.getElementById("addSens");
-                        addSens.onclick = function (e) {
-                            var s = _this.sensSel.item(_this.sensSel.selectedIndex);
-                            var sensor = s.value;
-                            _this.vishva.addSensorbyName(sensor);
-                            _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
-                            _this.sNaDialog.dialog("close");
-                            _this.sNaDialog.dialog("open");
-                            return true;
-                        };
-                        var addAct = document.getElementById("addAct");
-                        addAct.onclick = function (e) {
-                            var a = _this.actSel.item(_this.actSel.selectedIndex);
-                            var actuator = a.value;
-                            _this.vishva.addActuaorByName(actuator);
-                            _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
-                            _this.sNaDialog.dialog("close");
-                            _this.sNaDialog.dialog("open");
-                            return true;
-                        };
-                        this.sNaDialog.dialog("open");
-                    };
-                    /*
-                     * fill up the sensor and actuator tables
-                     * with a list of sensors and actuators
-                     */
-                    VishvaGUI.prototype.updateSensActTbl = function (sensAct, tbl) {
-                        var _this = this;
-                        var l = tbl.rows.length;
-                        for (var i = l - 1; i > 0; i--) {
-                            tbl.deleteRow(i);
-                        }
-                        l = sensAct.length;
-                        for (var i = 0; i < l; i++) {
-                            var row = tbl.insertRow();
-                            var cell = row.insertCell();
-                            cell.innerHTML = sensAct[i].getName();
-                            cell = row.insertCell();
-                            cell.innerHTML = sensAct[i].getProperties().signalId;
-                            cell = row.insertCell();
-                            var editBut = document.createElement("BUTTON");
-                            editBut.innerHTML = "edit";
-                            var jq = $(editBut);
-                            jq.button();
-                            var d = i;
-                            editBut.id = d.toString();
-                            editBut["sa"] = sensAct[i];
-                            cell.appendChild(editBut);
-                            editBut.onclick = function (e) {
-                                var el = e.currentTarget;
-                                var sa = el["sa"];
-                                if (sa.getType() === "SENSOR") {
-                                    _this.showEditSensDiag(sa);
-                                }
-                                else {
-                                    _this.showEditActDiag(sa);
-                                }
-                                return true;
-                            };
-                            cell = row.insertCell();
-                            var delBut = document.createElement("BUTTON");
-                            delBut.innerHTML = "del";
-                            var jq2 = $(delBut);
-                            jq2.button();
-                            delBut.id = d.toString();
-                            delBut["row"] = row;
-                            delBut["sa"] = sensAct[i];
-                            cell.appendChild(delBut);
-                            delBut.onclick = function (e) {
-                                var el = e.currentTarget;
-                                var r = el["row"];
-                                tbl.deleteRow(r.rowIndex);
-                                _this.vishva.removeSensorActuator(el["sa"]);
-                                return true;
-                            };
-                        }
-                    };
-                    VishvaGUI.prototype.createEditSensDiag = function () {
-                        var editSensDiag = $("#editSensDiag");
-                        var dos = {};
-                        dos.autoOpen = false;
-                        dos.modal = true;
-                        dos.resizable = false;
-                        dos.width = "auto";
-                        dos.title = "Edit Sensor";
-                        dos.closeText = "";
-                        dos.closeOnEscape = false;
-                        editSensDiag.dialog(dos);
-                    };
-                    /*
-                    * show a dialog box to edit sensor properties
-                    * dynamically creates an appropriate form.
-                    *
-                    */
-                    VishvaGUI.prototype.showEditSensDiag = function (sensor) {
-                        var _this = this;
-                        this.vishva.disableKeys();
-                        var sensNameEle = document.getElementById("editSensDiag.sensName");
-                        sensNameEle.innerHTML = sensor.getName();
-                        var editSensDiag = $("#editSensDiag");
-                        editSensDiag.dialog("open");
-                        var parmDiv = document.getElementById("editSensDiag.parms");
-                        var node = parmDiv.firstChild;
-                        if (node != null)
-                            parmDiv.removeChild(node);
-                        console.log(sensor.getProperties());
-                        var tbl = this.formCreate(sensor.getProperties(), parmDiv.id);
-                        parmDiv.appendChild(tbl);
-                        var dbo = {};
-                        dbo.text = "save";
-                        dbo.click = function (e) {
-                            _this.formRead(sensor.getProperties(), parmDiv.id);
-                            sensor.processUpdateGeneric();
-                            _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
-                            editSensDiag.dialog("close");
-                            _this.vishva.enableKeys();
-                            return true;
-                        };
-                        var dbos = [dbo];
-                        editSensDiag.dialog("option", "buttons", dbos);
-                    };
-                    VishvaGUI.prototype.createEditActDiag = function () {
-                        var editActDiag = $("#editActDiag");
-                        var dos = {};
-                        dos.autoOpen = false;
-                        dos.modal = true;
-                        dos.resizable = false;
-                        dos.width = "auto";
-                        dos.title = "Edit Actuator";
-                        dos.closeText = "";
-                        dos.closeOnEscape = false;
-                        editActDiag.dialog(dos);
-                    };
-                    /*
-                     * show a dialog box to edit actuator properties
-                     * dynamically creates an appropriate form.
-                     *
-                     */
-                    VishvaGUI.prototype.showEditActDiag = function (actuator) {
-                        var _this = this;
-                        this.vishva.disableKeys();
-                        var actNameEle = document.getElementById("editActDiag.actName");
-                        actNameEle.innerHTML = actuator.getName();
-                        var editActDiag = $("#editActDiag");
-                        editActDiag.dialog("open");
-                        var parmDiv = document.getElementById("editActDiag.parms");
-                        var node = parmDiv.firstChild;
-                        if (node != null) {
-                            parmDiv.removeChild(node);
-                        }
-                        if (actuator.getName() === "Sound") {
-                            var prop = actuator.getProperties();
-                            prop.soundFile.values = this.vishva.getSoundFiles();
-                        }
-                        var tbl = this.formCreate(actuator.getProperties(), parmDiv.id);
-                        parmDiv.appendChild(tbl);
-                        var dbo = {};
-                        dbo.text = "save";
-                        dbo.click = function (e) {
-                            _this.formRead(actuator.getProperties(), parmDiv.id);
-                            actuator.processUpdateGeneric();
-                            _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
-                            editActDiag.dialog("close");
-                            _this.vishva.enableKeys();
-                            return true;
-                        };
-                        var dbos = [dbo];
-                        editActDiag.dialog("option", "buttons", dbos);
-                    };
-                    /*
-                     * auto generate forms based on properties
-                     */
-                    VishvaGUI.prototype.formCreate = function (snaP, idPrefix) {
-                        idPrefix = idPrefix + ".";
-                        var tbl = document.createElement("table");
-                        var keys = Object.keys(snaP);
-                        for (var index168 = 0; index168 < keys.length; index168++) {
-                            var key = keys[index168];
-                            {
-                                if (key.split("_")[0] === this.STATE_IND)
-                                    continue;
-                                var row = tbl.insertRow();
-                                var cell = row.insertCell();
-                                cell.innerHTML = key;
-                                cell = row.insertCell();
-                                var t = typeof snaP[key];
-                                if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
-                                    var keyValue = snaP[key];
-                                    var options = keyValue.values;
-                                    var sel = document.createElement("select");
-                                    sel.id = idPrefix + key;
-                                    for (var index169 = 0; index169 < options.length; index169++) {
-                                        var option = options[index169];
-                                        {
-                                            var opt = document.createElement("option");
-                                            if (option === keyValue.value) {
-                                                opt.selected = true;
-                                            }
-                                            opt.innerText = option;
-                                            sel.add(opt);
-                                        }
-                                    }
-                                    cell.appendChild(sel);
-                                }
-                                else {
-                                    var inp = document.createElement("input");
-                                    inp.id = idPrefix + key;
-                                    inp.className = "ui-widget-content ui-corner-all";
-                                    inp.value = snaP[key];
-                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
-                                        var r = snaP[key];
-                                        inp.type = "range";
-                                        inp.max = new Number(r.max).toString();
-                                        inp.min = new Number(r.min).toString();
-                                        inp.step = new Number(r.step).toString();
-                                        inp.value = new Number(r.value).toString();
-                                    }
-                                    else if ((t === "string") || (t === "number")) {
-                                        inp.type = "text";
-                                        inp.value = snaP[key];
-                                    }
-                                    else if (t === "boolean") {
-                                        var check = snaP[key];
-                                        inp.type = "checkbox";
-                                        if (check)
-                                            inp.setAttribute("checked", "true");
-                                    }
-                                    cell.appendChild(inp);
-                                }
-                            }
-                        }
-                        return tbl;
-                    };
-                    VishvaGUI.prototype.formRead = function (snaP, idPrefix) {
-                        idPrefix = idPrefix + ".";
-                        var keys = Object.keys(snaP);
-                        for (var index170 = 0; index170 < keys.length; index170++) {
-                            var key = keys[index170];
-                            {
-                                if (key.split("_")[0] === this.STATE_IND)
-                                    continue;
-                                var t = typeof snaP[key];
-                                if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
-                                    var s = snaP[key];
-                                    var sel = document.getElementById(idPrefix + key);
-                                    s.value = sel.value;
-                                }
-                                else {
-                                    var ie = document.getElementById(idPrefix + key);
-                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
-                                        var r = snaP[key];
-                                        r.value = parseFloat(ie.value);
-                                    }
-                                    else if ((t === "string") || (t === "number")) {
-                                        if (t === "number") {
-                                            var v = parseFloat(ie.value);
-                                            if (isNaN(v))
-                                                snaP[key] = 0;
-                                            else
-                                                snaP[key] = v;
-                                        }
-                                        else {
-                                            snaP[key] = ie.value;
-                                        }
-                                    }
-                                    else if (t === "boolean") {
-                                        snaP[key] = ie.checked;
-                                    }
-                                }
-                            }
-                        }
-                    };
-                    /**
-                     * Mesh properties section
-                     */
-                    VishvaGUI.prototype.showPropDiag = function () {
-                        if (this.propsDiag != null) {
-                            if (this.propsDiag.dialog("isOpen"))
-                                return true;
-                        }
-                        if (!this.vishva.anyMeshSelected()) {
-                            this.showAlertDiag("no mesh selected");
-                            return;
-                        }
-                        if (this.propsDiag == null) {
-                            this.createPropsDiag();
-                        }
-                        this.propsDiag.dialog("open");
-                        return true;
-                    };
-                    VishvaGUI.prototype.closePropDiag = function () {
-                        this.propsDiag.dialog("close");
-                    };
-                    VishvaGUI.prototype.createPropsDiag = function () {
-                        var _this = this;
-                        //property tabs
-                        var propsAcc = $("#propsAcc");
-                        //            propsTabs.tabs({
-                        //                //everytime we switch tabs, close open to re-adjust size
-                        //                activate: (e, ui) => {
-                        //                    //this.fixingDragIssue = true;
-                        //                    //this.propsDiag.dialog("close");
-                        //                    //this.propsDiag.dialog("open");
-                        //                },
-                        //
-                        //                beforeActivate: (e, ui) => {
-                        //                    this.vishva.switchDisabled = false;
-                        //                    this.vishva.enableKeys();
-                        //                    this.refreshTab(ui.newTab.index());
-                        //                }
-                        //            });
-                        //            
-                        propsAcc.accordion({
-                            animate: 100,
-                            heightStyle: "content",
-                            collapsible: true,
-                            beforeActivate: function (e, ui) {
-                                _this.vishva.switchDisabled = false;
-                                //TODO remove this.vishva.enableKeys();
-                                _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
-                            }
-                        });
-                        //property dialog box
-                        this.propsDiag = $("#propsDiag");
-                        var dos = {
-                            autoOpen: false,
-                            resizable: false,
-                            position: this.leftCenter,
-                            minWidth: 420,
-                            width: 420,
-                            // height: "auto",
-                            height: 650,
-                            closeOnEscape: false,
-                            //a) on open set the values of the fields in the active panel.
-                            //b) also if we switched from another mesh vishav will close open
-                            //by calling refreshPropsDiag()
-                            //c) donot bother refreshing values if we are just restarting
-                            //dialog for height and width re-sizing after drag
-                            open: function (e, ui) {
-                                if (!_this.fixingDragIssue) {
-                                    // refresh the active tab
-                                    var activePanel = propsAcc.accordion("option", "active");
-                                    _this.refreshPanel(activePanel);
-                                }
-                                else {
-                                    _this.fixingDragIssue = false;
-                                }
-                            },
-                            closeText: "",
-                            close: function (e, ui) {
-                                _this.vishva.switchDisabled = false;
-                                //TODO remove this.vishva.enableKeys();
-                            },
-                            //after drag the dialog box doesnot resize
-                            //force resize by closing and opening
-                            dragStop: function (e, ui) {
-                                _this.fixingDragIssue = true;
-                                _this.propsDiag.dialog("close");
-                                _this.propsDiag.dialog("open");
-                            }
-                        };
-                        this.propsDiag.dialog(dos);
-                        this.propsDiag["jpo"] = this.leftCenter;
-                        this.dialogs.push(this.propsDiag);
-                    };
-                    /*
-                     * also called by vishva when editcontrol
-                     * is removed from mesh
-                     */
-                    VishvaGUI.prototype.closePropsDiag = function () {
-                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
-                            return;
-                        this.propsDiag.dialog("close");
-                    };
-                    /*
-                     * called by vishva when editcontrol
-                     * is switched from another mesh
-                     */
-                    VishvaGUI.prototype.refreshPropsDiag = function () {
-                        if ((this.propsDiag === undefined) || (this.propsDiag === null))
-                            return;
-                        if (this.propsDiag.dialog("isOpen") === true) {
-                            this.propsDiag.dialog("close");
-                            this.propsDiag.dialog("open");
-                        }
-                    };
-                    VishvaGUI.prototype.getPanelIndex = function (ui) {
-                        if (ui.text() == "General")
-                            return 0 /* General */;
-                        if (ui.text() == "Physics")
-                            return 1 /* Physics */;
-                        if (ui.text() == "Material")
-                            return 2 /* Material */;
-                        if (ui.text() == "Lights")
-                            return 3 /* Lights */;
-                        if (ui.text() == "Animations")
-                            return 4 /* Animations */;
-                    };
-                    VishvaGUI.prototype.refreshPanel = function (panelIndex) {
-                        if (panelIndex === 0 /* General */) {
-                            this.updateGeneral();
-                        }
-                        else if (panelIndex === 3 /* Lights */) {
-                            this.updateLight();
-                        }
-                        else if (panelIndex === 4 /* Animations */) {
-                            this.updateAnimations();
-                        }
-                        else if (panelIndex === 1 /* Physics */) {
-                            this.updatePhysics();
-                        }
-                        else if (panelIndex === 2 /* Material */) {
-                            this.updateMat();
-                        }
-                    };
-                    VishvaGUI.prototype.initAnimUI = function () {
-                        var _this = this;
-                        var animSkelView = document.getElementById("animSkelView");
-                        var animRest = document.getElementById("animRest");
-                        var animRangeName = document.getElementById("animRangeName");
-                        var animRangeStart = document.getElementById("animRangeStart");
-                        var animRangeEnd = document.getElementById("animRangeEnd");
-                        var animRangeMake = document.getElementById("animRangeMake");
-                        //enable/disable skeleton view
-                        animSkelView.onclick = function (e) {
-                            _this.vishva.toggleSkelView();
-                        };
-                        //show rest pose
-                        animRest.onclick = function (e) {
-                            _this.vishva.animRest();
-                        };
-                        //create
-                        animRangeMake.onclick = function (e) {
-                            var name = animRangeName.value;
-                            var ars = parseInt(animRangeStart.value);
-                            if (isNaN(ars)) {
-                                _this.showAlertDiag("from frame is not a number");
-                            }
-                            var are = parseInt(animRangeEnd.value);
-                            if (isNaN(are)) {
-                                _this.showAlertDiag("to frame is not a number");
-                            }
-                            _this.vishva.createAnimRange(name, ars, are);
-                            _this.refreshAnimSelect();
-                        };
-                        //select
-                        this.animSelect = document.getElementById("animList");
-                        this.animSelect.onchange = function (e) {
-                            var animName = _this.animSelect.value;
-                            if (animName != null) {
-                                var range = _this.skel.getAnimationRange(animName);
-                                document.getElementById("animFrom").innerText = new Number(range.from).toString();
-                                document.getElementById("animTo").innerText = new Number(range.to).toString();
-                            }
-                            return true;
-                        };
-                        //play
-                        this.animRate = document.getElementById("animRate");
-                        this.animLoop = document.getElementById("animLoop");
-                        document.getElementById("playAnim").onclick = function (e) {
-                            if (_this.skel == null)
-                                return true;
-                            var animName = _this.animSelect.value;
-                            var rate = _this.animRate.value;
-                            if (animName != null) {
-                                _this.vishva.playAnimation(animName, rate, _this.animLoop.checked);
-                            }
-                            return true;
-                        };
-                        document.getElementById("stopAnim").onclick = function (e) {
-                            if (_this.skel == null)
-                                return true;
-                            _this.vishva.stopAnimation();
-                            return true;
-                        };
-                    };
-                    VishvaGUI.prototype.createAnimDiag = function () {
-                        var _this = this;
-                        this.initAnimUI();
-                        this.meshAnimDiag = $("#meshAnimDiag");
-                        var dos = {};
-                        dos.autoOpen = false;
-                        dos.modal = false;
-                        dos.resizable = false;
-                        dos.width = "auto";
-                        dos.height = "auto";
-                        dos.closeOnEscape = false;
-                        dos.closeText = "";
-                        dos.close = function (e, ui) {
-                            _this.vishva.switchDisabled = false;
-                        };
-                        this.meshAnimDiag.dialog(dos);
-                    };
-                    VishvaGUI.prototype.updateAnimations = function () {
-                        this.vishva.switchDisabled = true;
-                        this.initAnimUI();
-                        this.skel = this.vishva.getSkeleton();
-                        var skelName;
-                        if (this.skel == null) {
-                            document.getElementById("skelName").innerText = "no skeleton";
-                            return;
-                        }
-                        else {
-                            skelName = this.skel.name;
-                            if (skelName.trim() === "")
-                                skelName = "no name";
-                        }
-                        document.getElementById("skelName").innerText = skelName;
-                        this.refreshAnimSelect();
-                        //            var childs: HTMLCollection = this.animSelect.children;
-                        //            var l: number = (<number>childs.length | 0);
-                        //            for (var i: number = l - 1; i >= 0; i--) {
-                        //                childs[i].remove();
-                        //            }
-                        //            if (skelName != null) {
-                        //                var range: AnimationRange[] = this.vishva.getAnimationRanges();
-                        //                var animOpt: HTMLOptionElement;
-                        //                for (var index171 = 0; index171 < range.length; index171++) {
-                        //                    var ar = range[index171];
-                        //                    {
-                        //                        animOpt = document.createElement("option");
-                        //                        animOpt.value = ar.name;
-                        //                        animOpt.innerText = ar.name;
-                        //                        this.animSelect.appendChild(animOpt);
-                        //                    }
-                        //                }
-                        //                if (range[0] != null) {
-                        //                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
-                        //                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
-                        //                }
-                        //            }
-                    };
-                    VishvaGUI.prototype.refreshAnimSelect = function () {
-                        var childs = this.animSelect.children;
-                        var l = (childs.length | 0);
-                        for (var i = l - 1; i >= 0; i--) {
-                            childs[i].remove();
-                        }
-                        var range = this.vishva.getAnimationRanges();
-                        if (range === null)
-                            return;
-                        var animOpt;
-                        for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
-                            var ar = range_1[_i];
-                            animOpt = document.createElement("option");
-                            animOpt.value = ar.name;
-                            animOpt.innerText = ar.name;
-                            this.animSelect.appendChild(animOpt);
-                        }
-                        if (range[0] != null) {
-                            document.getElementById("animFrom").innerText = new Number(range[0].from).toString();
-                            document.getElementById("animTo").innerText = new Number(range[0].to).toString();
-                        }
-                    };
-                    VishvaGUI.prototype.toString = function (d) {
-                        return new Number(d).toFixed(2).toString();
-                    };
-                    VishvaGUI.prototype.initGeneral = function () {
-                        var _this = this;
-                        //name
-                        this.genName = document.getElementById("genName");
-                        //TODO remove
-                        //            this.genName.onfocus = () => {
-                        //                this.vishva.disableKeys();
-                        //            }
-                        //            this.genName.onblur = () => {
-                        //                this.vishva.enableKeys();
-                        //            }
-                        this.genName.onchange = function () {
-                            _this.vishva.setName(_this.genName.value);
-                        };
-                        //space
-                        this.genSpace = document.getElementById("genSpace");
-                        this.genSpace.onchange = function () {
-                            var err = _this.vishva.setSpace(_this.genSpace.value);
-                            if (err !== null) {
-                                _this.showAlertDiag(err);
-                                _this.genSpace.value = _this.vishva.getSpace();
-                            }
-                        };
-                        //transforms
-                        if (this.transRefresh === undefined) {
-                            this.transRefresh = document.getElementById("transRefresh");
-                            this.transRefresh.onclick = function () {
-                                _this.updateTransform();
-                                return false;
-                            };
-                        }
-                        if (this.transBake === undefined) {
-                            this.transBake = document.getElementById("transBake");
-                            this.transBake.onclick = function () {
-                                _this.vishva.bakeTransforms();
-                                _this.updateTransform();
-                                return false;
-                            };
-                        }
-                        //edit controls
-                        this.genOperTrans = document.getElementById("operTrans");
-                        this.genOperRot = document.getElementById("operRot");
-                        this.genOperScale = document.getElementById("operScale");
-                        this.genOperFocus = document.getElementById("operFocus");
-                        this.genOperTrans.onclick = function () {
-                            _this.vishva.setTransOn();
-                        };
-                        this.genOperRot.onclick = function () {
-                            _this.vishva.setRotOn();
-                        };
-                        this.genOperScale.onclick = function () {
-                            _this.vishva.setScaleOn();
-                            if (!_this.vishva.isSpaceLocal()) {
-                                _this.showAlertDiag("note that scaling doesnot work with global axis");
-                            }
-                        };
-                        this.genOperFocus.onclick = function () {
-                            _this.vishva.setFocusOnMesh();
-                        };
-                        //Snap CheckBox
-                        this.genSnapTrans = document.getElementById("snapTrans");
-                        this.genSnapTrans.onchange = function () {
-                            var err = _this.vishva.snapTrans(_this.genSnapTrans.checked);
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                                _this.genSnapTrans.checked = false;
-                            }
-                        };
-                        this.genSnapRot = document.getElementById("snapRot");
-                        this.genSnapRot.onchange = function () {
-                            var err = _this.vishva.snapRot(_this.genSnapRot.checked);
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                                _this.genSnapRot.checked = false;
-                            }
-                        };
-                        this.genSnapScale = document.getElementById("snapScale");
-                        this.genSnapScale.onchange = function () {
-                            var err = _this.vishva.snapScale(_this.genSnapScale.checked);
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                                _this.genSnapScale.checked = false;
-                            }
-                        };
-                        //Snap Values
-                        this.genSnapTransValue = document.getElementById("snapTransValue");
-                        this.genSnapTransValue.onchange = function () {
-                            _this.vishva.setSnapTransValue(Number(_this.genSnapTransValue.value));
-                        };
-                        this.genSnapRotValue = document.getElementById("snapRotValue");
-                        this.genSnapRotValue.onchange = function () {
-                            _this.vishva.setSnapRotValue(Number(_this.genSnapRotValue.value));
-                        };
-                        this.genSnapScaleValue = document.getElementById("snapScaleValue");
-                        this.genSnapScaleValue.onchange = function () {
-                            _this.vishva.setSnapScaleValue(Number(_this.genSnapScaleValue.value));
-                        };
-                        //
-                        this.genDisable = document.getElementById("genDisable");
-                        this.genDisable.onchange = function () {
-                            _this.vishva.disableIt(_this.genDisable.checked);
-                        };
-                        this.genColl = document.getElementById("genColl");
-                        this.genColl.onchange = function () {
-                            _this.vishva.enableCollision(_this.genColl.checked);
-                        };
-                        this.genVisi = document.getElementById("genVisi");
-                        this.genVisi.onchange = function () {
-                            _this.vishva.makeVisibile(_this.genVisi.checked);
-                        };
-                        var undo = document.getElementById("undo");
-                        var redo = document.getElementById("redo");
-                        var parentMesh = document.getElementById("parentMesh");
-                        var removeParent = document.getElementById("removeParent");
-                        var removeChildren = document.getElementById("removeChildren");
-                        var cloneMesh = document.getElementById("cloneMesh");
-                        var instMesh = document.getElementById("instMesh");
-                        var mergeMesh = document.getElementById("mergeMesh");
-                        var subMesh = document.getElementById("subMesh");
-                        var interMesh = document.getElementById("interMesh");
-                        var downAsset = document.getElementById("downMesh");
-                        var delMesh = document.getElementById("delMesh");
-                        var swAv = document.getElementById("swAv");
-                        var swGnd = document.getElementById("swGnd");
-                        var sNa = document.getElementById("sNa");
-                        undo.onclick = function (e) {
-                            _this.vishva.undo();
-                            return false;
-                        };
-                        redo.onclick = function (e) {
-                            _this.vishva.redo();
-                            return false;
-                        };
-                        parentMesh.onclick = function (e) {
-                            var err = _this.vishva.makeParent();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        removeParent.onclick = function (e) {
-                            var err = _this.vishva.removeParent();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        removeChildren.onclick = function (e) {
-                            var err = _this.vishva.removeChildren();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        cloneMesh.onclick = function (e) {
-                            var err = _this.vishva.clone_mesh();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        instMesh.onclick = function (e) {
-                            var err = _this.vishva.instance_mesh();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        mergeMesh.onclick = function (e) {
-                            var err = _this.vishva.mergeMeshes();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        subMesh.onclick = function (e) {
-                            var err = _this.vishva.csgOperation("subtract");
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        interMesh.onclick = function (e) {
-                            var err = _this.vishva.csgOperation("intersect");
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        downAsset.onclick = function (e) {
-                            var downloadURL = _this.vishva.saveAsset();
-                            if (downloadURL == null) {
-                                _this.showAlertDiag("No Mesh Selected");
-                                return true;
-                            }
-                            _this.downloadLink.href = downloadURL;
-                            var env = $("#saveDiv");
-                            env.dialog("open");
-                            return false;
-                        };
-                        delMesh.onclick = function (e) {
-                            var err = _this.vishva.delete_mesh();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return false;
-                        };
-                        swAv.onclick = function (e) {
-                            var err = _this.vishva.switchAvatar();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return true;
-                        };
-                        swGnd.onclick = function (e) {
-                            var err = _this.vishva.switchGround();
-                            if (err != null) {
-                                _this.showAlertDiag(err);
-                            }
-                            return true;
-                        };
-                        sNa.onclick = function (e) {
-                            _this.show_sNaDiag();
-                            return true;
-                        };
-                    };
-                    VishvaGUI.prototype.updateGeneral = function () {
-                        if (this.genName === undefined)
-                            this.initGeneral();
-                        this.genName.value = this.vishva.getName();
-                        this.genSpace.value = this.vishva.getSpace();
-                        this.updateTransform();
-                        this.genDisable.checked = this.vishva.isDisabled();
-                        this.genColl.checked = this.vishva.isCollideable();
-                        this.genVisi.checked = this.vishva.isVisible();
-                    };
-                    VishvaGUI.prototype.updateTransform = function () {
-                        var loc = this.vishva.getLocation();
-                        var rot = this.vishva.getRotation();
-                        var scl = this.vishva.getScale();
-                        document.getElementById("loc.x").value = this.toString(loc.x);
-                        document.getElementById("loc.y").value = this.toString(loc.y);
-                        document.getElementById("loc.z").value = this.toString(loc.z);
-                        document.getElementById("rot.x").value = this.toString(rot.x);
-                        document.getElementById("rot.y").value = this.toString(rot.y);
-                        document.getElementById("rot.z").value = this.toString(rot.z);
-                        document.getElementById("scl.x").value = this.toString(scl.x);
-                        document.getElementById("scl.y").value = this.toString(scl.y);
-                        document.getElementById("scl.z").value = this.toString(scl.z);
-                    };
-                    VishvaGUI.prototype.initLightUI = function () {
-                        var _this = this;
-                        this.lightAtt = document.getElementById("lightAtt");
-                        this.lightType = document.getElementById("lightType");
-                        this.lightDiff = document.getElementById("lightDiff");
-                        this.lightSpec = document.getElementById("lightSpec");
-                        this.lightInten = document.getElementById("lightInten");
-                        this.lightRange = document.getElementById("lightRange");
-                        this.lightRadius = document.getElementById("lightAtt");
-                        this.lightAngle = document.getElementById("lightAngle");
-                        this.lightExp = document.getElementById("lightExp");
-                        this.lightGndClr = document.getElementById("lightGndClr");
-                        this.lightDirX = document.getElementById("lightDirX");
-                        this.lightDirY = document.getElementById("lightDirY");
-                        this.lightDirZ = document.getElementById("lightDirZ");
-                        var lightApply = document.getElementById("lightApply");
-                        lightApply.onclick = function () {
-                            _this.applyLight();
-                            _this.showAlertDiag("light applied");
-                        };
-                    };
-                    VishvaGUI.prototype.updateLight = function () {
-                        console.log("updateLight");
-                        if (this.lightAtt === undefined)
-                            this.initLightUI();
-                        var lightParm = this.vishva.getAttachedLight();
-                        if (lightParm === null) {
-                            this.lightAtt.checked = false;
-                            lightParm = new vishva_1.LightParm();
-                        }
-                        else {
-                            this.lightAtt.checked = true;
-                        }
-                        this.lightType.value = lightParm.type;
-                        this.lightDiff.value = lightParm.diffuse.toHexString();
-                        this.lightSpec.value = lightParm.specular.toHexString();
-                        this.lightInten.value = Number(lightParm.intensity).toString();
-                        this.lightRange.value = Number(lightParm.range).toString();
-                        this.lightRadius.value = Number(lightParm.radius).toString();
-                        //this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
-                        this.lightAngle.value = Number(lightParm.angle).toString();
-                        this.lightExp.value = Number(lightParm.exponent).toString();
-                        this.lightGndClr.value = lightParm.gndClr.toHexString();
-                        this.lightDirX.value = Number(lightParm.direction.x).toString();
-                        this.lightDirY.value = Number(lightParm.direction.y).toString();
-                        this.lightDirZ.value = Number(lightParm.direction.z).toString();
-                    };
-                    VishvaGUI.prototype.applyLight = function () {
-                        if (!this.lightAtt.checked) {
-                            this.vishva.detachLight();
-                            return;
-                        }
-                        var lightParm = new vishva_1.LightParm();
-                        lightParm.type = this.lightType.value;
-                        lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
-                        lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
-                        lightParm.intensity = parseFloat(this.lightInten.value);
-                        lightParm.range = parseFloat(this.lightRange.value);
-                        lightParm.radius = parseFloat(this.lightRadius.value);
-                        lightParm.angle = parseFloat(this.lightAngle.value);
-                        lightParm.direction.x = parseFloat(this.lightDirX.value);
-                        lightParm.direction.y = parseFloat(this.lightDirY.value);
-                        lightParm.direction.z = parseFloat(this.lightDirZ.value);
-                        lightParm.exponent = parseFloat(this.lightExp.value);
-                        lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
-                        this.vishva.attachAlight(lightParm);
-                    };
-                    VishvaGUI.prototype.initMatUI = function () {
-                        var _this = this;
-                        this.matVisVal = document.getElementById("matVisVal");
-                        this.matVis = document.getElementById("matVis");
-                        this.matVisVal["value"] = "1.00";
-                        this.matVis.oninput = function () {
-                            _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
-                            _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
-                        };
-                    };
-                    VishvaGUI.prototype.updateMat = function () {
-                        if (this.matVis == undefined)
-                            this.initMatUI();
-                        this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
-                        this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
-                    };
-                    VishvaGUI.prototype.initPhyUI = function () {
-                        var _this = this;
-                        this.phyEna = document.getElementById("phyEna");
-                        this.phyType = document.getElementById("phyType");
-                        this.phyMass = document.getElementById("phyMass");
-                        this.phyRes = document.getElementById("phyRes");
-                        this.phyResVal = document.getElementById("phyResVal");
-                        this.phyResVal["value"] = "0.0";
-                        this.phyRes.oninput = function () {
-                            _this.phyResVal["value"] = _this.formatValue(_this.phyRes.value);
-                        };
-                        this.phyFric = document.getElementById("phyFric");
-                        this.phyFricVal = document.getElementById("phyFricVal");
-                        this.phyFricVal["value"] = "0.0";
-                        this.phyFric.oninput = function () {
-                            _this.phyFricVal["value"] = _this.formatValue(_this.phyFric.value);
-                        };
-                        var phyApply = document.getElementById("phyApply");
-                        var phyTest = document.getElementById("phyTest");
-                        var phyReset = document.getElementById("phyReset");
-                        phyApply.onclick = function (ev) {
-                            _this.applyPhysics();
-                            _this.showAlertDiag("physics applied");
-                            return false;
-                        };
-                        phyTest.onclick = function (ev) {
-                            _this.testPhysics();
-                            return false;
-                        };
-                        phyReset.onclick = function (ev) {
-                            _this.resetPhysics();
-                            return false;
-                        };
-                    };
-                    VishvaGUI.prototype.formatValue = function (val) {
-                        if (val === "1")
-                            return "1.0";
-                        if (val === "0")
-                            return "0.0";
-                        return val;
-                    };
-                    VishvaGUI.prototype.updatePhysics = function () {
-                        if (this.phyEna === undefined)
-                            this.initPhyUI();
-                        var phyParms = this.vishva.getMeshPickedPhyParms();
-                        if (phyParms !== null) {
-                            this.phyEna.setAttribute("checked", "true");
-                            this.phyType.value = Number(phyParms.type).toString();
-                            this.phyMass.value = Number(phyParms.mass).toString();
-                            this.phyRes.value = Number(phyParms.restitution).toString();
-                            this.phyResVal["value"] = this.formatValue(this.phyRes.value);
-                            this.phyFric.value = Number(phyParms.friction).toString();
-                            this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
-                        }
-                        else {
-                            this.phyEna.checked = false;
-                            //by default lets set the type to "box"
-                            this.phyType.value = "2";
-                            this.phyMass.value = "1";
-                            this.phyRes.value = "0";
-                            this.phyResVal["value"] = "0.0";
-                            this.phyFric.value = "0";
-                            this.phyFricVal["value"] = "0.0";
-                        }
-                    };
-                    VishvaGUI.prototype.applyPhysics = function () {
-                        var phyParms;
-                        if (this.phyEna.checked) {
-                            phyParms = new vishva_1.PhysicsParm();
-                            phyParms.type = parseInt(this.phyType.value);
-                            phyParms.mass = parseFloat(this.phyMass.value);
-                            phyParms.restitution = parseFloat(this.phyRes.value);
-                            phyParms.friction = parseFloat(this.phyFric.value);
-                        }
-                        else {
-                            phyParms = null;
-                        }
-                        this.vishva.setMeshPickedPhyParms(phyParms);
-                    };
-                    VishvaGUI.prototype.testPhysics = function () {
-                        var phyParms;
-                        phyParms = new vishva_1.PhysicsParm();
-                        phyParms.type = parseInt(this.phyType.value);
-                        phyParms.mass = parseFloat(this.phyMass.value);
-                        phyParms.restitution = parseFloat(this.phyRes.value);
-                        phyParms.friction = parseFloat(this.phyFric.value);
-                        this.vishva.testPhysics(phyParms);
-                    };
-                    VishvaGUI.prototype.resetPhysics = function () {
-                        this.vishva.resetPhysics();
-                    };
-                    VishvaGUI.prototype.createAlertDiag = function () {
-                        this.alertDiv = document.getElementById("alertDiv");
-                        this.alertDialog = $("#alertDiv");
-                        var dos = {
-                            title: "Info",
-                            autoOpen: false,
-                            width: "auto",
-                            minWidth: 200,
-                            height: "auto",
-                            closeText: "",
-                            closeOnEscape: false
-                        };
-                        this.alertDialog.dialog(dos);
-                    };
-                    VishvaGUI.prototype.showAlertDiag = function (msg) {
-                        this.alertDiv.innerHTML = "<h3>" + msg + "</h3>";
-                        this.alertDialog.dialog("open");
-                    };
-                    VishvaGUI.prototype.sliderOptions = function (min, max, value) {
-                        var _this = this;
-                        var so = {};
-                        so.min = min;
-                        so.max = max;
-                        so.value = value;
-                        so.slide = function (e, ui) { return _this.handleSlide(e, ui); };
-                        return so;
-                    };
-                    VishvaGUI.prototype.handleSlide = function (e, ui) {
-                        var slider = e.target.id;
-                        if (slider === "fov") {
-                            this.vishva.setFov(ui.value);
-                        }
-                        else if (slider === "sunPos") {
-                            this.vishva.setSunPos(ui.value);
-                        }
-                        else {
-                            var v = ui.value / 100;
-                            if (slider === "light") {
-                                this.vishva.setLight(v);
-                            }
-                            else if (slider === "shade") {
-                                this.vishva.setShade(v);
-                            }
-                            else if (slider === "fog") {
-                                this.vishva.setFog(v / 10);
-                            }
-                        }
-                        return true;
-                    };
-                    VishvaGUI.prototype.colorPickerHandler = function (hex, hsv, rgb) {
-                        var colors = [rgb.r, rgb.g, rgb.b];
-                        this.vishva.setGroundColor(colors);
-                    };
-                    VishvaGUI.prototype.createNavMenu = function () {
-                        var _this = this;
-                        //button to show navigation menu
-                        var showNavMenu = document.getElementById("showNavMenu");
-                        showNavMenu.style.visibility = "visible";
-                        //navigation menu sliding setup
-                        document.getElementById("navMenubar").style.visibility = "visible";
-                        var navMenuBar = $("#navMenubar");
-                        var jpo = {
-                            my: "left center",
-                            at: "right center",
-                            of: showNavMenu
-                        };
-                        navMenuBar.position(jpo);
-                        navMenuBar.show(null);
-                        showNavMenu.onclick = function (e) {
-                            if (_this.menuBarOn) {
-                                navMenuBar.hide("slide", 100);
-                            }
-                            else {
-                                navMenuBar.show("slide", 100);
-                            }
-                            _this.menuBarOn = !_this.menuBarOn;
-                            return true;
-                        };
-                        //add menu sliding setup
-                        var slideDown = JSON.parse("{\"direction\":\"up\"}");
-                        var navAdd = document.getElementById("navAdd");
-                        var addMenu = $("#AddMenu");
-                        addMenu.menu();
-                        addMenu.hide(null);
-                        navAdd.onclick = function (e) {
-                            if (_this.firstTime) {
-                                var jpo = {
-                                    my: "left top",
-                                    at: "left bottom",
-                                    of: navAdd
-                                };
-                                addMenu.menu().position(jpo);
-                                _this.firstTime = false;
-                            }
-                            if (_this.addMenuOn) {
-                                addMenu.menu().hide("slide", slideDown, 100);
-                            }
-                            else {
-                                addMenu.show("slide", slideDown, 100);
-                            }
-                            _this.addMenuOn = !_this.addMenuOn;
-                            $(document).one("click", function (jqe) {
-                                if (_this.addMenuOn) {
-                                    addMenu.menu().hide("slide", slideDown, 100);
-                                    _this.addMenuOn = false;
-                                }
-                                return true;
-                            });
-                            e.cancelBubble = true;
-                            return true;
-                        };
-                        var downWorld = document.getElementById("downWorld");
-                        downWorld.onclick = function (e) {
-                            var downloadURL = _this.vishva.saveWorld();
-                            if (downloadURL == null)
-                                return true;
-                            _this.downloadLink.href = downloadURL;
-                            _this.downloadDialog.dialog("open");
-                            return false;
-                        };
-                        var navEnv = document.getElementById("navEnv");
-                        navEnv.onclick = function (e) {
-                            if (_this.envDiag == undefined) {
-                                _this.createEnvDiag();
-                            }
-                            _this.toggleDiag(_this.envDiag);
-                            return false;
-                        };
-                        var navEdit = document.getElementById("navEdit");
-                        navEdit.onclick = function (e) {
-                            if ((_this.propsDiag != null) && (_this.propsDiag.dialog("isOpen") === true)) {
-                                _this.closePropDiag();
-                            }
-                            else {
-                                _this.showPropDiag();
-                            }
-                            return true;
-                        };
-                        var navSettings = document.getElementById("navSettings");
-                        navSettings.onclick = function (e) {
-                            if (_this.settingDiag == undefined) {
-                                _this.createSettingDiag();
-                            }
-                            if (_this.settingDiag.dialog("isOpen") === false) {
-                                _this.updateSettings();
-                                _this.settingDiag.dialog("open");
-                            }
-                            else {
-                                _this.settingDiag.dialog("close");
-                            }
-                            return false;
-                        };
-                        var helpLink = document.getElementById("helpLink");
-                        helpLink.onclick = function (e) {
-                            _this.toggleDiag(_this.helpDiag);
-                            return true;
-                        };
-                        var debugLink = document.getElementById("debugLink");
-                        debugLink.onclick = function (e) {
-                            _this.vishva.toggleDebug();
-                            return true;
-                        };
-                    };
-                    /*
-                     * open diag if close
-                     * close diag if open
-                     */
-                    VishvaGUI.prototype.toggleDiag = function (diag) {
-                        if (diag.dialog("isOpen") === false) {
-                            diag.dialog("open");
-                        }
-                        else {
-                            diag.dialog("close");
-                        }
-                    };
-                    VishvaGUI.prototype.getSettings = function () {
-                        var guiSettings = new GuiSettings();
-                        guiSettings.enableToolTips = this.enableToolTips;
-                        return guiSettings;
-                    };
-                    VishvaGUI.prototype.setSettings = function () {
-                        var guiSettings = this.vishva.getGuiSettings();
-                        if (guiSettings !== null)
-                            this.enableToolTips = guiSettings.enableToolTips;
-                    };
-                    return VishvaGUI;
-                }());
-                VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
-                VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
-                vishva_1.VishvaGUI = VishvaGUI;
-                var GuiSettings = (function () {
-                    function GuiSettings() {
-                    }
-                    return GuiSettings;
-                }());
-                vishva_1.GuiSettings = GuiSettings;
-                var RGB = (function () {
-                    function RGB() {
-                        this.r = 0;
-                        this.g = 0;
-                        this.b = 0;
-                    }
-                    return RGB;
-                }());
-                vishva_1.RGB = RGB;
-                var Range = (function () {
-                    function Range(min, max, value, step) {
-                        this.type = "Range";
-                        this.min = 0;
-                        this.max = 0;
-                        this.value = 0;
-                        this.step = 0;
-                        this.min = min;
-                        this.max = max;
-                        this.value = value;
-                        this.step = step;
-                    }
-                    return Range;
-                }());
-                vishva_1.Range = Range;
-                var SelectType = (function () {
-                    function SelectType() {
-                        this.type = "SelectType";
-                    }
-                    return SelectType;
-                }());
-                vishva_1.SelectType = SelectType;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));

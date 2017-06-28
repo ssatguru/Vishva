@@ -454,6 +454,7 @@ var org;
                             this.enableToolTips = true;
                             this.propsDiag = null;
                             this.fixingDragIssue = false;
+                            this.activePanel = -1;
                             this.animSelect = null;
                             //        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
                             //            var colors: number[] = [rgb.r, rgb.g, rgb.b];
@@ -751,6 +752,8 @@ var org;
                                 }
                                 _this.settingDiag.dialog("close");
                                 //this.showAlertDiag("Saved");
+                                //refresh the property dialog in case something changed here
+                                _this.refreshPropsDiag();
                                 return true;
                             };
                             var dboCancel = {};
@@ -1221,8 +1224,8 @@ var org;
                                 open: function (e, ui) {
                                     if (!_this.fixingDragIssue) {
                                         // refresh the active tab
-                                        var activePanel = propsAcc.accordion("option", "active");
-                                        _this.refreshPanel(activePanel);
+                                        _this.activePanel = propsAcc.accordion("option", "active");
+                                        _this.refreshPanel(_this.activePanel);
                                     }
                                     else {
                                         _this.fixingDragIssue = false;
@@ -1265,6 +1268,11 @@ var org;
                                 this.propsDiag.dialog("close");
                                 this.propsDiag.dialog("open");
                             }
+                        };
+                        //only refresh if general panel is active;
+                        VishvaGUI.prototype.refreshGeneralPanel = function () {
+                            if (this.activePanel === 0 /* General */)
+                                this.refreshPropsDiag();
                         };
                         VishvaGUI.prototype.getPanelIndex = function (ui) {
                             if (ui.text() == "General")
@@ -1702,14 +1710,25 @@ var org;
                             this.lightDirX = document.getElementById("lightDirX");
                             this.lightDirY = document.getElementById("lightDirY");
                             this.lightDirZ = document.getElementById("lightDirZ");
-                            var lightApply = document.getElementById("lightApply");
-                            lightApply.onclick = function () {
-                                _this.applyLight();
-                                _this.showAlertDiag("light applied");
+                            this.lightAtt.onchange = function () {
+                                if (!_this.lightAtt.checked) {
+                                    _this.vishva.detachLight();
+                                }
+                                else
+                                    _this.applyLight();
                             };
+                            this.lightType.onchange = function () { return _this.applyLight(); };
+                            this.lightDiff.onchange = function () { return _this.applyLight(); };
+                            this.lightSpec.onchange = function () { return _this.applyLight(); };
+                            this.lightInten.onchange = function () { return _this.applyLight(); };
+                            this.lightRange.onchange = function () { return _this.applyLight(); };
+                            this.lightAngle.onchange = function () { return _this.applyLight(); };
+                            this.lightExp.onchange = function () { return _this.applyLight(); };
+                            this.lightDirX.onchange = function () { return _this.applyLight(); };
+                            this.lightDirY.onchange = function () { return _this.applyLight(); };
+                            this.lightDirZ.onchange = function () { return _this.applyLight(); };
                         };
                         VishvaGUI.prototype.updateLight = function () {
-                            console.log("updateLight");
                             if (this.lightAtt === undefined)
                                 this.initLightUI();
                             var lightParm = this.vishva.getAttachedLight();
@@ -1735,10 +1754,12 @@ var org;
                             this.lightDirZ.value = Number(lightParm.direction.z).toString();
                         };
                         VishvaGUI.prototype.applyLight = function () {
-                            if (!this.lightAtt.checked) {
-                                this.vishva.detachLight();
+                            //            if (!this.lightAtt.checked) {
+                            //                this.vishva.detachLight();
+                            //                return;
+                            //            }
+                            if (!this.lightAtt.checked)
                                 return;
-                            }
                             var lightParm = new vishva_1.LightParm();
                             lightParm.type = this.lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
@@ -3350,7 +3371,7 @@ var org;
                          *
                          */
                         this.snapperOn = false;
-                        this.snapTransValue = 1;
+                        this.snapTransValue = 0.5;
                         this.snapRotValue = Math.PI / 4;
                         this.snapScaleValue = 0.5;
                         //outlinewidth
@@ -3849,6 +3870,7 @@ var org;
                         }
                     };
                     Vishva.prototype.pickObject = function (evt, pickResult) {
+                        var _this = this;
                         // prevent curosr from changing to a edit caret in Chrome
                         evt.preventDefault();
                         if (evt.button !== 2)
@@ -3870,6 +3892,9 @@ var org;
                                 this.savePhyParms();
                                 this.switchToQuats(this.meshPicked);
                                 this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
+                                this.editControl.addActionListener(function (actionType) {
+                                    _this.vishvaGUI.refreshGeneralPanel();
+                                });
                                 this.editControl.enableTranslation();
                                 if (this.spaceWorld) {
                                     this.editControl.setLocal(false);

@@ -258,32 +258,32 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.showAlertDiag("Sorry. To be implemneted soon");
                 return true;
             };
-            
-            let trnCol:HTMLElement = document.getElementById("trnCol");
-            let trnColDiag: ColorPickerDiag = new ColorPickerDiag("terrain color", "trnColDiag", "trnColCP", this.centerBottom,(hex,hsv,rgb)=>{
+
+            let trnCol: HTMLElement = document.getElementById("trnCol");
+            let trnColDiag: ColorPickerDiag = new ColorPickerDiag("terrain color", "trnColDiag", "trnColCP", this.centerBottom, (hex, hsv, rgb) => {
                 trnCol.style.backgroundColor = hex;
                 this.vishva.setGroundColor(hex);
             });
-            let trnColor:string = this.vishva.getGroundColor();
+            let trnColor: string = this.vishva.getGroundColor();
             trnColDiag.setColor(trnColor);
             trnCol.style.backgroundColor = trnColor;
-            
-            trnCol.onclick =() =>{
-                let trnColor:string = this.vishva.getGroundColor();
+
+            trnCol.onclick = () => {
+                let trnColor: string = this.vishva.getGroundColor();
                 trnColDiag.open(trnColor);
             }
 
-//            var colorEle: HTMLElement = document.getElementById("color-picker");
-//            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
-//            var setRGB: Function = <Function>cp["setRgb"];
-//            var color: number[] = this.vishva.getGroundColor();
-//            if (color != null) {
-//                var rgb: RGB = new RGB();
-//                rgb.r = color[0];
-//                rgb.g = color[1];
-//                rgb.b = color[2];
-//                cp.setRgb(rgb);
-//            }
+            //            var colorEle: HTMLElement = document.getElementById("color-picker");
+            //            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
+            //            var setRGB: Function = <Function>cp["setRgb"];
+            //            var color: number[] = this.vishva.getGroundColor();
+            //            if (color != null) {
+            //                var rgb: RGB = new RGB();
+            //                rgb.r = color[0];
+            //                rgb.g = color[1];
+            //                rgb.b = color[2];
+            //                cp.setRgb(rgb);
+            //            }
 
             this.envDiag = $("#envDiv");
             var dos: DialogOptions = {
@@ -365,6 +365,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
                 this.settingDiag.dialog("close");
                 //this.showAlertDiag("Saved");
+                //refresh the property dialog in case something changed here
+                this.refreshPropsDiag();
+
                 return true;
             };
 
@@ -827,6 +830,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private propsDiag: JQuery = null;
 
         private fixingDragIssue: boolean = false;
+        private activePanel:number  = -1;
         private createPropsDiag() {
 
             //property tabs
@@ -878,8 +882,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 open: (e, ui) => {
                     if (!this.fixingDragIssue) {
                         // refresh the active tab
-                        let activePanel = propsAcc.accordion("option", "active");
-                        this.refreshPanel(activePanel);
+                        this.activePanel = propsAcc.accordion("option", "active");
+                        this.refreshPanel(this.activePanel);
                     } else {
                         this.fixingDragIssue = false;
                     }
@@ -920,7 +924,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.propsDiag.dialog("open");
             }
         }
-
+        //only refresh if general panel is active;
+        public refreshGeneralPanel() {
+            if (this.activePanel === propertyPanel.General) this.refreshPropsDiag();
+        }
+        
         private getPanelIndex(ui: JQuery): number {
             if (ui.text() == "General") return propertyPanel.General;
             if (ui.text() == "Physics") return propertyPanel.Physics;
@@ -957,12 +965,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
             var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
             var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
-            
+
             //enable/disable skeleton view
             animSkelView.onclick = (e) => {
                 this.vishva.toggleSkelView();
             }
-            
+
             //show rest pose
             animRest.onclick = (e) => {
                 this.vishva.animRest();
@@ -1439,17 +1447,26 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.lightDirX = <HTMLInputElement>document.getElementById("lightDirX");
             this.lightDirY = <HTMLInputElement>document.getElementById("lightDirY");
             this.lightDirZ = <HTMLInputElement>document.getElementById("lightDirZ");
-            let lightApply: HTMLButtonElement = <HTMLButtonElement>document.getElementById("lightApply");
-            lightApply.onclick = () => {
-                this.applyLight();
-                this.showAlertDiag("light applied");
-            }
 
+            this.lightAtt.onchange = () => {
+                if (!this.lightAtt.checked) {
+                    this.vishva.detachLight();
+                } else this.applyLight();
+            };
+            this.lightType.onchange = () => this.applyLight();
+            this.lightDiff.onchange = () => this.applyLight();
+            this.lightSpec.onchange = () => this.applyLight();
+            this.lightInten.onchange = () => this.applyLight();
+            this.lightRange.onchange = () => this.applyLight();
+            this.lightAngle.onchange = () => this.applyLight();
+            this.lightExp.onchange = () => this.applyLight();
+            this.lightDirX.onchange = () => this.applyLight();
+            this.lightDirY.onchange = () => this.applyLight();
+            this.lightDirZ.onchange = () => this.applyLight();
         }
 
         private updateLight() {
-            console.log("updateLight");
-            if (this.lightAtt === undefined) this.initLightUI();
+            if (this.lightAtt === undefined)this.initLightUI();
             let lightParm: LightParm = this.vishva.getAttachedLight();
             if (lightParm === null) {
                 this.lightAtt.checked = false;
@@ -1475,10 +1492,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private applyLight() {
-            if (!this.lightAtt.checked) {
-                this.vishva.detachLight();
-                return;
-            }
+//            if (!this.lightAtt.checked) {
+//                this.vishva.detachLight();
+//                return;
+//            }
+            if (!this.lightAtt.checked) return;
             let lightParm: LightParm = new LightParm();
             lightParm.type = this.lightType.value;
             lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
@@ -1495,49 +1513,49 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.vishva.attachAlight(lightParm);
 
         }
-        matVis:HTMLInputElement;
+        matVis: HTMLInputElement;
         matVisVal: HTMLElement;
-        
-        matColType:HTMLSelectElement;
-        matCol:HTMLElement;
-        matColDiag:org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
-        private initMatUI(){
-            
+
+        matColType: HTMLSelectElement;
+        matCol: HTMLElement;
+        matColDiag: org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
+        private initMatUI() {
+
             this.matVisVal = document.getElementById("matVisVal");
             this.matVis = <HTMLInputElement>document.getElementById("matVis");
-            
+
             this.matColType = <HTMLSelectElement>document.getElementById("matColType");
-           
+
             this.matCol = document.getElementById("matCol");
-            this.matColDiag = new ColorPickerDiag("mesh color","matColDiag", "matColCP", this.centerBottom,(hex,hsv,rgb)=>{
-                this.matCol.style.background=hex;
-                this.vishva.setMeshColor(this.matColType.value,hex);
+            this.matColDiag = new ColorPickerDiag("mesh color", "matColDiag", "matColCP", this.centerBottom, (hex, hsv, rgb) => {
+                this.matCol.style.background = hex;
+                this.vishva.setMeshColor(this.matColType.value, hex);
             })
-             this.matColType.onchange = () =>{
-                let col:string = this.vishva.getMeshColor(this.matColType.value);
+            this.matColType.onchange = () => {
+                let col: string = this.vishva.getMeshColor(this.matColType.value);
                 this.matCol.style.background = col
                 this.matColDiag.setColor(col);
             }
-            
-            this.matCol.onclick = () =>{
+
+            this.matCol.onclick = () => {
                 this.matColDiag.open(this.vishva.getMeshColor(this.matColType.value));
             }
-            
+
             this.matVisVal["value"] = "1.00";
-            this.matVis.oninput = () =>{
+            this.matVis.oninput = () => {
                 this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
                 this.vishva.setMeshVisibility(parseFloat(this.matVis.value));
             }
-            
-            
+
+
         }
-        
-        private updateMat(){
+
+        private updateMat() {
             if (this.matVis == undefined) this.initMatUI();
             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
             this.matCol.style.background = this.vishva.getMeshColor(this.matColType.value);
-            
+
         }
 
         phyEna: HTMLInputElement;
@@ -1583,7 +1601,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.testPhysics();
                 return false;
             }
-            
+
             phyReset.onclick = (ev) => {
                 this.resetPhysics()
                 return false;
@@ -1646,8 +1664,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             this.vishva.testPhysics(phyParms);
         }
-        
-        private resetPhysics(){
+
+        private resetPhysics() {
             this.vishva.resetPhysics();
         }
 
@@ -1728,10 +1746,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
 
-//        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
-//            var colors: number[] = [rgb.r, rgb.g, rgb.b];
-//            this.vishva.setGroundColor(colors);
-//        }
+        //        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
+        //            var colors: number[] = [rgb.r, rgb.g, rgb.b];
+        //            this.vishva.setGroundColor(colors);
+        //        }
 
         /**
          * Main Navigation Menu Section

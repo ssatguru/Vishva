@@ -673,6 +673,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.savePhyParms();
                     this.switchToQuats(this.meshPicked);
                     this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
+                    this.editControl.addActionListener((actionType:number)=>{
+                        this.vishvaGUI.refreshGeneralPanel();
+                    })
                     this.editControl.enableTranslation();
                     if (this.spaceWorld) {
                         this.editControl.setLocal(false);

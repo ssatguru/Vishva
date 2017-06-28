@@ -73,7 +73,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * 
          */
         private snapperOn: boolean = false;
-        private snapTransValue: number = 1;
+        private snapTransValue: number = 0.5;
         private snapRotValue: number = Math.PI / 4;
         private snapScaleValue: number = 0.5;
         //outlinewidth

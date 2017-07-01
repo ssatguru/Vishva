@@ -21,16 +21,19 @@
 
         <!--<script src="lib/babylon.2.6-12-16-2016.js"></script>--> 
         <!--<script src="lib/babylon2.6-01-18-2017.js"></script>--> 
-        <script src="lib/babylon3.0-03-20-2017.js"></script> 
+        <!--<script src="lib/babylon3.0-03-20-2017.js"></script>--> 
 
         <!-- following uses bluerExponential Shadowmaps -->
         <!--<script src="lib/babylon3.0-04-20-2017.js"></script>--> 
         <!--<script src="lib/babylon2.6-05-12-2017.js"></script>--> 
-        <!--<script src="lib/babylon-06-19-2017.max.js"></script>-->
+        <script src="lib/babylon-06-19-2017.max.js"></script>
+        
 
         <!-- the latest -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
 
+        <script src="lib/babylon.inspector.bundle-06-26-2017.js"></script>
+        
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
         <script src="lib/colorpicker.min.js"></script>
@@ -152,9 +155,9 @@
         </style>
 
     </head>
-    <body>
+    <body oncontextmenu="console.log('body rc');return false;">
 
-        <canvas id="vCanvas" oncontextmenu="return false;" tabindex="1"></canvas>
+        <canvas id="vCanvas" tabindex="1"></canvas>
 
         <div id="gui-items-1">
 
@@ -694,10 +697,10 @@
 
 
 
-            <div id="saveDiv">
+            <div id="saveDiv" oncontextmenu="event.stopPropagation();return true;">
                 <br>Your file is ready for download.
                 <p>
-                    <a id="downloadLink" href="www" download>Right click here and select "Save link as..." to save this file on your computer</a> <br> <br>
+                    <a id="downloadLink" href="www" download oncontextmenu="return true;">Right click here and select "Save link as..." to save this file on your computer</a> <br> <br>
             </div>
             <!--
             <div id="loadDiv">

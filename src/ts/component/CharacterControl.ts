@@ -68,7 +68,8 @@ namespace org.ssatguru.babylonjs.component {
             this.stillTime = 0.001;
             this.grounded = false;
             this.updateTargetValue();
-            this.camera.target = this.cameraTarget;
+            //this.camera.target = this.cameraTarget;
+
             this.scene.registerBeforeRender(this.renderer);
         }
 
@@ -119,7 +120,7 @@ namespace org.ssatguru.babylonjs.component {
 
         public moveAVandCamera(): boolean {
             this.oldPos.copyFrom(this.avatar.position);
-
+            //console.log(this.camera.target);
             //skip everything if no movement key pressed
             if (!this.anyMovement()) {
                 if (!this.grounded) {
@@ -277,15 +278,15 @@ namespace org.ssatguru.babylonjs.component {
                 this.prevAnim = anim;
             }
             this.updateTargetValue();
-
             if (this.oldPos.y <= this.avatar.position.y) {
                 this.time = 0;
             }
             return;
         }
-        cameraTarget: Vector3 = new Vector3(0, 0, 0);
+        //cameraTarget: Vector3 = new Vector3(0, 0, 0);
         private updateTargetValue() {
-            this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+            //this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+            this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
 
         move: boolean = false;

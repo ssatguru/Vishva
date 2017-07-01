@@ -37,7 +37,6 @@ var org;
                         this.time = 0;
                         this.stillTime = 0;
                         this.velocity = new Vector3(0, 0, 0);
-                        this.cameraTarget = new Vector3(0, 0, 0);
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
                         this.initAnims(anims);
@@ -74,7 +73,7 @@ var org;
                         this.stillTime = 0.001;
                         this.grounded = false;
                         this.updateTargetValue();
-                        this.camera.target = this.cameraTarget;
+                        //this.camera.target = this.cameraTarget;
                         this.scene.registerBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.stop = function () {
@@ -98,6 +97,7 @@ var org;
                     };
                     CharacterControl.prototype.moveAVandCamera = function () {
                         this.oldPos.copyFrom(this.avatar.position);
+                        //console.log(this.camera.target);
                         //skip everything if no movement key pressed
                         if (!this.anyMovement()) {
                             if (!this.grounded) {
@@ -268,8 +268,10 @@ var org;
                         }
                         return;
                     };
+                    //cameraTarget: Vector3 = new Vector3(0, 0, 0);
                     CharacterControl.prototype.updateTargetValue = function () {
-                        this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        //this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {
                         var event = e;
@@ -3671,16 +3673,16 @@ var org;
                             Tags.AddTagsTo(hl, "Vishva.sun");
                             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                             this.sunDR.intensity = 0.5;
-                            this.sunDR.position = new Vector3(0, 0, 0);
+                            this.sunDR.position = new Vector3(0, 32, 0);
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
-                            this.shadowGenerator.useBlurVarianceShadowMap = true;
-                            this.shadowGenerator.bias = 1.0E-6;
-                            //                                this.shadowGenerator.useBlurExponentialShadowMap = true;
-                            //                                this.shadowGenerator.bias =1.0E-6;
-                            //                                this.shadowGenerator.depthScale = 2500;
-                            //                                sl.shadowMinZ = 1;
-                            //                                sl.shadowMaxZ = 2500;
+                            //                this.shadowGenerator.useBlurVarianceShadowMap = true;
+                            //                this.shadowGenerator.bias = 1.0E-6;
+                            this.shadowGenerator.useBlurExponentialShadowMap = true;
+                            //                                                this.shadowGenerator.bias =1.0E-6;
+                            //                                                this.shadowGenerator.depthScale = 2500;
+                            //                                                sl.shadowMinZ = 1;
+                            //                                                sl.shadowMaxZ = 2500;
                         }
                         else {
                             for (var _f = 0, _g = scene.lights; _f < _g.length; _f++) {
@@ -3688,14 +3690,14 @@ var org;
                                 if (light.id === "Vishva.dl01") {
                                     this.sunDR = light;
                                     this.shadowGenerator = light.getShadowGenerator();
-                                    this.shadowGenerator.useBlurVarianceShadowMap = true;
-                                    this.shadowGenerator.bias = 1.0E-6;
-                                    //                                                this.shadowGenerator.useBlurExponentialShadowMap = true;
-                                    //                                                this.shadowGenerator.bias = 1.0E-6;
-                                    //                                                this.shadowGenerator.depthScale = 2500;
-                                    //                                                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                                    //                                                sl.shadowMinZ = 1;
-                                    //                                                sl.shadowMaxZ = 2500;
+                                    //                        this.shadowGenerator.useBlurVarianceShadowMap = true;
+                                    //                        this.shadowGenerator.bias = 1.0E-6;
+                                    this.shadowGenerator.useBlurExponentialShadowMap = true;
+                                    //                                                                        this.shadowGenerator.bias = 1.0E-6;
+                                    //                                                                        this.shadowGenerator.depthScale = 2500;
+                                    //                                                                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                                    //                                                                        sl.shadowMinZ = 1;
+                                    //                                                                        sl.shadowMaxZ = 2500;
                                 }
                             }
                         }
@@ -3824,7 +3826,7 @@ var org;
                             }
                         }
                         if (this.isFocusOnAv) {
-                            //this.sunDR.position.copyFromFloats(this.avatar.position.x, 128, this.avatar.position.y);
+                            //this.sunDR.position.copyFromFloats(this.avatar.position.x, 32, this.avatar.position.y);
                             if (this.editControl == null) {
                                 //this.moveAVandCamera();
                             }
@@ -3870,7 +3872,6 @@ var org;
                         }
                     };
                     Vishva.prototype.pickObject = function (evt, pickResult) {
-                        var _this = this;
                         // prevent curosr from changing to a edit caret in Chrome
                         evt.preventDefault();
                         if (evt.button !== 2)
@@ -3884,61 +3885,16 @@ var org;
                             }
                             // if none selected then select the one clicked
                             if (!this.isMeshSelected) {
-                                //if in multiselect then remove from multiselect
-                                this.multiUnSelect(pickResult.pickedMesh);
-                                this.isMeshSelected = true;
-                                this.meshPicked = pickResult.pickedMesh;
-                                vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
-                                this.savePhyParms();
-                                this.switchToQuats(this.meshPicked);
-                                this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
-                                this.editControl.addActionListener(function (actionType) {
-                                    _this.vishvaGUI.refreshGeneralPanel();
-                                });
-                                this.editControl.enableTranslation();
-                                if (this.spaceWorld) {
-                                    this.editControl.setLocal(false);
-                                }
-                                if (this.autoEditMenu) {
-                                    this.vishvaGUI.showPropDiag();
-                                }
-                                //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
-                                if (this.snapperOn) {
-                                    this.setSnapperOn();
-                                }
-                                else {
-                                    if (this.snapTransOn) {
-                                        this.editControl.setTransSnap(true);
-                                        this.editControl.setTransSnapValue(this.snapTransValue);
-                                    }
-                                    ;
-                                    if (this.snapRotOn) {
-                                        this.editControl.setRotSnap(true);
-                                        this.editControl.setRotSnapValue(this.snapRotValue);
-                                    }
-                                    ;
-                                    if (this.snapScaleOn) {
-                                        this.editControl.setScaleSnap(true);
-                                        this.editControl.setScaleSnapValue(this.snapScaleValue);
-                                    }
-                                    ;
-                                }
+                                this.selectForEdit(pickResult.pickedMesh);
                             }
                             else {
                                 if (pickResult.pickedMesh === this.meshPicked) {
                                     if (this.key.ctl) {
                                         return;
-                                        //this.multiSelect(null, this.meshPicked);
                                     }
                                     else {
                                         // if already selected then focus on it
                                         this.setFocusOnMesh();
-                                        //                            if (this.isFocusOnAv) {
-                                        //                                this.cc.stop();
-                                        //                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                                        //                                this.isFocusOnAv = false;
-                                        //                            }
-                                        //                            this.focusOnMesh(this.meshPicked, 50);
                                     }
                                 }
                                 else {
@@ -3949,6 +3905,48 @@ var org;
                                         this.snapToGlobal();
                                 }
                             }
+                        }
+                    };
+                    Vishva.prototype.selectForEdit = function (mesh) {
+                        var _this = this;
+                        //if in multiselect then remove from multiselect
+                        this.multiUnSelect(mesh);
+                        this.isMeshSelected = true;
+                        this.meshPicked = mesh;
+                        vishva.SNAManager.getSNAManager().disableSnAs(this.meshPicked);
+                        this.savePhyParms();
+                        this.switchToQuats(this.meshPicked);
+                        this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
+                        this.editControl.addActionListener(function (actionType) {
+                            _this.vishvaGUI.refreshGeneralPanel();
+                        });
+                        this.editControl.enableTranslation();
+                        if (this.spaceWorld) {
+                            this.editControl.setLocal(false);
+                        }
+                        if (this.autoEditMenu) {
+                            this.vishvaGUI.showPropDiag();
+                        }
+                        //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
+                        if (this.snapperOn) {
+                            this.setSnapperOn();
+                        }
+                        else {
+                            if (this.snapTransOn) {
+                                this.editControl.setTransSnap(true);
+                                this.editControl.setTransSnapValue(this.snapTransValue);
+                            }
+                            ;
+                            if (this.snapRotOn) {
+                                this.editControl.setRotSnap(true);
+                                this.editControl.setRotSnapValue(this.snapRotValue);
+                            }
+                            ;
+                            if (this.snapScaleOn) {
+                                this.editControl.setScaleSnap(true);
+                                this.editControl.setScaleSnapValue(this.snapScaleValue);
+                            }
+                            ;
                         }
                     };
                     /**
@@ -4216,50 +4214,67 @@ var org;
                         mesh.name = mesh.id;
                     };
                     Vishva.prototype.addPrim = function (primType) {
+                        var mesh = null;
                         if (primType === "plane")
-                            this.addPlane();
+                            mesh = this.addPlane();
                         else if (primType === "box")
-                            this.addBox();
+                            mesh = this.addBox();
                         else if (primType === "sphere")
-                            this.addSphere();
+                            mesh = this.addSphere();
                         else if (primType === "disc")
-                            this.addDisc();
+                            mesh = this.addDisc();
                         else if (primType === "cylinder")
-                            this.addCylinder();
+                            mesh = this.addCylinder();
                         else if (primType === "cone")
-                            this.addCone();
+                            mesh = this.addCone();
                         else if (primType === "torus")
-                            this.addTorus();
+                            mesh = this.addTorus();
+                        if (mesh !== null) {
+                            if (!this.isMeshSelected) {
+                                this.selectForEdit(mesh);
+                            }
+                            else {
+                                this.switchEditControl(mesh);
+                            }
+                            this.animateMesh(mesh);
+                        }
                     };
                     Vishva.prototype.addPlane = function () {
                         var mesh = Mesh.CreatePlane("", 1.0, this.scene);
                         this.setPrimProperties(mesh);
                         mesh.material.backFaceCulling = false;
+                        return mesh;
                     };
                     Vishva.prototype.addBox = function () {
                         var mesh = Mesh.CreateBox("", 1, this.scene);
                         this.setPrimProperties(mesh);
+                        return mesh;
                     };
                     Vishva.prototype.addSphere = function () {
                         var mesh = Mesh.CreateSphere("", 10, 1, this.scene);
                         this.setPrimProperties(mesh);
+                        return mesh;
                     };
                     Vishva.prototype.addDisc = function () {
                         var mesh = Mesh.CreateDisc("", 0.5, 20, this.scene);
                         this.setPrimProperties(mesh);
                         mesh.material.backFaceCulling = false;
+                        return mesh;
                     };
                     Vishva.prototype.addCylinder = function () {
                         var mesh = Mesh.CreateCylinder("", 1, 1, 1, 20, 1, this.scene);
                         this.setPrimProperties(mesh);
+                        return mesh;
                     };
                     Vishva.prototype.addCone = function () {
                         var mesh = Mesh.CreateCylinder("", 1, 0, 1, 20, 1, this.scene);
                         this.setPrimProperties(mesh);
+                        return mesh;
                     };
                     Vishva.prototype.addTorus = function () {
                         var mesh = Mesh.CreateTorus("", 1, 0.25, 20, this.scene);
                         this.setPrimProperties(mesh);
+                        return mesh;
                     };
                     Vishva.prototype.switchGround = function () {
                         if (!this.isMeshSelected) {
@@ -4283,7 +4298,7 @@ var org;
                         var name = new Number(Date.now()).toString();
                         var inst = this.meshPicked.createInstance(name);
                         //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
-                        this.animateCopy(inst);
+                        this.animateMesh(inst);
                         this.meshPicked = inst;
                         this.switchEditControl(inst);
                         //TODO think
@@ -4496,7 +4511,7 @@ var org;
                         var clone = mesh.clone(name, null, true);
                         delete clone["sensors"];
                         delete clone["actuators"];
-                        this.animateCopy(clone);
+                        this.animateMesh(clone);
                         //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
                         //TODO think
                         //clone.receiveShadows = true;
@@ -4505,7 +4520,7 @@ var org;
                         return clone;
                     };
                     //play a small scaling animation when cloning or instancing a mesh.
-                    Vishva.prototype.animateCopy = function (mesh) {
+                    Vishva.prototype.animateMesh = function (mesh) {
                         var startScale = new Vector3(1.5, 1.5, 1.5);
                         var endScale = new Vector3(1, 1, 1);
                         Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
@@ -4557,7 +4572,7 @@ var org;
                             //mergedMesh.computeWorldMatrix(true);
                             mergedMesh.position = this.meshPicked.position.clone();
                             this.switchEditControl(mergedMesh);
-                            this.animateCopy(mergedMesh);
+                            this.animateMesh(mergedMesh);
                             return null;
                         }
                         else {
@@ -4587,7 +4602,7 @@ var org;
                             var name_1 = new Number(Date.now()).toString();
                             var newMesh = csg3.toMesh(name_1, this.meshesPicked[0].material, this.scene, false);
                             this.switchEditControl(newMesh);
-                            this.animateCopy(newMesh);
+                            this.animateMesh(newMesh);
                             return null;
                         }
                         else {
@@ -5075,12 +5090,10 @@ var org;
                     };
                     Vishva.prototype.printAnimCount = function (skel) {
                         var bones = skel.bones;
-                        for (var index126 = 0; index126 < bones.length; index126++) {
-                            var bone = bones[index126];
-                            {
-                                console.log(bone.name + "," + bone.animations.length + " , " + bone.animations[0].getHighestFrame());
-                                console.log(bone.animations[0]);
-                            }
+                        for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
+                            var bone = bones_1[_i];
+                            console.log(bone.name + "," + bone.animations.length + " , " + bone.animations[0].getHighestFrame());
+                            console.log(bone.animations[0]);
                         }
                     };
                     Vishva.prototype.playAnimation = function (animName, animRate, loop) {
@@ -5343,28 +5356,24 @@ var org;
                     };
                     Vishva.prototype.removeInstancesFromShadow = function () {
                         var meshes = this.scene.meshes;
-                        for (var index127 = 0; index127 < meshes.length; index127++) {
-                            var mesh = meshes[index127];
-                            {
-                                if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                                    var shadowMeshes = this.shadowGenerator.getShadowMap().renderList;
-                                    var i = shadowMeshes.indexOf(mesh);
-                                    if (i >= 0) {
-                                        shadowMeshes.splice(i, 1);
-                                    }
+                        for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
+                            var mesh = meshes_1[_i];
+                            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                                var shadowMeshes = this.shadowGenerator.getShadowMap().renderList;
+                                var i = shadowMeshes.indexOf(mesh);
+                                if (i >= 0) {
+                                    shadowMeshes.splice(i, 1);
                                 }
                             }
                         }
                     };
                     Vishva.prototype.addInstancesToShadow = function () {
-                        for (var index128 = 0; index128 < this.scene.meshes.length; index128++) {
-                            var mesh = this.scene.meshes[index128];
-                            {
-                                if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                                    //TODO think
-                                    //mesh.receiveShadows = true;
-                                    (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                                }
+                        for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
+                            var mesh = _a[_i];
+                            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                                //TODO think
+                                //mesh.receiveShadows = true;
+                                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             }
                         }
                     };
@@ -5377,12 +5386,10 @@ var org;
                      */
                     Vishva.prototype.renameMeshIds = function () {
                         var i = 0;
-                        for (var index129 = 0; index129 < this.scene.meshes.length; index129++) {
-                            var mesh = this.scene.meshes[index129];
-                            {
-                                mesh.id = new Number(i).toString();
-                                i++;
-                            }
+                        for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
+                            var mesh = _a[_i];
+                            mesh.id = new Number(i).toString();
+                            i++;
                         }
                     };
                     /**
@@ -5394,39 +5401,33 @@ var org;
                      */
                     Vishva.prototype.resetSkels = function (scene) {
                         var i = 0;
-                        for (var index130 = 0; index130 < scene.skeletons.length; index130++) {
-                            var skel = scene.skeletons[index130];
-                            {
-                                skel.id = new Number(i).toString();
-                                i++;
-                                skel.returnToRest();
-                            }
+                        for (var _i = 0, _a = scene.skeletons; _i < _a.length; _i++) {
+                            var skel = _a[_i];
+                            skel.id = new Number(i).toString();
+                            i++;
+                            skel.returnToRest();
                         }
                     };
                     Vishva.prototype.renameWorldTextures = function () {
                         var mats = this.scene.materials;
                         this.renameWorldMaterials(mats);
                         var mms = this.scene.multiMaterials;
-                        for (var index131 = 0; index131 < mms.length; index131++) {
-                            var mm = mms[index131];
-                            {
-                                this.renameWorldMaterials(mm.subMaterials);
-                            }
+                        for (var _i = 0, mms_1 = mms; _i < mms_1.length; _i++) {
+                            var mm = mms_1[_i];
+                            this.renameWorldMaterials(mm.subMaterials);
                         }
                     };
                     Vishva.prototype.renameWorldMaterials = function (mats) {
                         var sm;
-                        for (var index132 = 0; index132 < mats.length; index132++) {
-                            var mat = mats[index132];
-                            {
-                                if (mat != null && mat instanceof BABYLON.StandardMaterial) {
-                                    sm = mat;
-                                    this.rename(sm.diffuseTexture);
-                                    this.rename(sm.reflectionTexture);
-                                    this.rename(sm.opacityTexture);
-                                    this.rename(sm.specularTexture);
-                                    this.rename(sm.bumpTexture);
-                                }
+                        for (var _i = 0, mats_1 = mats; _i < mats_1.length; _i++) {
+                            var mat = mats_1[_i];
+                            if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                                sm = mat;
+                                this.rename(sm.diffuseTexture);
+                                this.rename(sm.reflectionTexture);
+                                this.rename(sm.opacityTexture);
+                                this.rename(sm.specularTexture);
+                                this.rename(sm.bumpTexture);
                             }
                         }
                     };
@@ -5467,24 +5468,22 @@ var org;
                         var meshes = this.scene.meshes;
                         var mats = new Array();
                         var mms = new Array();
-                        for (var index133 = 0; index133 < meshes.length; index133++) {
-                            var mesh = meshes[index133];
-                            {
-                                if (mesh.material != null) {
-                                    if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
-                                        var mm = mesh.material;
-                                        mms.push(mm);
-                                        var ms = mm.subMaterials;
-                                        for (var index134 = 0; index134 < ms.length; index134++) {
-                                            var mat = ms[index134];
-                                            {
-                                                mats.push(mat);
-                                            }
+                        for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
+                            var mesh = meshes_2[_i];
+                            if (mesh.material != null) {
+                                if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
+                                    var mm = mesh.material;
+                                    mms.push(mm);
+                                    var ms = mm.subMaterials;
+                                    for (var index134 = 0; index134 < ms.length; index134++) {
+                                        var mat = ms[index134];
+                                        {
+                                            mats.push(mat);
                                         }
                                     }
-                                    else {
-                                        mats.push(mesh.material);
-                                    }
+                                }
+                                else {
+                                    mats.push(mesh.material);
                                 }
                             }
                         }
@@ -5510,12 +5509,10 @@ var org;
                     Vishva.prototype.cleanupSkels = function () {
                         var meshes = this.scene.meshes;
                         var skels = new Array();
-                        for (var index135 = 0; index135 < meshes.length; index135++) {
-                            var mesh = meshes[index135];
-                            {
-                                if (mesh.skeleton != null) {
-                                    skels.push(mesh.skeleton);
-                                }
+                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
+                            var mesh = meshes_3[_i];
+                            if (mesh.skeleton != null) {
+                                skels.push(mesh.skeleton);
                             }
                         }
                         var allSkels = this.scene.skeletons;
@@ -5540,44 +5537,48 @@ var org;
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
                         var boundingRadius = this.getBoundingRadius(meshes);
-                        {
-                            var array137 = meshes;
-                            for (var index136 = 0; index136 < array137.length; index136++) {
-                                var mesh = array137[index136];
-                                {
-                                    mesh.isPickable = true;
-                                    mesh.checkCollisions = true;
-                                    var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
-                                    var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                                    mesh.position.addInPlace(placementGlobal);
-                                    (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                                    //TODO think
-                                    //mesh.receiveShadows = true;
-                                    if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
-                                        var mm = mesh.material;
-                                        var mats = mm.subMaterials;
-                                        for (var index138 = 0; index138 < mats.length; index138++) {
-                                            var mat = mats[index138];
-                                            {
-                                                mesh.material.backFaceCulling = false;
-                                                mesh.material.alpha = 1;
-                                                if (mat != null && mat instanceof BABYLON.StandardMaterial) {
-                                                    this.renameAssetTextures(mat);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        mesh.material.backFaceCulling = false;
-                                        mesh.material.alpha = 1;
-                                        var sm = mesh.material;
-                                        this.renameAssetTextures(sm);
-                                    }
-                                    if (mesh.skeleton != null) {
-                                        this.fixAnimationRanges(mesh.skeleton);
+                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
+                            var mesh = meshes_4[_i];
+                            mesh.isPickable = true;
+                            mesh.checkCollisions = true;
+                            var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
+                            var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                            mesh.position.addInPlace(placementGlobal);
+                            (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+                            //TODO think
+                            //mesh.receiveShadows = true;
+                            if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
+                                var mm = mesh.material;
+                                var mats = mm.subMaterials;
+                                for (var _a = 0, mats_2 = mats; _a < mats_2.length; _a++) {
+                                    var mat = mats_2[_a];
+                                    mesh.material.backFaceCulling = false;
+                                    mesh.material.alpha = 1;
+                                    if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                                        this.renameAssetTextures(mat);
                                     }
                                 }
                             }
+                            else {
+                                mesh.material.backFaceCulling = false;
+                                mesh.material.alpha = 1;
+                                var sm = mesh.material;
+                                this.renameAssetTextures(sm);
+                            }
+                            if (mesh.skeleton != null) {
+                                this.fixAnimationRanges(mesh.skeleton);
+                            }
+                        }
+                        //select and animate the last mesh loaded
+                        if (meshes.length > 0) {
+                            var lastMesh = meshes[meshes.length - 1];
+                            if (!this.isMeshSelected) {
+                                this.selectForEdit(lastMesh);
+                            }
+                            else {
+                                this.switchEditControl(lastMesh);
+                            }
+                            this.animateMesh(lastMesh);
                         }
                     };
                     Vishva.prototype.renameAssetTextures = function (sm) {
@@ -5972,7 +5973,7 @@ var org;
                         Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
                         this.avatarSkeleton.name = "Vishva.skeleton";
                         this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
-                        this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
+                        //this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                         var sm = this.avatar.material;
                         if (sm.diffuseTexture != null) {
                             var textureName = sm.diffuseTexture.name;
@@ -5980,6 +5981,10 @@ var org;
                         }
                         this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
                         this.cc.start();
+                        //in 3.0 need to set the camera values again
+                        //            this.mainCamera.radius = 4;
+                        //            this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
+                        //            this.mainCamera.beta = 1.4;
                     };
                     Vishva.prototype.setAnimationRange = function (skel) {
                         for (var index149 = 0; index149 < this.anims.length; index149++) {

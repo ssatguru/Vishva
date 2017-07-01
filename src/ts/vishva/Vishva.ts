@@ -289,18 +289,18 @@ namespace org.ssatguru.babylonjs.vishva {
 
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                 this.sunDR.intensity = 0.5;
-                this.sunDR.position = new Vector3(0, 0, 0);
+                this.sunDR.position = new Vector3(0, 32, 0);
                 let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
 
-                this.shadowGenerator.useBlurVarianceShadowMap = true;
-                this.shadowGenerator.bias = 1.0E-6;
+                //                this.shadowGenerator.useBlurVarianceShadowMap = true;
+                //                this.shadowGenerator.bias = 1.0E-6;
 
-                //                                this.shadowGenerator.useBlurExponentialShadowMap = true;
-                //                                this.shadowGenerator.bias =1.0E-6;
-                //                                this.shadowGenerator.depthScale = 2500;
-                //                                sl.shadowMinZ = 1;
-                //                                sl.shadowMaxZ = 2500;
+                this.shadowGenerator.useBlurExponentialShadowMap = true;
+                //                                                this.shadowGenerator.bias =1.0E-6;
+                //                                                this.shadowGenerator.depthScale = 2500;
+                //                                                sl.shadowMinZ = 1;
+                //                                                sl.shadowMaxZ = 2500;
 
             } else {
                 for (let light of scene.lights) {
@@ -308,15 +308,15 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.sunDR = <DirectionalLight>light;
                         this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
 
-                        this.shadowGenerator.useBlurVarianceShadowMap = true;
-                        this.shadowGenerator.bias = 1.0E-6;
+                        //                        this.shadowGenerator.useBlurVarianceShadowMap = true;
+                        //                        this.shadowGenerator.bias = 1.0E-6;
 
-                        //                                                this.shadowGenerator.useBlurExponentialShadowMap = true;
-                        //                                                this.shadowGenerator.bias = 1.0E-6;
-                        //                                                this.shadowGenerator.depthScale = 2500;
-                        //                                                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                        //                                                sl.shadowMinZ = 1;
-                        //                                                sl.shadowMaxZ = 2500;
+                        this.shadowGenerator.useBlurExponentialShadowMap = true;
+                        //                                                                        this.shadowGenerator.bias = 1.0E-6;
+                        //                                                                        this.shadowGenerator.depthScale = 2500;
+                        //                                                                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                        //                                                                        sl.shadowMinZ = 1;
+                        //                                                                        sl.shadowMaxZ = 2500;
 
                     }
                 }
@@ -458,7 +458,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
             if (this.isFocusOnAv) {
-                //this.sunDR.position.copyFromFloats(this.avatar.position.x, 128, this.avatar.position.y);
+                //this.sunDR.position.copyFromFloats(this.avatar.position.x, 32, this.avatar.position.y);
                 if (this.editControl == null) {
                     //this.moveAVandCamera();
 
@@ -665,57 +665,14 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 // if none selected then select the one clicked
                 if (!this.isMeshSelected) {
-                    //if in multiselect then remove from multiselect
-                    this.multiUnSelect(pickResult.pickedMesh);
-                    this.isMeshSelected = true;
-                    this.meshPicked = pickResult.pickedMesh;
-                    SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
-                    this.savePhyParms();
-                    this.switchToQuats(this.meshPicked);
-                    this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
-                    this.editControl.addActionListener((actionType:number)=>{
-                        this.vishvaGUI.refreshGeneralPanel();
-                    })
-                    this.editControl.enableTranslation();
-                    if (this.spaceWorld) {
-                        this.editControl.setLocal(false);
-                    }
-                    if (this.autoEditMenu) {
-                        this.vishvaGUI.showPropDiag();
-                    }
-                    //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
-
-                    if (this.snapperOn) {
-                        this.setSnapperOn();
-                    } else {
-                        if (this.snapTransOn) {
-                            this.editControl.setTransSnap(true);
-                            this.editControl.setTransSnapValue(this.snapTransValue);
-                        };
-                        if (this.snapRotOn) {
-                            this.editControl.setRotSnap(true);
-                            this.editControl.setRotSnapValue(this.snapRotValue);
-                        };
-                        if (this.snapScaleOn) {
-                            this.editControl.setScaleSnap(true);
-                            this.editControl.setScaleSnapValue(this.snapScaleValue);
-                        };
-                    }
-
+                    this.selectForEdit(pickResult.pickedMesh);
                 } else {
                     if (pickResult.pickedMesh === this.meshPicked) {
                         if (this.key.ctl) {
                             return;
-                            //this.multiSelect(null, this.meshPicked);
                         } else {
                             // if already selected then focus on it
                             this.setFocusOnMesh();
-                            //                            if (this.isFocusOnAv) {
-                            //                                this.cc.stop();
-                            //                                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
-                            //                                this.isFocusOnAv = false;
-                            //                            }
-                            //                            this.focusOnMesh(this.meshPicked, 50);
                         }
                     } else {
                         //if in multiselect then remove from multiselect
@@ -727,7 +684,44 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        private selectForEdit(mesh: AbstractMesh) {
+            //if in multiselect then remove from multiselect
+            this.multiUnSelect(mesh);
+            this.isMeshSelected = true;
+            this.meshPicked = mesh;
+            SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
+            this.savePhyParms();
+            this.switchToQuats(this.meshPicked);
+            this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
+            this.editControl.addActionListener((actionType: number) => {
+                this.vishvaGUI.refreshGeneralPanel();
+            })
+            this.editControl.enableTranslation();
+            if (this.spaceWorld) {
+                this.editControl.setLocal(false);
+            }
+            if (this.autoEditMenu) {
+                this.vishvaGUI.showPropDiag();
+            }
+            //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
 
+            if (this.snapperOn) {
+                this.setSnapperOn();
+            } else {
+                if (this.snapTransOn) {
+                    this.editControl.setTransSnap(true);
+                    this.editControl.setTransSnapValue(this.snapTransValue);
+                };
+                if (this.snapRotOn) {
+                    this.editControl.setRotSnap(true);
+                    this.editControl.setRotSnapValue(this.snapRotValue);
+                };
+                if (this.snapScaleOn) {
+                    this.editControl.setScaleSnap(true);
+                    this.editControl.setScaleSnapValue(this.snapScaleValue);
+                };
+            }
+        }
 
 
         /**
@@ -1026,45 +1020,67 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public addPrim(primType: string) {
-            if (primType === "plane") this.addPlane(); else if (primType === "box") this.addBox(); else if (primType === "sphere") this.addSphere(); else if (primType === "disc") this.addDisc(); else if (primType === "cylinder") this.addCylinder(); else if (primType === "cone") this.addCone(); else if (primType === "torus") this.addTorus();
+            let mesh: AbstractMesh = null;
+            if (primType === "plane") mesh = this.addPlane();
+            else if (primType === "box") mesh = this.addBox();
+            else if (primType === "sphere") mesh = this.addSphere();
+            else if (primType === "disc") mesh = this.addDisc();
+            else if (primType === "cylinder") mesh = this.addCylinder();
+            else if (primType === "cone") mesh = this.addCone();
+            else if (primType === "torus") mesh = this.addTorus();
+            if (mesh !== null) {
+                if (!this.isMeshSelected) {
+                    this.selectForEdit(mesh);
+                } else {
+                    this.switchEditControl(mesh);
+                }
+                this.animateMesh(mesh);
+            }
         }
 
-        public addPlane() {
+        private addPlane(): AbstractMesh {
             let mesh: Mesh = Mesh.CreatePlane("", 1.0, this.scene);
             this.setPrimProperties(mesh);
             mesh.material.backFaceCulling = false;
+            return mesh;
 
         }
 
-        public addBox() {
+        private addBox(): AbstractMesh {
             let mesh: Mesh = Mesh.CreateBox("", 1, this.scene);
             this.setPrimProperties(mesh);
+            return mesh;
         }
 
-        public addSphere() {
+        private addSphere(): AbstractMesh {
             let mesh: Mesh = Mesh.CreateSphere("", 10, 1, this.scene);
             this.setPrimProperties(mesh);
+            return mesh;
         }
 
-        public addDisc() {
+        private addDisc(): AbstractMesh {
             let mesh: Mesh = Mesh.CreateDisc("", 0.5, 20, this.scene);
             this.setPrimProperties(mesh);
             mesh.material.backFaceCulling = false;
+            return mesh;
         }
 
-        public addCylinder() {
+        private addCylinder(): AbstractMesh {
             let mesh: Mesh = Mesh.CreateCylinder("", 1, 1, 1, 20, 1, this.scene);
             this.setPrimProperties(mesh);
+            return mesh;
         }
 
-        public addCone() {
+        private addCone(): AbstractMesh {
             let mesh: Mesh = Mesh.CreateCylinder("", 1, 0, 1, 20, 1, this.scene);
             this.setPrimProperties(mesh);
+            return mesh;
         }
 
-        public addTorus() {
+        private addTorus(): AbstractMesh {
             let mesh: Mesh = Mesh.CreateTorus("", 1, 0.25, 20, this.scene);
             this.setPrimProperties(mesh);
+            return mesh;
         }
 
         public switchGround(): string {
@@ -1090,7 +1106,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var name: string = (<number>new Number(Date.now())).toString();
             var inst: InstancedMesh = (<Mesh>this.meshPicked).createInstance(name);
             //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
-            this.animateCopy(inst);
+            this.animateMesh(inst);
             this.meshPicked = inst;
             this.switchEditControl(inst);
             //TODO think
@@ -1315,7 +1331,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var clone: AbstractMesh = mesh.clone(name, null, true);
             delete clone["sensors"];
             delete clone["actuators"];
-            this.animateCopy(clone);
+            this.animateMesh(clone);
             //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
             //TODO think
             //clone.receiveShadows = true;
@@ -1324,7 +1340,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return clone;
         }
         //play a small scaling animation when cloning or instancing a mesh.
-        private animateCopy(mesh: AbstractMesh): void {
+        private animateMesh(mesh: AbstractMesh): void {
             let startScale: Vector3 = new Vector3(1.5, 1.5, 1.5);
             let endScale: Vector3 = new Vector3(1, 1, 1);
             Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
@@ -1378,7 +1394,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 //mergedMesh.computeWorldMatrix(true);
                 mergedMesh.position = this.meshPicked.position.clone();
                 this.switchEditControl(mergedMesh);
-                this.animateCopy(mergedMesh);
+                this.animateMesh(mergedMesh);
                 return null;
             } else {
                 return "please select two or more mesh";
@@ -1406,7 +1422,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 let newMesh: Mesh = csg3.toMesh(name, this.meshesPicked[0].material, this.scene, false);
 
                 this.switchEditControl(newMesh);
-                this.animateCopy(newMesh);
+                this.animateMesh(newMesh);
                 return null;
             } else {
                 return "please select two mesh";
@@ -1492,9 +1508,9 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.meshPicked.visibility;
         }
 
-        public setMeshColor(colType: string,hex: string) {
+        public setMeshColor(colType: string, hex: string) {
             let sm: StandardMaterial = <StandardMaterial>this.meshPicked.material;
-            let col:Color3 = Color3.FromHexString(hex);
+            let col: Color3 = Color3.FromHexString(hex);
             if (colType === "diffuse")
                 sm.diffuseColor = col;
             else if (colType === "emissive")
@@ -1925,12 +1941,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public printAnimCount(skel: Skeleton) {
             var bones: Bone[] = skel.bones;
-            for (var index126 = 0; index126 < bones.length; index126++) {
-                var bone = bones[index126];
-                {
-                    console.log(bone.name + "," + bone.animations.length + " , " + bone.animations[0].getHighestFrame());
-                    console.log(bone.animations[0]);
-                }
+            for (let bone of bones) {
+                console.log(bone.name + "," + bone.animations.length + " , " + bone.animations[0].getHighestFrame());
+                console.log(bone.animations[0]);
             }
         }
 
@@ -2215,29 +2228,23 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private removeInstancesFromShadow() {
             var meshes: AbstractMesh[] = this.scene.meshes;
-            for (var index127 = 0; index127 < meshes.length; index127++) {
-                var mesh = meshes[index127];
-                {
-                    if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                        var shadowMeshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
-                        var i: number = shadowMeshes.indexOf(mesh);
-                        if (i >= 0) {
-                            shadowMeshes.splice(i, 1);
-                        }
+            for (let mesh of meshes) {
+                if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                    var shadowMeshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
+                    var i: number = shadowMeshes.indexOf(mesh);
+                    if (i >= 0) {
+                        shadowMeshes.splice(i, 1);
                     }
                 }
             }
         }
 
         private addInstancesToShadow() {
-            for (var index128 = 0; index128 < this.scene.meshes.length; index128++) {
-                var mesh = this.scene.meshes[index128];
-                {
-                    if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
-                        //TODO think
-                        //mesh.receiveShadows = true;
-                        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                    }
+            for (let mesh of this.scene.meshes) {
+                if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+                    //TODO think
+                    //mesh.receiveShadows = true;
+                    (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                 }
             }
         }
@@ -2251,12 +2258,9 @@ namespace org.ssatguru.babylonjs.vishva {
          */
         private renameMeshIds() {
             var i: number = 0;
-            for (var index129 = 0; index129 < this.scene.meshes.length; index129++) {
-                var mesh = this.scene.meshes[index129];
-                {
-                    mesh.id = (<number>new Number(i)).toString();
-                    i++;
-                }
+            for (let mesh of this.scene.meshes) {
+                mesh.id = (<number>new Number(i)).toString();
+                i++;
             }
         }
 
@@ -2269,13 +2273,10 @@ namespace org.ssatguru.babylonjs.vishva {
          */
         private resetSkels(scene: Scene) {
             var i: number = 0;
-            for (var index130 = 0; index130 < scene.skeletons.length; index130++) {
-                var skel = scene.skeletons[index130];
-                {
-                    skel.id = (<number>new Number(i)).toString();
-                    i++;
-                    skel.returnToRest();
-                }
+            for (let skel of scene.skeletons) {
+                skel.id = (<number>new Number(i)).toString();
+                i++;
+                skel.returnToRest();
             }
         }
 
@@ -2283,27 +2284,21 @@ namespace org.ssatguru.babylonjs.vishva {
             var mats: Material[] = this.scene.materials;
             this.renameWorldMaterials(mats);
             var mms: MultiMaterial[] = this.scene.multiMaterials;
-            for (var index131 = 0; index131 < mms.length; index131++) {
-                var mm = mms[index131];
-                {
-                    this.renameWorldMaterials(mm.subMaterials);
-                }
+            for (let mm of mms) {
+                this.renameWorldMaterials(mm.subMaterials);
             }
         }
 
         private renameWorldMaterials(mats: Material[]) {
             var sm: StandardMaterial;
-            for (var index132 = 0; index132 < mats.length; index132++) {
-                var mat = mats[index132];
-                {
-                    if (mat != null && mat instanceof BABYLON.StandardMaterial) {
-                        sm = <StandardMaterial>mat;
-                        this.rename(sm.diffuseTexture);
-                        this.rename(sm.reflectionTexture);
-                        this.rename(sm.opacityTexture);
-                        this.rename(sm.specularTexture);
-                        this.rename(sm.bumpTexture);
-                    }
+            for (let mat of mats) {
+                if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                    sm = <StandardMaterial>mat;
+                    this.rename(sm.diffuseTexture);
+                    this.rename(sm.reflectionTexture);
+                    this.rename(sm.opacityTexture);
+                    this.rename(sm.specularTexture);
+                    this.rename(sm.bumpTexture);
                 }
             }
         }
@@ -2344,26 +2339,24 @@ namespace org.ssatguru.babylonjs.vishva {
             var meshes: AbstractMesh[] = this.scene.meshes;
             var mats: Array<Material> = new Array<Material>();
             var mms: Array<MultiMaterial> = new Array<MultiMaterial>();
-            for (var index133 = 0; index133 < meshes.length; index133++) {
-                var mesh = meshes[index133];
-                {
-                    if (mesh.material != null) {
-                        if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
-                            var mm: MultiMaterial = <MultiMaterial>mesh.material;
-                            mms.push(mm);
-                            var ms: Material[] = mm.subMaterials;
-                            for (var index134 = 0; index134 < ms.length; index134++) {
-                                var mat = ms[index134];
-                                {
-                                    mats.push(mat);
-                                }
+            for (let mesh of meshes) {
+                if (mesh.material != null) {
+                    if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
+                        var mm: MultiMaterial = <MultiMaterial>mesh.material;
+                        mms.push(mm);
+                        var ms: Material[] = mm.subMaterials;
+                        for (var index134 = 0; index134 < ms.length; index134++) {
+                            var mat = ms[index134];
+                            {
+                                mats.push(mat);
                             }
-                        } else {
-                            mats.push(mesh.material);
                         }
+                    } else {
+                        mats.push(mesh.material);
                     }
                 }
             }
+
             var allMats: Material[] = this.scene.materials;
             var l: number = allMats.length;
             for (var i: number = l - 1; i >= 0; i--) {
@@ -2387,12 +2380,9 @@ namespace org.ssatguru.babylonjs.vishva {
         private cleanupSkels() {
             var meshes: AbstractMesh[] = this.scene.meshes;
             var skels: Array<Skeleton> = new Array<Skeleton>();
-            for (var index135 = 0; index135 < meshes.length; index135++) {
-                var mesh = meshes[index135];
-                {
-                    if (mesh.skeleton != null) {
-                        skels.push(mesh.skeleton);
-                    }
+            for (let mesh of meshes) {
+                if (mesh.skeleton != null) {
+                    skels.push(mesh.skeleton);
                 }
             }
             var allSkels: Skeleton[] = this.scene.skeletons;
@@ -2421,44 +2411,49 @@ namespace org.ssatguru.babylonjs.vishva {
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
         private onMeshLoaded(meshes: AbstractMesh[], particleSystems: ParticleSystem[], skeletons: Skeleton[]) {
             var boundingRadius: number = this.getBoundingRadius(meshes);
-            {
-                var array137 = <Mesh[]>meshes;
-                for (var index136 = 0; index136 < array137.length; index136++) {
-                    var mesh = array137[index136];
-                    {
-                        mesh.isPickable = true;
-                        mesh.checkCollisions = true;
-                        var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
-                        var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                        mesh.position.addInPlace(placementGlobal);
-                        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-                        //TODO think
-                        //mesh.receiveShadows = true;
-                        if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
-                            var mm: MultiMaterial = <MultiMaterial>mesh.material;
-                            var mats: Material[] = mm.subMaterials;
-                            for (var index138 = 0; index138 < mats.length; index138++) {
-                                var mat = mats[index138];
-                                {
-                                    mesh.material.backFaceCulling = false;
-                                    mesh.material.alpha = 1;
-                                    if (mat != null && mat instanceof BABYLON.StandardMaterial) {
-                                        this.renameAssetTextures(<StandardMaterial>mat);
-                                    }
-                                }
-                            }
-                        } else {
-                            mesh.material.backFaceCulling = false;
-                            mesh.material.alpha = 1;
-                            var sm: StandardMaterial = <StandardMaterial>mesh.material;
-                            this.renameAssetTextures(sm);
-                        }
-                        if (mesh.skeleton != null) {
-                            this.fixAnimationRanges(mesh.skeleton);
+
+            for (let mesh of meshes) {
+                mesh.isPickable = true;
+                mesh.checkCollisions = true;
+                var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
+                var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                mesh.position.addInPlace(placementGlobal);
+                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+                //TODO think
+                //mesh.receiveShadows = true;
+                if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
+                    var mm: MultiMaterial = <MultiMaterial>mesh.material;
+                    var mats: Material[] = mm.subMaterials;
+                    for (let mat of mats) {
+                        mesh.material.backFaceCulling = false;
+                        mesh.material.alpha = 1;
+                        if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                            this.renameAssetTextures(<StandardMaterial>mat);
                         }
                     }
+                } else {
+                    mesh.material.backFaceCulling = false;
+                    mesh.material.alpha = 1;
+                    var sm: StandardMaterial = <StandardMaterial>mesh.material;
+                    this.renameAssetTextures(sm);
+                }
+                if (mesh.skeleton != null) {
+                    this.fixAnimationRanges(mesh.skeleton);
                 }
             }
+            //select and animate the last mesh loaded
+            if (meshes.length > 0) {
+                let lastMesh: AbstractMesh = meshes[meshes.length - 1];
+                if (!this.isMeshSelected) {
+                    this.selectForEdit(lastMesh);
+                } else {
+                    this.switchEditControl(lastMesh);
+                }
+                this.animateMesh(lastMesh);
+            }
+
+
+
         }
 
         private renameAssetTextures(sm: StandardMaterial) {
@@ -2884,7 +2879,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.avatarSkeleton.name = "Vishva.skeleton";
 
             this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
-            this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
+            //this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
 
             var sm: StandardMaterial = <StandardMaterial>this.avatar.material;
             if (sm.diffuseTexture != null) {
@@ -2894,6 +2889,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
             this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
             this.cc.start();
+
+            //in 3.0 need to set the camera values again
+            //            this.mainCamera.radius = 4;
+            //            this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
+            //            this.mainCamera.beta = 1.4;
+
 
         }
 

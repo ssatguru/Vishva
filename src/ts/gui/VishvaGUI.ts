@@ -259,31 +259,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return true;
             };
 
-            let trnCol: HTMLElement = document.getElementById("trnCol");
-            let trnColDiag: ColorPickerDiag = new ColorPickerDiag("terrain color", "trnColDiag", "trnColCP", this.centerBottom, (hex, hsv, rgb) => {
-                trnCol.style.backgroundColor = hex;
+            
+            let trnColDiag: ColorPickerDiag = new ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), this.centerBottom, (hex, hsv, rgb) => {
                 this.vishva.setGroundColor(hex);
             });
-            let trnColor: string = this.vishva.getGroundColor();
-            trnColDiag.setColor(trnColor);
-            trnCol.style.backgroundColor = trnColor;
-
-            trnCol.onclick = () => {
-                let trnColor: string = this.vishva.getGroundColor();
-                trnColDiag.open(trnColor);
-            }
-
-            //            var colorEle: HTMLElement = document.getElementById("color-picker");
-            //            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
-            //            var setRGB: Function = <Function>cp["setRgb"];
-            //            var color: number[] = this.vishva.getGroundColor();
-            //            if (color != null) {
-            //                var rgb: RGB = new RGB();
-            //                rgb.r = color[0];
-            //                rgb.g = color[1];
-            //                rgb.b = color[2];
-            //                cp.setRgb(rgb);
-            //            }
 
             this.envDiag = $("#envDiv");
             var dos: DialogOptions = {
@@ -1421,8 +1400,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         lightAtt: HTMLInputElement;
         lightType: HTMLSelectElement;
-        lightDiff: HTMLInputElement;
-        lightSpec: HTMLInputElement;
+        lightDiff: ColorPickerDiag;
+        lightSpec: ColorPickerDiag;
         lightInten: HTMLInputElement;
         lightRange: HTMLInputElement;
         lightRadius: HTMLInputElement;
@@ -1436,8 +1415,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private initLightUI() {
             this.lightAtt = <HTMLInputElement>document.getElementById("lightAtt");
             this.lightType = <HTMLSelectElement>document.getElementById("lightType");
-            this.lightDiff = <HTMLInputElement>document.getElementById("lightDiff");
-            this.lightSpec = <HTMLInputElement>document.getElementById("lightSpec");
+            this.lightDiff = new ColorPickerDiag("diffuse light", "lightDiff","#ffffff",this.centerBottom, (hex, hsv, rgb) => {
+                this.applyLight();
+            });
+
+            this.lightSpec = new ColorPickerDiag("specular light", "lightSpec","#ffffff",this.centerBottom, (hex, hsv, rgb) => {
+                this.applyLight();
+            });
             this.lightInten = <HTMLInputElement>document.getElementById("lightInten");
             this.lightRange = <HTMLInputElement>document.getElementById("lightRange");
             this.lightRadius = <HTMLInputElement>document.getElementById("lightAtt");
@@ -1454,8 +1438,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 } else this.applyLight();
             };
             this.lightType.onchange = () => this.applyLight();
-            this.lightDiff.onchange = () => this.applyLight();
-            this.lightSpec.onchange = () => this.applyLight();
             this.lightInten.onchange = () => this.applyLight();
             this.lightRange.onchange = () => this.applyLight();
             this.lightAngle.onchange = () => this.applyLight();
@@ -1463,6 +1445,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.lightDirX.onchange = () => this.applyLight();
             this.lightDirY.onchange = () => this.applyLight();
             this.lightDirZ.onchange = () => this.applyLight();
+            
+           
         }
 
         private updateLight() {
@@ -1475,8 +1459,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.lightAtt.checked = true;
             }
             this.lightType.value = lightParm.type;
-            this.lightDiff.value = lightParm.diffuse.toHexString();
-            this.lightSpec.value = lightParm.specular.toHexString();
+            this.lightDiff.setColor(lightParm.diffuse.toHexString());
+            this.lightSpec.setColor(lightParm.specular.toHexString());
             this.lightInten.value = Number(lightParm.intensity).toString();
             this.lightRange.value = Number(lightParm.range).toString();
             this.lightRadius.value = Number(lightParm.radius).toString();
@@ -1499,8 +1483,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if (!this.lightAtt.checked) return;
             let lightParm: LightParm = new LightParm();
             lightParm.type = this.lightType.value;
-            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
-            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
+            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.getColor());
+            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.getColor());
             lightParm.intensity = parseFloat(this.lightInten.value);
             lightParm.range = parseFloat(this.lightRange.value);
             lightParm.radius = parseFloat(this.lightRadius.value);
@@ -1513,34 +1497,26 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.vishva.attachAlight(lightParm);
 
         }
+        
         matVis: HTMLInputElement;
         matVisVal: HTMLElement;
-
         matColType: HTMLSelectElement;
-        matCol: HTMLElement;
-        matColDiag: org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
+        matColDiag: ColorPickerDiag;
         private initMatUI() {
 
             this.matVisVal = document.getElementById("matVisVal");
             this.matVis = <HTMLInputElement>document.getElementById("matVis");
 
             this.matColType = <HTMLSelectElement>document.getElementById("matColType");
-
-            this.matCol = document.getElementById("matCol");
-            this.matColDiag = new ColorPickerDiag("mesh color", "matColDiag", "matColCP", this.centerBottom, (hex, hsv, rgb) => {
-                this.matCol.style.background = hex;
-                this.vishva.setMeshColor(this.matColType.value, hex);
-            })
             this.matColType.onchange = () => {
                 let col: string = this.vishva.getMeshColor(this.matColType.value);
-                this.matCol.style.background = col
                 this.matColDiag.setColor(col);
             }
 
-            this.matCol.onclick = () => {
-                this.matColDiag.open(this.vishva.getMeshColor(this.matColType.value));
-            }
-
+            this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, (hex, hsv, rgb) => {
+                this.vishva.setMeshColor(this.matColType.value, hex);
+            });
+            
             this.matVisVal["value"] = "1.00";
             this.matVis.oninput = () => {
                 this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
@@ -1554,8 +1530,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if (this.matVis == undefined) this.initMatUI();
             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
-            this.matCol.style.background = this.vishva.getMeshColor(this.matColType.value);
-
+            this.matColDiag.setColor(this.vishva.getMeshColor(this.matColType.value));
         }
 
         phyEna: HTMLInputElement;

@@ -2526,31 +2526,25 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         public createWater() {
+            console.log("creating water");
             var waterMesh: Mesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
-            //waterMesh.position.y = 0;
+            //waterMesh.position.y = 1;
             var water: WaterMaterial = new WaterMaterial("water", this.scene);
+            water.backFaceCulling = true;
             water.bumpTexture = new Texture(this.waterTexture, this.scene);
             //repoint the path, so that we can reload this if it is saved in scene 
             water.bumpTexture.name = this.RELATIVE_ASSET_LOCATION + water.bumpTexture.name;
-            //wavy
-            //            water.windForce = -5;
-            //            water.waveHeight = 0.5;
-            //            water.waterColor = new Color3(0.1, 0.1, 0.6);
-            //            water.colorBlendFactor = 0;
-            //            water.bumpHeight = 0.1;
-            //            water.waveLength = 0.1;
-
-
-            //calm
+            
+            //beach
             water.windForce = -5;
-            water.waveHeight = 0.02;
-            water.bumpHeight = 0.05;
-            water.waterColor = new Color3(0.047, 0.23, 0.015);
-            water.colorBlendFactor = 0.5;
+            water.waveHeight = 0.5;
+            //water.waterColor = new Color3(0.1, 0.1, 0.6);
+            water.colorBlendFactor = 0;
+            water.bumpHeight = 0.1;
+            water.waveLength = 0.1;
+
             water.addToRenderList(this.skybox);
-            water.addToRenderList(this.ground);
-
-
+            //water.addToRenderList(this.ground);
             waterMesh.material = water;
         }
 

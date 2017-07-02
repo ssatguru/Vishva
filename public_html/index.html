@@ -24,10 +24,12 @@
         <!--<script src="lib/babylon3.0-03-20-2017.js"></script>--> 
 
         <!-- following uses bluerExponential Shadowmaps -->
+        <!-- also arcrotate camera seems to have some sublte change in 3.0 -->
         <!--<script src="lib/babylon3.0-04-20-2017.js"></script>--> 
         <!--<script src="lib/babylon2.6-05-12-2017.js"></script>--> 
         <script src="lib/babylon-06-19-2017.max.js"></script>
-        
+        <!-- shadow is broken below -->
+        <!--<script src="lib/babylon-06-30-2017.max.js"></script>-->
 
         <!-- the latest -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
@@ -36,10 +38,13 @@
         
         <script src="lib/babylon.waterMaterial.min.js"></script>
         <script src="lib/pep.0.4.1.min.js"></script>
-        <script src="lib/colorpicker.min.js"></script>
-
+        
+        <!-- problem with the colorpicker minified version . see https://github.com/DavidDurman/FlexiColorPicker/issues/40 -->
+        <!--<script src="lib/colorpicker.min.js"></script>-->
+        <script src="lib/colorpicker.uglified.js"></script>
+        <!--<script src="lib/colorpicker.js"></script>-->
+        
         <link href="lib/colorpicker.themes.css" rel="stylesheet">
-        <script type="text/javascript" src="lib/colorpicker.js"></script>
 
         <style>
             html, body {
@@ -190,9 +195,6 @@
 
         <!-- all elements used by jquery ui -->
         <div id="gui-items-2">
-
-
-
             <div id="envDiv" title="Environment">
                 <table style="width: 100%; text-align: center;">
                     <tr>
@@ -234,13 +236,7 @@
                     </tr>
                     <tr>
                         <td>terrain color</td>
-                        <td>
-                            <!--<div ondragstart="return false;" id="color-picker" class="cp-small"></div>-->
-                            <div id="trnCol" style="width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer"></div>
-                            <div id="trnColDiag" style="align-content: center">
-                                <div id ="trnColCP" class="cp-fancy"></div>
-                            </div>
-                        </td>
+                        <td><div id="trnCol"></div></td>
                     </tr>
                 </table>
             </div>
@@ -511,10 +507,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <div id="matCol" style="width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer"></div>
-                                    <div id="matColDiag">
-                                        <div id ="matColCP" class="cp-fancy"></div>
-                                    </div>
+                                    <div id="matCol"></div>
                                 </td>
                             </tr>
                             <tr>
@@ -573,13 +566,11 @@
                             </tr>
                             <tr>
                                 <td>diffuse</td>
-                                <td><input type="color" id="lightDiff" value="#ffffff"></td>
+                                <td><div id="lightDiff"></div></td>
                             </tr>
                             <tr>
                                 <td>specular </td>
-                                <td>
-                                    <input type="color" id="lightSpec" value="#ffffff">
-                                </td>
+                                <td><div id="lightSpec"></div></td>
                             </tr>
                             <tr>
                                 <td>intensity </td>

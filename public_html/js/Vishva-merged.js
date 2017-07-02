@@ -390,10 +390,28 @@ var org;
                 var gui;
                 (function (gui) {
                     var ColorPickerDiag = (function () {
-                        function ColorPickerDiag(title, diagSelector, colorSelector, jpo, f) {
-                            this.diag = $("#" + diagSelector);
-                            var colorEle = document.getElementById(colorSelector);
-                            this.cp = new ColorPicker(colorEle, f);
+                        function ColorPickerDiag(title, diagSelector, initialColor, jpo, f) {
+                            var _this = this;
+                            this.inner1 = "<input class='colorInput' type='text' style='width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer' readonly></input>";
+                            this.inner2 = "<div class='colorDiag' style='align-content: center'><div  class='colorPicker cp-fancy'></div></div>";
+                            this.hexColor = initialColor;
+                            var colorEle = document.getElementById(diagSelector);
+                            colorEle.innerHTML = this.inner1.concat(this.inner2);
+                            this.colorInput = colorEle.getElementsByClassName("colorInput")[0];
+                            this.colorInput.style.backgroundColor = this.hexColor;
+                            this.colorInput.value = this.hexColor;
+                            this.colorInput.onclick = function () {
+                                _this.diag.dialog("open");
+                                _this.cp.setHex(_this.hexColor);
+                            };
+                            var colorDiag = colorEle.getElementsByClassName("colorDiag")[0];
+                            var colorPicker = colorDiag.getElementsByClassName("colorPicker")[0];
+                            this.cp = new ColorPicker(colorPicker, function (hex, hsv, rgb) {
+                                _this.hexColor = hex;
+                                _this.colorInput.style.backgroundColor = hex;
+                                _this.colorInput.value = hex;
+                                f(hex, hsv, rgb);
+                            });
                             var dos = {
                                 autoOpen: false,
                                 resizable: false,
@@ -404,6 +422,7 @@ var org;
                                 closeOnEscape: false,
                                 title: title
                             };
+                            this.diag = $(colorDiag);
                             this.diag.dialog(dos);
                             this.diag["jpo"] = jpo;
                         }
@@ -412,7 +431,13 @@ var org;
                             this.setColor(hex);
                         };
                         ColorPickerDiag.prototype.setColor = function (hex) {
+                            this.hexColor = hex;
                             this.cp.setHex(hex);
+                            this.colorInput.style.backgroundColor = hex;
+                            this.colorInput.value = hex;
+                        };
+                        ColorPickerDiag.prototype.getColor = function () {
+                            return this.hexColor;
                         };
                         return ColorPickerDiag;
                     }());
@@ -671,29 +696,9 @@ var org;
                                 _this.showAlertDiag("Sorry. To be implemneted soon");
                                 return true;
                             };
-                            var trnCol = document.getElementById("trnCol");
-                            var trnColDiag = new ColorPickerDiag("terrain color", "trnColDiag", "trnColCP", this.centerBottom, function (hex, hsv, rgb) {
-                                trnCol.style.backgroundColor = hex;
+                            var trnColDiag = new ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), this.centerBottom, function (hex, hsv, rgb) {
                                 _this.vishva.setGroundColor(hex);
                             });
-                            var trnColor = this.vishva.getGroundColor();
-                            trnColDiag.setColor(trnColor);
-                            trnCol.style.backgroundColor = trnColor;
-                            trnCol.onclick = function () {
-                                var trnColor = _this.vishva.getGroundColor();
-                                trnColDiag.open(trnColor);
-                            };
-                            //            var colorEle: HTMLElement = document.getElementById("color-picker");
-                            //            var cp: ColorPicker = new ColorPicker(colorEle, (hex, hsv, rgb) => { return this.colorPickerHandler(hex, hsv, rgb) });
-                            //            var setRGB: Function = <Function>cp["setRgb"];
-                            //            var color: number[] = this.vishva.getGroundColor();
-                            //            if (color != null) {
-                            //                var rgb: RGB = new RGB();
-                            //                rgb.r = color[0];
-                            //                rgb.g = color[1];
-                            //                rgb.b = color[2];
-                            //                cp.setRgb(rgb);
-                            //            }
                             this.envDiag = $("#envDiv");
                             var dos = {
                                 autoOpen: false,
@@ -1701,8 +1706,12 @@ var org;
                             var _this = this;
                             this.lightAtt = document.getElementById("lightAtt");
                             this.lightType = document.getElementById("lightType");
-                            this.lightDiff = document.getElementById("lightDiff");
-                            this.lightSpec = document.getElementById("lightSpec");
+                            this.lightDiff = new ColorPickerDiag("diffuse light", "lightDiff", "#ffffff", this.centerBottom, function (hex, hsv, rgb) {
+                                _this.applyLight();
+                            });
+                            this.lightSpec = new ColorPickerDiag("specular light", "lightSpec", "#ffffff", this.centerBottom, function (hex, hsv, rgb) {
+                                _this.applyLight();
+                            });
                             this.lightInten = document.getElementById("lightInten");
                             this.lightRange = document.getElementById("lightRange");
                             this.lightRadius = document.getElementById("lightAtt");
@@ -1720,8 +1729,6 @@ var org;
                                     _this.applyLight();
                             };
                             this.lightType.onchange = function () { return _this.applyLight(); };
-                            this.lightDiff.onchange = function () { return _this.applyLight(); };
-                            this.lightSpec.onchange = function () { return _this.applyLight(); };
                             this.lightInten.onchange = function () { return _this.applyLight(); };
                             this.lightRange.onchange = function () { return _this.applyLight(); };
                             this.lightAngle.onchange = function () { return _this.applyLight(); };
@@ -1742,8 +1749,8 @@ var org;
                                 this.lightAtt.checked = true;
                             }
                             this.lightType.value = lightParm.type;
-                            this.lightDiff.value = lightParm.diffuse.toHexString();
-                            this.lightSpec.value = lightParm.specular.toHexString();
+                            this.lightDiff.setColor(lightParm.diffuse.toHexString());
+                            this.lightSpec.setColor(lightParm.specular.toHexString());
                             this.lightInten.value = Number(lightParm.intensity).toString();
                             this.lightRange.value = Number(lightParm.range).toString();
                             this.lightRadius.value = Number(lightParm.radius).toString();
@@ -1764,8 +1771,8 @@ var org;
                                 return;
                             var lightParm = new vishva_1.LightParm();
                             lightParm.type = this.lightType.value;
-                            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.value);
-                            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.value);
+                            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.getColor());
+                            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.getColor());
                             lightParm.intensity = parseFloat(this.lightInten.value);
                             lightParm.range = parseFloat(this.lightRange.value);
                             lightParm.radius = parseFloat(this.lightRadius.value);
@@ -1782,19 +1789,13 @@ var org;
                             this.matVisVal = document.getElementById("matVisVal");
                             this.matVis = document.getElementById("matVis");
                             this.matColType = document.getElementById("matColType");
-                            this.matCol = document.getElementById("matCol");
-                            this.matColDiag = new ColorPickerDiag("mesh color", "matColDiag", "matColCP", this.centerBottom, function (hex, hsv, rgb) {
-                                _this.matCol.style.background = hex;
-                                _this.vishva.setMeshColor(_this.matColType.value, hex);
-                            });
                             this.matColType.onchange = function () {
                                 var col = _this.vishva.getMeshColor(_this.matColType.value);
-                                _this.matCol.style.background = col;
                                 _this.matColDiag.setColor(col);
                             };
-                            this.matCol.onclick = function () {
-                                _this.matColDiag.open(_this.vishva.getMeshColor(_this.matColType.value));
-                            };
+                            this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, function (hex, hsv, rgb) {
+                                _this.vishva.setMeshColor(_this.matColType.value, hex);
+                            });
                             this.matVisVal["value"] = "1.00";
                             this.matVis.oninput = function () {
                                 _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
@@ -1806,7 +1807,7 @@ var org;
                                 this.initMatUI();
                             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
                             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
-                            this.matCol.style.background = this.vishva.getMeshColor(this.matColType.value);
+                            this.matColDiag.setColor(this.vishva.getMeshColor(this.matColType.value));
                         };
                         VishvaGUI.prototype.initPhyUI = function () {
                             var _this = this;
@@ -5643,27 +5644,23 @@ var org;
                         SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, function (scene) { return _this.onSceneLoaded(scene); });
                     };
                     Vishva.prototype.createWater = function () {
+                        console.log("creating water");
                         var waterMesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
-                        //waterMesh.position.y = 0;
+                        //waterMesh.position.y = 1;
                         var water = new WaterMaterial("water", this.scene);
+                        water.backFaceCulling = true;
                         water.bumpTexture = new Texture(this.waterTexture, this.scene);
                         //repoint the path, so that we can reload this if it is saved in scene 
                         water.bumpTexture.name = this.RELATIVE_ASSET_LOCATION + water.bumpTexture.name;
-                        //wavy
-                        //            water.windForce = -5;
-                        //            water.waveHeight = 0.5;
-                        //            water.waterColor = new Color3(0.1, 0.1, 0.6);
-                        //            water.colorBlendFactor = 0;
-                        //            water.bumpHeight = 0.1;
-                        //            water.waveLength = 0.1;
-                        //calm
+                        //beach
                         water.windForce = -5;
-                        water.waveHeight = 0.02;
-                        water.bumpHeight = 0.05;
-                        water.waterColor = new Color3(0.047, 0.23, 0.015);
-                        water.colorBlendFactor = 0.5;
+                        water.waveHeight = 0.5;
+                        //water.waterColor = new Color3(0.1, 0.1, 0.6);
+                        water.colorBlendFactor = 0;
+                        water.bumpHeight = 0.1;
+                        water.waveLength = 0.1;
                         water.addToRenderList(this.skybox);
-                        water.addToRenderList(this.ground);
+                        //water.addToRenderList(this.ground);
                         waterMesh.material = water;
                     };
                     Vishva.prototype.addWater = function () {

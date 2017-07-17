@@ -25,7 +25,9 @@ var org;
                         //slopeLimit in radians
                         this.sl = 0.785;
                         this.started = false;
-                        this.avatarSpeed = 0.05;
+                        //avatarSpeed: number = 0.05;
+                        //avatar walking speed in meters/second
+                        this.avatarSpeed = 3;
                         this.prevAnim = null;
                         this.jumpCycleMax = 25;
                         this.jumpCycle = this.jumpCycleMax;
@@ -97,7 +99,6 @@ var org;
                     };
                     CharacterControl.prototype.moveAVandCamera = function () {
                         this.oldPos.copyFrom(this.avatar.position);
-                        //console.log(this.camera.target);
                         //skip everything if no movement key pressed
                         if (!this.anyMovement()) {
                             if (!this.grounded) {
@@ -111,7 +112,7 @@ var org;
                                     this.stillTime = 0;
                                 }
                                 else if (this.avatar.position.y < this.oldPos.y) {
-                                    //if we are sliding down check slope
+                                    //if we are sliding down then check slope
                                     var diff = this.oldPos.subtract(this.avatar.position).length();
                                     var ht = this.oldPos.y - this.avatar.position.y;
                                     var slope = Math.asin(ht / diff);
@@ -132,13 +133,17 @@ var org;
                         }
                         this.stillTime = 0;
                         this.grounded = false;
-                        this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
+                        var dt = this.scene.getEngine().getDeltaTime() / 1000;
+                        //distance by which AV should have walked since last frame
+                        var walkDist = this.avatarSpeed * dt;
+                        //actual distance to be calculated based on wether AV is walking, runnning, or backing up
+                        var actDist = 0;
+                        this.time = this.time + dt;
                         //this.downSpeed = this.gravity * (this.time ** 2) / 2;
                         this.downSpeed = this.gravity * this.time;
                         var anim = this.idle;
                         var moving = false;
-                        var speed = 0;
-                        var upSpeed = 0.05;
+                        var jumpSpeed = this.avatarSpeed * dt;
                         var dir = 1;
                         var forward;
                         var backwards;
@@ -146,23 +151,25 @@ var org;
                         var stepRight;
                         if (this.key.up) {
                             if (this.key.shift) {
-                                speed = this.avatarSpeed * 2;
+                                //speed = this.avatarSpeed * 2;
+                                actDist = walkDist * 2;
                                 anim = this.run;
                             }
                             else {
-                                speed = this.avatarSpeed;
+                                //speed = this.avatarSpeed;
+                                actDist = walkDist;
                                 anim = this.walk;
                             }
                             if (this.key.jump) {
                                 this.wasJumping = true;
                             }
                             if (this.wasJumping) {
-                                upSpeed *= 2;
+                                jumpSpeed *= 2;
                                 if (this.jumpCycle < this.jumpCycleMax / 2) {
                                     dir = 1;
                                     if (this.jumpCycle < 0) {
                                         this.jumpCycle = this.jumpCycleMax;
-                                        upSpeed /= 2;
+                                        jumpSpeed /= 2;
                                         this.key.jump = false;
                                         this.wasJumping = false;
                                     }
@@ -172,17 +179,18 @@ var org;
                                     dir = -1;
                                 }
                                 this.jumpCycle--;
-                                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                                forward = this.avatar.calcMovePOV(0, -jumpSpeed * dir, actDist);
                             }
                             else {
-                                forward = this.avatar.calcMovePOV(0, -this.downSpeed, speed);
+                                forward = this.avatar.calcMovePOV(0, -this.downSpeed, actDist);
                             }
                             this.avatar.moveWithCollisions(forward);
                             moving = true;
                         }
                         else if (this.key.down) {
                             //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                            backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
+                            //backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
+                            backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -walkDist / 2);
                             this.avatar.moveWithCollisions(backwards);
                             moving = true;
                             anim = this.walkBack;
@@ -192,14 +200,16 @@ var org;
                         else if (this.key.stepLeft) {
                             anim = this.strafeLeft;
                             //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
+                            //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
+                            stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downSpeed, 0);
                             this.avatar.moveWithCollisions(stepLeft);
                             moving = true;
                         }
                         else if (this.key.stepRight) {
                             anim = this.strafeRight;
                             //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
+                            //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
+                            stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downSpeed, 0);
                             this.avatar.moveWithCollisions(stepRight);
                             moving = true;
                         }
@@ -208,12 +218,12 @@ var org;
                                 this.wasJumping = true;
                             }
                             if (this.wasJumping) {
-                                upSpeed *= 2;
+                                jumpSpeed *= 2;
                                 if (this.jumpCycle < this.jumpCycleMax / 2) {
                                     dir = 1;
                                     if (this.jumpCycle < 0) {
                                         this.jumpCycle = this.jumpCycleMax;
-                                        upSpeed /= 2;
+                                        jumpSpeed /= 2;
                                         this.key.jump = false;
                                         this.wasJumping = false;
                                     }
@@ -226,7 +236,7 @@ var org;
                             }
                             else
                                 dir = dir / 2;
-                            this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
+                            this.avatar.moveWithCollisions(new Vector3(0, -jumpSpeed * dir, 0));
                         }
                         if (!this.key.stepLeft && !this.key.stepRight) {
                             if (this.key.left) {
@@ -562,6 +572,7 @@ var org;
                                 }
                             }
                         };
+                        //skyboxesDiag: JQuery;
                         VishvaGUI.prototype.createAddMenu = function () {
                             var _this = this;
                             var assetTypes = Object.keys(this.vishva.assets);
@@ -1577,6 +1588,7 @@ var org;
                             var swAv = document.getElementById("swAv");
                             var swGnd = document.getElementById("swGnd");
                             var sNa = document.getElementById("sNa");
+                            //            var addWater: HTMLElement = document.getElementById("addWater");
                             undo.onclick = function (e) {
                                 _this.vishva.undo();
                                 return false;
@@ -1677,6 +1689,13 @@ var org;
                                 _this.show_sNaDiag();
                                 return true;
                             };
+                            //            addWater.onclick = (e) => {
+                            //                var err: string = this.vishva.addWater()
+                            //                 if (err != null) {
+                            //                    this.showAlertDiag(err);
+                            //                }
+                            //                return true;
+                            //            };
                         };
                         VishvaGUI.prototype.updateGeneral = function () {
                             if (this.genName === undefined)
@@ -3110,7 +3129,8 @@ var org;
                     ActuatorSound.prototype.processUpdateSpecific = function () {
                         var _this = this;
                         var SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
-                        var RELATIVE_ASSET_LOCATION = "../../../../";
+                        //let RELATIVE_ASSET_LOCATION: string = "../../../../";
+                        var RELATIVE_ASSET_LOCATION = "";
                         var properties = this.properties;
                         if (properties.soundFile.value == null)
                             return;
@@ -3394,7 +3414,24 @@ var org;
                         this.rainPart = null;
                         this.raining = false;
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
-                        this.RELATIVE_ASSET_LOCATION = "../../../../";
+                        //each asset has a name and a url
+                        //the url seems to be ignored.
+                        //babylonjs gets the location of the asset as below
+                        //
+                        //location = (home url) + (root url specified in the scene loader functions) + (asset name)
+                        //
+                        //if scene file name is passed as parm to the scene loader functions then root url should point to the scene file location
+                        //if "data:" is used instead, then root url can point to the base url for resources.
+                        //
+                        //might bea good idea to load scene file directly and then just pass data to scene loader functions
+                        //this way we can use different base url for scene file and resources
+                        //
+                        //sound is different. 
+                        //location of sound file = home url + sound url
+                        //
+                        //RELATIVE_ASSET_LOCATION: string = "../../../../";
+                        //we can use below too but then while passing data to scene loader use empty string as root url
+                        this.RELATIVE_ASSET_LOCATION = "";
                         /**
                          * use this to prevent users from switching to another mesh during edit.
                          */
@@ -3606,10 +3643,20 @@ var org;
                         var sceneData = "data:" + tfat.text;
                         SceneLoader.ShowLoadingScreen = false;
                         this.loadingStatus.innerHTML = "loading scene";
-                        SceneLoader.Append(this.scenePath, sceneData, this.scene, function (scene) { return _this.onSceneLoaded(scene); });
+                        //SceneLoader.Append(this.scenePath, sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
+                        SceneLoader.Append("", sceneData, this.scene, function (scene) { return _this.onSceneLoaded(scene); });
                     };
                     Vishva.prototype.onTaskFailure = function (obj) {
                         alert("scene load failed");
+                    };
+                    Vishva.prototype.setShadowProperty = function (sl, shadowGenerator) {
+                        //            shadowGenerator.useBlurVarianceShadowMap = true;
+                        //            shadowGenerator.bias = 1.0E-6;
+                        shadowGenerator.useBlurExponentialShadowMap = true;
+                        //            shadowGenerator.bias = 1.0E-6;
+                        //            shadowGenerator.depthScale = 2500;
+                        //            sl.shadowMinZ = 1;
+                        //            sl.shadowMaxZ = 2500;
                     };
                     Vishva.prototype.onSceneLoaded = function (scene) {
                         var _this = this;
@@ -3673,17 +3720,13 @@ var org;
                             this.sun = hl;
                             Tags.AddTagsTo(hl, "Vishva.sun");
                             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
+                            //this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(0, -0.5, -1.0), this.scene);
                             this.sunDR.intensity = 0.5;
-                            this.sunDR.position = new Vector3(0, 32, 0);
+                            //this.sunDR.position = new Vector3(0, 32, 0);
+                            this.sunDR.position = new Vector3(50, 32, 0);
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
-                            //                this.shadowGenerator.useBlurVarianceShadowMap = true;
-                            //                this.shadowGenerator.bias = 1.0E-6;
-                            this.shadowGenerator.useBlurExponentialShadowMap = true;
-                            //                                                this.shadowGenerator.bias =1.0E-6;
-                            //                                                this.shadowGenerator.depthScale = 2500;
-                            //                                                sl.shadowMinZ = 1;
-                            //                                                sl.shadowMaxZ = 2500;
+                            this.setShadowProperty(sl, this.shadowGenerator);
                         }
                         else {
                             for (var _f = 0, _g = scene.lights; _f < _g.length; _f++) {
@@ -3691,14 +3734,8 @@ var org;
                                 if (light.id === "Vishva.dl01") {
                                     this.sunDR = light;
                                     this.shadowGenerator = light.getShadowGenerator();
-                                    //                        this.shadowGenerator.useBlurVarianceShadowMap = true;
-                                    //                        this.shadowGenerator.bias = 1.0E-6;
-                                    this.shadowGenerator.useBlurExponentialShadowMap = true;
-                                    //                                                                        this.shadowGenerator.bias = 1.0E-6;
-                                    //                                                                        this.shadowGenerator.depthScale = 2500;
-                                    //                                                                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                                    //                                                                        sl.shadowMinZ = 1;
-                                    //                                                                        sl.shadowMaxZ = 2500;
+                                    var sl = this.sunDR;
+                                    this.setShadowProperty(sl, this.shadowGenerator);
                                 }
                             }
                         }
@@ -3730,15 +3767,16 @@ var org;
                         this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         if (!groundFound) {
                             console.log("no vishva ground found. creating ground");
-                            //this.ground = this.createGround_old(this.scene);
-                            this.createGround(this.scene);
+                            //this.ground = this.createGround(this.scene);
+                            this.createGround_htmap(this.scene);
                         }
                         else {
                             //in case this wasn't set in serialized scene
                             this.ground.receiveShadows = true;
-                            if (this.enablePhysics) {
-                                this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
-                            }
+                            //are physicsImpostor serialized?
+                            //                if (this.enablePhysics) {
+                            //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
+                            //                }
                         }
                         if (!skyFound) {
                             console.log("no vishva sky found. creating sky");
@@ -5311,6 +5349,14 @@ var org;
                         }
                         this.debugVisible = !this.debugVisible;
                     };
+                    /**
+                     * question: should texture location be vishav based location?
+                     * if meant to be used within vishva then yes
+                     * else no but then we should probably provide an option to save texture too
+                     *
+                     * for now lets keep as vishva based location
+                     *
+                     */
                     Vishva.prototype.saveAsset = function () {
                         if (!this.isMeshSelected) {
                             return null;
@@ -5456,7 +5502,9 @@ var org;
                             var soundList = sounds;
                             for (var _i = 0, soundList_1 = soundList; _i < soundList_1.length; _i++) {
                                 var sound = soundList_1[_i];
-                                sound["url"] = this.RELATIVE_ASSET_LOCATION + this.SOUND_ASSET_LOCATION + sound["url"];
+                                //TODO need to verify this
+                                //sound["url"] = this.RELATIVE_ASSET_LOCATION + this.SOUND_ASSET_LOCATION + sound["url"];
+                                sound["url"] = this.SOUND_ASSET_LOCATION + sound["url"];
                             }
                             //sceneObj["sounds"] = soundList;
                         }
@@ -5669,12 +5717,12 @@ var org;
                         }
                         var water = new WaterMaterial("water", this.scene);
                         water.bumpTexture = new Texture(this.waterTexture, this.scene);
-                        water.windForce = -5;
-                        water.waveHeight = 0.5;
-                        water.waterColor = new Color3(0.1, 0.1, 0.6);
+                        water.windForce = 0.1;
+                        water.waveHeight = 0.1;
+                        //water.waterColor = new Color3(0.1, 0.1, 0.6);
                         water.colorBlendFactor = 0;
-                        water.bumpHeight = 0.1;
-                        water.waveLength = 0.1;
+                        water.bumpHeight = 0;
+                        water.waveLength = 0;
                         water.addToRenderList(this.skybox);
                         this.meshPicked.material = water;
                     };
@@ -5782,7 +5830,7 @@ var org;
                             }
                         }
                     };
-                    Vishva.prototype.createGround_old = function (scene) {
+                    Vishva.prototype.createGround = function (scene) {
                         var groundMaterial = new StandardMaterial("groundMat", scene);
                         groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
                         groundMaterial.diffuseTexture.uScale = 6.0;
@@ -5796,9 +5844,12 @@ var org;
                         Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
                         grnd.freezeWorldMatrix();
                         grnd.receiveShadows = true;
+                        if (this.enablePhysics) {
+                            grnd.physicsImpostor = new BABYLON.PhysicsImpostor(grnd, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+                        }
                         return grnd;
                     };
-                    Vishva.prototype.createGround = function (scene) {
+                    Vishva.prototype.createGround_htmap = function (scene) {
                         var _this = this;
                         var groundMaterial = this.createGroundMaterial(scene);
                         MeshBuilder.CreateGroundFromHeightMap("ground", this.groundHeightMap, {
@@ -5813,13 +5864,13 @@ var org;
                                 grnd.checkCollisions = true;
                                 grnd.isPickable = false;
                                 Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
-                                grnd.freezeWorldMatrix();
                                 grnd.receiveShadows = true;
-                                _this.ground = grnd;
                                 //HeightmapImpostor doesnot seem to work.
-                                //                    if (this.enablePhysics) {
-                                //                        this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.1 }, this.scene);
-                                //                    }
+                                if (_this.enablePhysics) {
+                                    grnd.physicsImpostor = new BABYLON.PhysicsImpostor(grnd, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.1 }, _this.scene);
+                                }
+                                grnd.freezeWorldMatrix();
+                                _this.ground = grnd;
                             }
                         }, scene);
                     };
@@ -6021,8 +6072,9 @@ var org;
                         camera.keysRight = [];
                         camera.keysUp = [];
                         camera.keysDown = [];
-                        camera.panningSensibility = 10;
+                        camera.panningInertia = 0.1;
                         camera.inertia = 0.1;
+                        camera.panningSensibility = 250;
                         camera.angularSensibilityX = 250;
                         camera.angularSensibilityY = 250;
                     };

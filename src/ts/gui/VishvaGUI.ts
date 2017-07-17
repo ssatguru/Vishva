@@ -117,7 +117,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-        skyboxesDiag: JQuery;
+        //skyboxesDiag: JQuery;
 
         private createAddMenu() {
             var assetTypes: string[] = Object.keys(this.vishva.assets);
@@ -1256,6 +1256,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var swGnd: HTMLElement = document.getElementById("swGnd");
 
             var sNa: HTMLElement = document.getElementById("sNa");
+//            var addWater: HTMLElement = document.getElementById("addWater");
 
             undo.onclick = (e) => {
                 this.vishva.undo();
@@ -1362,6 +1363,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.show_sNaDiag();
                 return true;
             };
+            
+//            addWater.onclick = (e) => {
+//                var err: string = this.vishva.addWater()
+//                 if (err != null) {
+//                    this.showAlertDiag(err);
+//                }
+//                return true;
+//            };
         }
 
         private updateGeneral() {

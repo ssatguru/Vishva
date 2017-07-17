@@ -1102,7 +1102,8 @@ export class ActuatorDisabler extends ActuatorAbstract {
         */
         public processUpdateSpecific() {
             var SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
-            var RELATIVE_ASSET_LOCATION: string = "../../../../";
+            //let RELATIVE_ASSET_LOCATION: string = "../../../../";
+            let RELATIVE_ASSET_LOCATION: string = "";
             var properties: ActSoundProp = <ActSoundProp>this.properties;
             if (properties.soundFile.value == null) return;
             if (this.sound == null || properties.soundFile.value !== this.sound.name) {

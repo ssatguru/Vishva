@@ -81,15 +81,15 @@ namespace org.ssatguru.babylonjs.component {
             this.scene.unregisterBeforeRender(this.renderer);
         }
 
-        walk: AnimData;
-        walkBack: AnimData;
-        idle: AnimData;
-        run: AnimData;
-        jump: AnimData;
-        turnLeft: AnimData;
-        turnRight: AnimData;
-        strafeLeft: AnimData;
-        strafeRight: AnimData;
+        private walk: AnimData;
+        private walkBack: AnimData;
+        private idle: AnimData;
+        private run: AnimData;
+        private jump: AnimData;
+        private turnLeft: AnimData;
+        private turnRight: AnimData;
+        private strafeLeft: AnimData;
+        private strafeRight: AnimData;
 
         private initAnims(anims: AnimData[]) {
             this.walk = anims[0];
@@ -103,24 +103,26 @@ namespace org.ssatguru.babylonjs.component {
             this.strafeRight = anims[8];
         }
 
-        avatarSpeed: number = 0.05;
-        prevAnim: AnimData = null;
+        //avatarSpeed: number = 0.05;
+        //avatar walking speed in meters/second
+        private avatarSpeed: number = 3;
+        private prevAnim: AnimData = null;
 
         private jumpCycleMax: number = 25;
         private jumpCycle: number = this.jumpCycleMax;
         private wasJumping: boolean = false;
 
-        gravity: number = 9.8;
-        oldPos: Vector3 = new Vector3(0, 0, 0);
-        grounded: boolean = false;
-        downSpeed: number = 0;
-        time: number = 0;
-        stillTime: number = 0;
-        velocity: Vector3 = new Vector3(0, 0, 0);
+        private gravity: number = 9.8;
+        private oldPos: Vector3 = new Vector3(0, 0, 0);
+        private grounded: boolean = false;
+        private downSpeed: number = 0;
+        private time: number = 0;
+        private stillTime: number = 0;
+        private velocity: Vector3 = new Vector3(0, 0, 0);
 
         public moveAVandCamera(): boolean {
             this.oldPos.copyFrom(this.avatar.position);
-            //console.log(this.camera.target);
+            
             //skip everything if no movement key pressed
             if (!this.anyMovement()) {
                 if (!this.grounded) {
@@ -133,7 +135,7 @@ namespace org.ssatguru.babylonjs.component {
                         this.grounded = true;
                         this.stillTime = 0;
                     } else if (this.avatar.position.y < this.oldPos.y) {
-                        //if we are sliding down check slope
+                        //if we are sliding down then check slope
                         let diff: number = this.oldPos.subtract(this.avatar.position).length();
                         let ht: number = this.oldPos.y - this.avatar.position.y;
                         let slope: number = Math.asin(ht / diff);
@@ -157,37 +159,47 @@ namespace org.ssatguru.babylonjs.component {
             }
             this.stillTime = 0;
             this.grounded = false;
-            this.time = this.time + this.scene.getEngine().getDeltaTime() / 1000;
+           
+            let dt:number = this.scene.getEngine().getDeltaTime() / 1000;
+            //distance by which AV should have walked since last frame
+            let walkDist: number = this.avatarSpeed * dt;
+            //actual distance to be calculated based on wether AV is walking, runnning, or backing up
+            var actDist: number = 0;
+            
+            this.time = this.time + dt;
             //this.downSpeed = this.gravity * (this.time ** 2) / 2;
             this.downSpeed = this.gravity * this.time;
             var anim: AnimData = this.idle;
             var moving: boolean = false;
-            var speed: number = 0;
-            var upSpeed: number = 0.05;
+            
+            var jumpSpeed: number = this.avatarSpeed * dt;
             var dir: number = 1;
             var forward: Vector3;
             var backwards: Vector3;
             var stepLeft: Vector3;
             var stepRight: Vector3;
+            
 
             if (this.key.up) {
                 if (this.key.shift) {
-                    speed = this.avatarSpeed * 2;
+                    //speed = this.avatarSpeed * 2;
+                    actDist = walkDist * 2;
                     anim = this.run;
                 } else {
-                    speed = this.avatarSpeed;
+                    //speed = this.avatarSpeed;
+                    actDist = walkDist;
                     anim = this.walk;
                 }
                 if (this.key.jump) {
                     this.wasJumping = true;
                 }
                 if (this.wasJumping) {
-                    upSpeed *= 2;
+                    jumpSpeed *= 2;
                     if (this.jumpCycle < this.jumpCycleMax / 2) {
                         dir = 1;
                         if (this.jumpCycle < 0) {
                             this.jumpCycle = this.jumpCycleMax;
-                            upSpeed /= 2;
+                            jumpSpeed /= 2;
                             this.key.jump = false;
                             this.wasJumping = false;
                         }
@@ -196,15 +208,16 @@ namespace org.ssatguru.babylonjs.component {
                         dir = -1;
                     }
                     this.jumpCycle--;
-                    forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
+                    forward = this.avatar.calcMovePOV(0, -jumpSpeed * dir, actDist);
                 } else {
-                    forward = this.avatar.calcMovePOV(0, -this.downSpeed, speed);
+                    forward = this.avatar.calcMovePOV(0, -this.downSpeed, actDist);
                 }
                 this.avatar.moveWithCollisions(forward);
                 moving = true;
             } else if (this.key.down) {
                 //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
+                //backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
+                backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -walkDist / 2);
                 this.avatar.moveWithCollisions(backwards);
                 moving = true;
                 anim = this.walkBack;
@@ -212,13 +225,15 @@ namespace org.ssatguru.babylonjs.component {
             } else if (this.key.stepLeft) {
                 anim = this.strafeLeft;
                 //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
+                //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
+                stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downSpeed, 0);
                 this.avatar.moveWithCollisions(stepLeft);
                 moving = true;
             } else if (this.key.stepRight) {
                 anim = this.strafeRight;
                 //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
+                //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
+                stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downSpeed, 0);
                 this.avatar.moveWithCollisions(stepRight);
                 moving = true;
             }
@@ -227,12 +242,12 @@ namespace org.ssatguru.babylonjs.component {
                     this.wasJumping = true;
                 }
                 if (this.wasJumping) {
-                    upSpeed *= 2;
+                    jumpSpeed *= 2;
                     if (this.jumpCycle < this.jumpCycleMax / 2) {
                         dir = 1;
                         if (this.jumpCycle < 0) {
                             this.jumpCycle = this.jumpCycleMax;
-                            upSpeed /= 2;
+                            jumpSpeed /= 2;
                             this.key.jump = false;
                             this.wasJumping = false;
                         }
@@ -242,7 +257,7 @@ namespace org.ssatguru.babylonjs.component {
                     }
                     this.jumpCycle--;
                 } else dir = dir / 2;
-                this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
+                this.avatar.moveWithCollisions(new Vector3(0, -jumpSpeed * dir, 0));
             }
             if (!this.key.stepLeft && !this.key.stepRight) {
                 if (this.key.left) {

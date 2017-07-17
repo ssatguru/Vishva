@@ -233,6 +233,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
             fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
+            
+            let fogColDiag: ColorPickerDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, (hex, hsv, rgb) => {
+                this.vishva.setFogColor(hex);
+            });
+            
             fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
 
             let envSnow: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envSnow");
@@ -1523,7 +1528,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
 
             this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, (hex, hsv, rgb) => {
-                this.vishva.setMeshColor(this.matColType.value, hex);
+                 let err:string = this.vishva.setMeshColor(this.matColType.value, hex);
+                 if (err !== null) this.showAlertDiag(err);
+                
             });
             
             this.matVisVal["value"] = "1.00";

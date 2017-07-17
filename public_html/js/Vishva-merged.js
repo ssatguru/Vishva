@@ -686,6 +686,9 @@ var org;
                             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
                             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
                             fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
+                            var fogColDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, function (hex, hsv, rgb) {
+                                _this.vishva.setFogColor(hex);
+                            });
                             fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
                             var envSnow = document.getElementById("envSnow");
                             envSnow.onclick = function (e) {
@@ -1813,7 +1816,9 @@ var org;
                                 _this.matColDiag.setColor(col);
                             };
                             this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, function (hex, hsv, rgb) {
-                                _this.vishva.setMeshColor(_this.matColType.value, hex);
+                                var err = _this.vishva.setMeshColor(_this.matColType.value, hex);
+                                if (err !== null)
+                                    _this.showAlertDiag(err);
                             });
                             this.matVisVal["value"] = "1.00";
                             this.matVis.oninput = function () {
@@ -3352,6 +3357,7 @@ var org;
                 var ArcRotateCamera = BABYLON.ArcRotateCamera;
                 var AssetsManager = BABYLON.AssetsManager;
                 var Color3 = BABYLON.Color3;
+                var Color4 = BABYLON.Color4;
                 var CubeTexture = BABYLON.CubeTexture;
                 var CSG = BABYLON.CSG;
                 var DirectionalLight = BABYLON.DirectionalLight;
@@ -3607,6 +3613,11 @@ var org;
                         this.engine = new Engine(this.canvas, true);
                         this.scene = new Scene(this.engine);
                         this.scene.enablePhysics();
+                        //lets make night black
+                        this.scene.clearColor = new Color4(0, 0, 0, 1);
+                        //set ambient to white in case user wants to bypass light conditions for some objects
+                        this.scene.ambientColor = new Color3(1, 1, 1);
+                        this.scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
                         window.addEventListener("resize", function (event) { return _this.onWindowResize(event); });
                         window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); }, false);
                         window.addEventListener("keyup", function (e) { return _this.onKeyUp(e); }, false);
@@ -3678,12 +3689,6 @@ var org;
                                     avFound = true;
                                     this.avatar = mesh;
                                     this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
-                                    /*
-                                    if (this.enablePhysics) {
-                                        this.avatar.checkCollisions = false;
-                                        this.avatar.physicsImpostor = new BABYLON.PhysicsImpostor(this.avatar, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.1 }, this.scene);
-                                    }
-                                    */
                                 }
                                 else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
                                     skyFound = true;
@@ -3716,16 +3721,11 @@ var org;
                         }
                         if (!sunFound) {
                             console.log("no vishva sun found. creating sun");
-                            var hl = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
-                            hl.groundColor = new Color3(0.5, 0.5, 0.5);
-                            hl.intensity = 0.4;
-                            this.sun = hl;
-                            Tags.AddTagsTo(hl, "Vishva.sun");
+                            this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                            this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
+                            Tags.AddTagsTo(this.sun, "Vishva.sun");
                             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-                            //this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(0, -0.5, -1.0), this.scene);
-                            this.sunDR.intensity = 0.5;
-                            //this.sunDR.position = new Vector3(0, 32, 0);
-                            this.sunDR.position = new Vector3(50, 32, 0);
+                            this.sunDR.position = new Vector3(0, 32, 0);
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
                             this.setShadowProperty(sl, this.shadowGenerator);
@@ -3783,6 +3783,7 @@ var org;
                         if (!skyFound) {
                             console.log("no vishva sky found. creating sky");
                             this.skybox = this.createSkyBox(this.scene);
+                            this.setLight(0.5);
                         }
                         if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
                             this.scene.fogMode = Scene.FOGMODE_EXP;
@@ -4761,6 +4762,12 @@ var org;
                         return this.meshPicked.visibility;
                     };
                     Vishva.prototype.setMeshColor = function (colType, hex) {
+                        if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+                            return "This is multimaterial. Not supported for now";
+                        }
+                        if (!(this.meshPicked.material instanceof BABYLON.StandardMaterial)) {
+                            return "This is not a standard material. Not supported for now";
+                        }
                         var sm = this.meshPicked.material;
                         var col = Color3.FromHexString(hex);
                         if (colType === "diffuse")
@@ -4772,19 +4779,43 @@ var org;
                         else if (colType === "ambient")
                             sm.ambientColor = col;
                         else {
-                            console.error("invalid color type [" + colType + "]");
+                            return "invalid color type [" + colType + "]";
                         }
+                        return null;
                     };
                     Vishva.prototype.getMeshColor = function (colType) {
+                        if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+                            return "#000000";
+                        }
+                        if (!(this.meshPicked.material instanceof BABYLON.StandardMaterial)) {
+                            return "#000000";
+                            ;
+                        }
                         var sm = this.meshPicked.material;
-                        if (colType === "diffuse")
-                            return sm.diffuseColor.toHexString();
-                        else if (colType === "emissive")
-                            return sm.emissiveColor.toHexString();
-                        else if (colType === "specular")
-                            return sm.specularColor.toHexString();
-                        else if (colType === "ambient")
-                            return sm.ambientColor.toHexString();
+                        if (colType === "diffuse") {
+                            if (sm.diffuseColor !== undefined)
+                                return sm.diffuseColor.toHexString();
+                            else
+                                return "#000000";
+                        }
+                        else if (colType === "emissive") {
+                            if (sm.emissiveColor !== undefined)
+                                return sm.emissiveColor.toHexString();
+                            else
+                                return "#000000";
+                        }
+                        else if (colType === "specular") {
+                            if (sm.specularColor !== undefined)
+                                return sm.specularColor.toHexString();
+                            else
+                                return "#000000";
+                        }
+                        else if (colType === "ambient") {
+                            if (sm.ambientColor !== undefined)
+                                return sm.ambientColor.toHexString();
+                            else
+                                return "#000000";
+                        }
                         else {
                             console.error("invalid color type [" + colType + "]");
                             return null;
@@ -5315,6 +5346,7 @@ var org;
                     Vishva.prototype.setLight = function (d) {
                         this.sun.intensity = d;
                         this.sunDR.intensity = d;
+                        this.skybox.visibility = 2 * d;
                     };
                     Vishva.prototype.getLight = function () {
                         return this.sun.intensity;
@@ -5332,6 +5364,12 @@ var org;
                     };
                     Vishva.prototype.getFog = function () {
                         return this.scene.fogDensity;
+                    };
+                    Vishva.prototype.setFogColor = function (fogColor) {
+                        this.scene.fogColor = Color3.FromHexString(fogColor);
+                    };
+                    Vishva.prototype.getFogColor = function () {
+                        return this.scene.fogColor.toHexString();
                     };
                     Vishva.prototype.setFov = function (dO) {
                         var d = dO;
@@ -5519,6 +5557,7 @@ var org;
                                 this.rename(sm.opacityTexture);
                                 this.rename(sm.specularTexture);
                                 this.rename(sm.bumpTexture);
+                                this.rename(sm.ambientTexture);
                             }
                         }
                     };
@@ -5928,15 +5967,16 @@ var org;
                         return groundMaterial;
                     };
                     Vishva.prototype.createSkyBox = function (scene) {
-                        var skybox = Mesh.CreateBox("skyBox", 1000.0, scene);
                         var skyboxMaterial = new StandardMaterial("skyBox", scene);
                         skyboxMaterial.backFaceCulling = false;
-                        skybox.material = skyboxMaterial;
-                        skybox.infiniteDistance = true;
+                        skyboxMaterial.disableLighting = true;
                         skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
                         skyboxMaterial.specularColor = new Color3(0, 0, 0);
                         skyboxMaterial.reflectionTexture = new CubeTexture(this.skyboxTextures, scene);
                         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+                        var skybox = Mesh.CreateBox("skyBox", 1000.0, scene);
+                        skybox.material = skyboxMaterial;
+                        skybox.infiniteDistance = true;
                         skybox.renderingGroupId = 0;
                         skybox.isPickable = false;
                         Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
@@ -6070,6 +6110,8 @@ var org;
                         if (sm.diffuseTexture != null) {
                             var textureName = sm.diffuseTexture.name;
                             sm.diffuseTexture.name = this.avatarFolder + textureName;
+                            sm.backFaceCulling = true;
+                            sm.ambientColor = new Color3(0, 0, 0);
                         }
                         this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
                         this.cc.start();

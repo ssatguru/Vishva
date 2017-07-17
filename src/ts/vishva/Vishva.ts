@@ -11,6 +11,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Bone = BABYLON.Bone;
     import BoundingInfo = BABYLON.BoundingInfo;
     import Color3 = BABYLON.Color3;
+    import Color4 = BABYLON.Color4;
     import CubeTexture = BABYLON.CubeTexture;
     import CSG = BABYLON.CSG;
     import DirectionalLight = BABYLON.DirectionalLight;
@@ -189,8 +190,14 @@ namespace org.ssatguru.babylonjs.vishva {
             this.initAnims();
             this.canvas = <HTMLCanvasElement> document.getElementById(canvasId);
             this.engine = new Engine(this.canvas, true);
+            
             this.scene = new Scene(this.engine);
             this.scene.enablePhysics();
+            //lets make night black
+            this.scene.clearColor =  new Color4(0,0,0,1);
+            //set ambient to white in case user wants to bypass light conditions for some objects
+            this.scene.ambientColor = new Color3(1,1,1);
+            this.scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
 
             window.addEventListener("resize", (event) => {return this.onWindowResize(event)});
             window.addEventListener("keydown", (e) => {return this.onKeyDown(e)}, false);
@@ -274,12 +281,6 @@ namespace org.ssatguru.babylonjs.vishva {
                         avFound = true;
                         this.avatar = <Mesh> mesh;
                         this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
-                        /*
-                        if (this.enablePhysics) {
-                            this.avatar.checkCollisions = false;
-                            this.avatar.physicsImpostor = new BABYLON.PhysicsImpostor(this.avatar, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.1 }, this.scene);
-                        }
-                        */
                     } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
                         skyFound = true;
                         this.skybox = <Mesh> mesh;
@@ -311,19 +312,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
             if (!sunFound) {
                 console.log("no vishva sun found. creating sun");
-                var hl: HemisphericLight = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
-
-                hl.groundColor = new Color3(0.5, 0.5, 0.5);
-                hl.intensity = 0.4;
-                this.sun = hl;
-                Tags.AddTagsTo(hl, "Vishva.sun");
+                
+                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
+                Tags.AddTagsTo(this.sun, "Vishva.sun");
 
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-                //this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(0, -0.5, -1.0), this.scene);
-                this.sunDR.intensity = 0.5;
-                //this.sunDR.position = new Vector3(0, 32, 0);
-                this.sunDR.position = new Vector3(50, 32, 0);
-
+                this.sunDR.position = new Vector3(0, 32, 0);
+                
                 let sl: IShadowLight = <IShadowLight>(<any> this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
                 this.setShadowProperty(sl,this.shadowGenerator);
@@ -384,6 +380,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!skyFound) {
                 console.log("no vishva sky found. creating sky");
                 this.skybox = this.createSkyBox(this.scene);
+                this.setLight(0.5);
             }
             if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
                 this.scene.fogMode = Scene.FOGMODE_EXP;
@@ -1564,7 +1561,13 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.meshPicked.visibility;
         }
 
-        public setMeshColor(colType: string, hex: string) {
+        public setMeshColor(colType: string, hex: string) : string{
+            if (this.meshPicked.material instanceof BABYLON.MultiMaterial){
+                return "This is multimaterial. Not supported for now";
+            }
+            if (!(this.meshPicked.material instanceof BABYLON.StandardMaterial)){
+                return "This is not a standard material. Not supported for now";
+            }
             let sm: StandardMaterial = <StandardMaterial> this.meshPicked.material;
             let col: Color3 = Color3.FromHexString(hex);
             if (colType === "diffuse")
@@ -1576,22 +1579,32 @@ namespace org.ssatguru.babylonjs.vishva {
             else if (colType === "ambient")
                 sm.ambientColor = col;
             else {
-                console.error("invalid color type [" + colType + "]");
+                return "invalid color type [" + colType + "]";
             }
-
+            return null;
         }
 
         public getMeshColor(colType: string): string {
+            if (this.meshPicked.material instanceof BABYLON.MultiMaterial){
+                return "#000000";
+            }
+            if (!(this.meshPicked.material instanceof BABYLON.StandardMaterial)){
+                 return "#000000";;
+            }
             let sm: StandardMaterial = <StandardMaterial> this.meshPicked.material;
-            if (colType === "diffuse")
-                return sm.diffuseColor.toHexString();
-            else if (colType === "emissive")
-                return sm.emissiveColor.toHexString();
-            else if (colType === "specular")
-                return sm.specularColor.toHexString();
-            else if (colType === "ambient")
-                return sm.ambientColor.toHexString();
-            else {
+            if (colType === "diffuse"){
+                if (sm.diffuseColor !== undefined) return sm.diffuseColor.toHexString();
+                else return "#000000";
+            }else if (colType === "emissive"){
+                if (sm.emissiveColor !== undefined) return sm.emissiveColor.toHexString();
+                else return "#000000";
+            }else if (colType === "specular"){
+                if (sm.specularColor !== undefined) return sm.specularColor.toHexString();
+                else return "#000000";
+            }else if (colType === "ambient"){
+                if (sm.ambientColor !== undefined) return sm.ambientColor.toHexString();
+                else return "#000000";
+            }else {
                 console.error("invalid color type [" + colType + "]");
                 return null;
             }
@@ -2139,6 +2152,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public setLight(d: number) {
             this.sun.intensity = d;
             this.sunDR.intensity = d;
+            this.skybox.visibility = 2*d;
         }
 
         public getLight(): number {
@@ -2161,6 +2175,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public getFog(): number {
             return this.scene.fogDensity;
+        }
+        
+        public setFogColor(fogColor:string){
+            this.scene.fogColor = Color3.FromHexString(fogColor);
+        }
+        
+        public getFogColor():string{
+            return this.scene.fogColor.toHexString();
         }
 
         public setFov(dO: any) {
@@ -2364,6 +2386,8 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.rename(sm.opacityTexture);
                     this.rename(sm.specularTexture);
                     this.rename(sm.bumpTexture);
+                    this.rename(sm.ambientTexture);
+                    
                 }
             }
         }
@@ -2798,17 +2822,22 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private createSkyBox(scene: Scene): Mesh {
-            var skybox: Mesh = Mesh.CreateBox("skyBox", 1000.0, scene);
+            
+            
             var skyboxMaterial: StandardMaterial = new StandardMaterial("skyBox", scene);
             skyboxMaterial.backFaceCulling = false;
-            skybox.material = skyboxMaterial;
-            skybox.infiniteDistance = true;
+            skyboxMaterial.disableLighting = true;
             skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
             skyboxMaterial.specularColor = new Color3(0, 0, 0);
             skyboxMaterial.reflectionTexture = new CubeTexture(this.skyboxTextures, scene);
             skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+            
+            var skybox: Mesh = Mesh.CreateBox("skyBox", 1000.0, scene);
+            skybox.material = skyboxMaterial;
+            skybox.infiniteDistance = true;
             skybox.renderingGroupId = 0;
             skybox.isPickable = false;
+            
             Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
             return skybox;
         }
@@ -2952,6 +2981,8 @@ namespace org.ssatguru.babylonjs.vishva {
             if (sm.diffuseTexture != null) {
                 var textureName: string = sm.diffuseTexture.name;
                 sm.diffuseTexture.name = this.avatarFolder + textureName;
+                sm.backFaceCulling = true;
+                sm.ambientColor = new Color3(0,0,0);
             }
 
             this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);

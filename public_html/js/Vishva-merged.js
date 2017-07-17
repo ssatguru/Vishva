@@ -3575,6 +3575,8 @@ var org;
                         }
                         */
                         this.fogDensity = 0;
+                        //list of meshes selected in addition to the currently picked mesh
+                        //doesnot include the currently picked mesh (the one with edit control)
                         this.meshesPicked = null;
                         this.isMeshSelected = false;
                         this.cameraTargetPos = new Vector3(0, 0, 0);
@@ -4455,7 +4457,7 @@ var org;
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
                         }
-                        if ((this.meshesPicked == null) || (this.meshesPicked.length === 1)) {
+                        if ((this.meshesPicked == null) || (this.meshesPicked.length === 0)) {
                             return "select atleast two mesh. use \'ctl\' and mosue right click to select multiple meshes";
                         }
                         this.meshPicked.computeWorldMatrix(true);
@@ -4593,7 +4595,7 @@ var org;
                         }
                         mesh.dispose();
                     };
-                    Vishva.prototype.mergeMeshes = function () {
+                    Vishva.prototype.mergeMeshes_old = function () {
                         if (this.meshesPicked != null) {
                             for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
                                 var mesh = _a[_i];
@@ -4616,6 +4618,48 @@ var org;
                         }
                         else {
                             return "please select two or more mesh";
+                        }
+                    };
+                    Vishva.prototype.mergeMeshes = function () {
+                        if (this.meshesPicked != null) {
+                            for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
+                                var mesh = _a[_i];
+                                if (mesh instanceof BABYLON.InstancedMesh) {
+                                    return "some of your meshes are instance meshes. cannot merge those";
+                                }
+                                //TODO what happens when meshes have different material
+                                //crashes
+                                //                    if (mesh.material != this.meshPicked.material){
+                                //                        return "some of your meshes have different material. cannot merge those";
+                                //                    }
+                            }
+                            this.meshesPicked.push(this.meshPicked);
+                            var savePos = new Array(this.meshesPicked.length);
+                            var i = 0;
+                            for (var _b = 0, _c = this.meshesPicked; _b < _c.length; _b++) {
+                                var mesh = _c[_b];
+                                savePos[i] = mesh.position.clone();
+                                i++;
+                                mesh.position.subtractInPlace(this.meshPicked.position);
+                            }
+                            var ms = this.meshesPicked;
+                            var mergedMesh = Mesh.MergeMeshes(ms, false);
+                            i = 0;
+                            for (var _d = 0, _e = this.meshesPicked; _d < _e.length; _d++) {
+                                var mesh = _e[_d];
+                                mesh.position = savePos[i];
+                                i++;
+                            }
+                            this.meshesPicked.pop();
+                            mergedMesh.position = this.meshPicked.position.clone();
+                            this.switchEditControl(mergedMesh);
+                            this.animateMesh(mergedMesh);
+                            this.shadowGenerator.getShadowMap().renderList.push(mergedMesh);
+                            this.multiUnSelectAll();
+                            return null;
+                        }
+                        else {
+                            return "select two or more mesh";
                         }
                     };
                     Vishva.prototype.csgOperation = function (op) {

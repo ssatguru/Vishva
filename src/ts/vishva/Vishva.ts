@@ -656,7 +656,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private meshPicked: AbstractMesh;
 
-
+        //list of meshes selected in addition to the currently picked mesh
+        //doesnot include the currently picked mesh (the one with edit control)
         private meshesPicked: Array<AbstractMesh> = null;
 
 
@@ -1249,7 +1250,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!this.isMeshSelected) {
                 return "no mesh selected";
             }
-            if ((this.meshesPicked == null) || (this.meshesPicked.length === 1)) {
+            if ((this.meshesPicked == null) || (this.meshesPicked.length === 0)) {
                 return "select atleast two mesh. use \'ctl\' and mosue right click to select multiple meshes";
             }
             this.meshPicked.computeWorldMatrix(true);
@@ -1393,7 +1394,7 @@ namespace org.ssatguru.babylonjs.vishva {
             mesh.dispose();
         }
 
-        public mergeMeshes() {
+        public mergeMeshes_old() {
             if (this.meshesPicked != null) {
                 for (let mesh of this.meshesPicked) {
                     if (mesh instanceof BABYLON.InstancedMesh) {
@@ -1416,7 +1417,46 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "please select two or more mesh";
             }
         }
-
+        public mergeMeshes() {
+            if (this.meshesPicked != null) {
+                for (let mesh of this.meshesPicked) {
+                    if (mesh instanceof BABYLON.InstancedMesh) {
+                        return "some of your meshes are instance meshes. cannot merge those";
+                    }
+                    //TODO what happens when meshes have different material
+                    //crashes
+//                    if (mesh.material != this.meshPicked.material){
+//                        return "some of your meshes have different material. cannot merge those";
+//                    }
+                }
+                this.meshesPicked.push(this.meshPicked);
+                
+                let savePos: Vector3[] = new Array(this.meshesPicked.length);
+                let i:number =0;
+                for (let mesh of this.meshesPicked){
+                    savePos[i]=mesh.position.clone();
+                    i++;
+                    mesh.position.subtractInPlace(this.meshPicked.position);
+                }
+                
+                let ms: any = this.meshesPicked;
+                let mergedMesh: Mesh = Mesh.MergeMeshes(<Mesh[]> ms, false);
+                i=0;
+                for (let mesh of this.meshesPicked){
+                    mesh.position = savePos[i]
+                    i++;
+                }
+                this.meshesPicked.pop();
+                mergedMesh.position = this.meshPicked.position.clone();
+                this.switchEditControl(mergedMesh);
+                this.animateMesh(mergedMesh);
+                this.shadowGenerator.getShadowMap().renderList.push(mergedMesh);
+                this.multiUnSelectAll();
+                return null;
+            } else {
+                return "select two or more mesh";
+            }
+        }
         public csgOperation(op: string): string {
             if (this.meshesPicked != null) {
                 if (this.meshesPicked.length > 2) {

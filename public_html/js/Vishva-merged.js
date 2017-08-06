@@ -25,20 +25,19 @@ var org;
                         //slopeLimit in radians
                         this.sl = Math.PI * this.slopeLimit / 180;
                         this.started = false;
-                        //avatarSpeed: number = 0.05;
                         //avatar walking speed in meters/second
                         this.avatarSpeed = 3;
                         this.prevAnim = null;
                         this.jumpCycleMax = 25;
                         this.jumpCycle = this.jumpCycleMax;
                         this.wasJumping = false;
-                        this.gravity = 9.8;
+                        this.gravity = 9.8 * 2;
                         this.oldPos = new Vector3(0, 0, 0);
                         this.grounded = false;
-                        this.downSpeed = 0;
-                        this.time = 0;
+                        this.downDist = 0;
+                        this.movTime = 0;
                         this.stillTime = 0;
-                        this.velocity = new Vector3(0, 0, 0);
+                        this.moveVector = new Vector3(0, 0, 0);
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
                         this.initAnims(anims);
@@ -64,25 +63,20 @@ var org;
                         this.sl = Math.PI * slopeLimit / 180;
                     };
                     CharacterControl.prototype.start = function () {
-                        //console.log("cc start()");
                         if (this.started)
                             return;
-                        //console.log("cc starting");
                         this.started = true;
                         this.key.reset();
-                        this.time = 0;
+                        this.movTime = 0;
                         //first time we enter render loop, delta time shows zero !!
                         this.stillTime = 0.001;
                         this.grounded = false;
                         this.updateTargetValue();
-                        //this.camera.target = this.cameraTarget;
                         this.scene.registerBeforeRender(this.renderer);
                     };
                     CharacterControl.prototype.stop = function () {
-                        //console.log("cc stop()");
                         if (!this.started)
                             return;
-                        //console.log("cc stoping");
                         this.started = false;
                         this.scene.unregisterBeforeRender(this.renderer);
                     };
@@ -102,11 +96,12 @@ var org;
                         //skip everything if no movement key pressed
                         if (!this.anyMovement()) {
                             if (!this.grounded) {
-                                this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
-                                //this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
-                                this.downSpeed = this.gravity * this.stillTime;
-                                this.velocity.copyFromFloats(0, -this.downSpeed, 0);
-                                this.avatar.moveWithCollisions(this.velocity);
+                                var dt_1 = this.scene.getEngine().getDeltaTime() / 1000;
+                                this.stillTime = this.stillTime + dt_1;
+                                var u_1 = this.stillTime * this.gravity;
+                                this.downDist = u_1 * dt_1 + this.gravity * dt_1 * dt_1 / 2;
+                                this.moveVector.copyFromFloats(0, -this.downDist, 0);
+                                this.avatar.moveWithCollisions(this.moveVector);
                                 if (this.oldPos.y === this.avatar.position.y) {
                                     this.grounded = true;
                                     this.stillTime = 0;
@@ -138,9 +133,11 @@ var org;
                         var walkDist = this.avatarSpeed * dt;
                         //actual distance to be calculated based on wether AV is walking, runnning, or backing up
                         var actDist = 0;
-                        this.time = this.time + dt;
-                        //this.downSpeed = this.gravity * (this.time ** 2) / 2;
-                        this.downSpeed = this.gravity * this.time;
+                        //initial down velocity
+                        var u = this.movTime * this.gravity;
+                        //dist by which av moves down since last frame
+                        this.downDist = u * dt + this.gravity * dt * dt / 2;
+                        this.movTime = this.movTime + dt;
                         var anim = this.idle;
                         var moving = false;
                         var jumpSpeed = this.avatarSpeed * dt;
@@ -182,7 +179,7 @@ var org;
                                 forward = this.avatar.calcMovePOV(0, -jumpSpeed * dir, actDist);
                             }
                             else {
-                                forward = this.avatar.calcMovePOV(0, -this.downSpeed, actDist);
+                                forward = this.avatar.calcMovePOV(0, -this.downDist, actDist);
                             }
                             this.avatar.moveWithCollisions(forward);
                             moving = true;
@@ -190,7 +187,7 @@ var org;
                         else if (this.key.down) {
                             //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
                             //backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
-                            backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -walkDist / 2);
+                            backwards = this.avatar.calcMovePOV(0, -this.downDist, -walkDist / 2);
                             this.avatar.moveWithCollisions(backwards);
                             moving = true;
                             anim = this.walkBack;
@@ -201,7 +198,7 @@ var org;
                             anim = this.strafeLeft;
                             //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
                             //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
-                            stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downSpeed, 0);
+                            stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downDist, 0);
                             this.avatar.moveWithCollisions(stepLeft);
                             moving = true;
                         }
@@ -209,7 +206,7 @@ var org;
                             anim = this.strafeRight;
                             //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
                             //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
-                            stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downSpeed, 0);
+                            stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downDist, 0);
                             this.avatar.moveWithCollisions(stepRight);
                             moving = true;
                         }
@@ -257,14 +254,22 @@ var org;
                         if (moving) {
                             this.avatar.rotation.y = -4.69 - this.camera.alpha;
                         }
+                        //
                         if (this.avatar.position.y < this.oldPos.y) {
-                            //if we are sliding down check slope
+                            //if we are sliding down check slope or falling down
                             var diff = this.oldPos.subtract(this.avatar.position).length();
                             var ht = this.oldPos.y - this.avatar.position.y;
                             var slope = Math.asin(ht / diff);
-                            if (slope <= this.sl) {
-                                this.time = 0;
+                            var delta = Math.abs(this.downDist - ht);
+                            if (delta > 0.0001) {
+                                //we are not falling down
+                                if (slope <= this.sl) {
+                                    this.movTime = 0;
+                                }
                             }
+                        }
+                        else {
+                            this.movTime = 0;
                         }
                         if (this.prevAnim !== anim) {
                             if (anim.exist) {
@@ -273,14 +278,9 @@ var org;
                             this.prevAnim = anim;
                         }
                         this.updateTargetValue();
-                        if (this.oldPos.y <= this.avatar.position.y) {
-                            this.time = 0;
-                        }
                         return;
                     };
-                    //cameraTarget: Vector3 = new Vector3(0, 0, 0);
                     CharacterControl.prototype.updateTargetValue = function () {
-                        //this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                         this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {

@@ -17,7 +17,7 @@ namespace org.ssatguru.babylonjs.component {
         //slopeLimit in degrees
         slopeLimit: number = 30;
         //slopeLimit in radians
-        sl:number=Math.PI * this.slopeLimit / 180;
+        sl: number = Math.PI * this.slopeLimit / 180;
 
         private renderer: () => void;
 
@@ -31,9 +31,9 @@ namespace org.ssatguru.babylonjs.component {
             this.scene = scene;
             this.key = new Key();
 
-            window.addEventListener("keydown", (e) => { return this.onKeyDown(e) }, false);
-            window.addEventListener("keyup", (e) => { return this.onKeyUp(e) }, false);
-            this.renderer = () => { this.moveAVandCamera() }
+            window.addEventListener("keydown", (e) => {return this.onKeyDown(e)}, false);
+            window.addEventListener("keyup", (e) => {return this.onKeyUp(e)}, false);
+            this.renderer = () => {this.moveAVandCamera()}
 
         }
 
@@ -58,25 +58,20 @@ namespace org.ssatguru.babylonjs.component {
         private started: boolean = false;
 
         public start() {
-            //console.log("cc start()");
             if (this.started) return;
-            //console.log("cc starting");
             this.started = true;
             this.key.reset();
-            this.time = 0;
+            this.movTime = 0;
             //first time we enter render loop, delta time shows zero !!
             this.stillTime = 0.001;
             this.grounded = false;
             this.updateTargetValue();
-            //this.camera.target = this.cameraTarget;
 
             this.scene.registerBeforeRender(this.renderer);
         }
 
         public stop() {
-            //console.log("cc stop()");
             if (!this.started) return;
-            //console.log("cc stoping");
             this.started = false;
             this.scene.unregisterBeforeRender(this.renderer);
         }
@@ -103,7 +98,6 @@ namespace org.ssatguru.babylonjs.component {
             this.strafeRight = anims[8];
         }
 
-        //avatarSpeed: number = 0.05;
         //avatar walking speed in meters/second
         private avatarSpeed: number = 3;
         private prevAnim: AnimData = null;
@@ -112,25 +106,26 @@ namespace org.ssatguru.babylonjs.component {
         private jumpCycle: number = this.jumpCycleMax;
         private wasJumping: boolean = false;
 
-        private gravity: number = 9.8;
+        private gravity: number = 9.8*2;
         private oldPos: Vector3 = new Vector3(0, 0, 0);
         private grounded: boolean = false;
-        private downSpeed: number = 0;
-        private time: number = 0;
+        private downDist: number = 0;
+        private movTime: number = 0;
         private stillTime: number = 0;
-        private velocity: Vector3 = new Vector3(0, 0, 0);
+        private moveVector: Vector3 = new Vector3(0, 0, 0);
 
         public moveAVandCamera(): boolean {
             this.oldPos.copyFrom(this.avatar.position);
-            
+
             //skip everything if no movement key pressed
             if (!this.anyMovement()) {
                 if (!this.grounded) {
-                    this.stillTime = this.stillTime + this.scene.getEngine().getDeltaTime() / 1000;
-                    //this.downSpeed = this.gravity * (this.stillTime ** 2) / 2;
-                    this.downSpeed = this.gravity * this.stillTime;
-                    this.velocity.copyFromFloats(0, -this.downSpeed, 0);
-                    this.avatar.moveWithCollisions(this.velocity);
+                    let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
+                    this.stillTime = this.stillTime + dt;
+                    let u: number = this.stillTime * this.gravity
+                    this.downDist = u * dt + this.gravity * dt * dt / 2;
+                    this.moveVector.copyFromFloats(0, -this.downDist, 0);
+                    this.avatar.moveWithCollisions(this.moveVector);
                     if (this.oldPos.y === this.avatar.position.y) {
                         this.grounded = true;
                         this.stillTime = 0;
@@ -144,7 +139,6 @@ namespace org.ssatguru.babylonjs.component {
                             this.stillTime = 0;
                             this.avatar.position.copyFrom(this.oldPos);
                         }
-
                     }
                     this.updateTargetValue();
                 }
@@ -154,31 +148,34 @@ namespace org.ssatguru.babylonjs.component {
                     if (this.idle.exist)
                         this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
                 }
-
                 return;
             }
+            
             this.stillTime = 0;
             this.grounded = false;
-           
-            let dt:number = this.scene.getEngine().getDeltaTime() / 1000;
+
+            let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
             //distance by which AV should have walked since last frame
             let walkDist: number = this.avatarSpeed * dt;
             //actual distance to be calculated based on wether AV is walking, runnning, or backing up
-            var actDist: number = 0;
+            let actDist: number = 0;
             
-            this.time = this.time + dt;
-            //this.downSpeed = this.gravity * (this.time ** 2) / 2;
-            this.downSpeed = this.gravity * this.time;
-            var anim: AnimData = this.idle;
-            var moving: boolean = false;
+            //initial down velocity
+            let u: number = this.movTime * this.gravity
+            //dist by which av moves down since last frame
+            this.downDist = u * dt + this.gravity * dt * dt / 2;
+            this.movTime = this.movTime + dt;
             
-            var jumpSpeed: number = this.avatarSpeed * dt;
-            var dir: number = 1;
-            var forward: Vector3;
-            var backwards: Vector3;
-            var stepLeft: Vector3;
-            var stepRight: Vector3;
-            
+            let anim: AnimData = this.idle;
+            let moving: boolean = false;
+
+            let jumpSpeed: number = this.avatarSpeed * dt;
+            let dir: number = 1;
+            let forward: Vector3;
+            let backwards: Vector3;
+            let stepLeft: Vector3;
+            let stepRight: Vector3;
+
 
             if (this.key.up) {
                 if (this.key.shift) {
@@ -210,14 +207,14 @@ namespace org.ssatguru.babylonjs.component {
                     this.jumpCycle--;
                     forward = this.avatar.calcMovePOV(0, -jumpSpeed * dir, actDist);
                 } else {
-                    forward = this.avatar.calcMovePOV(0, -this.downSpeed, actDist);
+                    forward = this.avatar.calcMovePOV(0, -this.downDist, actDist);
                 }
                 this.avatar.moveWithCollisions(forward);
                 moving = true;
             } else if (this.key.down) {
                 //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
                 //backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
-                backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -walkDist / 2);
+                backwards = this.avatar.calcMovePOV(0, -this.downDist, -walkDist / 2);
                 this.avatar.moveWithCollisions(backwards);
                 moving = true;
                 anim = this.walkBack;
@@ -226,14 +223,14 @@ namespace org.ssatguru.babylonjs.component {
                 anim = this.strafeLeft;
                 //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
                 //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
-                stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downSpeed, 0);
+                stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downDist, 0);
                 this.avatar.moveWithCollisions(stepLeft);
                 moving = true;
             } else if (this.key.stepRight) {
                 anim = this.strafeRight;
                 //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
                 //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
-                stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downSpeed, 0);
+                stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downDist, 0);
                 this.avatar.moveWithCollisions(stepRight);
                 moving = true;
             }
@@ -277,14 +274,22 @@ namespace org.ssatguru.babylonjs.component {
             if (moving) {
                 this.avatar.rotation.y = -4.69 - this.camera.alpha;
             }
+            //
+
             if (this.avatar.position.y < this.oldPos.y) {
-                //if we are sliding down check slope
+                //if we are sliding down check slope or falling down
                 let diff: number = this.oldPos.subtract(this.avatar.position).length();
                 let ht: number = this.oldPos.y - this.avatar.position.y;
                 let slope: number = Math.asin(ht / diff);
-                if (slope <= this.sl) {
-                    this.time = 0;
+                let delta:number = Math.abs(this.downDist-ht);
+                if (delta>0.0001 ){
+                    //we are not falling down
+                    if (slope <= this.sl ) {
+                        this.movTime = 0;
+                    }
                 }
+            } else {
+                this.movTime = 0;
             }
             if (this.prevAnim !== anim) {
                 if (anim.exist) {
@@ -293,21 +298,17 @@ namespace org.ssatguru.babylonjs.component {
                 this.prevAnim = anim;
             }
             this.updateTargetValue();
-            if (this.oldPos.y <= this.avatar.position.y) {
-                this.time = 0;
-            }
             return;
         }
-        //cameraTarget: Vector3 = new Vector3(0, 0, 0);
+
         private updateTargetValue() {
-            //this.cameraTarget.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
             this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }
 
         move: boolean = false;
         private onKeyDown(e: Event) {
 
-            var event: KeyboardEvent = <KeyboardEvent>e;
+            var event: KeyboardEvent = <KeyboardEvent> e;
             var chr: string = String.fromCharCode(event.keyCode);
 
             if (event.keyCode === 32) this.key.jump = false;
@@ -333,11 +334,11 @@ namespace org.ssatguru.babylonjs.component {
 
         private onKeyUp(e: Event) {
 
-            var event: KeyboardEvent = <KeyboardEvent>e;
+            var event: KeyboardEvent = <KeyboardEvent> e;
             var chr: string = String.fromCharCode(event.keyCode);
 
             if (event.keyCode === 32) this.key.jump = true
-            else if (event.keyCode === 16) { this.key.shift = false; }
+            else if (event.keyCode === 16) {this.key.shift = false;}
             //WASD or arrow keys
             else if ((chr === "W") || (event.keyCode === 38)) this.key.up = false;
             else if ((chr === "A") || (event.keyCode === 37)) this.key.left = false;

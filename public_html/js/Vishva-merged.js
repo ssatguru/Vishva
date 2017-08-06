@@ -21,9 +21,9 @@ var org;
                     function CharacterControl(avatar, avatarSkeleton, anims, camera, scene) {
                         var _this = this;
                         //slopeLimit in degrees
-                        this.slopeLimit = 45;
+                        this.slopeLimit = 30;
                         //slopeLimit in radians
-                        this.sl = 0.785;
+                        this.sl = Math.PI * this.slopeLimit / 180;
                         this.started = false;
                         //avatarSpeed: number = 0.05;
                         //avatar walking speed in meters/second
@@ -685,7 +685,7 @@ var org;
                             sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
                             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
                             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
-                            fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
+                            fog.slider(this.sliderOptions(0, 100, 100000 * this.vishva.getFog()));
                             var fogColDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, function (hex, hsv, rgb) {
                                 _this.vishva.setFogColor(hex);
                             });
@@ -1968,7 +1968,7 @@ var org;
                                     this.vishva.setShade(v);
                                 }
                                 else if (slider === "fog") {
-                                    this.vishva.setFog(v / 10);
+                                    this.vishva.setFog(v / 1000);
                                 }
                             }
                             return true;
@@ -3725,7 +3725,7 @@ var org;
                             this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
                             Tags.AddTagsTo(this.sun, "Vishva.sun");
                             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-                            this.sunDR.position = new Vector3(0, 32, 0);
+                            this.sunDR.position = new Vector3(0, 1048, 0);
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
                             this.setShadowProperty(sl, this.shadowGenerator);
@@ -3785,10 +3785,16 @@ var org;
                             this.skybox = this.createSkyBox(this.scene);
                             this.setLight(0.5);
                         }
-                        if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
-                            this.scene.fogMode = Scene.FOGMODE_EXP;
+                        if (this.scene.fogMode !== Scene.FOGMODE_EXP2) {
+                            this.scene.fogMode = Scene.FOGMODE_EXP2;
                             this.scene.fogDensity = 0;
                         }
+                        //            if (this.scene.fogMode !== Scene.FOGMODE_LINEAR) {
+                        //                this.scene.fogMode = Scene.FOGMODE_LINEAR;
+                        //                this.scene.fogStart =10220;
+                        //                this.scene.fogEnd =10240;
+                        //                this.scene.fogDensity = 0;
+                        //            }
                         if (this.editEnabled) {
                             this.scene.onPointerDown = function (evt, pickResult) { return _this.pickObject(evt, pickResult); };
                         }
@@ -3825,6 +3831,9 @@ var org;
                         this.engine.runRenderLoop(function () { return _this.scene.render(); });
                     };
                     Vishva.prototype.process = function () {
+                        this.sunDR.position.x = this.avatar.position.x + 100;
+                        this.sunDR.position.y = this.avatar.position.y + 100;
+                        this.sunDR.position.z = this.avatar.position.z + 0;
                         if (this.cameraAnimating)
                             return;
                         //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
@@ -4551,6 +4560,8 @@ var org;
                     Vishva.prototype.clonetheMesh = function (mesh) {
                         var name = new Number(Date.now()).toString();
                         var clone = mesh.clone(name, null, true);
+                        console.log(mesh.scaling);
+                        clone.scaling.copyFrom(mesh.scaling);
                         delete clone["sensors"];
                         delete clone["actuators"];
                         this.animateMesh(clone);
@@ -4563,8 +4574,8 @@ var org;
                     };
                     //play a small scaling animation when cloning or instancing a mesh.
                     Vishva.prototype.animateMesh = function (mesh) {
-                        var startScale = new Vector3(1.5, 1.5, 1.5);
-                        var endScale = new Vector3(1, 1, 1);
+                        var startScale = mesh.scaling.clone().scaleInPlace(1.5); //new Vector3(1.5, 1.5, 1.5);
+                        var endScale = mesh.scaling.clone();
                         Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
                     };
                     Vishva.prototype.delete_mesh = function () {
@@ -4907,6 +4918,7 @@ var org;
                         if (light === null)
                             return;
                         light.parent = null;
+                        light.setEnabled(false);
                         light.dispose();
                     };
                     Vishva.prototype.setTransOn = function () {
@@ -5361,8 +5373,10 @@ var org;
                     };
                     Vishva.prototype.setFog = function (d) {
                         this.scene.fogDensity = d;
+                        //this.scene.fogStart = 10220*(1 - d/0.1);
                     };
                     Vishva.prototype.getFog = function () {
+                        //return (10220 - this.scene.fogStart )*0.1/10220;
                         return this.scene.fogDensity;
                     };
                     Vishva.prototype.setFogColor = function (fogColor) {
@@ -5936,10 +5950,14 @@ var org;
                         var _this = this;
                         var groundMaterial = this.createGroundMaterial(scene);
                         MeshBuilder.CreateGroundFromHeightMap("ground", this.groundHeightMap, {
-                            width: 256,
-                            height: 256,
+                            //                width: 256,
+                            //                height: 256,
+                            width: 10240,
+                            height: 10240,
+                            //                minHeight: 0,
+                            //                maxHeight: 20,
                             minHeight: 0,
-                            maxHeight: 20,
+                            maxHeight: 1000,
                             subdivisions: 32,
                             onReady: function (grnd) {
                                 console.log("ground created");
@@ -5960,8 +5978,10 @@ var org;
                     Vishva.prototype.createGroundMaterial = function (scene) {
                         var groundMaterial = new StandardMaterial("groundMat", scene);
                         groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
-                        groundMaterial.diffuseTexture.uScale = 6.0;
-                        groundMaterial.diffuseTexture.vScale = 6.0;
+                        //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
+                        //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
+                        groundMaterial.diffuseTexture.uScale = 100.0;
+                        groundMaterial.diffuseTexture.vScale = 100.0;
                         groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
                         groundMaterial.specularColor = new Color3(0, 0, 0);
                         return groundMaterial;
@@ -5974,7 +5994,8 @@ var org;
                         skyboxMaterial.specularColor = new Color3(0, 0, 0);
                         skyboxMaterial.reflectionTexture = new CubeTexture(this.skyboxTextures, scene);
                         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-                        var skybox = Mesh.CreateBox("skyBox", 1000.0, scene);
+                        var skybox = Mesh.CreateBox("skyBox", 10000.0, scene);
+                        //var skybox: Mesh=Mesh.CreateSphere("skybox",4,10000,scene);
                         skybox.material = skyboxMaterial;
                         skybox.infiniteDistance = true;
                         skybox.renderingGroupId = 0;
@@ -6096,7 +6117,8 @@ var org;
                         this.checkAnimRange(this.avatarSkeleton);
                         this.avatarSkeleton.enableBlending(0.1);
                         //this.avatar.rotation.y = Math.PI;
-                        this.avatar.position = new Vector3(0, 20, 0);
+                        //this.avatar.position = new Vector3(0, 20, 0);
+                        this.avatar.position = new Vector3(0, 1020, 0);
                         this.avatar.checkCollisions = true;
                         this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
                         this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);

@@ -318,11 +318,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 Tags.AddTagsTo(this.sun, "Vishva.sun");
 
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-                this.sunDR.position = new Vector3(0, 32, 0);
+                this.sunDR.position = new Vector3(0, 1048, 0);
                 
                 let sl: IShadowLight = <IShadowLight>(<any> this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
                 this.setShadowProperty(sl,this.shadowGenerator);
+                
+                
             } else {
                 for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
@@ -382,10 +384,16 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.skybox = this.createSkyBox(this.scene);
                 this.setLight(0.5);
             }
-            if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
-                this.scene.fogMode = Scene.FOGMODE_EXP;
+            if (this.scene.fogMode !== Scene.FOGMODE_EXP2) {
+                this.scene.fogMode = Scene.FOGMODE_EXP2;
                 this.scene.fogDensity = 0;
             }
+//            if (this.scene.fogMode !== Scene.FOGMODE_LINEAR) {
+//                this.scene.fogMode = Scene.FOGMODE_LINEAR;
+//                this.scene.fogStart =10220;
+//                this.scene.fogEnd =10240;
+//                this.scene.fogDensity = 0;
+//            }
             if (this.editEnabled) {
                 this.scene.onPointerDown = (evt, pickResult) => {return this.pickObject(evt, pickResult)};
             }
@@ -428,6 +436,10 @@ namespace org.ssatguru.babylonjs.vishva {
         cameraAnimating: boolean = false;
 
         private process() {
+            this.sunDR.position.x = this.avatar.position.x+100;
+            this.sunDR.position.y = this.avatar.position.y+100;
+            this.sunDR.position.z = this.avatar.position.z+0;
+
             if (this.cameraAnimating) return;
 
             //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
@@ -1343,6 +1355,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public clonetheMesh(mesh: AbstractMesh): AbstractMesh {
             var name: string = (<number> new Number(Date.now())).toString();
             var clone: AbstractMesh = mesh.clone(name, null, true);
+            console.log(mesh.scaling);
+            clone.scaling.copyFrom(mesh.scaling);
             delete clone["sensors"];
             delete clone["actuators"];
             this.animateMesh(clone);
@@ -1355,8 +1369,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         //play a small scaling animation when cloning or instancing a mesh.
         private animateMesh(mesh: AbstractMesh): void {
-            let startScale: Vector3 = new Vector3(1.5, 1.5, 1.5);
-            let endScale: Vector3 = new Vector3(1, 1, 1);
+            let startScale: Vector3 = mesh.scaling.clone().scaleInPlace(1.5); //new Vector3(1.5, 1.5, 1.5);
+            let endScale: Vector3 = mesh.scaling.clone();
             Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
         }
 
@@ -1693,6 +1707,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if (light === null) return;
             light.parent = null;
+            light.setEnabled(false);
             light.dispose();
         }
 
@@ -2171,9 +2186,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public setFog(d: any) {
             this.scene.fogDensity = <number> d;
+            //this.scene.fogStart = 10220*(1 - d/0.1);
         }
 
         public getFog(): number {
+            //return (10220 - this.scene.fogStart )*0.1/10220;
             return this.scene.fogDensity;
         }
         
@@ -2785,10 +2802,14 @@ namespace org.ssatguru.babylonjs.vishva {
         private createGround_htmap(scene: Scene) {
             let groundMaterial: StandardMaterial = this.createGroundMaterial(scene);
             MeshBuilder.CreateGroundFromHeightMap("ground", this.groundHeightMap, {
-                width: 256,
-                height: 256,
-                minHeight: 0,
-                maxHeight: 20,
+//                width: 256,
+//                height: 256,
+                width: 10240,
+                height: 10240,
+//                minHeight: 0,
+//                maxHeight: 20,
+                 minHeight: 0,
+                maxHeight: 1000,
                 subdivisions: 32,
                 onReady: (grnd: GroundMesh) => {
                     console.log("ground created");
@@ -2814,8 +2835,10 @@ namespace org.ssatguru.babylonjs.vishva {
         private createGroundMaterial(scene: Scene): StandardMaterial {
             let groundMaterial: StandardMaterial = new StandardMaterial("groundMat", scene);
             groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
-            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
-            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
+//            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
+//            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
+             (<Texture> groundMaterial.diffuseTexture).uScale = 100.0;
+            (<Texture> groundMaterial.diffuseTexture).vScale = 100.0;
             groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
             groundMaterial.specularColor = new Color3(0, 0, 0);
             return groundMaterial;
@@ -2832,7 +2855,8 @@ namespace org.ssatguru.babylonjs.vishva {
             skyboxMaterial.reflectionTexture = new CubeTexture(this.skyboxTextures, scene);
             skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
             
-            var skybox: Mesh = Mesh.CreateBox("skyBox", 1000.0, scene);
+            var skybox: Mesh = Mesh.CreateBox("skyBox", 10000.0, scene);
+            //var skybox: Mesh=Mesh.CreateSphere("skybox",4,10000,scene);
             skybox.material = skyboxMaterial;
             skybox.infiniteDistance = true;
             skybox.renderingGroupId = 0;
@@ -2965,7 +2989,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.checkAnimRange(this.avatarSkeleton);
             this.avatarSkeleton.enableBlending(0.1);
             //this.avatar.rotation.y = Math.PI;
-            this.avatar.position = new Vector3(0, 20, 0);
+            //this.avatar.position = new Vector3(0, 20, 0);
+            this.avatar.position = new Vector3(0, 1020, 0);
             this.avatar.checkCollisions = true;
             this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
             this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);

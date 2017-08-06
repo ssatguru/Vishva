@@ -232,7 +232,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
-            fog.slider(this.sliderOptions(0, 100, 1000 * this.vishva.getFog()));
+            fog.slider(this.sliderOptions(0, 100, 100000 * this.vishva.getFog()));
             
             let fogColDiag: ColorPickerDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, (hex, hsv, rgb) => {
                 this.vishva.setFogColor(hex);
@@ -1729,7 +1729,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 } else if (slider === "shade") {
                     this.vishva.setShade(v);
                 } else if (slider === "fog") {
-                    this.vishva.setFog(v / 10);
+                   this.vishva.setFog(v / 1000);
                 }
             }
             return true;

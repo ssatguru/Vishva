@@ -15,9 +15,9 @@ namespace org.ssatguru.babylonjs.component {
         key: Key;
         scene: Scene;
         //slopeLimit in degrees
-        slopeLimit: number = 45;
+        slopeLimit: number = 30;
         //slopeLimit in radians
-        sl:number=0.785;
+        sl:number=Math.PI * this.slopeLimit / 180;
 
         private renderer: () => void;
 

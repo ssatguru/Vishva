@@ -24,7 +24,7 @@ namespace org.ssatguru.babylonjs.component {
         constructor(avatar: Mesh, avatarSkeleton: Skeleton, anims: AnimData[], camera: ArcRotateCamera, scene: Scene) {
 
             this.avatarSkeleton = avatarSkeleton;
-            this.initAnims(anims);
+            if (anims!== null) this.initAnims(anims);
             this.camera = camera;
 
             this.avatar = avatar;
@@ -106,7 +106,7 @@ namespace org.ssatguru.babylonjs.component {
         private jumpCycle: number = this.jumpCycleMax;
         private wasJumping: boolean = false;
 
-        private gravity: number = 9.8*2;
+        private gravity: number = 9.8 * 2;
         private oldPos: Vector3 = new Vector3(0, 0, 0);
         private grounded: boolean = false;
         private downDist: number = 0;
@@ -121,9 +121,13 @@ namespace org.ssatguru.babylonjs.component {
             if (!this.anyMovement()) {
                 if (!this.grounded) {
                     let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
-                    this.stillTime = this.stillTime + dt;
-                    let u: number = this.stillTime * this.gravity
-                    this.downDist = u * dt + this.gravity * dt * dt / 2;
+                    if (dt === 0) {
+                        this.downDist = 5;
+                    } else {
+                        this.stillTime = this.stillTime + dt;
+                        let u: number = this.stillTime * this.gravity
+                        this.downDist = u * dt + this.gravity * dt * dt / 2;
+                    }
                     this.moveVector.copyFromFloats(0, -this.downDist, 0);
                     this.avatar.moveWithCollisions(this.moveVector);
                     if (this.oldPos.y === this.avatar.position.y) {
@@ -142,15 +146,16 @@ namespace org.ssatguru.babylonjs.component {
                     }
                     this.updateTargetValue();
                 }
-
-                if (this.prevAnim != this.idle) {
-                    this.prevAnim = this.idle
-                    if (this.idle.exist)
-                        this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                if (this.avatarSkeleton !== null) {
+                    if (this.prevAnim !== this.idle) {
+                        this.prevAnim = this.idle
+                        if (this.idle.exist)
+                            this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                    }
                 }
                 return;
             }
-            
+
             this.stillTime = 0;
             this.grounded = false;
 
@@ -159,13 +164,13 @@ namespace org.ssatguru.babylonjs.component {
             let walkDist: number = this.avatarSpeed * dt;
             //actual distance to be calculated based on wether AV is walking, runnning, or backing up
             let actDist: number = 0;
-            
+
             //initial down velocity
             let u: number = this.movTime * this.gravity
             //dist by which av moves down since last frame
             this.downDist = u * dt + this.gravity * dt * dt / 2;
             this.movTime = this.movTime + dt;
-            
+
             let anim: AnimData = this.idle;
             let moving: boolean = false;
 
@@ -281,21 +286,23 @@ namespace org.ssatguru.babylonjs.component {
                 let diff: number = this.oldPos.subtract(this.avatar.position).length();
                 let ht: number = this.oldPos.y - this.avatar.position.y;
                 let slope: number = Math.asin(ht / diff);
-                let delta:number = Math.abs(this.downDist-ht);
-                if (delta>0.0001 ){
+                let delta: number = Math.abs(this.downDist - ht);
+                if (delta > 0.0001) {
                     //we are not falling down
-                    if (slope <= this.sl ) {
+                    if (slope <= this.sl) {
                         this.movTime = 0;
                     }
                 }
             } else {
                 this.movTime = 0;
             }
-            if (this.prevAnim !== anim) {
-                if (anim.exist) {
-                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+            if (this.avatarSkeleton !== null) {
+                if (this.prevAnim !== anim) {
+                    if (anim.exist) {
+                        this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                    }
+                    this.prevAnim = anim;
                 }
-                this.prevAnim = anim;
             }
             this.updateTargetValue();
             return;

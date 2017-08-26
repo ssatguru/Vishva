@@ -748,14 +748,8 @@
 
 
         <script type="text/javascript" src="lib/EditControl.min.js"></script>
-        <script type="text/javascript" src="config.js"></script>
-        <script type="text/javascript" src="worlds.js"></script>
-        <script type="text/javascript" src="assets.js"></script>
-        <!--
-        <script type="text/javascript" src="js/VishvaGUI.js"></script>
-        <script type="text/javascript" src="js/Vishva.js"></script>
-        <script type="text/javascript" src="js/HREFsearch.js"></script>
-        -->
+        <script type="text/javascript" src="vishva/config.js"></script>
+        <script type="text/javascript" src="vishva/assets.js"></script>
         <script type="text/javascript" src="js/Vishva-merged.js"></script>
         <script type="text/javascript">
                             $(function () {
@@ -770,35 +764,30 @@
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
                                 var search = new HREFsearch();
-
-                                var world, worldFolder, sceneFolder, sceneFile, editEnabled;
-
-                                world = search.getParm("world");
-                                if (world != "empty") {
-                                    if (!world) {
-                                        if (config) {
-                                            world = config.world;
-                                        }
+                                
+                                var scene = search.getParm("world");
+                                var scenePath="vishva/worlds/";
+                                var editEnabled =true;
+                                
+                                if (!scene){
+                                    if (defaultScene){
+                                        scene = defaultScene;
+                                    }else{
+                                        scene = "empty";
                                     }
-
-                                    if (worlds && world) {
-                                        var worldData = worlds[world];
-                                        if (worldData) {
-                                            worldFolder = worldData.worldFolder;
-                                            sceneFolder = worldData.sceneFolder;
-                                            sceneFile = worldData.sceneFile;
-                                            editEnabled = worldData.editEnabled;
-                                        }
-                                    }
-
-                                    var scenePath = "vishva/worlds/" + worldFolder + "/"
-                                            + sceneFolder + "/";
                                 }
-                                if (editEnabled == null)
-                                    editEnabled = true;
+
+                                if (noEditScenes){
+                                    var l = noEditScenes.length;
+                                    for (i=0;i<l;i++){
+                                        if (noEditScenes[i]== scene){
+                                            editEnabled=false;
+                                        }
+                                    }
+                                }
+
                                 var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
-                                var vishva = new Vishva(scenePath, sceneFile, "vCanvas",
-                                        editEnabled, assets);
+                                new Vishva(scene, scenePath, editEnabled,assets, "vCanvas");
                             });
         </script>
     </body>

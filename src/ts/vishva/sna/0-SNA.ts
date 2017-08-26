@@ -458,7 +458,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.properties.signalId = sid;
         }
 
-        public emitSignal(e: ActionEvent) {
+        public emitSignal(e?: ActionEvent) {
             // donot emit signal if this mesh is on the diabled list
             var i: number = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
             if (i >= 0) return;
@@ -490,6 +490,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * then dispose of the actionmanager itself.
          */
         public removeActions() {
+            if (!this.mesh.actionManager) return;
             var actions: Action[] = this.mesh.actionManager.actions;
             let i:number;
             for (let action of this.actions){

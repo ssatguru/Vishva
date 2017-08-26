@@ -28,7 +28,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 super(mesh, new SenContactProp());
             }
             this.processUpdateSpecific();
-            
         }
 
         public getName(): string {

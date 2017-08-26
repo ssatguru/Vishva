@@ -2247,7 +2247,7 @@ var org;
                  * @author satguru
                  */
                 var Vishva = (function () {
-                    function Vishva(scenePath, sceneFile, canvasId, editEnabled, assets) {
+                    function Vishva(sceneFile, scenePath, editEnabled, assets, canvasId) {
                         var _this = this;
                         this.actuator = "none";
                         this.snapTransOn = false;
@@ -2486,7 +2486,7 @@ var org;
                         //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
                         //BABYLON.SceneLoader.CleanBoneMatrixWeights = true
                         this.scenePath = scenePath;
-                        if (sceneFile == null) {
+                        if (sceneFile == "empty") {
                             this.onSceneLoaded(this.scene);
                         }
                         else {
@@ -5580,6 +5580,8 @@ var org;
                     * then dispose of the actionmanager itself.
                     */
                     SensorAbstract.prototype.removeActions = function () {
+                        if (!this.mesh.actionManager)
+                            return;
                         var actions = this.mesh.actionManager.actions;
                         var i;
                         for (var _i = 0, _a = this.actions; _i < _a.length; _i++) {
@@ -6081,13 +6083,6 @@ var org;
                         }
                         return _this;
                     }
-                    //        public constructor(mesh: Mesh, parms: ActMoverParm) {
-                    //            if (parms != null){
-                    //                super(mesh, parms);
-                    //            }else{
-                    //                super(mesh, new ActMoverParm());
-                    //            }
-                    //        }
                     ActuatorMover.prototype.actuate = function () {
                         var _this = this;
                         var props = this.properties;
@@ -6455,6 +6450,68 @@ var org;
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
 org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addSensor("Contact", org.ssatguru.babylonjs.vishva.SensorContact);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var SenTimerProp = (function (_super) {
+                    __extends(SenTimerProp, _super);
+                    function SenTimerProp() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.interval = 1000;
+                        return _this;
+                    }
+                    SenTimerProp.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return SenTimerProp;
+                }(vishva.SNAproperties));
+                vishva.SenTimerProp = SenTimerProp;
+                var SensorTimer = (function (_super) {
+                    __extends(SensorTimer, _super);
+                    function SensorTimer(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new SenTimerProp()) || this;
+                        }
+                        _this.processUpdateSpecific();
+                        return _this;
+                    }
+                    SensorTimer.prototype.getName = function () {
+                        return "Timer";
+                    };
+                    SensorTimer.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    SensorTimer.prototype.setProperties = function (properties) {
+                        this.properties = properties;
+                    };
+                    SensorTimer.prototype.cleanUp = function () {
+                        window.clearInterval(this.timerId);
+                    };
+                    SensorTimer.prototype.processUpdateSpecific = function () {
+                        var _this = this;
+                        var properties = this.properties;
+                        if (this.timerId) {
+                            window.clearInterval(this.timerId);
+                        }
+                        this.timerId = window.setInterval(function () { _this.emitSignal(); }, properties.interval);
+                    };
+                    return SensorTimer;
+                }(vishva.SensorAbstract));
+                vishva.SensorTimer = SensorTimer;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addSensor("Timer", org.ssatguru.babylonjs.vishva.SensorTimer);
 var org;
 (function (org) {
     var ssatguru;

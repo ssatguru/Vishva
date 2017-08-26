@@ -10,7 +10,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         rate: number = 1;
 
-        public unmarshall(obj: Object): ActProperties {
+        public unmarshall(obj: Object): AnimatorProp {
             return null;
         }
     }

@@ -172,7 +172,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-        public constructor(scenePath: string, sceneFile: string, canvasId: string, editEnabled: boolean, assets: Object) {
+        public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, assets: Object, canvasId: string) {
             this.editEnabled = false;
             this.frames = 0;
             this.f = 0;
@@ -208,7 +208,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //BABYLON.SceneLoader.CleanBoneMatrixWeights = true
 
             this.scenePath = scenePath;
-            if (sceneFile == null) {
+            if (sceneFile == "empty") {
                 this.onSceneLoaded(this.scene);
             } else {
                 this.loadingStatus.innerHTML = "downloading world";

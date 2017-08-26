@@ -6,6 +6,5 @@ assets={
 	characters:["Joan","Vincent"],
 	vehicles:["farm_tractor_01"],
 	sounds:["door.mp3","forest-ambient.ogg","nature-ambiance.ogg","soft-forest-music.ogg","tractor.wav","hello.mp3","old_door.ogg"],
-    water:["sea"]
-        
+        water:["sea"]
 }

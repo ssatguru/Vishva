@@ -202,6 +202,10 @@ namespace org.ssatguru.babylonjs.vishva {
             window.addEventListener("resize", (event) => {return this.onWindowResize(event)});
             window.addEventListener("keydown", (e) => {return this.onKeyDown(e)}, false);
             window.addEventListener("keyup", (e) => {return this.onKeyUp(e)}, false);
+            
+            //fix shadow and skinning issue
+            //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
+            //BABYLON.SceneLoader.CleanBoneMatrixWeights = true
 
             this.scenePath = scenePath;
             if (sceneFile == null) {
@@ -258,6 +262,8 @@ namespace org.ssatguru.babylonjs.vishva {
 //            shadowGenerator.bias = 1.0E-6;
 
             shadowGenerator.useBlurExponentialShadowMap = true;
+            //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
+            shadowGenerator.bias = -0.3;
 //            shadowGenerator.bias = 1.0E-6;
 //            shadowGenerator.depthScale = 2500;
 //            sl.shadowMinZ = 1;
@@ -400,7 +406,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!avFound) {
                 console.log("no vishva av found. creating av");
                 //remember loadAvatar is async. process
-                this.loadAvatar();
+                this.createAvatar();
             } else {
                 this.avatarSkeleton.enableBlending(0.1);
                 this.cc = new CharacterControl(this.avatar, this.avatarSkeleton, this.anims, this.mainCamera, this.scene);
@@ -2964,7 +2970,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return camera;
         }
 
-        private loadAvatar() {
+        private createAvatar() {
             SceneLoader.ImportMesh("", this.avatarFolder, this.avatarFile, this.scene, (meshes, particleSystems, skeletons) => {return this.onAvatarLoaded(meshes, particleSystems, skeletons)});
         }
 
@@ -2990,7 +2996,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.avatarSkeleton.enableBlending(0.1);
             //this.avatar.rotation.y = Math.PI;
             //this.avatar.position = new Vector3(0, 20, 0);
-            this.avatar.position = new Vector3(0, 1020, 0);
+            this.avatar.position = new Vector3(-360, 620, 225);
             this.avatar.checkCollisions = true;
             this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
             this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);

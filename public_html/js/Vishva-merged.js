@@ -40,7 +40,8 @@ var org;
                         this.moveVector = new Vector3(0, 0, 0);
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
-                        this.initAnims(anims);
+                        if (anims !== null)
+                            this.initAnims(anims);
                         this.camera = camera;
                         this.avatar = avatar;
                         this.scene = scene;
@@ -97,9 +98,14 @@ var org;
                         if (!this.anyMovement()) {
                             if (!this.grounded) {
                                 var dt_1 = this.scene.getEngine().getDeltaTime() / 1000;
-                                this.stillTime = this.stillTime + dt_1;
-                                var u_1 = this.stillTime * this.gravity;
-                                this.downDist = u_1 * dt_1 + this.gravity * dt_1 * dt_1 / 2;
+                                if (dt_1 === 0) {
+                                    this.downDist = 5;
+                                }
+                                else {
+                                    this.stillTime = this.stillTime + dt_1;
+                                    var u_1 = this.stillTime * this.gravity;
+                                    this.downDist = u_1 * dt_1 + this.gravity * dt_1 * dt_1 / 2;
+                                }
                                 this.moveVector.copyFromFloats(0, -this.downDist, 0);
                                 this.avatar.moveWithCollisions(this.moveVector);
                                 if (this.oldPos.y === this.avatar.position.y) {
@@ -119,10 +125,12 @@ var org;
                                 }
                                 this.updateTargetValue();
                             }
-                            if (this.prevAnim != this.idle) {
-                                this.prevAnim = this.idle;
-                                if (this.idle.exist)
-                                    this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                            if (this.avatarSkeleton !== null) {
+                                if (this.prevAnim !== this.idle) {
+                                    this.prevAnim = this.idle;
+                                    if (this.idle.exist)
+                                        this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                                }
                             }
                             return;
                         }
@@ -271,11 +279,13 @@ var org;
                         else {
                             this.movTime = 0;
                         }
-                        if (this.prevAnim !== anim) {
-                            if (anim.exist) {
-                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                        if (this.avatarSkeleton !== null) {
+                            if (this.prevAnim !== anim) {
+                                if (anim.exist) {
+                                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                                }
+                                this.prevAnim = anim;
                             }
-                            this.prevAnim = anim;
                         }
                         this.updateTargetValue();
                         return;
@@ -2105,10 +2115,10 @@ var org;
                             if (guiSettings !== null)
                                 this.enableToolTips = guiSettings.enableToolTips;
                         };
+                        VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
+                        VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
                         return VishvaGUI;
                     }());
-                    VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
-                    VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
                     gui.VishvaGUI = VishvaGUI;
                     var GuiSettings = (function () {
                         function GuiSettings() {
@@ -2191,1155 +2201,6 @@ var org;
                 }());
                 util.HREFsearch = HREFsearch;
             })(util = babylonjs.util || (babylonjs.util = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-/*
- * Sensors and Actuators
- */
-var org;
-/*
- * Sensors and Actuators
- */
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva) {
-                var ActionManager = BABYLON.ActionManager;
-                var Animation = BABYLON.Animation;
-                var Axis = BABYLON.Axis;
-                var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
-                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
-                var Range = org.ssatguru.babylonjs.vishva.gui.Range;
-                var Sound = BABYLON.Sound;
-                var Tags = BABYLON.Tags;
-                var Quaternion = BABYLON.Quaternion;
-                var Vector3 = BABYLON.Vector3;
-                var SNAManager = (function () {
-                    function SNAManager() {
-                        this.sensorList = ["Touch", "Contact"];
-                        this.actuatorList = ["Animator", "Mover", "Rotator", "Sound", "Cloaker", "Disabler", "Enabler"];
-                        this.snaDisabledList = new Array();
-                        this.sig2actMap = new Object();
-                        this.prevUID = "";
-                    }
-                    SNAManager.getSNAManager = function () {
-                        if (SNAManager.sm == null) {
-                            SNAManager.sm = new SNAManager();
-                        }
-                        return SNAManager.sm;
-                    };
-                    SNAManager.prototype.setConfig = function (snaConfig) {
-                        this.sensors = snaConfig["sensors"];
-                        this.actuators = snaConfig["actuators"];
-                        this.sensorList = Object.keys(this.sensors);
-                        this.actuatorList = Object.keys(this.actuators);
-                    };
-                    SNAManager.prototype.getSensorList = function () {
-                        return this.sensorList;
-                    };
-                    SNAManager.prototype.getActuatorList = function () {
-                        return this.actuatorList;
-                    };
-                    /*
-                     * the first constructor is called by the vishva scene unmarshaller
-                     * the second by the gui to create a new sensor
-                     */
-                    SNAManager.prototype.createSensorByName = function (name, mesh, prop) {
-                        if (name === "Touch") {
-                            if (prop != null)
-                                return new SensorTouch(mesh, prop);
-                            else
-                                return new SensorTouch(mesh, new SenTouchProp());
-                        }
-                        else if (name === "Contact") {
-                            if (prop != null)
-                                return new SensorContact(mesh, prop);
-                            else
-                                return new SensorContact(mesh, new SenContactProp());
-                        }
-                        else
-                            return null;
-                    };
-                    /*
-                     * the first constructor is called by the vishva scene unmarshaller
-                     * the second by the gui to create a new actuator
-                     */
-                    SNAManager.prototype.createActuatorByName = function (name, mesh, prop) {
-                        if (name === "Mover") {
-                            if (prop != null)
-                                return new ActuatorMover(mesh, prop);
-                            else
-                                return new ActuatorMover(mesh, new ActMoverParm());
-                        }
-                        else if (name === "Rotator") {
-                            if (prop != null)
-                                return new ActuatorRotator(mesh, prop);
-                            else
-                                return new ActuatorRotator(mesh, new ActRotatorParm());
-                        }
-                        else if (name === "Sound") {
-                            if (prop != null)
-                                return new ActuatorSound(mesh, prop);
-                            else
-                                return new ActuatorSound(mesh, new ActSoundProp());
-                        }
-                        else if (name === "Animator") {
-                            if (prop != null)
-                                return new ActuatorAnimator(mesh, prop);
-                            else
-                                return new ActuatorAnimator(mesh, new AnimatorProp());
-                        }
-                        else if (name === "Cloaker") {
-                            if (prop != null)
-                                return new ActuatorCloaker(mesh, prop);
-                            else
-                                return new ActuatorCloaker(mesh, new ActCloakerProp());
-                        }
-                        else if (name === "Disabler") {
-                            if (prop != null)
-                                return new ActuatorDisabler(mesh, prop);
-                            else
-                                return new ActuatorDisabler(mesh, new ActDisablerProp());
-                        }
-                        else if (name === "Enabler") {
-                            if (prop != null)
-                                return new ActuatorEnabler(mesh, prop);
-                            else
-                                return new ActuatorEnabler(mesh, new ActEnablerProp());
-                        }
-                        else
-                            return null;
-                    };
-                    SNAManager.prototype.getSensorParms = function (sensor) {
-                        var sensorObj = this.sensors[sensor];
-                        return sensorObj["parms"];
-                    };
-                    SNAManager.prototype.getActuatorParms = function (actuator) {
-                        var actuatorObj = this.sensors[actuator];
-                        return actuatorObj["parms"];
-                    };
-                    SNAManager.prototype.emitSignal = function (signalId) {
-                        var _this = this;
-                        if (signalId.trim() === "")
-                            return;
-                        var keyValue = this.sig2actMap[signalId];
-                        if (keyValue != null) {
-                            window.setTimeout((function (acts) { return _this.actuate(acts); }), 0, keyValue);
-                        }
-                    };
-                    SNAManager.prototype.actuate = function (acts) {
-                        var actuators = acts;
-                        for (var index151 = 0; index151 < actuators.length; index151++) {
-                            var actuator = actuators[index151];
-                            {
-                                actuator.start();
-                            }
-                        }
-                    };
-                    /**
-                     * this is called to process any signals queued in any of mesh actuators
-                     * this could be called after say a user has finished editing a mesh during
-                     * edit all actuators are disabled and some events coudl lead to pending
-                     * signals one example of such event could be adding a actuator with
-                     * "autostart" enabled or enabling an existing actuators "autostart" during
-                     * edit.
-                     *
-                     * @param mesh
-                     */
-                    SNAManager.prototype.processQueue = function (mesh) {
-                        var actuators = mesh["actuators"];
-                        if (actuators != null) {
-                            for (var index152 = 0; index152 < actuators.length; index152++) {
-                                var actuator = actuators[index152];
-                                {
-                                    actuator.processQueue();
-                                }
-                            }
-                        }
-                    };
-                    /**
-                     * this temproraily disables all sensors and actuators on a mesh this could
-                     * be called for example when editing a mesh
-                     *
-                     * @param mesh
-                     */
-                    SNAManager.prototype.disableSnAs = function (mesh) {
-                        this.snaDisabledList.push(mesh);
-                        var actuators = mesh["actuators"];
-                        if (actuators != null) {
-                            for (var index153 = 0; index153 < actuators.length; index153++) {
-                                var actuator = actuators[index153];
-                                {
-                                    if (actuator.actuating)
-                                        actuator.stop();
-                                }
-                            }
-                        }
-                    };
-                    SNAManager.prototype.enableSnAs = function (mesh) {
-                        var i = this.snaDisabledList.indexOf(mesh);
-                        if (i !== -1) {
-                            this.snaDisabledList.splice(i, 1);
-                        }
-                        var actuators = mesh["actuators"];
-                        if (actuators != null) {
-                            for (var index154 = 0; index154 < actuators.length; index154++) {
-                                var actuator = actuators[index154];
-                                {
-                                    if (actuator.properties.autoStart)
-                                        actuator.start();
-                                }
-                            }
-                        }
-                    };
-                    /**
-                     * removes all sensors and actuators from a mesh. this would be called when
-                     * say disposing off a mesh
-                     *
-                     * @param mesh
-                     */
-                    SNAManager.prototype.removeSNAs = function (mesh) {
-                        var actuators = mesh["actuators"];
-                        if (actuators != null) {
-                            var l = actuators.length;
-                            for (var i = l - 1; i >= 0; i--) {
-                                actuators[i].dispose();
-                            }
-                        }
-                        var sensors = mesh["sensors"];
-                        if (sensors != null) {
-                            var l = sensors.length;
-                            for (var i = l - 1; i >= 0; i--) {
-                                sensors[i].dispose();
-                            }
-                        }
-                        var i = this.snaDisabledList.indexOf(mesh);
-                        if (i !== -1) {
-                            this.snaDisabledList.splice(i, 1);
-                        }
-                    };
-                    SNAManager.prototype.subscribe = function (actuator, signalId) {
-                        var keyValue = this.sig2actMap[signalId];
-                        if (keyValue == null) {
-                            var actuators = new Array();
-                            actuators.push(actuator);
-                            this.sig2actMap[signalId] = actuators;
-                        }
-                        else {
-                            var actuators = keyValue;
-                            actuators.push(actuator);
-                        }
-                    };
-                    SNAManager.prototype.unSubscribe = function (actuator, signalId) {
-                        var keyValue = this.sig2actMap[signalId];
-                        if (keyValue != null) {
-                            var actuators = keyValue;
-                            var i = actuators.indexOf(actuator);
-                            if (i !== -1) {
-                                actuators.splice(i, 1);
-                            }
-                        }
-                    };
-                    SNAManager.prototype.unSubscribeAll = function () {
-                    };
-                    SNAManager.prototype.serializeSnAs = function (scene) {
-                        var snas = new Array();
-                        var sna;
-                        var meshes = scene.meshes;
-                        var meshId;
-                        for (var index155 = 0; index155 < meshes.length; index155++) {
-                            var mesh = meshes[index155];
-                            {
-                                meshId = null;
-                                var actuators = mesh["actuators"];
-                                if (actuators != null) {
-                                    meshId = this.getMeshVishvaUid(mesh);
-                                    for (var index156 = 0; index156 < actuators.length; index156++) {
-                                        var actuator = actuators[index156];
-                                        {
-                                            sna = new SNAserialized();
-                                            sna.name = actuator.getName();
-                                            sna.type = actuator.getType();
-                                            sna.meshId = meshId;
-                                            sna.properties = actuator.getProperties();
-                                            snas.push(sna);
-                                        }
-                                    }
-                                }
-                                var sensors = mesh["sensors"];
-                                if (sensors != null) {
-                                    if (meshId == null)
-                                        meshId = this.getMeshVishvaUid(mesh);
-                                    for (var index157 = 0; index157 < sensors.length; index157++) {
-                                        var sensor = sensors[index157];
-                                        {
-                                            sna = new SNAserialized();
-                                            sna.name = sensor.getName();
-                                            sna.type = sensor.getType();
-                                            sna.meshId = meshId;
-                                            sna.properties = sensor.getProperties();
-                                            snas.push(sna);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return snas;
-                    };
-                    SNAManager.prototype.unMarshal = function (snas, scene) {
-                        if (snas == null)
-                            return;
-                        for (var index158 = 0; index158 < snas.length; index158++) {
-                            var sna = snas[index158];
-                            var mesh = scene.getMeshesByTags(sna.meshId)[0];
-                            if (mesh != null) {
-                                if (sna.type === "SENSOR") {
-                                    this.createSensorByName(sna.name, mesh, sna.properties);
-                                }
-                                else if (sna.type === "ACTUATOR") {
-                                    this.createActuatorByName(sna.name, mesh, sna.properties);
-                                }
-                            }
-                            else {
-                                console.log("didnot find mesh for tag " + sna.meshId);
-                            }
-                        }
-                    };
-                    SNAManager.prototype.getMeshVishvaUid = function (mesh) {
-                        if (Tags.HasTags(mesh)) {
-                            var tags = Tags.GetTags(mesh, true).split(" ");
-                            for (var index159 = 0; index159 < tags.length; index159++) {
-                                var tag = tags[index159];
-                                {
-                                    var i = tag.indexOf("Vishva.uid.");
-                                    if (i >= 0) {
-                                        return tag;
-                                    }
-                                }
-                            }
-                        }
-                        var uid;
-                        uid = "Vishva.uid." + new Number(Date.now()).toString();
-                        while ((uid === this.prevUID)) {
-                            console.log("regenerating uid");
-                            uid = "Vishva.uid." + new Number(Date.now()).toString();
-                        }
-                        ;
-                        this.prevUID = uid;
-                        Tags.AddTagsTo(mesh, uid);
-                        return uid;
-                    };
-                    return SNAManager;
-                }());
-                vishva.SNAManager = SNAManager;
-                var SNAserialized = (function () {
-                    function SNAserialized() {
-                    }
-                    return SNAserialized;
-                }());
-                vishva.SNAserialized = SNAserialized;
-                var SensorAbstract = (function () {
-                    function SensorAbstract(mesh, properties) {
-                        //action: Action;
-                        this.actions = new Array();
-                        //Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
-                        this.properties = properties;
-                        this.mesh = mesh;
-                        var sensors = this.mesh["sensors"];
-                        if (sensors == null) {
-                            sensors = new Array();
-                            mesh["sensors"] = sensors;
-                        }
-                        sensors.push(this);
-                    }
-                    SensorAbstract.prototype.dispose = function () {
-                        var sensors = this.mesh["sensors"];
-                        if (sensors != null) {
-                            var i = sensors.indexOf(this);
-                            if (i !== -1) {
-                                sensors.splice(i, 1);
-                            }
-                        }
-                        this.removeActions();
-                        //call any sesnor specific cleanup
-                        this.cleanUp();
-                    };
-                    SensorAbstract.prototype.getSignalId = function () {
-                        return this.properties.signalId;
-                    };
-                    SensorAbstract.prototype.setSignalId = function (sid) {
-                        this.properties.signalId = sid;
-                    };
-                    SensorAbstract.prototype.emitSignal = function (e) {
-                        // donot emit signal if this mesh is on the diabled list
-                        var i = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
-                        if (i >= 0)
-                            return;
-                        SNAManager.getSNAManager().emitSignal(this.properties.signalId);
-                    };
-                    SensorAbstract.prototype.getProperties = function () {
-                        return this.properties;
-                    };
-                    SensorAbstract.prototype.setProperties = function (prop) {
-                        this.properties = prop;
-                    };
-                    SensorAbstract.prototype.processUpdateGeneric = function () {
-                        this.processUpdateSpecific();
-                    };
-                    SensorAbstract.prototype.getType = function () {
-                        return "SENSOR";
-                    };
-                    /*
-                    * from this mesh's actionmanager remove all actions
-                    * added by this sensor
-                    * if at end no actions left in the actionmanager
-                    * then dispose of the actionmanager itself.
-                    */
-                    SensorAbstract.prototype.removeActions = function () {
-                        var actions = this.mesh.actionManager.actions;
-                        var i;
-                        for (var _i = 0, _a = this.actions; _i < _a.length; _i++) {
-                            var action = _a[_i];
-                            i = actions.indexOf(action);
-                            actions.splice(i, 1);
-                        }
-                        if (actions.length === 0) {
-                            this.mesh.actionManager.dispose();
-                            this.mesh.actionManager = null;
-                        }
-                    };
-                    return SensorAbstract;
-                }());
-                vishva.SensorAbstract = SensorAbstract;
-                var SensorTouch = (function (_super) {
-                    __extends(SensorTouch, _super);
-                    function SensorTouch(mesh, properties) {
-                        var _this = _super.call(this, mesh, properties) || this;
-                        Object.defineProperty(_this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.Sensor", "org.ssatguru.babylonjs.SensorActuator"] });
-                        if (_this.mesh.actionManager == null) {
-                            _this.mesh.actionManager = new ActionManager(_this.mesh.getScene());
-                        }
-                        var action = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, function (e) {
-                            var pe = e.sourceEvent;
-                            if (pe.button === 0)
-                                _this.emitSignal(e);
-                        });
-                        _this.mesh.actionManager.registerAction(action);
-                        _this.actions.push(action);
-                        return _this;
-                    }
-                    SensorTouch.prototype.getName = function () {
-                        return "Touch";
-                    };
-                    SensorTouch.prototype.getProperties = function () {
-                        return this.properties;
-                    };
-                    SensorTouch.prototype.setProperties = function (properties) {
-                        this.properties = properties;
-                    };
-                    SensorTouch.prototype.cleanUp = function () {
-                    };
-                    SensorTouch.prototype.processUpdateSpecific = function () {
-                    };
-                    return SensorTouch;
-                }(SensorAbstract));
-                vishva.SensorTouch = SensorTouch;
-                var SensorContact = (function (_super) {
-                    __extends(SensorContact, _super);
-                    function SensorContact(aMesh, properties) {
-                        var _this = _super.call(this, aMesh, properties) || this;
-                        _this.processUpdateSpecific();
-                        return _this;
-                    }
-                    SensorContact.prototype.getName = function () {
-                        return "Contact";
-                    };
-                    SensorContact.prototype.getProperties = function () {
-                        return this.properties;
-                    };
-                    SensorContact.prototype.setProperties = function (properties) {
-                        this.properties = properties;
-                    };
-                    SensorContact.prototype.cleanUp = function () {
-                    };
-                    SensorContact.prototype.processUpdateSpecific = function () {
-                        var _this = this;
-                        var properties = this.properties;
-                        var scene = this.mesh.getScene();
-                        if (this.mesh.actionManager == null) {
-                            this.mesh.actionManager = new ActionManager(scene);
-                        }
-                        var otherMesh = scene.getMeshesByTags("Vishva.avatar")[0];
-                        if (properties.onEnter) {
-                            var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
-                            this.mesh.actionManager.registerAction(action);
-                            this.actions.push(action);
-                        }
-                        if (properties.onExit) {
-                            var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
-                            this.mesh.actionManager.registerAction(action);
-                            this.actions.push(action);
-                        }
-                    };
-                    SensorContact.prototype.findAV = function (scene) {
-                        for (var index140 = 0; index140 < scene.meshes.length; index140++) {
-                            var mesh = scene.meshes[index140];
-                            {
-                                if (Tags.HasTags(mesh)) {
-                                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
-                                        return mesh;
-                                    }
-                                }
-                            }
-                        }
-                        return null;
-                    };
-                    return SensorContact;
-                }(SensorAbstract));
-                vishva.SensorContact = SensorContact;
-                var ActuatorAbstract = (function () {
-                    function ActuatorAbstract(mesh, prop) {
-                        this.actuating = false;
-                        this.ready = true;
-                        this.queued = 0;
-                        this.disposed = false;
-                        Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
-                        this.properties = prop;
-                        this.mesh = mesh;
-                        this.processUpdateGeneric();
-                        var actuators = this.mesh["actuators"];
-                        if (actuators == null) {
-                            actuators = new Array();
-                            this.mesh["actuators"] = actuators;
-                        }
-                        actuators.push(this);
-                    }
-                    ActuatorAbstract.prototype.start = function () {
-                        if (this.disposed)
-                            return false;
-                        if (!this.ready)
-                            return false;
-                        // donot actuate if this mesh is on the disabled list
-                        var i = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
-                        if (i >= 0)
-                            return false;
-                        if (this.actuating) {
-                            if (!this.properties.loop) {
-                                this.queued++;
-                            }
-                            return true;
-                        }
-                        SNAManager.getSNAManager().emitSignal(this.properties.signalStart);
-                        this.actuating = true;
-                        this.actuate();
-                        return true;
-                    };
-                    ActuatorAbstract.prototype.processQueue = function () {
-                        if (this.queued > 0) {
-                            this.queued--;
-                            this.start();
-                        }
-                    };
-                    ActuatorAbstract.prototype.getType = function () {
-                        return "ACTUATOR";
-                    };
-                    ActuatorAbstract.prototype.getMesh = function () {
-                        return this.mesh;
-                    };
-                    ActuatorAbstract.prototype.getProperties = function () {
-                        return this.properties;
-                    };
-                    ActuatorAbstract.prototype.setProperties = function (prop) {
-                        this.properties = prop;
-                        this.processUpdateGeneric();
-                    };
-                    ActuatorAbstract.prototype.getSignalId = function () {
-                        return this.properties.signalId;
-                    };
-                    ActuatorAbstract.prototype.processUpdateGeneric = function () {
-                        // check if signalId changed, if yes then resubscribe
-                        if (this.signalId != null && this.signalId !== this.properties.signalId) {
-                            SNAManager.getSNAManager().unSubscribe(this, this.signalId);
-                            this.signalId = this.properties.signalId;
-                            SNAManager.getSNAManager().subscribe(this, this.signalId);
-                        }
-                        else if (this.signalId == null) {
-                            this.signalId = this.properties.signalId;
-                            SNAManager.getSNAManager().subscribe(this, this.signalId);
-                        }
-                        this.processUpdateSpecific();
-                    };
-                    ActuatorAbstract.prototype.onActuateEnd = function () {
-                        SNAManager.getSNAManager().emitSignal(this.properties.signalEnd);
-                        this.actuating = false;
-                        if (this.queued > 0) {
-                            this.queued--;
-                            this.start();
-                            return null;
-                        }
-                        if (this.properties.loop) {
-                            this.start();
-                            return null;
-                        }
-                        return null;
-                    };
-                    ActuatorAbstract.prototype.dispose = function () {
-                        this.disposed = true;
-                        SNAManager.getSNAManager().unSubscribe(this, this.properties.signalId);
-                        var actuators = this.mesh["actuators"];
-                        if (actuators != null) {
-                            this.stop();
-                            var i = actuators.indexOf(this);
-                            if (i !== -1) {
-                                actuators.splice(i, 1);
-                            }
-                        }
-                        this.cleanUp();
-                        this.mesh = null;
-                    };
-                    return ActuatorAbstract;
-                }());
-                vishva.ActuatorAbstract = ActuatorAbstract;
-                var ActuatorRotator = (function (_super) {
-                    __extends(ActuatorRotator, _super);
-                    function ActuatorRotator(mesh, parm) {
-                        var _this = _super.call(this, mesh, parm) || this;
-                        Object.defineProperty(_this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
-                        return _this;
-                    }
-                    ActuatorRotator.prototype.actuate = function () {
-                        var _this = this;
-                        var properties = this.properties;
-                        var cPos = this.mesh.rotationQuaternion.clone();
-                        var nPos;
-                        var rotX = Quaternion.RotationAxis(Axis.X, properties.x * Math.PI / 180);
-                        var rotY = Quaternion.RotationAxis(Axis.Y, properties.y * Math.PI / 180);
-                        var rotZ = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
-                        var abc = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
-                        if (properties.toggle) {
-                            if (properties.state_toggle) {
-                                nPos = cPos.multiply(abc);
-                            }
-                            else {
-                                nPos = cPos.multiply(Quaternion.Inverse(abc));
-                            }
-                        }
-                        else
-                            nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
-                        properties.state_toggle = !properties.state_toggle;
-                        var cY = this.mesh.position.y;
-                        var nY = this.mesh.position.y + 5;
-                        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, function () { return _this.onActuateEnd(); });
-                    };
-                    ActuatorRotator.prototype.getName = function () {
-                        return "Rotator";
-                    };
-                    ActuatorRotator.prototype.stop = function () {
-                        var _this = this;
-                        if (this.a != null) {
-                            this.a.stop();
-                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
-                        }
-                    };
-                    ActuatorRotator.prototype.cleanUp = function () {
-                    };
-                    ActuatorRotator.prototype.processUpdateSpecific = function () {
-                        if (this.properties.autoStart) {
-                            var started = this.start();
-                            // sometime a start maynot be possible example during edit
-                            // if could not start now then queue it for later start
-                            // if (!started)
-                            // this.queued++;
-                        }
-                    };
-                    ActuatorRotator.prototype.isReady = function () {
-                        return true;
-                    };
-                    return ActuatorRotator;
-                }(ActuatorAbstract));
-                vishva.ActuatorRotator = ActuatorRotator;
-                var ActuatorMover = (function (_super) {
-                    __extends(ActuatorMover, _super);
-                    function ActuatorMover(mesh, parms) {
-                        return _super.call(this, mesh, parms) || this;
-                    }
-                    ActuatorMover.prototype.actuate = function () {
-                        var _this = this;
-                        var props = this.properties;
-                        var cPos = this.mesh.position.clone();
-                        var nPos;
-                        var moveBy;
-                        if (props.local) {
-                            var meshMatrix = this.mesh.getWorldMatrix();
-                            var localMove = new Vector3(props.x * (1 / this.mesh.scaling.x), props.y * (1 / this.mesh.scaling.y), props.z * (1 / this.mesh.scaling.z));
-                            moveBy = Vector3.TransformCoordinates(localMove, meshMatrix).subtract(this.mesh.position);
-                        }
-                        else
-                            moveBy = new Vector3(props.x, props.y, props.z);
-                        if (props.toggle) {
-                            if (props.state_toggle) {
-                                nPos = cPos.add(moveBy);
-                            }
-                            else {
-                                nPos = cPos.subtract(moveBy);
-                            }
-                            props.state_toggle = !props.state_toggle;
-                        }
-                        else {
-                            nPos = cPos.add(moveBy);
-                        }
-                        this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, 0, null, function () { return _this.onActuateEnd(); });
-                    };
-                    ActuatorMover.prototype.getName = function () {
-                        return "Mover";
-                    };
-                    ActuatorMover.prototype.stop = function () {
-                        var _this = this;
-                        if (this.a != null) {
-                            this.a.stop();
-                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
-                        }
-                    };
-                    ActuatorMover.prototype.cleanUp = function () {
-                    };
-                    ActuatorMover.prototype.processUpdateSpecific = function () {
-                        if (this.properties.autoStart) {
-                            var started = this.start();
-                        }
-                    };
-                    ActuatorMover.prototype.isReady = function () {
-                        return true;
-                    };
-                    return ActuatorMover;
-                }(ActuatorAbstract));
-                vishva.ActuatorMover = ActuatorMover;
-                var ActuatorAnimator = (function (_super) {
-                    __extends(ActuatorAnimator, _super);
-                    function ActuatorAnimator(mesh, prop) {
-                        var _this = _super.call(this, mesh, prop) || this;
-                        Object.defineProperty(_this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
-                        var skel = mesh.skeleton;
-                        if (skel != null) {
-                            var getAnimationRanges = skel["getAnimationRanges"];
-                            var ranges = getAnimationRanges.call(skel);
-                            var animNames = new Array(ranges.length);
-                            var i = 0;
-                            for (var index160 = 0; index160 < ranges.length; index160++) {
-                                var range = ranges[index160];
-                                {
-                                    animNames[i] = range.name;
-                                    i++;
-                                }
-                            }
-                            prop.animationRange.values = animNames;
-                        }
-                        else {
-                            prop.animationRange.values = [""];
-                        }
-                        return _this;
-                    }
-                    ActuatorAnimator.prototype.actuate = function () {
-                        var _this = this;
-                        var prop = this.properties;
-                        if (this.mesh.skeleton != null) {
-                            this.mesh.skeleton.beginAnimation(prop.animationRange.value, false, prop.rate, function () { return _this.onActuateEnd(); });
-                        }
-                    };
-                    ActuatorAnimator.prototype.stop = function () {
-                    };
-                    ActuatorAnimator.prototype.isReady = function () {
-                        return true;
-                    };
-                    ActuatorAnimator.prototype.getName = function () {
-                        return "Animator";
-                    };
-                    ActuatorAnimator.prototype.processUpdateSpecific = function () {
-                        if (this.properties.autoStart) {
-                            var started = this.start();
-                        }
-                    };
-                    ActuatorAnimator.prototype.cleanUp = function () {
-                        this.properties.loop = false;
-                    };
-                    return ActuatorAnimator;
-                }(ActuatorAbstract));
-                vishva.ActuatorAnimator = ActuatorAnimator;
-                var ActuatorCloaker = (function (_super) {
-                    __extends(ActuatorCloaker, _super);
-                    function ActuatorCloaker(mesh, prop) {
-                        var _this = _super.call(this, mesh, prop) || this;
-                        _this.s = 1;
-                        _this.e = 0;
-                        return _this;
-                    }
-                    ActuatorCloaker.prototype.actuate = function () {
-                        var _this = this;
-                        var props = this.properties;
-                        if (props.toggle) {
-                            if (props.state_toggle) {
-                                this.s = 1;
-                                this.e = 0;
-                            }
-                            else {
-                                this.s = 0;
-                                this.e = 1;
-                            }
-                            props.state_toggle = !props.state_toggle;
-                        }
-                        else {
-                            this.s = 1;
-                            this.e = 0;
-                        }
-                        this.a = Animation.CreateAndStartAnimation("cloaker", this.mesh, "visibility", 60, 60 * props.timeToCloak, this.s, this.e, 0, null, function () { return _this.onActuateEnd(); });
-                    };
-                    ActuatorCloaker.prototype.stop = function () {
-                        var _this = this;
-                        if (this.a != null) {
-                            this.a.stop();
-                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
-                        }
-                    };
-                    ActuatorCloaker.prototype.isReady = function () {
-                        return true;
-                    };
-                    ActuatorCloaker.prototype.getName = function () {
-                        return "Cloaker";
-                    };
-                    ActuatorCloaker.prototype.processUpdateSpecific = function () {
-                        if (this.properties.autoStart) {
-                            var started = this.start();
-                        }
-                    };
-                    ActuatorCloaker.prototype.cleanUp = function () {
-                        this.properties.loop = false;
-                    };
-                    return ActuatorCloaker;
-                }(ActuatorAbstract));
-                vishva.ActuatorCloaker = ActuatorCloaker;
-                var ActuatorDisabler = (function (_super) {
-                    __extends(ActuatorDisabler, _super);
-                    function ActuatorDisabler(mesh, prop) {
-                        return _super.call(this, mesh, prop) || this;
-                    }
-                    ActuatorDisabler.prototype.actuate = function () {
-                        var enable = false;
-                        if (this.properties.toggle) {
-                            if (this.properties.state_toggle) {
-                                enable = false;
-                            }
-                            else {
-                                enable = true;
-                            }
-                            this.properties.state_toggle = !this.properties.state_toggle;
-                        }
-                        else {
-                            enable = false;
-                        }
-                        this.mesh.setEnabled(enable);
-                        this.onActuateEnd();
-                    };
-                    ActuatorDisabler.prototype.stop = function () {
-                        this.mesh.setEnabled(true);
-                    };
-                    ActuatorDisabler.prototype.isReady = function () {
-                        return true;
-                    };
-                    ActuatorDisabler.prototype.getName = function () {
-                        return "Disabler";
-                    };
-                    ActuatorDisabler.prototype.processUpdateSpecific = function () {
-                        if (this.properties.autoStart) {
-                            var started = this.start();
-                        }
-                    };
-                    ActuatorDisabler.prototype.cleanUp = function () {
-                        this.properties.loop = false;
-                    };
-                    return ActuatorDisabler;
-                }(ActuatorAbstract));
-                vishva.ActuatorDisabler = ActuatorDisabler;
-                var ActuatorEnabler = (function (_super) {
-                    __extends(ActuatorEnabler, _super);
-                    function ActuatorEnabler(mesh, prop) {
-                        return _super.call(this, mesh, prop) || this;
-                    }
-                    ActuatorEnabler.prototype.actuate = function () {
-                        var enable = false;
-                        if (this.properties.toggle) {
-                            if (this.properties.state_toggle) {
-                                enable = true;
-                            }
-                            else {
-                                enable = false;
-                            }
-                            this.properties.state_toggle = !this.properties.state_toggle;
-                        }
-                        else {
-                            enable = true;
-                        }
-                        this.mesh.setEnabled(enable);
-                        this.onActuateEnd();
-                    };
-                    ActuatorEnabler.prototype.stop = function () {
-                        this.mesh.setEnabled(false);
-                    };
-                    ActuatorEnabler.prototype.isReady = function () {
-                        return true;
-                    };
-                    ActuatorEnabler.prototype.getName = function () {
-                        return "Enabler";
-                    };
-                    ActuatorEnabler.prototype.processUpdateSpecific = function () {
-                        if (this.properties.autoStart) {
-                            var started = this.start();
-                        }
-                    };
-                    ActuatorEnabler.prototype.cleanUp = function () {
-                        this.properties.loop = false;
-                    };
-                    return ActuatorEnabler;
-                }(ActuatorAbstract));
-                vishva.ActuatorEnabler = ActuatorEnabler;
-                var ActuatorSound = (function (_super) {
-                    __extends(ActuatorSound, _super);
-                    function ActuatorSound(mesh, prop) {
-                        var _this = _super.call(this, mesh, prop) || this;
-                        Object.defineProperty(_this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
-                        return _this;
-                    }
-                    ActuatorSound.prototype.actuate = function () {
-                        var _this = this;
-                        if (this.properties.toggle) {
-                            if (this.properties.state_toggle) {
-                                this.sound.play();
-                            }
-                            else {
-                                window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
-                            }
-                            this.properties.state_toggle = !this.properties.state_toggle;
-                        }
-                        else {
-                            this.sound.play();
-                        }
-                    };
-                    /*
-                    update is little tricky here as sound file has to be loaded and that
-                    happens aynchronously
-                    it is not ready to play immediately
-                    */
-                    ActuatorSound.prototype.processUpdateSpecific = function () {
-                        var _this = this;
-                        var SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
-                        //let RELATIVE_ASSET_LOCATION: string = "../../../../";
-                        var RELATIVE_ASSET_LOCATION = "";
-                        var properties = this.properties;
-                        if (properties.soundFile.value == null)
-                            return;
-                        if (this.sound == null || properties.soundFile.value !== this.sound.name) {
-                            if (this.sound != null) {
-                                this.stop();
-                                this.sound.dispose();
-                            }
-                            this.ready = false;
-                            this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), (function (properties) {
-                                return function () {
-                                    _this.updateSound(properties);
-                                };
-                            })(properties));
-                        }
-                        else {
-                            this.stop();
-                            this.updateSound(properties);
-                        }
-                    };
-                    ActuatorSound.prototype.updateSound = function (properties) {
-                        var _this = this;
-                        this.ready = true;
-                        if (properties.attachToMesh) {
-                            this.sound.attachToMesh(this.mesh);
-                        }
-                        this.sound.onended = function () { return _this.onActuateEnd(); };
-                        this.sound.setVolume(properties.volume.value);
-                        if (properties.autoStart) {
-                            var started = this.start();
-                            if (!started)
-                                this.queued++;
-                        }
-                    };
-                    ActuatorSound.prototype.getName = function () {
-                        return "Sound";
-                    };
-                    ActuatorSound.prototype.stop = function () {
-                        var _this = this;
-                        if (this.sound != null) {
-                            if (this.sound.isPlaying) {
-                                this.sound.stop();
-                                window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
-                            }
-                        }
-                    };
-                    ActuatorSound.prototype.cleanUp = function () {
-                    };
-                    ActuatorSound.prototype.isReady = function () {
-                        return this.ready;
-                    };
-                    return ActuatorSound;
-                }(ActuatorAbstract));
-                vishva.ActuatorSound = ActuatorSound;
-                var SNAproperties = (function () {
-                    function SNAproperties() {
-                        this.signalId = "0";
-                        this.signalEnable = "";
-                        this.signalDisble = "";
-                    }
-                    return SNAproperties;
-                }());
-                vishva.SNAproperties = SNAproperties;
-                var SenTouchProp = (function (_super) {
-                    __extends(SenTouchProp, _super);
-                    function SenTouchProp() {
-                        return _super !== null && _super.apply(this, arguments) || this;
-                    }
-                    SenTouchProp.prototype.unmarshall = function (obj) {
-                        return obj;
-                    };
-                    return SenTouchProp;
-                }(SNAproperties));
-                vishva.SenTouchProp = SenTouchProp;
-                var SenContactProp = (function (_super) {
-                    __extends(SenContactProp, _super);
-                    function SenContactProp() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.onEnter = false;
-                        _this.onExit = false;
-                        return _this;
-                    }
-                    SenContactProp.prototype.unmarshall = function (obj) {
-                        return obj;
-                    };
-                    return SenContactProp;
-                }(SNAproperties));
-                vishva.SenContactProp = SenContactProp;
-                var ActProperties = (function (_super) {
-                    __extends(ActProperties, _super);
-                    function ActProperties() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.signalStart = "";
-                        _this.signalEnd = "";
-                        _this.autoStart = false;
-                        _this.loop = false;
-                        _this.toggle = true;
-                        _this.state_toggle = true;
-                        return _this;
-                    }
-                    return ActProperties;
-                }(SNAproperties));
-                vishva.ActProperties = ActProperties;
-                var ActRotatorParm = (function (_super) {
-                    __extends(ActRotatorParm, _super);
-                    function ActRotatorParm() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.x = 0;
-                        _this.y = 90;
-                        _this.z = 0;
-                        _this.duration = 1;
-                        return _this;
-                    }
-                    //
-                    // TODO:always local for now. provide a way to do global rotate
-                    // boolean local = false;
-                    ActRotatorParm.prototype.unmarshall = function (obj) {
-                        return obj;
-                    };
-                    return ActRotatorParm;
-                }(ActProperties));
-                vishva.ActRotatorParm = ActRotatorParm;
-                var ActMoverParm = (function (_super) {
-                    __extends(ActMoverParm, _super);
-                    function ActMoverParm() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.x = 1;
-                        _this.y = 1;
-                        _this.z = 1;
-                        _this.duration = 1;
-                        _this.local = false;
-                        return _this;
-                    }
-                    ActMoverParm.prototype.unmarshall = function (obj) {
-                        return obj;
-                    };
-                    return ActMoverParm;
-                }(ActProperties));
-                vishva.ActMoverParm = ActMoverParm;
-                var AnimatorProp = (function (_super) {
-                    __extends(AnimatorProp, _super);
-                    function AnimatorProp() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.animationRange = new SelectType();
-                        _this.rate = 1;
-                        return _this;
-                    }
-                    AnimatorProp.prototype.unmarshall = function (obj) {
-                        return null;
-                    };
-                    return AnimatorProp;
-                }(ActProperties));
-                vishva.AnimatorProp = AnimatorProp;
-                var ActSoundProp = (function (_super) {
-                    __extends(ActSoundProp, _super);
-                    function ActSoundProp() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.soundFile = new SelectType();
-                        _this.attachToMesh = false;
-                        _this.volume = new Range(0.0, 1.0, 1.0, 0.1);
-                        return _this;
-                    }
-                    ActSoundProp.prototype.unmarshall = function (obj) {
-                        return null;
-                    };
-                    return ActSoundProp;
-                }(ActProperties));
-                vishva.ActSoundProp = ActSoundProp;
-                var ActCloakerProp = (function (_super) {
-                    __extends(ActCloakerProp, _super);
-                    function ActCloakerProp() {
-                        var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.timeToCloak = 1;
-                        return _this;
-                    }
-                    ActCloakerProp.prototype.unmarshall = function (obj) {
-                        return null;
-                    };
-                    return ActCloakerProp;
-                }(ActProperties));
-                vishva.ActCloakerProp = ActCloakerProp;
-                var ActDisablerProp = (function (_super) {
-                    __extends(ActDisablerProp, _super);
-                    function ActDisablerProp() {
-                        return _super !== null && _super.apply(this, arguments) || this;
-                    }
-                    ActDisablerProp.prototype.unmarshall = function (obj) {
-                        return null;
-                    };
-                    return ActDisablerProp;
-                }(ActProperties));
-                vishva.ActDisablerProp = ActDisablerProp;
-                var ActEnablerProp = (function (_super) {
-                    __extends(ActEnablerProp, _super);
-                    function ActEnablerProp() {
-                        return _super !== null && _super.apply(this, arguments) || this;
-                    }
-                    ActEnablerProp.prototype.unmarshall = function (obj) {
-                        return null;
-                    };
-                    return ActEnablerProp;
-                }(ActProperties));
-                vishva.ActEnablerProp = ActEnablerProp;
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
@@ -3621,6 +2482,9 @@ var org;
                         window.addEventListener("resize", function (event) { return _this.onWindowResize(event); });
                         window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); }, false);
                         window.addEventListener("keyup", function (e) { return _this.onKeyUp(e); }, false);
+                        //fix shadow and skinning issue
+                        //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
+                        //BABYLON.SceneLoader.CleanBoneMatrixWeights = true
                         this.scenePath = scenePath;
                         if (sceneFile == null) {
                             this.onSceneLoaded(this.scene);
@@ -3666,6 +2530,8 @@ var org;
                         //            shadowGenerator.useBlurVarianceShadowMap = true;
                         //            shadowGenerator.bias = 1.0E-6;
                         shadowGenerator.useBlurExponentialShadowMap = true;
+                        //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
+                        shadowGenerator.bias = -0.3;
                         //            shadowGenerator.bias = 1.0E-6;
                         //            shadowGenerator.depthScale = 2500;
                         //            sl.shadowMinZ = 1;
@@ -3801,7 +2667,7 @@ var org;
                         if (!avFound) {
                             console.log("no vishva av found. creating av");
                             //remember loadAvatar is async. process
-                            this.loadAvatar();
+                            this.createAvatar();
                         }
                         else {
                             this.avatarSkeleton.enableBlending(0.1);
@@ -6093,7 +4959,7 @@ var org;
                         Tags.AddTagsTo(camera, "Vishva.camera");
                         return camera;
                     };
-                    Vishva.prototype.loadAvatar = function () {
+                    Vishva.prototype.createAvatar = function () {
                         var _this = this;
                         SceneLoader.ImportMesh("", this.avatarFolder, this.avatarFile, this.scene, function (meshes, particleSystems, skeletons) { return _this.onAvatarLoaded(meshes, particleSystems, skeletons); });
                     };
@@ -6118,7 +4984,7 @@ var org;
                         this.avatarSkeleton.enableBlending(0.1);
                         //this.avatar.rotation.y = Math.PI;
                         //this.avatar.position = new Vector3(0, 20, 0);
-                        this.avatar.position = new Vector3(0, 1020, 0);
+                        this.avatar.position = new Vector3(-360, 620, 225);
                         this.avatar.checkCollisions = true;
                         this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
                         this.avatar.ellipsoidOffset = new Vector3(0, 2, 0);
@@ -6333,3 +5199,1323 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
+/*
+ * Sensors and Actuators
+ */
+var org;
+/*
+ * Sensors and Actuators
+ */
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var Tags = BABYLON.Tags;
+                var SNAManager = (function () {
+                    function SNAManager() {
+                        this.sensorList = [];
+                        this.actuatorList = [];
+                        this.actuatorMap = {};
+                        this.sensorMap = {};
+                        this.snaDisabledList = new Array();
+                        this.sig2actMap = new Object();
+                        this.prevUID = "";
+                    }
+                    SNAManager.getSNAManager = function () {
+                        if (SNAManager.sm == null) {
+                            SNAManager.sm = new SNAManager();
+                        }
+                        return SNAManager.sm;
+                    };
+                    SNAManager.prototype.addActuator = function (name, actuator) {
+                        this.actuatorList.push(name);
+                        this.actuatorMap[name] = actuator;
+                    };
+                    SNAManager.prototype.addSensor = function (name, sensor) {
+                        this.sensorList.push(name);
+                        this.sensorMap[name] = sensor;
+                    };
+                    SNAManager.prototype.setConfig = function (snaConfig) {
+                        this.sensors = snaConfig["sensors"];
+                        this.actuators = snaConfig["actuators"];
+                        this.sensorList = Object.keys(this.sensors);
+                        this.actuatorList = Object.keys(this.actuators);
+                    };
+                    SNAManager.prototype.getSensorList = function () {
+                        return this.sensorList;
+                    };
+                    SNAManager.prototype.getActuatorList = function () {
+                        return this.actuatorList;
+                    };
+                    /*
+                     * the first constructor is called by the vishva scene unmarshaller
+                     * the second by the gui to create a new sensor
+                     */
+                    //        public createSensorByName_OLD(name: string, mesh: Mesh, prop: SNAproperties): Sensor {
+                    //            if (name === "Touch") {
+                    //                if (prop != null) return new SensorTouch(mesh, <SenTouchProp>prop); else return new SensorTouch(mesh, new SenTouchProp());
+                    //            } else if (name === "Contact") {
+                    //                if (prop != null) return new SensorContact(mesh, <SenContactProp>prop); else return new SensorContact(mesh, new SenContactProp());
+                    //            } else
+                    //                return null;
+                    //        }
+                    SNAManager.prototype.createSensorByName = function (name, mesh, prop) {
+                        var sensor = this.sensorMap[name];
+                        return new sensor(mesh, prop);
+                    };
+                    /*
+                     * the first constructor is called by the vishva scene unmarshaller
+                     * the second by the gui to create a new actuator
+                     */
+                    //        public createActuatorByName_OLD(name: string, mesh: Mesh, prop: SNAproperties): Actuator {
+                    //            if (name === "Mover") {
+                    //                //if (prop != null) return new ActuatorMover(mesh, <ActMoverParm>prop); else return new ActuatorMover(mesh, new ActMoverParm());
+                    //                let act:any = this.actuatorMap[name];
+                    //                if (prop != null) return new act(mesh, <ActProperties>prop); else return new act(mesh, null);
+                    //            } else if (name === "Rotator") {
+                    //                if (prop != null) return new ActuatorRotator(mesh, <ActRotatorParm>prop); else return new ActuatorRotator(mesh, new ActRotatorParm());
+                    //            } else if (name === "Sound") {
+                    //                if (prop != null) return new ActuatorSound(mesh, <ActSoundProp>prop); else return new ActuatorSound(mesh, new ActSoundProp());
+                    //            } else if (name === "Animator") {
+                    //                if (prop != null) return new ActuatorAnimator(mesh, <AnimatorProp>prop); else return new ActuatorAnimator(mesh, new AnimatorProp());
+                    //            } else if (name === "Cloaker") {
+                    //                if (prop != null) return new ActuatorCloaker(mesh, <ActCloakerProp>prop); else return new ActuatorCloaker(mesh, new ActCloakerProp());
+                    //            } else if (name === "Disabler") {
+                    //                if (prop != null) return new ActuatorDisabler(mesh, <ActDisablerProp>prop); else return new ActuatorDisabler(mesh, new ActDisablerProp());                
+                    //            } else if (name === "Enabler") {
+                    //                if (prop != null) return new ActuatorEnabler(mesh, <ActEnablerProp>prop); else return new ActuatorEnabler(mesh, new ActEnablerProp());                
+                    //            } else
+                    //                return null;
+                    //        }
+                    SNAManager.prototype.createActuatorByName = function (name, mesh, prop) {
+                        var act = this.actuatorMap[name];
+                        //if (prop != null) return new act(mesh, <ActProperties>prop); else return new act(mesh, null);
+                        return new act(mesh, prop);
+                    };
+                    SNAManager.prototype.getSensorParms = function (sensor) {
+                        var sensorObj = this.sensors[sensor];
+                        return sensorObj["parms"];
+                    };
+                    SNAManager.prototype.getActuatorParms = function (actuator) {
+                        var actuatorObj = this.sensors[actuator];
+                        return actuatorObj["parms"];
+                    };
+                    SNAManager.prototype.emitSignal = function (signalId) {
+                        var _this = this;
+                        if (signalId.trim() === "")
+                            return;
+                        var keyValue = this.sig2actMap[signalId];
+                        if (keyValue != null) {
+                            window.setTimeout((function (acts) { return _this.actuate(acts); }), 0, keyValue);
+                        }
+                    };
+                    SNAManager.prototype.actuate = function (acts) {
+                        var actuators = acts;
+                        for (var index151 = 0; index151 < actuators.length; index151++) {
+                            var actuator = actuators[index151];
+                            {
+                                actuator.start();
+                            }
+                        }
+                    };
+                    /**
+                     * this is called to process any signals queued in any of mesh actuators
+                     * this could be called after say a user has finished editing a mesh during
+                     * edit all actuators are disabled and some events coudl lead to pending
+                     * signals one example of such event could be adding a actuator with
+                     * "autostart" enabled or enabling an existing actuators "autostart" during
+                     * edit.
+                     *
+                     * @param mesh
+                     */
+                    SNAManager.prototype.processQueue = function (mesh) {
+                        var actuators = mesh["actuators"];
+                        if (actuators != null) {
+                            for (var index152 = 0; index152 < actuators.length; index152++) {
+                                var actuator = actuators[index152];
+                                {
+                                    actuator.processQueue();
+                                }
+                            }
+                        }
+                    };
+                    /**
+                     * this temproraily disables all sensors and actuators on a mesh this could
+                     * be called for example when editing a mesh
+                     *
+                     * @param mesh
+                     */
+                    SNAManager.prototype.disableSnAs = function (mesh) {
+                        this.snaDisabledList.push(mesh);
+                        var actuators = mesh["actuators"];
+                        if (actuators != null) {
+                            for (var index153 = 0; index153 < actuators.length; index153++) {
+                                var actuator = actuators[index153];
+                                {
+                                    if (actuator.actuating)
+                                        actuator.stop();
+                                }
+                            }
+                        }
+                    };
+                    SNAManager.prototype.enableSnAs = function (mesh) {
+                        var i = this.snaDisabledList.indexOf(mesh);
+                        if (i !== -1) {
+                            this.snaDisabledList.splice(i, 1);
+                        }
+                        var actuators = mesh["actuators"];
+                        if (actuators != null) {
+                            for (var index154 = 0; index154 < actuators.length; index154++) {
+                                var actuator = actuators[index154];
+                                {
+                                    if (actuator.properties.autoStart)
+                                        actuator.start();
+                                }
+                            }
+                        }
+                    };
+                    /**
+                     * removes all sensors and actuators from a mesh. this would be called when
+                     * say disposing off a mesh
+                     *
+                     * @param mesh
+                     */
+                    SNAManager.prototype.removeSNAs = function (mesh) {
+                        var actuators = mesh["actuators"];
+                        if (actuators != null) {
+                            var l = actuators.length;
+                            for (var i = l - 1; i >= 0; i--) {
+                                actuators[i].dispose();
+                            }
+                        }
+                        var sensors = mesh["sensors"];
+                        if (sensors != null) {
+                            var l = sensors.length;
+                            for (var i = l - 1; i >= 0; i--) {
+                                sensors[i].dispose();
+                            }
+                        }
+                        var i = this.snaDisabledList.indexOf(mesh);
+                        if (i !== -1) {
+                            this.snaDisabledList.splice(i, 1);
+                        }
+                    };
+                    SNAManager.prototype.subscribe = function (actuator, signalId) {
+                        var keyValue = this.sig2actMap[signalId];
+                        if (keyValue == null) {
+                            var actuators = new Array();
+                            actuators.push(actuator);
+                            this.sig2actMap[signalId] = actuators;
+                        }
+                        else {
+                            var actuators = keyValue;
+                            actuators.push(actuator);
+                        }
+                    };
+                    SNAManager.prototype.unSubscribe = function (actuator, signalId) {
+                        var keyValue = this.sig2actMap[signalId];
+                        if (keyValue != null) {
+                            var actuators = keyValue;
+                            var i = actuators.indexOf(actuator);
+                            if (i !== -1) {
+                                actuators.splice(i, 1);
+                            }
+                        }
+                    };
+                    SNAManager.prototype.unSubscribeAll = function () {
+                    };
+                    SNAManager.prototype.serializeSnAs = function (scene) {
+                        var snas = new Array();
+                        var sna;
+                        var meshes = scene.meshes;
+                        var meshId;
+                        for (var index155 = 0; index155 < meshes.length; index155++) {
+                            var mesh = meshes[index155];
+                            {
+                                meshId = null;
+                                var actuators = mesh["actuators"];
+                                if (actuators != null) {
+                                    meshId = this.getMeshVishvaUid(mesh);
+                                    for (var index156 = 0; index156 < actuators.length; index156++) {
+                                        var actuator = actuators[index156];
+                                        {
+                                            sna = new SNAserialized();
+                                            sna.name = actuator.getName();
+                                            sna.type = actuator.getType();
+                                            sna.meshId = meshId;
+                                            sna.properties = actuator.getProperties();
+                                            snas.push(sna);
+                                        }
+                                    }
+                                }
+                                var sensors = mesh["sensors"];
+                                if (sensors != null) {
+                                    if (meshId == null)
+                                        meshId = this.getMeshVishvaUid(mesh);
+                                    for (var index157 = 0; index157 < sensors.length; index157++) {
+                                        var sensor = sensors[index157];
+                                        {
+                                            sna = new SNAserialized();
+                                            sna.name = sensor.getName();
+                                            sna.type = sensor.getType();
+                                            sna.meshId = meshId;
+                                            sna.properties = sensor.getProperties();
+                                            snas.push(sna);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return snas;
+                    };
+                    SNAManager.prototype.unMarshal = function (snas, scene) {
+                        if (snas == null)
+                            return;
+                        for (var index158 = 0; index158 < snas.length; index158++) {
+                            var sna = snas[index158];
+                            var mesh = scene.getMeshesByTags(sna.meshId)[0];
+                            if (mesh != null) {
+                                if (sna.type === "SENSOR") {
+                                    this.createSensorByName(sna.name, mesh, sna.properties);
+                                }
+                                else if (sna.type === "ACTUATOR") {
+                                    this.createActuatorByName(sna.name, mesh, sna.properties);
+                                }
+                            }
+                            else {
+                                console.log("didnot find mesh for tag " + sna.meshId);
+                            }
+                        }
+                    };
+                    SNAManager.prototype.getMeshVishvaUid = function (mesh) {
+                        if (Tags.HasTags(mesh)) {
+                            var tags = Tags.GetTags(mesh, true).split(" ");
+                            for (var index159 = 0; index159 < tags.length; index159++) {
+                                var tag = tags[index159];
+                                {
+                                    var i = tag.indexOf("Vishva.uid.");
+                                    if (i >= 0) {
+                                        return tag;
+                                    }
+                                }
+                            }
+                        }
+                        var uid;
+                        uid = "Vishva.uid." + new Number(Date.now()).toString();
+                        while ((uid === this.prevUID)) {
+                            console.log("regenerating uid");
+                            uid = "Vishva.uid." + new Number(Date.now()).toString();
+                        }
+                        ;
+                        this.prevUID = uid;
+                        Tags.AddTagsTo(mesh, uid);
+                        return uid;
+                    };
+                    return SNAManager;
+                }());
+                vishva.SNAManager = SNAManager;
+                var SNAserialized = (function () {
+                    function SNAserialized() {
+                    }
+                    return SNAserialized;
+                }());
+                vishva.SNAserialized = SNAserialized;
+                var SensorAbstract = (function () {
+                    function SensorAbstract(mesh, properties) {
+                        //action: Action;
+                        this.actions = new Array();
+                        this.properties = properties;
+                        this.mesh = mesh;
+                        var sensors = this.mesh["sensors"];
+                        if (sensors == null) {
+                            sensors = new Array();
+                            mesh["sensors"] = sensors;
+                        }
+                        sensors.push(this);
+                    }
+                    SensorAbstract.prototype.dispose = function () {
+                        var sensors = this.mesh["sensors"];
+                        if (sensors != null) {
+                            var i = sensors.indexOf(this);
+                            if (i !== -1) {
+                                sensors.splice(i, 1);
+                            }
+                        }
+                        this.removeActions();
+                        //call any sesnor specific cleanup
+                        this.cleanUp();
+                    };
+                    SensorAbstract.prototype.getSignalId = function () {
+                        return this.properties.signalId;
+                    };
+                    SensorAbstract.prototype.setSignalId = function (sid) {
+                        this.properties.signalId = sid;
+                    };
+                    SensorAbstract.prototype.emitSignal = function (e) {
+                        // donot emit signal if this mesh is on the diabled list
+                        var i = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
+                        if (i >= 0)
+                            return;
+                        SNAManager.getSNAManager().emitSignal(this.properties.signalId);
+                    };
+                    SensorAbstract.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    SensorAbstract.prototype.setProperties = function (prop) {
+                        this.properties = prop;
+                    };
+                    SensorAbstract.prototype.processUpdateGeneric = function () {
+                        this.processUpdateSpecific();
+                    };
+                    SensorAbstract.prototype.getType = function () {
+                        return "SENSOR";
+                    };
+                    /*
+                    * from this mesh's actionmanager remove all actions
+                    * added by this sensor
+                    * if at end no actions left in the actionmanager
+                    * then dispose of the actionmanager itself.
+                    */
+                    SensorAbstract.prototype.removeActions = function () {
+                        var actions = this.mesh.actionManager.actions;
+                        var i;
+                        for (var _i = 0, _a = this.actions; _i < _a.length; _i++) {
+                            var action = _a[_i];
+                            i = actions.indexOf(action);
+                            actions.splice(i, 1);
+                        }
+                        if (actions.length === 0) {
+                            this.mesh.actionManager.dispose();
+                            this.mesh.actionManager = null;
+                        }
+                    };
+                    return SensorAbstract;
+                }());
+                vishva.SensorAbstract = SensorAbstract;
+                var ActuatorAbstract = (function () {
+                    function ActuatorAbstract(mesh, prop) {
+                        this.actuating = false;
+                        this.ready = true;
+                        this.queued = 0;
+                        this.disposed = false;
+                        Object.defineProperty(this, '__interfaces', { configurable: true, value: ["org.ssatguru.babylonjs.SensorActuator", "org.ssatguru.babylonjs.Actuator"] });
+                        this.properties = prop;
+                        this.mesh = mesh;
+                        this.processUpdateGeneric();
+                        var actuators = this.mesh["actuators"];
+                        if (actuators == null) {
+                            actuators = new Array();
+                            this.mesh["actuators"] = actuators;
+                        }
+                        actuators.push(this);
+                    }
+                    ActuatorAbstract.prototype.start = function () {
+                        if (this.disposed)
+                            return false;
+                        if (!this.ready)
+                            return false;
+                        // donot actuate if this mesh is on the disabled list
+                        var i = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
+                        if (i >= 0)
+                            return false;
+                        if (this.actuating) {
+                            if (!this.properties.loop) {
+                                this.queued++;
+                            }
+                            return true;
+                        }
+                        SNAManager.getSNAManager().emitSignal(this.properties.signalStart);
+                        this.actuating = true;
+                        this.actuate();
+                        return true;
+                    };
+                    ActuatorAbstract.prototype.processQueue = function () {
+                        if (this.queued > 0) {
+                            this.queued--;
+                            this.start();
+                        }
+                    };
+                    ActuatorAbstract.prototype.getType = function () {
+                        return "ACTUATOR";
+                    };
+                    ActuatorAbstract.prototype.getMesh = function () {
+                        return this.mesh;
+                    };
+                    ActuatorAbstract.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    ActuatorAbstract.prototype.setProperties = function (prop) {
+                        this.properties = prop;
+                        this.processUpdateGeneric();
+                    };
+                    ActuatorAbstract.prototype.getSignalId = function () {
+                        return this.properties.signalId;
+                    };
+                    ActuatorAbstract.prototype.processUpdateGeneric = function () {
+                        // check if signalId changed, if yes then resubscribe
+                        if (this.signalId != null && this.signalId !== this.properties.signalId) {
+                            SNAManager.getSNAManager().unSubscribe(this, this.signalId);
+                            this.signalId = this.properties.signalId;
+                            SNAManager.getSNAManager().subscribe(this, this.signalId);
+                        }
+                        else if (this.signalId == null) {
+                            this.signalId = this.properties.signalId;
+                            SNAManager.getSNAManager().subscribe(this, this.signalId);
+                        }
+                        this.processUpdateSpecific();
+                    };
+                    ActuatorAbstract.prototype.onActuateEnd = function () {
+                        SNAManager.getSNAManager().emitSignal(this.properties.signalEnd);
+                        this.actuating = false;
+                        if (this.queued > 0) {
+                            this.queued--;
+                            this.start();
+                            return null;
+                        }
+                        if (this.properties.loop) {
+                            this.start();
+                            return null;
+                        }
+                        return null;
+                    };
+                    ActuatorAbstract.prototype.dispose = function () {
+                        this.disposed = true;
+                        SNAManager.getSNAManager().unSubscribe(this, this.properties.signalId);
+                        var actuators = this.mesh["actuators"];
+                        if (actuators != null) {
+                            this.stop();
+                            var i = actuators.indexOf(this);
+                            if (i !== -1) {
+                                actuators.splice(i, 1);
+                            }
+                        }
+                        this.cleanUp();
+                        this.mesh = null;
+                    };
+                    return ActuatorAbstract;
+                }());
+                vishva.ActuatorAbstract = ActuatorAbstract;
+                var SNAproperties = (function () {
+                    function SNAproperties() {
+                        this.signalId = "0";
+                        this.signalEnable = "";
+                        this.signalDisble = "";
+                    }
+                    return SNAproperties;
+                }());
+                vishva.SNAproperties = SNAproperties;
+                var ActProperties = (function (_super) {
+                    __extends(ActProperties, _super);
+                    function ActProperties() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.signalStart = "";
+                        _this.signalEnd = "";
+                        _this.autoStart = false;
+                        _this.loop = false;
+                        _this.toggle = true;
+                        _this.state_toggle = true;
+                        return _this;
+                    }
+                    return ActProperties;
+                }(SNAproperties));
+                vishva.ActProperties = ActProperties;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var AnimatorProp = (function (_super) {
+                    __extends(AnimatorProp, _super);
+                    function AnimatorProp() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.animationRange = new SelectType();
+                        _this.rate = 1;
+                        return _this;
+                    }
+                    AnimatorProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return AnimatorProp;
+                }(vishva.ActProperties));
+                vishva.AnimatorProp = AnimatorProp;
+                var ActuatorAnimator = (function (_super) {
+                    __extends(ActuatorAnimator, _super);
+                    function ActuatorAnimator(mesh, parms) {
+                        var _this = this;
+                        if (parms != null) {
+                            _this = _super.call(this, mesh, parms) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new AnimatorProp()) || this;
+                        }
+                        var prop = _this.properties;
+                        var skel = mesh.skeleton;
+                        if (skel != null) {
+                            var getAnimationRanges = skel["getAnimationRanges"];
+                            var ranges = getAnimationRanges.call(skel);
+                            var animNames = new Array(ranges.length);
+                            var i = 0;
+                            for (var index160 = 0; index160 < ranges.length; index160++) {
+                                var range = ranges[index160];
+                                {
+                                    animNames[i] = range.name;
+                                    i++;
+                                }
+                            }
+                            prop.animationRange.values = animNames;
+                        }
+                        else {
+                            prop.animationRange.values = [""];
+                        }
+                        return _this;
+                    }
+                    ActuatorAnimator.prototype.actuate = function () {
+                        var _this = this;
+                        var prop = this.properties;
+                        if (this.mesh.skeleton != null) {
+                            this.mesh.skeleton.beginAnimation(prop.animationRange.value, false, prop.rate, function () { return _this.onActuateEnd(); });
+                        }
+                    };
+                    ActuatorAnimator.prototype.stop = function () {
+                    };
+                    ActuatorAnimator.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorAnimator.prototype.getName = function () {
+                        return "Animator";
+                    };
+                    ActuatorAnimator.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorAnimator.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorAnimator;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorAnimator = ActuatorAnimator;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Animator", org.ssatguru.babylonjs.vishva.ActuatorAnimator);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var Animation = BABYLON.Animation;
+                var ActCloakerProp = (function (_super) {
+                    __extends(ActCloakerProp, _super);
+                    function ActCloakerProp() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.timeToCloak = 1;
+                        return _this;
+                    }
+                    ActCloakerProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return ActCloakerProp;
+                }(vishva.ActProperties));
+                vishva.ActCloakerProp = ActCloakerProp;
+                var ActuatorCloaker = (function (_super) {
+                    __extends(ActuatorCloaker, _super);
+                    function ActuatorCloaker(mesh, parms) {
+                        var _this = this;
+                        if (parms != null) {
+                            _this = _super.call(this, mesh, parms) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new ActCloakerProp()) || this;
+                        }
+                        _this.s = 1;
+                        _this.e = 0;
+                        return _this;
+                    }
+                    ActuatorCloaker.prototype.actuate = function () {
+                        var _this = this;
+                        var props = this.properties;
+                        if (props.toggle) {
+                            if (props.state_toggle) {
+                                this.s = 1;
+                                this.e = 0;
+                            }
+                            else {
+                                this.s = 0;
+                                this.e = 1;
+                            }
+                            props.state_toggle = !props.state_toggle;
+                        }
+                        else {
+                            this.s = 1;
+                            this.e = 0;
+                        }
+                        this.a = Animation.CreateAndStartAnimation("cloaker", this.mesh, "visibility", 60, 60 * props.timeToCloak, this.s, this.e, 0, null, function () { return _this.onActuateEnd(); });
+                    };
+                    ActuatorCloaker.prototype.stop = function () {
+                        var _this = this;
+                        if (this.a != null) {
+                            this.a.stop();
+                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
+                        }
+                    };
+                    ActuatorCloaker.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorCloaker.prototype.getName = function () {
+                        return "Cloaker";
+                    };
+                    ActuatorCloaker.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorCloaker.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorCloaker;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorCloaker = ActuatorCloaker;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Cloaker", org.ssatguru.babylonjs.vishva.ActuatorCloaker);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var ActDisablerProp = (function (_super) {
+                    __extends(ActDisablerProp, _super);
+                    function ActDisablerProp() {
+                        return _super !== null && _super.apply(this, arguments) || this;
+                    }
+                    ActDisablerProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return ActDisablerProp;
+                }(vishva.ActProperties));
+                vishva.ActDisablerProp = ActDisablerProp;
+                var ActuatorDisabler = (function (_super) {
+                    __extends(ActuatorDisabler, _super);
+                    function ActuatorDisabler(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new ActDisablerProp()) || this;
+                        }
+                        return _this;
+                    }
+                    ActuatorDisabler.prototype.actuate = function () {
+                        var enable = false;
+                        if (this.properties.toggle) {
+                            if (this.properties.state_toggle) {
+                                enable = false;
+                            }
+                            else {
+                                enable = true;
+                            }
+                            this.properties.state_toggle = !this.properties.state_toggle;
+                        }
+                        else {
+                            enable = false;
+                        }
+                        this.mesh.setEnabled(enable);
+                        this.onActuateEnd();
+                    };
+                    ActuatorDisabler.prototype.stop = function () {
+                        this.mesh.setEnabled(true);
+                    };
+                    ActuatorDisabler.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorDisabler.prototype.getName = function () {
+                        return "Disabler";
+                    };
+                    ActuatorDisabler.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorDisabler.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorDisabler;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorDisabler = ActuatorDisabler;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Disabler", org.ssatguru.babylonjs.vishva.ActuatorDisabler);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var ActEnablerProp = (function (_super) {
+                    __extends(ActEnablerProp, _super);
+                    function ActEnablerProp() {
+                        return _super !== null && _super.apply(this, arguments) || this;
+                    }
+                    ActEnablerProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return ActEnablerProp;
+                }(vishva.ActProperties));
+                vishva.ActEnablerProp = ActEnablerProp;
+                var ActuatorEnabler = (function (_super) {
+                    __extends(ActuatorEnabler, _super);
+                    function ActuatorEnabler(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new ActEnablerProp()) || this;
+                        }
+                        return _this;
+                    }
+                    ActuatorEnabler.prototype.actuate = function () {
+                        var enable = false;
+                        if (this.properties.toggle) {
+                            if (this.properties.state_toggle) {
+                                enable = true;
+                            }
+                            else {
+                                enable = false;
+                            }
+                            this.properties.state_toggle = !this.properties.state_toggle;
+                        }
+                        else {
+                            enable = true;
+                        }
+                        this.mesh.setEnabled(enable);
+                        this.onActuateEnd();
+                    };
+                    ActuatorEnabler.prototype.stop = function () {
+                        this.mesh.setEnabled(false);
+                    };
+                    ActuatorEnabler.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorEnabler.prototype.getName = function () {
+                        return "Enabler";
+                    };
+                    ActuatorEnabler.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorEnabler.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorEnabler;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorEnabler = ActuatorEnabler;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Enabler", org.ssatguru.babylonjs.vishva.ActuatorEnabler);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var Animation = BABYLON.Animation;
+                var Vector3 = BABYLON.Vector3;
+                var ActMoverParm = (function (_super) {
+                    __extends(ActMoverParm, _super);
+                    function ActMoverParm() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.x = 1;
+                        _this.y = 1;
+                        _this.z = 1;
+                        _this.duration = 1;
+                        _this.local = false;
+                        return _this;
+                    }
+                    ActMoverParm.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return ActMoverParm;
+                }(vishva.ActProperties));
+                vishva.ActMoverParm = ActMoverParm;
+                var ActuatorMover = (function (_super) {
+                    __extends(ActuatorMover, _super);
+                    function ActuatorMover(mesh, parms) {
+                        var _this = this;
+                        if (parms != null) {
+                            _this = _super.call(this, mesh, parms) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new ActMoverParm()) || this;
+                        }
+                        return _this;
+                    }
+                    //        public constructor(mesh: Mesh, parms: ActMoverParm) {
+                    //            if (parms != null){
+                    //                super(mesh, parms);
+                    //            }else{
+                    //                super(mesh, new ActMoverParm());
+                    //            }
+                    //        }
+                    ActuatorMover.prototype.actuate = function () {
+                        var _this = this;
+                        var props = this.properties;
+                        var cPos = this.mesh.position.clone();
+                        var nPos;
+                        var moveBy;
+                        if (props.local) {
+                            var meshMatrix = this.mesh.getWorldMatrix();
+                            var localMove = new Vector3(props.x * (1 / this.mesh.scaling.x), props.y * (1 / this.mesh.scaling.y), props.z * (1 / this.mesh.scaling.z));
+                            moveBy = Vector3.TransformCoordinates(localMove, meshMatrix).subtract(this.mesh.position);
+                        }
+                        else
+                            moveBy = new Vector3(props.x, props.y, props.z);
+                        if (props.toggle) {
+                            if (props.state_toggle) {
+                                nPos = cPos.add(moveBy);
+                            }
+                            else {
+                                nPos = cPos.subtract(moveBy);
+                            }
+                            props.state_toggle = !props.state_toggle;
+                        }
+                        else {
+                            nPos = cPos.add(moveBy);
+                        }
+                        this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, 0, null, function () { return _this.onActuateEnd(); });
+                    };
+                    ActuatorMover.prototype.getName = function () {
+                        return "Mover";
+                    };
+                    ActuatorMover.prototype.stop = function () {
+                        var _this = this;
+                        if (this.a != null) {
+                            this.a.stop();
+                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
+                        }
+                    };
+                    ActuatorMover.prototype.cleanUp = function () {
+                    };
+                    ActuatorMover.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                        }
+                    };
+                    ActuatorMover.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorMover.prototype.newInstance = function (mesh, parms) {
+                        return new ActuatorMover(mesh, parms);
+                    };
+                    return ActuatorMover;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorMover = ActuatorMover;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Mover", org.ssatguru.babylonjs.vishva.ActuatorMover);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var Animation = BABYLON.Animation;
+                var Axis = BABYLON.Axis;
+                var Quaternion = BABYLON.Quaternion;
+                var ActRotatorParm = (function (_super) {
+                    __extends(ActRotatorParm, _super);
+                    function ActRotatorParm() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.x = 0;
+                        _this.y = 90;
+                        _this.z = 0;
+                        _this.duration = 1;
+                        return _this;
+                    }
+                    //
+                    // TODO:always local for now. provide a way to do global rotate
+                    // boolean local = false;
+                    ActRotatorParm.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return ActRotatorParm;
+                }(vishva.ActProperties));
+                vishva.ActRotatorParm = ActRotatorParm;
+                var ActuatorRotator = (function (_super) {
+                    __extends(ActuatorRotator, _super);
+                    function ActuatorRotator(mesh, parms) {
+                        var _this = this;
+                        if (parms != null) {
+                            _this = _super.call(this, mesh, parms) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new ActRotatorParm()) || this;
+                        }
+                        return _this;
+                    }
+                    ActuatorRotator.prototype.actuate = function () {
+                        var _this = this;
+                        var properties = this.properties;
+                        var cPos = this.mesh.rotationQuaternion.clone();
+                        var nPos;
+                        var rotX = Quaternion.RotationAxis(Axis.X, properties.x * Math.PI / 180);
+                        var rotY = Quaternion.RotationAxis(Axis.Y, properties.y * Math.PI / 180);
+                        var rotZ = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
+                        var abc = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
+                        if (properties.toggle) {
+                            if (properties.state_toggle) {
+                                nPos = cPos.multiply(abc);
+                            }
+                            else {
+                                nPos = cPos.multiply(Quaternion.Inverse(abc));
+                            }
+                        }
+                        else
+                            nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
+                        properties.state_toggle = !properties.state_toggle;
+                        var cY = this.mesh.position.y;
+                        var nY = this.mesh.position.y + 5;
+                        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, function () { return _this.onActuateEnd(); });
+                    };
+                    ActuatorRotator.prototype.getName = function () {
+                        return "Rotator";
+                    };
+                    ActuatorRotator.prototype.stop = function () {
+                        var _this = this;
+                        if (this.a != null) {
+                            this.a.stop();
+                            window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
+                        }
+                    };
+                    ActuatorRotator.prototype.cleanUp = function () {
+                    };
+                    ActuatorRotator.prototype.processUpdateSpecific = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start();
+                            // sometime a start maynot be possible example during edit
+                            // if could not start now then queue it for later start
+                            // if (!started)
+                            // this.queued++;
+                        }
+                    };
+                    ActuatorRotator.prototype.isReady = function () {
+                        return true;
+                    };
+                    return ActuatorRotator;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorRotator = ActuatorRotator;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Rotator", org.ssatguru.babylonjs.vishva.ActuatorRotator);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var Range = org.ssatguru.babylonjs.vishva.gui.Range;
+                var Sound = BABYLON.Sound;
+                var ActSoundProp = (function (_super) {
+                    __extends(ActSoundProp, _super);
+                    function ActSoundProp() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.soundFile = new SelectType();
+                        _this.attachToMesh = false;
+                        _this.volume = new Range(0.0, 1.0, 1.0, 0.1);
+                        return _this;
+                    }
+                    ActSoundProp.prototype.unmarshall = function (obj) {
+                        return null;
+                    };
+                    return ActSoundProp;
+                }(vishva.ActProperties));
+                vishva.ActSoundProp = ActSoundProp;
+                var ActuatorSound = (function (_super) {
+                    __extends(ActuatorSound, _super);
+                    function ActuatorSound(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new ActSoundProp()) || this;
+                        }
+                        return _this;
+                    }
+                    ActuatorSound.prototype.actuate = function () {
+                        var _this = this;
+                        if (this.properties.toggle) {
+                            if (this.properties.state_toggle) {
+                                this.sound.play();
+                            }
+                            else {
+                                window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
+                            }
+                            this.properties.state_toggle = !this.properties.state_toggle;
+                        }
+                        else {
+                            this.sound.play();
+                        }
+                    };
+                    /*
+                    update is little tricky here as sound file has to be loaded and that
+                    happens aynchronously
+                    it is not ready to play immediately
+                    */
+                    ActuatorSound.prototype.processUpdateSpecific = function () {
+                        var _this = this;
+                        var SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
+                        //let RELATIVE_ASSET_LOCATION: string = "../../../../";
+                        var RELATIVE_ASSET_LOCATION = "";
+                        var properties = this.properties;
+                        if (properties.soundFile.value == null)
+                            return;
+                        if (this.sound == null || properties.soundFile.value !== this.sound.name) {
+                            if (this.sound != null) {
+                                this.stop();
+                                this.sound.dispose();
+                            }
+                            this.ready = false;
+                            this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), (function (properties) {
+                                return function () {
+                                    _this.updateSound(properties);
+                                };
+                            })(properties));
+                        }
+                        else {
+                            this.stop();
+                            this.updateSound(properties);
+                        }
+                    };
+                    ActuatorSound.prototype.updateSound = function (properties) {
+                        var _this = this;
+                        this.ready = true;
+                        if (properties.attachToMesh) {
+                            this.sound.attachToMesh(this.mesh);
+                        }
+                        this.sound.onended = function () { return _this.onActuateEnd(); };
+                        this.sound.setVolume(properties.volume.value);
+                        if (properties.autoStart) {
+                            var started = this.start();
+                            if (!started)
+                                this.queued++;
+                        }
+                    };
+                    ActuatorSound.prototype.getName = function () {
+                        return "Sound";
+                    };
+                    ActuatorSound.prototype.stop = function () {
+                        var _this = this;
+                        if (this.sound != null) {
+                            if (this.sound.isPlaying) {
+                                this.sound.stop();
+                                window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
+                            }
+                        }
+                    };
+                    ActuatorSound.prototype.cleanUp = function () {
+                    };
+                    ActuatorSound.prototype.isReady = function () {
+                        return this.ready;
+                    };
+                    return ActuatorSound;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorSound = ActuatorSound;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Sound", org.ssatguru.babylonjs.vishva.ActuatorSound);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var ActionManager = BABYLON.ActionManager;
+                var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
+                var Tags = BABYLON.Tags;
+                var SenContactProp = (function (_super) {
+                    __extends(SenContactProp, _super);
+                    function SenContactProp() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.onEnter = false;
+                        _this.onExit = false;
+                        return _this;
+                    }
+                    SenContactProp.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return SenContactProp;
+                }(vishva.SNAproperties));
+                vishva.SenContactProp = SenContactProp;
+                var SensorContact = (function (_super) {
+                    __extends(SensorContact, _super);
+                    function SensorContact(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new SenContactProp()) || this;
+                        }
+                        _this.processUpdateSpecific();
+                        return _this;
+                    }
+                    SensorContact.prototype.getName = function () {
+                        return "Contact";
+                    };
+                    SensorContact.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    SensorContact.prototype.setProperties = function (properties) {
+                        this.properties = properties;
+                    };
+                    SensorContact.prototype.cleanUp = function () {
+                    };
+                    SensorContact.prototype.processUpdateSpecific = function () {
+                        var _this = this;
+                        var properties = this.properties;
+                        var scene = this.mesh.getScene();
+                        if (this.mesh.actionManager == null) {
+                            this.mesh.actionManager = new ActionManager(scene);
+                        }
+                        var otherMesh = scene.getMeshesByTags("Vishva.avatar")[0];
+                        if (properties.onEnter) {
+                            var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
+                            this.mesh.actionManager.registerAction(action);
+                            this.actions.push(action);
+                        }
+                        if (properties.onExit) {
+                            var action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, function (e) { return _this.emitSignal(e); });
+                            this.mesh.actionManager.registerAction(action);
+                            this.actions.push(action);
+                        }
+                    };
+                    SensorContact.prototype.findAV = function (scene) {
+                        for (var index140 = 0; index140 < scene.meshes.length; index140++) {
+                            var mesh = scene.meshes[index140];
+                            {
+                                if (Tags.HasTags(mesh)) {
+                                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                                        return mesh;
+                                    }
+                                }
+                            }
+                        }
+                        return null;
+                    };
+                    return SensorContact;
+                }(vishva.SensorAbstract));
+                vishva.SensorContact = SensorContact;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addSensor("Contact", org.ssatguru.babylonjs.vishva.SensorContact);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var ActionManager = BABYLON.ActionManager;
+                var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
+                var SenTouchProp = (function (_super) {
+                    __extends(SenTouchProp, _super);
+                    function SenTouchProp() {
+                        return _super !== null && _super.apply(this, arguments) || this;
+                    }
+                    SenTouchProp.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return SenTouchProp;
+                }(vishva.SNAproperties));
+                vishva.SenTouchProp = SenTouchProp;
+                var SensorTouch = (function (_super) {
+                    __extends(SensorTouch, _super);
+                    function SensorTouch(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new SenTouchProp()) || this;
+                        }
+                        if (_this.mesh.actionManager == null) {
+                            _this.mesh.actionManager = new ActionManager(_this.mesh.getScene());
+                        }
+                        var action = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, function (e) {
+                            var pe = e.sourceEvent;
+                            if (pe.button === 0)
+                                _this.emitSignal(e);
+                        });
+                        _this.mesh.actionManager.registerAction(action);
+                        _this.actions.push(action);
+                        return _this;
+                    }
+                    SensorTouch.prototype.getName = function () {
+                        return "Touch";
+                    };
+                    SensorTouch.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    SensorTouch.prototype.setProperties = function (properties) {
+                        this.properties = properties;
+                    };
+                    SensorTouch.prototype.cleanUp = function () {
+                    };
+                    SensorTouch.prototype.processUpdateSpecific = function () {
+                    };
+                    return SensorTouch;
+                }(vishva.SensorAbstract));
+                vishva.SensorTouch = SensorTouch;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addSensor("Touch", org.ssatguru.babylonjs.vishva.SensorTouch);

@@ -28,15 +28,24 @@ var org;
                         //avatar walking speed in meters/second
                         this.avatarSpeed = 3;
                         this.prevAnim = null;
-                        this.jumpCycleMax = 25;
+                        this.jumpCycleMax = 40;
                         this.jumpCycle = this.jumpCycleMax;
                         this.wasJumping = false;
                         this.gravity = 9.8 * 2;
-                        this.oldPos = new Vector3(0, 0, 0);
+                        this.avStartPos = new Vector3(0, 0, 0);
                         this.grounded = false;
-                        this.downDist = 0;
-                        this.movTime = 0;
-                        this.stillTime = 0;
+                        //distance by which AV would move down if in freefall
+                        this.freeFallDist = 0;
+                        //for how long has the av been falling while moving
+                        this.movFallTime = 0;
+                        //for how long has the av been falling while not moving
+                        this.stillFallTime = 0;
+                        //how many minimum contiguos frames should the AV have been in free fall
+                        //before we assume AV is really in freefall.
+                        //we will use this to remove animation flicker (fall, no fall, fall etc)
+                        this.fallFrameCountMin = 10;
+                        this.fallFrameCount = 0;
+                        this.inAir = false;
                         this.moveVector = new Vector3(0, 0, 0);
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
@@ -68,12 +77,14 @@ var org;
                             return;
                         this.started = true;
                         this.key.reset();
-                        this.movTime = 0;
+                        this.movFallTime = 0;
                         //first time we enter render loop, delta time shows zero !!
-                        this.stillTime = 0.001;
+                        this.stillFallTime = 0.001;
                         this.grounded = false;
                         this.updateTargetValue();
                         this.scene.registerBeforeRender(this.renderer);
+                        //this.scene.registerAfterRender(this.afterRenderer);
+                        this.scene;
                     };
                     CharacterControl.prototype.stop = function () {
                         if (!this.started)
@@ -93,155 +104,168 @@ var org;
                         this.strafeRight = anims[8];
                     };
                     CharacterControl.prototype.moveAVandCamera = function () {
-                        this.oldPos.copyFrom(this.avatar.position);
+                        this.avStartPos.copyFrom(this.avatar.position);
+                        var anim = null;
+                        var noMoveKeyPressed = !this.anyMovement();
                         //skip everything if no movement key pressed
-                        if (!this.anyMovement()) {
+                        if (this.inAir || noMoveKeyPressed) {
+                            this.fallFrameCount = 0;
                             if (!this.grounded) {
+                                anim = this.idle;
                                 var dt_1 = this.scene.getEngine().getDeltaTime() / 1000;
                                 if (dt_1 === 0) {
-                                    this.downDist = 5;
+                                    this.freeFallDist = 5;
                                 }
                                 else {
-                                    this.stillTime = this.stillTime + dt_1;
-                                    var u_1 = this.stillTime * this.gravity;
-                                    this.downDist = u_1 * dt_1 + this.gravity * dt_1 * dt_1 / 2;
+                                    this.stillFallTime = this.stillFallTime + dt_1;
+                                    var u_1 = this.stillFallTime * this.gravity;
+                                    this.freeFallDist = u_1 * dt_1 + this.gravity * dt_1 * dt_1 / 2;
                                 }
-                                this.moveVector.copyFromFloats(0, -this.downDist, 0);
+                                this.moveVector.copyFromFloats(0, -this.freeFallDist, 0);
                                 this.avatar.moveWithCollisions(this.moveVector);
-                                if (this.oldPos.y === this.avatar.position.y) {
+                                if (this.avStartPos.y === this.avatar.position.y) {
                                     this.grounded = true;
-                                    this.stillTime = 0;
+                                    this.inAir = false;
+                                    this.stillFallTime = 0;
                                 }
-                                else if (this.avatar.position.y < this.oldPos.y) {
-                                    //if we are sliding down then check slope
-                                    var diff = this.oldPos.subtract(this.avatar.position).length();
-                                    var ht = this.oldPos.y - this.avatar.position.y;
-                                    var slope = Math.asin(ht / diff);
-                                    if (slope <= this.sl) {
-                                        this.grounded = true;
-                                        this.stillTime = 0;
-                                        this.avatar.position.copyFrom(this.oldPos);
+                                else if (this.avatar.position.y < this.avStartPos.y) {
+                                    //AV is going down. 
+                                    //Check if AV is fallling down or is on a slope
+                                    //if the actual distance travelled down is same as what AV would have travelled if in freefall
+                                    //then AV is in freefall else AV is on a slope
+                                    var ht = this.avStartPos.y - this.avatar.position.y;
+                                    var delta = Math.abs(this.freeFallDist - ht);
+                                    if (delta < 0.0001) {
+                                        if (this.stillFallTime > dt_1)
+                                            anim = this.jump;
+                                    }
+                                    else {
+                                        var diff = this.avStartPos.subtract(this.avatar.position).length();
+                                        var slope = Math.asin(ht / diff);
+                                        if (slope <= this.sl) {
+                                            this.grounded = true;
+                                            this.inAir = false;
+                                            this.stillFallTime = 0;
+                                            this.avatar.position.copyFrom(this.avStartPos);
+                                        }
                                     }
                                 }
                                 this.updateTargetValue();
                             }
-                            if (this.avatarSkeleton !== null) {
-                                if (this.prevAnim !== this.idle) {
-                                    this.prevAnim = this.idle;
-                                    if (this.idle.exist)
-                                        this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                            if (anim !== null && noMoveKeyPressed) {
+                                if (this.avatarSkeleton !== null) {
+                                    if (this.prevAnim !== anim) {
+                                        this.prevAnim = anim;
+                                        if (anim.exist) {
+                                            this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                                        }
+                                    }
                                 }
                             }
                             return;
                         }
-                        this.stillTime = 0;
+                        this.stillFallTime = 0;
                         this.grounded = false;
                         var dt = this.scene.getEngine().getDeltaTime() / 1000;
                         //distance by which AV should have walked since last frame
                         var walkDist = this.avatarSpeed * dt;
-                        //actual distance to be calculated based on wether AV is walking, runnning, or backing up
+                        //actual distance to be calculated based on whether AV is walking, runnning, or backing
                         var actDist = 0;
                         //initial down velocity
-                        var u = this.movTime * this.gravity;
-                        //dist by which av moves down since last frame
-                        this.downDist = u * dt + this.gravity * dt * dt / 2;
-                        this.movTime = this.movTime + dt;
-                        var anim = this.idle;
+                        var u = this.movFallTime * this.gravity;
+                        //if no ground or slope then distance which av would fall down since last frame
+                        this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
+                        this.movFallTime = this.movFallTime + dt;
                         var moving = false;
-                        var jumpSpeed = this.avatarSpeed * dt;
+                        var jumpDist = this.avatarSpeed * dt;
                         var dir = 1;
                         var forward;
                         var backwards;
                         var stepLeft;
                         var stepRight;
-                        if (this.key.up) {
-                            if (this.key.shift) {
-                                //speed = this.avatarSpeed * 2;
-                                actDist = walkDist * 2;
-                                anim = this.run;
-                            }
-                            else {
-                                //speed = this.avatarSpeed;
-                                actDist = walkDist;
-                                anim = this.walk;
-                            }
-                            if (this.key.jump) {
-                                this.wasJumping = true;
-                            }
-                            if (this.wasJumping) {
-                                jumpSpeed *= 2;
-                                if (this.jumpCycle < this.jumpCycleMax / 2) {
-                                    dir = 1;
-                                    if (this.jumpCycle < 0) {
-                                        this.jumpCycle = this.jumpCycleMax;
-                                        jumpSpeed /= 2;
-                                        this.key.jump = false;
-                                        this.wasJumping = false;
-                                    }
+                        if (!this.inAir) {
+                            if (this.key.up) {
+                                if (this.key.shift) {
+                                    actDist = walkDist * 2;
+                                    anim = this.run;
                                 }
                                 else {
-                                    anim = this.jump;
-                                    dir = -1;
+                                    actDist = walkDist;
+                                    anim = this.walk;
                                 }
-                                this.jumpCycle--;
-                                forward = this.avatar.calcMovePOV(0, -jumpSpeed * dir, actDist);
-                            }
-                            else {
-                                forward = this.avatar.calcMovePOV(0, -this.downDist, actDist);
-                            }
-                            this.avatar.moveWithCollisions(forward);
-                            moving = true;
-                        }
-                        else if (this.key.down) {
-                            //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                            //backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
-                            backwards = this.avatar.calcMovePOV(0, -this.downDist, -walkDist / 2);
-                            this.avatar.moveWithCollisions(backwards);
-                            moving = true;
-                            anim = this.walkBack;
-                            if (this.key.jump)
-                                this.key.jump = false;
-                        }
-                        else if (this.key.stepLeft) {
-                            anim = this.strafeLeft;
-                            //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
-                            stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downDist, 0);
-                            this.avatar.moveWithCollisions(stepLeft);
-                            moving = true;
-                        }
-                        else if (this.key.stepRight) {
-                            anim = this.strafeRight;
-                            //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                            //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
-                            stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downDist, 0);
-                            this.avatar.moveWithCollisions(stepRight);
-                            moving = true;
-                        }
-                        if (!moving) {
-                            if (this.key.jump) {
-                                this.wasJumping = true;
-                            }
-                            if (this.wasJumping) {
-                                jumpSpeed *= 2;
-                                if (this.jumpCycle < this.jumpCycleMax / 2) {
-                                    dir = 1;
-                                    if (this.jumpCycle < 0) {
-                                        this.jumpCycle = this.jumpCycleMax;
-                                        jumpSpeed /= 2;
-                                        this.key.jump = false;
-                                        this.wasJumping = false;
+                                if (this.key.jump) {
+                                    this.wasJumping = true;
+                                }
+                                if (this.wasJumping) {
+                                    jumpDist *= 2;
+                                    if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                        dir = 1;
+                                        if (this.jumpCycle < 0) {
+                                            this.jumpCycle = this.jumpCycleMax;
+                                            //jumpDist /= 2;
+                                            jumpDist = -this.freeFallDist;
+                                            this.key.jump = false;
+                                            this.wasJumping = false;
+                                        }
                                     }
+                                    else {
+                                        dir = -1;
+                                    }
+                                    anim = this.jump;
+                                    this.jumpCycle--;
+                                    forward = this.avatar.calcMovePOV(0, -jumpDist * dir, actDist);
                                 }
                                 else {
-                                    anim = this.jump;
-                                    dir = -1;
+                                    forward = this.avatar.calcMovePOV(0, -this.freeFallDist, actDist);
                                 }
-                                this.jumpCycle--;
+                                this.avatar.moveWithCollisions(forward);
+                                moving = true;
                             }
-                            else
-                                dir = dir / 2;
-                            this.avatar.moveWithCollisions(new Vector3(0, -jumpSpeed * dir, 0));
+                            else if (this.key.down) {
+                                backwards = this.avatar.calcMovePOV(0, -this.freeFallDist, -walkDist / 2);
+                                this.avatar.moveWithCollisions(backwards);
+                                moving = true;
+                                anim = this.walkBack;
+                                if (this.key.jump)
+                                    this.key.jump = false;
+                            }
+                            else if (this.key.stepLeft) {
+                                anim = this.strafeLeft;
+                                stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.freeFallDist, 0);
+                                this.avatar.moveWithCollisions(stepLeft);
+                                moving = true;
+                            }
+                            else if (this.key.stepRight) {
+                                anim = this.strafeRight;
+                                stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.freeFallDist, 0);
+                                this.avatar.moveWithCollisions(stepRight);
+                                moving = true;
+                            }
+                            //jump when stationary
+                            if (!moving) {
+                                if (this.key.jump) {
+                                    this.wasJumping = true;
+                                }
+                                if (this.wasJumping) {
+                                    jumpDist *= 2;
+                                    if (this.jumpCycle < this.jumpCycleMax / 2) {
+                                        dir = 1;
+                                        if (this.jumpCycle < 0) {
+                                            this.jumpCycle = this.jumpCycleMax;
+                                            // jumpSpeed /= 2;
+                                            jumpDist = -this.freeFallDist;
+                                            this.key.jump = false;
+                                            this.wasJumping = false;
+                                        }
+                                    }
+                                    else {
+                                        anim = this.jump;
+                                        dir = -1;
+                                    }
+                                    this.jumpCycle--;
+                                    this.avatar.moveWithCollisions(new Vector3(0, -jumpDist * dir, 0));
+                                }
+                            }
                         }
                         if (!this.key.stepLeft && !this.key.stepRight) {
                             if (this.key.left) {
@@ -262,29 +286,41 @@ var org;
                         if (moving) {
                             this.avatar.rotation.y = -4.69 - this.camera.alpha;
                         }
-                        //
-                        if (this.avatar.position.y < this.oldPos.y) {
-                            //if we are sliding down check slope or falling down
-                            var diff = this.oldPos.subtract(this.avatar.position).length();
-                            var ht = this.oldPos.y - this.avatar.position.y;
-                            var slope = Math.asin(ht / diff);
-                            var delta = Math.abs(this.downDist - ht);
-                            if (delta > 0.0001) {
+                        if (this.avatar.position.y < this.avStartPos.y) {
+                            //if we are sliding down then check if we are on slope or falling down
+                            var ht = this.avStartPos.y - this.avatar.position.y;
+                            var delta = Math.abs(this.freeFallDist - ht);
+                            if (delta < 0.0001) {
+                                //to remove fliker check if AV has been falling down continously for last few consecutive frames
+                                this.fallFrameCount++;
+                                if (this.fallFrameCount > this.fallFrameCountMin) {
+                                    this.inAir = true;
+                                }
+                            }
+                            else {
+                                this.fallFrameCount = 0;
+                                this.inAir = false;
                                 //we are not falling down
+                                var diff = this.avStartPos.subtract(this.avatar.position).length();
+                                var slope = Math.asin(ht / diff);
                                 if (slope <= this.sl) {
-                                    this.movTime = 0;
+                                    this.movFallTime = 0;
                                 }
                             }
                         }
                         else {
-                            this.movTime = 0;
+                            this.movFallTime = 0;
+                            this.fallFrameCount = 0;
+                            this.inAir = false;
                         }
-                        if (this.avatarSkeleton !== null) {
-                            if (this.prevAnim !== anim) {
-                                if (anim.exist) {
-                                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                        if (anim != null) {
+                            if (this.avatarSkeleton !== null) {
+                                if (this.prevAnim.name !== anim.name) {
+                                    if (anim.exist) {
+                                        this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                                    }
+                                    this.prevAnim = anim;
                                 }
-                                this.prevAnim = anim;
                             }
                         }
                         this.updateTargetValue();
@@ -343,6 +379,13 @@ var org;
                         else if (chr === "E")
                             this.key.stepRight = false;
                         this.move = this.anyMovement();
+                    };
+                    //calc distance in horizontal plane
+                    CharacterControl.prototype.horizontalMove = function (v1, v2) {
+                        var dx = v1.x - v2.x;
+                        var dz = v1.z - v2.z;
+                        var d = Math.sqrt(dx * dx + dz * dz);
+                        return d;
                     };
                     return CharacterControl;
                 }());
@@ -1336,12 +1379,17 @@ var org;
                         };
                         VishvaGUI.prototype.initAnimUI = function () {
                             var _this = this;
+                            var animSkelChange = document.getElementById("animSkelChange");
                             var animSkelView = document.getElementById("animSkelView");
                             var animRest = document.getElementById("animRest");
                             var animRangeName = document.getElementById("animRangeName");
                             var animRangeStart = document.getElementById("animRangeStart");
                             var animRangeEnd = document.getElementById("animRangeEnd");
                             var animRangeMake = document.getElementById("animRangeMake");
+                            //change the mesh skeleton
+                            animSkelChange.onclick = function (e) {
+                                _this.vishva.changeSkeleton();
+                            };
                             //enable/disable skeleton view
                             animSkelView.onclick = function (e) {
                                 _this.vishva.toggleSkelView();
@@ -2834,7 +2882,7 @@ var org;
                         this.savePhyParms();
                         this.switchToQuats(this.meshPicked);
                         this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
-                        this.editControl.addActionListener(function (actionType) {
+                        this.editControl.addActionEndListener(function (actionType) {
                             _this.vishvaGUI.refreshGeneralPanel();
                         });
                         this.editControl.enableTranslation();
@@ -4032,6 +4080,16 @@ var org;
                         else
                             return this.meshPicked.skeleton;
                     };
+                    Vishva.prototype.changeSkeleton = function () {
+                        var skels = this.scene.skeletons;
+                        for (var _i = 0, skels_1 = skels; _i < skels_1.length; _i++) {
+                            var skel = skels_1[_i];
+                            console.log(skel.name);
+                            if (skel.name === "avatar_bow") {
+                                this.meshPicked.skeleton = skel;
+                            }
+                        }
+                    };
                     Vishva.prototype.toggleSkelView = function () {
                         if (this.meshPicked.skeleton == null)
                             return;
@@ -4549,8 +4607,14 @@ var org;
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
                         var boundingRadius = this.getBoundingRadius(meshes);
-                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
-                            var mesh = meshes_4[_i];
+                        console.log("meshes " + meshes.length);
+                        console.log("skels " + skeletons.length);
+                        for (var _i = 0, skeletons_1 = skeletons; _i < skeletons_1.length; _i++) {
+                            var skeleton = skeletons_1[_i];
+                            this.scene.stopAnimation(skeleton);
+                        }
+                        for (var _a = 0, meshes_4 = meshes; _a < meshes_4.length; _a++) {
+                            var mesh = meshes_4[_a];
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
                             var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
@@ -4559,25 +4623,28 @@ var org;
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             //TODO think
                             //mesh.receiveShadows = true;
-                            if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
-                                var mm = mesh.material;
-                                var mats = mm.subMaterials;
-                                for (var _a = 0, mats_2 = mats; _a < mats_2.length; _a++) {
-                                    var mat = mats_2[_a];
-                                    mesh.material.backFaceCulling = false;
-                                    mesh.material.alpha = 1;
-                                    if (mat != null && mat instanceof BABYLON.StandardMaterial) {
-                                        this.renameAssetTextures(mat);
+                            if (mesh.material != null) {
+                                if (mesh.material instanceof BABYLON.MultiMaterial) {
+                                    var mm = mesh.material;
+                                    var mats = mm.subMaterials;
+                                    for (var _b = 0, mats_2 = mats; _b < mats_2.length; _b++) {
+                                        var mat = mats_2[_b];
+                                        mesh.material.backFaceCulling = false;
+                                        mesh.material.alpha = 1;
+                                        if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                                            this.renameAssetTextures(mat);
+                                        }
                                     }
                                 }
-                            }
-                            else {
-                                mesh.material.backFaceCulling = false;
-                                mesh.material.alpha = 1;
-                                var sm = mesh.material;
-                                this.renameAssetTextures(sm);
+                                else {
+                                    mesh.material.backFaceCulling = false;
+                                    mesh.material.alpha = 1;
+                                    var sm = mesh.material;
+                                    this.renameAssetTextures(sm);
+                                }
                             }
                             if (mesh.skeleton != null) {
+                                this.scene.stopAnimation(mesh.skeleton);
                                 this.fixAnimationRanges(mesh.skeleton);
                             }
                         }
@@ -4594,6 +4661,7 @@ var org;
                         }
                     };
                     Vishva.prototype.renameAssetTextures = function (sm) {
+                        console.log("renameAssetTextures");
                         this.renameAssetTexture(sm.diffuseTexture);
                         this.renameAssetTexture(sm.reflectionTexture);
                         this.renameAssetTexture(sm.opacityTexture);
@@ -4891,9 +4959,12 @@ var org;
                     Vishva.prototype.createSnowPart = function () {
                         var part = new ParticleSystem("snow", 1000, this.scene);
                         part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
-                        part.emitter = new Vector3(0, 10, 0);
-                        part.maxEmitBox = new Vector3(100, 10, 100);
-                        part.minEmitBox = new Vector3(-100, 10, -100);
+                        //part.emitter = new Vector3(0, 10, 0);
+                        part.emitter = new Mesh("snowEmitter", this.scene, this.mainCamera);
+                        //part.maxEmitBox = new Vector3(100, 10, 100);
+                        //part.minEmitBox = new Vector3(-100, 10, -100);
+                        part.maxEmitBox = new Vector3(10, 10, 10);
+                        part.minEmitBox = new Vector3(-10, 10, -10);
                         part.emitRate = 1000;
                         part.updateSpeed = 0.005;
                         part.minLifeTime = 1;
@@ -5703,8 +5774,6 @@ var org;
                 var SNAproperties = (function () {
                     function SNAproperties() {
                         this.signalId = "0";
-                        this.signalEnable = "";
-                        this.signalDisble = "";
                     }
                     return SNAproperties;
                 }());

@@ -634,10 +634,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
     export abstract class SNAproperties {
         signalId: string = "0";
-
-        signalEnable: string = "";
-
-        signalDisble: string = "";
+        //comment these two out until we have an implementation
+//        signalEnable: string = "";
+//        signalDisble: string = "";
 
         public abstract unmarshall(obj: Object): SNAproperties;
     }

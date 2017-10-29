@@ -24,7 +24,7 @@ namespace org.ssatguru.babylonjs.component {
         constructor(avatar: Mesh, avatarSkeleton: Skeleton, anims: AnimData[], camera: ArcRotateCamera, scene: Scene) {
 
             this.avatarSkeleton = avatarSkeleton;
-            if (anims!== null) this.initAnims(anims);
+            if (anims !== null) this.initAnims(anims);
             this.camera = camera;
 
             this.avatar = avatar;
@@ -33,9 +33,12 @@ namespace org.ssatguru.babylonjs.component {
 
             window.addEventListener("keydown", (e) => {return this.onKeyDown(e)}, false);
             window.addEventListener("keyup", (e) => {return this.onKeyUp(e)}, false);
-            this.renderer = () => {this.moveAVandCamera()}
+            this.renderer = () => {this.moveAVandCamera()};
+
 
         }
+
+
 
         public setAvatar(avatar: Mesh) {
             this.avatar = avatar;
@@ -61,13 +64,15 @@ namespace org.ssatguru.babylonjs.component {
             if (this.started) return;
             this.started = true;
             this.key.reset();
-            this.movTime = 0;
+            this.movFallTime = 0;
             //first time we enter render loop, delta time shows zero !!
-            this.stillTime = 0.001;
+            this.stillFallTime = 0.001;
             this.grounded = false;
             this.updateTargetValue();
 
             this.scene.registerBeforeRender(this.renderer);
+            //this.scene.registerAfterRender(this.afterRenderer);
+            this.scene
         }
 
         public stop() {
@@ -102,164 +107,188 @@ namespace org.ssatguru.babylonjs.component {
         private avatarSpeed: number = 3;
         private prevAnim: AnimData = null;
 
-        private jumpCycleMax: number = 25;
+        private jumpCycleMax: number = 40;
         private jumpCycle: number = this.jumpCycleMax;
         private wasJumping: boolean = false;
 
         private gravity: number = 9.8 * 2;
-        private oldPos: Vector3 = new Vector3(0, 0, 0);
+        private avStartPos: Vector3 = new Vector3(0, 0, 0);
         private grounded: boolean = false;
-        private downDist: number = 0;
-        private movTime: number = 0;
-        private stillTime: number = 0;
+        //distance by which AV would move down if in freefall
+        private freeFallDist: number = 0;
+        //for how long has the av been falling while moving
+        private movFallTime: number = 0;
+        //for how long has the av been falling while not moving
+        private stillFallTime: number = 0;
+        //how many minimum contiguos frames should the AV have been in free fall
+        //before we assume AV is really in freefall.
+        //we will use this to remove animation flicker (fall, no fall, fall etc)
+        private fallFrameCountMin: number = 10;
+        private fallFrameCount: number = 0;
+        
+        private inAir: boolean = false;
         private moveVector: Vector3 = new Vector3(0, 0, 0);
 
         public moveAVandCamera(): boolean {
-            this.oldPos.copyFrom(this.avatar.position);
+            this.avStartPos.copyFrom(this.avatar.position);
 
+            let anim: AnimData = null;
+            let noMoveKeyPressed: boolean = !this.anyMovement();
             //skip everything if no movement key pressed
-            if (!this.anyMovement()) {
+            if (this.inAir || noMoveKeyPressed) {
+               
+                this.fallFrameCount = 0;
                 if (!this.grounded) {
+                     anim = this.idle;
                     let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
                     if (dt === 0) {
-                        this.downDist = 5;
+                        this.freeFallDist = 5;
                     } else {
-                        this.stillTime = this.stillTime + dt;
-                        let u: number = this.stillTime * this.gravity
-                        this.downDist = u * dt + this.gravity * dt * dt / 2;
+                        this.stillFallTime = this.stillFallTime + dt;
+                        let u: number = this.stillFallTime * this.gravity
+                        this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
                     }
-                    this.moveVector.copyFromFloats(0, -this.downDist, 0);
+                    this.moveVector.copyFromFloats(0, -this.freeFallDist, 0);
                     this.avatar.moveWithCollisions(this.moveVector);
-                    if (this.oldPos.y === this.avatar.position.y) {
+                    if (this.avStartPos.y === this.avatar.position.y) {
                         this.grounded = true;
-                        this.stillTime = 0;
-                    } else if (this.avatar.position.y < this.oldPos.y) {
-                        //if we are sliding down then check slope
-                        let diff: number = this.oldPos.subtract(this.avatar.position).length();
-                        let ht: number = this.oldPos.y - this.avatar.position.y;
-                        let slope: number = Math.asin(ht / diff);
-                        if (slope <= this.sl) {
-                            this.grounded = true;
-                            this.stillTime = 0;
-                            this.avatar.position.copyFrom(this.oldPos);
+                        this.inAir = false;
+                        this.stillFallTime = 0;
+                    } else if (this.avatar.position.y < this.avStartPos.y) {
+                        //AV is going down. 
+                        //Check if AV is fallling down or is on a slope
+                        //if the actual distance travelled down is same as what AV would have travelled if in freefall
+                        //then AV is in freefall else AV is on a slope
+                        let ht: number = this.avStartPos.y - this.avatar.position.y;
+                        let delta: number = Math.abs(this.freeFallDist - ht);
+                        if (delta < 0.0001) {
+                            if (this.stillFallTime > dt) anim = this.jump;
+                        } else {
+                            let diff: number = this.avStartPos.subtract(this.avatar.position).length();
+                            let slope: number = Math.asin(ht / diff);
+                            if (slope <= this.sl) {
+                                this.grounded = true;
+                                this.inAir = false;
+                                this.stillFallTime = 0;
+                                this.avatar.position.copyFrom(this.avStartPos);
+                            }
                         }
                     }
                     this.updateTargetValue();
                 }
-                if (this.avatarSkeleton !== null) {
-                    if (this.prevAnim !== this.idle) {
-                        this.prevAnim = this.idle
-                        if (this.idle.exist)
-                            this.avatarSkeleton.beginAnimation(this.idle.name, true, this.idle.r);
+                if (anim !== null && noMoveKeyPressed) {
+                    if (this.avatarSkeleton !== null) {
+                        if (this.prevAnim !== anim) {
+                            this.prevAnim = anim
+                            if (anim.exist){
+                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                            }
+                        }
                     }
                 }
                 return;
             }
 
-            this.stillTime = 0;
+            this.stillFallTime = 0;
             this.grounded = false;
 
             let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
             //distance by which AV should have walked since last frame
             let walkDist: number = this.avatarSpeed * dt;
-            //actual distance to be calculated based on wether AV is walking, runnning, or backing up
+            //actual distance to be calculated based on whether AV is walking, runnning, or backing
             let actDist: number = 0;
 
             //initial down velocity
-            let u: number = this.movTime * this.gravity
-            //dist by which av moves down since last frame
-            this.downDist = u * dt + this.gravity * dt * dt / 2;
-            this.movTime = this.movTime + dt;
+            let u: number = this.movFallTime * this.gravity
+            //if no ground or slope then distance which av would fall down since last frame
+            this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
+            this.movFallTime = this.movFallTime + dt;
 
-            let anim: AnimData = this.idle;
             let moving: boolean = false;
 
-            let jumpSpeed: number = this.avatarSpeed * dt;
+            let jumpDist: number = this.avatarSpeed * dt;
             let dir: number = 1;
             let forward: Vector3;
             let backwards: Vector3;
             let stepLeft: Vector3;
             let stepRight: Vector3;
 
+            if (!this.inAir) {
+                if (this.key.up) {
+                    if (this.key.shift) {
+                        actDist = walkDist * 2;
+                        anim = this.run;
+                    } else {
+                        actDist = walkDist;
+                        anim = this.walk;
+                    }
+                    if (this.key.jump) {
+                        this.wasJumping = true;
+                    }
+                    if (this.wasJumping) {
+                        jumpDist *= 2;
+                        if (this.jumpCycle < this.jumpCycleMax / 2) {
+                            dir = 1;
+                            if (this.jumpCycle < 0) {
+                                this.jumpCycle = this.jumpCycleMax;
+                                //jumpDist /= 2;
+                                jumpDist = -this.freeFallDist;
+                                this.key.jump = false;
+                                this.wasJumping = false;
+                            }
+                        } else {
+                            dir = -1;
+                        }
+                        anim = this.jump;
+                        this.jumpCycle--;
+                        forward = this.avatar.calcMovePOV(0, -jumpDist * dir, actDist);
+                    } else {
+                        forward = this.avatar.calcMovePOV(0, -this.freeFallDist, actDist);
+                    }
+                    this.avatar.moveWithCollisions(forward);
+                    moving = true;
+                } else if (this.key.down) {
+                    backwards = this.avatar.calcMovePOV(0, -this.freeFallDist, -walkDist / 2);
+                    this.avatar.moveWithCollisions(backwards);
+                    moving = true;
+                    anim = this.walkBack;
+                    if (this.key.jump) this.key.jump = false;
+                } else if (this.key.stepLeft) {
+                    anim = this.strafeLeft;
+                    stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.freeFallDist, 0);
+                    this.avatar.moveWithCollisions(stepLeft);
+                    moving = true;
+                } else if (this.key.stepRight) {
+                    anim = this.strafeRight;
+                    stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.freeFallDist, 0);
+                    this.avatar.moveWithCollisions(stepRight);
+                    moving = true;
+                }
 
-            if (this.key.up) {
-                if (this.key.shift) {
-                    //speed = this.avatarSpeed * 2;
-                    actDist = walkDist * 2;
-                    anim = this.run;
-                } else {
-                    //speed = this.avatarSpeed;
-                    actDist = walkDist;
-                    anim = this.walk;
-                }
-                if (this.key.jump) {
-                    this.wasJumping = true;
-                }
-                if (this.wasJumping) {
-                    jumpSpeed *= 2;
-                    if (this.jumpCycle < this.jumpCycleMax / 2) {
-                        dir = 1;
-                        if (this.jumpCycle < 0) {
-                            this.jumpCycle = this.jumpCycleMax;
-                            jumpSpeed /= 2;
-                            this.key.jump = false;
-                            this.wasJumping = false;
-                        }
-                    } else {
-                        anim = this.jump;
-                        dir = -1;
+                //jump when stationary
+                if (!moving) {
+                    if (this.key.jump) {
+                        this.wasJumping = true;
                     }
-                    this.jumpCycle--;
-                    forward = this.avatar.calcMovePOV(0, -jumpSpeed * dir, actDist);
-                } else {
-                    forward = this.avatar.calcMovePOV(0, -this.downDist, actDist);
-                }
-                this.avatar.moveWithCollisions(forward);
-                moving = true;
-            } else if (this.key.down) {
-                //backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                //backwards = this.avatar.calcMovePOV(0, -this.downSpeed, -this.avatarSpeed / 2);
-                backwards = this.avatar.calcMovePOV(0, -this.downDist, -walkDist / 2);
-                this.avatar.moveWithCollisions(backwards);
-                moving = true;
-                anim = this.walkBack;
-                if (this.key.jump) this.key.jump = false;
-            } else if (this.key.stepLeft) {
-                anim = this.strafeLeft;
-                //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                //stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -this.downSpeed, 0);
-                stepLeft = this.avatar.calcMovePOV(-walkDist / 2, -this.downDist, 0);
-                this.avatar.moveWithCollisions(stepLeft);
-                moving = true;
-            } else if (this.key.stepRight) {
-                anim = this.strafeRight;
-                //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                //stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -this.downSpeed, 0);
-                stepRight = this.avatar.calcMovePOV(walkDist / 2, -this.downDist, 0);
-                this.avatar.moveWithCollisions(stepRight);
-                moving = true;
-            }
-            if (!moving) {
-                if (this.key.jump) {
-                    this.wasJumping = true;
-                }
-                if (this.wasJumping) {
-                    jumpSpeed *= 2;
-                    if (this.jumpCycle < this.jumpCycleMax / 2) {
-                        dir = 1;
-                        if (this.jumpCycle < 0) {
-                            this.jumpCycle = this.jumpCycleMax;
-                            jumpSpeed /= 2;
-                            this.key.jump = false;
-                            this.wasJumping = false;
+                    if (this.wasJumping) {
+                        jumpDist *= 2;
+                        if (this.jumpCycle < this.jumpCycleMax / 2) {
+                            dir = 1;
+                            if (this.jumpCycle < 0) {
+                                this.jumpCycle = this.jumpCycleMax;
+                               // jumpSpeed /= 2;
+                                jumpDist = -this.freeFallDist;
+                                this.key.jump = false;
+                                this.wasJumping = false;
+                            }
+                        } else {
+                            anim = this.jump;
+                            dir = -1;
                         }
-                    } else {
-                        anim = this.jump;
-                        dir = -1;
+                        this.jumpCycle--;
+                        this.avatar.moveWithCollisions(new Vector3(0, -jumpDist * dir, 0));
                     }
-                    this.jumpCycle--;
-                } else dir = dir / 2;
-                this.avatar.moveWithCollisions(new Vector3(0, -jumpSpeed * dir, 0));
+                }
             }
             if (!this.key.stepLeft && !this.key.stepRight) {
                 if (this.key.left) {
@@ -279,29 +308,43 @@ namespace org.ssatguru.babylonjs.component {
             if (moving) {
                 this.avatar.rotation.y = -4.69 - this.camera.alpha;
             }
-            //
 
-            if (this.avatar.position.y < this.oldPos.y) {
-                //if we are sliding down check slope or falling down
-                let diff: number = this.oldPos.subtract(this.avatar.position).length();
-                let ht: number = this.oldPos.y - this.avatar.position.y;
-                let slope: number = Math.asin(ht / diff);
-                let delta: number = Math.abs(this.downDist - ht);
-                if (delta > 0.0001) {
+
+            if (this.avatar.position.y < this.avStartPos.y) {
+                //if we are sliding down then check if we are on slope or falling down
+                let ht: number = this.avStartPos.y - this.avatar.position.y;
+                let delta: number = Math.abs(this.freeFallDist - ht);
+
+                if (delta < 0.0001) {
+                    //to remove fliker check if AV has been falling down continously for last few consecutive frames
+                    this.fallFrameCount++;
+                    if (this.fallFrameCount > this.fallFrameCountMin) {
+                        this.inAir = true;
+                    }
+                } else {
+                    this.fallFrameCount = 0;
+                    this.inAir = false;
                     //we are not falling down
+                    let diff: number = this.avStartPos.subtract(this.avatar.position).length();
+                    let slope: number = Math.asin(ht / diff);
                     if (slope <= this.sl) {
-                        this.movTime = 0;
+                        this.movFallTime = 0;
                     }
                 }
             } else {
-                this.movTime = 0;
+                this.movFallTime = 0;
+                this.fallFrameCount = 0;
+                this.inAir = false;
             }
-            if (this.avatarSkeleton !== null) {
-                if (this.prevAnim !== anim) {
-                    if (anim.exist) {
-                        this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+
+            if (anim != null) {
+                if (this.avatarSkeleton !== null) {
+                    if (this.prevAnim.name !== anim.name) {
+                        if (anim.exist) {
+                            this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
+                        }
+                        this.prevAnim = anim;
                     }
-                    this.prevAnim = anim;
                 }
             }
             this.updateTargetValue();
@@ -355,6 +398,15 @@ namespace org.ssatguru.babylonjs.component {
             else if (chr === "E") this.key.stepRight = false;
 
             this.move = this.anyMovement();
+
+        }
+
+        //calc distance in horizontal plane
+        private horizontalMove(v1: Vector3, v2: Vector3): number {
+            let dx: number = v1.x - v2.x;
+            let dz: number = v1.z - v2.z;
+            let d: number = Math.sqrt(dx * dx + dz * dz);
+            return d;
 
         }
     }

@@ -943,13 +943,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         skel: Skeleton;
 
         private initAnimUI() {
+            var animSkelChange: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelChange");
             var animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
             var animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
             var animRangeName: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeName");
             var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
             var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
             var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
-
+            
+            //change the mesh skeleton
+            animSkelChange.onclick = (e) => {
+                this.vishva.changeSkeleton();
+            }
+            
             //enable/disable skeleton view
             animSkelView.onclick = (e) => {
                 this.vishva.toggleSkelView();

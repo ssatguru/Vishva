@@ -51,6 +51,7 @@ var org;
                         this.fallFrameCountMin = 10;
                         this.fallFrameCount = 0;
                         this.jumpTime = 0;
+                        this.jumpStartPosY = 0;
                         this.inAir = false;
                         this.moveVector = new Vector3(0, 0, 0);
                         this.move = false;
@@ -218,6 +219,9 @@ var org;
                                 }
                                 else {
                                     anim = this.jump;
+                                    if (this.jumpTime === 0) {
+                                        this.jumpStartPosY = this.avatar.position.y;
+                                    }
                                     //up velocity at the begining of the lastt frame (v=u+at)
                                     var js = this.jumpSpeed - this.gravity * this.jumpTime;
                                     //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
@@ -227,7 +231,7 @@ var org;
                                     this.avatar.moveWithCollisions(forward);
                                     if (jumpDist < 0) {
                                         anim = this.run;
-                                        if (this.avatar.position.y >= this.avStartPos.y) {
+                                        if ((this.avatar.position.y >= this.avStartPos.y) || (this.avatar.position.y < this.jumpStartPosY)) {
                                             this.isJumping = false;
                                             this.key.jump = false;
                                             this.jumpTime = 0;

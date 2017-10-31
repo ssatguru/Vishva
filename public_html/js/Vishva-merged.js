@@ -26,17 +26,15 @@ var org;
                         this.sl = Math.PI * this.slopeLimit / 180;
                         this.started = false;
                         //avatar walking speed in meters/second
-                        this.walkSpeed = 3;
+                        this.walkSpeed = 1.5;
                         this.runSpeed = this.walkSpeed * 2;
                         this.backSpeed = this.walkSpeed / 2;
                         this.jumpSpeed = this.walkSpeed * 2;
                         this.leftSpeed = this.walkSpeed / 2;
                         this.rightSpeed = this.walkSpeed / 2;
                         this.prevAnim = null;
-                        this.jumpCycleMax = 40;
-                        this.jumpCycle = this.jumpCycleMax;
                         this.isJumping = false;
-                        this.gravity = 9.8 * 2;
+                        this.gravity = 9.8;
                         this.avStartPos = new Vector3(0, 0, 0);
                         this.grounded = false;
                         //distance by which AV would move down if in freefall
@@ -231,7 +229,7 @@ var org;
                                     this.avatar.moveWithCollisions(forward);
                                     if (jumpDist < 0) {
                                         anim = this.run;
-                                        if ((this.avatar.position.y >= this.avStartPos.y) || (this.avatar.position.y < this.jumpStartPosY)) {
+                                        if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
                                             this.isJumping = false;
                                             this.key.jump = false;
                                             this.jumpTime = 0;
@@ -267,6 +265,9 @@ var org;
                                 }
                                 if (this.isJumping) {
                                     anim = this.jump;
+                                    if (this.jumpTime === 0) {
+                                        this.jumpStartPosY = this.avatar.position.y;
+                                    }
                                     //up velocity at the begining of the last frame (v=u+at)
                                     var js = this.jumpSpeed - this.gravity * this.jumpTime;
                                     //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
@@ -276,7 +277,7 @@ var org;
                                     this.avatar.moveWithCollisions(moveVector);
                                     if (jumpDist < 0) {
                                         anim = this.run;
-                                        if (this.avatar.position.y >= this.avStartPos.y) {
+                                        if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
                                             this.isJumping = false;
                                             this.key.jump = false;
                                             this.jumpTime = 0;

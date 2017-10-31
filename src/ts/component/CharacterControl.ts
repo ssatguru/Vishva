@@ -122,7 +122,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         //avatar walking speed in meters/second
-        private walkSpeed: number = 3;
+        private walkSpeed: number = 1.5;
         private runSpeed: number = this.walkSpeed * 2;
         private backSpeed: number = this.walkSpeed / 2;
         private jumpSpeed: number = this.walkSpeed * 2;
@@ -132,11 +132,9 @@ namespace org.ssatguru.babylonjs.component {
 
         private prevAnim: AnimData = null;
 
-        private jumpCycleMax: number = 40;
-        private jumpCycle: number = this.jumpCycleMax;
         private isJumping: boolean = false;
 
-        private gravity: number = 9.8 * 2;
+        private gravity: number = 9.8 ;
         private avStartPos: Vector3 = new Vector3(0, 0, 0);
         private grounded: boolean = false;
         //distance by which AV would move down if in freefall
@@ -260,7 +258,7 @@ namespace org.ssatguru.babylonjs.component {
                         this.avatar.moveWithCollisions(forward);
                         if (jumpDist < 0) {
                             anim = this.run;
-                            if ((this.avatar.position.y >= this.avStartPos.y) || (this.avatar.position.y < this.jumpStartPosY)) {
+                            if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
                                 this.isJumping = false;
                                 this.key.jump = false;
                                 this.jumpTime = 0;
@@ -293,6 +291,9 @@ namespace org.ssatguru.babylonjs.component {
                     }
                     if (this.isJumping) {
                         anim = this.jump;
+                        if (this.jumpTime === 0) {
+                            this.jumpStartPosY = this.avatar.position.y;
+                        }
                         //up velocity at the begining of the last frame (v=u+at)
                         let js: number = this.jumpSpeed - this.gravity * this.jumpTime;
                         //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
@@ -302,7 +303,7 @@ namespace org.ssatguru.babylonjs.component {
                         this.avatar.moveWithCollisions(moveVector);
                         if (jumpDist < 0) {
                             anim = this.run;
-                            if (this.avatar.position.y >= this.avStartPos.y) {
+                            if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
                                 this.isJumping = false;
                                 this.key.jump = false;
                                 this.jumpTime = 0;
@@ -371,7 +372,9 @@ namespace org.ssatguru.babylonjs.component {
             this.updateTargetValue();
             return;
         }
-
+        
+        
+        
         private updateTargetValue() {
             this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
         }

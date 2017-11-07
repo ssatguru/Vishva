@@ -185,7 +185,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 {
                     var img: HTMLImageElement = document.createElement("img");
                     img.id = item;
-                    img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                    //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                    let name:string = item.split(".")[0];
+                    img.src = "vishva/assets/" + assetType + "/" + name + "/" + name + ".jpg";
                     img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
                     img.className = assetType;
                     img.onclick = f;

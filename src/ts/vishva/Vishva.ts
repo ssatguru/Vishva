@@ -193,6 +193,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             this.scene = new Scene(this.engine);
             this.scene.enablePhysics();
+            //this.scene.useRightHandedSystem = true;
             //lets make night black
             this.scene.clearColor = new Color4(0, 0, 0, 1);
             //set ambient to white in case user wants to bypass light conditions for some objects
@@ -524,22 +525,22 @@ namespace org.ssatguru.babylonjs.vishva {
         private moveLimitEnd = 124;
 
         oldAvPos: Vector3 = new Vector3(0, 0, 0);
-        private moveAVandCamera() {
-            this.oldAvPos.copyFrom(this.avatar.position);
-
-            if (!this.cc.moveAVandCamera()) return;
-
-            let avPos = this.avatar.position.length();
-            if (avPos > this.moveLimitStart) {
-                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
-            } else {
-                this.scene.fogDensity = this.fogDensity;
-            }
-            if (avPos > this.moveLimitEnd) {
-                this.avatar.position.copyFrom(this.oldAvPos);
-            }
-
-        }
+        //        private moveAVandCamera() {
+        //            this.oldAvPos.copyFrom(this.avatar.position);
+        //
+        //            if (!this.cc.moveAVandCamera()) return;
+        //
+        //            let avPos = this.avatar.position.length();
+        //            if (avPos > this.moveLimitStart) {
+        //                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
+        //            } else {
+        //                this.scene.fogDensity = this.fogDensity;
+        //            }
+        //            if (avPos > this.moveLimitEnd) {
+        //                this.avatar.position.copyFrom(this.oldAvPos);
+        //            }
+        //
+        //        }
 
 
         /*
@@ -965,24 +966,28 @@ namespace org.ssatguru.babylonjs.vishva {
             let idle: AnimData;
             let run: AnimData;
             let jump: AnimData;
+            let fall: AnimData;
             let turnLeft: AnimData;
             let turnRight: AnimData;
             let strafeLeft: AnimData;
             let strafeRight: AnimData;
+            let slideBack: AnimData;
             let avatarSpeed: number = 0.05;
             let prevAnim: AnimData = null;
 
-            walk = new AnimData("walk", 7, 35, 1);
-            walkBack = new AnimData("walkBack", 39, 65, 0.5);
-            idle = new AnimData("idle", 203, 283, 1);
-            run = new AnimData("run", 69, 95, 1);
-            jump = new AnimData("jump", 101, 103, 0.5);
-            turnLeft = new AnimData("turnLeft", 107, 151, 0.5);
-            turnRight = new AnimData("turnRight", 155, 199, 0.5);
-            strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
-            strafeRight = new AnimData("strafeRight", 0, 0, 1);
+            walk = new AnimData("walk", true, 1);
+            walkBack = new AnimData("walkBack", true, 0.5);
+            idle = new AnimData("idle", true, 1);
+            run = new AnimData("run", true, 1);
+            jump = new AnimData("jump", false, 1);
+            fall = new AnimData("fall", false, 1);
+            turnLeft = new AnimData("turnLeft", true, 0.5);
+            turnRight = new AnimData("turnRight", true, 0.5);
+            strafeLeft = new AnimData("strafeLeft", true, 1);
+            strafeRight = new AnimData("strafeRight", true, 1);
+            slideBack = new AnimData("slideBack", true, 1);
 
-            this.anims = [walk, walkBack, idle, run, jump, turnLeft, turnRight, strafeLeft, strafeRight];
+            this.anims = [walk, walkBack, idle, run, jump, fall, turnLeft, turnRight, strafeLeft, strafeRight, slideBack];
         }
 
         private onWindowResize(event: Event) {
@@ -1982,16 +1987,16 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSkeleton(): Skeleton {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
-        
-        public changeSkeleton(){
+
+        public changeSkeleton() {
             let skels: Skeleton[] = this.scene.skeletons;
-            
-            for(let skel of skels){
+
+            for (let skel of skels) {
                 console.log(skel.name);
-                if (skel.name==="avatar_bow"){
+                if (skel.name === "avatar_bow") {
                     this.meshPicked.skeleton = skel;
                 }
-                
+
             }
         }
 
@@ -2520,6 +2525,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        //older, used by old GUI file loader dislog
         public loadAssetFile(file: File) {
             var sceneFolderName: string = file.name.split(".")[0];
             SceneLoader.ImportMesh("", "vishva/assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
@@ -2532,7 +2538,9 @@ namespace org.ssatguru.babylonjs.vishva {
         public loadAsset(assetType: string, file: string) {
             this.assetType = assetType;
             this.file = file;
-            SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
+            let fileName: string = file.split(".")[0];
+            //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
+            SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + fileName + "/", file, this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
         }
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
         private onMeshLoaded(meshes: AbstractMesh[], particleSystems: ParticleSystem[], skeletons: Skeleton[]) {
@@ -2547,9 +2555,13 @@ namespace org.ssatguru.babylonjs.vishva {
             for (let mesh of meshes) {
                 mesh.isPickable = true;
                 mesh.checkCollisions = true;
-                var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
-                var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                mesh.position.addInPlace(placementGlobal);
+                if (mesh.parent == null) {
+                    var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
+                    var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                    console.log(placementGlobal);
+                    mesh.position.addInPlace(placementGlobal);
+                }
+
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                 //TODO think
                 //mesh.receiveShadows = true;
@@ -2605,7 +2617,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if (bt == null) return;
             var textureName: string = bt.name;
             if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
-                bt.name = "vishva/assets/" + this.assetType + "/" + this.file + "/" + textureName;
+                bt.name = "vishva/assets/" + this.assetType + "/" + this.file.split(".")[0] + "/" + textureName;
             }
         }
 
@@ -2620,14 +2632,22 @@ namespace org.ssatguru.babylonjs.vishva {
          */
         private getBoundingRadius(meshes: AbstractMesh[]): number {
             var maxRadius: number = 0;
-            for (var index139 = 0; index139 < meshes.length; index139++) {
-                var mesh = meshes[index139];
-                {
-                    var bi: BoundingInfo = mesh.getBoundingInfo();
-                    var r: number = bi.boundingSphere.radiusWorld + mesh.position.length();
+            for (let mesh of meshes) {
+                console.log("==========");
+                console.log(mesh.name);
+                console.log(mesh.absolutePosition);
+                console.log(mesh.absolutePosition.length());
+                if (mesh.parent != null) console.log("parent " + mesh.parent.name);
+                var bi: BoundingInfo = mesh.getBoundingInfo();
+                var rw: number = bi.boundingSphere.radiusWorld;
+                console.log(bi.boundingSphere.radiusWorld);
+                if (isFinite(rw)) {
+                    var r: number = rw + mesh.absolutePosition.length();
                     if (maxRadius < r) maxRadius = r;
                 }
+
             }
+            console.log("max radius " + maxRadius);
             return maxRadius;
         }
 
@@ -2920,10 +2940,10 @@ namespace org.ssatguru.babylonjs.vishva {
             part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
             //part.emitter = new Vector3(0, 10, 0);
             part.emitter = new Mesh("snowEmitter", this.scene, this.mainCamera);
-            
+
             //part.maxEmitBox = new Vector3(100, 10, 100);
             //part.minEmitBox = new Vector3(-100, 10, -100);
-            
+
             part.maxEmitBox = new Vector3(10, 10, 10);
             part.minEmitBox = new Vector3(-10, 10, -10);
 
@@ -3055,14 +3075,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
         }
 
-        private setAnimationRange(skel: Skeleton) {
-            for (var index149 = 0; index149 < this.anims.length; index149++) {
-                var anim = this.anims[index149];
-                {
-                    skel.createAnimationRange(anim.name, anim.s, anim.e);
-                }
-            }
-        }
+        //        private setAnimationRange(skel: Skeleton) {
+        //            for (var index149 = 0; index149 < this.anims.length; index149++) {
+        //                var anim = this.anims[index149];
+        //                {
+        //                    skel.createAnimationRange(anim.name, anim.s, anim.e);
+        //                }
+        //            }
+        //        }
 
         /**
          * workaround for bugs in blender exporter 
@@ -3192,19 +3212,16 @@ namespace org.ssatguru.babylonjs.vishva {
     export class AnimData {
 
         public name: string;
-        public s: number;
-        public e: number;
+        //loop
+        public l: boolean;
+        //rate
         public r: number;
         public exist: boolean = false;
 
-        public constructor(name: string, s: number, e: number, d: number) {
-            this.s = 0;
-            this.e = 0;
-            this.r = 0;
+        public constructor(name: string, l: boolean, r: number) {
             this.name = name;
-            this.s = s;
-            this.e = e;
-            this.r = d;
+            this.l = l;
+            this.r = r;
         }
     }
     /*

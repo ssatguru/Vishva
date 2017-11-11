@@ -138,7 +138,7 @@ namespace org.ssatguru.babylonjs.component {
         private rightSpeed: number = this.walkSpeed / 2;
 
         private prevAnim: AnimData = null;
-        private gravity: number = 9.8 ;
+        private gravity: number = 9.8;
         private avStartPos: Vector3 = new Vector3(0, 0, 0);
         private grounded: boolean = false;
         //distance by which AV would move down if in freefall
@@ -160,19 +160,19 @@ namespace org.ssatguru.babylonjs.component {
             this.avStartPos.copyFrom(this.avatar.position);
             let anim: AnimData = null;
             let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
-
+            
             if (this.key.jump && !this.inFreeFall) {
                 this.grounded = false;
                 this.idleFallTime = 0;
-                
+
                 anim = this.doJump(dt);
-            } else if (this.anyMovement()) {
+            } else if (this.anyMovement() || this.inFreeFall) {
                 this.grounded = false;
                 this.idleFallTime = 0;
-                
+
                 anim = this.doMove(dt);
-            } else {
-            
+            } else if (!this.inFreeFall) {
+
                 anim = this.doIdle(dt);
             }
 
@@ -325,7 +325,7 @@ namespace org.ssatguru.babylonjs.component {
                     moving = true;
                 }
             }
-            
+
             if (!this.key.stepLeft && !this.key.stepRight) {
                 if (this.key.turnLeft) {
                     this.camera.alpha = this.camera.alpha + 0.022;
@@ -368,7 +368,11 @@ namespace org.ssatguru.babylonjs.component {
                             //if slope is less steeper than acceptable then walk else slide
                             if (this.verticalSlope(actDisp) <= this.sl) {
                                 this.endFreeFall();
-                            } 
+                            } else {
+                                //av is on a steep slope , continue increasing the moveFallTIme to deaccelerate it
+                                this.fallFrameCount = 0;
+                                this.inFreeFall = false;
+                            }
                         } else {
                             this.inFreeFall = true;
                             this.fallFrameCount++;
@@ -396,306 +400,74 @@ namespace org.ssatguru.babylonjs.component {
         //for how long has the av been falling while idle (not moving)
         private idleFallTime: number = 0;
         private doIdle(dt: number): AnimData {
-            let anim: AnimData = this.idle;;
+            if (this.grounded) {
+                return this.idle;
+            }
+            let anim: AnimData = this.idle;
             this.fallFrameCount = 0;
             this.movFallTime = 0;
-            if (!this.grounded) {
-                if (dt === 0) {
-                    this.freeFallDist = 5;
-                } else {
-                    let u: number = this.idleFallTime * this.gravity
-                    this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
-                    this.idleFallTime = this.idleFallTime + dt;
-                }
-                //if displacement is less than 0.01(? need to verify further) then 
-                //moveWithDisplacement down against a surface seems to push the AV up by a small amount!!
-                if (this.freeFallDist < 0.01) return anim;
-                let disp: Vector3 = new Vector3(0, -this.freeFallDist, 0);;
-                this.avatar.rotation.y = -4.69 - this.camera.alpha;
-                this.avatar.moveWithCollisions(disp);
-                if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y === this.avStartPos.y)) {
-                    this.grounded = true;
-                    this.idleFallTime = 0;
-                } else if (this.avatar.position.y < this.avStartPos.y) {
-                    //AV is going down. 
-                    //AV is either in free fall or is sliding along a downward slope
-                    //
-                    //if the actual displacemnt is same as the desired displacement then AV is in freefall
-                    //else it is on a slope
-                    let actDisp: Vector3 = this.avatar.position.subtract(this.avStartPos);
-                    if (!(this.areVectorsEqual(actDisp, disp, 0.001))) {
-                        //AV is on slope
-                        //Should AV continue to slide or stop?
-                        //if slope is less steeper than accebtable then stop else slide
-                        if (this.verticalSlope(actDisp) <= this.sl) {
-                            this.grounded = true;
-                            this.idleFallTime = 0;
-                            this.avatar.position.copyFrom(this.avStartPos);
-                        } else {
-                            anim = this.slideBack;
-                        }
+
+            if (dt === 0) {
+                this.freeFallDist = 5;
+            } else {
+                let u: number = this.idleFallTime * this.gravity
+                this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
+                this.idleFallTime = this.idleFallTime + dt;
+            }
+            //if displacement is less than 0.01(? need to verify further) then 
+            //moveWithDisplacement down against a surface seems to push the AV up by a small amount!!
+            if (this.freeFallDist < 0.01) return anim;
+            let disp: Vector3 = new Vector3(0, -this.freeFallDist, 0);;
+            this.avatar.rotation.y = -4.69 - this.camera.alpha;
+            this.avatar.moveWithCollisions(disp);
+            if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y === this.avStartPos.y)) {
+//                this.grounded = true;
+//                this.idleFallTime = 0;
+                this.groundIt();
+            } else if (this.avatar.position.y < this.avStartPos.y) {
+                //AV is going down. 
+                //AV is either in free fall or is sliding along a downward slope
+                //
+                //if the actual displacemnt is same as the desired displacement then AV is in freefall
+                //else it is on a slope
+                let actDisp: Vector3 = this.avatar.position.subtract(this.avStartPos);
+                if (!(this.areVectorsEqual(actDisp, disp, 0.001))) {
+                    //AV is on slope
+                    //Should AV continue to slide or stop?
+                    //if slope is less steeper than accebtable then stop else slide
+                    if (this.verticalSlope(actDisp) <= this.sl) {
+//                        this.grounded = true;
+//                        this.idleFallTime = 0;
+                        this.groundIt();
+                        this.avatar.position.copyFrom(this.avStartPos);
+                    } else {
+                        this.unGroundIt();
+                        anim = this.slideBack;
                     }
                 }
             }
             return anim;
         }
-
-        public moveAVandCamera_old(): boolean {
-            this.avStartPos.copyFrom(this.avatar.position);
-            let jumpDist: number = 0;
-            let anim: AnimData = null;
-            let noMoveKeyPressed: boolean = !this.anyMovement();
-            //skip everything if no movement key pressed
-            if (this.inFreeFall || noMoveKeyPressed) {
-
-                this.fallFrameCount = 0;
-
-                if (!this.grounded) {
-                    let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
-                    anim = this.idle;
-                    if (dt === 0) {
-                        this.freeFallDist = 5;
-                    } else {
-                        this.idleFallTime = this.idleFallTime + dt;
-                        let u: number = this.idleFallTime * this.gravity
-                        this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
-                    }
-                    let forwardDist: number = 0;
-                    let disp: Vector3;
-
-                    if ((this.inFreeFall) && (this.wasRunning || this.wasWalking)) {
-                        if (this.wasRunning) {
-                            forwardDist = this.runSpeed * dt;
-                        } else if (this.wasWalking) {
-                            forwardDist = this.walkSpeed * dt;
-                        }
-                        disp = this.moveVector.normalize();
-                        //disp.y = 0;
-                        disp.scaleToRef(forwardDist, disp);
-                        disp.y = -this.freeFallDist;
-                    } else {
-                        disp = new Vector3(0, -this.freeFallDist, 0);
-                    }
-                    this.avatar.rotation.y = -4.69 - this.camera.alpha;
-                    //let disp:Vector3 = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
-                    this.avatar.moveWithCollisions(disp);
-                    //console.log(disp);
-                    //console.log("new " + this.avatar.position.y + " old " + this.avStartPos.y);
-                    if ((this.avatar.position.y > this.avStartPos.y) || ((this.avatar.position.y === this.avStartPos.y) && (this.freeFallDist > 0.001))) {
-                        this.grounded = true;
-                        this.inFreeFall = false;
-                        console.log("not in air 1");
-                        this.idleFallTime = 0;
-                        this.wasWalking = false;
-                        this.wasRunning = false;
-                    } else if (this.avatar.position.y < this.avStartPos.y) {
-                        //AV is going down. 
-                        //Check if AV is fallling down or is on a slope
-                        //if the actual distance travelled down is same as what AV would have travelled if in freefall
-                        //then AV is in freefall else AV is on a slope
-                        let ht: number = this.avStartPos.y - this.avatar.position.y;
-                        //console.log(ht);
-                        let delta: number = Math.abs(this.freeFallDist - ht);
-                        if (delta < 0.0001) {
-                            if (ht > 0.01) {
-                                //console.log("free fall. changing anim");
-                                if (this.idleFallTime > dt) anim = this.fall;
-                            }
-                        } else {
-                            let diff: number = this.avStartPos.subtract(this.avatar.position).length();
-                            let slope: number = Math.asin(ht / diff);
-                            if (slope <= this.sl) {
-                                this.grounded = true;
-                                this.inFreeFall = false;
-                                //console.log("not in air 2");
-                                this.idleFallTime = 0;
-                                this.wasWalking = false;
-                                this.wasRunning = false;
-                                this.avatar.position.copyFrom(this.avStartPos);
-                            }
-                        }
-                    }
-                    this.updateTargetValue();
-                }
-                if (anim !== null && noMoveKeyPressed) {
-                    if (this.avatarSkeleton !== null) {
-                        if (this.prevAnim !== anim) {
-                            this.prevAnim = anim
-                            if (anim.exist) {
-                                //console.log("playing anim 1 " + anim.name);
-                                this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                            }
-                        }
-                    }
-                }
-                return;
+        
+        private groundFrameCount=0;
+        private groundFrameMax=10;
+        /**
+         * donot ground immediately
+         * wait few more frames
+         */
+        private groundIt():void{
+            this.groundFrameCount++;
+            if (this.groundFrameCount > this.groundFrameMax){
+                this.grounded = true;
+                this.idleFallTime = 0;
             }
-
-            this.idleFallTime = 0;
-            this.grounded = false;
-
-            let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
-
-            //initial down velocity
-            let u: number = this.movFallTime * this.gravity
-            //if no ground or slope then distance which av would fall down since last frame
-            this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
-            this.movFallTime = this.movFallTime + dt;
-
-            let moving: boolean = false;
-
-            this.wasWalking = false;
-            this.wasRunning = false;
-            if (this.key.forward) {
-                let forwardDist: number = 0;
-                if (this.key.shift) {
-                    this.wasRunning = true;
-                    forwardDist = this.runSpeed * dt;
-                    anim = this.run;
-                } else {
-                    this.wasWalking = true;
-                    forwardDist = this.walkSpeed * dt;
-                    anim = this.walk;
-                }
-                if (!this.key.jump) {
-                    this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
-                    this.avatar.moveWithCollisions(this.moveVector);
-                } else {
-                    anim = this.jump;
-                    if (this.jumpTime === 0) {
-                        this.jumpStartPosY = this.avatar.position.y;
-                    }
-                    //up velocity at the begining of the lastt frame (v=u+at)
-                    let js: number = this.jumpSpeed - this.gravity * this.jumpTime;
-                    //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
-                    jumpDist = js * dt - 0.5 * this.gravity * dt * dt;
-                    this.jumpTime = this.jumpTime + dt;
-                    this.moveVector = this.avatar.calcMovePOV(0, jumpDist, forwardDist);
-                    this.avatar.moveWithCollisions(this.moveVector);
-                    if (jumpDist < -0.001) {
-                        anim = this.fall;
-                        //if back on flat ground or going up the slope or back to where AV was when it started the jump (need to check for going down the slope!)
-                        if ((this.avatar.position.y >= this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
-                            //this.isJumping = false;
-                            this.key.jump = false;
-                            console.log("jump done");
-                            this.jumpTime = 0;
-                        }
-                    }
-                }
-                moving = true;
-            } else if (this.key.backward) {
-                this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, -(this.backSpeed * dt));
-                this.avatar.moveWithCollisions(this.moveVector);
-                moving = true;
-                anim = this.walkBack;
-                if (this.key.jump) this.key.jump = false;
-            } else if (this.key.stepLeft) {
-                anim = this.strafeLeft;
-                this.moveVector = this.avatar.calcMovePOV(-(this.leftSpeed * dt), -this.freeFallDist, 0);
-                this.avatar.moveWithCollisions(this.moveVector);
-                moving = true;
-            } else if (this.key.stepRight) {
-                anim = this.strafeRight;
-                this.moveVector = this.avatar.calcMovePOV((this.rightSpeed * dt), -this.freeFallDist, 0);
-                this.avatar.moveWithCollisions(this.moveVector);
-                moving = true;
-            }
-
-            //jump when stationary
-            if (!moving) {
-                if (this.key.jump) {
-                    anim = this.jump;
-                    if (this.jumpTime === 0) {
-                        this.jumpStartPosY = this.avatar.position.y;
-                    }
-                    //up velocity at the begining of the last frame (v=u+at)
-                    let js: number = this.jumpSpeed - this.gravity * this.jumpTime;
-                    //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
-                    jumpDist = js * dt - 0.5 * this.gravity * dt * dt;
-                    this.jumpTime = this.jumpTime + dt;
-                    let moveVector: Vector3 = this.avatar.calcMovePOV(0, jumpDist, 0);
-                    this.avatar.moveWithCollisions(moveVector);
-                    if (jumpDist < -0.001) {
-                        anim = this.fall;
-                        //if back on flat ground or going up the slope or back to where AV was when it started the jump (need to check for going down the slope!)
-                        if ((this.avatar.position.y >= this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
-                            // this.isJumping = false;
-                            this.key.jump = false;
-                            console.log("jump done");
-                            this.jumpTime = 0;
-                        }
-                    }
-                }
-            }
-
-            if (!this.key.stepLeft && !this.key.stepRight) {
-                if (this.key.turnLeft) {
-                    this.camera.alpha = this.camera.alpha + 0.022;
-                    if (!moving) {
-                        this.avatar.rotation.y = -4.69 - this.camera.alpha;
-                        anim = this.turnLeft;
-                    }
-                } else if (this.key.turnRight) {
-                    this.camera.alpha = this.camera.alpha - 0.022;
-                    if (!moving) {
-                        this.avatar.rotation.y = -4.69 - this.camera.alpha;
-                        anim = this.turnRight;
-                    }
-                }
-            }
-            if (moving) {
-                this.avatar.rotation.y = -4.69 - this.camera.alpha;
-            }
-
-
-            if (this.avatar.position.y < this.avStartPos.y) {
-                //if we are sliding down then check if we are on slope or falling down
-                let ht: number = this.avStartPos.y - this.avatar.position.y;
-                let delta: number = Math.abs(this.freeFallDist - ht);
-                if (this.key.jump) {
-                    delta = Math.abs(jumpDist + ht);
-                }
-
-                if (delta < 0.0001) {
-                    //to remove flicker, check if AV has been falling down continously for last few consecutive frames
-                    this.fallFrameCount++;
-                    if (this.fallFrameCount > this.fallFrameCountMin) {
-                        this.inFreeFall = true;
-                        console.log("in air");
-                    }
-                } else {
-                    this.fallFrameCount = 0;
-                    this.inFreeFall = false;
-                    //we are not falling down
-                    let diff: number = this.avStartPos.subtract(this.avatar.position).length();
-                    let slope: number = Math.asin(ht / diff);
-                    if (slope <= this.sl) {
-                        this.movFallTime = 0;
-                    } else {
-                        //this.inAir = true;
-                    }
-                }
-            } else {
-                this.movFallTime = 0;
-                this.fallFrameCount = 0;
-                this.inFreeFall = false;
-            }
-
-            if (anim != null) {
-                if (this.avatarSkeleton !== null) {
-                    if (this.prevAnim !== anim) {
-                        if (anim.exist) {
-                            console.log("playing anim 2 " + anim.name);
-                            this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                        }
-                        this.prevAnim = anim;
-                    }
-                }
-            }
-            this.updateTargetValue();
-            return;
         }
+        private unGroundIt(){
+            this.grounded = false;
+            this.groundFrameCount=0;
+        }
+
+        
 
 
 

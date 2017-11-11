@@ -36,7 +36,6 @@ namespace org.ssatguru.babylonjs.component {
             window.addEventListener("keyup", (e) => {return this.onKeyUp(e)}, false);
             this.renderer = () => {this.moveAVandCamera()};
 
-
         }
 
 
@@ -120,7 +119,9 @@ namespace org.ssatguru.babylonjs.component {
             this.run = anims[3];
             this.jump = anims[4];
             this.jump.r = 4;
+            this.jump.l = false;
             this.fall = anims[5];
+            this.fall.l = false;
             this.turnLeft = anims[6];
             this.turnRight = anims[7];
             this.strafeLeft = anims[8];
@@ -136,27 +137,21 @@ namespace org.ssatguru.babylonjs.component {
         private leftSpeed: number = this.walkSpeed / 2;
         private rightSpeed: number = this.walkSpeed / 2;
 
-
         private prevAnim: AnimData = null;
-
-        //private isJumping: boolean = false;
-
-        private gravity: number = 9.8;
+        private gravity: number = 9.8 ;
         private avStartPos: Vector3 = new Vector3(0, 0, 0);
         private grounded: boolean = false;
         //distance by which AV would move down if in freefall
         private freeFallDist: number = 0;
 
-
-
         //how many minimum contiguos frames should the AV have been in free fall
-        //before we assume AV is really in freefall.
-        //we will use this to remove animation flicker (fall, no fall, fall etc)
-        private fallFrameCountMin: number = 10;
+        //before we assume AV is in big freefall.
+        //we will use this to remove animation flicker during move down a slope (fall, move, fall move etc)
+        //TODO: base this on slope - large slope large count
+        private fallFrameCountMin: number = 50;
         private fallFrameCount: number = 0;
 
-
-        private inAir: boolean = false;
+        private inFreeFall: boolean = false;
         private wasWalking: boolean = false;
         private wasRunning: boolean = false;
         private moveVector: Vector3;
@@ -166,14 +161,18 @@ namespace org.ssatguru.babylonjs.component {
             let anim: AnimData = null;
             let dt: number = this.scene.getEngine().getDeltaTime() / 1000;
 
-            if (this.key.jump) {
+            if (this.key.jump && !this.inFreeFall) {
                 this.grounded = false;
-                anim = this.fall;
+                this.idleFallTime = 0;
+                
                 anim = this.doJump(dt);
             } else if (this.anyMovement()) {
                 this.grounded = false;
+                this.idleFallTime = 0;
+                
                 anim = this.doMove(dt);
             } else {
+            
                 anim = this.doIdle(dt);
             }
 
@@ -210,7 +209,7 @@ namespace org.ssatguru.babylonjs.component {
 
             let forwardDist: number = 0;
             let disp: Vector3;
-
+            this.avatar.rotation.y = -4.69 - this.camera.alpha;
             if (this.wasRunning || this.wasWalking) {
                 if (this.wasRunning) {
                     forwardDist = this.runSpeed * dt;
@@ -232,7 +231,6 @@ namespace org.ssatguru.babylonjs.component {
                 anim = this.fall;
                 //check if going up a slope or back on flat ground 
                 if ((this.avatar.position.y > this.avStartPos.y) || ((this.avatar.position.y === this.avStartPos.y) && (disp.length() > 0.001))) {
-                    console.log("jump done1");
                     this.endJump();
                 } else if (this.avatar.position.y < this.jumpStartPosY) {
                     //the avatar is below the point from where it started the jump
@@ -246,11 +244,9 @@ namespace org.ssatguru.babylonjs.component {
                         //Should AV continue to slide or stop?
                         //if slope is less steeper than acceptable then stop else slide
                         if (this.verticalSlope(actDisp) <= this.sl) {
-                            console.log("jump done2");
                             this.endJump();
                         }
                     }
-
                 }
             }
             return anim;
@@ -286,45 +282,50 @@ namespace org.ssatguru.babylonjs.component {
 
             //initial down velocity
             let u: number = this.movFallTime * this.gravity
-            //if no ground or slope then distance by which av should fall down since last frame
+            //calculate the distance by which av should fall down since last frame
+            //assuming it is in freefall
             this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
+
             this.movFallTime = this.movFallTime + dt;
 
-            this.idleFallTime = 0;
-            this.grounded = false;
             let moving: boolean = false;
-            this.wasWalking = false;
-            this.wasRunning = false;
-
             let anim: AnimData = null;
-            if (this.key.forward) {
-                let forwardDist: number = 0;
-                if (this.key.shift) {
-                    this.wasRunning = true;
-                    forwardDist = this.runSpeed * dt;
-                    anim = this.run;
-                } else {
-                    this.wasWalking = true;
-                    forwardDist = this.walkSpeed * dt;
-                    anim = this.walk;
+
+            if (this.inFreeFall) {
+                this.moveVector.y = -this.freeFallDist;
+                moving = true;
+            } else {
+                this.wasWalking = false;
+                this.wasRunning = false;
+
+                if (this.key.forward) {
+                    let forwardDist: number = 0;
+                    if (this.key.shift) {
+                        this.wasRunning = true;
+                        forwardDist = this.runSpeed * dt;
+                        anim = this.run;
+                    } else {
+                        this.wasWalking = true;
+                        forwardDist = this.walkSpeed * dt;
+                        anim = this.walk;
+                    }
+                    this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
+                    moving = true;
+                } else if (this.key.backward) {
+                    this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, -(this.backSpeed * dt));
+                    anim = this.walkBack;
+                    moving = true;
+                } else if (this.key.stepLeft) {
+                    anim = this.strafeLeft;
+                    this.moveVector = this.avatar.calcMovePOV(-(this.leftSpeed * dt), -this.freeFallDist, 0);
+                    moving = true;
+                } else if (this.key.stepRight) {
+                    anim = this.strafeRight;
+                    this.moveVector = this.avatar.calcMovePOV((this.rightSpeed * dt), -this.freeFallDist, 0);
+                    moving = true;
                 }
-                this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
-                moving = true;
-            } else if (this.key.backward) {
-                this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, -(this.backSpeed * dt));
-                anim = this.walkBack;
-                moving = true;
-            } else if (this.key.stepLeft) {
-                anim = this.strafeLeft;
-                this.moveVector = this.avatar.calcMovePOV(-(this.leftSpeed * dt), -this.freeFallDist, 0);
-                moving = true;
-            } else if (this.key.stepRight) {
-                anim = this.strafeRight;
-                this.moveVector = this.avatar.calcMovePOV((this.rightSpeed * dt), -this.freeFallDist, 0);
-                moving = true;
             }
-
-
+            
             if (!this.key.stepLeft && !this.key.stepRight) {
                 if (this.key.turnLeft) {
                     this.camera.alpha = this.camera.alpha + 0.022;
@@ -340,70 +341,56 @@ namespace org.ssatguru.babylonjs.component {
                     }
                 }
             }
+
             if (moving) {
                 this.avatar.rotation.y = -4.69 - this.camera.alpha;
-            }
-            if (moving && this.moveVector.length() > 0.001) {
-                this.avatar.moveWithCollisions(this.moveVector);
-                //this.avatar.computeWorldMatrix(true);
 
-                //walking up a slope
-                if (this.avatar.position.y > this.avStartPos.y) {
-                    let actDisp: Vector3 = this.avatar.position.subtract(this.avStartPos);
-                    if (this.verticalSlope(actDisp) > this.sl2) {
-                        this.avatar.position.copyFrom(this.avStartPos);
-                    }
-                    this.movFallTime = 1;
-                } else if ((this.avatar.position.y + 0.01) < this.avStartPos.y) {
-
-                    console.log("sliding down on walk " + this.avatar.position.y + "," + this.avStartPos.y);
-
-                    let actDisp: Vector3 = this.avStartPos.subtract(this.avatar.position);
-                    if (!(this.areVectorsEqual(actDisp, this.moveVector, 0.001))) {
-                        //AV is on slope
-                        //Should AV continue to slide or walk?
-                        //if slope is less steeper than acceptable then walk else slide
-                        if (this.verticalSlope(actDisp) <= this.sl) {
-                            this.movFallTime = 1;
+                if (this.moveVector.length() > 0.001) {
+                    this.avatar.moveWithCollisions(this.moveVector);
+                    //walking up a slope
+                    if (this.avatar.position.y > this.avStartPos.y) {
+                        let actDisp: Vector3 = this.avatar.position.subtract(this.avStartPos);
+                        if (this.verticalSlope(actDisp) > this.sl2) {
+                            this.avatar.position.copyFrom(this.avStartPos);
+                            this.endFreeFall();
+                        } if (this.verticalSlope(actDisp) < this.sl) {
+                            this.endFreeFall();
                         } else {
-                            anim = this.slideBack;//should be slide
+                            //av is on a steep slope , continue increasing the moveFallTIme to deaccelerate it
+                            this.fallFrameCount = 0;
+                            this.inFreeFall = false;
+                        }
+                    } else if ((this.avatar.position.y) < this.avStartPos.y) {
+                        let actDisp: Vector3 = this.avatar.position.subtract(this.avStartPos);
+                        if (!(this.areVectorsEqual(actDisp, this.moveVector, 0.001))) {
+                            //AV is on slope
+                            //Should AV continue to slide or walk?
+                            //if slope is less steeper than acceptable then walk else slide
+                            if (this.verticalSlope(actDisp) <= this.sl) {
+                                this.endFreeFall();
+                            } 
+                        } else {
+                            this.inFreeFall = true;
+                            this.fallFrameCount++;
+                            //AV could be running down a slope which mean freefall,run,frefall run ...
+                            //to remove anim flicker, check if AV has been falling down continously for last few consecutive frames
+                            //before changing to free fall animation
+                            if (this.fallFrameCount > this.fallFrameCountMin) {
+                                anim = this.fall;
+                            }
                         }
                     } else {
-                        anim = this.slideBack;
+                        this.endFreeFall();
                     }
-
-                    //if we are sliding down then check if we are on slope or falling down
-                    //                    let ht: number = this.avStartPos.y - this.avatar.position.y;
-                    //                    let delta: number = Math.abs(this.freeFallDist - ht);
-                    //
-                    //                    if (delta < 0.0001) {
-                    //                        //to remove flicker, check if AV has been falling down continously for last few consecutive frames
-                    //                        this.fallFrameCount++;
-                    //                        if (this.fallFrameCount > this.fallFrameCountMin) {
-                    //                            this.inAir = true;
-                    //                            console.log("in air");
-                    //                        }
-                    //                    } else {
-                    //                        this.fallFrameCount = 0;
-                    //                        this.inAir = false;
-                    //                        //we are not falling down
-                    //                        let diff: number = this.avStartPos.subtract(this.avatar.position).length();
-                    //                        let slope: number = Math.asin(ht / diff);
-                    //                        if (slope <= this.sl) {
-                    //                            this.movFallTime = 0;
-                    //                        } else {
-                    //                            //this.inAir = true;
-                    //                        }
-                    //                    }
-                } else {
-                    this.movFallTime = 1;
-                    this.fallFrameCount = 0;
-                    this.inAir = false;
                 }
             }
-
             return anim;
+        }
 
+        private endFreeFall(): void {
+            this.movFallTime = 0;
+            this.fallFrameCount = 0;
+            this.inFreeFall = false;
         }
 
         //for how long has the av been falling while idle (not moving)
@@ -411,7 +398,7 @@ namespace org.ssatguru.babylonjs.component {
         private doIdle(dt: number): AnimData {
             let anim: AnimData = this.idle;;
             this.fallFrameCount = 0;
-             this.movFallTime = 0;
+            this.movFallTime = 0;
             if (!this.grounded) {
                 if (dt === 0) {
                     this.freeFallDist = 5;
@@ -427,8 +414,6 @@ namespace org.ssatguru.babylonjs.component {
                 this.avatar.rotation.y = -4.69 - this.camera.alpha;
                 this.avatar.moveWithCollisions(disp);
                 if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y === this.avStartPos.y)) {
-                    console.log("grounding av c pos : " + this.avatar.position.y + " av start pos:" + this.avStartPos.y);
-                    if (this.avatar.position.y === this.avStartPos.y) console.log("same position");
                     this.grounded = true;
                     this.idleFallTime = 0;
                 } else if (this.avatar.position.y < this.avStartPos.y) {
@@ -443,16 +428,13 @@ namespace org.ssatguru.babylonjs.component {
                         //Should AV continue to slide or stop?
                         //if slope is less steeper than accebtable then stop else slide
                         if (this.verticalSlope(actDisp) <= this.sl) {
-                            console.log("still slide stop");
                             this.grounded = true;
                             this.idleFallTime = 0;
                             this.avatar.position.copyFrom(this.avStartPos);
                         } else {
                             anim = this.slideBack;
                         }
-
                     }
-
                 }
             }
             return anim;
@@ -464,7 +446,7 @@ namespace org.ssatguru.babylonjs.component {
             let anim: AnimData = null;
             let noMoveKeyPressed: boolean = !this.anyMovement();
             //skip everything if no movement key pressed
-            if (this.inAir || noMoveKeyPressed) {
+            if (this.inFreeFall || noMoveKeyPressed) {
 
                 this.fallFrameCount = 0;
 
@@ -481,7 +463,7 @@ namespace org.ssatguru.babylonjs.component {
                     let forwardDist: number = 0;
                     let disp: Vector3;
 
-                    if ((this.inAir) && (this.wasRunning || this.wasWalking)) {
+                    if ((this.inFreeFall) && (this.wasRunning || this.wasWalking)) {
                         if (this.wasRunning) {
                             forwardDist = this.runSpeed * dt;
                         } else if (this.wasWalking) {
@@ -497,11 +479,11 @@ namespace org.ssatguru.babylonjs.component {
                     this.avatar.rotation.y = -4.69 - this.camera.alpha;
                     //let disp:Vector3 = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
                     this.avatar.moveWithCollisions(disp);
-                    console.log(disp);
-                    console.log("new " + this.avatar.position.y + " old " + this.avStartPos.y);
+                    //console.log(disp);
+                    //console.log("new " + this.avatar.position.y + " old " + this.avStartPos.y);
                     if ((this.avatar.position.y > this.avStartPos.y) || ((this.avatar.position.y === this.avStartPos.y) && (this.freeFallDist > 0.001))) {
                         this.grounded = true;
-                        this.inAir = false;
+                        this.inFreeFall = false;
                         console.log("not in air 1");
                         this.idleFallTime = 0;
                         this.wasWalking = false;
@@ -512,11 +494,11 @@ namespace org.ssatguru.babylonjs.component {
                         //if the actual distance travelled down is same as what AV would have travelled if in freefall
                         //then AV is in freefall else AV is on a slope
                         let ht: number = this.avStartPos.y - this.avatar.position.y;
-                        console.log(ht);
+                        //console.log(ht);
                         let delta: number = Math.abs(this.freeFallDist - ht);
                         if (delta < 0.0001) {
                             if (ht > 0.01) {
-                                console.log("free fall. changing anim");
+                                //console.log("free fall. changing anim");
                                 if (this.idleFallTime > dt) anim = this.fall;
                             }
                         } else {
@@ -524,8 +506,8 @@ namespace org.ssatguru.babylonjs.component {
                             let slope: number = Math.asin(ht / diff);
                             if (slope <= this.sl) {
                                 this.grounded = true;
-                                this.inAir = false;
-                                console.log("not in air 2");
+                                this.inFreeFall = false;
+                                //console.log("not in air 2");
                                 this.idleFallTime = 0;
                                 this.wasWalking = false;
                                 this.wasRunning = false;
@@ -540,7 +522,7 @@ namespace org.ssatguru.babylonjs.component {
                         if (this.prevAnim !== anim) {
                             this.prevAnim = anim
                             if (anim.exist) {
-                                console.log("playing anim 1 " + anim.name);
+                                //console.log("playing anim 1 " + anim.name);
                                 this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
                             }
                         }
@@ -679,12 +661,12 @@ namespace org.ssatguru.babylonjs.component {
                     //to remove flicker, check if AV has been falling down continously for last few consecutive frames
                     this.fallFrameCount++;
                     if (this.fallFrameCount > this.fallFrameCountMin) {
-                        this.inAir = true;
+                        this.inFreeFall = true;
                         console.log("in air");
                     }
                 } else {
                     this.fallFrameCount = 0;
-                    this.inAir = false;
+                    this.inFreeFall = false;
                     //we are not falling down
                     let diff: number = this.avStartPos.subtract(this.avatar.position).length();
                     let slope: number = Math.asin(ht / diff);
@@ -697,7 +679,7 @@ namespace org.ssatguru.babylonjs.component {
             } else {
                 this.movFallTime = 0;
                 this.fallFrameCount = 0;
-                this.inAir = false;
+                this.inFreeFall = false;
             }
 
             if (anim != null) {

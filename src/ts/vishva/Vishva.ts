@@ -1987,17 +1987,44 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSkeleton(): Skeleton {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
+        
+        public getSkeltons():Skeleton[]{
+            return this.scene.skeletons;
+        }
 
-        public changeSkeleton() {
+        //TODO:skeleton id is not unique. need to figure out how to handle that
+        public changeSkeleton(skelId:string):boolean {
+            let switched:boolean=false;
             let skels: Skeleton[] = this.scene.skeletons;
-
+            console.log("trying to swicth to " + skelId);
             for (let skel of skels) {
-                console.log(skel.name);
-                if (skel.name === "avatar_bow") {
+                let id = skel.id+"-"+skel.name;
+                if (id === skelId) {
+                    console.log("found skeleton. swicthing. " )
                     this.meshPicked.skeleton = skel;
+                    switched = true;
+                    break;
                 }
-
             }
+            return switched;
+        }
+        //TODO during save unused skeleton are dropped and ID are reassigned.
+        //how do we handle that.
+        public cloneChangeSkeleton(skelId:string):boolean {
+            let switched:boolean=false;
+            let skels: Skeleton[] = this.scene.skeletons;
+            for (let skel of skels) {
+                let id = skel.id+"-"+skel.name;
+                if (id === skelId) {
+                    console.log("found skeleton. swicthing. " )
+                    var newId: string = (<number> new Number(Date.now())).toString();
+                    var clonedSkel:Skeleton = skel.clone(skel.name, newId );
+                    this.meshPicked.skeleton = clonedSkel;
+                    switched = true;
+                    break;
+                }
+            }
+            return switched;
         }
 
         skelViewerArr: SkeletonViewer[] = [];
@@ -2027,7 +2054,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public animRest() {
-            if (this.meshPicked.skeleton == null) return;
+            if (this.meshPicked.skeleton === null || this.meshPicked.skeleton === undefined) return;
             this.scene.stopAnimation(this.meshPicked.skeleton);
             this.meshPicked.skeleton.returnToRest();
         }
@@ -2040,7 +2067,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public getAnimationRanges(): AnimationRange[] {
             var skel: Skeleton = this.meshPicked.skeleton;
-            if (skel !== null) {
+            if (skel !== null && skel !== undefined) {
                 var ranges: AnimationRange[] = skel.getAnimationRanges()
                 return ranges;
             } else return null;
@@ -2392,7 +2419,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         /**
-         * resets each skel a assign. unique id to each skeleton. deserialization uses
+         * resets each skel.assign. unique id to each skeleton. deserialization uses
          * skeleton id to associate skel with mesh. if id isn't unique wrong skels
          * could get assigned to a mesh.
          * 

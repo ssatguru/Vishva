@@ -1,10 +1,10 @@
 assets={
 	primitives:["plane","box","sphere","disc","cylinder","cone","torus"],
 	skyboxes:["desert","dusk","hilly","rain","TropicalSunnyDay","city","snow1","hot","moon"],
-	structures:["farm_barn_01","farm_silo_01","tipi","huts","coffin","fences"],
-	vegetations:["farm_tree_01","farm_stump_01","farm_rocks_01","tree1"],
-	characters:["Joan","Vincent"],
-	vehicles:["farm_tractor_01"],
+	structures:["farm_barn_01.babylon","farm_silo_01.babylon","tipi.babylon","huts.babylon","coffin.babylon","fences.babylon","tower_lowpoly.obj"],
+	vegetations:["farm_tree_01.babylon","farm_stump_01.babylon","farm_rocks_01.babylon","tree1.babylon"],
+	characters:["Joan.babylon","Vincent.babylon"],
+	vehicles:["farm_tractor_01.babylon"],
 	sounds:["door.mp3","forest-ambient.ogg","nature-ambiance.ogg","soft-forest-music.ogg","tractor.wav","hello.mp3","old_door.ogg"],
         water:["sea"]
-}
+};

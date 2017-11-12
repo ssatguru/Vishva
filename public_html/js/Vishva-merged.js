@@ -22,36 +22,43 @@ var org;
                         var _this = this;
                         //slopeLimit in degrees
                         this.slopeLimit = 30;
+                        this.maxSlopeLimit = 45;
                         //slopeLimit in radians
                         this.sl = Math.PI * this.slopeLimit / 180;
+                        this.sl2 = Math.PI * this.maxSlopeLimit / 180;
                         this.started = false;
                         //avatar walking speed in meters/second
-                        this.walkSpeed = 1.5;
+                        this.walkSpeed = 3;
                         this.runSpeed = this.walkSpeed * 2;
                         this.backSpeed = this.walkSpeed / 2;
                         this.jumpSpeed = this.walkSpeed * 2;
                         this.leftSpeed = this.walkSpeed / 2;
                         this.rightSpeed = this.walkSpeed / 2;
                         this.prevAnim = null;
-                        this.isJumping = false;
                         this.gravity = 9.8;
                         this.avStartPos = new Vector3(0, 0, 0);
                         this.grounded = false;
                         //distance by which AV would move down if in freefall
                         this.freeFallDist = 0;
+                        //how many minimum contiguos frames should the AV have been in free fall
+                        //before we assume AV is in big freefall.
+                        //we will use this to remove animation flicker during move down a slope (fall, move, fall move etc)
+                        //TODO: base this on slope - large slope large count
+                        this.fallFrameCountMin = 50;
+                        this.fallFrameCount = 0;
+                        this.inFreeFall = false;
+                        this.wasWalking = false;
+                        this.wasRunning = false;
+                        //verical position of AV when it is about to start a jump
+                        this.jumpStartPosY = 0;
+                        //for how long the AV has been in the jump
+                        this.jumpTime = 0;
                         //for how long has the av been falling while moving
                         this.movFallTime = 0;
-                        //for how long has the av been falling while not moving
-                        this.stillFallTime = 0;
-                        //how many minimum contiguos frames should the AV have been in free fall
-                        //before we assume AV is really in freefall.
-                        //we will use this to remove animation flicker (fall, no fall, fall etc)
-                        this.fallFrameCountMin = 10;
-                        this.fallFrameCount = 0;
-                        this.jumpTime = 0;
-                        this.jumpStartPosY = 0;
-                        this.inAir = false;
-                        this.moveVector = new Vector3(0, 0, 0);
+                        //for how long has the av been falling while idle (not moving)
+                        this.idleFallTime = 0;
+                        this.groundFrameCount = 0;
+                        this.groundFrameMax = 10;
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
                         if (anims !== null)
@@ -102,7 +109,7 @@ var org;
                         this.key.reset();
                         this.movFallTime = 0;
                         //first time we enter render loop, delta time shows zero !!
-                        this.stillFallTime = 0.001;
+                        this.idleFallTime = 0.001;
                         this.grounded = false;
                         this.updateTargetValue();
                         this.scene.registerBeforeRender(this.renderer);
@@ -119,182 +126,184 @@ var org;
                         this.walk = anims[0];
                         this.walkBack = anims[1];
                         this.idle = anims[2];
+                        this.idle.r = 0.5;
                         this.run = anims[3];
                         this.jump = anims[4];
-                        this.turnLeft = anims[5];
-                        this.turnRight = anims[6];
-                        this.strafeLeft = anims[7];
-                        this.strafeRight = anims[8];
+                        this.jump.r = 4;
+                        this.jump.l = false;
+                        this.fall = anims[5];
+                        this.fall.l = false;
+                        this.turnLeft = anims[6];
+                        this.turnRight = anims[7];
+                        this.strafeLeft = anims[8];
+                        this.strafeRight = anims[9];
+                        this.slideBack = anims[10];
                     };
                     CharacterControl.prototype.moveAVandCamera = function () {
                         this.avStartPos.copyFrom(this.avatar.position);
                         var anim = null;
-                        var noMoveKeyPressed = !this.anyMovement();
-                        //skip everything if no movement key pressed
-                        if (this.inAir || noMoveKeyPressed) {
-                            this.fallFrameCount = 0;
-                            if (!this.grounded) {
-                                var dt_1 = this.scene.getEngine().getDeltaTime() / 1000;
-                                anim = this.idle;
-                                if (dt_1 === 0) {
-                                    this.freeFallDist = 5;
-                                }
-                                else {
-                                    this.stillFallTime = this.stillFallTime + dt_1;
-                                    var u_1 = this.stillFallTime * this.gravity;
-                                    this.freeFallDist = u_1 * dt_1 + this.gravity * dt_1 * dt_1 / 2;
-                                }
-                                this.moveVector.copyFromFloats(0, -this.freeFallDist, 0);
-                                this.avatar.moveWithCollisions(this.moveVector);
-                                if (this.avStartPos.y === this.avatar.position.y) {
-                                    this.grounded = true;
-                                    this.inAir = false;
-                                    this.stillFallTime = 0;
-                                }
-                                else if (this.avatar.position.y < this.avStartPos.y) {
-                                    //AV is going down. 
-                                    //Check if AV is fallling down or is on a slope
-                                    //if the actual distance travelled down is same as what AV would have travelled if in freefall
-                                    //then AV is in freefall else AV is on a slope
-                                    var ht = this.avStartPos.y - this.avatar.position.y;
-                                    var delta = Math.abs(this.freeFallDist - ht);
-                                    if (delta < 0.0001) {
-                                        if (this.stillFallTime > dt_1)
-                                            anim = this.jump;
-                                    }
-                                    else {
-                                        var diff = this.avStartPos.subtract(this.avatar.position).length();
-                                        var slope = Math.asin(ht / diff);
-                                        if (slope <= this.sl) {
-                                            this.grounded = true;
-                                            this.inAir = false;
-                                            this.stillFallTime = 0;
-                                            this.avatar.position.copyFrom(this.avStartPos);
-                                        }
-                                    }
-                                }
-                                this.updateTargetValue();
-                            }
-                            if (anim !== null && noMoveKeyPressed) {
-                                if (this.avatarSkeleton !== null) {
-                                    if (this.prevAnim !== anim) {
-                                        this.prevAnim = anim;
-                                        if (anim.exist) {
-                                            this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                                        }
-                                    }
-                                }
-                            }
-                            return;
-                        }
-                        this.stillFallTime = 0;
-                        this.grounded = false;
                         var dt = this.scene.getEngine().getDeltaTime() / 1000;
+                        if (this.key.jump && !this.inFreeFall) {
+                            this.grounded = false;
+                            this.idleFallTime = 0;
+                            anim = this.doJump(dt);
+                        }
+                        else if (this.anyMovement() || this.inFreeFall) {
+                            this.grounded = false;
+                            this.idleFallTime = 0;
+                            anim = this.doMove(dt);
+                        }
+                        else if (!this.inFreeFall) {
+                            anim = this.doIdle(dt);
+                        }
+                        if (anim != null) {
+                            if (this.avatarSkeleton !== null) {
+                                if (this.prevAnim !== anim) {
+                                    if (anim.exist) {
+                                        this.avatarSkeleton.beginAnimation(anim.name, anim.l, anim.r);
+                                    }
+                                    this.prevAnim = anim;
+                                }
+                            }
+                        }
+                        this.updateTargetValue();
+                        return;
+                    };
+                    CharacterControl.prototype.doJump = function (dt) {
+                        var anim = null;
+                        anim = this.jump;
+                        if (this.jumpTime === 0) {
+                            this.jumpStartPosY = this.avatar.position.y;
+                        }
+                        //up velocity at the begining of the lastt frame (v=u+at)
+                        var js = this.jumpSpeed - this.gravity * this.jumpTime;
+                        //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
+                        var jumpDist = js * dt - 0.5 * this.gravity * dt * dt;
+                        this.jumpTime = this.jumpTime + dt;
+                        var forwardDist = 0;
+                        var disp;
+                        this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                        if (this.wasRunning || this.wasWalking) {
+                            if (this.wasRunning) {
+                                forwardDist = this.runSpeed * dt;
+                            }
+                            else if (this.wasWalking) {
+                                forwardDist = this.walkSpeed * dt;
+                            }
+                            //find out in which horizontal direction the AV was moving when it started the jump
+                            disp = this.moveVector.clone();
+                            disp.y = 0;
+                            disp = disp.normalize();
+                            disp.scaleToRef(forwardDist, disp);
+                            disp.y = jumpDist;
+                        }
+                        else {
+                            disp = new Vector3(0, jumpDist, 0);
+                        }
+                        //moveWithCollision only seems to happen if length of displacment is atleast 0.001
+                        this.avatar.moveWithCollisions(disp);
+                        if (jumpDist < 0) {
+                            anim = this.fall;
+                            //check if going up a slope or back on flat ground 
+                            if ((this.avatar.position.y > this.avStartPos.y) || ((this.avatar.position.y === this.avStartPos.y) && (disp.length() > 0.001))) {
+                                this.endJump();
+                            }
+                            else if (this.avatar.position.y < this.jumpStartPosY) {
+                                //the avatar is below the point from where it started the jump
+                                //so it is either in free fall or is sliding along a downward slope
+                                //
+                                //if the actual displacemnt is same as the desired displacement then AV is in freefall
+                                //else it is on a slope
+                                var actDisp = this.avatar.position.subtract(this.avStartPos);
+                                if (!(this.areVectorsEqual(actDisp, disp, 0.001))) {
+                                    //AV is on slope
+                                    //Should AV continue to slide or stop?
+                                    //if slope is less steeper than acceptable then stop else slide
+                                    if (this.verticalSlope(actDisp) <= this.sl) {
+                                        this.endJump();
+                                    }
+                                }
+                            }
+                        }
+                        return anim;
+                    };
+                    /**
+                     * does cleanup at the end of a jump
+                     */
+                    CharacterControl.prototype.endJump = function () {
+                        this.key.jump = false;
+                        this.jumpTime = 0;
+                        this.wasWalking = false;
+                        this.wasRunning = false;
+                    };
+                    /**
+                     * checks if two vectors v1 and v2 are equal with an equality precision of p
+                     */
+                    CharacterControl.prototype.areVectorsEqual = function (v1, v2, p) {
+                        return ((Math.abs(v1.x - v2.x) < p) && (Math.abs(v1.y - v2.y) < p) && (Math.abs(v1.z - v2.z) < p));
+                    };
+                    /*
+                     * returns the slope (in radians) of a vector in the vertical plane
+                     */
+                    CharacterControl.prototype.verticalSlope = function (v) {
+                        return Math.atan(Math.abs(v.y / Math.sqrt(v.x * v.x + v.z * v.z)));
+                    };
+                    CharacterControl.prototype.doMove = function (dt) {
                         //initial down velocity
                         var u = this.movFallTime * this.gravity;
-                        //if no ground or slope then distance which av would fall down since last frame
+                        //calculate the distance by which av should fall down since last frame
+                        //assuming it is in freefall
                         this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
                         this.movFallTime = this.movFallTime + dt;
                         var moving = false;
-                        if (!this.inAir) {
-                            if (this.key.up) {
+                        var anim = null;
+                        if (this.inFreeFall) {
+                            this.moveVector.y = -this.freeFallDist;
+                            moving = true;
+                        }
+                        else {
+                            this.wasWalking = false;
+                            this.wasRunning = false;
+                            if (this.key.forward) {
                                 var forwardDist = 0;
                                 if (this.key.shift) {
+                                    this.wasRunning = true;
                                     forwardDist = this.runSpeed * dt;
                                     anim = this.run;
                                 }
                                 else {
+                                    this.wasWalking = true;
                                     forwardDist = this.walkSpeed * dt;
                                     anim = this.walk;
                                 }
-                                var forward = void 0;
-                                if (this.key.jump) {
-                                    this.isJumping = true;
-                                }
-                                if (!this.isJumping) {
-                                    forward = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
-                                    this.avatar.moveWithCollisions(forward);
-                                }
-                                else {
-                                    anim = this.jump;
-                                    if (this.jumpTime === 0) {
-                                        this.jumpStartPosY = this.avatar.position.y;
-                                    }
-                                    //up velocity at the begining of the lastt frame (v=u+at)
-                                    var js = this.jumpSpeed - this.gravity * this.jumpTime;
-                                    //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
-                                    var jumpDist = js * dt - 0.5 * this.gravity * dt * dt;
-                                    this.jumpTime = this.jumpTime + dt;
-                                    forward = this.avatar.calcMovePOV(0, jumpDist, forwardDist);
-                                    this.avatar.moveWithCollisions(forward);
-                                    if (jumpDist < 0) {
-                                        anim = this.run;
-                                        if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
-                                            this.isJumping = false;
-                                            this.key.jump = false;
-                                            this.jumpTime = 0;
-                                        }
-                                    }
-                                }
+                                this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, forwardDist);
                                 moving = true;
                             }
-                            else if (this.key.down) {
-                                var backwards = this.avatar.calcMovePOV(0, -this.freeFallDist, -(this.backSpeed * dt));
-                                this.avatar.moveWithCollisions(backwards);
-                                moving = true;
+                            else if (this.key.backward) {
+                                this.moveVector = this.avatar.calcMovePOV(0, -this.freeFallDist, -(this.backSpeed * dt));
                                 anim = this.walkBack;
-                                if (this.key.jump)
-                                    this.key.jump = false;
+                                moving = true;
                             }
                             else if (this.key.stepLeft) {
                                 anim = this.strafeLeft;
-                                var stepLeft = this.avatar.calcMovePOV(-(this.leftSpeed * dt), -this.freeFallDist, 0);
-                                this.avatar.moveWithCollisions(stepLeft);
+                                this.moveVector = this.avatar.calcMovePOV(-(this.leftSpeed * dt), -this.freeFallDist, 0);
                                 moving = true;
                             }
                             else if (this.key.stepRight) {
                                 anim = this.strafeRight;
-                                var stepRight = this.avatar.calcMovePOV((this.rightSpeed * dt), -this.freeFallDist, 0);
-                                this.avatar.moveWithCollisions(stepRight);
+                                this.moveVector = this.avatar.calcMovePOV((this.rightSpeed * dt), -this.freeFallDist, 0);
                                 moving = true;
-                            }
-                            //jump when stationary
-                            if (!moving) {
-                                if (this.key.jump) {
-                                    this.isJumping = true;
-                                }
-                                if (this.isJumping) {
-                                    anim = this.jump;
-                                    if (this.jumpTime === 0) {
-                                        this.jumpStartPosY = this.avatar.position.y;
-                                    }
-                                    //up velocity at the begining of the last frame (v=u+at)
-                                    var js = this.jumpSpeed - this.gravity * this.jumpTime;
-                                    //distance travelled up since last frame to this frame (s=ut+1/2*at^2)
-                                    var jumpDist = js * dt - 0.5 * this.gravity * dt * dt;
-                                    this.jumpTime = this.jumpTime + dt;
-                                    var moveVector = this.avatar.calcMovePOV(0, jumpDist, 0);
-                                    this.avatar.moveWithCollisions(moveVector);
-                                    if (jumpDist < 0) {
-                                        anim = this.run;
-                                        if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y <= this.jumpStartPosY)) {
-                                            this.isJumping = false;
-                                            this.key.jump = false;
-                                            this.jumpTime = 0;
-                                        }
-                                    }
-                                }
                             }
                         }
                         if (!this.key.stepLeft && !this.key.stepRight) {
-                            if (this.key.left) {
+                            if (this.key.turnLeft) {
                                 this.camera.alpha = this.camera.alpha + 0.022;
                                 if (!moving) {
                                     this.avatar.rotation.y = -4.69 - this.camera.alpha;
                                     anim = this.turnLeft;
                                 }
                             }
-                            else if (this.key.right) {
+                            else if (this.key.turnRight) {
                                 this.camera.alpha = this.camera.alpha - 0.022;
                                 if (!moving) {
                                     this.avatar.rotation.y = -4.69 - this.camera.alpha;
@@ -304,46 +313,129 @@ var org;
                         }
                         if (moving) {
                             this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                            if (this.moveVector.length() > 0.001) {
+                                this.avatar.moveWithCollisions(this.moveVector);
+                                //walking up a slope
+                                if (this.avatar.position.y > this.avStartPos.y) {
+                                    var actDisp = this.avatar.position.subtract(this.avStartPos);
+                                    if (this.verticalSlope(actDisp) > this.sl2) {
+                                        this.avatar.position.copyFrom(this.avStartPos);
+                                        this.endFreeFall();
+                                    }
+                                    if (this.verticalSlope(actDisp) < this.sl) {
+                                        this.endFreeFall();
+                                    }
+                                    else {
+                                        //av is on a steep slope , continue increasing the moveFallTIme to deaccelerate it
+                                        this.fallFrameCount = 0;
+                                        this.inFreeFall = false;
+                                    }
+                                }
+                                else if ((this.avatar.position.y) < this.avStartPos.y) {
+                                    var actDisp = this.avatar.position.subtract(this.avStartPos);
+                                    if (!(this.areVectorsEqual(actDisp, this.moveVector, 0.001))) {
+                                        //AV is on slope
+                                        //Should AV continue to slide or walk?
+                                        //if slope is less steeper than acceptable then walk else slide
+                                        if (this.verticalSlope(actDisp) <= this.sl) {
+                                            this.endFreeFall();
+                                        }
+                                        else {
+                                            //av is on a steep slope , continue increasing the moveFallTIme to deaccelerate it
+                                            this.fallFrameCount = 0;
+                                            this.inFreeFall = false;
+                                        }
+                                    }
+                                    else {
+                                        this.inFreeFall = true;
+                                        this.fallFrameCount++;
+                                        //AV could be running down a slope which mean freefall,run,frefall run ...
+                                        //to remove anim flicker, check if AV has been falling down continously for last few consecutive frames
+                                        //before changing to free fall animation
+                                        if (this.fallFrameCount > this.fallFrameCountMin) {
+                                            anim = this.fall;
+                                        }
+                                    }
+                                }
+                                else {
+                                    this.endFreeFall();
+                                }
+                            }
                         }
-                        if (this.avatar.position.y < this.avStartPos.y) {
-                            //if we are sliding down then check if we are on slope or falling down
-                            var ht = this.avStartPos.y - this.avatar.position.y;
-                            var delta = Math.abs(this.freeFallDist - ht);
-                            if (delta < 0.0001) {
-                                //to remove fliker check if AV has been falling down continously for last few consecutive frames
-                                this.fallFrameCount++;
-                                if (this.fallFrameCount > this.fallFrameCountMin) {
-                                    this.inAir = true;
-                                }
-                            }
-                            else {
-                                this.fallFrameCount = 0;
-                                this.inAir = false;
-                                //we are not falling down
-                                var diff = this.avStartPos.subtract(this.avatar.position).length();
-                                var slope = Math.asin(ht / diff);
-                                if (slope <= this.sl) {
-                                    this.movFallTime = 0;
-                                }
-                            }
+                        return anim;
+                    };
+                    CharacterControl.prototype.endFreeFall = function () {
+                        this.movFallTime = 0;
+                        this.fallFrameCount = 0;
+                        this.inFreeFall = false;
+                    };
+                    CharacterControl.prototype.doIdle = function (dt) {
+                        if (this.grounded) {
+                            return this.idle;
+                        }
+                        var anim = this.idle;
+                        this.fallFrameCount = 0;
+                        this.movFallTime = 0;
+                        if (dt === 0) {
+                            this.freeFallDist = 5;
                         }
                         else {
-                            this.movFallTime = 0;
-                            this.fallFrameCount = 0;
-                            this.inAir = false;
+                            var u = this.idleFallTime * this.gravity;
+                            this.freeFallDist = u * dt + this.gravity * dt * dt / 2;
+                            this.idleFallTime = this.idleFallTime + dt;
                         }
-                        if (anim != null) {
-                            if (this.avatarSkeleton !== null) {
-                                if (this.prevAnim.name !== anim.name) {
-                                    if (anim.exist) {
-                                        this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                                    }
-                                    this.prevAnim = anim;
+                        //if displacement is less than 0.01(? need to verify further) then 
+                        //moveWithDisplacement down against a surface seems to push the AV up by a small amount!!
+                        if (this.freeFallDist < 0.01)
+                            return anim;
+                        var disp = new Vector3(0, -this.freeFallDist, 0);
+                        ;
+                        this.avatar.rotation.y = -4.69 - this.camera.alpha;
+                        this.avatar.moveWithCollisions(disp);
+                        if ((this.avatar.position.y > this.avStartPos.y) || (this.avatar.position.y === this.avStartPos.y)) {
+                            //                this.grounded = true;
+                            //                this.idleFallTime = 0;
+                            this.groundIt();
+                        }
+                        else if (this.avatar.position.y < this.avStartPos.y) {
+                            //AV is going down. 
+                            //AV is either in free fall or is sliding along a downward slope
+                            //
+                            //if the actual displacemnt is same as the desired displacement then AV is in freefall
+                            //else it is on a slope
+                            var actDisp = this.avatar.position.subtract(this.avStartPos);
+                            if (!(this.areVectorsEqual(actDisp, disp, 0.001))) {
+                                //AV is on slope
+                                //Should AV continue to slide or stop?
+                                //if slope is less steeper than accebtable then stop else slide
+                                if (this.verticalSlope(actDisp) <= this.sl) {
+                                    //                        this.grounded = true;
+                                    //                        this.idleFallTime = 0;
+                                    this.groundIt();
+                                    this.avatar.position.copyFrom(this.avStartPos);
+                                }
+                                else {
+                                    this.unGroundIt();
+                                    anim = this.slideBack;
                                 }
                             }
                         }
-                        this.updateTargetValue();
-                        return;
+                        return anim;
+                    };
+                    /**
+                     * donot ground immediately
+                     * wait few more frames
+                     */
+                    CharacterControl.prototype.groundIt = function () {
+                        this.groundFrameCount++;
+                        if (this.groundFrameCount > this.groundFrameMax) {
+                            this.grounded = true;
+                            this.idleFallTime = 0;
+                        }
+                    };
+                    CharacterControl.prototype.unGroundIt = function () {
+                        this.grounded = false;
+                        this.groundFrameCount = 0;
                     };
                     CharacterControl.prototype.updateTargetValue = function () {
                         this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
@@ -352,19 +444,19 @@ var org;
                         var event = e;
                         var chr = String.fromCharCode(event.keyCode);
                         if (event.keyCode === 32) {
-                            if (!this.isJumping)
-                                this.key.jump = false;
+                            //if (!this.isJumping) this.key.jump = true;
+                            this.key.jump = true;
                         }
                         else if (event.keyCode === 16)
                             this.key.shift = true;
                         else if ((chr === "W") || (event.keyCode === 38))
-                            this.key.up = true;
+                            this.key.forward = true;
                         else if ((chr === "A") || (event.keyCode === 37))
-                            this.key.left = true;
+                            this.key.turnLeft = true;
                         else if ((chr === "D") || (event.keyCode === 39))
-                            this.key.right = true;
+                            this.key.turnRight = true;
                         else if ((chr === "S") || (event.keyCode === 40))
-                            this.key.down = true;
+                            this.key.backward = true;
                         else if (chr === "Q")
                             this.key.stepLeft = true;
                         else if (chr === "E")
@@ -372,31 +464,25 @@ var org;
                         this.move = this.anyMovement();
                     };
                     CharacterControl.prototype.anyMovement = function () {
-                        if (this.key.up || this.key.down || this.key.left || this.key.right || this.key.stepLeft || this.key.stepRight || this.key.jump) {
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
+                        return (this.key.forward || this.key.backward || this.key.turnLeft || this.key.turnRight || this.key.stepLeft || this.key.stepRight);
                     };
                     CharacterControl.prototype.onKeyUp = function (e) {
                         var event = e;
                         var chr = String.fromCharCode(event.keyCode);
                         if (event.keyCode === 32) {
-                            if (!this.isJumping)
-                                this.key.jump = true;
+                            //if (!this.isJumping) this.key.jump = true;
                         }
                         else if (event.keyCode === 16) {
                             this.key.shift = false;
                         }
                         else if ((chr === "W") || (event.keyCode === 38))
-                            this.key.up = false;
+                            this.key.forward = false;
                         else if ((chr === "A") || (event.keyCode === 37))
-                            this.key.left = false;
+                            this.key.turnLeft = false;
                         else if ((chr === "D") || (event.keyCode === 39))
-                            this.key.right = false;
+                            this.key.turnRight = false;
                         else if ((chr === "S") || (event.keyCode === 40))
-                            this.key.down = false;
+                            this.key.backward = false;
                         else if (chr === "Q")
                             this.key.stepLeft = false;
                         else if (chr === "E")
@@ -414,35 +500,31 @@ var org;
                 }());
                 component.CharacterControl = CharacterControl;
                 var AnimData = (function () {
-                    function AnimData(name, s, e, d) {
+                    function AnimData(name, l, r) {
                         this.exist = false;
-                        this.s = 0;
-                        this.e = 0;
-                        this.r = 0;
                         this.name = name;
-                        this.s = s;
-                        this.e = e;
-                        this.r = d;
+                        this.l = l;
+                        this.r = r;
                     }
                     return AnimData;
                 }());
                 component.AnimData = AnimData;
                 var Key = (function () {
                     function Key() {
-                        this.up = false;
-                        this.down = false;
-                        this.right = false;
-                        this.left = false;
+                        this.forward = false;
+                        this.backward = false;
+                        this.turnRight = false;
+                        this.turnLeft = false;
                         this.stepRight = false;
                         this.stepLeft = false;
                         this.jump = false;
                         this.shift = false;
                     }
                     Key.prototype.reset = function () {
-                        this.up = false;
-                        this.down = false;
-                        this.right = false;
-                        this.left = false;
+                        this.forward = false;
+                        this.backward = false;
+                        this.turnRight = false;
+                        this.turnLeft = false;
                         this.stepRight = false;
                         this.stepLeft = false;
                         this.jump = false;
@@ -715,7 +797,9 @@ var org;
                                 {
                                     var img = document.createElement("img");
                                     img.id = item;
-                                    img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                                    //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                                    var name_1 = item.split(".")[0];
+                                    img.src = "vishva/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
                                     img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
                                     img.className = assetType;
                                     img.onclick = f;
@@ -2388,6 +2472,22 @@ var org;
                         this.moveLimitStart = 114;
                         this.moveLimitEnd = 124;
                         this.oldAvPos = new Vector3(0, 0, 0);
+                        //        private moveAVandCamera() {
+                        //            this.oldAvPos.copyFrom(this.avatar.position);
+                        //
+                        //            if (!this.cc.moveAVandCamera()) return;
+                        //
+                        //            let avPos = this.avatar.position.length();
+                        //            if (avPos > this.moveLimitStart) {
+                        //                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
+                        //            } else {
+                        //                this.scene.fogDensity = this.fogDensity;
+                        //            }
+                        //            if (avPos > this.moveLimitEnd) {
+                        //                this.avatar.position.copyFrom(this.oldAvPos);
+                        //            }
+                        //
+                        //        }
                         /*
                         private jumpCycleMax: number = 25;
                         private jumpCycle: number = this.jumpCycleMax;
@@ -2545,6 +2645,7 @@ var org;
                         this.engine = new Engine(this.canvas, true);
                         this.scene = new Scene(this.engine);
                         this.scene.enablePhysics();
+                        //this.scene.useRightHandedSystem = true;
                         //lets make night black
                         this.scene.clearColor = new Color4(0, 0, 0, 1);
                         //set ambient to white in case user wants to bypass light conditions for some objects
@@ -2844,21 +2945,6 @@ var org;
                         this.key.rot = false;
                         this.key.scale = false;
                     };
-                    Vishva.prototype.moveAVandCamera = function () {
-                        this.oldAvPos.copyFrom(this.avatar.position);
-                        if (!this.cc.moveAVandCamera())
-                            return;
-                        var avPos = this.avatar.position.length();
-                        if (avPos > this.moveLimitStart) {
-                            this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart);
-                        }
-                        else {
-                            this.scene.fogDensity = this.fogDensity;
-                        }
-                        if (avPos > this.moveLimitEnd) {
-                            this.avatar.position.copyFrom(this.oldAvPos);
-                        }
-                    };
                     Vishva.prototype.pickObject = function (evt, pickResult) {
                         // prevent curosr from changing to a edit caret in Chrome
                         evt.preventDefault();
@@ -3115,22 +3201,26 @@ var org;
                         var idle;
                         var run;
                         var jump;
+                        var fall;
                         var turnLeft;
                         var turnRight;
                         var strafeLeft;
                         var strafeRight;
+                        var slideBack;
                         var avatarSpeed = 0.05;
                         var prevAnim = null;
-                        walk = new AnimData("walk", 7, 35, 1);
-                        walkBack = new AnimData("walkBack", 39, 65, 0.5);
-                        idle = new AnimData("idle", 203, 283, 1);
-                        run = new AnimData("run", 69, 95, 1);
-                        jump = new AnimData("jump", 101, 103, 0.5);
-                        turnLeft = new AnimData("turnLeft", 107, 151, 0.5);
-                        turnRight = new AnimData("turnRight", 155, 199, 0.5);
-                        strafeLeft = new AnimData("strafeLeft", 0, 0, 1);
-                        strafeRight = new AnimData("strafeRight", 0, 0, 1);
-                        this.anims = [walk, walkBack, idle, run, jump, turnLeft, turnRight, strafeLeft, strafeRight];
+                        walk = new AnimData("walk", true, 1);
+                        walkBack = new AnimData("walkBack", true, 0.5);
+                        idle = new AnimData("idle", true, 1);
+                        run = new AnimData("run", true, 1);
+                        jump = new AnimData("jump", false, 1);
+                        fall = new AnimData("fall", false, 1);
+                        turnLeft = new AnimData("turnLeft", true, 0.5);
+                        turnRight = new AnimData("turnRight", true, 0.5);
+                        strafeLeft = new AnimData("strafeLeft", true, 1);
+                        strafeRight = new AnimData("strafeRight", true, 1);
+                        slideBack = new AnimData("slideBack", true, 1);
+                        this.anims = [walk, walkBack, idle, run, jump, fall, turnLeft, turnRight, strafeLeft, strafeRight, slideBack];
                     };
                     Vishva.prototype.onWindowResize = function (event) {
                         this.engine.resize();
@@ -3631,8 +3721,8 @@ var org;
                             else {
                                 return "invalid operation";
                             }
-                            var name_1 = new Number(Date.now()).toString();
-                            var newMesh = csg3.toMesh(name_1, this.meshesPicked[0].material, this.scene, false);
+                            var name_2 = new Number(Date.now()).toString();
+                            var newMesh = csg3.toMesh(name_2, this.meshesPicked[0].material, this.scene, false);
                             this.switchEditControl(newMesh);
                             this.animateMesh(newMesh);
                             return null;
@@ -4616,6 +4706,7 @@ var org;
                             }
                         }
                     };
+                    //older, used by old GUI file loader dislog
                     Vishva.prototype.loadAssetFile = function (file) {
                         var _this = this;
                         var sceneFolderName = file.name.split(".")[0];
@@ -4625,7 +4716,9 @@ var org;
                         var _this = this;
                         this.assetType = assetType;
                         this.file = file;
-                        SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
+                        var fileName = file.split(".")[0];
+                        //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
+                        SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + fileName + "/", file, this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
                     };
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
@@ -4640,9 +4733,12 @@ var org;
                             var mesh = meshes_4[_a];
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
-                            var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
-                            var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                            mesh.position.addInPlace(placementGlobal);
+                            if (mesh.parent == null) {
+                                var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
+                                var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                                console.log(placementGlobal);
+                                mesh.position.addInPlace(placementGlobal);
+                            }
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             //TODO think
                             //mesh.receiveShadows = true;
@@ -4696,7 +4792,7 @@ var org;
                             return;
                         var textureName = bt.name;
                         if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
-                            bt.name = "vishva/assets/" + this.assetType + "/" + this.file + "/" + textureName;
+                            bt.name = "vishva/assets/" + this.assetType + "/" + this.file.split(".")[0] + "/" + textureName;
                         }
                     };
                     /**
@@ -4710,15 +4806,24 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var index139 = 0; index139 < meshes.length; index139++) {
-                            var mesh = meshes[index139];
-                            {
-                                var bi = mesh.getBoundingInfo();
-                                var r = bi.boundingSphere.radiusWorld + mesh.position.length();
+                        for (var _i = 0, meshes_5 = meshes; _i < meshes_5.length; _i++) {
+                            var mesh = meshes_5[_i];
+                            console.log("==========");
+                            console.log(mesh.name);
+                            console.log(mesh.absolutePosition);
+                            console.log(mesh.absolutePosition.length());
+                            if (mesh.parent != null)
+                                console.log("parent " + mesh.parent.name);
+                            var bi = mesh.getBoundingInfo();
+                            var rw = bi.boundingSphere.radiusWorld;
+                            console.log(bi.boundingSphere.radiusWorld);
+                            if (isFinite(rw)) {
+                                var r = rw + mesh.absolutePosition.length();
                                 if (maxRadius < r)
                                     maxRadius = r;
                             }
                         }
+                        console.log("max radius " + maxRadius);
                         return maxRadius;
                     };
                     Vishva.prototype.loadWorldFile = function (file) {
@@ -5102,14 +5207,14 @@ var org;
                         //            this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
                         //            this.mainCamera.beta = 1.4;
                     };
-                    Vishva.prototype.setAnimationRange = function (skel) {
-                        for (var index149 = 0; index149 < this.anims.length; index149++) {
-                            var anim = this.anims[index149];
-                            {
-                                skel.createAnimationRange(anim.name, anim.s, anim.e);
-                            }
-                        }
-                    };
+                    //        private setAnimationRange(skel: Skeleton) {
+                    //            for (var index149 = 0; index149 < this.anims.length; index149++) {
+                    //                var anim = this.anims[index149];
+                    //                {
+                    //                    skel.createAnimationRange(anim.name, anim.s, anim.e);
+                    //                }
+                    //            }
+                    //        }
                     /**
                      * workaround for bugs in blender exporter
                      * 4.4.3 animation ranges are off by 1
@@ -5198,15 +5303,11 @@ var org;
                 }());
                 vishva.Key = Key;
                 var AnimData = (function () {
-                    function AnimData(name, s, e, d) {
+                    function AnimData(name, l, r) {
                         this.exist = false;
-                        this.s = 0;
-                        this.e = 0;
-                        this.r = 0;
                         this.name = name;
-                        this.s = s;
-                        this.e = e;
-                        this.r = d;
+                        this.l = l;
+                        this.r = r;
                     }
                     return AnimData;
                 }());

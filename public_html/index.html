@@ -28,10 +28,10 @@
         <!--<script src="lib/babylon3.0-04-20-2017.js"></script>--> 
         <!--<script src="lib/babylon2.6-05-12-2017.js"></script>--> 
         <script src="lib/babylon3.0-08-08-2017.js"></script> 
-        
+
         <!--ok-->
         <!--<script src="lib/babylon-06-19-2017.max.js"></script>-->
-        
+
         <!-- shadow is broken below -->
         <!--<script src="lib/babylon-06-30-2017.max.js"></script>-->
         <!--<script src="lib/babylon3.0-07-27-2017.js"></script>-->
@@ -40,23 +40,23 @@
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
         <!-- stable -->
         <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
-        
+
         <!--<script src="lib/babylon.inspector.bundle-06-26-2017.js"></script>-->
         <script src="lib/babylon.inspector.bundle-08-23-2017.js"></script>
-        
+
         <!--<script src="lib/babylon.waterMaterial.min.js"></script>-->
         <script src="lib/babylon.waterMaterial.min-08-24-2017.js"></script>
         <!-- loaders -->
         <script src="lib/babylon.glTFFileLoader3.1-preview.min.js"></script>
         <script src="lib/babylon.objFileLoader3.0-stable.min.js"></script>
-        
+
         <script src="lib/pep.0.4.1.min.js"></script>
-        
+
         <!-- problem with the colorpicker minified version . see https://github.com/DavidDurman/FlexiColorPicker/issues/40 -->
         <!--<script src="lib/colorpicker.min.js"></script>-->
         <script src="lib/colorpicker.uglified.js"></script>
         <!--<script src="lib/colorpicker.js"></script>-->
-        
+
         <link href="lib/colorpicker.themes.css" rel="stylesheet">
 
         <style>
@@ -452,11 +452,11 @@
                                     </button>
                                 </td>
                             </tr>
-<!--                            <tr>
-                                <td>
-                                    <button id="addWater" >addWater</button>
-                                </td>
-                            </tr>-->
+                            <!--                            <tr>
+                                                            <td>
+                                                                <button id="addWater" >addWater</button>
+                                                            </td>
+                                                        </tr>-->
                         </table>
                     </div>
 
@@ -521,7 +521,7 @@
                             </tr>
                             <tr>
                                 <td>
-                                     <select id="matColType">
+                                    <select id="matColType">
                                         <option value="diffuse">diffuse color</option>
                                         <option value="emissive">emissive color</option>
                                         <option value="ambient">ambient color</option>
@@ -651,45 +651,21 @@
 
                     <h3>Animations</h3>
                     <div id="meshAnimDiag" >
-                        <button id="animSkelChange">change skeleton</button>
-                        <button id="animSkelView">toggle skeleton</button>
+
+                        <br>skeleton name : <label id="skelName"></label>
+                        <br>
+                        <button id="animSkelView">view skeleton</button>
                         <button id="animRest">show rest pose</button>
+
                         <br>
-                        <br>create range
+                        <br>skeleton animation ranges
                         <table>
                             <tr>
-                                <td>range name</td>
-                                <td><input type="text" id="animRangeName"></td>
+                                <td>range</td>
+                                <td><select id="animList"></select>
+                                    <label id="animFrom"></label>
+                                    <label id="animTo"></lable
                             </tr>
-                            <tr>
-                                <td>from frame</td>
-                                <td><input type="text" id="animRangeStart" size="2" ></td>
-                            </tr>
-                            <tr>
-                                <td>to frame</td>
-                                <td><input type="text" id="animRangeEnd" size="2"></td>                                
-                            </tr>
-                        </table>
-                        <button id="animRangeMake">create</button>
-                        <br>
-                        <br>select a range
-                        <table>
-                            <tr>
-                                <td>skeleton name</td>
-                                <td>ranges</td>
-                                <td>from frame</td>
-                                <td>to frame</td>
-                            </tr>
-                            <tr>
-                                <td id="skelName"></td>
-                                <td><select id="animList"></select></td>
-                                <td id="animFrom"></td>
-                                <td id="animTo"></td>
-                            </tr>
-                        </table>
-                        <br>
-                        play selected range
-                        <table>
                             <tr>
                                 <td>rate</td>
                                 <td><input id="animRate" type="text" value="1" size="2"></td>
@@ -698,11 +674,33 @@
                                 <td>loop</td>
                                 <td><input type="checkbox" id="animLoop"></td>
                             </tr>
+                        </table>
+                        <button id="playAnim">play</button><button id="stopAnim">stop</button>
+                        <br>
+                        <br>
+                        create/modify an animation range
+                        <table>
                             <tr>
-                                <td><button id="playAnim">play</button></td>
-                                <td><button id="stopAnim">stop</button></td>
+                                <td>range name</td>
+                                <td>from frame</td>
+                                <td>to frame</td>
+                            </tr>
+                            <tr>
+                                <td><input type="text" id="animRangeName"></td>
+                                <td><input type="text" id="animRangeStart" size="2" ></td>
+                                <td><input type="text" id="animRangeEnd" size="2"></td>    
                             </tr>
                         </table>
+                        <button id="animRangeMake">create</button>
+                        <br>
+                        <hr>
+                        <br>
+                        All skeletons : <select id="animSkelList" class="ui-widget-content ui-corner-all"></select>
+                        <br>
+                        <br>
+                        <button id="animSkelChange">switch to</button>
+                        <button id="animSkelClone">clone and switch to</button>
+
                     </div>
                 </div>
             </div>
@@ -768,30 +766,30 @@
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
                                 var search = new HREFsearch();
-                                
+
                                 var scene = search.getParm("world");
-                                var scenePath="vishva/worlds/";
-                                var editEnabled =true;
-                                
-                                if (!scene){
-                                    if (defaultScene){
+                                var scenePath = "vishva/worlds/";
+                                var editEnabled = true;
+
+                                if (!scene) {
+                                    if (defaultScene) {
                                         scene = defaultScene;
-                                    }else{
+                                    } else {
                                         scene = "empty";
                                     }
                                 }
 
-                                if (noEditScenes){
+                                if (noEditScenes) {
                                     var l = noEditScenes.length;
-                                    for (i=0;i<l;i++){
-                                        if (noEditScenes[i]== scene){
-                                            editEnabled=false;
+                                    for (i = 0; i < l; i++) {
+                                        if (noEditScenes[i] == scene) {
+                                            editEnabled = false;
                                         }
                                     }
                                 }
 
                                 var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
-                                new Vishva(scene, scenePath, editEnabled,assets, "vCanvas");
+                                new Vishva(scene, scenePath, editEnabled, assets, "vCanvas");
                             });
         </script>
     </body>

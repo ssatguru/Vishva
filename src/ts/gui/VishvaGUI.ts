@@ -39,8 +39,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
-            $("input").on("focus", () => { this.vishva.disableKeys(); });
-            $("input").on("blur", () => { this.vishva.enableKeys(); });
+            $("input").on("focus", () => {this.vishva.disableKeys();});
+            $("input").on("blur", () => {this.vishva.enableKeys();});
 
             this.createJPOs();
 
@@ -60,7 +60,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.create_sNaDiag();
             this.createEditSensDiag();
             this.createEditActDiag();
-            window.addEventListener("resize", (evt) => { return this.onWindowResize(evt) });
+            window.addEventListener("resize", (evt) => {return this.onWindowResize(evt)});
         }
 
         private centerBottom: JQueryPositionOptions;
@@ -104,10 +104,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             for (var index161 = 0; index161 < this.dialogs.length; index161++) {
                 var jq = this.dialogs[index161];
                 {
-                    var jpo: JQueryPositionOptions = <JQueryPositionOptions>jq["jpo"];
+                    var jpo: JQueryPositionOptions = <JQueryPositionOptions> jq["jpo"];
                     if (jpo != null) {
                         jq.dialog("option", "position", jpo);
-                        var open: boolean = <boolean><any>jq.dialog("isOpen");
+                        var open: boolean = <boolean> <any> jq.dialog("isOpen");
                         if (open) {
                             jq.dialog("close");
                             jq.dialog("open");
@@ -121,9 +121,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private createAddMenu() {
             var assetTypes: string[] = Object.keys(this.vishva.assets);
-            var addMenu: HTMLUListElement = <HTMLUListElement>document.getElementById("AddMenu");
+            var addMenu: HTMLUListElement = <HTMLUListElement> document.getElementById("AddMenu");
             addMenu.style.visibility = "visible";
-            var f: (p1: MouseEvent) => any = (e) => { return this.onAddMenuItemClick(e) };
+            var f: (p1: MouseEvent) => any = (e) => {return this.onAddMenuItemClick(e)};
             for (let assetType of assetTypes) {
                 if (assetType === "sounds") {
                     continue;
@@ -137,8 +137,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private onAddMenuItemClick(e: MouseEvent): any {
-            var li: HTMLLIElement = <HTMLLIElement>e.target;
-            var jq: JQuery = <JQuery>li["diag"];
+            var li: HTMLLIElement = <HTMLLIElement> e.target;
+            var jq: JQuery = <JQuery> li["diag"];
             if (jq == null) {
                 var assetType: string = li.innerHTML;
                 jq = this.createAssetDiag(assetType);
@@ -154,17 +154,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             div.setAttribute("title", assetType);
             var table: HTMLTableElement = document.createElement("table");
             table.id = assetType + "Tbl";
-            var items: Array<string> = <Array<string>>this.vishva.assets[assetType];
+            var items: Array<string> = <Array<string>> this.vishva.assets[assetType];
             this.updateAssetTable(table, assetType, items);
             div.appendChild(table);
             document.body.appendChild(div);
-            var jq: JQuery = <JQuery>(<any>$("#" + div.id));
+            var jq: JQuery = <JQuery>(<any> $("#" + div.id));
             var dos: DialogOptions = {
                 autoOpen: false,
                 resizable: true,
                 position: this.centerBottom,
-                width: (<any>"100%"),
-                height: (<any>"auto"),
+                width: (<any> "100%"),
+                height: (<any> "auto"),
                 closeText: "",
                 closeOnEscape: false
             };
@@ -178,35 +178,35 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if (tbl.rows.length > 0) {
                 return;
             }
-            var f: (p1: MouseEvent) => any = (e) => { return this.onAssetImgClick(e) };
-            var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
+            var f: (p1: MouseEvent) => any = (e) => {return this.onAssetImgClick(e)};
+            var row: HTMLTableRowElement = <HTMLTableRowElement> tbl.insertRow();
             for (var index163 = 0; index163 < items.length; index163++) {
                 var item = items[index163];
                 {
                     var img: HTMLImageElement = document.createElement("img");
                     img.id = item;
                     //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                    let name:string = item.split(".")[0];
+                    let name: string = item.split(".")[0];
                     img.src = "vishva/assets/" + assetType + "/" + name + "/" + name + ".jpg";
                     img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
                     img.className = assetType;
                     img.onclick = f;
-                    var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
+                    var cell: HTMLTableCellElement = <HTMLTableCellElement> row.insertCell();
                     cell.appendChild(img);
                 }
             }
-            var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
+            var row2: HTMLTableRowElement = <HTMLTableRowElement> tbl.insertRow();
             for (var index164 = 0; index164 < items.length; index164++) {
                 var item = items[index164];
                 {
-                    var cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
+                    var cell: HTMLTableCellElement = <HTMLTableCellElement> row2.insertCell();
                     cell.innerText = item;
                 }
             }
         }
 
         private onAssetImgClick(e: Event): any {
-            var i: HTMLImageElement = <HTMLImageElement>e.target;
+            var i: HTMLImageElement = <HTMLImageElement> e.target;
             if (i.className === "skyboxes") {
                 this.vishva.setSky(i.id);
             } else if (i.className === "primitives") {
@@ -235,38 +235,38 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
             fog.slider(this.sliderOptions(0, 100, 100000 * this.vishva.getFog()));
-            
+
             let fogColDiag: ColorPickerDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, (hex, hsv, rgb) => {
                 this.vishva.setFogColor(hex);
             });
-            
+
             fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
 
-            let envSnow: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envSnow");
+            let envSnow: HTMLButtonElement = <HTMLButtonElement> document.getElementById("envSnow");
             envSnow.onclick = (e) => {
                 this.vishva.toggleSnow();
             };
 
-            let envRain: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envRain");
+            let envRain: HTMLButtonElement = <HTMLButtonElement> document.getElementById("envRain");
             envRain.onclick = (e) => {
                 //this.showAlertDiag("Sorry. To be implemented");
                 this.vishva.toggleRain();
             };
 
-            var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
+            var skyButton: HTMLButtonElement = <HTMLButtonElement> document.getElementById("skyButton");
             skyButton.onclick = (e) => {
                 var foo: HTMLElement = document.getElementById("add-skyboxes");
                 foo.click();
                 return true;
             };
 
-            var trnButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("trnButton");
+            var trnButton: HTMLButtonElement = <HTMLButtonElement> document.getElementById("trnButton");
             trnButton.onclick = (e) => {
                 this.showAlertDiag("Sorry. To be implemneted soon");
                 return true;
             };
 
-            
+
             let trnColDiag: ColorPickerDiag = new ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), this.centerBottom, (hex, hsv, rgb) => {
                 this.vishva.setGroundColor(hex);
             });
@@ -313,7 +313,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 resizable: false,
                 position: this.rightCenter,
                 minWidth: 350,
-                height: (<any>"auto"),
+                height: (<any> "auto"),
                 closeText: "",
                 closeOnEscape: false
             };
@@ -382,8 +382,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         downloadDialog: JQuery;
         private createDownloadDiag() {
-            this.downloadLink = <HTMLAnchorElement>document.getElementById("downloadLink");
-            this.downloadDialog = <JQuery>(<any>$("#saveDiv"));
+            this.downloadLink = <HTMLAnchorElement> document.getElementById("downloadLink");
+            this.downloadDialog = <JQuery>(<any> $("#saveDiv"));
             this.downloadDialog.dialog();
             this.downloadDialog.dialog("close");
         }
@@ -391,8 +391,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         loadDialog: JQuery;
 
         private createUploadDiag() {
-            var loadFileInput: HTMLInputElement = <HTMLInputElement>document.getElementById("loadFileInput");
-            var loadFileOk: HTMLButtonElement = <HTMLButtonElement>document.getElementById("loadFileOk");
+            var loadFileInput: HTMLInputElement = <HTMLInputElement> document.getElementById("loadFileInput");
+            var loadFileOk: HTMLButtonElement = <HTMLButtonElement> document.getElementById("loadFileOk");
             loadFileOk.onclick = ((loadFileInput) => {
                 return (e) => {
                     var fl: FileList = loadFileInput.files;
@@ -412,7 +412,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     return true;
                 }
             })(loadFileInput);
-            this.loadDialog = <JQuery>(<any>$("#loadDiv"));
+            this.loadDialog = <JQuery>(<any> $("#loadDiv"));
             this.loadDialog.dialog();
             this.loadDialog.dialog("close");
         }
@@ -477,31 +477,31 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             this.sNaDialog.dialog(dos);
 
-            this.sensSel = <HTMLSelectElement>document.getElementById("sensSel");
-            this.actSel = <HTMLSelectElement>document.getElementById("actSel");
+            this.sensSel = <HTMLSelectElement> document.getElementById("sensSel");
+            this.actSel = <HTMLSelectElement> document.getElementById("actSel");
             var sensors: string[] = this.vishva.getSensorList();
             var actuators: string[] = this.vishva.getActuatorList();
 
             for (let sensor of sensors) {
-                var opt: HTMLOptionElement = <HTMLOptionElement>document.createElement("option");
+                var opt: HTMLOptionElement = <HTMLOptionElement> document.createElement("option");
                 opt.value = sensor;
                 opt.innerHTML = sensor;
                 this.sensSel.add(opt);
             }
 
             for (let actuator of actuators) {
-                var opt: HTMLOptionElement = <HTMLOptionElement>document.createElement("option");
+                var opt: HTMLOptionElement = <HTMLOptionElement> document.createElement("option");
                 opt.value = actuator;
                 opt.innerHTML = actuator;
                 this.actSel.add(opt);
             }
 
-            this.sensTbl = <HTMLTableElement>document.getElementById("sensTbl");
-            this.actTbl = <HTMLTableElement>document.getElementById("actTbl");
+            this.sensTbl = <HTMLTableElement> document.getElementById("sensTbl");
+            this.actTbl = <HTMLTableElement> document.getElementById("actTbl");
         }
 
         private show_sNaDiag() {
-            var sens: Array<SensorActuator> = <Array<SensorActuator>>this.vishva.getSensors();
+            var sens: Array<SensorActuator> = <Array<SensorActuator>> this.vishva.getSensors();
             if (sens == null) {
                 this.showAlertDiag("no mesh selected");
                 return;
@@ -517,7 +517,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.updateSensActTbl(acts, this.actTbl);
             var addSens: HTMLElement = document.getElementById("addSens");
             addSens.onclick = (e) => {
-                var s: HTMLOptionElement = <HTMLOptionElement>this.sensSel.item(this.sensSel.selectedIndex);
+                var s: HTMLOptionElement = <HTMLOptionElement> this.sensSel.item(this.sensSel.selectedIndex);
                 var sensor: string = s.value;
                 this.vishva.addSensorbyName(sensor);
                 this.updateSensActTbl(this.vishva.getSensors(), this.sensTbl);
@@ -527,7 +527,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             };
             var addAct: HTMLElement = document.getElementById("addAct");
             addAct.onclick = (e) => {
-                var a: HTMLOptionElement = <HTMLOptionElement>this.actSel.item(this.actSel.selectedIndex);
+                var a: HTMLOptionElement = <HTMLOptionElement> this.actSel.item(this.actSel.selectedIndex);
                 var actuator: string = a.value;
                 this.vishva.addActuaorByName(actuator);
                 this.updateSensActTbl(this.vishva.getActuators(), this.actTbl);
@@ -549,44 +549,44 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             l = sensAct.length;
             for (var i: number = 0; i < l; i++) {
-                var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
-                var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
+                var row: HTMLTableRowElement = <HTMLTableRowElement> tbl.insertRow();
+                var cell: HTMLTableCellElement = <HTMLTableCellElement> row.insertCell();
                 cell.innerHTML = sensAct[i].getName();
-                cell = <HTMLTableCellElement>row.insertCell();
+                cell = <HTMLTableCellElement> row.insertCell();
                 cell.innerHTML = sensAct[i].getProperties().signalId;
-                cell = <HTMLTableCellElement>row.insertCell();
-                var editBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
+                cell = <HTMLTableCellElement> row.insertCell();
+                var editBut: HTMLButtonElement = <HTMLButtonElement> document.createElement("BUTTON");
                 editBut.innerHTML = "edit";
-                var jq: JQuery = <JQuery>(<any>$(editBut));
+                var jq: JQuery = <JQuery>(<any> $(editBut));
                 jq.button();
                 var d: number = i;
                 editBut.id = d.toString();
                 editBut["sa"] = sensAct[i];
                 cell.appendChild(editBut);
                 editBut.onclick = (e) => {
-                    var el: HTMLElement = <HTMLElement>e.currentTarget;
-                    var sa: SensorActuator = <SensorActuator>el["sa"];
+                    var el: HTMLElement = <HTMLElement> e.currentTarget;
+                    var sa: SensorActuator = <SensorActuator> el["sa"];
                     if (sa.getType() === "SENSOR") {
-                        this.showEditSensDiag(<Sensor>sa);
+                        this.showEditSensDiag(<Sensor> sa);
                     } else {
-                        this.showEditActDiag(<Actuator>sa);
+                        this.showEditActDiag(<Actuator> sa);
                     }
                     return true;
                 };
-                cell = <HTMLTableCellElement>row.insertCell();
-                var delBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
+                cell = <HTMLTableCellElement> row.insertCell();
+                var delBut: HTMLButtonElement = <HTMLButtonElement> document.createElement("BUTTON");
                 delBut.innerHTML = "del";
-                var jq2: JQuery = <JQuery>(<any>$(delBut));
+                var jq2: JQuery = <JQuery>(<any> $(delBut));
                 jq2.button();
                 delBut.id = d.toString();
                 delBut["row"] = row;
                 delBut["sa"] = sensAct[i];
                 cell.appendChild(delBut);
                 delBut.onclick = (e) => {
-                    var el: HTMLElement = <HTMLElement>e.currentTarget;
-                    var r: HTMLTableRowElement = <HTMLTableRowElement>el["row"];
+                    var el: HTMLElement = <HTMLElement> e.currentTarget;
+                    var r: HTMLTableRowElement = <HTMLTableRowElement> el["row"];
                     tbl.deleteRow(r.rowIndex);
-                    this.vishva.removeSensorActuator(<SensorActuator>el["sa"]);
+                    this.vishva.removeSensorActuator(<SensorActuator> el["sa"]);
                     return true;
                 };
             }
@@ -613,10 +613,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             this.vishva.disableKeys();
 
-            var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
+            var sensNameEle: HTMLLabelElement = <HTMLLabelElement> document.getElementById("editSensDiag.sensName");
             sensNameEle.innerHTML = sensor.getName();
 
-            var editSensDiag: JQuery = <JQuery>(<any>$("#editSensDiag"));
+            var editSensDiag: JQuery = <JQuery>(<any> $("#editSensDiag"));
             editSensDiag.dialog("open");
 
             var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
@@ -642,7 +642,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private createEditActDiag() {
-            var editActDiag: JQuery = <JQuery>(<any>$("#editActDiag"));
+            var editActDiag: JQuery = <JQuery>(<any> $("#editActDiag"));
             var dos: DialogOptions = {};
             dos.autoOpen = false;
             dos.modal = true;
@@ -663,7 +663,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             this.vishva.disableKeys();
 
-            var actNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editActDiag.actName");
+            var actNameEle: HTMLLabelElement = <HTMLLabelElement> document.getElementById("editActDiag.actName");
             actNameEle.innerHTML = actuator.getName();
 
             var editActDiag: JQuery = $("#editActDiag");
@@ -675,7 +675,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 parmDiv.removeChild(node);
             }
             if (actuator.getName() === "Sound") {
-                var prop: ActSoundProp = <ActSoundProp>actuator.getProperties();
+                var prop: ActSoundProp = <ActSoundProp> actuator.getProperties();
                 prop.soundFile.values = this.vishva.getSoundFiles();
             }
             var tbl: HTMLTableElement = this.formCreate(actuator.getProperties(), parmDiv.id);
@@ -705,13 +705,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 var key = keys[index168];
                 {
                     if (key.split("_")[0] === this.STATE_IND) continue;
-                    var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
-                    var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
+                    var row: HTMLTableRowElement = <HTMLTableRowElement> tbl.insertRow();
+                    var cell: HTMLTableCellElement = <HTMLTableCellElement> row.insertCell();
                     cell.innerHTML = key;
-                    cell = <HTMLTableCellElement>row.insertCell();
+                    cell = <HTMLTableCellElement> row.insertCell();
                     var t: string = typeof snaP[key];
-                    if ((t === "object") && ((<Object>snaP[key])["type"] === "SelectType")) {
-                        var keyValue: SelectType = <SelectType>snaP[key];
+                    if ((t === "object") && ((<Object> snaP[key])["type"] === "SelectType")) {
+                        var keyValue: SelectType = <SelectType> snaP[key];
                         var options: string[] = keyValue.values;
                         var sel: HTMLSelectElement = document.createElement("select");
                         sel.id = idPrefix + key;
@@ -731,19 +731,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                         var inp: HTMLInputElement = document.createElement("input");
                         inp.id = idPrefix + key;
                         inp.className = "ui-widget-content ui-corner-all";
-                        inp.value = <string>snaP[key];
-                        if ((t === "object") && ((<Object>snaP[key])["type"] === "Range")) {
-                            var r: Range = <Range>snaP[key];
+                        inp.value = <string> snaP[key];
+                        if ((t === "object") && ((<Object> snaP[key])["type"] === "Range")) {
+                            var r: Range = <Range> snaP[key];
                             inp.type = "range";
-                            inp.max = (<number>new Number(r.max)).toString();
-                            inp.min = (<number>new Number(r.min)).toString();
-                            inp.step = (<number>new Number(r.step)).toString();
-                            inp.value = (<number>new Number(r.value)).toString();
+                            inp.max = (<number> new Number(r.max)).toString();
+                            inp.min = (<number> new Number(r.min)).toString();
+                            inp.step = (<number> new Number(r.step)).toString();
+                            inp.value = (<number> new Number(r.value)).toString();
                         } else if ((t === "string") || (t === "number")) {
                             inp.type = "text";
-                            inp.value = <string>snaP[key];
+                            inp.value = <string> snaP[key];
                         } else if (t === "boolean") {
-                            var check: boolean = <boolean>snaP[key];
+                            var check: boolean = <boolean> snaP[key];
                             inp.type = "checkbox";
                             if (check) inp.setAttribute("checked", "true");
                         }
@@ -762,14 +762,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 {
                     if (key.split("_")[0] === this.STATE_IND) continue;
                     var t: string = typeof snaP[key];
-                    if ((t === "object") && ((<Object>snaP[key])["type"] === "SelectType")) {
-                        var s: SelectType = <SelectType>snaP[key];
-                        var sel: HTMLSelectElement = <HTMLSelectElement>document.getElementById(idPrefix + key);
+                    if ((t === "object") && ((<Object> snaP[key])["type"] === "SelectType")) {
+                        var s: SelectType = <SelectType> snaP[key];
+                        var sel: HTMLSelectElement = <HTMLSelectElement> document.getElementById(idPrefix + key);
                         s.value = sel.value;
                     } else {
-                        var ie: HTMLInputElement = <HTMLInputElement>document.getElementById(idPrefix + key);
-                        if ((t === "object") && ((<Object>snaP[key])["type"] === "Range")) {
-                            var r: Range = <Range>snaP[key];
+                        var ie: HTMLInputElement = <HTMLInputElement> document.getElementById(idPrefix + key);
+                        if ((t === "object") && ((<Object> snaP[key])["type"] === "Range")) {
+                            var r: Range = <Range> snaP[key];
                             r.value = parseFloat(ie.value);
                         } else if ((t === "string") || (t === "number")) {
                             if (t === "number") {
@@ -816,7 +816,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private propsDiag: JQuery = null;
 
         private fixingDragIssue: boolean = false;
-        private activePanel:number  = -1;
+        private activePanel: number = -1;
         private createPropsDiag() {
 
             //property tabs
@@ -914,7 +914,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public refreshGeneralPanel() {
             if (this.activePanel === propertyPanel.General) this.refreshPropsDiag();
         }
-        
+
         private getPanelIndex(ui: JQuery): number {
             if (ui.text() == "General") return propertyPanel.General;
             if (ui.text() == "Physics") return propertyPanel.Physics;
@@ -938,26 +938,42 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-        meshAnimDiag: JQuery;
+        //meshAnimDiag: JQuery;
+        animUIInitialized: boolean = false;
         animSelect: HTMLSelectElement = null;
         animRate: HTMLInputElement;
         animLoop: HTMLInputElement;
         skel: Skeleton;
+        animSkelList: HTMLSelectElement;
 
         private initAnimUI() {
-            var animSkelChange: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelChange");
-            var animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
-            var animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
-            var animRangeName: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeName");
-            var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
-            var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
-            var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
-            
+            this.animUIInitialized = true;
+            var animSkelChange: HTMLInputElement = <HTMLInputElement> document.getElementById("animSkelChange");
+            var animSkelClone: HTMLInputElement = <HTMLInputElement> document.getElementById("animSkelClone");
+            var animSkelView: HTMLInputElement = <HTMLInputElement> document.getElementById("animSkelView");
+            var animRest: HTMLInputElement = <HTMLInputElement> document.getElementById("animRest");
+            var animRangeName: HTMLInputElement = <HTMLInputElement> document.getElementById("animRangeName");
+            var animRangeStart: HTMLInputElement = <HTMLInputElement> document.getElementById("animRangeStart");
+            var animRangeEnd: HTMLInputElement = <HTMLInputElement> document.getElementById("animRangeEnd");
+            var animRangeMake: HTMLButtonElement = <HTMLButtonElement> document.getElementById("animRangeMake");
+
+            this.animSkelList = <HTMLSelectElement> document.getElementById("animSkelList");
+
             //change the mesh skeleton
             animSkelChange.onclick = (e) => {
-                this.vishva.changeSkeleton();
+
+                if (this.vishva.changeSkeleton(this.animSkelList.selectedOptions[0].value))
+                    this.updateAnimations();
+                else this.showAlertDiag("Error: unable to switch");
             }
-            
+            //clone the selected skeleton and swicth to it
+            animSkelClone.onclick = (e) => {
+
+                if (this.vishva.cloneChangeSkeleton(this.animSkelList.selectedOptions[0].value))
+                    this.updateAnimations();
+                else this.showAlertDiag("Error: unable to clone and switch");
+            }
+
             //enable/disable skeleton view
             animSkelView.onclick = (e) => {
                 this.vishva.toggleSkelView();
@@ -986,20 +1002,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             //select
-            this.animSelect = <HTMLSelectElement>document.getElementById("animList");
+            this.animSelect = <HTMLSelectElement> document.getElementById("animList");
             this.animSelect.onchange = (e) => {
                 var animName: string = this.animSelect.value;
                 if (animName != null) {
                     var range: AnimationRange = this.skel.getAnimationRange(animName);
-                    document.getElementById("animFrom").innerText = (<number>new Number(range.from)).toString();
-                    document.getElementById("animTo").innerText = (<number>new Number(range.to)).toString();
+                    document.getElementById("animFrom").innerText = (<number> new Number(range.from)).toString();
+                    document.getElementById("animTo").innerText = (<number> new Number(range.to)).toString();
                 }
                 return true;
             };
 
             //play
-            this.animRate = <HTMLInputElement>document.getElementById("animRate");
-            this.animLoop = <HTMLInputElement>document.getElementById("animLoop");
+            this.animRate = <HTMLInputElement> document.getElementById("animRate");
+            this.animLoop = <HTMLInputElement> document.getElementById("animLoop");
             document.getElementById("playAnim").onclick = (e) => {
                 if (this.skel == null) return true;
                 var animName: string = this.animSelect.value;
@@ -1016,85 +1032,92 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             };
         }
 
-        private createAnimDiag() {
-            this.initAnimUI();
-            this.meshAnimDiag = $("#meshAnimDiag");
-            var dos: DialogOptions = {};
-            dos.autoOpen = false;
-            dos.modal = false;
-            dos.resizable = false;
-            dos.width = "auto";
-            dos.height = (<any>"auto");
-            dos.closeOnEscape = false;
-            dos.closeText = "";
-            dos.close = (e, ui) => {
-                this.vishva.switchDisabled = false;
-            };
-            this.meshAnimDiag.dialog(dos);
-        }
+        //        private createAnimDiag() {
+        //            this.initAnimUI();
+        //            this.meshAnimDiag = $("#meshAnimDiag");
+        //            var dos: DialogOptions = {};
+        //            dos.autoOpen = false;
+        //            dos.modal = false;
+        //            dos.resizable = false;
+        //            dos.width = "auto";
+        //            dos.height = (<any>"auto");
+        //            dos.closeOnEscape = false;
+        //            dos.closeText = "";
+        //            dos.close = (e, ui) => {
+        //                this.vishva.switchDisabled = false;
+        //            };
+        //            this.meshAnimDiag.dialog(dos);
+        //        }
 
         private updateAnimations() {
-            this.vishva.switchDisabled = true;
-            this.initAnimUI();
+            //this.vishva.switchDisabled = true;
+            if (!this.animUIInitialized) this.initAnimUI();
             this.skel = this.vishva.getSkeleton();
             var skelName: string;
             if (this.skel == null) {
-                document.getElementById("skelName").innerText = "no skeleton";
-                return;
+                skelName = "NO SKELETON";
             } else {
-                skelName = this.skel.name;
-                if (skelName.trim() === "") skelName = "no name";
+                skelName = this.skel.name.trim();
+                if (skelName === "") skelName = "NO NAME";
+                skelName = skelName + " (" + this.skel.id + ")";
             }
             document.getElementById("skelName").innerText = skelName;
 
             this.refreshAnimSelect();
-            //            var childs: HTMLCollection = this.animSelect.children;
-            //            var l: number = (<number>childs.length | 0);
-            //            for (var i: number = l - 1; i >= 0; i--) {
-            //                childs[i].remove();
-            //            }
-            //            if (skelName != null) {
-            //                var range: AnimationRange[] = this.vishva.getAnimationRanges();
-            //                var animOpt: HTMLOptionElement;
-            //                for (var index171 = 0; index171 < range.length; index171++) {
-            //                    var ar = range[index171];
-            //                    {
-            //                        animOpt = document.createElement("option");
-            //                        animOpt.value = ar.name;
-            //                        animOpt.innerText = ar.name;
-            //                        this.animSelect.appendChild(animOpt);
-            //                    }
-            //                }
-            //                if (range[0] != null) {
-            //                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
-            //                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
-            //                }
-            //            }
+            this.refreshAnimSkelList();
         }
-
+        /**
+         * refresh the list of animation ranges
+         */
         private refreshAnimSelect() {
             var childs: HTMLCollection = this.animSelect.children;
-            var l: number = (<number>childs.length | 0);
+            var l: number = (<number> childs.length | 0);
             for (var i: number = l - 1; i >= 0; i--) {
                 childs[i].remove();
             }
 
             var range: AnimationRange[] = this.vishva.getAnimationRanges();
-            if (range === null) return;
+            if (range != null) {
+                var animOpt: HTMLOptionElement;
+                for (let ar of range) {
+                    animOpt = document.createElement("option");
+                    animOpt.value = ar.name;
+                    animOpt.innerText = ar.name;
+                    this.animSelect.appendChild(animOpt);
+                }
 
-            var animOpt: HTMLOptionElement;
-            for (let ar of range) {
-                animOpt = document.createElement("option");
-                animOpt.value = ar.name;
-                animOpt.innerText = ar.name;
-                this.animSelect.appendChild(animOpt);
+                if (range[0] != null) {
+                    document.getElementById("animFrom").innerText = (<number> new Number(range[0].from)).toString();
+                    document.getElementById("animTo").innerText = (<number> new Number(range[0].to)).toString();
+                } else {
+                    document.getElementById("animFrom").innerText = "";
+                    document.getElementById("animTo").innerText = "";
+                }
+            } else {
+                document.getElementById("animFrom").innerText = "";
+                document.getElementById("animTo").innerText = "";
+            }
+        }
+
+        /**
+         * refresh list of skeletons shown in animation tab
+         */
+        private refreshAnimSkelList() {
+            var childs: HTMLCollection = this.animSkelList.children;
+            var l: number = (<number> childs.length | 0);
+            for (var i: number = l - 1; i >= 0; i--) {
+                childs[i].remove();
             }
 
-            if (range[0] != null) {
-                document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
-                document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
+            var skels: Skeleton[] = this.vishva.getSkeltons();
+            var opt: HTMLOptionElement;
+            //NOTE:skel id is not unique
+            for (let skel of skels) {
+                opt = document.createElement("option");
+                opt.value = skel.id + "-" + skel.name;
+                opt.innerText = skel.name + " (" + skel.id + ")";
+                this.animSkelList.appendChild(opt);
             }
-
         }
 
 
@@ -1103,7 +1126,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
         private toString(d: number): string {
-            return (<number>new Number(d)).toFixed(2).toString();
+            return (<number> new Number(d)).toFixed(2).toString();
         }
 
 
@@ -1132,7 +1155,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private initGeneral() {
             //name
-            this.genName = <HTMLInputElement>document.getElementById("genName");
+            this.genName = <HTMLInputElement> document.getElementById("genName");
             //TODO remove
             //            this.genName.onfocus = () => {
             //                this.vishva.disableKeys();
@@ -1145,7 +1168,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
 
             //space
-            this.genSpace = <HTMLSelectElement>document.getElementById("genSpace");
+            this.genSpace = <HTMLSelectElement> document.getElementById("genSpace");
             this.genSpace.onchange = () => {
                 let err: string = this.vishva.setSpace(this.genSpace.value);
                 if (err !== null) {
@@ -1196,7 +1219,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             //Snap CheckBox
-            this.genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
+            this.genSnapTrans = <HTMLInputElement> document.getElementById("snapTrans");
             this.genSnapTrans.onchange = () => {
                 let err: string = this.vishva.snapTrans(this.genSnapTrans.checked);
                 if (err != null) {
@@ -1204,7 +1227,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     this.genSnapTrans.checked = false;
                 }
             }
-            this.genSnapRot = <HTMLInputElement>document.getElementById("snapRot");
+            this.genSnapRot = <HTMLInputElement> document.getElementById("snapRot");
             this.genSnapRot.onchange = () => {
                 let err: string = this.vishva.snapRot(this.genSnapRot.checked);
                 if (err != null) {
@@ -1212,7 +1235,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     this.genSnapRot.checked = false;
                 }
             }
-            this.genSnapScale = <HTMLInputElement>document.getElementById("snapScale");
+            this.genSnapScale = <HTMLInputElement> document.getElementById("snapScale");
             this.genSnapScale.onchange = () => {
                 let err: string = this.vishva.snapScale(this.genSnapScale.checked);
                 if (err != null) {
@@ -1222,29 +1245,29 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
 
             //Snap Values
-            this.genSnapTransValue = <HTMLInputElement>document.getElementById("snapTransValue");
+            this.genSnapTransValue = <HTMLInputElement> document.getElementById("snapTransValue");
             this.genSnapTransValue.onchange = () => {
                 this.vishva.setSnapTransValue(Number(this.genSnapTransValue.value));
             }
-            this.genSnapRotValue = <HTMLInputElement>document.getElementById("snapRotValue");
+            this.genSnapRotValue = <HTMLInputElement> document.getElementById("snapRotValue");
             this.genSnapRotValue.onchange = () => {
                 this.vishva.setSnapRotValue(Number(this.genSnapRotValue.value));
             }
-            this.genSnapScaleValue = <HTMLInputElement>document.getElementById("snapScaleValue");
+            this.genSnapScaleValue = <HTMLInputElement> document.getElementById("snapScaleValue");
             this.genSnapScaleValue.onchange = () => {
                 this.vishva.setSnapScaleValue(Number(this.genSnapScaleValue.value));
             }
 
             //
-            this.genDisable = <HTMLInputElement>document.getElementById("genDisable");
+            this.genDisable = <HTMLInputElement> document.getElementById("genDisable");
             this.genDisable.onchange = () => {
                 this.vishva.disableIt(this.genDisable.checked);
             }
-            this.genColl = <HTMLInputElement>document.getElementById("genColl");
+            this.genColl = <HTMLInputElement> document.getElementById("genColl");
             this.genColl.onchange = () => {
                 this.vishva.enableCollision(this.genColl.checked);
             }
-            this.genVisi = <HTMLInputElement>document.getElementById("genVisi");
+            this.genVisi = <HTMLInputElement> document.getElementById("genVisi");
             this.genVisi.onchange = () => {
                 this.vishva.makeVisibile(this.genVisi.checked);
             }
@@ -1269,7 +1292,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var swGnd: HTMLElement = document.getElementById("swGnd");
 
             var sNa: HTMLElement = document.getElementById("sNa");
-//            var addWater: HTMLElement = document.getElementById("addWater");
+            //            var addWater: HTMLElement = document.getElementById("addWater");
 
             undo.onclick = (e) => {
                 this.vishva.undo();
@@ -1345,7 +1368,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     return true;
                 }
                 this.downloadLink.href = downloadURL;
-                var env: JQuery = <JQuery>(<any>$("#saveDiv"));
+                var env: JQuery = <JQuery>(<any> $("#saveDiv"));
                 env.dialog("open");
                 return false;
             };
@@ -1376,14 +1399,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.show_sNaDiag();
                 return true;
             };
-            
-//            addWater.onclick = (e) => {
-//                var err: string = this.vishva.addWater()
-//                 if (err != null) {
-//                    this.showAlertDiag(err);
-//                }
-//                return true;
-//            };
+
+            //            addWater.onclick = (e) => {
+            //                var err: string = this.vishva.addWater()
+            //                 if (err != null) {
+            //                    this.showAlertDiag(err);
+            //                }
+            //                return true;
+            //            };
         }
 
         private updateGeneral() {
@@ -1406,17 +1429,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var rot: Vector3 = this.vishva.getRotation();
             var scl: Vector3 = this.vishva.getScale();
 
-            (<HTMLInputElement>document.getElementById("loc.x")).value = this.toString(loc.x);
-            (<HTMLInputElement>document.getElementById("loc.y")).value = this.toString(loc.y);
-            (<HTMLInputElement>document.getElementById("loc.z")).value = this.toString(loc.z);
+            (<HTMLInputElement> document.getElementById("loc.x")).value = this.toString(loc.x);
+            (<HTMLInputElement> document.getElementById("loc.y")).value = this.toString(loc.y);
+            (<HTMLInputElement> document.getElementById("loc.z")).value = this.toString(loc.z);
 
-            (<HTMLInputElement>document.getElementById("rot.x")).value = this.toString(rot.x);
-            (<HTMLInputElement>document.getElementById("rot.y")).value = this.toString(rot.y);
-            (<HTMLInputElement>document.getElementById("rot.z")).value = this.toString(rot.z);
+            (<HTMLInputElement> document.getElementById("rot.x")).value = this.toString(rot.x);
+            (<HTMLInputElement> document.getElementById("rot.y")).value = this.toString(rot.y);
+            (<HTMLInputElement> document.getElementById("rot.z")).value = this.toString(rot.z);
 
-            (<HTMLInputElement>document.getElementById("scl.x")).value = this.toString(scl.x);
-            (<HTMLInputElement>document.getElementById("scl.y")).value = this.toString(scl.y);
-            (<HTMLInputElement>document.getElementById("scl.z")).value = this.toString(scl.z);
+            (<HTMLInputElement> document.getElementById("scl.x")).value = this.toString(scl.x);
+            (<HTMLInputElement> document.getElementById("scl.y")).value = this.toString(scl.y);
+            (<HTMLInputElement> document.getElementById("scl.z")).value = this.toString(scl.z);
 
         }
 
@@ -1435,24 +1458,24 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         lightDirZ: HTMLInputElement;
 
         private initLightUI() {
-            this.lightAtt = <HTMLInputElement>document.getElementById("lightAtt");
-            this.lightType = <HTMLSelectElement>document.getElementById("lightType");
-            this.lightDiff = new ColorPickerDiag("diffuse light", "lightDiff","#ffffff",this.centerBottom, (hex, hsv, rgb) => {
+            this.lightAtt = <HTMLInputElement> document.getElementById("lightAtt");
+            this.lightType = <HTMLSelectElement> document.getElementById("lightType");
+            this.lightDiff = new ColorPickerDiag("diffuse light", "lightDiff", "#ffffff", this.centerBottom, (hex, hsv, rgb) => {
                 this.applyLight();
             });
 
-            this.lightSpec = new ColorPickerDiag("specular light", "lightSpec","#ffffff",this.centerBottom, (hex, hsv, rgb) => {
+            this.lightSpec = new ColorPickerDiag("specular light", "lightSpec", "#ffffff", this.centerBottom, (hex, hsv, rgb) => {
                 this.applyLight();
             });
-            this.lightInten = <HTMLInputElement>document.getElementById("lightInten");
-            this.lightRange = <HTMLInputElement>document.getElementById("lightRange");
-            this.lightRadius = <HTMLInputElement>document.getElementById("lightAtt");
-            this.lightAngle = <HTMLInputElement>document.getElementById("lightAngle");
-            this.lightExp = <HTMLInputElement>document.getElementById("lightExp");
-            this.lightGndClr = <HTMLInputElement>document.getElementById("lightGndClr");
-            this.lightDirX = <HTMLInputElement>document.getElementById("lightDirX");
-            this.lightDirY = <HTMLInputElement>document.getElementById("lightDirY");
-            this.lightDirZ = <HTMLInputElement>document.getElementById("lightDirZ");
+            this.lightInten = <HTMLInputElement> document.getElementById("lightInten");
+            this.lightRange = <HTMLInputElement> document.getElementById("lightRange");
+            this.lightRadius = <HTMLInputElement> document.getElementById("lightAtt");
+            this.lightAngle = <HTMLInputElement> document.getElementById("lightAngle");
+            this.lightExp = <HTMLInputElement> document.getElementById("lightExp");
+            this.lightGndClr = <HTMLInputElement> document.getElementById("lightGndClr");
+            this.lightDirX = <HTMLInputElement> document.getElementById("lightDirX");
+            this.lightDirY = <HTMLInputElement> document.getElementById("lightDirY");
+            this.lightDirZ = <HTMLInputElement> document.getElementById("lightDirZ");
 
             this.lightAtt.onchange = () => {
                 if (!this.lightAtt.checked) {
@@ -1467,12 +1490,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.lightDirX.onchange = () => this.applyLight();
             this.lightDirY.onchange = () => this.applyLight();
             this.lightDirZ.onchange = () => this.applyLight();
-            
-           
+
+
         }
 
         private updateLight() {
-            if (this.lightAtt === undefined)this.initLightUI();
+            if (this.lightAtt === undefined) this.initLightUI();
             let lightParm: LightParm = this.vishva.getAttachedLight();
             if (lightParm === null) {
                 this.lightAtt.checked = false;
@@ -1498,10 +1521,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private applyLight() {
-//            if (!this.lightAtt.checked) {
-//                this.vishva.detachLight();
-//                return;
-//            }
+            //            if (!this.lightAtt.checked) {
+            //                this.vishva.detachLight();
+            //                return;
+            //            }
             if (!this.lightAtt.checked) return;
             let lightParm: LightParm = new LightParm();
             lightParm.type = this.lightType.value;
@@ -1519,7 +1542,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.vishva.attachAlight(lightParm);
 
         }
-        
+
         matVis: HTMLInputElement;
         matVisVal: HTMLElement;
         matColType: HTMLSelectElement;
@@ -1527,20 +1550,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private initMatUI() {
 
             this.matVisVal = document.getElementById("matVisVal");
-            this.matVis = <HTMLInputElement>document.getElementById("matVis");
+            this.matVis = <HTMLInputElement> document.getElementById("matVis");
 
-            this.matColType = <HTMLSelectElement>document.getElementById("matColType");
+            this.matColType = <HTMLSelectElement> document.getElementById("matColType");
             this.matColType.onchange = () => {
                 let col: string = this.vishva.getMeshColor(this.matColType.value);
                 this.matColDiag.setColor(col);
             }
 
             this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, (hex, hsv, rgb) => {
-                 let err:string = this.vishva.setMeshColor(this.matColType.value, hex);
-                 if (err !== null) this.showAlertDiag(err);
-                
+                let err: string = this.vishva.setMeshColor(this.matColType.value, hex);
+                if (err !== null) this.showAlertDiag(err);
+
             });
-            
+
             this.matVisVal["value"] = "1.00";
             this.matVis.oninput = () => {
                 this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
@@ -1566,29 +1589,29 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         phyFric: HTMLInputElement;
 
         private initPhyUI() {
-            this.phyEna = <HTMLInputElement>document.getElementById("phyEna");
+            this.phyEna = <HTMLInputElement> document.getElementById("phyEna");
 
-            this.phyType = <HTMLSelectElement>document.getElementById("phyType");
+            this.phyType = <HTMLSelectElement> document.getElementById("phyType");
 
-            this.phyMass = <HTMLInputElement>document.getElementById("phyMass");
+            this.phyMass = <HTMLInputElement> document.getElementById("phyMass");
 
-            this.phyRes = <HTMLInputElement>document.getElementById("phyRes");
-            this.phyResVal = <HTMLElement>document.getElementById("phyResVal");
+            this.phyRes = <HTMLInputElement> document.getElementById("phyRes");
+            this.phyResVal = <HTMLElement> document.getElementById("phyResVal");
             this.phyResVal["value"] = "0.0";
             this.phyRes.oninput = () => {
                 this.phyResVal["value"] = this.formatValue(this.phyRes.value);
             }
 
-            this.phyFric = <HTMLInputElement>document.getElementById("phyFric");
-            this.phyFricVal = <HTMLElement>document.getElementById("phyFricVal");
+            this.phyFric = <HTMLInputElement> document.getElementById("phyFric");
+            this.phyFricVal = <HTMLElement> document.getElementById("phyFricVal");
             this.phyFricVal["value"] = "0.0";
             this.phyFric.oninput = () => {
                 this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
             }
 
-            let phyApply = <HTMLButtonElement>document.getElementById("phyApply");
-            let phyTest = <HTMLButtonElement>document.getElementById("phyTest");
-            let phyReset = <HTMLButtonElement>document.getElementById("phyReset");
+            let phyApply = <HTMLButtonElement> document.getElementById("phyApply");
+            let phyTest = <HTMLButtonElement> document.getElementById("phyTest");
+            let phyReset = <HTMLButtonElement> document.getElementById("phyReset");
 
             phyApply.onclick = (ev) => {
                 this.applyPhysics();
@@ -1719,13 +1742,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             so.min = min;
             so.max = max;
             so.value = value;
-            so.slide = (e, ui) => { return this.handleSlide(e, ui) };
+            so.slide = (e, ui) => {return this.handleSlide(e, ui)};
             return so;
         }
 
 
         private handleSlide(e: Event, ui: SliderUIParams): boolean {
-            var slider: string = (<HTMLElement>e.target).id;
+            var slider: string = (<HTMLElement> e.target).id;
             if (slider === "fov") {
                 this.vishva.setFov(ui.value);
             } else if (slider === "sunPos") {
@@ -1737,7 +1760,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 } else if (slider === "shade") {
                     this.vishva.setShade(v);
                 } else if (slider === "fog") {
-                   this.vishva.setFog(v / 1000);
+                    this.vishva.setFog(v / 1000);
                 }
             }
             return true;
@@ -1761,7 +1784,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private createNavMenu() {
 
             //button to show navigation menu
-            let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
+            let showNavMenu: HTMLButtonElement = <HTMLButtonElement> document.getElementById("showNavMenu");
             showNavMenu.style.visibility = "visible";
 
             //navigation menu sliding setup
@@ -1891,7 +1914,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private setSettings() {
-            let guiSettings: GuiSettings = <GuiSettings>this.vishva.getGuiSettings();
+            let guiSettings: GuiSettings = <GuiSettings> this.vishva.getGuiSettings();
             if (guiSettings !== null)
                 this.enableToolTips = guiSettings.enableToolTips;
         }

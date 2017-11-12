@@ -237,7 +237,7 @@ var org;
                         this.wasRunning = false;
                     };
                     /**
-                     * checks if two vectors v1 and v2 are equal with an equality precision of p
+                     * checks if two vectors v1 and v2 are equal within a precision of p
                      */
                     CharacterControl.prototype.areVectorsEqual = function (v1, v2, p) {
                         return ((Math.abs(v1.x - v2.x) < p) && (Math.abs(v1.y - v2.y) < p) && (Math.abs(v1.z - v2.z) < p));
@@ -373,9 +373,11 @@ var org;
                         if (this.grounded) {
                             return this.idle;
                         }
+                        this.wasWalking = false;
+                        this.wasRunning = false;
+                        this.movFallTime = 0;
                         var anim = this.idle;
                         this.fallFrameCount = 0;
-                        this.movFallTime = 0;
                         if (dt === 0) {
                             this.freeFallDist = 5;
                         }
@@ -650,6 +652,8 @@ var org;
                             this.propsDiag = null;
                             this.fixingDragIssue = false;
                             this.activePanel = -1;
+                            //meshAnimDiag: JQuery;
+                            this.animUIInitialized = false;
                             this.animSelect = null;
                             //        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
                             //            var colors: number[] = [rgb.r, rgb.g, rgb.b];
@@ -1486,16 +1490,29 @@ var org;
                         };
                         VishvaGUI.prototype.initAnimUI = function () {
                             var _this = this;
+                            this.animUIInitialized = true;
                             var animSkelChange = document.getElementById("animSkelChange");
+                            var animSkelClone = document.getElementById("animSkelClone");
                             var animSkelView = document.getElementById("animSkelView");
                             var animRest = document.getElementById("animRest");
                             var animRangeName = document.getElementById("animRangeName");
                             var animRangeStart = document.getElementById("animRangeStart");
                             var animRangeEnd = document.getElementById("animRangeEnd");
                             var animRangeMake = document.getElementById("animRangeMake");
+                            this.animSkelList = document.getElementById("animSkelList");
                             //change the mesh skeleton
                             animSkelChange.onclick = function (e) {
-                                _this.vishva.changeSkeleton();
+                                if (_this.vishva.changeSkeleton(_this.animSkelList.selectedOptions[0].value))
+                                    _this.updateAnimations();
+                                else
+                                    _this.showAlertDiag("Error: unable to switch");
+                            };
+                            //clone the selected skeleton and swicth to it
+                            animSkelClone.onclick = function (e) {
+                                if (_this.vishva.cloneChangeSkeleton(_this.animSkelList.selectedOptions[0].value))
+                                    _this.updateAnimations();
+                                else
+                                    _this.showAlertDiag("Error: unable to clone and switch");
                             };
                             //enable/disable skeleton view
                             animSkelView.onclick = function (e) {
@@ -1550,62 +1567,44 @@ var org;
                                 return true;
                             };
                         };
-                        VishvaGUI.prototype.createAnimDiag = function () {
-                            var _this = this;
-                            this.initAnimUI();
-                            this.meshAnimDiag = $("#meshAnimDiag");
-                            var dos = {};
-                            dos.autoOpen = false;
-                            dos.modal = false;
-                            dos.resizable = false;
-                            dos.width = "auto";
-                            dos.height = "auto";
-                            dos.closeOnEscape = false;
-                            dos.closeText = "";
-                            dos.close = function (e, ui) {
-                                _this.vishva.switchDisabled = false;
-                            };
-                            this.meshAnimDiag.dialog(dos);
-                        };
+                        //        private createAnimDiag() {
+                        //            this.initAnimUI();
+                        //            this.meshAnimDiag = $("#meshAnimDiag");
+                        //            var dos: DialogOptions = {};
+                        //            dos.autoOpen = false;
+                        //            dos.modal = false;
+                        //            dos.resizable = false;
+                        //            dos.width = "auto";
+                        //            dos.height = (<any>"auto");
+                        //            dos.closeOnEscape = false;
+                        //            dos.closeText = "";
+                        //            dos.close = (e, ui) => {
+                        //                this.vishva.switchDisabled = false;
+                        //            };
+                        //            this.meshAnimDiag.dialog(dos);
+                        //        }
                         VishvaGUI.prototype.updateAnimations = function () {
-                            this.vishva.switchDisabled = true;
-                            this.initAnimUI();
+                            //this.vishva.switchDisabled = true;
+                            if (!this.animUIInitialized)
+                                this.initAnimUI();
                             this.skel = this.vishva.getSkeleton();
                             var skelName;
                             if (this.skel == null) {
-                                document.getElementById("skelName").innerText = "no skeleton";
-                                return;
+                                skelName = "NO SKELETON";
                             }
                             else {
-                                skelName = this.skel.name;
-                                if (skelName.trim() === "")
-                                    skelName = "no name";
+                                skelName = this.skel.name.trim();
+                                if (skelName === "")
+                                    skelName = "NO NAME";
+                                skelName = skelName + " (" + this.skel.id + ")";
                             }
                             document.getElementById("skelName").innerText = skelName;
                             this.refreshAnimSelect();
-                            //            var childs: HTMLCollection = this.animSelect.children;
-                            //            var l: number = (<number>childs.length | 0);
-                            //            for (var i: number = l - 1; i >= 0; i--) {
-                            //                childs[i].remove();
-                            //            }
-                            //            if (skelName != null) {
-                            //                var range: AnimationRange[] = this.vishva.getAnimationRanges();
-                            //                var animOpt: HTMLOptionElement;
-                            //                for (var index171 = 0; index171 < range.length; index171++) {
-                            //                    var ar = range[index171];
-                            //                    {
-                            //                        animOpt = document.createElement("option");
-                            //                        animOpt.value = ar.name;
-                            //                        animOpt.innerText = ar.name;
-                            //                        this.animSelect.appendChild(animOpt);
-                            //                    }
-                            //                }
-                            //                if (range[0] != null) {
-                            //                    document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
-                            //                    document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
-                            //                }
-                            //            }
+                            this.refreshAnimSkelList();
                         };
+                        /**
+                         * refresh the list of animation ranges
+                         */
                         VishvaGUI.prototype.refreshAnimSelect = function () {
                             var childs = this.animSelect.children;
                             var l = (childs.length | 0);
@@ -1613,19 +1612,47 @@ var org;
                                 childs[i].remove();
                             }
                             var range = this.vishva.getAnimationRanges();
-                            if (range === null)
-                                return;
-                            var animOpt;
-                            for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
-                                var ar = range_1[_i];
-                                animOpt = document.createElement("option");
-                                animOpt.value = ar.name;
-                                animOpt.innerText = ar.name;
-                                this.animSelect.appendChild(animOpt);
+                            if (range != null) {
+                                var animOpt;
+                                for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
+                                    var ar = range_1[_i];
+                                    animOpt = document.createElement("option");
+                                    animOpt.value = ar.name;
+                                    animOpt.innerText = ar.name;
+                                    this.animSelect.appendChild(animOpt);
+                                }
+                                if (range[0] != null) {
+                                    document.getElementById("animFrom").innerText = new Number(range[0].from).toString();
+                                    document.getElementById("animTo").innerText = new Number(range[0].to).toString();
+                                }
+                                else {
+                                    document.getElementById("animFrom").innerText = "";
+                                    document.getElementById("animTo").innerText = "";
+                                }
                             }
-                            if (range[0] != null) {
-                                document.getElementById("animFrom").innerText = new Number(range[0].from).toString();
-                                document.getElementById("animTo").innerText = new Number(range[0].to).toString();
+                            else {
+                                document.getElementById("animFrom").innerText = "";
+                                document.getElementById("animTo").innerText = "";
+                            }
+                        };
+                        /**
+                         * refresh list of skeletons shown in animation tab
+                         */
+                        VishvaGUI.prototype.refreshAnimSkelList = function () {
+                            var childs = this.animSkelList.children;
+                            var l = (childs.length | 0);
+                            for (var i = l - 1; i >= 0; i--) {
+                                childs[i].remove();
+                            }
+                            var skels = this.vishva.getSkeltons();
+                            var opt;
+                            //NOTE:skel id is not unique
+                            for (var _i = 0, skels_1 = skels; _i < skels_1.length; _i++) {
+                                var skel = skels_1[_i];
+                                opt = document.createElement("option");
+                                opt.value = skel.id + "-" + skel.name;
+                                opt.innerText = skel.name + " (" + skel.id + ")";
+                                this.animSkelList.appendChild(opt);
                             }
                         };
                         VishvaGUI.prototype.toString = function (d) {
@@ -4193,15 +4220,44 @@ var org;
                         else
                             return this.meshPicked.skeleton;
                     };
-                    Vishva.prototype.changeSkeleton = function () {
+                    Vishva.prototype.getSkeltons = function () {
+                        return this.scene.skeletons;
+                    };
+                    //TODO:skeleton id is not unique. need to figure out how to handle that
+                    Vishva.prototype.changeSkeleton = function (skelId) {
+                        var switched = false;
                         var skels = this.scene.skeletons;
-                        for (var _i = 0, skels_1 = skels; _i < skels_1.length; _i++) {
-                            var skel = skels_1[_i];
-                            console.log(skel.name);
-                            if (skel.name === "avatar_bow") {
+                        console.log("trying to swicth to " + skelId);
+                        for (var _i = 0, skels_2 = skels; _i < skels_2.length; _i++) {
+                            var skel = skels_2[_i];
+                            var id = skel.id + "-" + skel.name;
+                            if (id === skelId) {
+                                console.log("found skeleton. swicthing. ");
                                 this.meshPicked.skeleton = skel;
+                                switched = true;
+                                break;
                             }
                         }
+                        return switched;
+                    };
+                    //TODO during save unused skeleton are dropped and ID are reassigned.
+                    //how do we handle that.
+                    Vishva.prototype.cloneChangeSkeleton = function (skelId) {
+                        var switched = false;
+                        var skels = this.scene.skeletons;
+                        for (var _i = 0, skels_3 = skels; _i < skels_3.length; _i++) {
+                            var skel = skels_3[_i];
+                            var id = skel.id + "-" + skel.name;
+                            if (id === skelId) {
+                                console.log("found skeleton. swicthing. ");
+                                var newId = new Number(Date.now()).toString();
+                                var clonedSkel = skel.clone(skel.name, newId);
+                                this.meshPicked.skeleton = clonedSkel;
+                                switched = true;
+                                break;
+                            }
+                        }
+                        return switched;
                     };
                     Vishva.prototype.toggleSkelView = function () {
                         if (this.meshPicked.skeleton == null)
@@ -4232,7 +4288,7 @@ var org;
                             sva.splice(i, 1);
                     };
                     Vishva.prototype.animRest = function () {
-                        if (this.meshPicked.skeleton == null)
+                        if (this.meshPicked.skeleton === null || this.meshPicked.skeleton === undefined)
                             return;
                         this.scene.stopAnimation(this.meshPicked.skeleton);
                         this.meshPicked.skeleton.returnToRest();
@@ -4244,7 +4300,7 @@ var org;
                     };
                     Vishva.prototype.getAnimationRanges = function () {
                         var skel = this.meshPicked.skeleton;
-                        if (skel !== null) {
+                        if (skel !== null && skel !== undefined) {
                             var ranges = skel.getAnimationRanges();
                             return ranges;
                         }
@@ -4573,7 +4629,7 @@ var org;
                         }
                     };
                     /**
-                     * resets each skel a assign. unique id to each skeleton. deserialization uses
+                     * resets each skel.assign. unique id to each skeleton. deserialization uses
                      * skeleton id to associate skel with mesh. if id isn't unique wrong skels
                      * could get assigned to a mesh.
                      *

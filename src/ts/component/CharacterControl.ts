@@ -172,7 +172,7 @@ namespace org.ssatguru.babylonjs.component {
 
                 anim = this.doMove(dt);
             } else if (!this.inFreeFall) {
-
+                
                 anim = this.doIdle(dt);
             }
 
@@ -263,7 +263,7 @@ namespace org.ssatguru.babylonjs.component {
         }
 
         /**
-         * checks if two vectors v1 and v2 are equal with an equality precision of p
+         * checks if two vectors v1 and v2 are equal within a precision of p
          */
         private areVectorsEqual(v1: Vector3, v2: Vector3, p: number) {
             return ((Math.abs(v1.x - v2.x) < p) && (Math.abs(v1.y - v2.y) < p) && (Math.abs(v1.z - v2.z) < p));
@@ -403,9 +403,12 @@ namespace org.ssatguru.babylonjs.component {
             if (this.grounded) {
                 return this.idle;
             }
+            this.wasWalking=false;
+            this.wasRunning=false;
+            this.movFallTime = 0;
             let anim: AnimData = this.idle;
             this.fallFrameCount = 0;
-            this.movFallTime = 0;
+            
 
             if (dt === 0) {
                 this.freeFallDist = 5;

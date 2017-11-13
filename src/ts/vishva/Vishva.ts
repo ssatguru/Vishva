@@ -1814,7 +1814,6 @@ namespace org.ssatguru.babylonjs.vishva {
             return;
         }
 
-
         public snapTrans(yes: boolean): string {
             if (this.snapperOn) {
                 return "Cannot change snapping mode when snapper is on"
@@ -1835,6 +1834,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public setSnapTransValue(val: number) {
+            if (isNaN(val)) return;
             this.editControl.setTransSnapValue(val);
         }
 
@@ -1858,6 +1858,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.snapRotOn;
         }
         public setSnapRotValue(val: number) {
+            if (isNaN(val)) return;
             let inrad: number = val * Math.PI / 180;
             this.editControl.setRotSnapValue(inrad);
         }
@@ -1866,6 +1867,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.snapScaleOn;
         }
         public setSnapScaleValue(val: number) {
+            if (isNaN(val)) return;
             this.editControl.setScaleSnapValue(val);
         }
         public snapScale(yes: boolean): string {
@@ -1960,6 +1962,32 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.meshPicked.position;
         }
 
+
+        //Translation
+        public setLocation(valX: number, valY: number, valZ: number){
+            if (isNaN(valX) || isNaN(valY) || isNaN(valZ)) return;
+            if (this.isMeshSelected) {
+                this.meshPicked.position.x = valX;
+                this.meshPicked.position.y = valY;
+                this.meshPicked.position.z = valZ;
+            }
+        }
+
+        public setRotation(valX: number, valY: number, valZ: number) {
+            if (isNaN(valX) || isNaN(valY) || isNaN(valZ)) return;
+            if (this.isMeshSelected) {
+                Quaternion.RotationYawPitchRollToRef(valY*Math.PI/180, valX*Math.PI/180, valZ*Math.PI/180, this.meshPicked.rotationQuaternion)
+            }
+        }
+        public setScale(valX: number, valY: number, valZ: number) {
+            if (isNaN(valX) || isNaN(valY) || isNaN(valZ)) return;
+            if (this.isMeshSelected) {
+                this.meshPicked.scaling.x = valX;
+                this.meshPicked.scaling.y = valY;
+                this.meshPicked.scaling.z = valZ;
+            }
+        }
+        
         public getRotation(): Vector3 {
             var euler: Vector3 = this.meshPicked.rotationQuaternion.toEulerAngles();
             var r: number = 180 / Math.PI;
@@ -1987,20 +2015,20 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSkeleton(): Skeleton {
             if (this.meshPicked.skeleton == null) return null; else return this.meshPicked.skeleton;
         }
-        
-        public getSkeltons():Skeleton[]{
+
+        public getSkeltons(): Skeleton[] {
             return this.scene.skeletons;
         }
 
         //TODO:skeleton id is not unique. need to figure out how to handle that
-        public changeSkeleton(skelId:string):boolean {
-            let switched:boolean=false;
+        public changeSkeleton(skelId: string): boolean {
+            let switched: boolean = false;
             let skels: Skeleton[] = this.scene.skeletons;
             console.log("trying to swicth to " + skelId);
             for (let skel of skels) {
-                let id = skel.id+"-"+skel.name;
+                let id = skel.id + "-" + skel.name;
                 if (id === skelId) {
-                    console.log("found skeleton. swicthing. " )
+                    console.log("found skeleton. swicthing. ")
                     this.meshPicked.skeleton = skel;
                     switched = true;
                     break;
@@ -2010,15 +2038,15 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         //TODO during save unused skeleton are dropped and ID are reassigned.
         //how do we handle that.
-        public cloneChangeSkeleton(skelId:string):boolean {
-            let switched:boolean=false;
+        public cloneChangeSkeleton(skelId: string): boolean {
+            let switched: boolean = false;
             let skels: Skeleton[] = this.scene.skeletons;
             for (let skel of skels) {
-                let id = skel.id+"-"+skel.name;
+                let id = skel.id + "-" + skel.name;
                 if (id === skelId) {
-                    console.log("found skeleton. swicthing. " )
+                    console.log("found skeleton. swicthing. ")
                     var newId: string = (<number> new Number(Date.now())).toString();
-                    var clonedSkel:Skeleton = skel.clone(skel.name, newId );
+                    var clonedSkel: Skeleton = skel.clone(skel.name, newId);
                     this.meshPicked.skeleton = clonedSkel;
                     switched = true;
                     break;

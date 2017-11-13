@@ -163,7 +163,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 autoOpen: false,
                 resizable: true,
                 position: this.centerBottom,
-                width: (<any> "100%"),
+                width: (<any> "95%"),
                 height: (<any> "auto"),
                 closeText: "",
                 closeOnEscape: false
@@ -1140,6 +1140,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         genOperRot: HTMLElement;
         genOperScale: HTMLElement;
         genOperFocus: HTMLElement;
+        
+        genLocX:HTMLInputElement;
+        genLocY:HTMLInputElement;
+        genLocZ:HTMLInputElement;
+        genRotX:HTMLInputElement;
+        genRotY:HTMLInputElement;
+        genRotZ:HTMLInputElement;
+        genScaleX:HTMLInputElement;
+        genScaleY:HTMLInputElement;
+        genScaleZ:HTMLInputElement;
+        
 
         genSnapTrans: HTMLInputElement;
         genSnapRot: HTMLInputElement;
@@ -1156,13 +1167,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private initGeneral() {
             //name
             this.genName = <HTMLInputElement> document.getElementById("genName");
-            //TODO remove
-            //            this.genName.onfocus = () => {
-            //                this.vishva.disableKeys();
-            //            }
-            //            this.genName.onblur = () => {
-            //                this.vishva.enableKeys();
-            //            }
             this.genName.onchange = () => {
                 this.vishva.setName(this.genName.value);
             }
@@ -1216,8 +1220,46 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.vishva.setFocusOnMesh();
             }
 
-
-
+            //Translation
+            this.genLocX = <HTMLInputElement> document.getElementById("loc.x");
+            this.genLocX.onchange = () => {
+                this.vishva.setLocation(Number(this.genLocX.value),Number(this.genLocY.value),Number(this.genLocZ.value));
+            }
+            this.genLocY = <HTMLInputElement> document.getElementById("loc.y");
+            this.genLocY.onchange = () => {
+                this.vishva.setLocation(Number(this.genLocX.value),Number(this.genLocY.value),Number(this.genLocZ.value));
+            }
+            this.genLocZ = <HTMLInputElement> document.getElementById("loc.z");
+            this.genLocZ.onchange = () => {
+                this.vishva.setLocation(Number(this.genLocX.value),Number(this.genLocY.value),Number(this.genLocZ.value));
+            }
+            //Rotation
+            this.genRotX = <HTMLInputElement> document.getElementById("rot.x");
+            this.genRotX.onchange = () => {
+                this.vishva.setRotation(Number(this.genRotX.value),Number(this.genRotY.value),Number(this.genRotZ.value));
+            }
+            this.genRotY = <HTMLInputElement> document.getElementById("rot.y");
+            this.genRotY.onchange = () => {
+                this.vishva.setRotation(Number(this.genRotX.value),Number(this.genRotY.value),Number(this.genRotZ.value));
+            }
+            this.genRotZ = <HTMLInputElement> document.getElementById("rot.z");
+            this.genRotZ.onchange = () => {
+                this.vishva.setRotation(Number(this.genRotX.value),Number(this.genRotY.value),Number(this.genRotZ.value));
+            }
+            //Scale
+            this.genScaleX = <HTMLInputElement> document.getElementById("scl.x");
+            this.genScaleX.onchange = () => {
+                this.vishva.setScale(Number(this.genScaleX.value),Number(this.genScaleY.value),Number(this.genScaleZ.value));
+            }
+            this.genScaleY = <HTMLInputElement> document.getElementById("scl.y");
+            this.genScaleY.onchange = () => {
+                this.vishva.setScale(Number(this.genScaleX.value),Number(this.genScaleY.value),Number(this.genScaleZ.value));
+            }
+            this.genScaleZ = <HTMLInputElement> document.getElementById("scl.z");
+            this.genScaleZ.onchange = () => {
+                this.vishva.setScale(Number(this.genScaleX.value),Number(this.genScaleY.value),Number(this.genScaleZ.value));
+            }
+            
             //Snap CheckBox
             this.genSnapTrans = <HTMLInputElement> document.getElementById("snapTrans");
             this.genSnapTrans.onchange = () => {

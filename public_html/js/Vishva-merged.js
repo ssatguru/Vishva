@@ -779,7 +779,7 @@ var org;
                                 autoOpen: false,
                                 resizable: true,
                                 position: this.centerBottom,
-                                width: "100%",
+                                width: "95%",
                                 height: "auto",
                                 closeText: "",
                                 closeOnEscape: false
@@ -1662,13 +1662,6 @@ var org;
                             var _this = this;
                             //name
                             this.genName = document.getElementById("genName");
-                            //TODO remove
-                            //            this.genName.onfocus = () => {
-                            //                this.vishva.disableKeys();
-                            //            }
-                            //            this.genName.onblur = () => {
-                            //                this.vishva.enableKeys();
-                            //            }
                             this.genName.onchange = function () {
                                 _this.vishva.setName(_this.genName.value);
                             };
@@ -1716,6 +1709,45 @@ var org;
                             };
                             this.genOperFocus.onclick = function () {
                                 _this.vishva.setFocusOnMesh();
+                            };
+                            //Translation
+                            this.genLocX = document.getElementById("loc.x");
+                            this.genLocX.onchange = function () {
+                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
+                            };
+                            this.genLocY = document.getElementById("loc.y");
+                            this.genLocY.onchange = function () {
+                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
+                            };
+                            this.genLocZ = document.getElementById("loc.z");
+                            this.genLocZ.onchange = function () {
+                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
+                            };
+                            //Rotation
+                            this.genRotX = document.getElementById("rot.x");
+                            this.genRotX.onchange = function () {
+                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
+                            };
+                            this.genRotY = document.getElementById("rot.y");
+                            this.genRotY.onchange = function () {
+                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
+                            };
+                            this.genRotZ = document.getElementById("rot.z");
+                            this.genRotZ.onchange = function () {
+                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
+                            };
+                            //Scale
+                            this.genScaleX = document.getElementById("scl.x");
+                            this.genScaleX.onchange = function () {
+                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
+                            };
+                            this.genScaleY = document.getElementById("scl.y");
+                            this.genScaleY.onchange = function () {
+                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
+                            };
+                            this.genScaleZ = document.getElementById("scl.z");
+                            this.genScaleZ.onchange = function () {
+                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
                             };
                             //Snap CheckBox
                             this.genSnapTrans = document.getElementById("snapTrans");
@@ -4082,6 +4114,8 @@ var org;
                         return this.snapTransOn;
                     };
                     Vishva.prototype.setSnapTransValue = function (val) {
+                        if (isNaN(val))
+                            return;
                         this.editControl.setTransSnapValue(val);
                     };
                     Vishva.prototype.snapRot = function (yes) {
@@ -4104,6 +4138,8 @@ var org;
                         return this.snapRotOn;
                     };
                     Vishva.prototype.setSnapRotValue = function (val) {
+                        if (isNaN(val))
+                            return;
                         var inrad = val * Math.PI / 180;
                         this.editControl.setRotSnapValue(inrad);
                     };
@@ -4111,6 +4147,8 @@ var org;
                         return this.snapScaleOn;
                     };
                     Vishva.prototype.setSnapScaleValue = function (val) {
+                        if (isNaN(val))
+                            return;
                         this.editControl.setScaleSnapValue(val);
                     };
                     Vishva.prototype.snapScale = function (yes) {
@@ -4190,6 +4228,32 @@ var org;
                     };
                     Vishva.prototype.getLocation = function () {
                         return this.meshPicked.position;
+                    };
+                    //Translation
+                    Vishva.prototype.setLocation = function (valX, valY, valZ) {
+                        if (isNaN(valX) || isNaN(valY) || isNaN(valZ))
+                            return;
+                        if (this.isMeshSelected) {
+                            this.meshPicked.position.x = valX;
+                            this.meshPicked.position.y = valY;
+                            this.meshPicked.position.z = valZ;
+                        }
+                    };
+                    Vishva.prototype.setRotation = function (valX, valY, valZ) {
+                        if (isNaN(valX) || isNaN(valY) || isNaN(valZ))
+                            return;
+                        if (this.isMeshSelected) {
+                            Quaternion.RotationYawPitchRollToRef(valY * Math.PI / 180, valX * Math.PI / 180, valZ * Math.PI / 180, this.meshPicked.rotationQuaternion);
+                        }
+                    };
+                    Vishva.prototype.setScale = function (valX, valY, valZ) {
+                        if (isNaN(valX) || isNaN(valY) || isNaN(valZ))
+                            return;
+                        if (this.isMeshSelected) {
+                            this.meshPicked.scaling.x = valX;
+                            this.meshPicked.scaling.y = valY;
+                            this.meshPicked.scaling.z = valZ;
+                        }
                     };
                     Vishva.prototype.getRotation = function () {
                         var euler = this.meshPicked.rotationQuaternion.toEulerAngles();

@@ -1608,7 +1608,46 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             return null;
         }
+        public getMaterialName(): string {
+            if (this.isMeshSelected) {
+                return this.meshPicked.material.name;
+            } else {
+                return "";
+            }
+        }
 
+        public getMatTexture(type: string): string {
+            let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
+            if (type == "diffuse") {
+                return stdMat.diffuseTexture.name;
+            } else
+                return "";
+        }
+        public setMatTexture(type: string, textName:string) {
+            let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
+            if (type == "diffuse") {
+                let bt: BaseTexture = this.getTextureByName(textName);
+                if (bt != null  ){
+                    let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
+                    stdMat.diffuseTexture = bt;
+                }
+            } 
+        }
+        public getTextures():string[]{
+            let ts:BaseTexture[] =this.scene.textures;
+            let ns: string[] = [];
+            for(let t of ts){
+                ns.push(t.name);
+            }
+            return ns;
+        }
+        private getTextureByName(name:String):BaseTexture{
+             let ts:BaseTexture[] =this.scene.textures;
+             for(let t of ts){
+                if (t.name==name) return t;
+            }
+            return null;
+        }
         public getMeshColor(colType: string): string {
             if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
                 return "#000000";
@@ -1964,7 +2003,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         //Translation
-        public setLocation(valX: number, valY: number, valZ: number){
+        public setLocation(valX: number, valY: number, valZ: number) {
             if (isNaN(valX) || isNaN(valY) || isNaN(valZ)) return;
             if (this.isMeshSelected) {
                 this.meshPicked.position.x = valX;
@@ -1976,7 +2015,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public setRotation(valX: number, valY: number, valZ: number) {
             if (isNaN(valX) || isNaN(valY) || isNaN(valZ)) return;
             if (this.isMeshSelected) {
-                Quaternion.RotationYawPitchRollToRef(valY*Math.PI/180, valX*Math.PI/180, valZ*Math.PI/180, this.meshPicked.rotationQuaternion)
+                Quaternion.RotationYawPitchRollToRef(valY * Math.PI / 180, valX * Math.PI / 180, valZ * Math.PI / 180, this.meshPicked.rotationQuaternion)
             }
         }
         public setScale(valX: number, valY: number, valZ: number) {
@@ -1987,7 +2026,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.meshPicked.scaling.z = valZ;
             }
         }
-        
+
         public getRotation(): Vector3 {
             var euler: Vector3 = this.meshPicked.rotationQuaternion.toEulerAngles();
             var r: number = 180 / Math.PI;

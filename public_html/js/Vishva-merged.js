@@ -999,6 +999,36 @@ var org;
                             };
                             this.helpDiag.dialog(dos);
                         };
+                        VishvaGUI.prototype.createTextureDiag = function () {
+                            var _this = this;
+                            this.textureDiag = $("#textureDiag");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                width: "auto",
+                                closeOnEscape: false,
+                                closeText: ""
+                            };
+                            this.textureDiag.dialog(dos);
+                            this.textureDiag["jpo"] = this.centerBottom;
+                            this.dialogs.push(this.textureDiag);
+                            this.textureImg = document.getElementById("textImg");
+                            var chgTexture = document.getElementById("changeTexture");
+                            chgTexture.onclick = function () {
+                                _this.vishva.setMatTexture("diffuse", textList.value);
+                            };
+                            var textList = document.getElementById("textureList");
+                            var textures = this.vishva.getTextures();
+                            var opt;
+                            //NOTE:skel id is not unique
+                            for (var _i = 0, textures_1 = textures; _i < textures_1.length; _i++) {
+                                var text = textures_1[_i];
+                                opt = document.createElement("option");
+                                opt.value = text;
+                                opt.innerText = text;
+                                textList.appendChild(opt);
+                            }
+                        };
                         /*
                          * A dialog box to show the list of available sensors
                          * actuators, each in seperate tabs
@@ -2032,6 +2062,8 @@ var org;
                         };
                         VishvaGUI.prototype.initMatUI = function () {
                             var _this = this;
+                            this.matName = document.getElementById("matName");
+                            this.matName.innerText = this.vishva.getMaterialName();
                             this.matVisVal = document.getElementById("matVisVal");
                             this.matVis = document.getElementById("matVis");
                             this.matColType = document.getElementById("matColType");
@@ -2048,6 +2080,16 @@ var org;
                             this.matVis.oninput = function () {
                                 _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
                                 _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
+                            };
+                            this.matTexture = document.getElementById("matTexture");
+                            this.matTexture.onclick = function () {
+                                console.log("checking texture");
+                                if (_this.textureDiag == null) {
+                                    _this.createTextureDiag();
+                                }
+                                _this.textureImg.src = _this.vishva.getMatTexture("diffuse");
+                                console.log(_this.textureImg.src);
+                                _this.textureDiag.dialog("open");
                             };
                         };
                         VishvaGUI.prototype.updateMat = function () {
@@ -3877,6 +3919,50 @@ var org;
                             sm.ambientColor = col;
                         else {
                             return "invalid color type [" + colType + "]";
+                        }
+                        return null;
+                    };
+                    Vishva.prototype.getMaterialName = function () {
+                        if (this.isMeshSelected) {
+                            return this.meshPicked.material.name;
+                        }
+                        else {
+                            return "";
+                        }
+                    };
+                    Vishva.prototype.getMatTexture = function (type) {
+                        var stdMat = this.meshPicked.material;
+                        if (type == "diffuse") {
+                            return stdMat.diffuseTexture.name;
+                        }
+                        else
+                            return "";
+                    };
+                    Vishva.prototype.setMatTexture = function (type, textName) {
+                        var stdMat = this.meshPicked.material;
+                        if (type == "diffuse") {
+                            var bt = this.getTextureByName(textName);
+                            if (bt != null) {
+                                var stdMat_1 = this.meshPicked.material;
+                                stdMat_1.diffuseTexture = bt;
+                            }
+                        }
+                    };
+                    Vishva.prototype.getTextures = function () {
+                        var ts = this.scene.textures;
+                        var ns = [];
+                        for (var _i = 0, ts_1 = ts; _i < ts_1.length; _i++) {
+                            var t = ts_1[_i];
+                            ns.push(t.name);
+                        }
+                        return ns;
+                    };
+                    Vishva.prototype.getTextureByName = function (name) {
+                        var ts = this.scene.textures;
+                        for (var _i = 0, ts_2 = ts; _i < ts_2.length; _i++) {
+                            var t = ts_2[_i];
+                            if (t.name == name)
+                                return t;
                         }
                         return null;
                     };

@@ -431,6 +431,38 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.helpDiag.dialog(dos);
         }
 
+        textureDiag: JQuery;
+        textureImg: HTMLImageElement;
+        private createTextureDiag() {
+            this.textureDiag = $("#textureDiag");
+            var dos: DialogOptions = {
+                autoOpen: false,
+                resizable: false,
+                width: "auto",
+                closeOnEscape: false,
+                closeText: ""
+            };
+            this.textureDiag.dialog(dos);
+            this.textureDiag["jpo"] = this.centerBottom;
+            this.dialogs.push(this.textureDiag);
+            
+            this.textureImg = <HTMLImageElement> document.getElementById("textImg");
+            let chgTexture:HTMLButtonElement= <HTMLButtonElement> document.getElementById("changeTexture");
+            chgTexture.onclick = ()=>{
+                this.vishva.setMatTexture("diffuse", textList.value);
+            }
+            let textList: HTMLSelectElement = <HTMLSelectElement>document.getElementById("textureList");
+            var textures: string[] = this.vishva.getTextures();
+            var opt: HTMLOptionElement;
+            for (let text of textures) {
+                opt = document.createElement("option");
+                opt.value = text;
+                opt.innerText = text;
+                textList.appendChild(opt);
+            }
+            
+        }
+
         sNaDialog: JQuery;
 
         sensSel: HTMLSelectElement;
@@ -1140,17 +1172,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         genOperRot: HTMLElement;
         genOperScale: HTMLElement;
         genOperFocus: HTMLElement;
-        
-        genLocX:HTMLInputElement;
-        genLocY:HTMLInputElement;
-        genLocZ:HTMLInputElement;
-        genRotX:HTMLInputElement;
-        genRotY:HTMLInputElement;
-        genRotZ:HTMLInputElement;
-        genScaleX:HTMLInputElement;
-        genScaleY:HTMLInputElement;
-        genScaleZ:HTMLInputElement;
-        
+
+        genLocX: HTMLInputElement;
+        genLocY: HTMLInputElement;
+        genLocZ: HTMLInputElement;
+        genRotX: HTMLInputElement;
+        genRotY: HTMLInputElement;
+        genRotZ: HTMLInputElement;
+        genScaleX: HTMLInputElement;
+        genScaleY: HTMLInputElement;
+        genScaleZ: HTMLInputElement;
+
 
         genSnapTrans: HTMLInputElement;
         genSnapRot: HTMLInputElement;
@@ -1223,43 +1255,43 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //Translation
             this.genLocX = <HTMLInputElement> document.getElementById("loc.x");
             this.genLocX.onchange = () => {
-                this.vishva.setLocation(Number(this.genLocX.value),Number(this.genLocY.value),Number(this.genLocZ.value));
+                this.vishva.setLocation(Number(this.genLocX.value), Number(this.genLocY.value), Number(this.genLocZ.value));
             }
             this.genLocY = <HTMLInputElement> document.getElementById("loc.y");
             this.genLocY.onchange = () => {
-                this.vishva.setLocation(Number(this.genLocX.value),Number(this.genLocY.value),Number(this.genLocZ.value));
+                this.vishva.setLocation(Number(this.genLocX.value), Number(this.genLocY.value), Number(this.genLocZ.value));
             }
             this.genLocZ = <HTMLInputElement> document.getElementById("loc.z");
             this.genLocZ.onchange = () => {
-                this.vishva.setLocation(Number(this.genLocX.value),Number(this.genLocY.value),Number(this.genLocZ.value));
+                this.vishva.setLocation(Number(this.genLocX.value), Number(this.genLocY.value), Number(this.genLocZ.value));
             }
             //Rotation
             this.genRotX = <HTMLInputElement> document.getElementById("rot.x");
             this.genRotX.onchange = () => {
-                this.vishva.setRotation(Number(this.genRotX.value),Number(this.genRotY.value),Number(this.genRotZ.value));
+                this.vishva.setRotation(Number(this.genRotX.value), Number(this.genRotY.value), Number(this.genRotZ.value));
             }
             this.genRotY = <HTMLInputElement> document.getElementById("rot.y");
             this.genRotY.onchange = () => {
-                this.vishva.setRotation(Number(this.genRotX.value),Number(this.genRotY.value),Number(this.genRotZ.value));
+                this.vishva.setRotation(Number(this.genRotX.value), Number(this.genRotY.value), Number(this.genRotZ.value));
             }
             this.genRotZ = <HTMLInputElement> document.getElementById("rot.z");
             this.genRotZ.onchange = () => {
-                this.vishva.setRotation(Number(this.genRotX.value),Number(this.genRotY.value),Number(this.genRotZ.value));
+                this.vishva.setRotation(Number(this.genRotX.value), Number(this.genRotY.value), Number(this.genRotZ.value));
             }
             //Scale
             this.genScaleX = <HTMLInputElement> document.getElementById("scl.x");
             this.genScaleX.onchange = () => {
-                this.vishva.setScale(Number(this.genScaleX.value),Number(this.genScaleY.value),Number(this.genScaleZ.value));
+                this.vishva.setScale(Number(this.genScaleX.value), Number(this.genScaleY.value), Number(this.genScaleZ.value));
             }
             this.genScaleY = <HTMLInputElement> document.getElementById("scl.y");
             this.genScaleY.onchange = () => {
-                this.vishva.setScale(Number(this.genScaleX.value),Number(this.genScaleY.value),Number(this.genScaleZ.value));
+                this.vishva.setScale(Number(this.genScaleX.value), Number(this.genScaleY.value), Number(this.genScaleZ.value));
             }
             this.genScaleZ = <HTMLInputElement> document.getElementById("scl.z");
             this.genScaleZ.onchange = () => {
-                this.vishva.setScale(Number(this.genScaleX.value),Number(this.genScaleY.value),Number(this.genScaleZ.value));
+                this.vishva.setScale(Number(this.genScaleX.value), Number(this.genScaleY.value), Number(this.genScaleZ.value));
             }
-            
+
             //Snap CheckBox
             this.genSnapTrans = <HTMLInputElement> document.getElementById("snapTrans");
             this.genSnapTrans.onchange = () => {
@@ -1585,11 +1617,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         }
 
+        matName: HTMLLabelElement;
         matVis: HTMLInputElement;
         matVisVal: HTMLElement;
         matColType: HTMLSelectElement;
         matColDiag: ColorPickerDiag;
+        matTexture: HTMLButtonElement;
+
         private initMatUI() {
+
+            this.matName = <HTMLLabelElement> document.getElementById("matName");
+            this.matName.innerText = this.vishva.getMaterialName();
 
             this.matVisVal = document.getElementById("matVisVal");
             this.matVis = <HTMLInputElement> document.getElementById("matVis");
@@ -1612,6 +1650,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.vishva.setMeshVisibility(parseFloat(this.matVis.value));
             }
 
+            this.matTexture = <HTMLButtonElement> document.getElementById("matTexture");
+            this.matTexture.onclick = () => {
+                console.log("checking texture");
+                if (this.textureDiag == null) {
+                    this.createTextureDiag();
+                }
+                this.textureImg.src = this.vishva.getMatTexture("diffuse");
+                console.log(this.textureImg.src);
+                this.textureDiag.dialog("open");
+            }
 
         }
 

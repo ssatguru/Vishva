@@ -511,6 +511,14 @@
                     <h3>Material</h3>
                     <div id="Material" >
                         <table>
+                             <tr>
+                                <td>
+                                    Name   
+                                </td>
+                                <td>
+                                    <label id="matName"></label>
+                                </td>
+                            </tr>
                             <tr>
                                 <td>
                                     visibility :  <output for="matVis" id="matVisVal"></output> 
@@ -548,6 +556,7 @@
                                         <option value="reflection">reflection</option>
                                         <option value="refraction">refraction</option>
                                     </select>
+                                    <button id="matTexture">show</button>
                                 </td>
                             </tr>
                         </table>
@@ -705,7 +714,12 @@
                 </div>
             </div>
 
-
+            <div id="textureDiag">
+                <img id="textImg" src="" height="200" alt="tga images cannot be displayed" width="200">
+                <br>
+                <button id="changeTexture" >change texture</button>
+                <select id="textureList"></select>
+            </div>
 
 
 

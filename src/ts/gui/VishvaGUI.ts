@@ -449,7 +449,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.textureImg = <HTMLImageElement> document.getElementById("textImg");
             let chgTexture:HTMLButtonElement= <HTMLButtonElement> document.getElementById("changeTexture");
             chgTexture.onclick = ()=>{
-                this.vishva.setMatTexture("diffuse", textList.value);
+                this.vishva.setMatTexture(this.matTextType.value, textList.value);
             }
             let textList: HTMLSelectElement = <HTMLSelectElement>document.getElementById("textureList");
             var textures: string[] = this.vishva.getTextures();
@@ -1621,6 +1621,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         matVis: HTMLInputElement;
         matVisVal: HTMLElement;
         matColType: HTMLSelectElement;
+        matTextType:HTMLSelectElement;
         matColDiag: ColorPickerDiag;
         matTexture: HTMLButtonElement;
 
@@ -1637,6 +1638,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 let col: string = this.vishva.getMeshColor(this.matColType.value);
                 this.matColDiag.setColor(col);
             }
+            
+            this.matTextType=<HTMLSelectElement> document.getElementById("matTextType");;
 
             this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, (hex, hsv, rgb) => {
                 let err: string = this.vishva.setMeshColor(this.matColType.value, hex);
@@ -1656,7 +1659,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if (this.textureDiag == null) {
                     this.createTextureDiag();
                 }
-                this.textureImg.src = this.vishva.getMatTexture("diffuse");
+                this.textureImg.src = this.vishva.getMatTexture(this.matTextType.value);
                 console.log(this.textureImg.src);
                 this.textureDiag.dialog("open");
             }

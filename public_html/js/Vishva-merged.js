@@ -1015,12 +1015,11 @@ var org;
                             this.textureImg = document.getElementById("textImg");
                             var chgTexture = document.getElementById("changeTexture");
                             chgTexture.onclick = function () {
-                                _this.vishva.setMatTexture("diffuse", textList.value);
+                                _this.vishva.setMatTexture(_this.matTextType.value, textList.value);
                             };
                             var textList = document.getElementById("textureList");
                             var textures = this.vishva.getTextures();
                             var opt;
-                            //NOTE:skel id is not unique
                             for (var _i = 0, textures_1 = textures; _i < textures_1.length; _i++) {
                                 var text = textures_1[_i];
                                 opt = document.createElement("option");
@@ -2071,6 +2070,8 @@ var org;
                                 var col = _this.vishva.getMeshColor(_this.matColType.value);
                                 _this.matColDiag.setColor(col);
                             };
+                            this.matTextType = document.getElementById("matTextType");
+                            ;
                             this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, function (hex, hsv, rgb) {
                                 var err = _this.vishva.setMeshColor(_this.matColType.value, hex);
                                 if (err !== null)
@@ -2087,7 +2088,7 @@ var org;
                                 if (_this.textureDiag == null) {
                                     _this.createTextureDiag();
                                 }
-                                _this.textureImg.src = _this.vishva.getMatTexture("diffuse");
+                                _this.textureImg.src = _this.vishva.getMatTexture(_this.matTextType.value);
                                 console.log(_this.textureImg.src);
                                 _this.textureDiag.dialog("open");
                             };
@@ -2860,7 +2861,8 @@ var org;
                         }
                         if (!sunFound) {
                             console.log("no vishva sun found. creating sun");
-                            this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                            //this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                            this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
                             this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
                             Tags.AddTagsTo(this.sun, "Vishva.sun");
                             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
@@ -3370,12 +3372,22 @@ var org;
                         if (chr === "F")
                             this.key.focus = true;
                     };
+                    // private primMaterial: PBRMetallicRoughnessMaterial;
                     Vishva.prototype.createPrimMaterial = function () {
                         this.primMaterial = new StandardMaterial("primMat", this.scene);
                         this.primMaterial.diffuseTexture = new Texture(this.primTexture, this.scene);
                         this.primMaterial.diffuseColor = new Color3(1, 1, 1);
                         this.primMaterial.specularColor = new Color3(0, 0, 0);
                     };
+                    //        private createPrimMaterial(){
+                    //            this.primMaterial = new PBRMetallicRoughnessMaterial("primMat",this.scene);
+                    //            this.primMaterial.baseTexture = new Texture(this.primTexture, this.scene);
+                    //            this.primMaterial.baseColor = new Color3(1, 1, 1);
+                    //            this.primMaterial.roughness = 0.5;
+                    //            this.primMaterial.metallic =0.5;
+                    //            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
+                    //            
+                    //        }
                     Vishva.prototype.setPrimProperties = function (mesh) {
                         if (this.primMaterial == null)
                             this.createPrimMaterial();
@@ -3932,19 +3944,55 @@ var org;
                     };
                     Vishva.prototype.getMatTexture = function (type) {
                         var stdMat = this.meshPicked.material;
-                        if (type == "diffuse") {
+                        if (type == "diffuse" && stdMat.diffuseTexture != null) {
                             return stdMat.diffuseTexture.name;
+                        }
+                        else if (type == "ambient" && stdMat.ambientTexture != null) {
+                            return stdMat.ambientTexture.name;
+                        }
+                        else if (type == "opacity" && stdMat.opacityTexture != null) {
+                            return stdMat.opacityTexture.name;
+                        }
+                        else if (type == "reflection" && stdMat.reflectionTexture != null) {
+                            return stdMat.reflectionTexture.name;
+                        }
+                        else if (type == "emissive" && stdMat.emissiveTexture != null) {
+                            return stdMat.emissiveTexture.name;
+                        }
+                        else if (type == "specular" && stdMat.specularTexture != null) {
+                            return stdMat.specularTexture.name;
+                        }
+                        else if (type == "bump" && stdMat.bumpTexture != null) {
+                            return stdMat.bumpTexture.name;
                         }
                         else
                             return "";
                     };
                     Vishva.prototype.setMatTexture = function (type, textName) {
                         var stdMat = this.meshPicked.material;
-                        if (type == "diffuse") {
-                            var bt = this.getTextureByName(textName);
-                            if (bt != null) {
-                                var stdMat_1 = this.meshPicked.material;
+                        var bt = this.getTextureByName(textName);
+                        if (bt != null) {
+                            var stdMat_1 = this.meshPicked.material;
+                            if (type == "diffuse") {
                                 stdMat_1.diffuseTexture = bt;
+                            }
+                            else if (type == "ambient") {
+                                stdMat_1.ambientTexture = bt;
+                            }
+                            else if (type == "opacity") {
+                                stdMat_1.opacityTexture = bt;
+                            }
+                            else if (type == "reflection") {
+                                stdMat_1.reflectionTexture = bt;
+                            }
+                            else if (type == "emissive") {
+                                stdMat_1.emissiveTexture = bt;
+                            }
+                            else if (type == "specular") {
+                                stdMat_1.specularTexture = bt;
+                            }
+                            else if (type == "bump") {
+                                stdMat_1.bumpTexture = bt;
                             }
                         }
                     };
@@ -4589,6 +4637,7 @@ var org;
                         var x = -Math.cos(r);
                         var y = -Math.sin(r);
                         this.sunDR.direction = new Vector3(x, y, 0);
+                        this.sun.direction = new Vector3(-x, -y, 0);
                     };
                     Vishva.prototype.getSunPos = function () {
                         var sunDir = this.sunDR.direction;
@@ -4641,6 +4690,8 @@ var org;
                         var skyFile = "vishva/assets/skyboxes/" + sky + "/" + sky;
                         mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
                         mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+                        //            if (this.primMaterial !=null)
+                        //            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
                     };
                     Vishva.prototype.getSky = function () {
                         var mat = this.skybox.material;

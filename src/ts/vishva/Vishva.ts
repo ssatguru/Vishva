@@ -29,6 +29,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import MultiMaterial = BABYLON.MultiMaterial;
     import Node = BABYLON.Node;
     import ParticleSystem = BABYLON.ParticleSystem;
+    import PBRMetallicRoughnessMaterial=BABYLON.PBRMetallicRoughnessMaterial;
     import PhysicsImpostor = BABYLON.PhysicsImpostor;
     import PickingInfo = BABYLON.PickingInfo;
     import Quaternion = BABYLON.Quaternion;
@@ -320,12 +321,14 @@ namespace org.ssatguru.babylonjs.vishva {
             if (!sunFound) {
                 console.log("no vishva sun found. creating sun");
 
-                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                //this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
+                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
                 this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
                 Tags.AddTagsTo(this.sun, "Vishva.sun");
 
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                 this.sunDR.position = new Vector3(0, 1048, 0);
+                
 
                 let sl: IShadowLight = <IShadowLight>(<any> this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
@@ -1032,6 +1035,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * material for primitives
          */
         private primMaterial: StandardMaterial;
+        // private primMaterial: PBRMetallicRoughnessMaterial;
 
         private createPrimMaterial() {
             this.primMaterial = new StandardMaterial("primMat", this.scene);
@@ -1039,6 +1043,16 @@ namespace org.ssatguru.babylonjs.vishva {
             this.primMaterial.diffuseColor = new Color3(1, 1, 1);
             this.primMaterial.specularColor = new Color3(0, 0, 0);
         }
+        
+//        private createPrimMaterial(){
+//            this.primMaterial = new PBRMetallicRoughnessMaterial("primMat",this.scene);
+//            this.primMaterial.baseTexture = new Texture(this.primTexture, this.scene);
+//            this.primMaterial.baseColor = new Color3(1, 1, 1);
+//            this.primMaterial.roughness = 0.5;
+//            this.primMaterial.metallic =0.5;
+//            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
+//            
+//        }
 
         private setPrimProperties(mesh: Mesh) {
             if (this.primMaterial == null) this.createPrimMaterial();
@@ -1618,33 +1632,59 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public getMatTexture(type: string): string {
             let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
-            if (type == "diffuse") {
+            if (type == "diffuse" && stdMat.diffuseTexture != null) {
                 return stdMat.diffuseTexture.name;
+            } else if (type == "ambient" && stdMat.ambientTexture != null) {
+                return stdMat.ambientTexture.name;
+            } else if (type == "opacity" && stdMat.opacityTexture != null) {
+                return stdMat.opacityTexture.name;
+            } else if (type == "reflection" && stdMat.reflectionTexture != null) {
+                return stdMat.reflectionTexture.name;
+            } else if (type == "emissive" && stdMat.emissiveTexture != null) {
+                return stdMat.emissiveTexture.name;
+            } else if (type == "specular" && stdMat.specularTexture != null) {
+                return stdMat.specularTexture.name;
+            } else if (type == "bump" && stdMat.bumpTexture != null) {
+                return stdMat.bumpTexture.name;
             } else
                 return "";
         }
-        public setMatTexture(type: string, textName:string) {
+        public setMatTexture(type: string, textName: string) {
             let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
-            if (type == "diffuse") {
-                let bt: BaseTexture = this.getTextureByName(textName);
-                if (bt != null  ){
-                    let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
+
+            let bt: BaseTexture = this.getTextureByName(textName);
+            if (bt != null) {
+                let stdMat: StandardMaterial = <StandardMaterial> this.meshPicked.material;
+                if (type == "diffuse") {
                     stdMat.diffuseTexture = bt;
+                }else if (type == "ambient") {
+                    stdMat.ambientTexture = bt;
+                }else if (type == "opacity") {
+                    stdMat.opacityTexture = bt;
+                }else if (type == "reflection") {
+                    stdMat.reflectionTexture = bt;
+                }else if (type == "emissive") {
+                    stdMat.emissiveTexture = bt;
+                }else if (type == "specular") {
+                    stdMat.specularTexture = bt;
+                }else if (type == "bump") {
+                    stdMat.bumpTexture = bt;
                 }
-            } 
+            }
+
         }
-        public getTextures():string[]{
-            let ts:BaseTexture[] =this.scene.textures;
+        public getTextures(): string[] {
+            let ts: BaseTexture[] = this.scene.textures;
             let ns: string[] = [];
-            for(let t of ts){
+            for (let t of ts) {
                 ns.push(t.name);
             }
             return ns;
         }
-        private getTextureByName(name:String):BaseTexture{
-             let ts:BaseTexture[] =this.scene.textures;
-             for(let t of ts){
-                if (t.name==name) return t;
+        private getTextureByName(name: String): BaseTexture {
+            let ts: BaseTexture[] = this.scene.textures;
+            for (let t of ts) {
+                if (t.name == name) return t;
             }
             return null;
         }
@@ -2270,6 +2310,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var x: number = -Math.cos(r);
             var y: number = -Math.sin(r);
             this.sunDR.direction = new Vector3(x, y, 0);
+            this.sun.direction = new Vector3(-x,-y,0)
         }
 
         public getSunPos(): number {
@@ -2334,6 +2375,8 @@ namespace org.ssatguru.babylonjs.vishva {
             var skyFile: string = "vishva/assets/skyboxes/" + sky + "/" + sky;
             mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
             mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+//            if (this.primMaterial !=null)
+//            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
         }
 
         public getSky(): string {

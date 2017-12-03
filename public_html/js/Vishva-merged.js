@@ -6913,6 +6913,7 @@ var org;
                     function SenTimerProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
                         _this.interval = 1000;
+                        _this.plusMinus = 0;
                         return _this;
                     }
                     SenTimerProp.prototype.unmarshall = function (obj) {
@@ -6944,15 +6945,44 @@ var org;
                         this.properties = properties;
                     };
                     SensorTimer.prototype.cleanUp = function () {
-                        window.clearInterval(this.timerId);
+                        //window.clearInterval(this.timerId);
+                        window.clearTimeout(this.timerId);
                     };
-                    SensorTimer.prototype.processUpdateSpecific = function () {
+                    SensorTimer.prototype.processUpdateSpecific_old = function () {
                         var _this = this;
                         var properties = this.properties;
                         if (this.timerId) {
                             window.clearInterval(this.timerId);
                         }
                         this.timerId = window.setInterval(function () { _this.emitSignal(); }, properties.interval);
+                    };
+                    SensorTimer.prototype.processUpdateSpecific = function () {
+                        var _this = this;
+                        var properties = this.properties;
+                        if (this.timerId) {
+                            window.clearTimeout(this.timerId);
+                        }
+                        this.timerId = window.setTimeout(function () { _this.signalEmitter(); }, properties.interval);
+                    };
+                    SensorTimer.prototype.signalEmitter = function () {
+                        var _this = this;
+                        var properties = this.properties;
+                        this.emitSignal();
+                        window.clearTimeout(this.timerId);
+                        var i = properties.interval;
+                        var pm = properties.plusMinus;
+                        if (pm > 0) {
+                            var min = i - pm;
+                            if (min < 0)
+                                min = 0;
+                            i = this.getRandomInt(min, i + pm);
+                        }
+                        this.timerId = window.setTimeout(function () { _this.signalEmitter(); }, i);
+                    };
+                    SensorTimer.prototype.getRandomInt = function (min, max) {
+                        min = Math.ceil(min);
+                        max = Math.floor(max);
+                        return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
                     };
                     return SensorTimer;
                 }(vishva.SensorAbstract));

@@ -1,2 +1,2 @@
-var defaultScene = "demo1";
+var defaultScene = "demo";
 var noEditScenes = ["demo3"];

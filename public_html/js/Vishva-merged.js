@@ -6821,6 +6821,91 @@ var org;
             (function (vishva) {
                 var ActionManager = BABYLON.ActionManager;
                 var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
+                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var SenClickProp = (function (_super) {
+                    __extends(SenClickProp, _super);
+                    function SenClickProp() {
+                        var _this = _super.call(this) || this;
+                        _this.clickType = new SelectType();
+                        _this.clickType.values = ["leftClick", "middleClick", "rightClick", "doubleClick"];
+                        _this.clickType.value = "leftClick";
+                        return _this;
+                    }
+                    SenClickProp.prototype.unmarshall = function (obj) {
+                        return obj;
+                    };
+                    return SenClickProp;
+                }(vishva.SNAproperties));
+                vishva.SenClickProp = SenClickProp;
+                var SensorClick = (function (_super) {
+                    __extends(SensorClick, _super);
+                    //properties: SNAproperties;
+                    function SensorClick(mesh, prop) {
+                        var _this = this;
+                        if (prop != null) {
+                            _this = _super.call(this, mesh, prop) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new SenClickProp()) || this;
+                        }
+                        _this.processUpdateSpecific();
+                        return _this;
+                    }
+                    SensorClick.prototype.getName = function () {
+                        return "Click";
+                    };
+                    SensorClick.prototype.getProperties = function () {
+                        return this.properties;
+                    };
+                    SensorClick.prototype.setProperties = function (properties) {
+                        this.properties = properties;
+                    };
+                    SensorClick.prototype.cleanUp = function () {
+                    };
+                    SensorClick.prototype.processUpdateSpecific = function () {
+                        var _this = this;
+                        this.removeActions();
+                        if (this.mesh.actionManager == null) {
+                            this.mesh.actionManager = new ActionManager(this.mesh.getScene());
+                        }
+                        var clickProp = this.properties;
+                        var actType;
+                        if (clickProp.clickType.value == "doubleClick") {
+                            actType = ActionManager.OnDoublePickTrigger;
+                        }
+                        else if (clickProp.clickType.value == "rightClick") {
+                            actType = ActionManager.OnRightPickTrigger;
+                        }
+                        else if (clickProp.clickType.value == "leftClick") {
+                            actType = ActionManager.OnLeftPickTrigger;
+                        }
+                        else if (clickProp.clickType.value == "middleClick") {
+                            actType = ActionManager.OnCenterPickTrigger;
+                        }
+                        var action = new ExecuteCodeAction(actType, function (e) {
+                            _this.emitSignal(e);
+                        });
+                        this.mesh.actionManager.registerAction(action);
+                        this.actions.push(action);
+                    };
+                    return SensorClick;
+                }(vishva.SensorAbstract));
+                vishva.SensorClick = SensorClick;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addSensor("Click", org.ssatguru.babylonjs.vishva.SensorClick);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var ActionManager = BABYLON.ActionManager;
+                var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
                 var Tags = BABYLON.Tags;
                 var SenContactProp = (function (_super) {
                     __extends(SenContactProp, _super);

@@ -786,17 +786,17 @@
                                 var editEnabled = true;
 
                                 if (!scene) {
-                                    if (defaultScene) {
-                                        scene = defaultScene;
+                                    if (typeof(defaultWorld) !== "undefined") {
+                                        scene = defaultWorld;
                                     } else {
                                         scene = "empty";
                                     }
                                 }
 
-                                if (noEditScenes) {
-                                    var l = noEditScenes.length;
+                                if (typeof(noEditWorlds) !== "undefined") {
+                                    var l = noEditWorlds.length;
                                     for (i = 0; i < l; i++) {
-                                        if (noEditScenes[i] == scene) {
+                                        if (noEditWorlds[i] == scene) {
                                             editEnabled = false;
                                         }
                                     }

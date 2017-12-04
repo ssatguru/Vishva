@@ -1,2 +1,2 @@
-var defaultScene = "demo";
-var noEditScenes = ["demo3"];
+var defaultWorld = "demo";
+var noEditWorlds = ["demo3"];

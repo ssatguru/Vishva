@@ -1068,7 +1068,7 @@ namespace org.ssatguru.babylonjs.vishva {
             Tags.AddTagsTo(mesh,"Vishva.prim Vishva.internal");
             mesh.id=(<number>new Number(Date.now())).toString();
             mesh.name=mesh.id;
-//            mesh.material=this.primMaterial.clone("m"+mesh.name);
+            mesh.material=this.primMaterial.clone("m"+mesh.name);
         }
 
         public addPrim(primType: string) {

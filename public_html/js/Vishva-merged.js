@@ -652,6 +652,11 @@ var org;
                             this.propsDiag = null;
                             this.fixingDragIssue = false;
                             this.activePanel = -1;
+                            /*
+                             * called by vishva when editcontrol
+                             * is switched from another mesh
+                             */
+                            this.refreshingPropsDiag = false;
                             //meshAnimDiag: JQuery;
                             this.animUIInitialized = false;
                             this.animSelect = null;
@@ -1048,9 +1053,6 @@ var org;
                             dos.title = "Sensors and Actuators";
                             dos.closeOnEscape = false;
                             dos.closeText = "";
-                            dos.close = function (e, ui) {
-                                _this.vishva.switchDisabled = false;
-                            };
                             dos.dragStop = function (e, ui) {
                                 /* required as jquery dialog's size does not re-adjust to content after it has been dragged
                                  Thus if the size of sensors tab is different from the size of actuators tab  then the content of
@@ -1094,7 +1096,7 @@ var org;
                                 this.showAlertDiag("no mesh selected");
                                 return;
                             }
-                            this.vishva.switchDisabled = true;
+                            //this.vishva.switchDisabled=true;
                             this.updateSensActTbl(sens, this.sensTbl);
                             this.updateSensActTbl(acts, this.actTbl);
                             var addSens = document.getElementById("addSens");
@@ -1117,6 +1119,7 @@ var org;
                                 _this.sNaDialog.dialog("open");
                                 return true;
                             };
+                            console.log("opening sna ");
                             this.sNaDialog.dialog("open");
                         };
                         /*
@@ -1175,7 +1178,8 @@ var org;
                             }
                         };
                         VishvaGUI.prototype.createEditSensDiag = function () {
-                            var editSensDiag = $("#editSensDiag");
+                            var _this = this;
+                            this.editSensDiag = $("#editSensDiag");
                             var dos = {};
                             dos.autoOpen = false;
                             dos.modal = true;
@@ -1184,7 +1188,13 @@ var org;
                             dos.title = "Edit Sensor";
                             dos.closeText = "";
                             dos.closeOnEscape = false;
-                            editSensDiag.dialog(dos);
+                            dos.open = function () {
+                                _this.vishva.disableKeys();
+                            };
+                            dos.close = function () {
+                                _this.vishva.enableKeys();
+                            };
+                            this.editSensDiag.dialog(dos);
                         };
                         /*
                         * show a dialog box to edit sensor properties
@@ -1193,11 +1203,9 @@ var org;
                         */
                         VishvaGUI.prototype.showEditSensDiag = function (sensor) {
                             var _this = this;
-                            this.vishva.disableKeys();
                             var sensNameEle = document.getElementById("editSensDiag.sensName");
                             sensNameEle.innerHTML = sensor.getName();
-                            var editSensDiag = $("#editSensDiag");
-                            editSensDiag.dialog("open");
+                            this.editSensDiag.dialog("open");
                             var parmDiv = document.getElementById("editSensDiag.parms");
                             var node = parmDiv.firstChild;
                             if (node != null)
@@ -1211,15 +1219,15 @@ var org;
                                 _this.formRead(sensor.getProperties(), parmDiv.id);
                                 sensor.processUpdateGeneric();
                                 _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
-                                editSensDiag.dialog("close");
-                                _this.vishva.enableKeys();
+                                _this.editSensDiag.dialog("close");
                                 return true;
                             };
                             var dbos = [dbo];
-                            editSensDiag.dialog("option", "buttons", dbos);
+                            this.editSensDiag.dialog("option", "buttons", dbos);
                         };
                         VishvaGUI.prototype.createEditActDiag = function () {
-                            var editActDiag = $("#editActDiag");
+                            var _this = this;
+                            this.editActDiag = $("#editActDiag");
                             var dos = {};
                             dos.autoOpen = false;
                             dos.modal = true;
@@ -1228,7 +1236,13 @@ var org;
                             dos.title = "Edit Actuator";
                             dos.closeText = "";
                             dos.closeOnEscape = false;
-                            editActDiag.dialog(dos);
+                            dos.open = function (e, ui) {
+                                _this.vishva.disableKeys();
+                            };
+                            dos.close = function (e, ui) {
+                                _this.vishva.enableKeys();
+                            };
+                            this.editActDiag.dialog(dos);
                         };
                         /*
                          * show a dialog box to edit actuator properties
@@ -1237,11 +1251,9 @@ var org;
                          */
                         VishvaGUI.prototype.showEditActDiag = function (actuator) {
                             var _this = this;
-                            this.vishva.disableKeys();
                             var actNameEle = document.getElementById("editActDiag.actName");
                             actNameEle.innerHTML = actuator.getName();
-                            var editActDiag = $("#editActDiag");
-                            editActDiag.dialog("open");
+                            this.editActDiag.dialog("open");
                             var parmDiv = document.getElementById("editActDiag.parms");
                             var node = parmDiv.firstChild;
                             if (node != null) {
@@ -1259,12 +1271,11 @@ var org;
                                 _this.formRead(actuator.getProperties(), parmDiv.id);
                                 actuator.processUpdateGeneric();
                                 _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
-                                editActDiag.dialog("close");
-                                _this.vishva.enableKeys();
+                                _this.editActDiag.dialog("close");
                                 return true;
                             };
                             var dbos = [dbo];
-                            editActDiag.dialog("option", "buttons", dbos);
+                            this.editActDiag.dialog("option", "buttons", dbos);
                         };
                         /*
                          * auto generate forms based on properties
@@ -1414,8 +1425,6 @@ var org;
                                 heightStyle: "content",
                                 collapsible: true,
                                 beforeActivate: function (e, ui) {
-                                    _this.vishva.switchDisabled = false;
-                                    //TODO remove this.vishva.enableKeys();
                                     _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
                                 }
                             });
@@ -1440,6 +1449,7 @@ var org;
                                         // refresh the active tab
                                         _this.activePanel = propsAcc.accordion("option", "active");
                                         _this.refreshPanel(_this.activePanel);
+                                        _this.refreshingPropsDiag = false;
                                     }
                                     else {
                                         _this.fixingDragIssue = false;
@@ -1447,8 +1457,9 @@ var org;
                                 },
                                 closeText: "",
                                 close: function (e, ui) {
-                                    _this.vishva.switchDisabled = false;
-                                    //TODO remove this.vishva.enableKeys();
+                                    if (!_this.fixingDragIssue && !_this.refreshingPropsDiag && _this.sNaDialog.dialog("isOpen") === true) {
+                                        _this.sNaDialog.dialog("close");
+                                    }
                                 },
                                 //after drag the dialog box doesnot resize
                                 //force resize by closing and opening
@@ -1463,7 +1474,7 @@ var org;
                             this.dialogs.push(this.propsDiag);
                         };
                         /*
-                         * also called by vishva when editcontrol
+                         * called by vishva when editcontrol
                          * is removed from mesh
                          */
                         VishvaGUI.prototype.closePropsDiag = function () {
@@ -1471,14 +1482,11 @@ var org;
                                 return;
                             this.propsDiag.dialog("close");
                         };
-                        /*
-                         * called by vishva when editcontrol
-                         * is switched from another mesh
-                         */
                         VishvaGUI.prototype.refreshPropsDiag = function () {
                             if ((this.propsDiag === undefined) || (this.propsDiag === null))
                                 return;
                             if (this.propsDiag.dialog("isOpen") === true) {
+                                this.refreshingPropsDiag = true;
                                 this.propsDiag.dialog("close");
                                 this.propsDiag.dialog("open");
                             }
@@ -1515,6 +1523,11 @@ var org;
                             }
                             else if (panelIndex === 2 /* Material */) {
                                 this.updateMat();
+                            }
+                            //refresh sNaDialog if open
+                            if (this.sNaDialog.dialog("isOpen") === true) {
+                                this.sNaDialog.dialog("close");
+                                this.show_sNaDiag();
                             }
                         };
                         VishvaGUI.prototype.initAnimUI = function () {
@@ -3402,7 +3415,7 @@ var org;
                         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
                         mesh.id = new Number(Date.now()).toString();
                         mesh.name = mesh.id;
-                        //            mesh.material=this.primMaterial.clone("m"+mesh.name);
+                        mesh.material = this.primMaterial.clone("m" + mesh.name);
                     };
                     Vishva.prototype.addPrim = function (primType) {
                         var mesh = null;

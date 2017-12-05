@@ -1060,7 +1060,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var placementLocal: Vector3=new Vector3(0,r,-(r+2));
             var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
             mesh.position.addInPlace(placementGlobal);
-            mesh.material=this.primMaterial;
+            
             mesh.checkCollisions=true;
             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
             //sat TODO remove comment
@@ -1068,6 +1068,7 @@ namespace org.ssatguru.babylonjs.vishva {
             Tags.AddTagsTo(mesh,"Vishva.prim Vishva.internal");
             mesh.id=(<number>new Number(Date.now())).toString();
             mesh.name=mesh.id;
+//            mesh.material=this.primMaterial.clone("m"+mesh.name);
         }
 
         public addPrim(primType: string) {

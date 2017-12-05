@@ -3395,7 +3395,6 @@ var org;
                         var placementLocal = new Vector3(0, r, -(r + 2));
                         var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
                         mesh.position.addInPlace(placementGlobal);
-                        mesh.material = this.primMaterial;
                         mesh.checkCollisions = true;
                         (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                         //sat TODO remove comment
@@ -3403,6 +3402,7 @@ var org;
                         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
                         mesh.id = new Number(Date.now()).toString();
                         mesh.name = mesh.id;
+                        //            mesh.material=this.primMaterial.clone("m"+mesh.name);
                     };
                     Vishva.prototype.addPrim = function (primType) {
                         var mesh = null;

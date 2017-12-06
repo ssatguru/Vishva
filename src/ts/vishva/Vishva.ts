@@ -528,148 +528,6 @@ namespace org.ssatguru.babylonjs.vishva {
         private moveLimitEnd=124;
 
         oldAvPos: Vector3=new Vector3(0,0,0);
-        //        private moveAVandCamera() {
-        //            this.oldAvPos.copyFrom(this.avatar.position);
-        //
-        //            if (!this.cc.moveAVandCamera()) return;
-        //
-        //            let avPos = this.avatar.position.length();
-        //            if (avPos > this.moveLimitStart) {
-        //                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
-        //            } else {
-        //                this.scene.fogDensity = this.fogDensity;
-        //            }
-        //            if (avPos > this.moveLimitEnd) {
-        //                this.avatar.position.copyFrom(this.oldAvPos);
-        //            }
-        //
-        //        }
-
-
-        /*
-        private jumpCycleMax: number = 25;
-        private jumpCycle: number = this.jumpCycleMax;
-        private wasJumping: boolean = false;
-        
-        private moveAVandCamera_old() {
-            let oldAvPos = this.avatar.position.clone();
-            var anim: AnimData = this.idle;
-            var moving: boolean = false;
-            var speed: number = 0;
-            var upSpeed: number = 0.05;
-            var dir: number = 1;
-            var forward: Vector3;
-            var backwards: Vector3;
-            var stepLeft: Vector3;
-            var stepRight: Vector3;
-            var up: Vector3;
-            if (this.key.up) {
-                if (this.key.shift) {
-                    speed = this.avatarSpeed * 2;
-                    anim = this.run;
-                } else {
-                    speed = this.avatarSpeed;
-                    anim = this.walk;
-                }
-                if (this.key.jump) {
-                    this.wasJumping = true;
-                }
-                if (this.wasJumping) {
-                    upSpeed *= 2;
-                    if (this.jumpCycle < this.jumpCycleMax / 2) {
-                        dir = 1;
-                        if (this.jumpCycle < 0) {
-                            this.jumpCycle = this.jumpCycleMax;
-                            upSpeed /= 2;
-                            this.key.jump = false;
-                            this.wasJumping = false;
-                        }
-                    } else {
-                        anim = this.jump;
-                        dir = -1;
-                    }
-                    this.jumpCycle--;
-                }
-                //TODO testing physics
-                forward = this.avatar.calcMovePOV(0, -upSpeed * dir, speed);
-                this.avatar.moveWithCollisions(forward);
-                //this.avatar.physicsImpostor.applyForce(new BABYLON.Vector3(0, 0, 1), this.avatar.getAbsolutePosition());
-                moving = true;
-            } else if (this.key.down) {
-                backwards = this.avatar.calcMovePOV(0, -upSpeed * dir, -this.avatarSpeed / 2);
-                this.avatar.moveWithCollisions(backwards);
-                moving = true;
-                anim = this.walkBack;
-                if (this.key.jump) this.key.jump = false;
-            } else if (this.key.stepLeft) {
-                anim = this.strafeLeft;
-                stepLeft = this.avatar.calcMovePOV(-this.avatarSpeed / 2, -upSpeed * dir, 0);
-                this.avatar.moveWithCollisions(stepLeft);
-                moving = true;
-            } else if (this.key.stepRight) {
-                anim = this.strafeRight;
-                stepRight = this.avatar.calcMovePOV(this.avatarSpeed / 2, -upSpeed * dir, 0);
-                this.avatar.moveWithCollisions(stepRight);
-                moving = true;
-            }
-            if (!moving) {
-                if (this.key.jump) {
-                    this.wasJumping = true;
-                }
-                if (this.wasJumping) {
-                    upSpeed *= 2;
-                    if (this.jumpCycle < this.jumpCycleMax / 2) {
-                        dir = 1;
-                        if (this.jumpCycle < 0) {
-                            this.jumpCycle = this.jumpCycleMax;
-                            upSpeed /= 2;
-                            this.key.jump = false;
-                            this.wasJumping = false;
-                        }
-                    } else {
-                        anim = this.jump;
-                        dir = -1;
-                    }
-                    this.jumpCycle--;
-                } else dir = dir / 2;
-                this.avatar.moveWithCollisions(new Vector3(0, -upSpeed * dir, 0));
-            }
-            if (!this.key.stepLeft && !this.key.stepRight) {
-                if (this.key.left) {
-                    this.mainCamera.alpha = this.mainCamera.alpha + 0.022;
-                    if (!moving) {
-                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                        anim = this.turnLeft;
-                    }
-                } else if (this.key.right) {
-                    this.mainCamera.alpha = this.mainCamera.alpha - 0.022;
-                    if (!moving) {
-                        this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-                        anim = this.turnRight;
-                    }
-                }
-            }
-            if (moving) {
-                this.avatar.rotation.y = -4.69 - this.mainCamera.alpha;
-            }
-            if (this.prevAnim !== anim) {
-                if (anim.exist) {
-                    this.avatarSkeleton.beginAnimation(anim.name, true, anim.r);
-                }
-                this.prevAnim = anim;
-            }
-            let avPos = this.avatar.position.length();
-            if (avPos > this.moveLimitStart) {
-                this.scene.fogDensity = this.fogDensity + 0.01 * (avPos - this.moveLimitStart) / (this.moveLimitEnd - this.moveLimitStart)
-            } else {
-                this.scene.fogDensity = this.fogDensity;
-            }
-            if (avPos > this.moveLimitEnd) {
-                this.avatar.position = oldAvPos;
-            }
-            this.mainCamera.target = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-        }
-        */
 
         fogDensity: number=0;
 
@@ -691,7 +549,8 @@ namespace org.ssatguru.babylonjs.vishva {
         private pickObject(evt: PointerEvent,pickResult: PickingInfo) {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
-            if(evt.button!==2) return;
+            //if(evt.button!==2 || !this.key.alt) return;
+            if(evt.button!==2 ) return;
             if(pickResult.hit) {
                 if(this.key.ctl) {
                     if((!this.isMeshSelected)||(pickResult.pickedMesh!==this.meshPicked)) {
@@ -999,9 +858,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private onKeyDown(e: Event) {
             var event: KeyboardEvent=<KeyboardEvent>e;
-
+            if(event.keyCode===16) this.key.shift=true;
             if(event.keyCode===17) this.key.ctl=true;
-
+            if(event.keyCode===18) this.key.alt=true;
             if(event.keyCode===27) this.key.esc=false;
 
             var chr: string=String.fromCharCode(event.keyCode);
@@ -1018,7 +877,9 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private onKeyUp(e: Event) {
             var event: KeyboardEvent=<KeyboardEvent>e;
+            if(event.keyCode===16) this.key.shift=false;
             if(event.keyCode===17) this.key.ctl=false;
+            if(event.keyCode===18) this.key.alt=false;
             if(event.keyCode===27) this.key.esc=true;
             //
             var chr: string=String.fromCharCode(event.keyCode);
@@ -1060,7 +921,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var placementLocal: Vector3=new Vector3(0,r,-(r+2));
             var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
             mesh.position.addInPlace(placementGlobal);
-            
+
             mesh.checkCollisions=true;
             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
             //sat TODO remove comment
@@ -3302,31 +3163,19 @@ namespace org.ssatguru.babylonjs.vishva {
 
     export class Key {
         public up: boolean;
-
         public down: boolean;
-
         public right: boolean;
-
         public left: boolean;
-
         public stepRight: boolean;
-
         public stepLeft: boolean;
-
         public jump: boolean;
-
-        public shift: boolean;
-
         public trans: boolean;
-
         public rot: boolean;
-
         public scale: boolean;
-
         public esc: boolean;
-
+        public shift: boolean;
         public ctl: boolean;
-
+        public alt: boolean;
         public focus: boolean;
 
         constructor() {
@@ -3337,12 +3186,13 @@ namespace org.ssatguru.babylonjs.vishva {
             this.stepRight=false;
             this.stepLeft=false;
             this.jump=false;
-            this.shift=false;
             this.trans=false;
             this.rot=false;
             this.scale=false;
             this.esc=false;
+            this.shift=false;
             this.ctl=false;
+            this.alt=false;
             this.focus=false;
         }
     }

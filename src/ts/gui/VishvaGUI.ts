@@ -849,33 +849,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
         private propsDiag: JQuery=null;
-
         private fixingDragIssue: boolean=false;
         private activePanel: number=-1;
         private createPropsDiag() {
 
-            //property tabs
-            let propsAcc=$("#propsAcc");
+            let propsAcc: JQuery=$("#propsAcc");
 
-            //            propsTabs.tabs({
-            //                //everytime we switch tabs, close open to re-adjust size
-            //                activate: (e, ui) => {
-            //                    //this.fixingDragIssue = true;
-            //                    //this.propsDiag.dialog("close");
-            //                    //this.propsDiag.dialog("open");
-            //                },
-            //
-            //                beforeActivate: (e, ui) => {
-            //                    this.vishva.switchDisabled = false;
-            //                    this.vishva.enableKeys();
-            //                    this.refreshTab(ui.newTab.index());
-            //                }
-            //            });
-            //            
             propsAcc.accordion({
                 animate: 100,
                 heightStyle: "content",
                 collapsible: true,
+                activate: () => {
+                    this.activePanel=propsAcc.accordion("option","active");
+                },
                 beforeActivate: (e,ui) => {
                     this.refreshPanel(this.getPanelIndex(ui.newHeader));
 
@@ -910,7 +896,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 },
                 closeText: "",
                 close: (e,ui) => {
-                    if(!this.fixingDragIssue&&!this.refreshingPropsDiag  && this.sNaDialog.dialog("isOpen")===true) {
+                    if(!this.fixingDragIssue&&!this.refreshingPropsDiag&&this.sNaDialog.dialog("isOpen")===true) {
                         this.sNaDialog.dialog("close");
                     }
                 },
@@ -938,11 +924,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * called by vishva when editcontrol
          * is switched from another mesh
          */
-        refreshingPropsDiag:boolean=false;
+        refreshingPropsDiag: boolean=false;
         public refreshPropsDiag() {
             if((this.propsDiag===undefined)||(this.propsDiag===null)) return;
             if(this.propsDiag.dialog("isOpen")===true) {
-                this.refreshingPropsDiag = true;
+                this.refreshingPropsDiag=true;
                 this.propsDiag.dialog("close");
                 this.propsDiag.dialog("open");
             }

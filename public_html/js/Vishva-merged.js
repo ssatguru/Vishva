@@ -17,6 +17,7 @@ var org;
             var component;
             (function (component) {
                 var Vector3 = BABYLON.Vector3;
+                var Ray = BABYLON.Ray;
                 var CharacterControl = (function () {
                     function CharacterControl(avatar, avatarSkeleton, anims, camera, scene) {
                         var _this = this;
@@ -59,6 +60,8 @@ var org;
                         this.idleFallTime = 0;
                         this.groundFrameCount = 0;
                         this.groundFrameMax = 10;
+                        this.ray = new Ray(Vector3.Zero(), Vector3.One(), 1);
+                        this.rayDir = Vector3.Zero();
                         this.move = false;
                         this.avatarSkeleton = avatarSkeleton;
                         if (anims !== null)
@@ -441,6 +444,20 @@ var org;
                     };
                     CharacterControl.prototype.updateTargetValue = function () {
                         this.camera.target.copyFromFloats(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+                        this.bounceCamera();
+                    };
+                    CharacterControl.prototype.bounceCamera = function () {
+                        //get vector from av (camera.target) to camera
+                        this.camera.position.subtractToRef(this.camera.target, this.rayDir);
+                        //start ray from av to camera
+                        this.ray.origin = this.camera.target;
+                        this.ray.length = this.rayDir.length();
+                        this.ray.direction = this.rayDir.normalize();
+                        var pi = this.scene.pickWithRay(this.ray, null, true);
+                        if (pi.hit) {
+                            //postion the camera in front of the mesh that is obstructing camera
+                            this.camera.position = pi.pickedPoint;
+                        }
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {
                         var event = e;

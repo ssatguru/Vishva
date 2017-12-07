@@ -492,7 +492,12 @@ namespace org.ssatguru.babylonjs.component {
             let pi: PickingInfo=this.scene.pickWithRay(this.ray,null,true);
             if(pi.hit) {
                 //postion the camera in front of the mesh that is obstructing camera
-                this.camera.position=pi.pickedPoint;
+				if (this.camera.checkCollisions ){
+					this.camera.position=pi.pickedPoint;
+				}else{
+					let nr: number = pi.pickedPoint.subtract(this.camera.target).length();
+					this.camera.radius = nr;
+				}
             }
         }
 

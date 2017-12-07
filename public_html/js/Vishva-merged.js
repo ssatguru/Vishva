@@ -18,7 +18,7 @@ var org;
             (function (component) {
                 var Vector3 = BABYLON.Vector3;
                 var Ray = BABYLON.Ray;
-                var CharacterControl = (function () {
+                var CharacterControl = /** @class */ (function () {
                     function CharacterControl(avatar, avatarSkeleton, anims, camera, scene) {
                         var _this = this;
                         //slopeLimit in degrees
@@ -456,7 +456,13 @@ var org;
                         var pi = this.scene.pickWithRay(this.ray, null, true);
                         if (pi.hit) {
                             //postion the camera in front of the mesh that is obstructing camera
-                            this.camera.position = pi.pickedPoint;
+                            if (this.camera.checkCollisions) {
+                                this.camera.position = pi.pickedPoint;
+                            }
+                            else {
+                                var nr = pi.pickedPoint.subtract(this.camera.target).length();
+                                this.camera.radius = nr;
+                            }
                         }
                     };
                     CharacterControl.prototype.onKeyDown = function (e) {
@@ -518,7 +524,7 @@ var org;
                     return CharacterControl;
                 }());
                 component.CharacterControl = CharacterControl;
-                var AnimData = (function () {
+                var AnimData = /** @class */ (function () {
                     function AnimData(name, l, r) {
                         this.exist = false;
                         this.name = name;
@@ -528,7 +534,7 @@ var org;
                     return AnimData;
                 }());
                 component.AnimData = AnimData;
-                var Key = (function () {
+                var Key = /** @class */ (function () {
                     function Key() {
                         this.forward = false;
                         this.backward = false;
@@ -576,7 +582,7 @@ var org;
             (function (vishva) {
                 var gui;
                 (function (gui) {
-                    var ColorPickerDiag = (function () {
+                    var ColorPickerDiag = /** @class */ (function () {
                         function ColorPickerDiag(title, diagSelector, initialColor, jpo, f) {
                             var _this = this;
                             this.inner1 = "<input class='colorInput' type='text' style='width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer' readonly></input>";
@@ -629,7 +635,7 @@ var org;
                         return ColorPickerDiag;
                     }());
                     gui.ColorPickerDiag = ColorPickerDiag;
-                    var RGB = (function () {
+                    var RGB = /** @class */ (function () {
                         function RGB() {
                             this.r = 0;
                             this.g = 0;
@@ -653,7 +659,7 @@ var org;
                 var gui;
                 (function (gui) {
                     var ColorPickerDiag = org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
-                    var VishvaGUI = (function () {
+                    var VishvaGUI = /** @class */ (function () {
                         function VishvaGUI(vishva) {
                             var _this = this;
                             this.local = true;
@@ -2394,13 +2400,13 @@ var org;
                         return VishvaGUI;
                     }());
                     gui.VishvaGUI = VishvaGUI;
-                    var GuiSettings = (function () {
+                    var GuiSettings = /** @class */ (function () {
                         function GuiSettings() {
                         }
                         return GuiSettings;
                     }());
                     gui.GuiSettings = GuiSettings;
-                    var RGB = (function () {
+                    var RGB = /** @class */ (function () {
                         function RGB() {
                             this.r = 0;
                             this.g = 0;
@@ -2409,7 +2415,7 @@ var org;
                         return RGB;
                     }());
                     gui.RGB = RGB;
-                    var Range = (function () {
+                    var Range = /** @class */ (function () {
                         function Range(min, max, value, step) {
                             this.type = "Range";
                             this.min = 0;
@@ -2424,7 +2430,7 @@ var org;
                         return Range;
                     }());
                     gui.Range = Range;
-                    var SelectType = (function () {
+                    var SelectType = /** @class */ (function () {
                         function SelectType() {
                             this.type = "SelectType";
                         }
@@ -2444,7 +2450,7 @@ var org;
         (function (babylonjs) {
             var util;
             (function (util) {
-                var HREFsearch = (function () {
+                var HREFsearch = /** @class */ (function () {
                     function HREFsearch() {
                         this.names = new Array();
                         this.values = new Array();
@@ -2520,7 +2526,7 @@ var org;
                 /**
                  * @author satguru
                  */
-                var Vishva = (function () {
+                var Vishva = /** @class */ (function () {
                     function Vishva(sceneFile, scenePath, editEnabled, assets, canvasId) {
                         var _this = this;
                         this.actuator = "none";
@@ -5425,7 +5431,7 @@ var org;
                     return Vishva;
                 }());
                 vishva.Vishva = Vishva;
-                var Key = (function () {
+                var Key = /** @class */ (function () {
                     function Key() {
                         this.up = false;
                         this.down = false;
@@ -5446,7 +5452,7 @@ var org;
                     return Key;
                 }());
                 vishva.Key = Key;
-                var AnimData = (function () {
+                var AnimData = /** @class */ (function () {
                     function AnimData(name, l, r) {
                         this.exist = false;
                         this.name = name;
@@ -5460,13 +5466,13 @@ var org;
                  * will be used to store a meshes, usually mesh picked for edit,
                  * physics parms if physics is enabled for it
                  */
-                var PhysicsParm = (function () {
+                var PhysicsParm = /** @class */ (function () {
                     function PhysicsParm() {
                     }
                     return PhysicsParm;
                 }());
                 vishva.PhysicsParm = PhysicsParm;
-                var LightParm = (function () {
+                var LightParm = /** @class */ (function () {
                     function LightParm() {
                         this.type = "Spot";
                         this.diffuse = Color3.White();
@@ -5507,7 +5513,7 @@ var org;
             var vishva;
             (function (vishva) {
                 var Vector3 = BABYLON.Vector3;
-                var VishvaSerialized = (function () {
+                var VishvaSerialized = /** @class */ (function () {
                     function VishvaSerialized() {
                         this.settings = new SettingsSerialized();
                         this.misc = new MiscSerialized();
@@ -5515,7 +5521,7 @@ var org;
                     return VishvaSerialized;
                 }());
                 vishva.VishvaSerialized = VishvaSerialized;
-                var SettingsSerialized = (function () {
+                var SettingsSerialized = /** @class */ (function () {
                     function SettingsSerialized() {
                         this.cameraCollision = true;
                         //automatcally open edit menu whenever a mesh is selected
@@ -5527,7 +5533,7 @@ var org;
                 /*
                  * BABYLONJS values not serialized by BABYLONJS but which we need
                  */
-                var MiscSerialized = (function () {
+                var MiscSerialized = /** @class */ (function () {
                     function MiscSerialized() {
                         this.activeCameraTarget = Vector3.Zero();
                     }
@@ -5553,7 +5559,7 @@ var org;
             var vishva;
             (function (vishva) {
                 var Tags = BABYLON.Tags;
-                var SNAManager = (function () {
+                var SNAManager = /** @class */ (function () {
                     function SNAManager() {
                         this.sensorList = [];
                         this.actuatorList = [];
@@ -5856,13 +5862,13 @@ var org;
                     return SNAManager;
                 }());
                 vishva.SNAManager = SNAManager;
-                var SNAserialized = (function () {
+                var SNAserialized = /** @class */ (function () {
                     function SNAserialized() {
                     }
                     return SNAserialized;
                 }());
                 vishva.SNAserialized = SNAserialized;
-                var SensorAbstract = (function () {
+                var SensorAbstract = /** @class */ (function () {
                     function SensorAbstract(mesh, properties) {
                         //action: Action;
                         this.actions = new Array();
@@ -5936,7 +5942,7 @@ var org;
                     return SensorAbstract;
                 }());
                 vishva.SensorAbstract = SensorAbstract;
-                var ActuatorAbstract = (function () {
+                var ActuatorAbstract = /** @class */ (function () {
                     function ActuatorAbstract(mesh, prop) {
                         this.actuating = false;
                         this.ready = true;
@@ -6039,14 +6045,14 @@ var org;
                     return ActuatorAbstract;
                 }());
                 vishva.ActuatorAbstract = ActuatorAbstract;
-                var SNAproperties = (function () {
+                var SNAproperties = /** @class */ (function () {
                     function SNAproperties() {
                         this.signalId = "0";
                     }
                     return SNAproperties;
                 }());
                 vishva.SNAproperties = SNAproperties;
-                var ActProperties = (function (_super) {
+                var ActProperties = /** @class */ (function (_super) {
                     __extends(ActProperties, _super);
                     function ActProperties() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6074,7 +6080,7 @@ var org;
             var vishva;
             (function (vishva) {
                 var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
-                var AnimatorProp = (function (_super) {
+                var AnimatorProp = /** @class */ (function (_super) {
                     __extends(AnimatorProp, _super);
                     function AnimatorProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6088,7 +6094,7 @@ var org;
                     return AnimatorProp;
                 }(vishva.ActProperties));
                 vishva.AnimatorProp = AnimatorProp;
-                var ActuatorAnimator = (function (_super) {
+                var ActuatorAnimator = /** @class */ (function (_super) {
                     __extends(ActuatorAnimator, _super);
                     function ActuatorAnimator(mesh, parms) {
                         var _this = this;
@@ -6159,7 +6165,7 @@ var org;
             var vishva;
             (function (vishva) {
                 var Animation = BABYLON.Animation;
-                var ActCloakerProp = (function (_super) {
+                var ActCloakerProp = /** @class */ (function (_super) {
                     __extends(ActCloakerProp, _super);
                     function ActCloakerProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6172,7 +6178,7 @@ var org;
                     return ActCloakerProp;
                 }(vishva.ActProperties));
                 vishva.ActCloakerProp = ActCloakerProp;
-                var ActuatorCloaker = (function (_super) {
+                var ActuatorCloaker = /** @class */ (function (_super) {
                     __extends(ActuatorCloaker, _super);
                     function ActuatorCloaker(mesh, parms) {
                         var _this = this;
@@ -6243,7 +6249,7 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva) {
-                var ActDisablerProp = (function (_super) {
+                var ActDisablerProp = /** @class */ (function (_super) {
                     __extends(ActDisablerProp, _super);
                     function ActDisablerProp() {
                         return _super !== null && _super.apply(this, arguments) || this;
@@ -6254,7 +6260,7 @@ var org;
                     return ActDisablerProp;
                 }(vishva.ActProperties));
                 vishva.ActDisablerProp = ActDisablerProp;
-                var ActuatorDisabler = (function (_super) {
+                var ActuatorDisabler = /** @class */ (function (_super) {
                     __extends(ActuatorDisabler, _super);
                     function ActuatorDisabler(mesh, prop) {
                         var _this = this;
@@ -6316,7 +6322,7 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva) {
-                var ActEnablerProp = (function (_super) {
+                var ActEnablerProp = /** @class */ (function (_super) {
                     __extends(ActEnablerProp, _super);
                     function ActEnablerProp() {
                         return _super !== null && _super.apply(this, arguments) || this;
@@ -6327,7 +6333,7 @@ var org;
                     return ActEnablerProp;
                 }(vishva.ActProperties));
                 vishva.ActEnablerProp = ActEnablerProp;
-                var ActuatorEnabler = (function (_super) {
+                var ActuatorEnabler = /** @class */ (function (_super) {
                     __extends(ActuatorEnabler, _super);
                     function ActuatorEnabler(mesh, prop) {
                         var _this = this;
@@ -6391,7 +6397,7 @@ var org;
             (function (vishva) {
                 var Animation = BABYLON.Animation;
                 var Vector3 = BABYLON.Vector3;
-                var ActMoverParm = (function (_super) {
+                var ActMoverParm = /** @class */ (function (_super) {
                     __extends(ActMoverParm, _super);
                     function ActMoverParm() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6408,7 +6414,7 @@ var org;
                     return ActMoverParm;
                 }(vishva.ActProperties));
                 vishva.ActMoverParm = ActMoverParm;
-                var ActuatorMover = (function (_super) {
+                var ActuatorMover = /** @class */ (function (_super) {
                     __extends(ActuatorMover, _super);
                     function ActuatorMover(mesh, parms) {
                         var _this = this;
@@ -6489,7 +6495,7 @@ var org;
                 var Animation = BABYLON.Animation;
                 var Axis = BABYLON.Axis;
                 var Quaternion = BABYLON.Quaternion;
-                var ActRotatorParm = (function (_super) {
+                var ActRotatorParm = /** @class */ (function (_super) {
                     __extends(ActRotatorParm, _super);
                     function ActRotatorParm() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6508,7 +6514,7 @@ var org;
                     return ActRotatorParm;
                 }(vishva.ActProperties));
                 vishva.ActRotatorParm = ActRotatorParm;
-                var ActuatorRotator = (function (_super) {
+                var ActuatorRotator = /** @class */ (function (_super) {
                     __extends(ActuatorRotator, _super);
                     function ActuatorRotator(mesh, parms) {
                         var _this = this;
@@ -6587,7 +6593,7 @@ var org;
                 var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
                 var Range = org.ssatguru.babylonjs.vishva.gui.Range;
                 var Sound = BABYLON.Sound;
-                var ActSoundProp = (function (_super) {
+                var ActSoundProp = /** @class */ (function (_super) {
                     __extends(ActSoundProp, _super);
                     function ActSoundProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6602,7 +6608,7 @@ var org;
                     return ActSoundProp;
                 }(vishva.ActProperties));
                 vishva.ActSoundProp = ActSoundProp;
-                var ActuatorSound = (function (_super) {
+                var ActuatorSound = /** @class */ (function (_super) {
                     __extends(ActuatorSound, _super);
                     function ActuatorSound(mesh, prop) {
                         var _this = this;
@@ -6709,7 +6715,7 @@ var org;
                 var ActionManager = BABYLON.ActionManager;
                 var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
                 var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
-                var SenClickProp = (function (_super) {
+                var SenClickProp = /** @class */ (function (_super) {
                     __extends(SenClickProp, _super);
                     function SenClickProp() {
                         var _this = _super.call(this) || this;
@@ -6724,7 +6730,7 @@ var org;
                     return SenClickProp;
                 }(vishva.SNAproperties));
                 vishva.SenClickProp = SenClickProp;
-                var SensorClick = (function (_super) {
+                var SensorClick = /** @class */ (function (_super) {
                     __extends(SensorClick, _super);
                     //properties: SNAproperties;
                     function SensorClick(mesh, prop) {
@@ -6794,7 +6800,7 @@ var org;
                 var ActionManager = BABYLON.ActionManager;
                 var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
                 var Tags = BABYLON.Tags;
-                var SenContactProp = (function (_super) {
+                var SenContactProp = /** @class */ (function (_super) {
                     __extends(SenContactProp, _super);
                     function SenContactProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6808,7 +6814,7 @@ var org;
                     return SenContactProp;
                 }(vishva.SNAproperties));
                 vishva.SenContactProp = SenContactProp;
-                var SensorContact = (function (_super) {
+                var SensorContact = /** @class */ (function (_super) {
                     __extends(SensorContact, _super);
                     function SensorContact(mesh, prop) {
                         var _this = this;
@@ -6880,7 +6886,7 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva) {
-                var SenTimerProp = (function (_super) {
+                var SenTimerProp = /** @class */ (function (_super) {
                     __extends(SenTimerProp, _super);
                     function SenTimerProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
@@ -6894,7 +6900,7 @@ var org;
                     return SenTimerProp;
                 }(vishva.SNAproperties));
                 vishva.SenTimerProp = SenTimerProp;
-                var SensorTimer = (function (_super) {
+                var SensorTimer = /** @class */ (function (_super) {
                     __extends(SensorTimer, _super);
                     function SensorTimer(mesh, prop) {
                         var _this = this;
@@ -6974,7 +6980,7 @@ var org;
             (function (vishva) {
                 var ActionManager = BABYLON.ActionManager;
                 var ExecuteCodeAction = BABYLON.ExecuteCodeAction;
-                var SenTouchProp = (function (_super) {
+                var SenTouchProp = /** @class */ (function (_super) {
                     __extends(SenTouchProp, _super);
                     function SenTouchProp() {
                         return _super !== null && _super.apply(this, arguments) || this;
@@ -6985,7 +6991,7 @@ var org;
                     return SenTouchProp;
                 }(vishva.SNAproperties));
                 vishva.SenTouchProp = SenTouchProp;
-                var SensorTouch = (function (_super) {
+                var SensorTouch = /** @class */ (function (_super) {
                     __extends(SensorTouch, _super);
                     function SensorTouch(mesh, prop) {
                         var _this = this;

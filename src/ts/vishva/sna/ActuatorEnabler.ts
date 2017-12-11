@@ -2,44 +2,47 @@
 
 namespace org.ssatguru.babylonjs.vishva {
 
-    import Mesh = BABYLON.Mesh;
+    import Mesh=BABYLON.Mesh;
+    import Node=BABYLON.Node;
 
     export class ActEnablerProp extends ActProperties {
         public unmarshall(obj: Object): ActEnablerProp {
             return null;
         }
     }
-    
+
     export class ActuatorEnabler extends ActuatorAbstract {
 
 
-        public constructor(mesh: Mesh, prop: ActEnablerProp) {
-            if (prop!=null){
-                super(mesh, prop);
-            }else{
-                super(mesh, new ActEnablerProp());
+        public constructor(mesh: Mesh,prop: ActEnablerProp) {
+            if(prop!=null) {
+                super(mesh,prop);
+            } else {
+                super(mesh,new ActEnablerProp());
             }
         }
 
         public actuate() {
-            let enable :boolean = false;
-            if (this.properties.toggle) {
-                if (this.properties.state_toggle) {
-                    enable = true
-                } else {
-                    enable = false;
-                    }
-                this.properties.state_toggle = !this.properties.state_toggle;
-            } else {
-                enable =true;
-                }
-            this.mesh.setEnabled(enable);
+            let enableState: boolean=true;
+            if(this.properties.toggle) {
+                enableState = this.properties.state_toggle;
+                this.properties.state_toggle=!this.properties.state_toggle;
+            } 
+            this.mesh.setEnabled(enableState);
+            this.enableChilds(this.mesh,enableState);
             this.onActuateEnd();
 
         }
 
+        private enableChilds(mesh: Mesh,enableState: boolean) {
+            let nodes: Node[]=mesh.getDescendants(false);
+            for(let node of nodes) {
+                node.setEnabled(enableState);
+            }
+        }
+
         public stop() {
-            this.mesh.setEnabled(false)
+            this.mesh.setEnabled(true);
         }
 
         public isReady(): boolean {
@@ -51,16 +54,16 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public processUpdateSpecific() {
-            if (this.properties.autoStart) {
-                var started: boolean = this.start();
+            if(this.properties.autoStart) {
+                var started: boolean=this.start();
             }
         }
 
         public cleanUp() {
-            this.properties.loop = false;
+            this.properties.loop=false;
         }
-    }        
-    
+    }
+
 }
 
-org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Enabler", org.ssatguru.babylonjs.vishva.ActuatorEnabler);
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Enabler",org.ssatguru.babylonjs.vishva.ActuatorEnabler);

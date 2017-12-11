@@ -476,7 +476,7 @@ namespace org.ssatguru.babylonjs.component {
 
         private updateTargetValue() {
             this.camera.target.copyFromFloats(this.avatar.position.x,(this.avatar.position.y+1.5),this.avatar.position.z);
-            this.bounceCamera();
+            //this.bounceCamera();
         }
 
         ray: Ray=new Ray(Vector3.Zero(),Vector3.One(),1);

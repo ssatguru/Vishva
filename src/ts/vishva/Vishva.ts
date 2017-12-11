@@ -1,7 +1,7 @@
 
 namespace org.ssatguru.babylonjs.vishva {
     import EditControl=org.ssatguru.babylonjs.component.EditControl;
-    import CharacterControl=org.ssatguru.babylonjs.component.CharacterControl;
+    import CharacterController=org.ssatguru.babylonjs.component.CharacterController;
     import AbstractMesh=BABYLON.AbstractMesh;
     import Animation=BABYLON.Animation;
     import AnimationRange=BABYLON.AnimationRange;
@@ -188,13 +188,15 @@ namespace org.ssatguru.babylonjs.vishva {
             this.editEnabled=editEnabled;
             this.assets=assets;
             this.key=new Key();
-            this.initAnims();
+
             this.canvas=<HTMLCanvasElement>document.getElementById(canvasId);
+            //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
             this.engine=new Engine(this.canvas,true);
 
             this.scene=new Scene(this.engine);
             this.scene.enablePhysics();
             //this.scene.useRightHandedSystem = true;
+            //
             //lets make night black
             this.scene.clearColor=new Color4(0,0,0,1);
             //set ambient to white in case user wants to bypass light conditions for some objects
@@ -207,7 +209,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //fix shadow and skinning issue
             //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
-            //BABYLON.SceneLoader.CleanBoneMatrixWeights = true
+            SceneLoader.CleanBoneMatrixWeights = true
 
             this.scenePath=scenePath;
             if(sceneFile=="empty") {
@@ -266,6 +268,7 @@ namespace org.ssatguru.babylonjs.vishva {
             shadowGenerator.useBlurExponentialShadowMap=true;
             //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
             shadowGenerator.bias=-0.3;
+            
             //            shadowGenerator.bias = 1.0E-6;
             //            shadowGenerator.depthScale = 2500;
             //            sl.shadowMinZ = 1;
@@ -288,7 +291,8 @@ namespace org.ssatguru.babylonjs.vishva {
                     if(Tags.MatchesQuery(mesh,"Vishva.avatar")) {
                         avFound=true;
                         this.avatar=<Mesh>mesh;
-                        this.avatar.ellipsoidOffset=new Vector3(0,2,0);
+                        //TODO ellipsoidOffset not serialized?
+                        this.avatar.ellipsoidOffset=new Vector3(0,1,0);
                     } else if(Tags.MatchesQuery(mesh,"Vishva.sky")) {
                         skyFound=true;
                         this.skybox=<Mesh>mesh;
@@ -304,7 +308,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 if(Tags.MatchesQuery(skeleton,"Vishva.skeleton")||(skeleton.name==="Vishva.skeleton")) {
                     skelFound=true;
                     this.avatarSkeleton=skeleton;
-                    this.checkAnimRange(this.avatarSkeleton);
                 }
             }
             if(!skelFound) {
@@ -378,7 +381,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             if(!groundFound) {
                 console.log("no vishva ground found. creating ground");
-                //this.ground = this.createGround(this.scene);
+                //this.ground=this.createGround(this.scene);
                 this.createGround_htmap(this.scene);
             } else {
                 //in case this wasn't set in serialized scene
@@ -394,8 +397,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.skybox=this.createSkyBox(this.scene);
                 this.setLight(0.5);
             }
-            if(this.scene.fogMode!==Scene.FOGMODE_EXP2) {
-                this.scene.fogMode=Scene.FOGMODE_EXP2;
+            if(this.scene.fogMode!==Scene.FOGMODE_EXP) {
+                this.scene.fogMode=Scene.FOGMODE_EXP;
                 this.scene.fogDensity=0;
             }
             //            if (this.scene.fogMode !== Scene.FOGMODE_LINEAR) {
@@ -413,7 +416,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.createAvatar();
             } else {
                 this.avatarSkeleton.enableBlending(0.1);
-                this.cc=new CharacterControl(this.avatar,this.avatarSkeleton,this.anims,this.mainCamera,this.scene);
+                this.cc=new CharacterController(this.avatar,this.mainCamera,this.scene);
+                //TODO remove below. The character controller should be set using deserialization
+                this.setCharacterController(this.cc);
                 this.cc.start();
             }
             SNAManager.getSNAManager().unMarshal(this.snas,this.scene);
@@ -422,7 +427,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.render();
         }
 
-        cc: CharacterControl;
+        cc: CharacterController;
 
         private render() {
             this.scene.registerBeforeRender(() => {return this.process()});
@@ -461,14 +466,15 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //switch to first person?
             if(this.isFocusOnAv) {
-                if(this.mainCamera.radius<=0.75) {
-                    this.mainCamera.radius=0.75;
-                    this.avatar.visibility=0;
-                    this.mainCamera.checkCollisions=false;
-                } else {
-                    this.avatar.visibility=1;
-                    this.mainCamera.checkCollisions=this.cameraCollision;
-                }
+                //this is now done in character controller               
+                //                if(this.mainCamera.radius<=0.75) {
+                //                    this.mainCamera.radius=0.75;
+                //                    this.avatar.visibility=0;
+                //                    this.mainCamera.checkCollisions=false;
+                //                } else {
+                //                    this.avatar.visibility=1;
+                //                    this.mainCamera.checkCollisions=this.cameraCollision;
+                //                }
             }
             if(this.isMeshSelected) {
                 if(this.key.focus) {
@@ -550,7 +556,7 @@ namespace org.ssatguru.babylonjs.vishva {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
             //if(evt.button!==2 || !this.key.alt) return;
-            if(evt.button!==2 ) return;
+            if(evt.button!==2) return;
             if(pickResult.hit) {
                 if(this.key.ctl) {
                     if((!this.isMeshSelected)||(pickResult.pickedMesh!==this.meshPicked)) {
@@ -819,39 +825,6 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        //////////////////////////////////////////////////////////
-
-        anims: AnimData[];
-        private initAnims() {
-            let walk: AnimData;
-            let walkBack: AnimData;
-            let idle: AnimData;
-            let run: AnimData;
-            let jump: AnimData;
-            let fall: AnimData;
-            let turnLeft: AnimData;
-            let turnRight: AnimData;
-            let strafeLeft: AnimData;
-            let strafeRight: AnimData;
-            let slideBack: AnimData;
-            let avatarSpeed: number=0.05;
-            let prevAnim: AnimData=null;
-
-            walk=new AnimData("walk",true,1);
-            walkBack=new AnimData("walkBack",true,0.5);
-            idle=new AnimData("idle",true,1);
-            run=new AnimData("run",true,1);
-            jump=new AnimData("jump",false,1);
-            fall=new AnimData("fall",false,1);
-            turnLeft=new AnimData("turnLeft",true,0.5);
-            turnRight=new AnimData("turnRight",true,0.5);
-            strafeLeft=new AnimData("strafeLeft",true,1);
-            strafeRight=new AnimData("strafeRight",true,1);
-            slideBack=new AnimData("slideBack",true,1);
-
-            this.anims=[walk,walkBack,idle,run,jump,fall,turnLeft,turnRight,strafeLeft,strafeRight,slideBack];
-        }
-
         private onWindowResize(event: Event) {
             this.engine.resize();
         }
@@ -1013,14 +986,24 @@ namespace org.ssatguru.babylonjs.vishva {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
             }
-            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
-                return ("this is an instance mesh. you cannot create instance of that");
-            }
+//            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
+//                return ("this is an instance mesh. you cannot create instance of that");
+//            }
             var name: string=(<number>new Number(Date.now())).toString();
-            var inst: InstancedMesh=(<Mesh>this.meshPicked).createInstance(name);
+            var inst: InstancedMesh;
+            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
+                inst = (<InstancedMesh>this.meshPicked).clone(name,null,true);
+                inst.scaling.copyFrom(this.meshPicked.scaling);
+            }else{
+                inst =(<Mesh>this.meshPicked).createInstance(name);
+            }
+            console.log(this.meshPicked);
+            console.log(inst);
+//            delete inst["sensors"];
+//            delete inst["actuators"];
             //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
             this.animateMesh(inst);
-            this.meshPicked=inst;
+            //this.meshPicked=inst;
             this.switchEditControl(inst);
             //TODO think
             //inst.receiveShadows = true;
@@ -1214,9 +1197,9 @@ namespace org.ssatguru.babylonjs.vishva {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
             }
-            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
-                return ("this is an instance mesh. you cannot clone these");
-            }
+//            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
+//                return ("this is an instance mesh. you cannot clone these");
+//            }
             var clonedMeshesPicked: Array<AbstractMesh>=new Array<AbstractMesh>();
             var clone: AbstractMesh;
             //check if multiple meshes selected. If yes clone all except the last
@@ -1242,10 +1225,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public clonetheMesh(mesh: AbstractMesh): AbstractMesh {
             var name: string=(<number>new Number(Date.now())).toString();
             var clone: AbstractMesh=mesh.clone(name,null,true);
-            console.log(mesh.scaling);
             clone.scaling.copyFrom(mesh.scaling);
             delete clone["sensors"];
             delete clone["actuators"];
+            //console.log(mesh);
+            //console.log(clone);
+            
             this.animateMesh(clone);
             //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
             //TODO think
@@ -2328,7 +2313,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.resetSkels(this.scene);
             this.cleanupMats();
             this.renameWorldTextures();
-
+            //TODO add support for CharacterController serialization.
             let vishvaSerialzed=new VishvaSerialized();
             vishvaSerialzed.settings.cameraCollision=this.cameraCollision;
             vishvaSerialzed.settings.autoEditMenu=this.autoEditMenu;
@@ -2743,12 +2728,14 @@ namespace org.ssatguru.babylonjs.vishva {
                 if(this.avatarSkeleton!=null) {
                     Tags.AddTagsTo(this.avatarSkeleton,"Vishva.skeleton");
                     this.avatarSkeleton.name="Vishva.skeleton";
-                    this.checkAnimRange(this.avatarSkeleton);
                     this.avatarSkeleton.enableBlending(0.1);
                 }
+                this.cc.setAvatar(this.avatar);
+                this.cc.setAvatarSkeleton(this.avatarSkeleton);
+
                 this.avatar.checkCollisions=true;
                 this.avatar.ellipsoid=new Vector3(0.5,1,0.5);
-                this.avatar.ellipsoidOffset=new Vector3(0,2,0);
+                this.avatar.ellipsoidOffset=new Vector3(0,1,0);
                 this.avatar.isPickable=false;
                 this.avatar.rotation=this.avatar.rotationQuaternion.toEulerAngles();
                 this.avatar.rotationQuaternion=null;
@@ -2773,56 +2760,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 return false;
             }
             return true;
-        }
-
-        /**
-         * check how many of standard avatar animations are present in this skeleton
-         * 
-         * @param skel
-         */
-        private checkAnimRange(skel: Skeleton) {
-            for(let anim of this.anims) {
-                if(skel.getAnimationRange(anim.name)!=null) {
-                    anim.exist=true;
-                } else {
-                    console.log(anim.name+" not found")
-                    anim.exist=false;
-                }
-            }
-        }
-
-        private setAvatar(avName: string,meshes: AbstractMesh[]) {
-            var mesh: Mesh;
-            for(var index147=0;index147<meshes.length;index147++) {
-                var amesh=meshes[index147];
-                {
-                    mesh=<Mesh>amesh;
-                    if((mesh.id===avName)) {
-                        var saveRotation: Vector3;
-                        var savePosition: Vector3;
-                        if(this.avatar!=null) {
-                            saveRotation=this.avatar.rotation;
-                            savePosition=this.avatar.position;
-                        } else {
-                            saveRotation=new Vector3(0,Math.PI,0);
-                            savePosition=new Vector3(0,0,0);
-                        }
-                        this.avatar=mesh;
-                        this.avatar.rotation=saveRotation;
-                        this.avatar.position=savePosition;
-                        this.avatar.visibility=1;
-                        this.avatar.skeleton=this.avatarSkeleton;
-                        this.avatar.checkCollisions=true;
-                        this.avatar.ellipsoid=new Vector3(0.5,1,0.5);
-                        this.avatar.ellipsoidOffset=new Vector3(0,2,0);
-                        this.avatar.isPickable=false;
-                    } else {
-                        mesh.skeleton=null;
-                        mesh.visibility=0;
-                        mesh.checkCollisions=false;
-                    }
-                }
-            }
         }
 
 
@@ -2868,11 +2805,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
                     grnd.receiveShadows=true;
 
-
                     //HeightmapImpostor doesnot seem to work.
-                    if(this.enablePhysics) {
-                        grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.HeightmapImpostor,{mass: 0,restitution: 0.1},this.scene);
-                    }
+//                    if(this.enablePhysics) {
+//                        grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.HeightmapImpostor,{mass: 0,restitution: 0.1},this.scene);
+//                    }
                     grnd.freezeWorldMatrix();
                     this.ground=grnd;
                 }
@@ -3027,26 +2963,31 @@ namespace org.ssatguru.babylonjs.vishva {
             (this.shadowGenerator.getShadowMap().renderList).push(this.avatar);
             //TODO
             //this.avatar.receiveShadows = true;
-            var l: number=meshes.length;
-            for(var i: number=1;i<l;i++) {
+
+            //dispose of all OTHER meshes
+            let l: number=meshes.length;
+            for(let i=1;i<l;i++) {
                 meshes[i].checkCollisions=false;
                 meshes[i].dispose();
             }
+
+
             this.avatarSkeleton=skeletons[0];
+            //dispose of all OTHER skeletons
             l=skeletons.length;
-            for(var i: number=1;i<l;i++) {
+            for(let i=1;i<l;i++) {
                 skeletons[i].dispose();
             }
+
             this.fixAnimationRanges(this.avatarSkeleton);
             this.avatar.skeleton=this.avatarSkeleton;
-            this.checkAnimRange(this.avatarSkeleton);
             this.avatarSkeleton.enableBlending(0.1);
             //this.avatar.rotation.y = Math.PI;
             //this.avatar.position = new Vector3(0, 20, 0);
             this.avatar.position=new Vector3(-360,620,225);
             this.avatar.checkCollisions=true;
             this.avatar.ellipsoid=new Vector3(0.5,1,0.5);
-            this.avatar.ellipsoidOffset=new Vector3(0,2,0);
+            this.avatar.ellipsoidOffset=new Vector3(0,1,0);
             this.avatar.isPickable=false;
             Tags.AddTagsTo(this.avatar,"Vishva.avatar");
             Tags.AddTagsTo(this.avatarSkeleton,"Vishva.skeleton");
@@ -3063,25 +3004,32 @@ namespace org.ssatguru.babylonjs.vishva {
                 sm.ambientColor=new Color3(0,0,0);
             }
 
-            this.cc=new CharacterControl(this.avatar,this.avatarSkeleton,this.anims,this.mainCamera,this.scene);
+            this.cc=new CharacterController(this.avatar,this.mainCamera,this.scene);
+            
+            this.setCharacterController(this.cc);
             this.cc.start();
 
             //in 3.0 need to set the camera values again
-            //            this.mainCamera.radius = 4;
-            //            this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
+            //            this.mainCamera.radius=4;
+            //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;
             //            this.mainCamera.beta = 1.4;
 
 
         }
-
-        //        private setAnimationRange(skel: Skeleton) {
-        //            for (var index149 = 0; index149 < this.anims.length; index149++) {
-        //                var anim = this.anims[index149];
-        //                {
-        //                    skel.createAnimationRange(anim.name, anim.s, anim.e);
-        //                }
-        //            }
-        //        }
+        //TODO
+        //persist charactercontroller settings
+        private setCharacterController(cc: CharacterController) {
+            this.mainCamera.lowerRadiusLimit=1;
+            this.mainCamera.upperRadiusLimit=100;
+            cc.setCameraTarget(new BABYLON.Vector3(0,1.5,0));
+            cc.setIdleAnim("idle",0.1,true);
+            cc.setTurnLeftAnim("turnLeft",0.5,true);
+            cc.setTurnRightAnim("turnRight",0.5,true);
+            cc.setWalkBackAnim("walkBack",0.5,true);
+            cc.setJumpAnim("jump",4,false);
+            cc.setFallAnim("fall",2,false);
+            cc.setSlideBackAnim("slideBack",1,false);
+        }
 
         /**
          * workaround for bugs in blender exporter 
@@ -3094,15 +3042,15 @@ namespace org.ssatguru.babylonjs.vishva {
          * @param skel
          */
         private fixAnimationRanges(skel: Skeleton) {
-            var getAnimationRanges: Function=<Function>skel["getAnimationRanges"];
-            var ranges: AnimationRange[]=<AnimationRange[]>getAnimationRanges.call(skel);
+            var ranges: AnimationRange[]=skel.getAnimationRanges();
 
             for(let range of ranges) {
-                //fix for 4.4.4
+                //                fix for 4.4.4
                 //                if (range.from === range.to) {
                 //                    console.log("animation issue found in " + range.name + " from " + range.from);
                 //                    range.to++;
                 //                }
+
                 //fix for 5.3
                 range.from++;
 

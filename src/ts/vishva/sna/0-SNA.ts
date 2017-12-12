@@ -83,8 +83,6 @@ namespace org.ssatguru.babylonjs.vishva {
         public emitSignal(signalId: string) {
             if(signalId.trim()==="") return;
             var keyValue: any=this.sig2actMap[signalId];
-            console.log("emiiting "+signalId);
-            console.log(keyValue);
             if(keyValue!=null) {
                 window.setTimeout(((acts) => {return this.actuate(acts)}),0,keyValue);
             }
@@ -435,8 +433,6 @@ namespace org.ssatguru.babylonjs.vishva {
             let i: number;
             for(let action of this.actions) {
                 i=actions.indexOf(action);
-                console.log(action);
-                console.log(i);
                 actions.splice(i,1);
             }
             if(actions.length===0) {

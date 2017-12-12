@@ -5008,8 +5008,6 @@ var org;
                         if (signalId.trim() === "")
                             return;
                         var keyValue = this.sig2actMap[signalId];
-                        console.log("emiiting " + signalId);
-                        console.log(keyValue);
                         if (keyValue != null) {
                             window.setTimeout((function (acts) { return _this.actuate(acts); }), 0, keyValue);
                         }
@@ -5308,8 +5306,6 @@ var org;
                         for (var _i = 0, _a = this.actions; _i < _a.length; _i++) {
                             var action = _a[_i];
                             i = actions.indexOf(action);
-                            console.log(action);
-                            console.log(i);
                             actions.splice(i, 1);
                         }
                         if (actions.length === 0) {

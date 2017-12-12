@@ -7,13 +7,8 @@ namespace org.ssatguru.babylonjs.vishva {
     
     export class AnimatorProp extends ActProperties {
         animationRange: SelectType = new SelectType();
-
         rate: number = 1;
-
-        public unmarshall(obj: Object): AnimatorProp {
-            return null;
-        }
-    }
+     }
     
     export class ActuatorAnimator extends ActuatorAbstract {
         public constructor(mesh: Mesh, parms: AnimatorProp) {
@@ -62,7 +57,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return "Animator";
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if (this.properties.autoStart) {
                 var started: boolean = this.start();
             }

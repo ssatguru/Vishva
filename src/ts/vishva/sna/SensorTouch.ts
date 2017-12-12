@@ -6,10 +6,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Mesh = BABYLON.Mesh;
     
     export class SenTouchProp extends SNAproperties {
-        public unmarshall(obj: Object): SenTouchProp {
-            return <SenTouchProp>obj;
-        }
-    }
+     }
     
     export class SensorTouch extends SensorAbstract {
         properties: SNAproperties;
@@ -50,7 +47,7 @@ namespace org.ssatguru.babylonjs.vishva {
             
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
            
         }
     }

@@ -15,18 +15,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
     export class SNAManager {
         sensors: Object;
-
         actuators: Object;
-
         sensorList: string[]=[];
-
         actuatorList: string[]=[];
-
         actuatorMap: any={};
         sensorMap: any={};
-
         snaDisabledList: Array<AbstractMesh>=new Array();
-
         sig2actMap: Object=<Object>new Object();
 
         static sm: SNAManager;
@@ -66,56 +60,15 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.actuatorList;
         }
 
-        /*
-         * the first constructor is called by the vishva scene unmarshaller
-         * the second by the gui to create a new sensor
-                 */
-
-        //        public createSensorByName_OLD(name: string, mesh: Mesh, prop: SNAproperties): S        ensor {
-        //            if (name === "To        uch") {
-        //                if (prop != null) return new SensorTouch(mesh, <SenTouchProp>prop); else return new SensorTouch(mesh, new SenTouchP        rop());
-        //            } else if (name === "Cont        act") {
-        //                if (prop != null) return new SensorContact(mesh, <SenContactProp>prop); else return new SensorContact(mesh, new SenContactP        rop());
-        //                    } else
-        //                retur        n null;
-        //        }
-
         public createSensorByName(name: string,mesh: Mesh,prop: SNAproperties): Sensor {
             let sensor: any=this.sensorMap[name];
             return new sensor(mesh,<SNAproperties>prop)
         }
 
-        /*
-         * the first constructor is called by the vishva scene unmarshaller
-         * the second by the gui to create a new actuator
-                 */
-        //        public createActuatorByName_OLD(name: string, mesh: Mesh, prop: SNAproperties): Act        uator {
-        //            if (name === "Mo        ver") {
-        //                //if (prop != null) return new ActuatorMover(mesh, <ActMoverParm>prop); else return new ActuatorMover(mesh, new ActMoverP        arm());
-        //                let act:any = this.actuatorMap        [name];
-        //                if (prop != null) return new act(mesh, <ActProperties>prop); else return new act(mesh,         null);
-        //            } else if (name === "Rota        tor") {
-        //                if (prop != null) return new ActuatorRotator(mesh, <ActRotatorParm>prop); else return new ActuatorRotator(mesh, new ActRotatorP        arm());
-        //            } else if (name === "So        und") {
-        //                if (prop != null) return new ActuatorSound(mesh, <ActSoundProp>prop); else return new ActuatorSound(mesh, new ActSoundP        rop());
-        //            } else if (name === "Anima        tor") {
-        //                if (prop != null) return new ActuatorAnimator(mesh, <AnimatorProp>prop); else return new ActuatorAnimator(mesh, new AnimatorP        rop());
-        //            } else if (name === "Cloa        ker") {
-        //                if (prop != null) return new ActuatorCloaker(mesh, <ActCloakerProp>prop); else return new ActuatorCloaker(mesh, new ActCloakerP        rop());
-        //            } else if (name === "Disab        ler") {
-        //                if (prop != null) return new ActuatorDisabler(mesh, <ActDisablerProp>prop); else return new ActuatorDisabler(mesh, new ActDisablerProp());                        
-        //            } else if (name === "Enab        ler") {
-        //                if (prop != null) return new ActuatorEnabler(mesh, <ActEnablerProp>prop); else return new ActuatorEnabler(mesh, new ActEnablerProp());                        
-        //                    } else
-        //                retur        n null;
-        //        }
-
         public createActuatorByName(name: string,mesh: Mesh,prop: SNAproperties): Actuator {
             let act: any=this.actuatorMap[name];
-            //if (prop != null) return new act(mesh, <ActProperties>prop); else return new act(mesh, null);
             return new act(mesh,<ActProperties>prop)
         }
-
 
         public getSensorParms(sensor: string): Object {
             var sensorObj: Object=<Object>this.sensors[sensor];
@@ -130,6 +83,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public emitSignal(signalId: string) {
             if(signalId.trim()==="") return;
             var keyValue: any=this.sig2actMap[signalId];
+            console.log("emiiting "+signalId);
+            console.log(keyValue);
             if(keyValue!=null) {
                 window.setTimeout(((acts) => {return this.actuate(acts)}),0,keyValue);
             }
@@ -291,14 +246,14 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public unMarshal(snas: SNAserialized[],scene: Scene) {
-            let renames:AbstractMesh[]=[];
+            let renames: AbstractMesh[]=[];
             if(snas==null) return;
             for(let sna of snas) {
                 var mesh: AbstractMesh=scene.getMeshesByTags(sna.meshId)[0];
-                if (mesh==null){
+                if(mesh==null) {
                     mesh=scene.getMeshByName(sna.meshId);
-                    if (mesh!=null){
-                        if (renames.indexOf(mesh) <0) renames.push(mesh);
+                    if(mesh!=null) {
+                        if(renames.indexOf(mesh)<0) renames.push(mesh);
                     }
                 }
                 if(mesh!=null) {
@@ -311,7 +266,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     console.error("Didnot find mesh for tag "+sna.meshId);
                 }
             }
-            for(let mesh of renames){
+            for(let mesh of renames) {
                 mesh.name=mesh.name.split(".Vishva.uid.")[0];
             }
         }
@@ -327,12 +282,12 @@ namespace org.ssatguru.babylonjs.vishva {
          * TODO:check if we can use this method for all meshes rather than just InstancedMesh
          */
         private getMeshVishvaUid(mesh: AbstractMesh): string {
-            
-            if(!(mesh instanceof BABYLON.InstancedMesh) && (Tags.HasTags(mesh))) {
+
+            if(!(mesh instanceof BABYLON.InstancedMesh)&&(Tags.HasTags(mesh))) {
                 var tags: string[]=(<string>Tags.GetTags(mesh,true)).split(" ");
                 for(let tag of tags) {
                     var i: number=tag.indexOf("Vishva.uid.");
-                    if(i>=0)return tag;
+                    if(i>=0) return tag;
                 }
             }
             var uid: string;
@@ -341,24 +296,21 @@ namespace org.ssatguru.babylonjs.vishva {
                 uid="Vishva.uid."+(<number>new Number(Date.now())).toString();
             };
             this.prevUID=uid;
-            if(mesh instanceof BABYLON.InstancedMesh){
-                mesh.name = mesh.name + "." + uid;
+            if(mesh instanceof BABYLON.InstancedMesh) {
+                mesh.name=mesh.name+"."+uid;
                 return mesh.name;
-            }else{
+            } else {
                 Tags.AddTagsTo(mesh,uid);
                 return uid;
             }
-            
+
         }
     }
 
     export class SNAserialized {
         name: string;
-
         type: string;
-
         meshId: string;
-
         properties: SNAproperties;
 
         constructor() {
@@ -366,31 +318,22 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export interface SensorActuator {
-
         getName(): string;
-
         getType(): string;
-
         getProperties(): SNAproperties;
-
         setProperties(properties: SNAproperties);
-
         /**
          * this is called by the system after the actuator properties are updated
          */
-        processUpdateGeneric();
-
+        handlePropertiesChange();
         /**
          * called by {@processUpdateGeneric}' implementors should do their sensor
          * actuator specific updates here if autostart specified then do a start
          * here
          */
-        processUpdateSpecific();
-
+        onPropertiesChange();
         getSignalId(): string;
-
         dispose();
-
         /**
          * called by dispose() the implementor of the a sensor actuator should do
          * all cleanup specific to their sensor actuator here
@@ -403,31 +346,21 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export interface Actuator extends SensorActuator {
-
-        // TODO swicth start and actuate
-        // start is callled by SNAManager
         start(): boolean;
-
         stop();
-
         actuate();
-
         isReady(): boolean;
-
         processQueue();
-
         getMesh(): Mesh;
     }
 
     export abstract class SensorAbstract implements Sensor {
         public abstract getName(): string;
-        public abstract processUpdateSpecific(): any;
+        public abstract onPropertiesChange(): any;
         public abstract cleanUp(): any;
 
         properties: SNAproperties;
-
         mesh: Mesh;
-
         //action: Action;
         actions: Action[]=new Array();
 
@@ -472,8 +405,6 @@ namespace org.ssatguru.babylonjs.vishva {
             SNAManager.getSNAManager().emitSignal(this.properties.signalId);
         }
 
-
-
         public getProperties(): SNAproperties {
             return this.properties;
         }
@@ -482,8 +413,10 @@ namespace org.ssatguru.babylonjs.vishva {
             this.properties=prop;
         }
 
-        public processUpdateGeneric() {
-            this.processUpdateSpecific();
+        public handlePropertiesChange() {
+            //remove all actions which might have been added by previous property
+            this.removeActions();
+            this.onPropertiesChange();
         }
 
         public getType(): string {
@@ -502,6 +435,8 @@ namespace org.ssatguru.babylonjs.vishva {
             let i: number;
             for(let action of this.actions) {
                 i=actions.indexOf(action);
+                console.log(action);
+                console.log(i);
                 actions.splice(i,1);
             }
             if(actions.length===0) {
@@ -513,30 +448,24 @@ namespace org.ssatguru.babylonjs.vishva {
 
     export abstract class ActuatorAbstract implements Actuator {
         public abstract getName(): any;
-        public abstract processUpdateSpecific(): any;
+        public abstract onPropertiesChange(): any;
         public abstract cleanUp(): any;
         public abstract stop(): any;
         public abstract actuate(): any;
         public abstract isReady(): any;
+
         properties: ActProperties;
-
         mesh: Mesh;
-
         signalId: string;
-
         actuating: boolean=false;
-
         ready: boolean=true;
-
         queued: number=0;
-
         disposed: boolean=false;
 
         public constructor(mesh: Mesh,prop: ActProperties) {
-            Object.defineProperty(this,'__interfaces',{configurable: true,value: ["org.ssatguru.babylonjs.SensorActuator","org.ssatguru.babylonjs.Actuator"]});
             this.properties=prop;
             this.mesh=mesh;
-            this.processUpdateGeneric();
+            this.handlePropertiesChange();
             var actuators: Array<Actuator>=<Array<Actuator>>this.mesh["actuators"];
             if(actuators==null) {
                 actuators=new Array<Actuator>();
@@ -584,15 +513,14 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public setProperties(prop: SNAproperties) {
             this.properties=<ActProperties>prop;
-            this.processUpdateGeneric();
+            this.handlePropertiesChange();
         }
 
         public getSignalId(): string {
             return this.properties.signalId;
         }
 
-        public processUpdateGeneric() {
-
+        public handlePropertiesChange() {
             // check if signalId changed, if yes then resubscribe
             if(this.signalId!=null&&this.signalId!==this.properties.signalId) {
                 SNAManager.getSNAManager().unSubscribe(this,this.signalId);
@@ -602,8 +530,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.signalId=this.properties.signalId;
                 SNAManager.getSNAManager().subscribe(this,this.signalId);
             }
-
-            this.processUpdateSpecific();
+            this.onPropertiesChange();
         }
 
         public onActuateEnd(): any {
@@ -644,28 +571,17 @@ namespace org.ssatguru.babylonjs.vishva {
         //comment these two out until we have an implementation
         //        signalEnable: string = "";
         //        signalDisble: string = "";
-
-        public abstract unmarshall(obj: Object): SNAproperties;
     }
-
-
-
-
 
     export abstract class ActProperties extends SNAproperties {
         signalStart: string="";
-
         signalEnd: string="";
-
         autoStart: boolean=false;
-
         loop: boolean=false;
-
         toggle: boolean=true;
-
-        state_toggle: boolean=true;
-
-        public abstract unmarshall(obj: Object): ActProperties;
+        //when toggle is true then actuator can be in normal or reversed state
+        //else its always in normal (notReversed state);
+        notReversed: boolean=true;
     }
 
 }

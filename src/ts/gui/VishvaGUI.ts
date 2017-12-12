@@ -662,7 +662,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             dbo.text="save";
             dbo.click=(e) => {
                 this.formRead(sensor.getProperties(),parmDiv.id);
-                sensor.processUpdateGeneric()
+                sensor.handlePropertiesChange()
                 this.updateSensActTbl(this.vishva.getSensors(),this.sensTbl);
                 this.editSensDiag.dialog("close");
                 return true;
@@ -720,7 +720,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             dbo.text="save";
             dbo.click=(e) => {
                 this.formRead(actuator.getProperties(),parmDiv.id);
-                actuator.processUpdateGeneric();
+                actuator.handlePropertiesChange();
                 this.updateSensActTbl(this.vishva.getActuators(),this.actTbl);
                 this.editActDiag.dialog("close");
                 return true;

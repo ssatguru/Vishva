@@ -9,14 +9,8 @@ namespace org.ssatguru.babylonjs.vishva {
     
     export class ActSoundProp extends ActProperties {
         soundFile: SelectType = new SelectType();
-
         attachToMesh: boolean = false;
-
         volume: Range = new Range(0.0, 1.0, 1.0, 0.1);
-
-        public unmarshall(obj: Object): ActSoundProp {
-            return null;
-        }
     }
     
     export class ActuatorSound extends ActuatorAbstract {
@@ -33,12 +27,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public actuate() {
             if (this.properties.toggle) {
-                if (this.properties.state_toggle) {
+                if (this.properties.notReversed) {
                     this.sound.play();
                 } else {
                     window.setTimeout((() => { return this.onActuateEnd() }), 0);
                 }
-                this.properties.state_toggle = !this.properties.state_toggle;
+                this.properties.notReversed = !this.properties.notReversed;
             } else {
                 this.sound.play();
             }
@@ -49,7 +43,7 @@ namespace org.ssatguru.babylonjs.vishva {
         happens aynchronously
         it is not ready to play immediately
         */
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             var SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
             //let RELATIVE_ASSET_LOCATION: string = "../../../../";
             let RELATIVE_ASSET_LOCATION: string = "";

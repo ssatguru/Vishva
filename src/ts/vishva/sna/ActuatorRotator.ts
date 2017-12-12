@@ -19,11 +19,6 @@ namespace org.ssatguru.babylonjs.vishva {
         //
         // TODO:always local for now. provide a way to do global rotate
         // boolean local = false;
-
-
-        public unmarshall(obj: Object): ActRotatorParm {
-            return <ActRotatorParm> obj;
-        }
     }
 
     export class ActuatorRotator extends ActuatorAbstract {
@@ -46,13 +41,13 @@ namespace org.ssatguru.babylonjs.vishva {
             var rotZ: Quaternion = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
             var abc: Quaternion = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
             if (properties.toggle) {
-                if (properties.state_toggle) {
+                if (properties.notReversed) {
                     nPos = cPos.multiply(abc);
                 } else {
                     nPos = cPos.multiply(Quaternion.Inverse(abc));
                 }
             } else nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
-            properties.state_toggle = !properties.state_toggle;
+            properties.notReversed = !properties.notReversed;
             var cY: number = this.mesh.position.y;
             var nY: number = this.mesh.position.y + 5;
             this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, () => {return this.onActuateEnd()});
@@ -72,7 +67,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public cleanUp() {
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if (this.properties.autoStart) {
                 var started: boolean = this.start();
                 // sometime a start maynot be possible example during edit

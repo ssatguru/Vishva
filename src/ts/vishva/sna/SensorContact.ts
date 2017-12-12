@@ -13,10 +13,7 @@ namespace org.ssatguru.babylonjs.vishva {
     export class SenContactProp extends SNAproperties {
         onEnter : boolean = false;
         onExit: boolean = false; 
-        public unmarshall(obj: Object): SenContactProp {
-            return <SenContactProp>obj;
-        }
-    }
+     }
     
     export class SensorContact extends SensorAbstract {
         
@@ -27,7 +24,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }else{
                 super(mesh, new SenContactProp());
             }
-            this.processUpdateSpecific();
+            this.onPropertiesChange();
         }
 
         public getName(): string {
@@ -45,7 +42,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public cleanUp() {
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             let properties : SenContactProp = <SenContactProp> this.properties;
             var scene: Scene = this.mesh.getScene();
             
@@ -53,13 +50,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.mesh.actionManager = new ActionManager(scene);
             }
 
-
             let otherMesh = scene.getMeshesByTags("Vishva.avatar" )[0];
             
             if (properties.onEnter){
                 let action:Action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
                 this.mesh.actionManager.registerAction(action);
                 this.actions.push(action);
+                
             }
             
             if (properties.onExit){

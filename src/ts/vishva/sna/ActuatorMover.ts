@@ -12,10 +12,6 @@ namespace org.ssatguru.babylonjs.vishva {
         z: number = 1;
         duration: number = 1;
         local: boolean = false;
-
-        public unmarshall(obj: Object): ActMoverParm {
-            return <ActMoverParm> obj;
-        }
     }
 
     export class ActuatorMover extends ActuatorAbstract {
@@ -41,12 +37,12 @@ namespace org.ssatguru.babylonjs.vishva {
                 moveBy = Vector3.TransformCoordinates(localMove, meshMatrix).subtract(this.mesh.position);
             } else moveBy = new Vector3(props.x, props.y, props.z);
             if (props.toggle) {
-                if (props.state_toggle) {
+                if (props.notReversed) {
                     nPos = cPos.add(moveBy);
                 } else {
                     nPos = cPos.subtract(moveBy);
                 }
-                props.state_toggle = !props.state_toggle;
+                props.notReversed = !props.notReversed;
             } else {
                 nPos = cPos.add(moveBy);
             }
@@ -67,7 +63,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public cleanUp() {
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if (this.properties.autoStart) {
                 var started: boolean = this.start();
             }

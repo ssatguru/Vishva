@@ -11,10 +11,7 @@ namespace org.ssatguru.babylonjs.vishva {
     export class SenTimerProp extends SNAproperties {
         interval: number=1000;
         plusMinus: number=0;
-        public unmarshall(obj: Object): SenTimerProp {
-            return <SenTimerProp>obj;
-        }
-    }
+     }
 
     export class SensorTimer extends SensorAbstract {
 
@@ -26,7 +23,7 @@ namespace org.ssatguru.babylonjs.vishva {
             } else {
                 super(mesh,new SenTimerProp());
             }
-            this.processUpdateSpecific();
+            this.onPropertiesChange();
         }
 
         public getName(): string {
@@ -53,7 +50,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.timerId=window.setInterval(() => {this.emitSignal();},properties.interval);
         }
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             let properties: SenTimerProp=<SenTimerProp>this.properties;
             if(this.timerId) {
                 window.clearTimeout(this.timerId);

@@ -8,11 +8,6 @@ namespace org.ssatguru.babylonjs.vishva {
     
     export class ActCloakerProp extends ActProperties {
         timeToCloak: number = 1;
-
-
-        public unmarshall(obj: Object): ActCloakerProp {
-            return null;
-        }
     }
     
     export class ActuatorCloaker extends ActuatorAbstract {
@@ -33,14 +28,14 @@ namespace org.ssatguru.babylonjs.vishva {
         public actuate() {
             var props: ActCloakerProp = <ActCloakerProp>this.properties;
             if (props.toggle) {
-                if (props.state_toggle) {
+                if (props.notReversed) {
                     this.s = 1;
                     this.e = 0;
                 } else {
                     this.s = 0;
                     this.e = 1;
                 }
-                props.state_toggle = !props.state_toggle;
+                props.notReversed = !props.notReversed;
             } else {
                 this.s = 1;
                 this.e = 0;
@@ -64,7 +59,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return "Cloaker";
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if (this.properties.autoStart) {
                 var started: boolean = this.start();
             }

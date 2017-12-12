@@ -19,46 +19,33 @@
 
         <script src="lib/cannon.js"></script>
 
-        <!--<script src="lib/babylon.2.6-12-16-2016.js"></script>--> 
-        <!--<script src="lib/babylon2.6-01-18-2017.js"></script>--> 
-        <!--<script src="lib/babylon3.0-03-20-2017.js"></script>--> 
-
+        <!-- BABYLONJS -->
         <!-- following uses bluerExponential Shadowmaps -->
         <!-- also arcrotate camera seems to have some sublte change in 3.0 -->
-        <!--<script src="lib/babylon3.0-04-20-2017.js"></script>--> 
-        <!--<script src="lib/babylon2.6-05-12-2017.js"></script>--> 
-        <script src="lib/babylon3.0-08-08-2017.js"></script> 
-
+        <!--<script src="lib/babylon3.0-08-08-2017.js"></script>--> 
+        <script src="lib/babylon3.1-12-08-2017.js"></script> 
         <!--ok-->
-        <!--<script src="lib/babylon-06-19-2017.max.js"></script>-->
-
-        <!-- shadow is broken below -->
-        <!--<script src="lib/babylon-06-30-2017.max.js"></script>-->
-        <!--<script src="lib/babylon3.0-07-27-2017.js"></script>-->
-
+        <!--<script src="lib/babylon3.0-06-19-2017.max.js"></script> -->
         <!-- the latest -->
+        <!-- ellipsoid are centered in the latest BABYLON -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
         <!-- stable -->
         <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
 
-        <!--<script src="lib/babylon.inspector.bundle-06-26-2017.js"></script>-->
+        <!-- BABYLONJS INSPECTOR-->
         <script src="lib/babylon.inspector.bundle-08-23-2017.js"></script>
 
-        <!--<script src="lib/babylon.waterMaterial.min.js"></script>-->
+        <!-- BABYLONJS MATERIALS -->
         <script src="lib/babylon.waterMaterial.min-08-24-2017.js"></script>
-        <!-- loaders -->
+        
+        <!-- BABYLONJS LOADER -->
         <script src="lib/babylon.glTFFileLoader3.1-preview.min.js"></script>
         <script src="lib/babylon.objFileLoader3.0-stable.min.js"></script>
 
+        <!-- BABYLONJS Pointer Events Polyfill -->
         <script src="lib/pep.0.4.1.min.js"></script>
 
-        <!-- problem with the colorpicker minified version . see https://github.com/DavidDurman/FlexiColorPicker/issues/40 -->
-        <!--<script src="lib/colorpicker.min.js"></script>-->
-        <script src="lib/colorpicker.uglified.js"></script>
-        <!--<script src="lib/colorpicker.js"></script>-->
-
-        <link href="lib/colorpicker.themes.css" rel="stylesheet">
-
+        
         <style>
             html, body {
                 width: 100%;
@@ -782,12 +769,17 @@
 
         </div>
 
-
-
+        <!-- VISHVA -->
+        <!-- problem with the colorpicker minified version. --> 
+        <!-- see https://github.com/DavidDurman/FlexiColorPicker/issues/40 -->
+        <script src="lib/colorpicker.uglified.js"></script>
+        <link href="lib/colorpicker.themes.css" rel="stylesheet">
         <script type="text/javascript" src="lib/EditControl.min.js"></script>
+        <script type="text/javascript" src="lib/CharacterController.min.js"></script>
         <script type="text/javascript" src="vishva/config.js"></script>
         <script type="text/javascript" src="vishva/assets.js"></script>
         <script type="text/javascript" src="js/Vishva-merged.js"></script>
+        
         <script type="text/javascript">
                             $(function () {
 

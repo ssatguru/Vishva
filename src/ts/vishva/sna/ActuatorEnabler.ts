@@ -6,9 +6,6 @@ namespace org.ssatguru.babylonjs.vishva {
     import Node=BABYLON.Node;
 
     export class ActEnablerProp extends ActProperties {
-        public unmarshall(obj: Object): ActEnablerProp {
-            return null;
-        }
     }
 
     export class ActuatorEnabler extends ActuatorAbstract {
@@ -25,8 +22,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public actuate() {
             let enableState: boolean=true;
             if(this.properties.toggle) {
-                enableState = this.properties.state_toggle;
-                this.properties.state_toggle=!this.properties.state_toggle;
+                enableState = this.properties.notReversed;
+                this.properties.notReversed=!this.properties.notReversed;
             } 
             this.mesh.setEnabled(enableState);
             this.enableChilds(this.mesh,enableState);
@@ -53,7 +50,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return "Enabler";
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if(this.properties.autoStart) {
                 var started: boolean=this.start();
             }

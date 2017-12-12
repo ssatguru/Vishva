@@ -14,10 +14,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.clickType.values =["leftClick","middleClick","rightClick","doubleClick"];
             this.clickType.value="leftClick";
         }
-
-        public unmarshall(obj: Object): SenClickProp {
-            return <SenClickProp>obj;
-        }
     }
     
     export class SensorClick extends SensorAbstract {
@@ -29,7 +25,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }else{
                 super(mesh, new SenClickProp());
             }
-            this.processUpdateSpecific();
+            this.onPropertiesChange();
         }
         
         
@@ -51,8 +47,7 @@ namespace org.ssatguru.babylonjs.vishva {
             
         }
 
-        public processUpdateSpecific() {
-            this.removeActions();
+        public onPropertiesChange() {
             if (this.mesh.actionManager == null) {
                 this.mesh.actionManager = new ActionManager(this.mesh.getScene());
             }

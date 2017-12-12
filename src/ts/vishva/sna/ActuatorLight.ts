@@ -18,9 +18,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.switchType.values=["OnSwitch","OffSwitch"];
             this.switchType.value="OnSwitch";
         }
-        public unmarshall(obj: Object): ActEnablerProp {
-            return null;
-        }
     }
 
     export class ActuatorLight extends ActuatorAbstract {
@@ -49,10 +46,10 @@ namespace org.ssatguru.babylonjs.vishva {
             else enable=false;
 
             if(this.properties.toggle) {
-                if(!this.properties.state_toggle) {
+                if(!this.properties.notReversed) {
                     enable=!enable;
                 }
-                this.properties.state_toggle=!this.properties.state_toggle;
+                this.properties.notReversed=!this.properties.notReversed;
             }
 
             this.switchLights(lights,enable);
@@ -74,6 +71,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     lights.push(node);
                 }
             }
+            console.log(lights);
             return lights;
         }
 
@@ -93,9 +91,9 @@ namespace org.ssatguru.babylonjs.vishva {
             return "Light";
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if(this.properties.autoStart) {
-                var started: boolean=this.start();
+                this.start();
             }
         }
 

@@ -422,6 +422,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.cc.start();
             }
             SNAManager.getSNAManager().unMarshal(this.snas,this.scene);
+            console.log(SNAManager.getSNAManager().sig2actMap);
             this.snas=null;
 
             this.render();

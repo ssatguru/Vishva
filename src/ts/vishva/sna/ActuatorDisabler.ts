@@ -4,9 +4,6 @@ namespace org.ssatguru.babylonjs.vishva {
     import Node=BABYLON.Node;
     
     export class ActDisablerProp extends ActProperties {
-        public unmarshall(obj: Object): ActDisablerProp {
-            return null;
-        }
     }
 
     export class ActuatorDisabler extends ActuatorAbstract {
@@ -23,8 +20,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public actuate() {
             let enableState: boolean=false;
             if(this.properties.toggle) {
-                enableState = !this.properties.state_toggle;
-                this.properties.state_toggle=!this.properties.state_toggle;
+                enableState = !this.properties.notReversed;
+                this.properties.notReversed=!this.properties.notReversed;
             } else {
                 enableState=false;
             }
@@ -52,7 +49,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return "Disabler";
         }
 
-        public processUpdateSpecific() {
+        public onPropertiesChange() {
             if(this.properties.autoStart) {
                 var started: boolean=this.start();
             }

@@ -209,7 +209,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //fix shadow and skinning issue
             //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
-            SceneLoader.CleanBoneMatrixWeights = true
+            SceneLoader.CleanBoneMatrixWeights=true
 
             this.scenePath=scenePath;
             if(sceneFile=="empty") {
@@ -268,7 +268,7 @@ namespace org.ssatguru.babylonjs.vishva {
             shadowGenerator.useBlurExponentialShadowMap=true;
             //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
             shadowGenerator.bias=-0.3;
-            
+
             //            shadowGenerator.bias = 1.0E-6;
             //            shadowGenerator.depthScale = 2500;
             //            sl.shadowMinZ = 1;
@@ -422,7 +422,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.cc.start();
             }
             SNAManager.getSNAManager().unMarshal(this.snas,this.scene);
-            console.log(SNAManager.getSNAManager().sig2actMap);
             this.snas=null;
 
             this.render();
@@ -556,8 +555,8 @@ namespace org.ssatguru.babylonjs.vishva {
         private pickObject(evt: PointerEvent,pickResult: PickingInfo) {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
-            //if(evt.button!==2 || !this.key.alt) return;
-            if(evt.button!==2) return;
+            if(evt.button!==2 || !this.key.alt) return;
+            //if(evt.button!==2) return;
             if(pickResult.hit) {
                 if(this.key.ctl) {
                     if((!this.isMeshSelected)||(pickResult.pickedMesh!==this.meshPicked)) {
@@ -987,21 +986,21 @@ namespace org.ssatguru.babylonjs.vishva {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
             }
-//            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
-//                return ("this is an instance mesh. you cannot create instance of that");
-//            }
+            //            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
+            //                return ("this is an instance mesh. you cannot create instance of that");
+            //            }
             var name: string=(<number>new Number(Date.now())).toString();
             var inst: InstancedMesh;
             if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
-                inst = (<InstancedMesh>this.meshPicked).clone(name,null,true);
+                inst=(<InstancedMesh>this.meshPicked).clone(name,null,true);
                 inst.scaling.copyFrom(this.meshPicked.scaling);
-            }else{
-                inst =(<Mesh>this.meshPicked).createInstance(name);
+            } else {
+                inst=(<Mesh>this.meshPicked).createInstance(name);
             }
             console.log(this.meshPicked);
             console.log(inst);
-//            delete inst["sensors"];
-//            delete inst["actuators"];
+            //            delete inst["sensors"];
+            //            delete inst["actuators"];
             //inst.position = this.meshPicked.position.add(new Vector3(0.1, 0.1, 0.1));
             this.animateMesh(inst);
             //this.meshPicked=inst;
@@ -1198,9 +1197,9 @@ namespace org.ssatguru.babylonjs.vishva {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
             }
-//            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
-//                return ("this is an instance mesh. you cannot clone these");
-//            }
+            //            if((this.meshPicked!=null&&this.meshPicked instanceof BABYLON.InstancedMesh)) {
+            //                return ("this is an instance mesh. you cannot clone these");
+            //            }
             var clonedMeshesPicked: Array<AbstractMesh>=new Array<AbstractMesh>();
             var clone: AbstractMesh;
             //check if multiple meshes selected. If yes clone all except the last
@@ -1231,7 +1230,7 @@ namespace org.ssatguru.babylonjs.vishva {
             delete clone["actuators"];
             //console.log(mesh);
             //console.log(clone);
-            
+
             this.animateMesh(clone);
             //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
             //TODO think
@@ -1252,12 +1251,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 return "no mesh selected";
             }
             if(this.meshesPicked!=null) {
-                for(var index125=0;index125<this.meshesPicked.length;index125++) {
-                    var mesh=this.meshesPicked[index125];
-                    {
-                        if(mesh!==this.meshPicked) {
-                            this.deleteTheMesh(mesh);
-                        }
+                for(let mesh of this.meshesPicked) {
+                    if(mesh!==this.meshPicked) {
+                        this.deleteTheMesh(mesh);
                     }
                 }
                 this.meshesPicked=null;
@@ -2807,9 +2803,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     grnd.receiveShadows=true;
 
                     //HeightmapImpostor doesnot seem to work.
-//                    if(this.enablePhysics) {
-//                        grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.HeightmapImpostor,{mass: 0,restitution: 0.1},this.scene);
-//                    }
+                    //                    if(this.enablePhysics) {
+                    //                        grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.HeightmapImpostor,{mass: 0,restitution: 0.1},this.scene);
+                    //                    }
                     grnd.freezeWorldMatrix();
                     this.ground=grnd;
                 }
@@ -3006,7 +3002,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
             this.cc=new CharacterController(this.avatar,this.mainCamera,this.scene);
-            
+
             this.setCharacterController(this.cc);
             this.cc.start();
 

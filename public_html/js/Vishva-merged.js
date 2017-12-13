@@ -2282,7 +2282,6 @@ var org;
                             this.cc.start();
                         }
                         vishva.SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
-                        console.log(vishva.SNAManager.getSNAManager().sig2actMap);
                         this.snas = null;
                         this.render();
                     };
@@ -2384,9 +2383,9 @@ var org;
                     Vishva.prototype.pickObject = function (evt, pickResult) {
                         // prevent curosr from changing to a edit caret in Chrome
                         evt.preventDefault();
-                        //if(evt.button!==2 || !this.key.alt) return;
-                        if (evt.button !== 2)
+                        if (evt.button !== 2 || !this.key.alt)
                             return;
+                        //if(evt.button!==2) return;
                         if (pickResult.hit) {
                             if (this.key.ctl) {
                                 if ((!this.isMeshSelected) || (pickResult.pickedMesh !== this.meshPicked)) {
@@ -3050,12 +3049,10 @@ var org;
                             return "no mesh selected";
                         }
                         if (this.meshesPicked != null) {
-                            for (var index125 = 0; index125 < this.meshesPicked.length; index125++) {
-                                var mesh = this.meshesPicked[index125];
-                                {
-                                    if (mesh !== this.meshPicked) {
-                                        this.deleteTheMesh(mesh);
-                                    }
+                            for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
+                                var mesh = _a[_i];
+                                if (mesh !== this.meshPicked) {
+                                    this.deleteTheMesh(mesh);
                                 }
                             }
                             this.meshesPicked = null;
@@ -5009,16 +5006,14 @@ var org;
                             return;
                         var keyValue = this.sig2actMap[signalId];
                         if (keyValue != null) {
-                            window.setTimeout((function (acts) { return _this.actuate(acts); }), 0, keyValue);
+                            window.setTimeout(function (acts, signalId) { return _this.actuate(acts, signalId); }, 0, keyValue, signalId);
                         }
                     };
-                    SNAManager.prototype.actuate = function (acts) {
+                    SNAManager.prototype.actuate = function (acts, signal) {
                         var actuators = acts;
-                        for (var index151 = 0; index151 < actuators.length; index151++) {
-                            var actuator = actuators[index151];
-                            {
-                                actuator.start();
-                            }
+                        for (var _i = 0, actuators_2 = actuators; _i < actuators_2.length; _i++) {
+                            var actuator = actuators_2[_i];
+                            actuator.start(signal);
                         }
                     };
                     /**
@@ -5034,11 +5029,9 @@ var org;
                     SNAManager.prototype.processQueue = function (mesh) {
                         var actuators = mesh["actuators"];
                         if (actuators != null) {
-                            for (var index152 = 0; index152 < actuators.length; index152++) {
-                                var actuator = actuators[index152];
-                                {
-                                    actuator.processQueue();
-                                }
+                            for (var _i = 0, actuators_3 = actuators; _i < actuators_3.length; _i++) {
+                                var actuator = actuators_3[_i];
+                                actuator.processQueue();
                             }
                         }
                     };
@@ -5052,12 +5045,10 @@ var org;
                         this.snaDisabledList.push(mesh);
                         var actuators = mesh["actuators"];
                         if (actuators != null) {
-                            for (var index153 = 0; index153 < actuators.length; index153++) {
-                                var actuator = actuators[index153];
-                                {
-                                    if (actuator.actuating)
-                                        actuator.stop();
-                                }
+                            for (var _i = 0, actuators_4 = actuators; _i < actuators_4.length; _i++) {
+                                var actuator = actuators_4[_i];
+                                if (actuator.actuating)
+                                    actuator.stop();
                             }
                         }
                     };
@@ -5068,18 +5059,16 @@ var org;
                         }
                         var actuators = mesh["actuators"];
                         if (actuators != null) {
-                            for (var index154 = 0; index154 < actuators.length; index154++) {
-                                var actuator = actuators[index154];
-                                {
-                                    if (actuator.properties.autoStart)
-                                        actuator.start();
-                                }
+                            for (var _i = 0, actuators_5 = actuators; _i < actuators_5.length; _i++) {
+                                var actuator = actuators_5[_i];
+                                if (actuator.properties.autoStart)
+                                    actuator.start(actuator.properties.signalId);
                             }
                         }
                     };
                     /**
-                     * removes all sensors and actuators from a mesh. this would be called when
-                     * say disposing off a mesh
+                     * removes all sensors and actuators from a mesh.
+                     * this would be called when say disposing off a mesh
                      *
                      * @param mesh
                      */
@@ -5138,8 +5127,8 @@ var org;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {
                                 meshId = this.getMeshVishvaUid(mesh);
-                                for (var _a = 0, actuators_2 = actuators; _a < actuators_2.length; _a++) {
-                                    var actuator = actuators_2[_a];
+                                for (var _a = 0, actuators_6 = actuators; _a < actuators_6.length; _a++) {
+                                    var actuator = actuators_6[_a];
                                     sna = new SNAserialized();
                                     sna.name = actuator.getName();
                                     sna.type = actuator.getType();
@@ -5322,6 +5311,7 @@ var org;
                         this.ready = true;
                         this.queued = 0;
                         this.disposed = false;
+                        this.disabled = false;
                         this.properties = prop;
                         this.mesh = mesh;
                         this.handlePropertiesChange();
@@ -5332,7 +5322,7 @@ var org;
                         }
                         actuators.push(this);
                     }
-                    ActuatorAbstract.prototype.start = function () {
+                    ActuatorAbstract.prototype.start = function (signal) {
                         if (this.disposed)
                             return false;
                         if (!this.ready)
@@ -5341,7 +5331,17 @@ var org;
                         var i = SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
                         if (i >= 0)
                             return false;
-                        if (this.actuating) {
+                        if (signal == this.signalDisable) {
+                            this.disabled = true;
+                            return;
+                        }
+                        if (signal == this.signalEnable) {
+                            this.disabled = false;
+                            if (this.queued == 0)
+                                return;
+                            this.queued--;
+                        }
+                        if (this.actuating || this.disabled) {
                             if (!this.properties.loop) {
                                 this.queued++;
                             }
@@ -5355,7 +5355,7 @@ var org;
                     ActuatorAbstract.prototype.processQueue = function () {
                         if (this.queued > 0) {
                             this.queued--;
-                            this.start();
+                            this.start(this.signalId);
                         }
                     };
                     ActuatorAbstract.prototype.getType = function () {
@@ -5376,14 +5376,46 @@ var org;
                     };
                     ActuatorAbstract.prototype.handlePropertiesChange = function () {
                         // check if signalId changed, if yes then resubscribe
-                        if (this.signalId != null && this.signalId !== this.properties.signalId) {
-                            SNAManager.getSNAManager().unSubscribe(this, this.signalId);
-                            this.signalId = this.properties.signalId;
-                            SNAManager.getSNAManager().subscribe(this, this.signalId);
+                        //            if(this.signalId!=null&&this.signalId!==this.properties.signalId) {
+                        //                SNAManager.getSNAManager().unSubscribe(this,this.signalId);
+                        //                this.signalId=this.properties.signalId;
+                        //                SNAManager.getSNAManager().subscribe(this,this.signalId);
+                        //            } else if(this.signalId==null) {
+                        //                this.signalId=this.properties.signalId;
+                        //                SNAManager.getSNAManager().subscribe(this,this.signalId);
+                        //            }
+                        if (this.properties.signalId != null && this.properties.signalId != "") {
+                            if (this.signalId == null) {
+                                this.signalId = this.properties.signalId;
+                                SNAManager.getSNAManager().subscribe(this, this.signalId);
+                            }
+                            else if (this.signalId !== this.properties.signalId) {
+                                SNAManager.getSNAManager().unSubscribe(this, this.signalId);
+                                this.signalId = this.properties.signalId;
+                                SNAManager.getSNAManager().subscribe(this, this.signalId);
+                            }
                         }
-                        else if (this.signalId == null) {
-                            this.signalId = this.properties.signalId;
-                            SNAManager.getSNAManager().subscribe(this, this.signalId);
+                        if (this.properties.signalEnable != null && this.properties.signalEnable != "") {
+                            if (this.signalEnable == null) {
+                                this.signalEnable = this.properties.signalEnable;
+                                SNAManager.getSNAManager().subscribe(this, this.signalEnable);
+                            }
+                            else if (this.signalEnable !== this.properties.signalEnable) {
+                                SNAManager.getSNAManager().unSubscribe(this, this.signalEnable);
+                                this.signalEnable = this.properties.signalEnable;
+                                SNAManager.getSNAManager().subscribe(this, this.signalEnable);
+                            }
+                        }
+                        if (this.properties.signalDisable != null && this.properties.signalDisable != "") {
+                            if (this.signalDisable == null) {
+                                this.signalDisable = this.properties.signalDisable;
+                                SNAManager.getSNAManager().subscribe(this, this.signalDisable);
+                            }
+                            else if (this.signalDisable !== this.properties.signalDisable) {
+                                SNAManager.getSNAManager().unSubscribe(this, this.signalDisable);
+                                this.signalDisable = this.properties.signalDisable;
+                                SNAManager.getSNAManager().subscribe(this, this.signalDisable);
+                            }
                         }
                         this.onPropertiesChange();
                     };
@@ -5392,11 +5424,11 @@ var org;
                         this.actuating = false;
                         if (this.queued > 0) {
                             this.queued--;
-                            this.start();
+                            this.start(this.signalId);
                             return null;
                         }
                         if (this.properties.loop) {
-                            this.start();
+                            this.start(this.signalId);
                             return null;
                         }
                         return null;
@@ -5421,9 +5453,8 @@ var org;
                 var SNAproperties = (function () {
                     function SNAproperties() {
                         this.signalId = "0";
-                        //comment these two out until we have an implementation
-                        //        signalEnable: string = "";
-                        //        signalDisble: string = "";
+                        this.signalEnable = "";
+                        this.signalDisable = "";
                     }
                     return SNAproperties;
                 }());
@@ -5517,7 +5548,7 @@ var org;
                     };
                     ActuatorAnimator.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                         }
                     };
                     ActuatorAnimator.prototype.cleanUp = function () {
@@ -5599,7 +5630,7 @@ var org;
                     };
                     ActuatorCloaker.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                         }
                     };
                     ActuatorCloaker.prototype.cleanUp = function () {
@@ -5672,7 +5703,7 @@ var org;
                     };
                     ActuatorDisabler.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                         }
                     };
                     ActuatorDisabler.prototype.cleanUp = function () {
@@ -5742,7 +5773,7 @@ var org;
                     };
                     ActuatorEnabler.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                         }
                     };
                     ActuatorEnabler.prototype.cleanUp = function () {
@@ -5801,7 +5832,6 @@ var org;
                     ActuatorLight.prototype.actuate = function () {
                         var lights = this.getLights(this.mesh);
                         if (lights.length == 0) {
-                            console.log("no lights");
                             this.onActuateEnd();
                             return;
                         }
@@ -5835,7 +5865,6 @@ var org;
                                 lights.push(node);
                             }
                         }
-                        console.log(lights);
                         return lights;
                     };
                     ActuatorLight.prototype.stop = function () {
@@ -5855,7 +5884,7 @@ var org;
                     };
                     ActuatorLight.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            this.start();
+                            this.start(this.properties.signalId);
                         }
                     };
                     ActuatorLight.prototype.cleanUp = function () {
@@ -5946,7 +5975,7 @@ var org;
                     };
                     ActuatorMover.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                         }
                     };
                     ActuatorMover.prototype.isReady = function () {
@@ -5983,7 +6012,6 @@ var org;
                         _this.z = 0;
                         _this.duration = 1;
                         return _this;
-                        //
                         // TODO:always local for now. provide a way to do global rotate
                         // boolean local = false;
                     }
@@ -6024,7 +6052,10 @@ var org;
                         properties.notReversed = !properties.notReversed;
                         var cY = this.mesh.position.y;
                         var nY = this.mesh.position.y + 5;
-                        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, function () { return _this.onActuateEnd(); });
+                        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, function () {
+                            console.log("rotation done");
+                            return _this.onActuateEnd();
+                        });
                     };
                     ActuatorRotator.prototype.getName = function () {
                         return "Rotator";
@@ -6040,7 +6071,7 @@ var org;
                     };
                     ActuatorRotator.prototype.onPropertiesChange = function () {
                         if (this.properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                             // sometime a start maynot be possible example during edit
                             // if could not start now then queue it for later start
                             // if (!started)
@@ -6147,7 +6178,7 @@ var org;
                         this.sound.onended = function () { return _this.onActuateEnd(); };
                         this.sound.setVolume(properties.volume.value);
                         if (properties.autoStart) {
-                            var started = this.start();
+                            var started = this.start(this.properties.signalId);
                             if (!started)
                                 this.queued++;
                         }

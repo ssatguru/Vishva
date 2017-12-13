@@ -59,7 +59,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public onPropertiesChange() {
             if (this.properties.autoStart) {
-                var started: boolean = this.start();
+                var started: boolean=this.start(this.properties.signalId);
             }
         }
 

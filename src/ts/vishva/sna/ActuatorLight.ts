@@ -34,7 +34,6 @@ namespace org.ssatguru.babylonjs.vishva {
         public actuate() {
             let lights: Light[]=this.getLights(this.mesh);
             if (lights.length == 0){
-                console.log("no lights");
                 this.onActuateEnd();
                 return;
             }
@@ -71,7 +70,6 @@ namespace org.ssatguru.babylonjs.vishva {
                     lights.push(node);
                 }
             }
-            console.log(lights);
             return lights;
         }
 
@@ -93,7 +91,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public onPropertiesChange() {
             if(this.properties.autoStart) {
-                this.start();
+                this.start(this.properties.signalId);
             }
         }
 

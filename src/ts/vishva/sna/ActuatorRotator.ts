@@ -9,14 +9,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
     export class ActRotatorParm extends ActProperties {
         x: number = 0;
-
         y: number = 90;
-
         z: number = 0;
-
         duration: number = 1;
 
-        //
         // TODO:always local for now. provide a way to do global rotate
         // boolean local = false;
     }
@@ -50,7 +46,9 @@ namespace org.ssatguru.babylonjs.vishva {
             properties.notReversed = !properties.notReversed;
             var cY: number = this.mesh.position.y;
             var nY: number = this.mesh.position.y + 5;
-            this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, () => {return this.onActuateEnd()});
+            this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, () => {
+            console.log("rotation done");
+            return this.onActuateEnd()});
         }
 
         public getName(): string {
@@ -69,7 +67,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public onPropertiesChange() {
             if (this.properties.autoStart) {
-                var started: boolean = this.start();
+                var started: boolean = this.start(this.properties.signalId);
                 // sometime a start maynot be possible example during edit
                 // if could not start now then queue it for later start
                 // if (!started)

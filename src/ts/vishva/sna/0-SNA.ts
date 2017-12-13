@@ -84,18 +84,16 @@ namespace org.ssatguru.babylonjs.vishva {
             if(signalId.trim()==="") return;
             var keyValue: any=this.sig2actMap[signalId];
             if(keyValue!=null) {
-                window.setTimeout(((acts) => {return this.actuate(acts)}),0,keyValue);
+                window.setTimeout((acts,signalId) => {return this.actuate(acts,signalId)},0,keyValue,signalId);
             }
         }
 
-        private actuate(acts: any) {
+        private actuate(acts: any, signal:string) {
             var actuators: Actuator[]=<Actuator[]>acts;
-            for(var index151=0;index151<actuators.length;index151++) {
-                var actuator=actuators[index151];
-                {
-                    actuator.start();
-                }
+            for(let actuator of actuators) {
+                actuator.start(signal);
             }
+
         }
 
         /**
@@ -111,11 +109,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public processQueue(mesh: AbstractMesh) {
             var actuators: Array<Actuator>=<Array<Actuator>>mesh["actuators"];
             if(actuators!=null) {
-                for(var index152=0;index152<actuators.length;index152++) {
-                    var actuator=actuators[index152];
-                    {
-                        actuator.processQueue();
-                    }
+                for(let actuator of actuators) {
+                    actuator.processQueue();
                 }
             }
         }
@@ -130,11 +125,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.snaDisabledList.push(mesh);
             var actuators: Array<ActuatorAbstract>=<Array<ActuatorAbstract>>mesh["actuators"];
             if(actuators!=null) {
-                for(var index153=0;index153<actuators.length;index153++) {
-                    var actuator=actuators[index153];
-                    {
-                        if(actuator.actuating) actuator.stop();
-                    }
+                for(let actuator of actuators) {
+                    if(actuator.actuating) actuator.stop();
                 }
             }
         }
@@ -146,18 +138,15 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             var actuators: Array<ActuatorAbstract>=<Array<ActuatorAbstract>>mesh["actuators"];
             if(actuators!=null) {
-                for(var index154=0;index154<actuators.length;index154++) {
-                    var actuator=actuators[index154];
-                    {
-                        if(actuator.properties.autoStart) actuator.start();
-                    }
+                for(let actuator of actuators) {
+                    if(actuator.properties.autoStart) actuator.start(actuator.properties.signalId);
                 }
             }
         }
 
         /**
-         * removes all sensors and actuators from a mesh. this would be called when
-         * say disposing off a mesh
+         * removes all sensors and actuators from a mesh. 
+         * this would be called when say disposing off a mesh
          * 
          * @param mesh
          */
@@ -344,7 +333,7 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export interface Actuator extends SensorActuator {
-        start(): boolean;
+        start(signal:string): boolean;
         stop();
         actuate();
         isReady(): boolean;
@@ -453,10 +442,13 @@ namespace org.ssatguru.babylonjs.vishva {
         properties: ActProperties;
         mesh: Mesh;
         signalId: string;
+        signalEnable: string;
+        signalDisable: string;
         actuating: boolean=false;
         ready: boolean=true;
         queued: number=0;
         disposed: boolean=false;
+        disabled:boolean=false;
 
         public constructor(mesh: Mesh,prop: ActProperties) {
             this.properties=prop;
@@ -470,13 +462,22 @@ namespace org.ssatguru.babylonjs.vishva {
             actuators.push(this);
         }
 
-        public start(): boolean {
+        public start(signal:string): boolean {
             if(this.disposed) return false;
             if(!this.ready) return false;
             // donot actuate if this mesh is on the disabled list
             var i: number=SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
             if(i>=0) return false;
-            if(this.actuating) {
+            if(signal==this.signalDisable){
+                 this.disabled=true;
+                 return;
+            }
+            if (signal == this.signalEnable){
+                 this.disabled=false;
+                 if (this.queued==0) return;
+                 this.queued--;
+            }
+            if(this.actuating || this.disabled) {
                 if(!this.properties.loop) {
                     this.queued++;
                 }
@@ -491,7 +492,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public processQueue() {
             if(this.queued>0) {
                 this.queued--;
-                this.start();
+                this.start(this.signalId);
             }
         }
 
@@ -518,14 +519,45 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public handlePropertiesChange() {
             // check if signalId changed, if yes then resubscribe
-            if(this.signalId!=null&&this.signalId!==this.properties.signalId) {
-                SNAManager.getSNAManager().unSubscribe(this,this.signalId);
-                this.signalId=this.properties.signalId;
-                SNAManager.getSNAManager().subscribe(this,this.signalId);
-            } else if(this.signalId==null) {
-                this.signalId=this.properties.signalId;
-                SNAManager.getSNAManager().subscribe(this,this.signalId);
+            //            if(this.signalId!=null&&this.signalId!==this.properties.signalId) {
+            //                SNAManager.getSNAManager().unSubscribe(this,this.signalId);
+            //                this.signalId=this.properties.signalId;
+            //                SNAManager.getSNAManager().subscribe(this,this.signalId);
+            //            } else if(this.signalId==null) {
+            //                this.signalId=this.properties.signalId;
+            //                SNAManager.getSNAManager().subscribe(this,this.signalId);
+            //            }
+            if(this.properties.signalId!=null&&this.properties.signalId!="") {
+                if(this.signalId==null) {
+                    this.signalId=this.properties.signalId;
+                    SNAManager.getSNAManager().subscribe(this,this.signalId);
+                } else if(this.signalId!==this.properties.signalId) {
+                    SNAManager.getSNAManager().unSubscribe(this,this.signalId);
+                    this.signalId=this.properties.signalId;
+                    SNAManager.getSNAManager().subscribe(this,this.signalId);
+                }
             }
+            if(this.properties.signalEnable!=null&&this.properties.signalEnable!="") {
+                if(this.signalEnable==null) {
+                    this.signalEnable=this.properties.signalEnable;
+                    SNAManager.getSNAManager().subscribe(this,this.signalEnable);
+                } else if(this.signalEnable!==this.properties.signalEnable) {
+                    SNAManager.getSNAManager().unSubscribe(this,this.signalEnable);
+                    this.signalEnable=this.properties.signalEnable;
+                    SNAManager.getSNAManager().subscribe(this,this.signalEnable);
+                }
+            }
+            if(this.properties.signalDisable!=null&&this.properties.signalDisable!="") {
+                if(this.signalDisable==null) {
+                    this.signalDisable=this.properties.signalDisable;
+                    SNAManager.getSNAManager().subscribe(this,this.signalDisable);
+                } else if(this.signalDisable!==this.properties.signalDisable) {
+                    SNAManager.getSNAManager().unSubscribe(this,this.signalDisable);
+                    this.signalDisable=this.properties.signalDisable;
+                    SNAManager.getSNAManager().subscribe(this,this.signalDisable);
+                }
+            }
+
             this.onPropertiesChange();
         }
 
@@ -534,11 +566,11 @@ namespace org.ssatguru.babylonjs.vishva {
             this.actuating=false;
             if(this.queued>0) {
                 this.queued--;
-                this.start();
+                this.start(this.signalId);
                 return null;
             }
             if(this.properties.loop) {
-                this.start();
+                this.start(this.signalId);
                 return null;
             }
             return null;
@@ -564,9 +596,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
     export abstract class SNAproperties {
         signalId: string="0";
-        //comment these two out until we have an implementation
-        //        signalEnable: string = "";
-        //        signalDisble: string = "";
+        signalEnable: string="";
+        signalDisable: string="";
     }
 
     export abstract class ActProperties extends SNAproperties {

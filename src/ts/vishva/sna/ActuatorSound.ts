@@ -74,7 +74,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.sound.onended = () => { return this.onActuateEnd() };
             this.sound.setVolume(properties.volume.value);
             if (properties.autoStart) {
-                var started: boolean = this.start();
+                var started: boolean = this.start(this.properties.signalId);
                 if (!started) this.queued++;
             }
         }

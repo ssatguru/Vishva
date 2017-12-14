@@ -23,14 +23,14 @@
         <!-- following uses bluerExponential Shadowmaps -->
         <!-- also arcrotate camera seems to have some sublte change in 3.0 -->
         <!--<script src="lib/babylon3.0-08-08-2017.js"></script>--> 
-        <script src="lib/babylon3.1-12-08-2017.js"></script> 
+        <!--<script src="lib/babylon3.1-12-08-2017.js"></script>--> 
         <!--ok-->
         <!--<script src="lib/babylon3.0-06-19-2017.max.js"></script> -->
         <!-- the latest -->
         <!-- ellipsoid are centered in the latest BABYLON -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
         <!-- stable -->
-        <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
 
         <!-- BABYLONJS INSPECTOR-->
         <script src="lib/babylon.inspector.bundle-08-23-2017.js"></script>
@@ -233,6 +233,10 @@
                     <tr>
                         <td>sky</td>
                         <td><Button id="skyButton">Select Sky</button></td>
+                    </tr>
+                    <tr>
+                        <td>ambient color</td>
+                        <td><div id="ambCol"></div></td>
                     </tr>
                     <tr>
                         <td>terrain</td>
@@ -778,8 +782,8 @@
         <script type="text/javascript" src="lib/CharacterController.min.js"></script>
         <script type="text/javascript" src="vishva/config.js"></script>
         <script type="text/javascript" src="vishva/assets.js"></script>
-        <script type="text/javascript" src="js/Vishva-merged.min.js"></script>
-        <!--<script type="text/javascript" src="js/Vishva-merged.js"></script>-->
+        <!--<script type="text/javascript" src="js/Vishva-merged.min.js"></script>-->
+        <script type="text/javascript" src="js/Vishva-merged.js"></script>
         
         <script type="text/javascript">
                             $(function () {

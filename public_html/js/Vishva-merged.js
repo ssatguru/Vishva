@@ -323,7 +323,7 @@ var org;
                             sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
                             light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
                             shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
-                            fog.slider(this.sliderOptions(0, 100, 100000 * this.vishva.getFog()));
+                            fog.slider(this.sliderOptions(0, 100, 100 * this.vishva.getFog()));
                             var fogColDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, function (hex, hsv, rgb) {
                                 _this.vishva.setFogColor(hex);
                             });
@@ -348,6 +348,9 @@ var org;
                                 _this.showAlertDiag("Sorry. To be implemneted soon");
                                 return true;
                             };
+                            var ambColDiag = new ColorPickerDiag("ambient color", "ambCol", this.vishva.getAmbientColor(), this.centerBottom, function (hex, hsv, rgb) {
+                                _this.vishva.setAmbientColor(hex);
+                            });
                             var trnColDiag = new ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), this.centerBottom, function (hex, hsv, rgb) {
                                 _this.vishva.setGroundColor(hex);
                             });
@@ -1704,7 +1707,8 @@ var org;
                                     this.vishva.setShade(v);
                                 }
                                 else if (slider === "fog") {
-                                    this.vishva.setFog(v / 1000);
+                                    console.log(v);
+                                    this.vishva.setFog(v / 10);
                                 }
                             }
                             return true;
@@ -4023,6 +4027,12 @@ var org;
                         var i = skyname.lastIndexOf("/");
                         return skyname.substring(i + 1);
                     };
+                    Vishva.prototype.getAmbientColor = function () {
+                        return this.scene.ambientColor.toHexString();
+                    };
+                    Vishva.prototype.setAmbientColor = function (hex) {
+                        this.scene.ambientColor = Color3.FromHexString(hex);
+                    };
                     Vishva.prototype.setGroundColor_old = function (gcolor) {
                         var ground_color = gcolor;
                         var r = ground_color[0] / 255;
@@ -5001,21 +5011,29 @@ var org;
                         return actuatorObj["parms"];
                     };
                     SNAManager.prototype.emitSignal = function (signalId) {
-                        var _this = this;
                         if (signalId.trim() === "")
                             return;
-                        var keyValue = this.sig2actMap[signalId];
-                        if (keyValue != null) {
-                            window.setTimeout(function (acts, signalId) { return _this.actuate(acts, signalId); }, 0, keyValue, signalId);
-                        }
-                    };
-                    SNAManager.prototype.actuate = function (acts, signal) {
-                        var actuators = acts;
+                        var actuators = this.sig2actMap[signalId];
                         for (var _i = 0, actuators_2 = actuators; _i < actuators_2.length; _i++) {
                             var actuator = actuators_2[_i];
-                            actuator.start(signal);
+                            actuator.start(signalId);
                         }
                     };
+                    //        public emitSignal(signalId: string) {
+                    //            if(signalId.trim()==="") return;
+                    //            var keyValue: any=this.sig2actMap[signalId];
+                    //            if(keyValue!=null) {
+                    //                window.setTimeout((acts,signalId) => {return this.actuate(acts,signalId)},0,keyValue,signalId);
+                    //            }
+                    //        }
+                    //
+                    //        private actuate(acts: any, signal:string) {
+                    //            var actuators: Actuator[]=<Actuator[]>acts;
+                    //            for(let actuator of actuators) {
+                    //                actuator.start(signal);
+                    //            }
+                    //
+                    //        }
                     /**
                      * this is called to process any signals queued in any of mesh actuators
                      * this could be called after say a user has finished editing a mesh during

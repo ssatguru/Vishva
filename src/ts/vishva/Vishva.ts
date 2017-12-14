@@ -2229,6 +2229,13 @@ namespace org.ssatguru.babylonjs.vishva {
             var i: number=skyname.lastIndexOf("/");
             return skyname.substring(i+1);
         }
+        
+        public getAmbientColor():string{
+            return this.scene.ambientColor.toHexString();
+        }
+        public setAmbientColor(hex:string){
+            this.scene.ambientColor=Color3.FromHexString(hex);
+        }
 
         public setGroundColor_old(gcolor: any) {
             var ground_color: number[]=<number[]>gcolor;

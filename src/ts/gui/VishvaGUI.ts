@@ -265,7 +265,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.showAlertDiag("Sorry. To be implemneted soon");
                 return true;
             };
-
+            
+            let ambColDiag: ColorPickerDiag=new ColorPickerDiag("ambient color","ambCol",this.vishva.getAmbientColor(),this.centerBottom,(hex,hsv,rgb) => {
+                this.vishva.setAmbientColor(hex);
+            });
 
             let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this.vishva.getGroundColor(),this.centerBottom,(hex,hsv,rgb) => {
                 this.vishva.setGroundColor(hex);

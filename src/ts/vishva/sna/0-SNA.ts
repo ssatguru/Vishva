@@ -82,19 +82,27 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public emitSignal(signalId: string) {
             if(signalId.trim()==="") return;
-            var keyValue: any=this.sig2actMap[signalId];
-            if(keyValue!=null) {
-                window.setTimeout((acts,signalId) => {return this.actuate(acts,signalId)},0,keyValue,signalId);
-            }
-        }
-
-        private actuate(acts: any, signal:string) {
-            var actuators: Actuator[]=<Actuator[]>acts;
+            let actuators: Actuator[]=<Actuator[]>this.sig2actMap[signalId];
             for(let actuator of actuators) {
-                actuator.start(signal);
+                actuator.start(signalId);
             }
-
         }
+
+        //        public emitSignal(signalId: string) {
+        //            if(signalId.trim()==="") return;
+        //            var keyValue: any=this.sig2actMap[signalId];
+        //            if(keyValue!=null) {
+        //                window.setTimeout((acts,signalId) => {return this.actuate(acts,signalId)},0,keyValue,signalId);
+        //            }
+        //        }
+        //
+        //        private actuate(acts: any, signal:string) {
+        //            var actuators: Actuator[]=<Actuator[]>acts;
+        //            for(let actuator of actuators) {
+        //                actuator.start(signal);
+        //            }
+        //
+        //        }
 
         /**
          * this is called to process any signals queued in any of mesh actuators
@@ -333,7 +341,7 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export interface Actuator extends SensorActuator {
-        start(signal:string): boolean;
+        start(signal: string): boolean;
         stop();
         actuate();
         isReady(): boolean;
@@ -448,7 +456,7 @@ namespace org.ssatguru.babylonjs.vishva {
         ready: boolean=true;
         queued: number=0;
         disposed: boolean=false;
-        disabled:boolean=false;
+        disabled: boolean=false;
 
         public constructor(mesh: Mesh,prop: ActProperties) {
             this.properties=prop;
@@ -462,22 +470,22 @@ namespace org.ssatguru.babylonjs.vishva {
             actuators.push(this);
         }
 
-        public start(signal:string): boolean {
+        public start(signal: string): boolean {
             if(this.disposed) return false;
             if(!this.ready) return false;
             // donot actuate if this mesh is on the disabled list
             var i: number=SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
             if(i>=0) return false;
-            if(signal==this.signalDisable){
-                 this.disabled=true;
-                 return;
+            if(signal==this.signalDisable) {
+                this.disabled=true;
+                return;
             }
-            if (signal == this.signalEnable){
-                 this.disabled=false;
-                 if (this.queued==0) return;
-                 this.queued--;
+            if(signal==this.signalEnable) {
+                this.disabled=false;
+                if(this.queued==0) return;
+                this.queued--;
             }
-            if(this.actuating || this.disabled) {
+            if(this.actuating||this.disabled) {
                 if(!this.properties.loop) {
                     this.queued++;
                 }

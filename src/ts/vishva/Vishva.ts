@@ -555,7 +555,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private pickObject(evt: PointerEvent,pickResult: PickingInfo) {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
-            if(evt.button!==2 || !this.key.alt) return;
+            if (!(evt.button==2 && (this.key.alt || this.key.ctl))) return;
             //if(evt.button!==2) return;
             if(pickResult.hit) {
                 if(this.key.ctl) {

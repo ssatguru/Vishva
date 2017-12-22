@@ -20,24 +20,20 @@
         <script src="lib/cannon.js"></script>
 
         <!-- BABYLONJS -->
-        <!-- following uses bluerExponential Shadowmaps -->
-        <!-- also arcrotate camera seems to have some sublte change in 3.0 -->
-        <!--<script src="lib/babylon3.0-08-08-2017.js"></script>--> 
-        <!--<script src="lib/babylon3.1-12-08-2017.js"></script>--> 
-        <!--ok-->
-        <!--<script src="lib/babylon3.0-06-19-2017.max.js"></script> -->
+        <script src="lib/babylon-3.1.1-12.13.2017.js"></script> 
+        <!-- stable -->
+        <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
         <!-- the latest -->
         <!-- ellipsoid are centered in the latest BABYLON -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
-        <!-- stable -->
-        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+        
 
         <!-- BABYLONJS INSPECTOR-->
-        <script src="lib/babylon.inspector.bundle-08-23-2017.js"></script>
+        <script src="lib/babylon.inspector.bundle-3.1.1-12.12.2017.js"></script>
 
         <!-- BABYLONJS MATERIALS -->
-        <script src="lib/babylon.waterMaterial.min-08-24-2017.js"></script>
-        
+        <!--<script src="lib/babylon.waterMaterial.min-08-24-2017.js"></script>-->
+
         <!-- BABYLONJS LOADER -->
         <script src="lib/babylon.glTFFileLoader3.1-preview.min.js"></script>
         <script src="lib/babylon.objFileLoader3.0-stable.min.js"></script>
@@ -45,7 +41,7 @@
         <!-- BABYLONJS Pointer Events Polyfill -->
         <script src="lib/pep.0.4.1.min.js"></script>
 
-        
+
         <style>
             html, body {
                 width: 100%;
@@ -502,7 +498,7 @@
                     <h3>Material</h3>
                     <div id="Material" >
                         <table>
-                             <tr>
+                            <tr>
                                 <td>
                                     Name   
                                 </td>
@@ -640,8 +636,8 @@
                             </tr>
                         </table>
                         <script>
-                            function showOpt() {
-                                var cls = "." + $("#lightType").val();
+                            function showOpt(){
+                                var cls = "."+$("#lightType").val();
                                 $(".opt").hide();
                                 $(cls).show();
                             }
@@ -729,8 +725,8 @@
                         </td>
                     </tr>
                 </table>
-                
-                
+
+
             </div>
 
 
@@ -780,21 +776,22 @@
         <link href="lib/colorpicker.themes.css" rel="stylesheet">
         <script type="text/javascript" src="lib/EditControl.min.js"></script>
         <script type="text/javascript" src="lib/CharacterController.min.js"></script>
+        <!--<script type="text/javascript" src="lib/CharacterController.js"></script>-->
         <script type="text/javascript" src="vishva/config.js"></script>
         <script type="text/javascript" src="vishva/assets.js"></script>
         <script type="text/javascript" src="js/Vishva-merged.min.js"></script>
         <!--<script type="text/javascript" src="js/Vishva-merged.js"></script>-->
-        
+
         <script type="text/javascript">
-                            $(function () {
+                            $(function(){
 
                                 //change all buttons to jquery button
                                 $("button").button();
-                                $("button").click(function (e) {
+                                $("button").click(function(e){
                                     $(this).blur();
                                 });
 
-//                                $('input').addClass("ui-corner-all");
+                                //$('input').addClass("ui-corner-all");
 
                                 var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
                                 var search = new HREFsearch();
@@ -803,25 +800,25 @@
                                 var scenePath = "vishva/worlds/";
                                 var editEnabled = true;
 
-                                if (!scene) {
-                                    if (typeof(defaultWorld) !== "undefined") {
+                                if(!scene){
+                                    if(typeof (defaultWorld)!=="undefined"){
                                         scene = defaultWorld;
-                                    } else {
+                                    }else{
                                         scene = "empty";
                                     }
                                 }
 
-                                if (typeof(noEditWorlds) !== "undefined") {
+                                if(typeof (noEditWorlds)!=="undefined"){
                                     var l = noEditWorlds.length;
-                                    for (i = 0; i < l; i++) {
-                                        if (noEditWorlds[i] == scene) {
+                                    for(i = 0;i<l;i++){
+                                        if(noEditWorlds[i]==scene){
                                             editEnabled = false;
                                         }
                                     }
                                 }
 
                                 var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
-                                new Vishva(scene, scenePath, editEnabled, assets, "vCanvas");
+                                new Vishva(scene,scenePath,editEnabled,assets,"vCanvas");
                             });
         </script>
     </body>

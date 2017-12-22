@@ -2204,6 +2204,8 @@ var org;
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
                             this.setShadowProperty(sl, this.shadowGenerator);
+                            this.avShadowGenerator = new ShadowGenerator(512, sl);
+                            this.setShadowProperty(sl, this.avShadowGenerator);
                         }
                         else {
                             for (var _f = 0, _g = scene.lights; _f < _g.length; _f++) {
@@ -4323,12 +4325,12 @@ var org;
                         }
                         for (var _a = 0, meshes_4 = meshes; _a < meshes_4.length; _a++) {
                             var mesh = meshes_4[_a];
+                            //mesh = (<Mesh>mesh).toLeftHanded();
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
                             if (mesh.parent == null) {
                                 var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
                                 var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                                console.log(placementGlobal);
                                 mesh.position.addInPlace(placementGlobal);
                             }
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
@@ -4706,6 +4708,7 @@ var org;
                     Vishva.prototype.onAvatarLoaded = function (meshes, particleSystems, skeletons) {
                         this.avatar = meshes[0];
                         (this.shadowGenerator.getShadowMap().renderList).push(this.avatar);
+                        //(this.avShadowGenerator.getShadowMap().renderList).push(this.avatar);
                         //TODO
                         //this.avatar.receiveShadows = true;
                         //dispose of all OTHER meshes
@@ -6071,7 +6074,6 @@ var org;
                         var cY = this.mesh.position.y;
                         var nY = this.mesh.position.y + 5;
                         this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, function () {
-                            console.log("rotation done");
                             return _this.onActuateEnd();
                         });
                     };

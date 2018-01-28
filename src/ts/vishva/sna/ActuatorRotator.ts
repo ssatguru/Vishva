@@ -47,7 +47,6 @@ namespace org.ssatguru.babylonjs.vishva {
             var cY: number = this.mesh.position.y;
             var nY: number = this.mesh.position.y + 5;
             this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, () => {
-            console.log("rotation done");
             return this.onActuateEnd()});
         }
 

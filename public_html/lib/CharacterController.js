@@ -70,7 +70,8 @@ var org;
                         this.savedCameraCollision = true;
                         this.ray = new Ray(Vector3.Zero(), Vector3.One(), 1);
                         this.rayDir = Vector3.Zero();
-                        this.cameraSkin = .5;
+                        this.cameraSkin = 0.5;
+                        this.skip = 0;
                         this.move = false;
                         this.avatar = avatar;
                         this.scene = scene;
@@ -211,6 +212,9 @@ var org;
                     };
                     CharacterController.prototype.setCameraTarget = function (v) {
                         this.cameraTarget.copyFrom(v);
+                    };
+                    CharacterController.prototype.cameraCollisionChanged = function () {
+                        this.savedCameraCollision = this.camera.checkCollisions;
                     };
                     CharacterController.prototype.setNoFirstPerson = function (b) {
                         this.noFirstPerson = b;
@@ -507,6 +511,7 @@ var org;
                     };
                     CharacterController.prototype.snapCamera = function () {
                         var _this = this;
+                        
                         this.camera.position.subtractToRef(this.camera.target, this.rayDir);
                         this.ray.origin = this.camera.target;
                         this.ray.length = this.rayDir.length();
@@ -518,6 +523,11 @@ var org;
                                 return true;
                         }, true);
                         if (pi.hit) {
+                            if (this.skip < 120) {
+                            this.skip++;
+                            return;
+                        }
+                        this.skip = 0;
                             if (this.camera.checkCollisions) {
                                 this.camera.position = pi.pickedPoint;
                             }

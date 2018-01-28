@@ -1,4 +1,5 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
+    import AbstractMesh=BABYLON.AbstractMesh;
     import AnimationRange=BABYLON.AnimationRange;
     import ColorPickerDiag=org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
     import Skeleton=BABYLON.Skeleton;
@@ -66,6 +67,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private centerBottom: JQueryPositionOptions;
         private leftCenter: JQueryPositionOptions;
         private rightCenter: JQueryPositionOptions;
+        private rightTop: JQueryPositionOptions;
 
         private createJPOs() {
             this.centerBottom={
@@ -81,6 +83,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.rightCenter={
                 at: "right center",
                 my: "right center",
+                of: window
+            };
+            this.rightTop={
+                at: "right top",
+                my: "right top",
                 of: window
             };
         }
@@ -180,28 +187,22 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             var f: (p1: MouseEvent) => any=(e) => {return this.onAssetImgClick(e)};
             var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-            for(var index163=0;index163<items.length;index163++) {
-                var item=items[index163];
-                {
-                    var img: HTMLImageElement=document.createElement("img");
-                    img.id=item;
-                    //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                    let name: string=item.split(".")[0];
-                    img.src="vishva/assets/"+assetType+"/"+name+"/"+name+".jpg";
-                    img.setAttribute("style",VishvaGUI.SMALL_ICON_SIZE+"cursor:pointer;");
-                    img.className=assetType;
-                    img.onclick=f;
-                    var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                    cell.appendChild(img);
-                }
+            for(let item of items) {
+                let img: HTMLImageElement=document.createElement("img");
+                img.id=item;
+                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                let name: string=item.split(".")[0];
+                img.src="vishva/assets/"+assetType+"/"+name+"/"+name+".jpg";
+                img.setAttribute("style",VishvaGUI.SMALL_ICON_SIZE+"cursor:pointer;");
+                img.className=assetType;
+                img.onclick=f;
+                var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
+                cell.appendChild(img);
             }
             var row2: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-            for(var index164=0;index164<items.length;index164++) {
-                var item=items[index164];
-                {
-                    var cell: HTMLTableCellElement=<HTMLTableCellElement>row2.insertCell();
-                    cell.innerText=item;
-                }
+            for(let item of items) {
+                let cell: HTMLTableCellElement=<HTMLTableCellElement>row2.insertCell();
+                cell.innerText=item;
             }
         }
 
@@ -218,6 +219,111 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             return true;
         }
+
+        _itemsDiag: JQuery;
+        _itemTab="---- ";
+        private _createItemsDiag() {
+            let itemsRefresh: HTMLElement=document.getElementById("itemsRefresh");
+            itemsRefresh.onclick =()=>{
+                this._itemsDiag.dialog("close");
+                this._updateItemsTable();
+                this._itemsDiag.dialog("open");
+            }
+            
+            this._itemsDiag=$("#itemsDiv");
+            var dos: DialogOptions={
+                autoOpen: false,
+                resizable: false,
+                position: this.rightTop,
+                //minWidth: 300,
+                //maxHeight: 500,
+                width:"auto",
+                height: "auto",
+                closeText: "",
+                closeOnEscape: false
+            };
+            this._itemsDiag.dialog(dos);
+            this._itemsDiag["jpo"]=this.rightTop;
+            this.dialogs.push(this._itemsDiag);
+
+        }
+        
+        _prevCell: HTMLTableCellElement=null;
+        private _onItemClick(e:MouseEvent){
+            let cell: HTMLTableCellElement=<HTMLTableCellElement>e.target;
+            if (!(cell instanceof HTMLTableCellElement)) return;
+            if (cell == this._prevCell) return;
+            
+            this.vishva.selectMesh(cell.id);
+            cell.setAttribute("style","text-decoration: underline");
+            if (this._prevCell!=null){
+                this._prevCell.setAttribute("style","text-decoration: none");
+            }
+            this._prevCell=cell;
+        }
+        /**
+         * can be called when a user unselects a mesh by pressing esc
+         */
+        private _clearPrevItem(){
+            if (this._prevCell!=null){
+                this._prevCell.setAttribute("style","text-decoration: none");
+                this._prevCell=null;
+            }
+        }
+        
+        private _updateItemsTable() {
+            let tbl: HTMLTableElement=<HTMLTableElement>document.getElementById("itemsTable");
+            tbl.onclick = (e) => {return this._onItemClick(e)};
+            let l: number=tbl.rows.length;
+            for(var i: number=l-1;i>=0;i--) {
+                tbl.deleteRow(i);
+            }
+            let items: Array<AbstractMesh>=this.vishva.getMeshList();
+            let meshChildMap: any=this._getMeshChildMap(items);
+            let childs: Array<AbstractMesh>;
+            for(let item of items) {
+                if(item.parent==null) {
+                    let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
+                    let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
+                    cell.innerText=item.name;
+                    cell.id=Number(item.uniqueId).toString();
+                    childs=meshChildMap[item.uniqueId];
+                    if(childs!=null) {
+                        this._addChildren(childs,tbl,meshChildMap,this._itemTab);
+                    }
+
+                }
+            }
+        }
+        private _addChildren(children: Array<AbstractMesh>,tbl: HTMLTableElement,meshChildMap: any,tab:string) {
+            for(let child of children) {
+                let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
+                let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
+                cell.innerText=tab+child.name;
+                cell.id=Number(child.uniqueId).toString();
+                let childs: Array<AbstractMesh>=meshChildMap[child.uniqueId];
+                if(childs!=null) {
+                    this._addChildren(childs,tbl,meshChildMap,tab+this._itemTab );
+                }
+            }
+        }
+
+        private _getMeshChildMap(meshes: Array<AbstractMesh>) {
+            let meshChildMap: any={};
+            for(let mesh of meshes) {
+                if(mesh.parent!=null) {
+                    let childs: Array<AbstractMesh>=meshChildMap[mesh.parent.uniqueId];
+                    if(childs==null) {
+                        childs=new Array();
+                        meshChildMap[mesh.parent.uniqueId]=childs;
+                    }
+                    childs.push(mesh);
+                }
+            }
+            return meshChildMap;
+        }
+
+
 
         envDiag: JQuery;
         /*
@@ -265,7 +371,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.showAlertDiag("Sorry. To be implemneted soon");
                 return true;
             };
-            
+
             let ambColDiag: ColorPickerDiag=new ColorPickerDiag("ambient color","ambCol",this.vishva.getAmbientColor(),this.centerBottom,(hex,hsv,rgb) => {
                 this.vishva.setAmbientColor(hex);
             });
@@ -575,7 +681,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * with a list of sensors and actuators
          */
         private updateSensActTbl(sensAct: Array<SensorActuator>,tbl: HTMLTableElement) {
-            var l: number=tbl.rows.length;
+            let l: number=tbl.rows.length;
             for(var i: number=l-1;i>0;i--) {
                 tbl.deleteRow(i);
             }
@@ -920,8 +1026,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * is removed from mesh
          */
         public closePropsDiag() {
-            if((this.propsDiag===undefined)||(this.propsDiag===null)) return;
-            this.propsDiag.dialog("close");
+            if(this._itemsDiag!=null && this._itemsDiag.dialog("isOpen")===true) {
+                this._clearPrevItem();
+            }
+            if(this.propsDiag!=null) this.propsDiag.dialog("close");
         }
         /*
          * called by vishva when editcontrol
@@ -1853,7 +1961,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     this.vishva.setShade(v);
                 } else if(slider==="fog") {
                     console.log(v);
-                    this.vishva.setFog(v/10);
+                    this.vishva.setFog(v/100);
                 }
             }
             return true;
@@ -1941,6 +2049,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.downloadDialog.dialog("open");
                 return false;
             };
+
+            let navItems: HTMLElement=document.getElementById("navItems");
+            navItems.onclick=(e) => {
+                if(this._itemsDiag==undefined) {
+                    this._createItemsDiag();
+                }
+                 if(this._itemsDiag.dialog("isOpen")===false) {
+                    this._updateItemsTable();
+                }
+                this.toggleDiag(this._itemsDiag);
+               
+
+                return false;
+            }
+
 
             var navEnv: HTMLElement=document.getElementById("navEnv");
             navEnv.onclick=(e) => {

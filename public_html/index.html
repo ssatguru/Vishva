@@ -26,7 +26,7 @@
         <!-- the latest -->
         <!-- ellipsoid are centered in the latest BABYLON -->
         <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
-        
+
 
         <!-- BABYLONJS INSPECTOR-->
         <script src="lib/babylon.inspector.bundle-3.1.1-12.12.2017.js"></script>
@@ -41,6 +41,8 @@
         <!-- BABYLONJS Pointer Events Polyfill -->
         <script src="lib/pep.0.4.1.min.js"></script>
 
+        <!-- BABYLONJS DynamicTerrain -->
+        <script src="lib/babylon.dynamicTerrain.min.js"></script>
 
         <style>
             html, body {
@@ -153,12 +155,23 @@
                 height:100%;
             }
 
+            .noselect {
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Safari */
+                -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                -o-user-select:none;
+                user-select: none; /* Non-prefixed version, currently
+                                      supported by Chrome and Opera */
+            }
+
         </style>
 
     </head>
     <body oncontextmenu="return false;">
 
-        <canvas id="vCanvas" tabindex="1"></canvas>
+        <canvas id="vCanvas" tabindex="1" x></canvas>
 
         <div id="gui-items-1">
 
@@ -176,6 +189,7 @@
 
             <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;display:block;">
                 <button id="downWorld"><span class="ui-icon  ui-icon ui-icon-arrowthickstop-1-s" title="download scene"></span></button>
+                <button id="navItems" title="list items">list </button>
                 <button id="navAdd"><span class="ui-icon ui-icon-plusthick" title="add"></span> </button>
                 <button id="navEnv"><span class="ui-icon ui-icon-image" title="environment"></span> </button>
                 <button id="navEdit"><span class="ui-icon ui-icon-wrench" title="edit"></span> </button>
@@ -190,8 +204,15 @@
         </div>
 
         <!-- all elements used by jquery ui -->
-        <div id="gui-items-2">
-            <div id="envDiv" title="Environment">
+        <div id="gui-items-2"  >
+            <div id="itemsDiv" title="List of items in world"  >
+                <table id="itemsTable" style="width: 100%;text-align:left;cursor:pointer;"  class="noselect">
+                    <tbody style="height:400px;overflow-y:auto;display:block;">
+                    </tbody>
+                </table>
+                <button id="itemsRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
+            </div>
+            <div id="envDiv" title="Environment" class="noselect">
                 <table style="width: 100%; text-align: center;">
                     <tr>
                         <td>sun (west-east)</td>
@@ -747,7 +768,7 @@
             -->
             <div id="alertDiv" style="text-align:center;"></div>
 
-            <div id="helpDiv" title="Help">
+            <div id="helpDiv" title="Help" class="noselect">
                 <h4>Avatar Movement Keys</h4>
                 <ul>
                     <li>Turn left, right - press "A,D" or "left,right arrow" key or press and drag left mouse key
@@ -774,13 +795,15 @@
         <!-- see https://github.com/DavidDurman/FlexiColorPicker/issues/40 -->
         <script src="lib/colorpicker.uglified.js"></script>
         <link href="lib/colorpicker.themes.css" rel="stylesheet">
+        <script type="text/javascript" src="lib/perlin.js"></script>
         <script type="text/javascript" src="lib/EditControl.min.js"></script>
-        <script type="text/javascript" src="lib/CharacterController.min.js"></script>
-        <!--<script type="text/javascript" src="lib/CharacterController.js"></script>-->
+        <!--<script type="text/javascript" src="lib/EditControl.js"></script>-->
+        <!--<script type="text/javascript" src="lib/CharacterController.min.js"></script>-->
+        <script type="text/javascript" src="lib/CharacterController.js"></script>
         <script type="text/javascript" src="vishva/config.js"></script>
         <script type="text/javascript" src="vishva/assets.js"></script>
-        <script type="text/javascript" src="js/Vishva-merged.min.js"></script>
-        <!--<script type="text/javascript" src="js/Vishva-merged.js"></script>-->
+        <!--<script type="text/javascript" src="js/Vishva-merged.min.js"></script>-->
+        <script type="text/javascript" src="js/Vishva-merged.js"></script>
 
         <script type="text/javascript">
                             $(function(){

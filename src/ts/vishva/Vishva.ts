@@ -15,6 +15,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import CubeTexture=BABYLON.CubeTexture;
     import CSG=BABYLON.CSG;
     import DirectionalLight=BABYLON.DirectionalLight;
+    import DynamicTerrain=BABYLON.DynamicTerrain;
     import Engine=BABYLON.Engine;
     import GroundMesh=BABYLON.GroundMesh;
     import HemisphericLight=BABYLON.HemisphericLight;
@@ -94,7 +95,12 @@ namespace org.ssatguru.babylonjs.vishva {
         avatarFile: string="starterAvatars.babylon";
 
         groundTexture: string="vishva/internal/textures/ground.jpg";
+        groundBumpTexture: string="vishva/internal/textures/ground-normal.jpg";
         groundHeightMap: string="vishva/internal/textures/ground_heightMap.png";
+
+        terrainTexture: string="vishva/internal/textures/earth.jpg";
+        terrainHeightMap: string="vishva/internal/textures/worldHeightMap.jpg";
+
         primTexture: string="vishva/internal/textures/Birch.jpg";
 
         waterTexture: string="vishva/internal/textures/waterbump.png";
@@ -334,8 +340,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
                 let sl: IShadowLight=<IShadowLight>(<any>this.sunDR);
+
                 this.shadowGenerator=new ShadowGenerator(1024,sl);
                 this.setShadowProperty(sl,this.shadowGenerator);
+
+//                this.avShadowGenerator=new ShadowGenerator(512,sl);
+//                this.setShadowProperty(sl,this.avShadowGenerator);
 
 
             } else {
@@ -381,8 +391,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             if(!groundFound) {
                 console.log("no vishva ground found. creating ground");
-                //this.ground=this.createGround(this.scene);
-                this.createGround_htmap(this.scene);
+                this.ground=this.createGround(this.scene);
+                //this.createGround_htmap(this.scene);
+                //this.creatDynamicTerrain();
+                
             } else {
                 //in case this wasn't set in serialized scene
                 this.ground.receiveShadows=true;
@@ -401,11 +413,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.scene.fogMode=Scene.FOGMODE_EXP;
                 this.scene.fogDensity=0;
             }
-            //            if (this.scene.fogMode !== Scene.FOGMODE_LINEAR) {
-            //                this.scene.fogMode = Scene.FOGMODE_LINEAR;
-            //                this.scene.fogStart =10220;
-            //                this.scene.fogEnd =10240;
-            //                this.scene.fogDensity = 0;
+            //            if(this.scene.fogMode!==Scene.FOGMODE_LINEAR) {
+            //                this.scene.fogMode=Scene.FOGMODE_LINEAR;
+            //                this.scene.fogStart=256;
+            //                this.scene.fogEnd=512;
+            //                this.scene.fogDensity=0;
             //            }
             if(this.editEnabled) {
                 this.scene.onPointerDown=(evt,pickResult) => {return this.pickObject(evt,pickResult)};
@@ -435,7 +447,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         private startRenderLoop() {
-            this.backfaceCulling(this.scene.materials);
+            //this.backfaceCulling(this.scene.materials);
             if(this.editEnabled) {
                 this.vishvaGUI=new VishvaGUI(this);
             } else {
@@ -555,7 +567,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private pickObject(evt: PointerEvent,pickResult: PickingInfo) {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
-            if (!(evt.button==2 && (this.key.alt || this.key.ctl))) return;
+            if(!(evt.button==2&&(this.key.alt||this.key.ctl))) return;
             //if(evt.button!==2) return;
             if(pickResult.hit) {
                 if(this.key.ctl) {
@@ -1558,6 +1570,27 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
         }
+        
+        public getMeshList():Array<AbstractMesh>{
+            let meshList:Array<AbstractMesh>= new Array();
+            for(let mesh of this.scene.meshes){
+                if(mesh!=this.ground&&mesh!=this.avatar&&mesh!=this.skybox&&mesh.name!="EditControl")
+                meshList.push(mesh);
+            }
+            return meshList;
+        }
+        
+        public selectMesh(meshId:string){
+            let mesh:AbstractMesh = this.scene.getMeshByUniqueID(Number(meshId));
+            if(!this.isMeshSelected) {
+                    this.selectForEdit(mesh);
+            }else{
+                this.switchEditControl(mesh);
+            }
+            
+        }
+        
+        
         //
         // LIGHTS
 
@@ -2229,11 +2262,11 @@ namespace org.ssatguru.babylonjs.vishva {
             var i: number=skyname.lastIndexOf("/");
             return skyname.substring(i+1);
         }
-        
-        public getAmbientColor():string{
+
+        public getAmbientColor(): string {
             return this.scene.ambientColor.toHexString();
         }
-        public setAmbientColor(hex:string){
+        public setAmbientColor(hex: string) {
             this.scene.ambientColor=Color3.FromHexString(hex);
         }
 
@@ -2541,12 +2574,20 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
             for(let mesh of meshes) {
+                //mesh = (<Mesh>mesh).toLeftHanded();
                 mesh.isPickable=true;
                 mesh.checkCollisions=true;
+                //gltb file
+//                if (mesh.parent!=null){
+//                    if (mesh.parent.id=="root"){
+//                        console.log("removing parent of " + mesh.id);
+//                        (<Mesh>mesh.parent).removeChild(mesh)
+//                    }
+//                }
+//                
                 if(mesh.parent==null) {
                     var placementLocal: Vector3=new Vector3(0,0,-(boundingRadius+2));
                     var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
-                    console.log(placementGlobal);
                     mesh.position.addInPlace(placementGlobal);
                 }
 
@@ -2668,6 +2709,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         shadowGenerator: ShadowGenerator;
+        avShadowGenerator: ShadowGenerator;
 
 
         public createWater() {
@@ -2771,8 +2813,13 @@ namespace org.ssatguru.babylonjs.vishva {
         private createGround(scene: Scene): Mesh {
             var groundMaterial: StandardMaterial=new StandardMaterial("groundMat",scene);
             groundMaterial.diffuseTexture=new Texture(this.groundTexture,scene);
+            groundMaterial.bumpTexture=new Texture(this.groundBumpTexture,scene);
+
             (<Texture>groundMaterial.diffuseTexture).uScale=6.0;
             (<Texture>groundMaterial.diffuseTexture).vScale=6.0;
+            (<Texture>groundMaterial.bumpTexture).uScale=100.0;
+            (<Texture>groundMaterial.bumpTexture).vScale=100.0;
+
             groundMaterial.diffuseColor=new Color3(0.9,0.6,0.4);
             groundMaterial.specularColor=new Color3(0,0,0);
             var grnd: Mesh=Mesh.CreateGround("ground",256,256,1,scene);
@@ -2785,6 +2832,7 @@ namespace org.ssatguru.babylonjs.vishva {
             if(this.enablePhysics) {
                 grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.BoxImpostor,{mass: 0,restitution: 0.1},this.scene);
             }
+            this.ground=grnd;
             return grnd;
         }
 
@@ -2823,17 +2871,74 @@ namespace org.ssatguru.babylonjs.vishva {
         private createGroundMaterial(scene: Scene): StandardMaterial {
             let groundMaterial: StandardMaterial=new StandardMaterial("groundMat",scene);
             groundMaterial.diffuseTexture=new Texture(this.groundTexture,scene);
+            groundMaterial.bumpTexture=new Texture(this.groundBumpTexture,scene);
+
             //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
             //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
             (<Texture>groundMaterial.diffuseTexture).uScale=100.0;
             (<Texture>groundMaterial.diffuseTexture).vScale=100.0;
+            (<Texture>groundMaterial.bumpTexture).uScale=100.0;
+            (<Texture>groundMaterial.bumpTexture).vScale=100.0;
             groundMaterial.diffuseColor=new Color3(0.9,0.6,0.4);
             groundMaterial.specularColor=new Color3(0,0,0);
             return groundMaterial;
         }
 
-        private createSkyBox(scene: Scene): Mesh {
+        private onDataMapReady(map: number[]|Float32Array,subX: number,subZ: number) {
+            let normal=new Float32Array(map.length);
+            DynamicTerrain.ComputeNormalsFromMapToRef(map,subX,subZ,normal);
 
+            let parms={
+                mapData: map,
+                mapSubX: subX,
+                mapSubZ: subZ,
+                mapNormals: normal,
+                terrainSub: 120
+            };
+            let terrain: DynamicTerrain=new BABYLON.DynamicTerrain("t",parms,this.scene);
+
+            let mat: StandardMaterial=new StandardMaterial("tm",this.scene);
+            //mat.diffuseTexture=new Texture(this.terrainTexture, this.scene);
+
+            mat.diffuseTexture=new Texture(this.groundTexture,this.scene);
+            (<Texture>mat.diffuseTexture).uScale=6.0;
+            (<Texture>mat.diffuseTexture).vScale=6.0;
+            mat.bumpTexture=new Texture(this.groundBumpTexture,this.scene);
+            (<Texture>mat.bumpTexture).uScale=64.0;
+            (<Texture>mat.bumpTexture).vScale=64.0;
+            mat.specularColor=Color3.Black();
+            mat.diffuseColor=new Color3(0.9,0.6,0.4);
+            
+            terrain.mesh.material=mat;
+
+            // compute the UVs to stretch the image on the whole map
+            terrain.createUVMap();
+            terrain.update(true);
+            terrain.mesh.checkCollisions=true;
+            this.ground=terrain.mesh;
+            Tags.AddTagsTo(this.ground,"Vishva.ground Vishva.internal");
+        }
+
+        private creatDynamicTerrain() {
+            let dmOptions={
+                width: 1024,
+                height: 1024,
+                subX: 512,
+                subZ: 512,
+                minHeight: 0,
+                maxHeight: 10,
+                offsetX: 0,
+                offsetZ: 0,
+                onReady: (map: number[]|Float32Array,subX: number,subZ: number) => {this.onDataMapReady(map,subX,subZ);}
+            }
+            let mapData: Float32Array=new Float32Array(512*512*3);
+            //            DynamicTerrain.CreateMapFromHeightMapToRef(this.terrainHeightMap,
+            //                dmOptions,mapData,this.scene);
+            DynamicTerrain.CreateMapFromHeightMapToRef(this.groundHeightMap,
+                dmOptions,mapData,this.scene);
+        }
+
+        private createSkyBox(scene: Scene): Mesh {
 
             var skyboxMaterial: StandardMaterial=new StandardMaterial("skyBox",scene);
             skyboxMaterial.backFaceCulling=false;
@@ -2849,6 +2954,7 @@ namespace org.ssatguru.babylonjs.vishva {
             skybox.infiniteDistance=true;
             skybox.renderingGroupId=0;
             skybox.isPickable=false;
+            //skybox.position.y=-100;
 
             Tags.AddTagsTo(skybox,"Vishva.sky Vishva.internal");
             return skybox;
@@ -2960,11 +3066,13 @@ namespace org.ssatguru.babylonjs.vishva {
         private createAvatar() {
             SceneLoader.ImportMesh("",this.avatarFolder,this.avatarFile,this.scene,(meshes,particleSystems,skeletons) => {return this.onAvatarLoaded(meshes,particleSystems,skeletons)});
         }
-
+        //spawnPosition:Vector3=new Vector3(-360,620,225);
+        spawnPosition: Vector3=new Vector3(0,0.2,0);
         private onAvatarLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
             this.avatar=<Mesh>meshes[0];
 
             (this.shadowGenerator.getShadowMap().renderList).push(this.avatar);
+            //(this.avShadowGenerator.getShadowMap().renderList).push(this.avatar);
             //TODO
             //this.avatar.receiveShadows = true;
 
@@ -2988,7 +3096,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.avatarSkeleton.enableBlending(0.1);
             //this.avatar.rotation.y = Math.PI;
             //this.avatar.position = new Vector3(0, 20, 0);
-            this.avatar.position=new Vector3(-360,620,225);
+            this.avatar.position=this.spawnPosition;
+
             this.avatar.checkCollisions=true;
             this.avatar.ellipsoid=new Vector3(0.5,1,0.5);
             this.avatar.ellipsoidOffset=new Vector3(0,1,0);
@@ -3011,6 +3120,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.cc=new CharacterController(this.avatar,this.mainCamera,this.scene);
 
             this.setCharacterController(this.cc);
+            this.cc.setCameraElasticity(true);
+            //this.cc.setNoFirstPerson(true);
             this.cc.start();
 
             //in 3.0 need to set the camera values again
@@ -3097,6 +3208,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public enableCameraCollision(yesNo: boolean) {
             this.cameraCollision=yesNo;
             this.mainCamera.checkCollisions=yesNo;
+            this.cc.cameraCollisionChanged();
         }
 
         public isCameraCollisionOn(): boolean {

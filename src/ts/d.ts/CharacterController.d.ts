@@ -88,6 +88,7 @@ declare namespace org.ssatguru.babylonjs.component {
         setJumpCode(code: number): void;
         setCameraElasticity(b: boolean): void;
         setCameraTarget(v: Vector3): void;
+        cameraCollisionChanged(): void;
         setNoFirstPerson(b: boolean): void;
         private checkAnims(skel);
         private key;
@@ -126,6 +127,7 @@ declare namespace org.ssatguru.babylonjs.component {
         private updateTargetValue();
         ray: Ray;
         rayDir: Vector3;
+        cameraSkin: number;
         private snapCamera();
         move: boolean;
         anyMovement(): boolean;

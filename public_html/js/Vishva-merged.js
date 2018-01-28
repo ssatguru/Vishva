@@ -116,6 +116,8 @@ var org;
                              * reset on window resize
                              */
                             this.dialogs = new Array();
+                            this._itemTab = "---- ";
+                            this._prevCell = null;
                             //TODO persist this setting
                             this.enableToolTips = true;
                             this.propsDiag = null;
@@ -180,6 +182,11 @@ var org;
                             this.rightCenter = {
                                 at: "right center",
                                 my: "right center",
+                                of: window
+                            };
+                            this.rightTop = {
+                                at: "right top",
+                                my: "right top",
                                 of: window
                             };
                         };
@@ -270,28 +277,24 @@ var org;
                             }
                             var f = function (e) { return _this.onAssetImgClick(e); };
                             var row = tbl.insertRow();
-                            for (var index163 = 0; index163 < items.length; index163++) {
-                                var item = items[index163];
-                                {
-                                    var img = document.createElement("img");
-                                    img.id = item;
-                                    //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                                    var name_1 = item.split(".")[0];
-                                    img.src = "vishva/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
-                                    img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
-                                    img.className = assetType;
-                                    img.onclick = f;
-                                    var cell = row.insertCell();
-                                    cell.appendChild(img);
-                                }
+                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
+                                var item = items_1[_i];
+                                var img = document.createElement("img");
+                                img.id = item;
+                                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                                var name_1 = item.split(".")[0];
+                                img.src = "vishva/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
+                                img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
+                                img.className = assetType;
+                                img.onclick = f;
+                                var cell = row.insertCell();
+                                cell.appendChild(img);
                             }
                             var row2 = tbl.insertRow();
-                            for (var index164 = 0; index164 < items.length; index164++) {
-                                var item = items[index164];
-                                {
-                                    var cell = row2.insertCell();
-                                    cell.innerText = item;
-                                }
+                            for (var _a = 0, items_2 = items; _a < items_2.length; _a++) {
+                                var item = items_2[_a];
+                                var cell_1 = row2.insertCell();
+                                cell_1.innerText = item;
                             }
                         };
                         VishvaGUI.prototype.onAssetImgClick = function (e) {
@@ -309,6 +312,105 @@ var org;
                                 this.vishva.loadAsset(i.className, i.id);
                             }
                             return true;
+                        };
+                        VishvaGUI.prototype._createItemsDiag = function () {
+                            var _this = this;
+                            var itemsRefresh = document.getElementById("itemsRefresh");
+                            itemsRefresh.onclick = function () {
+                                _this._itemsDiag.dialog("close");
+                                _this._updateItemsTable();
+                                _this._itemsDiag.dialog("open");
+                            };
+                            this._itemsDiag = $("#itemsDiv");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: this.rightTop,
+                                //minWidth: 300,
+                                //maxHeight: 500,
+                                width: "auto",
+                                height: "auto",
+                                closeText: "",
+                                closeOnEscape: false
+                            };
+                            this._itemsDiag.dialog(dos);
+                            this._itemsDiag["jpo"] = this.rightTop;
+                            this.dialogs.push(this._itemsDiag);
+                        };
+                        VishvaGUI.prototype._onItemClick = function (e) {
+                            var cell = e.target;
+                            if (!(cell instanceof HTMLTableCellElement))
+                                return;
+                            if (cell == this._prevCell)
+                                return;
+                            this.vishva.selectMesh(cell.id);
+                            cell.setAttribute("style", "text-decoration: underline");
+                            if (this._prevCell != null) {
+                                this._prevCell.setAttribute("style", "text-decoration: none");
+                            }
+                            this._prevCell = cell;
+                        };
+                        /**
+                         * can be called when a user unselects a mesh by pressing esc
+                         */
+                        VishvaGUI.prototype._clearPrevItem = function () {
+                            if (this._prevCell != null) {
+                                this._prevCell.setAttribute("style", "text-decoration: none");
+                                this._prevCell = null;
+                            }
+                        };
+                        VishvaGUI.prototype._updateItemsTable = function () {
+                            var _this = this;
+                            var tbl = document.getElementById("itemsTable");
+                            tbl.onclick = function (e) { return _this._onItemClick(e); };
+                            var l = tbl.rows.length;
+                            for (var i = l - 1; i >= 0; i--) {
+                                tbl.deleteRow(i);
+                            }
+                            var items = this.vishva.getMeshList();
+                            var meshChildMap = this._getMeshChildMap(items);
+                            var childs;
+                            for (var _i = 0, items_3 = items; _i < items_3.length; _i++) {
+                                var item = items_3[_i];
+                                if (item.parent == null) {
+                                    var row = tbl.insertRow();
+                                    var cell = row.insertCell();
+                                    cell.innerText = item.name;
+                                    cell.id = Number(item.uniqueId).toString();
+                                    childs = meshChildMap[item.uniqueId];
+                                    if (childs != null) {
+                                        this._addChildren(childs, tbl, meshChildMap, this._itemTab);
+                                    }
+                                }
+                            }
+                        };
+                        VishvaGUI.prototype._addChildren = function (children, tbl, meshChildMap, tab) {
+                            for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
+                                var child = children_1[_i];
+                                var row = tbl.insertRow();
+                                var cell = row.insertCell();
+                                cell.innerText = tab + child.name;
+                                cell.id = Number(child.uniqueId).toString();
+                                var childs = meshChildMap[child.uniqueId];
+                                if (childs != null) {
+                                    this._addChildren(childs, tbl, meshChildMap, tab + this._itemTab);
+                                }
+                            }
+                        };
+                        VishvaGUI.prototype._getMeshChildMap = function (meshes) {
+                            var meshChildMap = {};
+                            for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
+                                var mesh = meshes_1[_i];
+                                if (mesh.parent != null) {
+                                    var childs = meshChildMap[mesh.parent.uniqueId];
+                                    if (childs == null) {
+                                        childs = new Array();
+                                        meshChildMap[mesh.parent.uniqueId] = childs;
+                                    }
+                                    childs.push(mesh);
+                                }
+                            }
+                            return meshChildMap;
                         };
                         /*
                          * Create Environment Dialog
@@ -937,9 +1039,11 @@ var org;
                          * is removed from mesh
                          */
                         VishvaGUI.prototype.closePropsDiag = function () {
-                            if ((this.propsDiag === undefined) || (this.propsDiag === null))
-                                return;
-                            this.propsDiag.dialog("close");
+                            if (this._itemsDiag != null && this._itemsDiag.dialog("isOpen") === true) {
+                                this._clearPrevItem();
+                            }
+                            if (this.propsDiag != null)
+                                this.propsDiag.dialog("close");
                         };
                         VishvaGUI.prototype.refreshPropsDiag = function () {
                             if ((this.propsDiag === undefined) || (this.propsDiag === null))
@@ -1708,7 +1812,7 @@ var org;
                                 }
                                 else if (slider === "fog") {
                                     console.log(v);
-                                    this.vishva.setFog(v / 10);
+                                    this.vishva.setFog(v / 100);
                                 }
                             }
                             return true;
@@ -1778,6 +1882,17 @@ var org;
                                     return true;
                                 _this.downloadLink.href = downloadURL;
                                 _this.downloadDialog.dialog("open");
+                                return false;
+                            };
+                            var navItems = document.getElementById("navItems");
+                            navItems.onclick = function (e) {
+                                if (_this._itemsDiag == undefined) {
+                                    _this._createItemsDiag();
+                                }
+                                if (_this._itemsDiag.dialog("isOpen") === false) {
+                                    _this._updateItemsTable();
+                                }
+                                _this.toggleDiag(_this._itemsDiag);
                                 return false;
                             };
                             var navEnv = document.getElementById("navEnv");
@@ -1952,6 +2067,7 @@ var org;
                 var CubeTexture = BABYLON.CubeTexture;
                 var CSG = BABYLON.CSG;
                 var DirectionalLight = BABYLON.DirectionalLight;
+                var DynamicTerrain = BABYLON.DynamicTerrain;
                 var Engine = BABYLON.Engine;
                 var HemisphericLight = BABYLON.HemisphericLight;
                 var Light = BABYLON.Light;
@@ -2001,7 +2117,10 @@ var org;
                         this.avatarFolder = "vishva/internal/avatar/";
                         this.avatarFile = "starterAvatars.babylon";
                         this.groundTexture = "vishva/internal/textures/ground.jpg";
+                        this.groundBumpTexture = "vishva/internal/textures/ground-normal.jpg";
                         this.groundHeightMap = "vishva/internal/textures/ground_heightMap.png";
+                        this.terrainTexture = "vishva/internal/textures/earth.jpg";
+                        this.terrainHeightMap = "vishva/internal/textures/worldHeightMap.jpg";
                         this.primTexture = "vishva/internal/textures/Birch.jpg";
                         this.waterTexture = "vishva/internal/textures/waterbump.png";
                         this.snowTexture = "vishva/internal/textures/flare.png";
@@ -2062,6 +2181,8 @@ var org;
                         this.didPhysTest = false;
                         this.skelViewerArr = [];
                         this.debugVisible = false;
+                        //spawnPosition:Vector3=new Vector3(-360,620,225);
+                        this.spawnPosition = new Vector3(0, 0.2, 0);
                         this.editEnabled = false;
                         this.frames = 0;
                         this.f = 0;
@@ -2204,8 +2325,8 @@ var org;
                             var sl = this.sunDR;
                             this.shadowGenerator = new ShadowGenerator(1024, sl);
                             this.setShadowProperty(sl, this.shadowGenerator);
-                            this.avShadowGenerator = new ShadowGenerator(512, sl);
-                            this.setShadowProperty(sl, this.avShadowGenerator);
+                            //                this.avShadowGenerator=new ShadowGenerator(512,sl);
+                            //                this.setShadowProperty(sl,this.avShadowGenerator);
                         }
                         else {
                             for (var _f = 0, _g = scene.lights; _f < _g.length; _f++) {
@@ -2246,8 +2367,9 @@ var org;
                         this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         if (!groundFound) {
                             console.log("no vishva ground found. creating ground");
-                            //this.ground=this.createGround(this.scene);
-                            this.createGround_htmap(this.scene);
+                            this.ground = this.createGround(this.scene);
+                            //this.createGround_htmap(this.scene);
+                            //this.creatDynamicTerrain();
                         }
                         else {
                             //in case this wasn't set in serialized scene
@@ -2266,11 +2388,11 @@ var org;
                             this.scene.fogMode = Scene.FOGMODE_EXP;
                             this.scene.fogDensity = 0;
                         }
-                        //            if (this.scene.fogMode !== Scene.FOGMODE_LINEAR) {
-                        //                this.scene.fogMode = Scene.FOGMODE_LINEAR;
-                        //                this.scene.fogStart =10220;
-                        //                this.scene.fogEnd =10240;
-                        //                this.scene.fogDensity = 0;
+                        //            if(this.scene.fogMode!==Scene.FOGMODE_LINEAR) {
+                        //                this.scene.fogMode=Scene.FOGMODE_LINEAR;
+                        //                this.scene.fogStart=256;
+                        //                this.scene.fogEnd=512;
+                        //                this.scene.fogDensity=0;
                         //            }
                         if (this.editEnabled) {
                             this.scene.onPointerDown = function (evt, pickResult) { return _this.pickObject(evt, pickResult); };
@@ -2298,7 +2420,7 @@ var org;
                     };
                     Vishva.prototype.startRenderLoop = function () {
                         var _this = this;
-                        this.backfaceCulling(this.scene.materials);
+                        //this.backfaceCulling(this.scene.materials);
                         if (this.editEnabled) {
                             this.vishvaGUI = new VishvaGUI(this);
                         }
@@ -3382,6 +3504,24 @@ var org;
                             return null;
                         }
                     };
+                    Vishva.prototype.getMeshList = function () {
+                        var meshList = new Array();
+                        for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
+                            var mesh = _a[_i];
+                            if (mesh != this.ground && mesh != this.avatar && mesh != this.skybox && mesh.name != "EditControl")
+                                meshList.push(mesh);
+                        }
+                        return meshList;
+                    };
+                    Vishva.prototype.selectMesh = function (meshId) {
+                        var mesh = this.scene.getMeshByUniqueID(Number(meshId));
+                        if (!this.isMeshSelected) {
+                            this.selectForEdit(mesh);
+                        }
+                        else {
+                            this.switchEditControl(mesh);
+                        }
+                    };
                     //
                     // LIGHTS
                     /*
@@ -4130,8 +4270,8 @@ var org;
                     };
                     Vishva.prototype.removeInstancesFromShadow = function () {
                         var meshes = this.scene.meshes;
-                        for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
-                            var mesh = meshes_1[_i];
+                        for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
+                            var mesh = meshes_2[_i];
                             if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
                                 var shadowMeshes = this.shadowGenerator.getShadowMap().renderList;
                                 var i = shadowMeshes.indexOf(mesh);
@@ -4245,8 +4385,8 @@ var org;
                         var meshes = this.scene.meshes;
                         var mats = new Array();
                         var mms = new Array();
-                        for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
-                            var mesh = meshes_2[_i];
+                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
+                            var mesh = meshes_3[_i];
                             if (mesh.material != null) {
                                 if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
                                     var mm = mesh.material;
@@ -4286,8 +4426,8 @@ var org;
                     Vishva.prototype.cleanupSkels = function () {
                         var meshes = this.scene.meshes;
                         var skels = new Array();
-                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
-                            var mesh = meshes_3[_i];
+                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
+                            var mesh = meshes_4[_i];
                             if (mesh.skeleton != null) {
                                 skels.push(mesh.skeleton);
                             }
@@ -4323,11 +4463,19 @@ var org;
                             var skeleton = skeletons_1[_i];
                             this.scene.stopAnimation(skeleton);
                         }
-                        for (var _a = 0, meshes_4 = meshes; _a < meshes_4.length; _a++) {
-                            var mesh = meshes_4[_a];
+                        for (var _a = 0, meshes_5 = meshes; _a < meshes_5.length; _a++) {
+                            var mesh = meshes_5[_a];
                             //mesh = (<Mesh>mesh).toLeftHanded();
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
+                            //gltb file
+                            //                if (mesh.parent!=null){
+                            //                    if (mesh.parent.id=="root"){
+                            //                        console.log("removing parent of " + mesh.id);
+                            //                        (<Mesh>mesh.parent).removeChild(mesh)
+                            //                    }
+                            //                }
+                            //                
                             if (mesh.parent == null) {
                                 var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
                                 var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
@@ -4400,8 +4548,8 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var _i = 0, meshes_5 = meshes; _i < meshes_5.length; _i++) {
-                            var mesh = meshes_5[_i];
+                        for (var _i = 0, meshes_6 = meshes; _i < meshes_6.length; _i++) {
+                            var mesh = meshes_6[_i];
                             console.log("==========");
                             console.log(mesh.name);
                             console.log(mesh.absolutePosition);
@@ -4535,8 +4683,11 @@ var org;
                     Vishva.prototype.createGround = function (scene) {
                         var groundMaterial = new StandardMaterial("groundMat", scene);
                         groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
+                        groundMaterial.bumpTexture = new Texture(this.groundBumpTexture, scene);
                         groundMaterial.diffuseTexture.uScale = 6.0;
                         groundMaterial.diffuseTexture.vScale = 6.0;
+                        groundMaterial.bumpTexture.uScale = 100.0;
+                        groundMaterial.bumpTexture.vScale = 100.0;
                         groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
                         groundMaterial.specularColor = new Color3(0, 0, 0);
                         var grnd = Mesh.CreateGround("ground", 256, 256, 1, scene);
@@ -4549,6 +4700,7 @@ var org;
                         if (this.enablePhysics) {
                             grnd.physicsImpostor = new BABYLON.PhysicsImpostor(grnd, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
                         }
+                        this.ground = grnd;
                         return grnd;
                     };
                     Vishva.prototype.createGround_htmap = function (scene) {
@@ -4583,13 +4735,63 @@ var org;
                     Vishva.prototype.createGroundMaterial = function (scene) {
                         var groundMaterial = new StandardMaterial("groundMat", scene);
                         groundMaterial.diffuseTexture = new Texture(this.groundTexture, scene);
+                        groundMaterial.bumpTexture = new Texture(this.groundBumpTexture, scene);
                         //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
                         //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
                         groundMaterial.diffuseTexture.uScale = 100.0;
                         groundMaterial.diffuseTexture.vScale = 100.0;
+                        groundMaterial.bumpTexture.uScale = 100.0;
+                        groundMaterial.bumpTexture.vScale = 100.0;
                         groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
                         groundMaterial.specularColor = new Color3(0, 0, 0);
                         return groundMaterial;
+                    };
+                    Vishva.prototype.onDataMapReady = function (map, subX, subZ) {
+                        var normal = new Float32Array(map.length);
+                        DynamicTerrain.ComputeNormalsFromMapToRef(map, subX, subZ, normal);
+                        var parms = {
+                            mapData: map,
+                            mapSubX: subX,
+                            mapSubZ: subZ,
+                            mapNormals: normal,
+                            terrainSub: 120
+                        };
+                        var terrain = new BABYLON.DynamicTerrain("t", parms, this.scene);
+                        var mat = new StandardMaterial("tm", this.scene);
+                        //mat.diffuseTexture=new Texture(this.terrainTexture, this.scene);
+                        mat.diffuseTexture = new Texture(this.groundTexture, this.scene);
+                        mat.diffuseTexture.uScale = 6.0;
+                        mat.diffuseTexture.vScale = 6.0;
+                        mat.bumpTexture = new Texture(this.groundBumpTexture, this.scene);
+                        mat.bumpTexture.uScale = 64.0;
+                        mat.bumpTexture.vScale = 64.0;
+                        mat.specularColor = Color3.Black();
+                        mat.diffuseColor = new Color3(0.9, 0.6, 0.4);
+                        terrain.mesh.material = mat;
+                        // compute the UVs to stretch the image on the whole map
+                        terrain.createUVMap();
+                        terrain.update(true);
+                        terrain.mesh.checkCollisions = true;
+                        this.ground = terrain.mesh;
+                        Tags.AddTagsTo(this.ground, "Vishva.ground Vishva.internal");
+                    };
+                    Vishva.prototype.creatDynamicTerrain = function () {
+                        var _this = this;
+                        var dmOptions = {
+                            width: 1024,
+                            height: 1024,
+                            subX: 512,
+                            subZ: 512,
+                            minHeight: 0,
+                            maxHeight: 10,
+                            offsetX: 0,
+                            offsetZ: 0,
+                            onReady: function (map, subX, subZ) { _this.onDataMapReady(map, subX, subZ); }
+                        };
+                        var mapData = new Float32Array(512 * 512 * 3);
+                        //            DynamicTerrain.CreateMapFromHeightMapToRef(this.terrainHeightMap,
+                        //                dmOptions,mapData,this.scene);
+                        DynamicTerrain.CreateMapFromHeightMapToRef(this.groundHeightMap, dmOptions, mapData, this.scene);
                     };
                     Vishva.prototype.createSkyBox = function (scene) {
                         var skyboxMaterial = new StandardMaterial("skyBox", scene);
@@ -4605,6 +4807,7 @@ var org;
                         skybox.infiniteDistance = true;
                         skybox.renderingGroupId = 0;
                         skybox.isPickable = false;
+                        //skybox.position.y=-100;
                         Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
                         return skybox;
                     };
@@ -4728,7 +4931,7 @@ var org;
                         this.avatarSkeleton.enableBlending(0.1);
                         //this.avatar.rotation.y = Math.PI;
                         //this.avatar.position = new Vector3(0, 20, 0);
-                        this.avatar.position = new Vector3(-360, 620, 225);
+                        this.avatar.position = this.spawnPosition;
                         this.avatar.checkCollisions = true;
                         this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
                         this.avatar.ellipsoidOffset = new Vector3(0, 1, 0);
@@ -4747,6 +4950,8 @@ var org;
                         }
                         this.cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
                         this.setCharacterController(this.cc);
+                        this.cc.setCameraElasticity(true);
+                        //this.cc.setNoFirstPerson(true);
                         this.cc.start();
                         //in 3.0 need to set the camera values again
                         //            this.mainCamera.radius=4;
@@ -4820,6 +5025,7 @@ var org;
                     Vishva.prototype.enableCameraCollision = function (yesNo) {
                         this.cameraCollision = yesNo;
                         this.mainCamera.checkCollisions = yesNo;
+                        this.cc.cameraCollisionChanged();
                     };
                     Vishva.prototype.isCameraCollisionOn = function () {
                         return this.cameraCollision;
@@ -5142,8 +5348,8 @@ var org;
                         var sna;
                         var meshes = scene.meshes;
                         var meshId;
-                        for (var _i = 0, meshes_6 = meshes; _i < meshes_6.length; _i++) {
-                            var mesh = meshes_6[_i];
+                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
+                            var mesh = meshes_7[_i];
                             meshId = null;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {

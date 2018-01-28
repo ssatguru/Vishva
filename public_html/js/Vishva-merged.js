@@ -94,70 +94,7 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 var org;
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva) {
-                var gui;
-                (function (gui) {
-                    var DialogMgr = (function () {
-                        function DialogMgr() {
-                        }
-                        ;
-                        DialogMgr.dialogs = new Array();
-                        DialogMgr.centerBottom = {
-                            at: "center bottom",
-                            my: "center bottom",
-                            of: window
-                        };
-                        DialogMgr.leftCenter = {
-                            at: "left center",
-                            my: "left center",
-                            of: window
-                        };
-                        DialogMgr.rightCenter = {
-                            at: "right center",
-                            my: "right center",
-                            of: window
-                        };
-                        DialogMgr.rightTop = {
-                            at: "right top",
-                            my: "right top",
-                            of: window
-                        };
-                        return DialogMgr;
-                    }());
-                    gui.DialogMgr = DialogMgr;
-                })(gui = vishva.gui || (vishva.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-var org;
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 (function (org) {
     var ssatguru;
     (function (ssatguru) {
@@ -215,9 +152,71 @@ var org;
                         VDialog.prototype.position = function () {
                             this._diag.dialog("option", "position", this.jpo);
                         };
+                        VDialog.prototype.setButtons = function (dbos) {
+                            this._diag.dialog("option", "buttons", dbos);
+                        };
                         return VDialog;
                     }());
                     gui.VDialog = VDialog;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+/// <reference path="VDialog.ts"/>
+var org;
+/// <reference path="VDialog.ts"/>
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var DialogMgr = (function () {
+                        function DialogMgr() {
+                        }
+                        ;
+                        DialogMgr.createAlertDiag = function () {
+                            if (this._alertDialog == null)
+                                this._alertDialog = new gui.VDialog("alertDiv", "Info", DialogMgr.center, "", "", 200);
+                        };
+                        DialogMgr.showAlertDiag = function (msg) {
+                            this._alertDiv.innerHTML = "<h3>" + msg + "</h3>";
+                            this._alertDialog.open();
+                        };
+                        DialogMgr.dialogs = new Array();
+                        DialogMgr.center = {
+                            at: "center center",
+                            my: "center center",
+                            of: window
+                        };
+                        DialogMgr.centerBottom = {
+                            at: "center bottom",
+                            my: "center bottom",
+                            of: window
+                        };
+                        DialogMgr.leftCenter = {
+                            at: "left center",
+                            my: "left center",
+                            of: window
+                        };
+                        DialogMgr.rightCenter = {
+                            at: "right center",
+                            my: "right center",
+                            of: window
+                        };
+                        DialogMgr.rightTop = {
+                            at: "right top",
+                            my: "right top",
+                            of: window
+                        };
+                        DialogMgr._alertDiv = document.getElementById("alertDiv");
+                        return DialogMgr;
+                    }());
+                    gui.DialogMgr = DialogMgr;
                 })(gui = vishva.gui || (vishva.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -233,22 +232,116 @@ var org;
             (function (vishva_1) {
                 var gui;
                 (function (gui) {
-                    var ColorPickerDiag = org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
-                    var VishvaGUI = (function () {
-                        function VishvaGUI(vishva) {
+                    /**
+                     * provides a ui to manage the environment in the world
+                     */
+                    var Environment = (function () {
+                        /*
+                         * Create Environment Dialog
+                         */
+                        function Environment(vishva) {
                             var _this = this;
-                            this.local = true;
-                            this.menuBarOn = true;
-                            this.STATE_IND = "state";
-                            /**
-                             * this array will be used store all dialogs whose position needs to be
-                             * reset on window resize
-                             */
-                            this.dialogs = new Array();
-                            this._itemTab = "---- ";
-                            this._prevCell = null;
-                            //TODO persist this setting
-                            this.enableToolTips = true;
+                            this.vishva = vishva;
+                            var sunPos = $("#sunPos");
+                            var light = $("#light");
+                            var shade = $("#shade");
+                            var fog = $("#fog");
+                            var fov = $("#fov");
+                            sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
+                            light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
+                            shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
+                            fog.slider(this.sliderOptions(0, 100, 100 * this.vishva.getFog()));
+                            var fogColDiag = new gui.ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                _this.vishva.setFogColor(hex);
+                            });
+                            fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
+                            var envSnow = document.getElementById("envSnow");
+                            envSnow.onclick = function (e) {
+                                _this.vishva.toggleSnow();
+                            };
+                            var envRain = document.getElementById("envRain");
+                            envRain.onclick = function (e) {
+                                //this.showAlertDiag("Sorry. To be implemented");
+                                _this.vishva.toggleRain();
+                            };
+                            var skyButton = document.getElementById("skyButton");
+                            skyButton.onclick = function (e) {
+                                var foo = document.getElementById("add-skyboxes");
+                                foo.click();
+                                return true;
+                            };
+                            var trnButton = document.getElementById("trnButton");
+                            trnButton.onclick = function (e) {
+                                gui.DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
+                                return true;
+                            };
+                            var ambColDiag = new gui.ColorPickerDiag("ambient color", "ambCol", this.vishva.getAmbientColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                _this.vishva.setAmbientColor(hex);
+                            });
+                            var trnColDiag = new gui.ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                _this.vishva.setGroundColor(hex);
+                            });
+                            this.envDiag = new gui.VDialog("envDiv", "Environment", gui.DialogMgr.rightCenter, "", "", 350);
+                        }
+                        Environment.prototype.sliderOptions = function (min, max, value) {
+                            var _this = this;
+                            var so = {};
+                            so.min = min;
+                            so.max = max;
+                            so.value = value;
+                            so.slide = function (e, ui) { return _this.handleSlide(e, ui); };
+                            return so;
+                        };
+                        Environment.prototype.handleSlide = function (e, ui) {
+                            var slider = e.target.id;
+                            if (slider === "fov") {
+                                this.vishva.setFov(ui.value);
+                            }
+                            else if (slider === "sunPos") {
+                                this.vishva.setSunPos(ui.value);
+                            }
+                            else {
+                                var v = ui.value / 100;
+                                if (slider === "light") {
+                                    this.vishva.setLight(v);
+                                }
+                                else if (slider === "shade") {
+                                    this.vishva.setShade(v);
+                                }
+                                else if (slider === "fog") {
+                                    console.log(v);
+                                    this.vishva.setFog(v / 100);
+                                }
+                            }
+                            return true;
+                        };
+                        Environment.prototype.toggle = function () {
+                            this.envDiag.toggle();
+                        };
+                        return Environment;
+                    }());
+                    gui.Environment = Environment;
+                })(gui = vishva_1.gui || (vishva_1.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_2) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * Provides UI to manage an Item(mesh) properties
+                     */
+                    var ItemProps = (function () {
+                        function ItemProps(vishva, sNaDialog, vishvaGUI) {
+                            var _this = this;
                             this.propsDiag = null;
                             this.fixingDragIssue = false;
                             this.activePanel = -1;
@@ -260,10 +353,1067 @@ var org;
                             //meshAnimDiag: JQuery;
                             this.animUIInitialized = false;
                             this.animSelect = null;
-                            //        private colorPickerHandler(hex: any, hsv: any, rgb: RGB) {
-                            //            var colors: number[] = [rgb.r, rgb.g, rgb.b];
-                            //            this.vishva.setGroundColor(colors);
-                            //        }
+                            this.vishva = vishva;
+                            this.sNaDialog = sNaDialog;
+                            this._vishvaGUI = vishvaGUI;
+                            var propsAcc = $("#propsAcc");
+                            propsAcc.accordion({
+                                animate: 100,
+                                heightStyle: "content",
+                                collapsible: true,
+                                activate: function () {
+                                    _this.activePanel = propsAcc.accordion("option", "active");
+                                },
+                                beforeActivate: function (e, ui) {
+                                    _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
+                                }
+                            });
+                            //property dialog box
+                            this.propsDiag = $("#propsDiag");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: gui.DialogMgr.leftCenter,
+                                minWidth: 420,
+                                width: 420,
+                                // height: "auto",
+                                height: 650,
+                                closeOnEscape: false,
+                                //a) on open set the values of the fields in the active panel.
+                                //b) also if we switched from another mesh vishav will close open
+                                //by calling refreshPropsDiag()
+                                //c) donot bother refreshing values if we are just restarting
+                                //dialog for height and width re-sizing after drag
+                                open: function (e, ui) {
+                                    if (!_this.fixingDragIssue) {
+                                        // refresh the active tab
+                                        _this.activePanel = propsAcc.accordion("option", "active");
+                                        _this.refreshPanel(_this.activePanel);
+                                        _this.refreshingPropsDiag = false;
+                                    }
+                                    else {
+                                        _this.fixingDragIssue = false;
+                                    }
+                                },
+                                closeText: "",
+                                close: function (e, ui) {
+                                    if (!_this.fixingDragIssue && !_this.refreshingPropsDiag && _this.sNaDialog.dialog("isOpen") === true) {
+                                        _this.sNaDialog.dialog("close");
+                                    }
+                                },
+                                //after drag the dialog box doesnot resize
+                                //force resize by closing and opening
+                                dragStop: function (e, ui) {
+                                    _this.fixingDragIssue = true;
+                                    _this.propsDiag.dialog("close");
+                                    _this.propsDiag.dialog("open");
+                                }
+                            };
+                            this.propsDiag.dialog(dos);
+                            this.propsDiag["jpo"] = gui.DialogMgr.leftCenter;
+                            this._vishvaGUI.dialogs.push(this.propsDiag);
+                        }
+                        ItemProps.prototype.open = function () {
+                            this.propsDiag.dialog("open");
+                        };
+                        ItemProps.prototype.isOpen = function () {
+                            return this.propsDiag.dialog("isOpen");
+                        };
+                        ItemProps.prototype.close = function () {
+                            this.propsDiag.dialog("close");
+                        };
+                        ItemProps.prototype.refreshPropsDiag = function () {
+                            if ((this.propsDiag === undefined) || (this.propsDiag === null))
+                                return;
+                            if (this.propsDiag.dialog("isOpen") === true) {
+                                this.refreshingPropsDiag = true;
+                                this.propsDiag.dialog("close");
+                                this.propsDiag.dialog("open");
+                            }
+                        };
+                        //only refresh if general panel is active;
+                        ItemProps.prototype.refreshGeneralPanel = function () {
+                            if (this.activePanel === 0 /* General */)
+                                this.refreshPropsDiag();
+                        };
+                        ItemProps.prototype.getPanelIndex = function (ui) {
+                            if (ui.text() == "General")
+                                return 0 /* General */;
+                            if (ui.text() == "Physics")
+                                return 1 /* Physics */;
+                            if (ui.text() == "Material")
+                                return 2 /* Material */;
+                            if (ui.text() == "Lights")
+                                return 3 /* Lights */;
+                            if (ui.text() == "Animations")
+                                return 4 /* Animations */;
+                        };
+                        ItemProps.prototype.refreshPanel = function (panelIndex) {
+                            if (panelIndex === 0 /* General */) {
+                                this.updateGeneral();
+                            }
+                            else if (panelIndex === 3 /* Lights */) {
+                                this.updateLight();
+                            }
+                            else if (panelIndex === 4 /* Animations */) {
+                                this.updateAnimations();
+                            }
+                            else if (panelIndex === 1 /* Physics */) {
+                                this.updatePhysics();
+                            }
+                            else if (panelIndex === 2 /* Material */) {
+                                this.updateMat();
+                            }
+                            //refresh sNaDialog if open
+                            if (this.sNaDialog.dialog("isOpen") === true) {
+                                this.sNaDialog.dialog("close");
+                                this._vishvaGUI.show_sNaDiag();
+                            }
+                        };
+                        ItemProps.prototype.initAnimUI = function () {
+                            var _this = this;
+                            this.animUIInitialized = true;
+                            var animSkelChange = document.getElementById("animSkelChange");
+                            var animSkelClone = document.getElementById("animSkelClone");
+                            var animSkelView = document.getElementById("animSkelView");
+                            var animRest = document.getElementById("animRest");
+                            var animRangeName = document.getElementById("animRangeName");
+                            var animRangeStart = document.getElementById("animRangeStart");
+                            var animRangeEnd = document.getElementById("animRangeEnd");
+                            var animRangeMake = document.getElementById("animRangeMake");
+                            this.animSkelList = document.getElementById("animSkelList");
+                            //change the mesh skeleton
+                            animSkelChange.onclick = function (e) {
+                                if (_this.vishva.changeSkeleton(_this.animSkelList.selectedOptions[0].value))
+                                    _this.updateAnimations();
+                                else
+                                    gui.DialogMgr.showAlertDiag("Error: unable to switch");
+                            };
+                            //clone the selected skeleton and swicth to it
+                            animSkelClone.onclick = function (e) {
+                                if (_this.vishva.cloneChangeSkeleton(_this.animSkelList.selectedOptions[0].value))
+                                    _this.updateAnimations();
+                                else
+                                    gui.DialogMgr.showAlertDiag("Error: unable to clone and switch");
+                            };
+                            //enable/disable skeleton view
+                            animSkelView.onclick = function (e) {
+                                _this.vishva.toggleSkelView();
+                            };
+                            //show rest pose
+                            animRest.onclick = function (e) {
+                                _this.vishva.animRest();
+                            };
+                            //create
+                            animRangeMake.onclick = function (e) {
+                                var name = animRangeName.value;
+                                var ars = parseInt(animRangeStart.value);
+                                if (isNaN(ars)) {
+                                    gui.DialogMgr.showAlertDiag("from frame is not a number");
+                                }
+                                var are = parseInt(animRangeEnd.value);
+                                if (isNaN(are)) {
+                                    gui.DialogMgr.showAlertDiag("to frame is not a number");
+                                }
+                                _this.vishva.createAnimRange(name, ars, are);
+                                _this.refreshAnimSelect();
+                            };
+                            //select
+                            this.animSelect = document.getElementById("animList");
+                            this.animSelect.onchange = function (e) {
+                                var animName = _this.animSelect.value;
+                                if (animName != null) {
+                                    var range = _this.skel.getAnimationRange(animName);
+                                    document.getElementById("animFrom").innerText = new Number(range.from).toString();
+                                    document.getElementById("animTo").innerText = new Number(range.to).toString();
+                                }
+                                return true;
+                            };
+                            //play
+                            this.animRate = document.getElementById("animRate");
+                            this.animLoop = document.getElementById("animLoop");
+                            document.getElementById("playAnim").onclick = function (e) {
+                                if (_this.skel == null)
+                                    return true;
+                                var animName = _this.animSelect.value;
+                                var rate = _this.animRate.value;
+                                if (animName != null) {
+                                    _this.vishva.playAnimation(animName, rate, _this.animLoop.checked);
+                                }
+                                return true;
+                            };
+                            document.getElementById("stopAnim").onclick = function (e) {
+                                if (_this.skel == null)
+                                    return true;
+                                _this.vishva.stopAnimation();
+                                return true;
+                            };
+                        };
+                        //        private createAnimDiag() {
+                        //            this.initAnimUI();
+                        //            this.meshAnimDiag = $("#meshAnimDiag");
+                        //            var dos: DialogOptions = {};
+                        //            dos.autoOpen = false;
+                        //            dos.modal = false;
+                        //            dos.resizable = false;
+                        //            dos.width = "auto";
+                        //            dos.height = (<any>"auto");
+                        //            dos.closeOnEscape = false;
+                        //            dos.closeText = "";
+                        //            dos.close = (e, ui) => {
+                        //                this.vishva.switchDisabled = false;
+                        //            };
+                        //            this.meshAnimDiag.dialog(dos);
+                        //        }
+                        ItemProps.prototype.updateAnimations = function () {
+                            //this.vishva.switchDisabled = true;
+                            if (!this.animUIInitialized)
+                                this.initAnimUI();
+                            this.skel = this.vishva.getSkeleton();
+                            var skelName;
+                            if (this.skel == null) {
+                                skelName = "NO SKELETON";
+                            }
+                            else {
+                                skelName = this.skel.name.trim();
+                                if (skelName === "")
+                                    skelName = "NO NAME";
+                                skelName = skelName + " (" + this.skel.id + ")";
+                            }
+                            document.getElementById("skelName").innerText = skelName;
+                            this.refreshAnimSelect();
+                            this.refreshAnimSkelList();
+                        };
+                        /**
+                         * refresh the list of animation ranges
+                         */
+                        ItemProps.prototype.refreshAnimSelect = function () {
+                            var childs = this.animSelect.children;
+                            var l = (childs.length | 0);
+                            for (var i = l - 1; i >= 0; i--) {
+                                childs[i].remove();
+                            }
+                            var range = this.vishva.getAnimationRanges();
+                            if (range != null) {
+                                var animOpt;
+                                for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
+                                    var ar = range_1[_i];
+                                    animOpt = document.createElement("option");
+                                    animOpt.value = ar.name;
+                                    animOpt.innerText = ar.name;
+                                    this.animSelect.appendChild(animOpt);
+                                }
+                                if (range[0] != null) {
+                                    document.getElementById("animFrom").innerText = new Number(range[0].from).toString();
+                                    document.getElementById("animTo").innerText = new Number(range[0].to).toString();
+                                }
+                                else {
+                                    document.getElementById("animFrom").innerText = "";
+                                    document.getElementById("animTo").innerText = "";
+                                }
+                            }
+                            else {
+                                document.getElementById("animFrom").innerText = "";
+                                document.getElementById("animTo").innerText = "";
+                            }
+                        };
+                        /**
+                         * refresh list of skeletons shown in animation tab
+                         */
+                        ItemProps.prototype.refreshAnimSkelList = function () {
+                            var childs = this.animSkelList.children;
+                            var l = (childs.length | 0);
+                            for (var i = l - 1; i >= 0; i--) {
+                                childs[i].remove();
+                            }
+                            var skels = this.vishva.getSkeltons();
+                            var opt;
+                            //NOTE:skel id is not unique
+                            for (var _i = 0, skels_1 = skels; _i < skels_1.length; _i++) {
+                                var skel = skels_1[_i];
+                                opt = document.createElement("option");
+                                opt.value = skel.id + "-" + skel.name;
+                                opt.innerText = skel.name + " (" + skel.id + ")";
+                                this.animSkelList.appendChild(opt);
+                            }
+                        };
+                        ItemProps.prototype.toString = function (d) {
+                            return new Number(d).toFixed(2).toString();
+                        };
+                        ItemProps.prototype.initGeneral = function () {
+                            var _this = this;
+                            //name
+                            this.genName = document.getElementById("genName");
+                            this.genName.onchange = function () {
+                                _this.vishva.setName(_this.genName.value);
+                            };
+                            //space
+                            this.genSpace = document.getElementById("genSpace");
+                            this.genSpace.onchange = function () {
+                                var err = _this.vishva.setSpace(_this.genSpace.value);
+                                if (err !== null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                    _this.genSpace.value = _this.vishva.getSpace();
+                                }
+                            };
+                            //transforms
+                            if (this.transRefresh === undefined) {
+                                this.transRefresh = document.getElementById("transRefresh");
+                                this.transRefresh.onclick = function () {
+                                    _this.updateTransform();
+                                    return false;
+                                };
+                            }
+                            if (this.transBake === undefined) {
+                                this.transBake = document.getElementById("transBake");
+                                this.transBake.onclick = function () {
+                                    _this.vishva.bakeTransforms();
+                                    _this.updateTransform();
+                                    return false;
+                                };
+                            }
+                            //edit controls
+                            this.genOperTrans = document.getElementById("operTrans");
+                            this.genOperRot = document.getElementById("operRot");
+                            this.genOperScale = document.getElementById("operScale");
+                            this.genOperFocus = document.getElementById("operFocus");
+                            this.genOperTrans.onclick = function () {
+                                _this.vishva.setTransOn();
+                            };
+                            this.genOperRot.onclick = function () {
+                                _this.vishva.setRotOn();
+                            };
+                            this.genOperScale.onclick = function () {
+                                _this.vishva.setScaleOn();
+                                if (!_this.vishva.isSpaceLocal()) {
+                                    gui.DialogMgr.showAlertDiag("note that scaling doesnot work with global axis");
+                                }
+                            };
+                            this.genOperFocus.onclick = function () {
+                                _this.vishva.setFocusOnMesh();
+                            };
+                            //Translation
+                            this.genLocX = document.getElementById("loc.x");
+                            this.genLocX.onchange = function () {
+                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
+                            };
+                            this.genLocY = document.getElementById("loc.y");
+                            this.genLocY.onchange = function () {
+                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
+                            };
+                            this.genLocZ = document.getElementById("loc.z");
+                            this.genLocZ.onchange = function () {
+                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
+                            };
+                            //Rotation
+                            this.genRotX = document.getElementById("rot.x");
+                            this.genRotX.onchange = function () {
+                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
+                            };
+                            this.genRotY = document.getElementById("rot.y");
+                            this.genRotY.onchange = function () {
+                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
+                            };
+                            this.genRotZ = document.getElementById("rot.z");
+                            this.genRotZ.onchange = function () {
+                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
+                            };
+                            //Scale
+                            this.genScaleX = document.getElementById("scl.x");
+                            this.genScaleX.onchange = function () {
+                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
+                            };
+                            this.genScaleY = document.getElementById("scl.y");
+                            this.genScaleY.onchange = function () {
+                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
+                            };
+                            this.genScaleZ = document.getElementById("scl.z");
+                            this.genScaleZ.onchange = function () {
+                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
+                            };
+                            //Snap CheckBox
+                            this.genSnapTrans = document.getElementById("snapTrans");
+                            this.genSnapTrans.onchange = function () {
+                                var err = _this.vishva.snapTrans(_this.genSnapTrans.checked);
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                    _this.genSnapTrans.checked = false;
+                                }
+                            };
+                            this.genSnapRot = document.getElementById("snapRot");
+                            this.genSnapRot.onchange = function () {
+                                var err = _this.vishva.snapRot(_this.genSnapRot.checked);
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                    _this.genSnapRot.checked = false;
+                                }
+                            };
+                            this.genSnapScale = document.getElementById("snapScale");
+                            this.genSnapScale.onchange = function () {
+                                var err = _this.vishva.snapScale(_this.genSnapScale.checked);
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                    _this.genSnapScale.checked = false;
+                                }
+                            };
+                            //Snap Values
+                            this.genSnapTransValue = document.getElementById("snapTransValue");
+                            this.genSnapTransValue.onchange = function () {
+                                _this.vishva.setSnapTransValue(Number(_this.genSnapTransValue.value));
+                            };
+                            this.genSnapRotValue = document.getElementById("snapRotValue");
+                            this.genSnapRotValue.onchange = function () {
+                                _this.vishva.setSnapRotValue(Number(_this.genSnapRotValue.value));
+                            };
+                            this.genSnapScaleValue = document.getElementById("snapScaleValue");
+                            this.genSnapScaleValue.onchange = function () {
+                                _this.vishva.setSnapScaleValue(Number(_this.genSnapScaleValue.value));
+                            };
+                            //
+                            this.genDisable = document.getElementById("genDisable");
+                            this.genDisable.onchange = function () {
+                                _this.vishva.disableIt(_this.genDisable.checked);
+                            };
+                            this.genColl = document.getElementById("genColl");
+                            this.genColl.onchange = function () {
+                                _this.vishva.enableCollision(_this.genColl.checked);
+                            };
+                            this.genVisi = document.getElementById("genVisi");
+                            this.genVisi.onchange = function () {
+                                _this.vishva.makeVisibile(_this.genVisi.checked);
+                            };
+                            var undo = document.getElementById("undo");
+                            var redo = document.getElementById("redo");
+                            var parentMesh = document.getElementById("parentMesh");
+                            var removeParent = document.getElementById("removeParent");
+                            var removeChildren = document.getElementById("removeChildren");
+                            var cloneMesh = document.getElementById("cloneMesh");
+                            var instMesh = document.getElementById("instMesh");
+                            var mergeMesh = document.getElementById("mergeMesh");
+                            var subMesh = document.getElementById("subMesh");
+                            var interMesh = document.getElementById("interMesh");
+                            var downAsset = document.getElementById("downMesh");
+                            var delMesh = document.getElementById("delMesh");
+                            var swAv = document.getElementById("swAv");
+                            var swGnd = document.getElementById("swGnd");
+                            var sNa = document.getElementById("sNa");
+                            //            var addWater: HTMLElement = document.getElementById("addWater");
+                            undo.onclick = function (e) {
+                                _this.vishva.undo();
+                                return false;
+                            };
+                            redo.onclick = function (e) {
+                                _this.vishva.redo();
+                                return false;
+                            };
+                            parentMesh.onclick = function (e) {
+                                var err = _this.vishva.makeParent();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            removeParent.onclick = function (e) {
+                                var err = _this.vishva.removeParent();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            removeChildren.onclick = function (e) {
+                                var err = _this.vishva.removeChildren();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            cloneMesh.onclick = function (e) {
+                                var err = _this.vishva.clone_mesh();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            instMesh.onclick = function (e) {
+                                var err = _this.vishva.instance_mesh();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            mergeMesh.onclick = function (e) {
+                                var err = _this.vishva.mergeMeshes();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            subMesh.onclick = function (e) {
+                                var err = _this.vishva.csgOperation("subtract");
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            interMesh.onclick = function (e) {
+                                var err = _this.vishva.csgOperation("intersect");
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            downAsset.onclick = function (e) {
+                                var downloadURL = _this.vishva.saveAsset();
+                                if (downloadURL == null) {
+                                    gui.DialogMgr.showAlertDiag("No Mesh Selected");
+                                    return true;
+                                }
+                                _this._vishvaGUI.downloadLink.href = downloadURL;
+                                var env = $("#saveDiv");
+                                env.dialog("open");
+                                return false;
+                            };
+                            delMesh.onclick = function (e) {
+                                var err = _this.vishva.delete_mesh();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return false;
+                            };
+                            swAv.onclick = function (e) {
+                                var err = _this.vishva.switchAvatar();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return true;
+                            };
+                            swGnd.onclick = function (e) {
+                                var err = _this.vishva.switchGround();
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                }
+                                return true;
+                            };
+                            sNa.onclick = function (e) {
+                                _this._vishvaGUI.show_sNaDiag();
+                                return true;
+                            };
+                            //            addWater.onclick = (e) => {
+                            //                var err: string = this.vishva.addWater()
+                            //                 if (err != null) {
+                            //                    DialogMgr.showAlertDiag(err);
+                            //                }
+                            //                return true;
+                            //            };
+                        };
+                        ItemProps.prototype.updateGeneral = function () {
+                            if (this.genName === undefined)
+                                this.initGeneral();
+                            this.genName.value = this.vishva.getName();
+                            this.genSpace.value = this.vishva.getSpace();
+                            this.updateTransform();
+                            this.genDisable.checked = this.vishva.isDisabled();
+                            this.genColl.checked = this.vishva.isCollideable();
+                            this.genVisi.checked = this.vishva.isVisible();
+                        };
+                        ItemProps.prototype.updateTransform = function () {
+                            var loc = this.vishva.getLocation();
+                            var rot = this.vishva.getRotation();
+                            var scl = this.vishva.getScale();
+                            document.getElementById("loc.x").value = this.toString(loc.x);
+                            document.getElementById("loc.y").value = this.toString(loc.y);
+                            document.getElementById("loc.z").value = this.toString(loc.z);
+                            document.getElementById("rot.x").value = this.toString(rot.x);
+                            document.getElementById("rot.y").value = this.toString(rot.y);
+                            document.getElementById("rot.z").value = this.toString(rot.z);
+                            document.getElementById("scl.x").value = this.toString(scl.x);
+                            document.getElementById("scl.y").value = this.toString(scl.y);
+                            document.getElementById("scl.z").value = this.toString(scl.z);
+                        };
+                        ItemProps.prototype.initLightUI = function () {
+                            var _this = this;
+                            this.lightAtt = document.getElementById("lightAtt");
+                            this.lightType = document.getElementById("lightType");
+                            this.lightDiff = new gui.ColorPickerDiag("diffuse light", "lightDiff", "#ffffff", gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                _this.applyLight();
+                            });
+                            this.lightSpec = new gui.ColorPickerDiag("specular light", "lightSpec", "#ffffff", gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                _this.applyLight();
+                            });
+                            this.lightInten = document.getElementById("lightInten");
+                            this.lightRange = document.getElementById("lightRange");
+                            this.lightRadius = document.getElementById("lightAtt");
+                            this.lightAngle = document.getElementById("lightAngle");
+                            this.lightExp = document.getElementById("lightExp");
+                            this.lightGndClr = document.getElementById("lightGndClr");
+                            this.lightDirX = document.getElementById("lightDirX");
+                            this.lightDirY = document.getElementById("lightDirY");
+                            this.lightDirZ = document.getElementById("lightDirZ");
+                            this.lightAtt.onchange = function () {
+                                if (!_this.lightAtt.checked) {
+                                    _this.vishva.detachLight();
+                                }
+                                else
+                                    _this.applyLight();
+                            };
+                            this.lightType.onchange = function () { return _this.applyLight(); };
+                            this.lightInten.onchange = function () { return _this.applyLight(); };
+                            this.lightRange.onchange = function () { return _this.applyLight(); };
+                            this.lightAngle.onchange = function () { return _this.applyLight(); };
+                            this.lightExp.onchange = function () { return _this.applyLight(); };
+                            this.lightDirX.onchange = function () { return _this.applyLight(); };
+                            this.lightDirY.onchange = function () { return _this.applyLight(); };
+                            this.lightDirZ.onchange = function () { return _this.applyLight(); };
+                        };
+                        ItemProps.prototype.updateLight = function () {
+                            if (this.lightAtt === undefined)
+                                this.initLightUI();
+                            var lightParm = this.vishva.getAttachedLight();
+                            if (lightParm === null) {
+                                this.lightAtt.checked = false;
+                                lightParm = new vishva_2.LightParm();
+                            }
+                            else {
+                                this.lightAtt.checked = true;
+                            }
+                            this.lightType.value = lightParm.type;
+                            this.lightDiff.setColor(lightParm.diffuse.toHexString());
+                            this.lightSpec.setColor(lightParm.specular.toHexString());
+                            this.lightInten.value = Number(lightParm.intensity).toString();
+                            this.lightRange.value = Number(lightParm.range).toString();
+                            this.lightRadius.value = Number(lightParm.radius).toString();
+                            //this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
+                            this.lightAngle.value = Number(lightParm.angle).toString();
+                            this.lightExp.value = Number(lightParm.exponent).toString();
+                            this.lightGndClr.value = lightParm.gndClr.toHexString();
+                            this.lightDirX.value = Number(lightParm.direction.x).toString();
+                            this.lightDirY.value = Number(lightParm.direction.y).toString();
+                            this.lightDirZ.value = Number(lightParm.direction.z).toString();
+                        };
+                        ItemProps.prototype.applyLight = function () {
+                            //            if (!this.lightAtt.checked) {
+                            //                this.vishva.detachLight();
+                            //                return;
+                            //            }
+                            if (!this.lightAtt.checked)
+                                return;
+                            var lightParm = new vishva_2.LightParm();
+                            lightParm.type = this.lightType.value;
+                            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.getColor());
+                            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.getColor());
+                            lightParm.intensity = parseFloat(this.lightInten.value);
+                            lightParm.range = parseFloat(this.lightRange.value);
+                            lightParm.radius = parseFloat(this.lightRadius.value);
+                            lightParm.angle = parseFloat(this.lightAngle.value);
+                            lightParm.direction.x = parseFloat(this.lightDirX.value);
+                            lightParm.direction.y = parseFloat(this.lightDirY.value);
+                            lightParm.direction.z = parseFloat(this.lightDirZ.value);
+                            lightParm.exponent = parseFloat(this.lightExp.value);
+                            lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
+                            this.vishva.attachAlight(lightParm);
+                        };
+                        ItemProps.prototype.initMatUI = function () {
+                            var _this = this;
+                            this.matName = document.getElementById("matName");
+                            this.matName.innerText = this.vishva.getMaterialName();
+                            this.matVisVal = document.getElementById("matVisVal");
+                            this.matVis = document.getElementById("matVis");
+                            this.matColType = document.getElementById("matColType");
+                            this.matColType.onchange = function () {
+                                var col = _this.vishva.getMeshColor(_this.matColType.value);
+                                _this.matColDiag.setColor(col);
+                            };
+                            this.matTextType = document.getElementById("matTextType");
+                            ;
+                            this.matColDiag = new gui.ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                var err = _this.vishva.setMeshColor(_this.matColType.value, hex);
+                                if (err !== null)
+                                    gui.DialogMgr.showAlertDiag(err);
+                            });
+                            this.matVisVal["value"] = "1.00";
+                            this.matVis.oninput = function () {
+                                _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
+                                _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
+                            };
+                            this.matTexture = document.getElementById("matTexture");
+                            this.matTexture.onclick = function () {
+                                console.log("checking texture");
+                                if (_this.textureDiag == null) {
+                                    _this.createTextureDiag();
+                                }
+                                _this.textureImg.src = _this.vishva.getMatTexture(_this.matTextType.value);
+                                console.log(_this.textureImg.src);
+                                _this.textureDiag.dialog("open");
+                            };
+                        };
+                        ItemProps.prototype.updateMat = function () {
+                            if (this.matVis == undefined)
+                                this.initMatUI();
+                            this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
+                            this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
+                            this.matColDiag.setColor(this.vishva.getMeshColor(this.matColType.value));
+                        };
+                        ItemProps.prototype.createTextureDiag = function () {
+                            var _this = this;
+                            this.textureDiag = $("#textureDiag");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                width: "auto",
+                                closeOnEscape: false,
+                                closeText: ""
+                            };
+                            this.textureDiag.dialog(dos);
+                            this.textureDiag["jpo"] = gui.DialogMgr.centerBottom;
+                            this._vishvaGUI.dialogs.push(this.textureDiag);
+                            this.textureImg = document.getElementById("textImg");
+                            var chgTexture = document.getElementById("changeTexture");
+                            chgTexture.onclick = function () {
+                                _this.vishva.setMatTexture(_this.matTextType.value, textList.value);
+                            };
+                            var textList = document.getElementById("textureList");
+                            var textures = this.vishva.getTextures();
+                            var opt;
+                            for (var _i = 0, textures_1 = textures; _i < textures_1.length; _i++) {
+                                var text = textures_1[_i];
+                                opt = document.createElement("option");
+                                opt.value = text;
+                                opt.innerText = text;
+                                textList.appendChild(opt);
+                            }
+                        };
+                        ItemProps.prototype.initPhyUI = function () {
+                            var _this = this;
+                            this.phyEna = document.getElementById("phyEna");
+                            this.phyType = document.getElementById("phyType");
+                            this.phyMass = document.getElementById("phyMass");
+                            this.phyRes = document.getElementById("phyRes");
+                            this.phyResVal = document.getElementById("phyResVal");
+                            this.phyResVal["value"] = "0.0";
+                            this.phyRes.oninput = function () {
+                                _this.phyResVal["value"] = _this.formatValue(_this.phyRes.value);
+                            };
+                            this.phyFric = document.getElementById("phyFric");
+                            this.phyFricVal = document.getElementById("phyFricVal");
+                            this.phyFricVal["value"] = "0.0";
+                            this.phyFric.oninput = function () {
+                                _this.phyFricVal["value"] = _this.formatValue(_this.phyFric.value);
+                            };
+                            var phyApply = document.getElementById("phyApply");
+                            var phyTest = document.getElementById("phyTest");
+                            var phyReset = document.getElementById("phyReset");
+                            phyApply.onclick = function (ev) {
+                                _this.applyPhysics();
+                                gui.DialogMgr.showAlertDiag("physics applied");
+                                return false;
+                            };
+                            phyTest.onclick = function (ev) {
+                                _this.testPhysics();
+                                return false;
+                            };
+                            phyReset.onclick = function (ev) {
+                                _this.resetPhysics();
+                                return false;
+                            };
+                        };
+                        ItemProps.prototype.formatValue = function (val) {
+                            if (val === "1")
+                                return "1.0";
+                            if (val === "0")
+                                return "0.0";
+                            return val;
+                        };
+                        ItemProps.prototype.updatePhysics = function () {
+                            if (this.phyEna === undefined)
+                                this.initPhyUI();
+                            var phyParms = this.vishva.getMeshPickedPhyParms();
+                            if (phyParms !== null) {
+                                this.phyEna.setAttribute("checked", "true");
+                                this.phyType.value = Number(phyParms.type).toString();
+                                this.phyMass.value = Number(phyParms.mass).toString();
+                                this.phyRes.value = Number(phyParms.restitution).toString();
+                                this.phyResVal["value"] = this.formatValue(this.phyRes.value);
+                                this.phyFric.value = Number(phyParms.friction).toString();
+                                this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
+                            }
+                            else {
+                                this.phyEna.checked = false;
+                                //by default lets set the type to "box"
+                                this.phyType.value = "2";
+                                this.phyMass.value = "1";
+                                this.phyRes.value = "0";
+                                this.phyResVal["value"] = "0.0";
+                                this.phyFric.value = "0";
+                                this.phyFricVal["value"] = "0.0";
+                            }
+                        };
+                        ItemProps.prototype.applyPhysics = function () {
+                            var phyParms;
+                            if (this.phyEna.checked) {
+                                phyParms = new vishva_2.PhysicsParm();
+                                phyParms.type = parseInt(this.phyType.value);
+                                phyParms.mass = parseFloat(this.phyMass.value);
+                                phyParms.restitution = parseFloat(this.phyRes.value);
+                                phyParms.friction = parseFloat(this.phyFric.value);
+                            }
+                            else {
+                                phyParms = null;
+                            }
+                            this.vishva.setMeshPickedPhyParms(phyParms);
+                        };
+                        ItemProps.prototype.testPhysics = function () {
+                            var phyParms;
+                            phyParms = new vishva_2.PhysicsParm();
+                            phyParms.type = parseInt(this.phyType.value);
+                            phyParms.mass = parseFloat(this.phyMass.value);
+                            phyParms.restitution = parseFloat(this.phyRes.value);
+                            phyParms.friction = parseFloat(this.phyFric.value);
+                            this.vishva.testPhysics(phyParms);
+                        };
+                        ItemProps.prototype.resetPhysics = function () {
+                            this.vishva.resetPhysics();
+                            /* End of Mesh Properties              */
+                        };
+                        return ItemProps;
+                    }());
+                    gui.ItemProps = ItemProps;
+                })(gui = vishva_2.gui || (vishva_2.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_3) {
+                var gui;
+                (function (gui) {
+                    /*
+                     * provides a user interface which list all meshes in the scene
+                     */
+                    var Items = (function () {
+                        function Items(vishva) {
+                            var _this = this;
+                            this._itemTab = "---- ";
+                            this._prevCell = null;
+                            console.log("sceneitems");
+                            this._vishva = vishva;
+                            var itemsRefresh = document.getElementById("itemsRefresh");
+                            itemsRefresh.onclick = function () {
+                                _this._itemsDiag.close();
+                                _this._updateItemsTable();
+                                _this._itemsDiag.open();
+                            };
+                            this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.rightTop);
+                        }
+                        Items.prototype.toggle = function () {
+                            if (!this._itemsDiag.isOpen()) {
+                                this._updateItemsTable();
+                                this._itemsDiag.open();
+                            }
+                            else {
+                                this._itemsDiag.close();
+                            }
+                        };
+                        Items.prototype._onItemClick = function (e) {
+                            var cell = e.target;
+                            if (!(cell instanceof HTMLTableCellElement))
+                                return;
+                            if (cell == this._prevCell)
+                                return;
+                            this._vishva.selectMesh(cell.id);
+                            cell.setAttribute("style", "text-decoration: underline");
+                            if (this._prevCell != null) {
+                                this._prevCell.setAttribute("style", "text-decoration: none");
+                            }
+                            this._prevCell = cell;
+                        };
+                        /**
+                         * can be called when a user unselects a mesh by pressing esc
+                         */
+                        Items.prototype.clearPrevItem = function () {
+                            if (this._prevCell != null) {
+                                this._prevCell.setAttribute("style", "text-decoration: none");
+                                this._prevCell = null;
+                            }
+                        };
+                        Items.prototype._updateItemsTable = function () {
+                            var _this = this;
+                            var tbl = document.getElementById("itemsTable");
+                            tbl.onclick = function (e) { return _this._onItemClick(e); };
+                            var l = tbl.rows.length;
+                            for (var i = l - 1; i >= 0; i--) {
+                                tbl.deleteRow(i);
+                            }
+                            var items = this._vishva.getMeshList();
+                            var meshChildMap = this._getMeshChildMap(items);
+                            var childs;
+                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
+                                var item = items_1[_i];
+                                if (item.parent == null) {
+                                    var row = tbl.insertRow();
+                                    var cell = row.insertCell();
+                                    cell.innerText = item.name;
+                                    cell.id = Number(item.uniqueId).toString();
+                                    childs = meshChildMap[item.uniqueId];
+                                    if (childs != null) {
+                                        this._addChildren(childs, tbl, meshChildMap, this._itemTab);
+                                    }
+                                }
+                            }
+                        };
+                        Items.prototype._addChildren = function (children, tbl, meshChildMap, tab) {
+                            for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
+                                var child = children_1[_i];
+                                var row = tbl.insertRow();
+                                var cell = row.insertCell();
+                                cell.innerText = tab + child.name;
+                                cell.id = Number(child.uniqueId).toString();
+                                var childs = meshChildMap[child.uniqueId];
+                                if (childs != null) {
+                                    this._addChildren(childs, tbl, meshChildMap, tab + this._itemTab);
+                                }
+                            }
+                        };
+                        Items.prototype._getMeshChildMap = function (meshes) {
+                            var meshChildMap = {};
+                            for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
+                                var mesh = meshes_1[_i];
+                                if (mesh.parent != null) {
+                                    var childs = meshChildMap[mesh.parent.uniqueId];
+                                    if (childs == null) {
+                                        childs = new Array();
+                                        meshChildMap[mesh.parent.uniqueId] = childs;
+                                    }
+                                    childs.push(mesh);
+                                }
+                            }
+                            return meshChildMap;
+                        };
+                        return Items;
+                    }());
+                    gui.Items = Items;
+                })(gui = vishva_3.gui || (vishva_3.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_4) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * provide ui to manage world/user settings/preferences
+                     */
+                    var Settings = (function () {
+                        //TODO pass property dialog instead of VishvaGUI
+                        function Settings(vishva, vishvaGUI) {
+                            var _this = this;
+                            this.enableToolTips = true;
+                            this._vishva = vishva;
+                            this._vishvaGUI = vishvaGUI;
+                            this._settingDiag = new gui.VDialog("settingDiag", "Settings", gui.DialogMgr.rightCenter, "", "", 350);
+                            this._camCol = $("#camCol");
+                            this._autoEditMenu = $("#autoEditMenu");
+                            this._showToolTips = $("#showToolTips");
+                            this._showInvis = $("#showInvis");
+                            this._showDisa = $("#showDisa");
+                            this._snapper = $("#snapper");
+                            var dboSave = {};
+                            dboSave.text = "save";
+                            dboSave.click = function (e) {
+                                _this._vishva.enableCameraCollision(_this._camCol.prop("checked"));
+                                _this._vishva.enableAutoEditMenu(_this._autoEditMenu.prop("checked"));
+                                _this.enableToolTips = _this._showToolTips.prop("checked");
+                                if (_this._showInvis.prop("checked")) {
+                                    _this._vishva.showAllInvisibles();
+                                }
+                                else {
+                                    _this._vishva.hideAllInvisibles();
+                                }
+                                if (_this._showDisa.prop("checked")) {
+                                    _this._vishva.showAllDisabled();
+                                }
+                                else {
+                                    _this._vishva.hideAllDisabled();
+                                }
+                                var err = _this._vishva.snapper(_this._snapper.prop("checked"));
+                                if (err != null) {
+                                    gui.DialogMgr.showAlertDiag(err);
+                                    return false;
+                                }
+                                _this._settingDiag.close();
+                                //DialogMgr.showAlertDiag("Saved");
+                                //refresh the property dialog in case something changed here
+                                //TODO pass props dialog 
+                                _this._vishvaGUI.refreshPropsDiag();
+                                return true;
+                            };
+                            var dboCancel = {};
+                            dboCancel.text = "Cancel";
+                            dboCancel.click = function (e) {
+                                _this._settingDiag.close();
+                                return true;
+                            };
+                            var dbos = [dboSave, dboCancel];
+                            this._settingDiag.setButtons(dbos);
+                        }
+                        Settings.prototype._updateSettings = function () {
+                            this._camCol.prop("checked", this._vishva.isCameraCollisionOn());
+                            this._autoEditMenu.prop("checked", this._vishva.isAutoEditMenuOn());
+                            this._showToolTips.prop("checked", this.enableToolTips);
+                        };
+                        Settings.prototype.toggle = function () {
+                            if (!this._settingDiag.isOpen()) {
+                                this._updateSettings();
+                                this._settingDiag.open();
+                            }
+                            else {
+                                this._settingDiag.close();
+                            }
+                        };
+                        return Settings;
+                    }());
+                    gui.Settings = Settings;
+                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_5) {
+                var gui;
+                (function (gui) {
+                    var VishvaGUI = (function () {
+                        function VishvaGUI(vishva) {
+                            var _this = this;
+                            this.local = true;
+                            this.menuBarOn = true;
+                            this.STATE_IND = "state";
+                            /**
+                             * this array will be used store all dialogs whose position needs to be
+                             * reset on window resize
+                             */
+                            this.dialogs = new Array();
+                            /**
+                             * End of Mesh Properties section
+                             */
                             /**
                              * Main Navigation Menu Section
                              */
@@ -273,7 +1423,7 @@ var org;
                             this.setSettings();
                             $(document).tooltip({
                                 open: function (event, ui) {
-                                    if (!_this.enableToolTips) {
+                                    if (!_this._settingDiag.enableToolTips) {
                                         ui.tooltip.stop().remove();
                                     }
                                 }
@@ -290,8 +1440,7 @@ var org;
                             this.createNavMenu();
                             this.createDownloadDiag();
                             //this.createUploadDiag();
-                            this.createHelpDiag();
-                            this.createAlertDiag();
+                            gui.DialogMgr.createAlertDiag();
                             this.create_sNaDiag();
                             this.createEditSensDiag();
                             this.createEditActDiag();
@@ -412,8 +1561,8 @@ var org;
                             }
                             var f = function (e) { return _this.onAssetImgClick(e); };
                             var row = tbl.insertRow();
-                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-                                var item = items_1[_i];
+                            for (var _i = 0, items_2 = items; _i < items_2.length; _i++) {
+                                var item = items_2[_i];
                                 var img = document.createElement("img");
                                 img.id = item;
                                 //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
@@ -426,8 +1575,8 @@ var org;
                                 cell.appendChild(img);
                             }
                             var row2 = tbl.insertRow();
-                            for (var _a = 0, items_2 = items; _a < items_2.length; _a++) {
-                                var item = items_2[_a];
+                            for (var _a = 0, items_3 = items; _a < items_3.length; _a++) {
+                                var item = items_3[_a];
                                 var cell_1 = row2.insertCell();
                                 cell_1.innerText = item;
                             }
@@ -447,201 +1596,6 @@ var org;
                                 this.vishva.loadAsset(i.className, i.id);
                             }
                             return true;
-                        };
-                        VishvaGUI.prototype._createItemsDiag = function () {
-                            var _this = this;
-                            var itemsRefresh = document.getElementById("itemsRefresh");
-                            itemsRefresh.onclick = function () {
-                                _this._itemsDiag.close();
-                                _this._updateItemsTable();
-                                _this._itemsDiag.open();
-                            };
-                            this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.rightTop);
-                        };
-                        VishvaGUI.prototype._onItemClick = function (e) {
-                            var cell = e.target;
-                            if (!(cell instanceof HTMLTableCellElement))
-                                return;
-                            if (cell == this._prevCell)
-                                return;
-                            this.vishva.selectMesh(cell.id);
-                            cell.setAttribute("style", "text-decoration: underline");
-                            if (this._prevCell != null) {
-                                this._prevCell.setAttribute("style", "text-decoration: none");
-                            }
-                            this._prevCell = cell;
-                        };
-                        /**
-                         * can be called when a user unselects a mesh by pressing esc
-                         */
-                        VishvaGUI.prototype._clearPrevItem = function () {
-                            if (this._prevCell != null) {
-                                this._prevCell.setAttribute("style", "text-decoration: none");
-                                this._prevCell = null;
-                            }
-                        };
-                        VishvaGUI.prototype._updateItemsTable = function () {
-                            var _this = this;
-                            var tbl = document.getElementById("itemsTable");
-                            tbl.onclick = function (e) { return _this._onItemClick(e); };
-                            var l = tbl.rows.length;
-                            for (var i = l - 1; i >= 0; i--) {
-                                tbl.deleteRow(i);
-                            }
-                            var items = this.vishva.getMeshList();
-                            var meshChildMap = this._getMeshChildMap(items);
-                            var childs;
-                            for (var _i = 0, items_3 = items; _i < items_3.length; _i++) {
-                                var item = items_3[_i];
-                                if (item.parent == null) {
-                                    var row = tbl.insertRow();
-                                    var cell = row.insertCell();
-                                    cell.innerText = item.name;
-                                    cell.id = Number(item.uniqueId).toString();
-                                    childs = meshChildMap[item.uniqueId];
-                                    if (childs != null) {
-                                        this._addChildren(childs, tbl, meshChildMap, this._itemTab);
-                                    }
-                                }
-                            }
-                        };
-                        VishvaGUI.prototype._addChildren = function (children, tbl, meshChildMap, tab) {
-                            for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
-                                var child = children_1[_i];
-                                var row = tbl.insertRow();
-                                var cell = row.insertCell();
-                                cell.innerText = tab + child.name;
-                                cell.id = Number(child.uniqueId).toString();
-                                var childs = meshChildMap[child.uniqueId];
-                                if (childs != null) {
-                                    this._addChildren(childs, tbl, meshChildMap, tab + this._itemTab);
-                                }
-                            }
-                        };
-                        VishvaGUI.prototype._getMeshChildMap = function (meshes) {
-                            var meshChildMap = {};
-                            for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
-                                var mesh = meshes_1[_i];
-                                if (mesh.parent != null) {
-                                    var childs = meshChildMap[mesh.parent.uniqueId];
-                                    if (childs == null) {
-                                        childs = new Array();
-                                        meshChildMap[mesh.parent.uniqueId] = childs;
-                                    }
-                                    childs.push(mesh);
-                                }
-                            }
-                            return meshChildMap;
-                        };
-                        /*
-                         * Create Environment Dialog
-                         */
-                        VishvaGUI.prototype.createEnvDiag = function () {
-                            var _this = this;
-                            var sunPos = $("#sunPos");
-                            var light = $("#light");
-                            var shade = $("#shade");
-                            var fog = $("#fog");
-                            var fov = $("#fov");
-                            sunPos.slider(this.sliderOptions(0, 180, this.vishva.getSunPos()));
-                            light.slider(this.sliderOptions(0, 100, 100 * this.vishva.getLight()));
-                            shade.slider(this.sliderOptions(0, 100, 100 * this.vishva.getShade()));
-                            fog.slider(this.sliderOptions(0, 100, 100 * this.vishva.getFog()));
-                            var fogColDiag = new ColorPickerDiag("fog color", "fogCol", this.vishva.getFogColor(), this.centerBottom, function (hex, hsv, rgb) {
-                                _this.vishva.setFogColor(hex);
-                            });
-                            fov.slider(this.sliderOptions(0, 180, this.vishva.getFov()));
-                            var envSnow = document.getElementById("envSnow");
-                            envSnow.onclick = function (e) {
-                                _this.vishva.toggleSnow();
-                            };
-                            var envRain = document.getElementById("envRain");
-                            envRain.onclick = function (e) {
-                                //this.showAlertDiag("Sorry. To be implemented");
-                                _this.vishva.toggleRain();
-                            };
-                            var skyButton = document.getElementById("skyButton");
-                            skyButton.onclick = function (e) {
-                                var foo = document.getElementById("add-skyboxes");
-                                foo.click();
-                                return true;
-                            };
-                            var trnButton = document.getElementById("trnButton");
-                            trnButton.onclick = function (e) {
-                                _this.showAlertDiag("Sorry. To be implemneted soon");
-                                return true;
-                            };
-                            var ambColDiag = new ColorPickerDiag("ambient color", "ambCol", this.vishva.getAmbientColor(), this.centerBottom, function (hex, hsv, rgb) {
-                                _this.vishva.setAmbientColor(hex);
-                            });
-                            var trnColDiag = new ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), this.centerBottom, function (hex, hsv, rgb) {
-                                _this.vishva.setGroundColor(hex);
-                            });
-                            this.envDiag = new gui.VDialog("envDiv", "Environment", gui.DialogMgr.rightCenter, "", "", 350);
-                        };
-                        VishvaGUI.prototype.createSettingDiag = function () {
-                            var _this = this;
-                            this.settingDiag = $("#settingDiag");
-                            this.camCol = $("#camCol");
-                            this.autoEditMenu = $("#autoEditMenu");
-                            this.showToolTips = $("#showToolTips");
-                            this.showInvis = $("#showInvis");
-                            this.showDisa = $("#showDisa");
-                            this.snapper = $("#snapper");
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                position: this.rightCenter,
-                                minWidth: 350,
-                                height: "auto",
-                                closeText: "",
-                                closeOnEscape: false
-                            };
-                            this.settingDiag.dialog(dos);
-                            this.settingDiag["jpo"] = this.rightCenter;
-                            this.dialogs.push(this.settingDiag);
-                            var dboSave = {};
-                            dboSave.text = "save";
-                            dboSave.click = function (e) {
-                                _this.vishva.enableCameraCollision(_this.camCol.prop("checked"));
-                                _this.vishva.enableAutoEditMenu(_this.autoEditMenu.prop("checked"));
-                                _this.enableToolTips = _this.showToolTips.prop("checked");
-                                if (_this.showInvis.prop("checked")) {
-                                    _this.vishva.showAllInvisibles();
-                                }
-                                else {
-                                    _this.vishva.hideAllInvisibles();
-                                }
-                                if (_this.showDisa.prop("checked")) {
-                                    _this.vishva.showAllDisabled();
-                                }
-                                else {
-                                    _this.vishva.hideAllDisabled();
-                                }
-                                var err = _this.vishva.snapper(_this.snapper.prop("checked"));
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                    return false;
-                                }
-                                _this.settingDiag.dialog("close");
-                                //this.showAlertDiag("Saved");
-                                //refresh the property dialog in case something changed here
-                                _this.refreshPropsDiag();
-                                return true;
-                            };
-                            var dboCancel = {};
-                            dboCancel.text = "Cancel";
-                            dboCancel.click = function (e) {
-                                _this.settingDiag.dialog("close");
-                                return true;
-                            };
-                            var dbos = [dboSave, dboCancel];
-                            this.settingDiag.dialog("option", "buttons", dbos);
-                        };
-                        VishvaGUI.prototype.updateSettings = function () {
-                            this.camCol.prop("checked", this.vishva.isCameraCollisionOn());
-                            this.autoEditMenu.prop("checked", this.vishva.isAutoEditMenuOn());
-                            this.showToolTips.prop("checked", this.enableToolTips);
                         };
                         VishvaGUI.prototype.createDownloadDiag = function () {
                             this.downloadLink = document.getElementById("downloadLink");
@@ -675,46 +1629,6 @@ var org;
                             this.loadDialog = $("#loadDiv");
                             this.loadDialog.dialog();
                             this.loadDialog.dialog("close");
-                        };
-                        VishvaGUI.prototype.createHelpDiag = function () {
-                            this.helpDiag = $("#helpDiv");
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                width: 500,
-                                closeOnEscape: false,
-                                closeText: ""
-                            };
-                            this.helpDiag.dialog(dos);
-                        };
-                        VishvaGUI.prototype.createTextureDiag = function () {
-                            var _this = this;
-                            this.textureDiag = $("#textureDiag");
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                width: "auto",
-                                closeOnEscape: false,
-                                closeText: ""
-                            };
-                            this.textureDiag.dialog(dos);
-                            this.textureDiag["jpo"] = this.centerBottom;
-                            this.dialogs.push(this.textureDiag);
-                            this.textureImg = document.getElementById("textImg");
-                            var chgTexture = document.getElementById("changeTexture");
-                            chgTexture.onclick = function () {
-                                _this.vishva.setMatTexture(_this.matTextType.value, textList.value);
-                            };
-                            var textList = document.getElementById("textureList");
-                            var textures = this.vishva.getTextures();
-                            var opt;
-                            for (var _i = 0, textures_1 = textures; _i < textures_1.length; _i++) {
-                                var text = textures_1[_i];
-                                opt = document.createElement("option");
-                                opt.value = text;
-                                opt.innerText = text;
-                                textList.appendChild(opt);
-                            }
                         };
                         /*
                          * A dialog box to show the list of available sensors
@@ -771,12 +1685,12 @@ var org;
                             var _this = this;
                             var sens = this.vishva.getSensors();
                             if (sens == null) {
-                                this.showAlertDiag("no mesh selected");
+                                gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
                             }
                             var acts = this.vishva.getActuators();
                             if (acts == null) {
-                                this.showAlertDiag("no mesh selected");
+                                gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
                             }
                             //this.vishva.switchDisabled=true;
@@ -1067,864 +1981,39 @@ var org;
                          * Mesh properties section
                          */
                         VishvaGUI.prototype.showPropDiag = function () {
-                            if (this.propsDiag != null) {
-                                if (this.propsDiag.dialog("isOpen"))
-                                    return true;
-                            }
                             if (!this.vishva.anyMeshSelected()) {
-                                this.showAlertDiag("no mesh selected");
+                                gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
                             }
-                            if (this.propsDiag == null) {
-                                this.createPropsDiag();
+                            if (this._itemProps == null) {
+                                this._itemProps = new gui.ItemProps(this.vishva, this.sNaDialog, this);
                             }
-                            this.propsDiag.dialog("open");
+                            this._itemProps.open();
                             return true;
-                        };
-                        VishvaGUI.prototype.closePropDiag = function () {
-                            this.propsDiag.dialog("close");
-                        };
-                        VishvaGUI.prototype.createPropsDiag = function () {
-                            var _this = this;
-                            var propsAcc = $("#propsAcc");
-                            propsAcc.accordion({
-                                animate: 100,
-                                heightStyle: "content",
-                                collapsible: true,
-                                activate: function () {
-                                    _this.activePanel = propsAcc.accordion("option", "active");
-                                },
-                                beforeActivate: function (e, ui) {
-                                    _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
-                                }
-                            });
-                            //property dialog box
-                            this.propsDiag = $("#propsDiag");
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                position: this.leftCenter,
-                                minWidth: 420,
-                                width: 420,
-                                // height: "auto",
-                                height: 650,
-                                closeOnEscape: false,
-                                //a) on open set the values of the fields in the active panel.
-                                //b) also if we switched from another mesh vishav will close open
-                                //by calling refreshPropsDiag()
-                                //c) donot bother refreshing values if we are just restarting
-                                //dialog for height and width re-sizing after drag
-                                open: function (e, ui) {
-                                    if (!_this.fixingDragIssue) {
-                                        // refresh the active tab
-                                        _this.activePanel = propsAcc.accordion("option", "active");
-                                        _this.refreshPanel(_this.activePanel);
-                                        _this.refreshingPropsDiag = false;
-                                    }
-                                    else {
-                                        _this.fixingDragIssue = false;
-                                    }
-                                },
-                                closeText: "",
-                                close: function (e, ui) {
-                                    if (!_this.fixingDragIssue && !_this.refreshingPropsDiag && _this.sNaDialog.dialog("isOpen") === true) {
-                                        _this.sNaDialog.dialog("close");
-                                    }
-                                },
-                                //after drag the dialog box doesnot resize
-                                //force resize by closing and opening
-                                dragStop: function (e, ui) {
-                                    _this.fixingDragIssue = true;
-                                    _this.propsDiag.dialog("close");
-                                    _this.propsDiag.dialog("open");
-                                }
-                            };
-                            this.propsDiag.dialog(dos);
-                            this.propsDiag["jpo"] = this.leftCenter;
-                            this.dialogs.push(this.propsDiag);
                         };
                         /*
                          * called by vishva when editcontrol
                          * is removed from mesh
                          */
-                        VishvaGUI.prototype.closePropsDiag = function () {
-                            if (this._itemsDiag != null && this._itemsDiag.isOpen()) {
-                                this._clearPrevItem();
+                        VishvaGUI.prototype.handeEditControlClose = function () {
+                            if (this._items != null) {
+                                this._items.clearPrevItem();
                             }
-                            if (this.propsDiag != null)
-                                this.propsDiag.dialog("close");
+                            if (this._itemProps != null)
+                                this._itemProps.close();
                         };
+                        /*
+                         * called by vishva when editcontrol
+                         * is switched from another mesh
+                         */
                         VishvaGUI.prototype.refreshPropsDiag = function () {
-                            if ((this.propsDiag === undefined) || (this.propsDiag === null))
-                                return;
-                            if (this.propsDiag.dialog("isOpen") === true) {
-                                this.refreshingPropsDiag = true;
-                                this.propsDiag.dialog("close");
-                                this.propsDiag.dialog("open");
-                            }
+                            if (this._itemProps != null)
+                                this._itemProps.refreshPropsDiag();
                         };
-                        //only refresh if general panel is active;
-                        VishvaGUI.prototype.refreshGeneralPanel = function () {
-                            if (this.activePanel === 0 /* General */)
-                                this.refreshPropsDiag();
-                        };
-                        VishvaGUI.prototype.getPanelIndex = function (ui) {
-                            if (ui.text() == "General")
-                                return 0 /* General */;
-                            if (ui.text() == "Physics")
-                                return 1 /* Physics */;
-                            if (ui.text() == "Material")
-                                return 2 /* Material */;
-                            if (ui.text() == "Lights")
-                                return 3 /* Lights */;
-                            if (ui.text() == "Animations")
-                                return 4 /* Animations */;
-                        };
-                        VishvaGUI.prototype.refreshPanel = function (panelIndex) {
-                            if (panelIndex === 0 /* General */) {
-                                this.updateGeneral();
-                            }
-                            else if (panelIndex === 3 /* Lights */) {
-                                this.updateLight();
-                            }
-                            else if (panelIndex === 4 /* Animations */) {
-                                this.updateAnimations();
-                            }
-                            else if (panelIndex === 1 /* Physics */) {
-                                this.updatePhysics();
-                            }
-                            else if (panelIndex === 2 /* Material */) {
-                                this.updateMat();
-                            }
-                            //refresh sNaDialog if open
-                            if (this.sNaDialog.dialog("isOpen") === true) {
-                                this.sNaDialog.dialog("close");
-                                this.show_sNaDiag();
-                            }
-                        };
-                        VishvaGUI.prototype.initAnimUI = function () {
-                            var _this = this;
-                            this.animUIInitialized = true;
-                            var animSkelChange = document.getElementById("animSkelChange");
-                            var animSkelClone = document.getElementById("animSkelClone");
-                            var animSkelView = document.getElementById("animSkelView");
-                            var animRest = document.getElementById("animRest");
-                            var animRangeName = document.getElementById("animRangeName");
-                            var animRangeStart = document.getElementById("animRangeStart");
-                            var animRangeEnd = document.getElementById("animRangeEnd");
-                            var animRangeMake = document.getElementById("animRangeMake");
-                            this.animSkelList = document.getElementById("animSkelList");
-                            //change the mesh skeleton
-                            animSkelChange.onclick = function (e) {
-                                if (_this.vishva.changeSkeleton(_this.animSkelList.selectedOptions[0].value))
-                                    _this.updateAnimations();
-                                else
-                                    _this.showAlertDiag("Error: unable to switch");
-                            };
-                            //clone the selected skeleton and swicth to it
-                            animSkelClone.onclick = function (e) {
-                                if (_this.vishva.cloneChangeSkeleton(_this.animSkelList.selectedOptions[0].value))
-                                    _this.updateAnimations();
-                                else
-                                    _this.showAlertDiag("Error: unable to clone and switch");
-                            };
-                            //enable/disable skeleton view
-                            animSkelView.onclick = function (e) {
-                                _this.vishva.toggleSkelView();
-                            };
-                            //show rest pose
-                            animRest.onclick = function (e) {
-                                _this.vishva.animRest();
-                            };
-                            //create
-                            animRangeMake.onclick = function (e) {
-                                var name = animRangeName.value;
-                                var ars = parseInt(animRangeStart.value);
-                                if (isNaN(ars)) {
-                                    _this.showAlertDiag("from frame is not a number");
-                                }
-                                var are = parseInt(animRangeEnd.value);
-                                if (isNaN(are)) {
-                                    _this.showAlertDiag("to frame is not a number");
-                                }
-                                _this.vishva.createAnimRange(name, ars, are);
-                                _this.refreshAnimSelect();
-                            };
-                            //select
-                            this.animSelect = document.getElementById("animList");
-                            this.animSelect.onchange = function (e) {
-                                var animName = _this.animSelect.value;
-                                if (animName != null) {
-                                    var range = _this.skel.getAnimationRange(animName);
-                                    document.getElementById("animFrom").innerText = new Number(range.from).toString();
-                                    document.getElementById("animTo").innerText = new Number(range.to).toString();
-                                }
-                                return true;
-                            };
-                            //play
-                            this.animRate = document.getElementById("animRate");
-                            this.animLoop = document.getElementById("animLoop");
-                            document.getElementById("playAnim").onclick = function (e) {
-                                if (_this.skel == null)
-                                    return true;
-                                var animName = _this.animSelect.value;
-                                var rate = _this.animRate.value;
-                                if (animName != null) {
-                                    _this.vishva.playAnimation(animName, rate, _this.animLoop.checked);
-                                }
-                                return true;
-                            };
-                            document.getElementById("stopAnim").onclick = function (e) {
-                                if (_this.skel == null)
-                                    return true;
-                                _this.vishva.stopAnimation();
-                                return true;
-                            };
-                        };
-                        //        private createAnimDiag() {
-                        //            this.initAnimUI();
-                        //            this.meshAnimDiag = $("#meshAnimDiag");
-                        //            var dos: DialogOptions = {};
-                        //            dos.autoOpen = false;
-                        //            dos.modal = false;
-                        //            dos.resizable = false;
-                        //            dos.width = "auto";
-                        //            dos.height = (<any>"auto");
-                        //            dos.closeOnEscape = false;
-                        //            dos.closeText = "";
-                        //            dos.close = (e, ui) => {
-                        //                this.vishva.switchDisabled = false;
-                        //            };
-                        //            this.meshAnimDiag.dialog(dos);
-                        //        }
-                        VishvaGUI.prototype.updateAnimations = function () {
-                            //this.vishva.switchDisabled = true;
-                            if (!this.animUIInitialized)
-                                this.initAnimUI();
-                            this.skel = this.vishva.getSkeleton();
-                            var skelName;
-                            if (this.skel == null) {
-                                skelName = "NO SKELETON";
-                            }
-                            else {
-                                skelName = this.skel.name.trim();
-                                if (skelName === "")
-                                    skelName = "NO NAME";
-                                skelName = skelName + " (" + this.skel.id + ")";
-                            }
-                            document.getElementById("skelName").innerText = skelName;
-                            this.refreshAnimSelect();
-                            this.refreshAnimSkelList();
-                        };
-                        /**
-                         * refresh the list of animation ranges
-                         */
-                        VishvaGUI.prototype.refreshAnimSelect = function () {
-                            var childs = this.animSelect.children;
-                            var l = (childs.length | 0);
-                            for (var i = l - 1; i >= 0; i--) {
-                                childs[i].remove();
-                            }
-                            var range = this.vishva.getAnimationRanges();
-                            if (range != null) {
-                                var animOpt;
-                                for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
-                                    var ar = range_1[_i];
-                                    animOpt = document.createElement("option");
-                                    animOpt.value = ar.name;
-                                    animOpt.innerText = ar.name;
-                                    this.animSelect.appendChild(animOpt);
-                                }
-                                if (range[0] != null) {
-                                    document.getElementById("animFrom").innerText = new Number(range[0].from).toString();
-                                    document.getElementById("animTo").innerText = new Number(range[0].to).toString();
-                                }
-                                else {
-                                    document.getElementById("animFrom").innerText = "";
-                                    document.getElementById("animTo").innerText = "";
-                                }
-                            }
-                            else {
-                                document.getElementById("animFrom").innerText = "";
-                                document.getElementById("animTo").innerText = "";
-                            }
-                        };
-                        /**
-                         * refresh list of skeletons shown in animation tab
-                         */
-                        VishvaGUI.prototype.refreshAnimSkelList = function () {
-                            var childs = this.animSkelList.children;
-                            var l = (childs.length | 0);
-                            for (var i = l - 1; i >= 0; i--) {
-                                childs[i].remove();
-                            }
-                            var skels = this.vishva.getSkeltons();
-                            var opt;
-                            //NOTE:skel id is not unique
-                            for (var _i = 0, skels_1 = skels; _i < skels_1.length; _i++) {
-                                var skel = skels_1[_i];
-                                opt = document.createElement("option");
-                                opt.value = skel.id + "-" + skel.name;
-                                opt.innerText = skel.name + " (" + skel.id + ")";
-                                this.animSkelList.appendChild(opt);
-                            }
-                        };
-                        VishvaGUI.prototype.toString = function (d) {
-                            return new Number(d).toFixed(2).toString();
-                        };
-                        VishvaGUI.prototype.initGeneral = function () {
-                            var _this = this;
-                            //name
-                            this.genName = document.getElementById("genName");
-                            this.genName.onchange = function () {
-                                _this.vishva.setName(_this.genName.value);
-                            };
-                            //space
-                            this.genSpace = document.getElementById("genSpace");
-                            this.genSpace.onchange = function () {
-                                var err = _this.vishva.setSpace(_this.genSpace.value);
-                                if (err !== null) {
-                                    _this.showAlertDiag(err);
-                                    _this.genSpace.value = _this.vishva.getSpace();
-                                }
-                            };
-                            //transforms
-                            if (this.transRefresh === undefined) {
-                                this.transRefresh = document.getElementById("transRefresh");
-                                this.transRefresh.onclick = function () {
-                                    _this.updateTransform();
-                                    return false;
-                                };
-                            }
-                            if (this.transBake === undefined) {
-                                this.transBake = document.getElementById("transBake");
-                                this.transBake.onclick = function () {
-                                    _this.vishva.bakeTransforms();
-                                    _this.updateTransform();
-                                    return false;
-                                };
-                            }
-                            //edit controls
-                            this.genOperTrans = document.getElementById("operTrans");
-                            this.genOperRot = document.getElementById("operRot");
-                            this.genOperScale = document.getElementById("operScale");
-                            this.genOperFocus = document.getElementById("operFocus");
-                            this.genOperTrans.onclick = function () {
-                                _this.vishva.setTransOn();
-                            };
-                            this.genOperRot.onclick = function () {
-                                _this.vishva.setRotOn();
-                            };
-                            this.genOperScale.onclick = function () {
-                                _this.vishva.setScaleOn();
-                                if (!_this.vishva.isSpaceLocal()) {
-                                    _this.showAlertDiag("note that scaling doesnot work with global axis");
-                                }
-                            };
-                            this.genOperFocus.onclick = function () {
-                                _this.vishva.setFocusOnMesh();
-                            };
-                            //Translation
-                            this.genLocX = document.getElementById("loc.x");
-                            this.genLocX.onchange = function () {
-                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
-                            };
-                            this.genLocY = document.getElementById("loc.y");
-                            this.genLocY.onchange = function () {
-                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
-                            };
-                            this.genLocZ = document.getElementById("loc.z");
-                            this.genLocZ.onchange = function () {
-                                _this.vishva.setLocation(Number(_this.genLocX.value), Number(_this.genLocY.value), Number(_this.genLocZ.value));
-                            };
-                            //Rotation
-                            this.genRotX = document.getElementById("rot.x");
-                            this.genRotX.onchange = function () {
-                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
-                            };
-                            this.genRotY = document.getElementById("rot.y");
-                            this.genRotY.onchange = function () {
-                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
-                            };
-                            this.genRotZ = document.getElementById("rot.z");
-                            this.genRotZ.onchange = function () {
-                                _this.vishva.setRotation(Number(_this.genRotX.value), Number(_this.genRotY.value), Number(_this.genRotZ.value));
-                            };
-                            //Scale
-                            this.genScaleX = document.getElementById("scl.x");
-                            this.genScaleX.onchange = function () {
-                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
-                            };
-                            this.genScaleY = document.getElementById("scl.y");
-                            this.genScaleY.onchange = function () {
-                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
-                            };
-                            this.genScaleZ = document.getElementById("scl.z");
-                            this.genScaleZ.onchange = function () {
-                                _this.vishva.setScale(Number(_this.genScaleX.value), Number(_this.genScaleY.value), Number(_this.genScaleZ.value));
-                            };
-                            //Snap CheckBox
-                            this.genSnapTrans = document.getElementById("snapTrans");
-                            this.genSnapTrans.onchange = function () {
-                                var err = _this.vishva.snapTrans(_this.genSnapTrans.checked);
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                    _this.genSnapTrans.checked = false;
-                                }
-                            };
-                            this.genSnapRot = document.getElementById("snapRot");
-                            this.genSnapRot.onchange = function () {
-                                var err = _this.vishva.snapRot(_this.genSnapRot.checked);
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                    _this.genSnapRot.checked = false;
-                                }
-                            };
-                            this.genSnapScale = document.getElementById("snapScale");
-                            this.genSnapScale.onchange = function () {
-                                var err = _this.vishva.snapScale(_this.genSnapScale.checked);
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                    _this.genSnapScale.checked = false;
-                                }
-                            };
-                            //Snap Values
-                            this.genSnapTransValue = document.getElementById("snapTransValue");
-                            this.genSnapTransValue.onchange = function () {
-                                _this.vishva.setSnapTransValue(Number(_this.genSnapTransValue.value));
-                            };
-                            this.genSnapRotValue = document.getElementById("snapRotValue");
-                            this.genSnapRotValue.onchange = function () {
-                                _this.vishva.setSnapRotValue(Number(_this.genSnapRotValue.value));
-                            };
-                            this.genSnapScaleValue = document.getElementById("snapScaleValue");
-                            this.genSnapScaleValue.onchange = function () {
-                                _this.vishva.setSnapScaleValue(Number(_this.genSnapScaleValue.value));
-                            };
-                            //
-                            this.genDisable = document.getElementById("genDisable");
-                            this.genDisable.onchange = function () {
-                                _this.vishva.disableIt(_this.genDisable.checked);
-                            };
-                            this.genColl = document.getElementById("genColl");
-                            this.genColl.onchange = function () {
-                                _this.vishva.enableCollision(_this.genColl.checked);
-                            };
-                            this.genVisi = document.getElementById("genVisi");
-                            this.genVisi.onchange = function () {
-                                _this.vishva.makeVisibile(_this.genVisi.checked);
-                            };
-                            var undo = document.getElementById("undo");
-                            var redo = document.getElementById("redo");
-                            var parentMesh = document.getElementById("parentMesh");
-                            var removeParent = document.getElementById("removeParent");
-                            var removeChildren = document.getElementById("removeChildren");
-                            var cloneMesh = document.getElementById("cloneMesh");
-                            var instMesh = document.getElementById("instMesh");
-                            var mergeMesh = document.getElementById("mergeMesh");
-                            var subMesh = document.getElementById("subMesh");
-                            var interMesh = document.getElementById("interMesh");
-                            var downAsset = document.getElementById("downMesh");
-                            var delMesh = document.getElementById("delMesh");
-                            var swAv = document.getElementById("swAv");
-                            var swGnd = document.getElementById("swGnd");
-                            var sNa = document.getElementById("sNa");
-                            //            var addWater: HTMLElement = document.getElementById("addWater");
-                            undo.onclick = function (e) {
-                                _this.vishva.undo();
-                                return false;
-                            };
-                            redo.onclick = function (e) {
-                                _this.vishva.redo();
-                                return false;
-                            };
-                            parentMesh.onclick = function (e) {
-                                var err = _this.vishva.makeParent();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            removeParent.onclick = function (e) {
-                                var err = _this.vishva.removeParent();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            removeChildren.onclick = function (e) {
-                                var err = _this.vishva.removeChildren();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            cloneMesh.onclick = function (e) {
-                                var err = _this.vishva.clone_mesh();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            instMesh.onclick = function (e) {
-                                var err = _this.vishva.instance_mesh();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            mergeMesh.onclick = function (e) {
-                                var err = _this.vishva.mergeMeshes();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            subMesh.onclick = function (e) {
-                                var err = _this.vishva.csgOperation("subtract");
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            interMesh.onclick = function (e) {
-                                var err = _this.vishva.csgOperation("intersect");
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            downAsset.onclick = function (e) {
-                                var downloadURL = _this.vishva.saveAsset();
-                                if (downloadURL == null) {
-                                    _this.showAlertDiag("No Mesh Selected");
-                                    return true;
-                                }
-                                _this.downloadLink.href = downloadURL;
-                                var env = $("#saveDiv");
-                                env.dialog("open");
-                                return false;
-                            };
-                            delMesh.onclick = function (e) {
-                                var err = _this.vishva.delete_mesh();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return false;
-                            };
-                            swAv.onclick = function (e) {
-                                var err = _this.vishva.switchAvatar();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return true;
-                            };
-                            swGnd.onclick = function (e) {
-                                var err = _this.vishva.switchGround();
-                                if (err != null) {
-                                    _this.showAlertDiag(err);
-                                }
-                                return true;
-                            };
-                            sNa.onclick = function (e) {
-                                _this.show_sNaDiag();
-                                return true;
-                            };
-                            //            addWater.onclick = (e) => {
-                            //                var err: string = this.vishva.addWater()
-                            //                 if (err != null) {
-                            //                    this.showAlertDiag(err);
-                            //                }
-                            //                return true;
-                            //            };
-                        };
-                        VishvaGUI.prototype.updateGeneral = function () {
-                            if (this.genName === undefined)
-                                this.initGeneral();
-                            this.genName.value = this.vishva.getName();
-                            this.genSpace.value = this.vishva.getSpace();
-                            this.updateTransform();
-                            this.genDisable.checked = this.vishva.isDisabled();
-                            this.genColl.checked = this.vishva.isCollideable();
-                            this.genVisi.checked = this.vishva.isVisible();
-                        };
-                        VishvaGUI.prototype.updateTransform = function () {
-                            var loc = this.vishva.getLocation();
-                            var rot = this.vishva.getRotation();
-                            var scl = this.vishva.getScale();
-                            document.getElementById("loc.x").value = this.toString(loc.x);
-                            document.getElementById("loc.y").value = this.toString(loc.y);
-                            document.getElementById("loc.z").value = this.toString(loc.z);
-                            document.getElementById("rot.x").value = this.toString(rot.x);
-                            document.getElementById("rot.y").value = this.toString(rot.y);
-                            document.getElementById("rot.z").value = this.toString(rot.z);
-                            document.getElementById("scl.x").value = this.toString(scl.x);
-                            document.getElementById("scl.y").value = this.toString(scl.y);
-                            document.getElementById("scl.z").value = this.toString(scl.z);
-                        };
-                        VishvaGUI.prototype.initLightUI = function () {
-                            var _this = this;
-                            this.lightAtt = document.getElementById("lightAtt");
-                            this.lightType = document.getElementById("lightType");
-                            this.lightDiff = new ColorPickerDiag("diffuse light", "lightDiff", "#ffffff", this.centerBottom, function (hex, hsv, rgb) {
-                                _this.applyLight();
-                            });
-                            this.lightSpec = new ColorPickerDiag("specular light", "lightSpec", "#ffffff", this.centerBottom, function (hex, hsv, rgb) {
-                                _this.applyLight();
-                            });
-                            this.lightInten = document.getElementById("lightInten");
-                            this.lightRange = document.getElementById("lightRange");
-                            this.lightRadius = document.getElementById("lightAtt");
-                            this.lightAngle = document.getElementById("lightAngle");
-                            this.lightExp = document.getElementById("lightExp");
-                            this.lightGndClr = document.getElementById("lightGndClr");
-                            this.lightDirX = document.getElementById("lightDirX");
-                            this.lightDirY = document.getElementById("lightDirY");
-                            this.lightDirZ = document.getElementById("lightDirZ");
-                            this.lightAtt.onchange = function () {
-                                if (!_this.lightAtt.checked) {
-                                    _this.vishva.detachLight();
-                                }
-                                else
-                                    _this.applyLight();
-                            };
-                            this.lightType.onchange = function () { return _this.applyLight(); };
-                            this.lightInten.onchange = function () { return _this.applyLight(); };
-                            this.lightRange.onchange = function () { return _this.applyLight(); };
-                            this.lightAngle.onchange = function () { return _this.applyLight(); };
-                            this.lightExp.onchange = function () { return _this.applyLight(); };
-                            this.lightDirX.onchange = function () { return _this.applyLight(); };
-                            this.lightDirY.onchange = function () { return _this.applyLight(); };
-                            this.lightDirZ.onchange = function () { return _this.applyLight(); };
-                        };
-                        VishvaGUI.prototype.updateLight = function () {
-                            if (this.lightAtt === undefined)
-                                this.initLightUI();
-                            var lightParm = this.vishva.getAttachedLight();
-                            if (lightParm === null) {
-                                this.lightAtt.checked = false;
-                                lightParm = new vishva_1.LightParm();
-                            }
-                            else {
-                                this.lightAtt.checked = true;
-                            }
-                            this.lightType.value = lightParm.type;
-                            this.lightDiff.setColor(lightParm.diffuse.toHexString());
-                            this.lightSpec.setColor(lightParm.specular.toHexString());
-                            this.lightInten.value = Number(lightParm.intensity).toString();
-                            this.lightRange.value = Number(lightParm.range).toString();
-                            this.lightRadius.value = Number(lightParm.radius).toString();
-                            //this.lightAngle.value = Number(lightParm.angle * 180 / Math.PI).toString();
-                            this.lightAngle.value = Number(lightParm.angle).toString();
-                            this.lightExp.value = Number(lightParm.exponent).toString();
-                            this.lightGndClr.value = lightParm.gndClr.toHexString();
-                            this.lightDirX.value = Number(lightParm.direction.x).toString();
-                            this.lightDirY.value = Number(lightParm.direction.y).toString();
-                            this.lightDirZ.value = Number(lightParm.direction.z).toString();
-                        };
-                        VishvaGUI.prototype.applyLight = function () {
-                            //            if (!this.lightAtt.checked) {
-                            //                this.vishva.detachLight();
-                            //                return;
-                            //            }
-                            if (!this.lightAtt.checked)
-                                return;
-                            var lightParm = new vishva_1.LightParm();
-                            lightParm.type = this.lightType.value;
-                            lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.getColor());
-                            lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.getColor());
-                            lightParm.intensity = parseFloat(this.lightInten.value);
-                            lightParm.range = parseFloat(this.lightRange.value);
-                            lightParm.radius = parseFloat(this.lightRadius.value);
-                            lightParm.angle = parseFloat(this.lightAngle.value);
-                            lightParm.direction.x = parseFloat(this.lightDirX.value);
-                            lightParm.direction.y = parseFloat(this.lightDirY.value);
-                            lightParm.direction.z = parseFloat(this.lightDirZ.value);
-                            lightParm.exponent = parseFloat(this.lightExp.value);
-                            lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
-                            this.vishva.attachAlight(lightParm);
-                        };
-                        VishvaGUI.prototype.initMatUI = function () {
-                            var _this = this;
-                            this.matName = document.getElementById("matName");
-                            this.matName.innerText = this.vishva.getMaterialName();
-                            this.matVisVal = document.getElementById("matVisVal");
-                            this.matVis = document.getElementById("matVis");
-                            this.matColType = document.getElementById("matColType");
-                            this.matColType.onchange = function () {
-                                var col = _this.vishva.getMeshColor(_this.matColType.value);
-                                _this.matColDiag.setColor(col);
-                            };
-                            this.matTextType = document.getElementById("matTextType");
-                            ;
-                            this.matColDiag = new ColorPickerDiag("mesh color", "matCol", this.vishva.getMeshColor(this.matColType.value), this.centerBottom, function (hex, hsv, rgb) {
-                                var err = _this.vishva.setMeshColor(_this.matColType.value, hex);
-                                if (err !== null)
-                                    _this.showAlertDiag(err);
-                            });
-                            this.matVisVal["value"] = "1.00";
-                            this.matVis.oninput = function () {
-                                _this.matVisVal["value"] = Number(_this.matVis.value).toFixed(2);
-                                _this.vishva.setMeshVisibility(parseFloat(_this.matVis.value));
-                            };
-                            this.matTexture = document.getElementById("matTexture");
-                            this.matTexture.onclick = function () {
-                                console.log("checking texture");
-                                if (_this.textureDiag == null) {
-                                    _this.createTextureDiag();
-                                }
-                                _this.textureImg.src = _this.vishva.getMatTexture(_this.matTextType.value);
-                                console.log(_this.textureImg.src);
-                                _this.textureDiag.dialog("open");
-                            };
-                        };
-                        VishvaGUI.prototype.updateMat = function () {
-                            if (this.matVis == undefined)
-                                this.initMatUI();
-                            this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
-                            this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
-                            this.matColDiag.setColor(this.vishva.getMeshColor(this.matColType.value));
-                        };
-                        VishvaGUI.prototype.initPhyUI = function () {
-                            var _this = this;
-                            this.phyEna = document.getElementById("phyEna");
-                            this.phyType = document.getElementById("phyType");
-                            this.phyMass = document.getElementById("phyMass");
-                            this.phyRes = document.getElementById("phyRes");
-                            this.phyResVal = document.getElementById("phyResVal");
-                            this.phyResVal["value"] = "0.0";
-                            this.phyRes.oninput = function () {
-                                _this.phyResVal["value"] = _this.formatValue(_this.phyRes.value);
-                            };
-                            this.phyFric = document.getElementById("phyFric");
-                            this.phyFricVal = document.getElementById("phyFricVal");
-                            this.phyFricVal["value"] = "0.0";
-                            this.phyFric.oninput = function () {
-                                _this.phyFricVal["value"] = _this.formatValue(_this.phyFric.value);
-                            };
-                            var phyApply = document.getElementById("phyApply");
-                            var phyTest = document.getElementById("phyTest");
-                            var phyReset = document.getElementById("phyReset");
-                            phyApply.onclick = function (ev) {
-                                _this.applyPhysics();
-                                _this.showAlertDiag("physics applied");
-                                return false;
-                            };
-                            phyTest.onclick = function (ev) {
-                                _this.testPhysics();
-                                return false;
-                            };
-                            phyReset.onclick = function (ev) {
-                                _this.resetPhysics();
-                                return false;
-                            };
-                        };
-                        VishvaGUI.prototype.formatValue = function (val) {
-                            if (val === "1")
-                                return "1.0";
-                            if (val === "0")
-                                return "0.0";
-                            return val;
-                        };
-                        VishvaGUI.prototype.updatePhysics = function () {
-                            if (this.phyEna === undefined)
-                                this.initPhyUI();
-                            var phyParms = this.vishva.getMeshPickedPhyParms();
-                            if (phyParms !== null) {
-                                this.phyEna.setAttribute("checked", "true");
-                                this.phyType.value = Number(phyParms.type).toString();
-                                this.phyMass.value = Number(phyParms.mass).toString();
-                                this.phyRes.value = Number(phyParms.restitution).toString();
-                                this.phyResVal["value"] = this.formatValue(this.phyRes.value);
-                                this.phyFric.value = Number(phyParms.friction).toString();
-                                this.phyFricVal["value"] = this.formatValue(this.phyFric.value);
-                            }
-                            else {
-                                this.phyEna.checked = false;
-                                //by default lets set the type to "box"
-                                this.phyType.value = "2";
-                                this.phyMass.value = "1";
-                                this.phyRes.value = "0";
-                                this.phyResVal["value"] = "0.0";
-                                this.phyFric.value = "0";
-                                this.phyFricVal["value"] = "0.0";
-                            }
-                        };
-                        VishvaGUI.prototype.applyPhysics = function () {
-                            var phyParms;
-                            if (this.phyEna.checked) {
-                                phyParms = new vishva_1.PhysicsParm();
-                                phyParms.type = parseInt(this.phyType.value);
-                                phyParms.mass = parseFloat(this.phyMass.value);
-                                phyParms.restitution = parseFloat(this.phyRes.value);
-                                phyParms.friction = parseFloat(this.phyFric.value);
-                            }
-                            else {
-                                phyParms = null;
-                            }
-                            this.vishva.setMeshPickedPhyParms(phyParms);
-                        };
-                        VishvaGUI.prototype.testPhysics = function () {
-                            var phyParms;
-                            phyParms = new vishva_1.PhysicsParm();
-                            phyParms.type = parseInt(this.phyType.value);
-                            phyParms.mass = parseFloat(this.phyMass.value);
-                            phyParms.restitution = parseFloat(this.phyRes.value);
-                            phyParms.friction = parseFloat(this.phyFric.value);
-                            this.vishva.testPhysics(phyParms);
-                        };
-                        VishvaGUI.prototype.resetPhysics = function () {
-                            this.vishva.resetPhysics();
-                        };
-                        VishvaGUI.prototype.createAlertDiag = function () {
-                            this.alertDiv = document.getElementById("alertDiv");
-                            this.alertDialog = $("#alertDiv");
-                            var dos = {
-                                title: "Info",
-                                autoOpen: false,
-                                width: "auto",
-                                minWidth: 200,
-                                height: "auto",
-                                closeText: "",
-                                closeOnEscape: false
-                            };
-                            this.alertDialog.dialog(dos);
-                        };
-                        VishvaGUI.prototype.showAlertDiag = function (msg) {
-                            this.alertDiv.innerHTML = "<h3>" + msg + "</h3>";
-                            this.alertDialog.dialog("open");
-                        };
-                        VishvaGUI.prototype.sliderOptions = function (min, max, value) {
-                            var _this = this;
-                            var so = {};
-                            so.min = min;
-                            so.max = max;
-                            so.value = value;
-                            so.slide = function (e, ui) { return _this.handleSlide(e, ui); };
-                            return so;
-                        };
-                        VishvaGUI.prototype.handleSlide = function (e, ui) {
-                            var slider = e.target.id;
-                            if (slider === "fov") {
-                                this.vishva.setFov(ui.value);
-                            }
-                            else if (slider === "sunPos") {
-                                this.vishva.setSunPos(ui.value);
-                            }
-                            else {
-                                var v = ui.value / 100;
-                                if (slider === "light") {
-                                    this.vishva.setLight(v);
-                                }
-                                else if (slider === "shade") {
-                                    this.vishva.setShade(v);
-                                }
-                                else if (slider === "fog") {
-                                    console.log(v);
-                                    this.vishva.setFog(v / 100);
-                                }
-                            }
-                            return true;
+                        //called when user has changed transforms using editcontrol
+                        VishvaGUI.prototype.handleTransChange = function () {
+                            if (this._itemProps != null)
+                                this._itemProps.refreshGeneralPanel();
                         };
                         VishvaGUI.prototype.createNavMenu = function () {
                             var _this = this;
@@ -1995,50 +2084,50 @@ var org;
                             };
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
-                                if (_this._itemsDiag == null) {
-                                    _this._createItemsDiag();
+                                if (_this._items == null) {
+                                    _this._items = new gui.Items(_this.vishva);
                                 }
-                                if (!_this._itemsDiag.isOpen()) {
-                                    _this._updateItemsTable();
-                                }
-                                _this._itemsDiag.toggle();
+                                _this._items.toggle();
                                 return false;
                             };
                             var navEnv = document.getElementById("navEnv");
                             navEnv.onclick = function (e) {
-                                if (_this.envDiag == null) {
-                                    _this.createEnvDiag();
+                                if (_this._environment == null) {
+                                    _this._environment = new gui.Environment(_this.vishva);
                                 }
-                                _this.envDiag.toggle();
+                                _this._environment.toggle();
                                 return false;
                             };
                             var navEdit = document.getElementById("navEdit");
                             navEdit.onclick = function (e) {
-                                if ((_this.propsDiag != null) && (_this.propsDiag.dialog("isOpen") === true)) {
-                                    _this.closePropDiag();
+                                if ((_this._itemProps != null) && (_this._itemProps.isOpen())) {
+                                    _this._itemProps.close();
                                 }
                                 else {
                                     _this.showPropDiag();
                                 }
-                                return true;
+                                return false;
                             };
+                            //            navEdit.onclick=(e) => {
+                            //                if((this.propsDiag!=null)&&(this.propsDiag.dialog("isOpen")===true)) {
+                            //                    this.closePropDiag();
+                            //                } else {
+                            //                    this.showPropDiag();
+                            //                }
+                            //                return true;
+                            //            };
                             var navSettings = document.getElementById("navSettings");
                             navSettings.onclick = function (e) {
-                                if (_this.settingDiag == undefined) {
-                                    _this.createSettingDiag();
-                                }
-                                if (_this.settingDiag.dialog("isOpen") === false) {
-                                    _this.updateSettings();
-                                    _this.settingDiag.dialog("open");
-                                }
-                                else {
-                                    _this.settingDiag.dialog("close");
-                                }
+                                _this._settingDiag.toggle();
                                 return false;
                             };
                             var helpLink = document.getElementById("helpLink");
+                            var helpDiag = null;
                             helpLink.onclick = function (e) {
-                                _this.toggleDiag(_this.helpDiag);
+                                if (helpDiag == null) {
+                                    helpDiag = new gui.VDialog("helpDiv", "Help", gui.DialogMgr.center, "", "", 500);
+                                }
+                                helpDiag.toggle();
                                 return true;
                             };
                             var debugLink = document.getElementById("debugLink");
@@ -2047,27 +2136,18 @@ var org;
                                 return true;
                             };
                         };
-                        /*
-                         * open diag if close
-                         * close diag if open
-                         */
-                        VishvaGUI.prototype.toggleDiag = function (diag) {
-                            if (diag.dialog("isOpen") === false) {
-                                diag.dialog("open");
-                            }
-                            else {
-                                diag.dialog("close");
-                            }
-                        };
                         VishvaGUI.prototype.getSettings = function () {
                             var guiSettings = new GuiSettings();
-                            guiSettings.enableToolTips = this.enableToolTips;
+                            guiSettings.enableToolTips = this._settingDiag.enableToolTips;
                             return guiSettings;
                         };
                         VishvaGUI.prototype.setSettings = function () {
+                            if (this._settingDiag == null) {
+                                this._settingDiag = new gui.Settings(this.vishva, this);
+                            }
                             var guiSettings = this.vishva.getGuiSettings();
                             if (guiSettings !== null)
-                                this.enableToolTips = guiSettings.enableToolTips;
+                                this._settingDiag.enableToolTips = guiSettings.enableToolTips;
                         };
                         VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
                         VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
@@ -2111,7 +2191,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_1.gui || (vishva_1.gui = {}));
+                })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2665,7 +2745,7 @@ var org;
                         this.switchToQuats(this.meshPicked);
                         this.editControl = new EditControl(this.meshPicked, this.mainCamera, this.canvas, 0.75);
                         this.editControl.addActionEndListener(function (actionType) {
-                            _this.vishvaGUI.refreshGeneralPanel();
+                            _this.vishvaGUI.handleTransChange();
                         });
                         this.editControl.enableTranslation();
                         if (this.spaceWorld) {
@@ -2813,11 +2893,9 @@ var org;
                         //            }
                         this.editControl.detach();
                         this.editControl = null;
-                        //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
-                        if (this.autoEditMenu)
-                            this.vishvaGUI.closePropDiag();
+                        //if(this.autoEditMenu) this.vishvaGUI.closePropDiag();
                         //close properties dialog if open
-                        this.vishvaGUI.closePropsDiag();
+                        this.vishvaGUI.handeEditControlClose();
                         if (this.meshPicked != null) {
                             vishva.SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                             this.restorePhyParms();

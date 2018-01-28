@@ -1,14 +1,16 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/// <reference path="VDialog.ts"/>
 namespace org.ssatguru.babylonjs.vishva.gui {
     import JQueryPositionOptions=JQueryUI.JQueryPositionOptions;
 
     export class DialogMgr {
 
         public static dialogs:Array<VDialog>= new Array();
+        
+         public static center: JQueryPositionOptions={
+            at: "center center",
+            my: "center center",
+            of: window
+        };
         
         public static centerBottom: JQueryPositionOptions={
             at: "center bottom",
@@ -31,8 +33,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             at: "right top",
             my: "right top",
             of: window
-        };;
-
+        };
+        
+        private static _alertDialog: VDialog;
+        private static _alertDiv: HTMLElement= document.getElementById("alertDiv");;
+        
+        public static createAlertDiag(){
+            if (this._alertDialog ==null)
+            this._alertDialog=new VDialog("alertDiv","Info",DialogMgr.center,"","",200);
+        }
+        public static showAlertDiag(msg: string) {
+            this._alertDiv.innerHTML="<h3>"+msg+"</h3>";
+            this._alertDialog.open();
+        }
 
     }
 }

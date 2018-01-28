@@ -607,7 +607,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.switchToQuats(this.meshPicked);
             this.editControl=new EditControl(<Mesh>this.meshPicked,this.mainCamera,this.canvas,0.75);
             this.editControl.addActionEndListener((actionType: number) => {
-                this.vishvaGUI.refreshGeneralPanel();
+                this.vishvaGUI.handleTransChange();
             })
             this.editControl.enableTranslation();
             if(this.spaceWorld) {
@@ -759,10 +759,10 @@ namespace org.ssatguru.babylonjs.vishva {
             //            }
             this.editControl.detach();
             this.editControl=null;
-            //if (!this.editAlreadyOpen) this.vishvaGUI.closeEditMenu();
-            if(this.autoEditMenu) this.vishvaGUI.closePropDiag();
+            
+            //if(this.autoEditMenu) this.vishvaGUI.closePropDiag();
             //close properties dialog if open
-            this.vishvaGUI.closePropsDiag();
+            this.vishvaGUI.handeEditControlClose();
             if(this.meshPicked!=null) {
                 SNAManager.getSNAManager().enableSnAs(this.meshPicked);
                 this.restorePhyParms();

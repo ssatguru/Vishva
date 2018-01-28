@@ -107,22 +107,30 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * 
          * @param evt
          */
+         
         private onWindowResize(evt: Event) {
-            for(var index161=0;index161<this.dialogs.length;index161++) {
-                var jq=this.dialogs[index161];
-                {
-                    var jpo: JQueryPositionOptions=<JQueryPositionOptions>jq["jpo"];
-                    if(jpo!=null) {
-                        jq.dialog("option","position",jpo);
-                        var open: boolean=<boolean><any>jq.dialog("isOpen");
-                        if(open) {
-                            jq.dialog("close");
-                            jq.dialog("open");
-                        }
+            
+            for(let jq of this.dialogs) {
+                let jpo: JQueryPositionOptions=<JQueryPositionOptions>jq["jpo"];
+                if(jpo!=null) {
+                    jq.dialog("option","position",jpo);
+                    var open: boolean=<boolean><any>jq.dialog("isOpen");
+                    if(open) {
+                        jq.dialog("close");
+                        jq.dialog("open");
                     }
+                }
+            }            
+
+            for(let diag of DialogMgr.dialogs) {
+                diag.position();
+                if(diag.isOpen()) {
+                    diag.close();
+                    diag.open();
                 }
             }
         }
+
 
         //skyboxesDiag: JQuery;
 
@@ -165,6 +173,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.updateAssetTable(table,assetType,items);
             div.appendChild(table);
             document.body.appendChild(div);
+
             var jq: JQuery=<JQuery>(<any>$("#"+div.id));
             var dos: DialogOptions={
                 autoOpen: false,
@@ -220,43 +229,30 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             return true;
         }
 
-        _itemsDiag: JQuery;
+        _itemsDiag: VDialog;
         _itemTab="---- ";
         private _createItemsDiag() {
             let itemsRefresh: HTMLElement=document.getElementById("itemsRefresh");
-            itemsRefresh.onclick =()=>{
-                this._itemsDiag.dialog("close");
+            itemsRefresh.onclick=() => {
+                this._itemsDiag.close();
                 this._updateItemsTable();
-                this._itemsDiag.dialog("open");
+                this._itemsDiag.open();
             }
-            
-            this._itemsDiag=$("#itemsDiv");
-            var dos: DialogOptions={
-                autoOpen: false,
-                resizable: false,
-                position: this.rightTop,
-                //minWidth: 300,
-                //maxHeight: 500,
-                width:"auto",
-                height: "auto",
-                closeText: "",
-                closeOnEscape: false
-            };
-            this._itemsDiag.dialog(dos);
-            this._itemsDiag["jpo"]=this.rightTop;
-            this.dialogs.push(this._itemsDiag);
 
+            this._itemsDiag=new VDialog("itemsDiv","Items",DialogMgr.rightTop);
         }
-        
+
+
+
         _prevCell: HTMLTableCellElement=null;
-        private _onItemClick(e:MouseEvent){
+        private _onItemClick(e: MouseEvent) {
             let cell: HTMLTableCellElement=<HTMLTableCellElement>e.target;
-            if (!(cell instanceof HTMLTableCellElement)) return;
-            if (cell == this._prevCell) return;
-            
+            if(!(cell instanceof HTMLTableCellElement)) return;
+            if(cell==this._prevCell) return;
+
             this.vishva.selectMesh(cell.id);
             cell.setAttribute("style","text-decoration: underline");
-            if (this._prevCell!=null){
+            if(this._prevCell!=null) {
                 this._prevCell.setAttribute("style","text-decoration: none");
             }
             this._prevCell=cell;
@@ -264,16 +260,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         /**
          * can be called when a user unselects a mesh by pressing esc
          */
-        private _clearPrevItem(){
-            if (this._prevCell!=null){
+        private _clearPrevItem() {
+            if(this._prevCell!=null) {
                 this._prevCell.setAttribute("style","text-decoration: none");
                 this._prevCell=null;
             }
         }
-        
+
         private _updateItemsTable() {
             let tbl: HTMLTableElement=<HTMLTableElement>document.getElementById("itemsTable");
-            tbl.onclick = (e) => {return this._onItemClick(e)};
+            tbl.onclick=(e) => {return this._onItemClick(e)};
             let l: number=tbl.rows.length;
             for(var i: number=l-1;i>=0;i--) {
                 tbl.deleteRow(i);
@@ -295,7 +291,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
             }
         }
-        private _addChildren(children: Array<AbstractMesh>,tbl: HTMLTableElement,meshChildMap: any,tab:string) {
+        private _addChildren(children: Array<AbstractMesh>,tbl: HTMLTableElement,meshChildMap: any,tab: string) {
             for(let child of children) {
                 let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
                 let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
@@ -303,7 +299,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 cell.id=Number(child.uniqueId).toString();
                 let childs: Array<AbstractMesh>=meshChildMap[child.uniqueId];
                 if(childs!=null) {
-                    this._addChildren(childs,tbl,meshChildMap,tab+this._itemTab );
+                    this._addChildren(childs,tbl,meshChildMap,tab+this._itemTab);
                 }
             }
         }
@@ -325,7 +321,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
 
-        envDiag: JQuery;
+        envDiag: VDialog;
         /*
          * Create Environment Dialog
          */
@@ -380,19 +376,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.vishva.setGroundColor(hex);
             });
 
-            this.envDiag=$("#envDiv");
-            var dos: DialogOptions={
-                autoOpen: false,
-                resizable: false,
-                position: this.rightCenter,
-                minWidth: 350,
-                height: "auto",
-                closeText: "",
-                closeOnEscape: false
-            };
-            this.envDiag.dialog(dos);
-            this.envDiag["jpo"]=this.rightCenter;
-            this.dialogs.push(this.envDiag);
+            this.envDiag=new VDialog("envDiv","Environment",DialogMgr.rightCenter,"","",350);
         }
         /*
          * Create Setting Dialog
@@ -1026,7 +1010,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * is removed from mesh
          */
         public closePropsDiag() {
-            if(this._itemsDiag!=null && this._itemsDiag.dialog("isOpen")===true) {
+            if(this._itemsDiag!=null&&this._itemsDiag.isOpen()) {
                 this._clearPrevItem();
             }
             if(this.propsDiag!=null) this.propsDiag.dialog("close");
@@ -2052,25 +2036,23 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
-                if(this._itemsDiag==undefined) {
+                if(this._itemsDiag==null) {
                     this._createItemsDiag();
                 }
-                 if(this._itemsDiag.dialog("isOpen")===false) {
+                if(!this._itemsDiag.isOpen()) {
                     this._updateItemsTable();
                 }
-                this.toggleDiag(this._itemsDiag);
-               
-
+                this._itemsDiag.toggle();
                 return false;
             }
 
 
             var navEnv: HTMLElement=document.getElementById("navEnv");
             navEnv.onclick=(e) => {
-                if(this.envDiag==undefined) {
+                if(this.envDiag==null) {
                     this.createEnvDiag();
                 }
-                this.toggleDiag(this.envDiag);
+                this.envDiag.toggle();
                 return false;
             };
 

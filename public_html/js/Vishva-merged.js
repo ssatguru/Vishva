@@ -94,6 +94,135 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+var org;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var DialogMgr = (function () {
+                        function DialogMgr() {
+                        }
+                        ;
+                        DialogMgr.dialogs = new Array();
+                        DialogMgr.centerBottom = {
+                            at: "center bottom",
+                            my: "center bottom",
+                            of: window
+                        };
+                        DialogMgr.leftCenter = {
+                            at: "left center",
+                            my: "left center",
+                            of: window
+                        };
+                        DialogMgr.rightCenter = {
+                            at: "right center",
+                            my: "right center",
+                            of: window
+                        };
+                        DialogMgr.rightTop = {
+                            at: "right top",
+                            my: "right top",
+                            of: window
+                        };
+                        return DialogMgr;
+                    }());
+                    gui.DialogMgr = DialogMgr;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+var org;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var VDialog = (function () {
+                        function VDialog(id, title, jpo, width, height, minWidth) {
+                            if (width === void 0) { width = "auto"; }
+                            if (height === void 0) { height = "auto"; }
+                            if (minWidth === void 0) { minWidth = 0; }
+                            if (width == "")
+                                width = "auto";
+                            if (height == "")
+                                height = "auto";
+                            this._diag = $("#" + id);
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: jpo,
+                                height: height,
+                                closeText: "",
+                                closeOnEscape: false
+                            };
+                            this._diag.dialog(dos);
+                            if (minWidth != 0) {
+                                this._diag.dialog("option", "minWidth", minWidth);
+                            }
+                            else {
+                                this._diag.dialog("option", "width", width);
+                            }
+                            this.jpo = jpo;
+                            gui.DialogMgr.dialogs.push(this);
+                        }
+                        VDialog.prototype.open = function () {
+                            this._diag.dialog("open");
+                        };
+                        VDialog.prototype.close = function () {
+                            this._diag.dialog("close");
+                        };
+                        VDialog.prototype.isOpen = function () {
+                            return this._diag.dialog("isOpen");
+                        };
+                        VDialog.prototype.toggle = function () {
+                            if (this.isOpen()) {
+                                this.close();
+                            }
+                            else {
+                                this.open();
+                            }
+                        };
+                        VDialog.prototype.position = function () {
+                            this._diag.dialog("option", "position", this.jpo);
+                        };
+                        return VDialog;
+                    }());
+                    gui.VDialog = VDialog;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
 var org;
 (function (org) {
     var ssatguru;
@@ -200,18 +329,24 @@ var org;
                          * @param evt
                          */
                         VishvaGUI.prototype.onWindowResize = function (evt) {
-                            for (var index161 = 0; index161 < this.dialogs.length; index161++) {
-                                var jq = this.dialogs[index161];
-                                {
-                                    var jpo = jq["jpo"];
-                                    if (jpo != null) {
-                                        jq.dialog("option", "position", jpo);
-                                        var open = jq.dialog("isOpen");
-                                        if (open) {
-                                            jq.dialog("close");
-                                            jq.dialog("open");
-                                        }
+                            for (var _i = 0, _a = this.dialogs; _i < _a.length; _i++) {
+                                var jq = _a[_i];
+                                var jpo = jq["jpo"];
+                                if (jpo != null) {
+                                    jq.dialog("option", "position", jpo);
+                                    var open = jq.dialog("isOpen");
+                                    if (open) {
+                                        jq.dialog("close");
+                                        jq.dialog("open");
                                     }
+                                }
+                            }
+                            for (var _b = 0, _c = gui.DialogMgr.dialogs; _b < _c.length; _b++) {
+                                var diag = _c[_b];
+                                diag.position();
+                                if (diag.isOpen()) {
+                                    diag.close();
+                                    diag.open();
                                 }
                             }
                         };
@@ -317,25 +452,11 @@ var org;
                             var _this = this;
                             var itemsRefresh = document.getElementById("itemsRefresh");
                             itemsRefresh.onclick = function () {
-                                _this._itemsDiag.dialog("close");
+                                _this._itemsDiag.close();
                                 _this._updateItemsTable();
-                                _this._itemsDiag.dialog("open");
+                                _this._itemsDiag.open();
                             };
-                            this._itemsDiag = $("#itemsDiv");
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                position: this.rightTop,
-                                //minWidth: 300,
-                                //maxHeight: 500,
-                                width: "auto",
-                                height: "auto",
-                                closeText: "",
-                                closeOnEscape: false
-                            };
-                            this._itemsDiag.dialog(dos);
-                            this._itemsDiag["jpo"] = this.rightTop;
-                            this.dialogs.push(this._itemsDiag);
+                            this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.rightTop);
                         };
                         VishvaGUI.prototype._onItemClick = function (e) {
                             var cell = e.target;
@@ -456,19 +577,7 @@ var org;
                             var trnColDiag = new ColorPickerDiag("terrain color", "trnCol", this.vishva.getGroundColor(), this.centerBottom, function (hex, hsv, rgb) {
                                 _this.vishva.setGroundColor(hex);
                             });
-                            this.envDiag = $("#envDiv");
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                position: this.rightCenter,
-                                minWidth: 350,
-                                height: "auto",
-                                closeText: "",
-                                closeOnEscape: false
-                            };
-                            this.envDiag.dialog(dos);
-                            this.envDiag["jpo"] = this.rightCenter;
-                            this.dialogs.push(this.envDiag);
+                            this.envDiag = new gui.VDialog("envDiv", "Environment", gui.DialogMgr.rightCenter, "", "", 350);
                         };
                         VishvaGUI.prototype.createSettingDiag = function () {
                             var _this = this;
@@ -1039,7 +1148,7 @@ var org;
                          * is removed from mesh
                          */
                         VishvaGUI.prototype.closePropsDiag = function () {
-                            if (this._itemsDiag != null && this._itemsDiag.dialog("isOpen") === true) {
+                            if (this._itemsDiag != null && this._itemsDiag.isOpen()) {
                                 this._clearPrevItem();
                             }
                             if (this.propsDiag != null)
@@ -1886,21 +1995,21 @@ var org;
                             };
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
-                                if (_this._itemsDiag == undefined) {
+                                if (_this._itemsDiag == null) {
                                     _this._createItemsDiag();
                                 }
-                                if (_this._itemsDiag.dialog("isOpen") === false) {
+                                if (!_this._itemsDiag.isOpen()) {
                                     _this._updateItemsTable();
                                 }
-                                _this.toggleDiag(_this._itemsDiag);
+                                _this._itemsDiag.toggle();
                                 return false;
                             };
                             var navEnv = document.getElementById("navEnv");
                             navEnv.onclick = function (e) {
-                                if (_this.envDiag == undefined) {
+                                if (_this.envDiag == null) {
                                     _this.createEnvDiag();
                                 }
-                                _this.toggleDiag(_this.envDiag);
+                                _this.envDiag.toggle();
                                 return false;
                             };
                             var navEdit = document.getElementById("navEdit");

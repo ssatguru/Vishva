@@ -190,23 +190,29 @@
             <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;display:block;">
                 <button id="downWorld"><span class="ui-icon  ui-icon ui-icon-arrowthickstop-1-s" title="download scene"></span></button>
                 <button id="navItems" title="list items">list </button>
-                <button id="navAdd"><span class="ui-icon ui-icon-plusthick" title="add"></span> </button>
+                <button id="navAdd"><span class="ui-icon ui-icon-plusthick" title="add items"></span> </button>
                 <button id="navEnv"><span class="ui-icon ui-icon-image" title="environment"></span> </button>
                 <button id="navEdit"><span class="ui-icon ui-icon-wrench" title="edit"></span> </button>
                 <button id="navSettings"><span class="ui-icon ui-icon-gear" title="settings"></span> </button>
                 <button id="helpLink"><span class="ui-icon ui-icon-help" title="help"></span> </button>
                 <button id="debugLink"><span class="ui-icon ui-icon-info" title="debug"></span> </button>
             </div>
-
-            <ul id="AddMenu" style="position: absolute; width: auto; ">
-            </ul>
-
+            
         </div>
 
         <!-- all elements used by jquery ui -->
         <div id="gui-items-2"  >
+            
             <div id="itemsDiv" title="Items"  >
                 <table id="itemsTable" style="width: 100%;text-align:left;cursor:pointer;"  class="noselect">
+                    <tbody style="height:400px;overflow-y:auto;display:block;">
+                    </tbody>
+                </table>
+                <br>
+                <button id="itemsRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
+            </div>
+            <div id="addItemsDiv" title="Add Items"  >
+                <table id="addItemTable" style="width: 100%;text-align:left;cursor:pointer;"  class="noselect">
                     <tbody style="height:400px;overflow-y:auto;display:block;">
                     </tbody>
                 </table>

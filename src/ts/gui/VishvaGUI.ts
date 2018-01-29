@@ -11,22 +11,22 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
     export class VishvaGUI {
 
-        private vishva: Vishva;
+        private _vishva: Vishva;
 
         local: boolean=true;
 
         downloadLink: HTMLAnchorElement;
 
-        private static LARGE_ICON_SIZE: string="width:128px;height:128px;";
+        public static LARGE_ICON_SIZE: string="width:128px;height:128px;";
 
-        private static SMALL_ICON_SIZE: string="width:64px;height:64px;";
+        public static SMALL_ICON_SIZE: string="width:64px;height:64px;";
 
         private menuBarOn: boolean=true;
 
         private STATE_IND: string="state";
 
         public constructor(vishva: Vishva) {
-            this.vishva=vishva;
+            this._vishva=vishva;
 
             this.setSettings();
 
@@ -40,22 +40,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
-            $("input").on("focus",() => {this.vishva.disableKeys();});
-            $("input").on("blur",() => {this.vishva.enableKeys();});
+            $("input").on("focus",() => {this._vishva.disableKeys();});
+            $("input").on("blur",() => {this._vishva.enableKeys();});
 
-            this.createJPOs();
-
-            //need to do add menu before main navigation menu
-            //the content of add menu is not static
-            //it changes based on the asset.js file
-            this.createAddMenu();
+            //this.createJPOs();
 
             //main navigation menu 
             this.createNavMenu();
 
             this.createDownloadDiag();
             //this.createUploadDiag();
-
 
             DialogMgr.createAlertDiag();
 
@@ -65,33 +59,33 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             window.addEventListener("resize",(evt) => {return this.onWindowResize(evt)});
         }
 
-        private centerBottom: JQueryPositionOptions;
-        private leftCenter: JQueryPositionOptions;
-        private rightCenter: JQueryPositionOptions;
-        private rightTop: JQueryPositionOptions;
-
-        private createJPOs() {
-            this.centerBottom={
-                at: "center bottom",
-                my: "center bottom",
-                of: window
-            };
-            this.leftCenter={
-                at: "left center",
-                my: "left center",
-                of: window
-            };
-            this.rightCenter={
-                at: "right center",
-                my: "right center",
-                of: window
-            };
-            this.rightTop={
-                at: "right top",
-                my: "right top",
-                of: window
-            };
-        }
+//        private centerBottom: JQueryPositionOptions;
+//        private leftCenter: JQueryPositionOptions;
+//        private rightCenter: JQueryPositionOptions;
+//        private rightTop: JQueryPositionOptions;
+//
+//        private createJPOs() {
+//            this.centerBottom={
+//                at: "center bottom",
+//                my: "center bottom",
+//                of: window
+//            };
+//            this.leftCenter={
+//                at: "left center",
+//                my: "left center",
+//                of: window
+//            };
+//            this.rightCenter={
+//                at: "right center",
+//                my: "right center",
+//                of: window
+//            };
+//            this.rightTop={
+//                at: "right top",
+//                my: "right top",
+//                of: window
+//            };
+//        }
 
         /**
          * this array will be used store all dialogs whose position needs to be
@@ -133,102 +127,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
 
-        //skyboxesDiag: JQuery;
 
-        private createAddMenu() {
-            var assetTypes: string[]=Object.keys(this.vishva.assets);
-            var addMenu: HTMLUListElement=<HTMLUListElement>document.getElementById("AddMenu");
-            addMenu.style.visibility="visible";
-            var f: (p1: MouseEvent) => any=(e) => {return this.onAddMenuItemClick(e)};
-            for(let assetType of assetTypes) {
-                if(assetType==="sounds") {
-                    continue;
-                }
-                var li: HTMLLIElement=document.createElement("li");
-                li.id="add-"+assetType;
-                li.innerText=assetType;
-                li.onclick=f;
-                addMenu.appendChild(li);
-            }
-        }
-
-        private onAddMenuItemClick(e: MouseEvent): any {
-            var li: HTMLLIElement=<HTMLLIElement>e.target;
-            var jq: JQuery=<JQuery>li["diag"];
-            if(jq==null) {
-                var assetType: string=li.innerHTML;
-                jq=this.createAssetDiag(assetType);
-                li["diag"]=jq;
-            }
-            jq.dialog("open");
-            return true;
-        }
-
-        private createAssetDiag(assetType: string): JQuery {
-            var div: HTMLDivElement=document.createElement("div");
-            div.id=assetType+"Div";
-            div.setAttribute("title",assetType);
-            var table: HTMLTableElement=document.createElement("table");
-            table.id=assetType+"Tbl";
-            var items: Array<string>=<Array<string>>this.vishva.assets[assetType];
-            this.updateAssetTable(table,assetType,items);
-            div.appendChild(table);
-            document.body.appendChild(div);
-
-            var jq: JQuery=<JQuery>(<any>$("#"+div.id));
-            var dos: DialogOptions={
-                autoOpen: false,
-                resizable: true,
-                position: this.centerBottom,
-                width: (<any>"95%"),
-                height: (<any>"auto"),
-                closeText: "",
-                closeOnEscape: false
-            };
-            jq.dialog(dos);
-            jq["jpo"]=this.centerBottom;
-            this.dialogs.push(jq);
-            return jq;
-        }
-
-        private updateAssetTable(tbl: HTMLTableElement,assetType: string,items: Array<string>) {
-            if(tbl.rows.length>0) {
-                return;
-            }
-            var f: (p1: MouseEvent) => any=(e) => {return this.onAssetImgClick(e)};
-            var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-            for(let item of items) {
-                let img: HTMLImageElement=document.createElement("img");
-                img.id=item;
-                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                let name: string=item.split(".")[0];
-                img.src="vishva/assets/"+assetType+"/"+name+"/"+name+".jpg";
-                img.setAttribute("style",VishvaGUI.SMALL_ICON_SIZE+"cursor:pointer;");
-                img.className=assetType;
-                img.onclick=f;
-                var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                cell.appendChild(img);
-            }
-            var row2: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-            for(let item of items) {
-                let cell: HTMLTableCellElement=<HTMLTableCellElement>row2.insertCell();
-                cell.innerText=item;
-            }
-        }
-
-        private onAssetImgClick(e: Event): any {
-            var i: HTMLImageElement=<HTMLImageElement>e.target;
-            if(i.className==="skyboxes") {
-                this.vishva.setSky(i.id);
-            } else if(i.className==="primitives") {
-                this.vishva.addPrim(i.id);
-            } else if(i.className==="water") {
-                this.vishva.createWater();
-            } else {
-                this.vishva.loadAsset(i.className,i.id);
-            }
-            return true;
-        }
+        
 
 
         downloadDialog: JQuery;
@@ -258,7 +158,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                             file=f;
                         }
                     }
-                    this.vishva.loadAssetFile(file);
+                    this._vishva.loadAssetFile(file);
                     this.loadDialog.dialog("close");
                     return true;
                 }
@@ -267,7 +167,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.loadDialog.dialog();
             this.loadDialog.dialog("close");
         }
-
 
  
 
@@ -316,8 +215,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             this.sensSel=<HTMLSelectElement>document.getElementById("sensSel");
             this.actSel=<HTMLSelectElement>document.getElementById("actSel");
-            var sensors: string[]=this.vishva.getSensorList();
-            var actuators: string[]=this.vishva.getActuatorList();
+            var sensors: string[]=this._vishva.getSensorList();
+            var actuators: string[]=this._vishva.getActuatorList();
 
             for(let sensor of sensors) {
                 var opt: HTMLOptionElement=<HTMLOptionElement>document.createElement("option");
@@ -338,12 +237,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         public show_sNaDiag() {
-            var sens: Array<SensorActuator>=<Array<SensorActuator>>this.vishva.getSensors();
+            var sens: Array<SensorActuator>=<Array<SensorActuator>>this._vishva.getSensors();
             if(sens==null) {
                 DialogMgr.showAlertDiag("no mesh selected");
                 return;
             }
-            var acts: Array<SensorActuator>=this.vishva.getActuators();
+            var acts: Array<SensorActuator>=this._vishva.getActuators();
             if(acts==null) {
                 DialogMgr.showAlertDiag("no mesh selected");
                 return;
@@ -356,8 +255,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             addSens.onclick=(e) => {
                 var s: HTMLOptionElement=<HTMLOptionElement>this.sensSel.item(this.sensSel.selectedIndex);
                 var sensor: string=s.value;
-                this.vishva.addSensorbyName(sensor);
-                this.updateSensActTbl(this.vishva.getSensors(),this.sensTbl);
+                this._vishva.addSensorbyName(sensor);
+                this.updateSensActTbl(this._vishva.getSensors(),this.sensTbl);
                 this.sNaDialog.dialog("close");
                 this.sNaDialog.dialog("open");
                 return true;
@@ -366,8 +265,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             addAct.onclick=(e) => {
                 var a: HTMLOptionElement=<HTMLOptionElement>this.actSel.item(this.actSel.selectedIndex);
                 var actuator: string=a.value;
-                this.vishva.addActuaorByName(actuator);
-                this.updateSensActTbl(this.vishva.getActuators(),this.actTbl);
+                this._vishva.addActuaorByName(actuator);
+                this.updateSensActTbl(this._vishva.getActuators(),this.actTbl);
                 this.sNaDialog.dialog("close");
                 this.sNaDialog.dialog("open");
                 return true;
@@ -423,7 +322,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     var el: HTMLElement=<HTMLElement>e.currentTarget;
                     var r: HTMLTableRowElement=<HTMLTableRowElement>el["row"];
                     tbl.deleteRow(r.rowIndex);
-                    this.vishva.removeSensorActuator(<SensorActuator>el["sa"]);
+                    this._vishva.removeSensorActuator(<SensorActuator>el["sa"]);
                     return true;
                 };
             }
@@ -440,10 +339,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             dos.closeText="";
             dos.closeOnEscape=false;
             dos.open=() => {
-                this.vishva.disableKeys();
+                this._vishva.disableKeys();
             }
             dos.close=() => {
-                this.vishva.enableKeys();
+                this._vishva.enableKeys();
             }
             this.editSensDiag.dialog(dos);
         }
@@ -471,7 +370,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             dbo.click=(e) => {
                 this.formRead(sensor.getProperties(),parmDiv.id);
                 sensor.handlePropertiesChange()
-                this.updateSensActTbl(this.vishva.getSensors(),this.sensTbl);
+                this.updateSensActTbl(this._vishva.getSensors(),this.sensTbl);
                 this.editSensDiag.dialog("close");
                 return true;
             };
@@ -493,10 +392,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             dos.closeText="";
             dos.closeOnEscape=false;
             dos.open=(e,ui) => {
-                this.vishva.disableKeys();
+                this._vishva.disableKeys();
             }
             dos.close=(e,ui) => {
-                this.vishva.enableKeys();
+                this._vishva.enableKeys();
             }
             this.editActDiag.dialog(dos);
         }
@@ -520,7 +419,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             if(actuator.getName()==="Sound") {
                 var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
-                prop.soundFile.values=this.vishva.getSoundFiles();
+                prop.soundFile.values=this._vishva.getSoundFiles();
             }
             var tbl: HTMLTableElement=this.formCreate(actuator.getProperties(),parmDiv.id);
             parmDiv.appendChild(tbl);
@@ -529,7 +428,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             dbo.click=(e) => {
                 this.formRead(actuator.getProperties(),parmDiv.id);
                 actuator.handlePropertiesChange();
-                this.updateSensActTbl(this.vishva.getActuators(),this.actTbl);
+                this.updateSensActTbl(this._vishva.getActuators(),this.actTbl);
                 this.editActDiag.dialog("close");
                 return true;
             };
@@ -634,12 +533,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          */
 
         public showPropDiag() {
-            if(!this.vishva.anyMeshSelected()) {
+            if(!this._vishva.anyMeshSelected()) {
                 DialogMgr.showAlertDiag("no mesh selected")
                 return;
             }
             if(this._itemProps==null) {
-                this._itemProps=new ItemProps(this.vishva,this.sNaDialog,this);
+                this._itemProps=new ItemProps(this._vishva,this.sNaDialog,this);
             }
             this._itemProps.open();
             return true;
@@ -686,6 +585,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         addMenuOn: boolean=false;
 
+        private _addItemUI:AddItemUI;
         private _items: Items;
         private _environment: Environment;
         private _settingDiag: Settings;
@@ -718,41 +618,49 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             };
 
             //add menu sliding setup
-            var slideDown: any=JSON.parse("{\"direction\":\"up\"}");
+//            var slideDown: any=JSON.parse("{\"direction\":\"up\"}");
+//            var navAdd: HTMLElement=document.getElementById("navAdd");
+//            var addMenu: JQuery=$("#AddMenu");
+//            addMenu.menu();
+//            addMenu.hide(null);
+//            navAdd.onclick=(e) => {
+//                if(this.firstTime) {
+//                    var jpo: JQueryPositionOptions={
+//                        my: "left top",
+//                        at: "left bottom",
+//                        of: navAdd
+//                    };
+//                    addMenu.menu().position(jpo);
+//                    this.firstTime=false;
+//                }
+//                if(this.addMenuOn) {
+//                    addMenu.menu().hide("slide",slideDown,100);
+//                } else {
+//                    addMenu.show("slide",slideDown,100);
+//                }
+//                this.addMenuOn=!this.addMenuOn;
+//                $(document).one("click",(jqe) => {
+//                    if(this.addMenuOn) {
+//                        addMenu.menu().hide("slide",slideDown,100);
+//                        this.addMenuOn=false;
+//                    }
+//                    return true;
+//                });
+//                e.cancelBubble=true;
+//                return true;
+//            };
+            
             var navAdd: HTMLElement=document.getElementById("navAdd");
-            var addMenu: JQuery=$("#AddMenu");
-            addMenu.menu();
-            addMenu.hide(null);
             navAdd.onclick=(e) => {
-                if(this.firstTime) {
-                    var jpo: JQueryPositionOptions={
-                        my: "left top",
-                        at: "left bottom",
-                        of: navAdd
-                    };
-                    addMenu.menu().position(jpo);
-                    this.firstTime=false;
+                if (this._addItemUI == null){
+                    this._addItemUI=new AddItemUI(this._vishva);
                 }
-                if(this.addMenuOn) {
-                    addMenu.menu().hide("slide",slideDown,100);
-                } else {
-                    addMenu.show("slide",slideDown,100);
-                }
-                this.addMenuOn=!this.addMenuOn;
-                $(document).one("click",(jqe) => {
-                    if(this.addMenuOn) {
-                        addMenu.menu().hide("slide",slideDown,100);
-                        this.addMenuOn=false;
-                    }
-                    return true;
-                });
-                e.cancelBubble=true;
-                return true;
-            };
+                this._addItemUI.toggle();
+            }
 
             var downWorld: HTMLElement=document.getElementById("downWorld");
             downWorld.onclick=(e) => {
-                var downloadURL: string=this.vishva.saveWorld();
+                var downloadURL: string=this._vishva.saveWorld();
                 if(downloadURL==null) return true;
                 this.downloadLink.href=downloadURL;
                 this.downloadDialog.dialog("open");
@@ -762,7 +670,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
                 if(this._items==null) {
-                    this._items=new Items(this.vishva);
+                    this._items=new Items(this._vishva);
                 }
                 this._items.toggle();
                 return false;
@@ -772,7 +680,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var navEnv: HTMLElement=document.getElementById("navEnv");
             navEnv.onclick=(e) => {
                 if(this._environment==null) {
-                    this._environment=new Environment(this.vishva);
+                    this._environment=new Environment(this._vishva);
                 }
                 this._environment.toggle();
                 return false;
@@ -815,7 +723,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             var debugLink: HTMLElement=document.getElementById("debugLink");
             debugLink.onclick=(e) => {
-                this.vishva.toggleDebug();
+                this._vishva.toggleDebug();
                 return true;
             };
         }
@@ -828,9 +736,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private setSettings() {
             if(this._settingDiag==null) {
-                this._settingDiag=new Settings(this.vishva,this);
+                this._settingDiag=new Settings(this._vishva,this);
             }
-            let guiSettings: GuiSettings=<GuiSettings>this.vishva.getGuiSettings();
+            let guiSettings: GuiSettings=<GuiSettings>this._vishva.getGuiSettings();
             if(guiSettings!==null)
                 this._settingDiag.enableToolTips=guiSettings.enableToolTips;
         }

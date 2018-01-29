@@ -8,6 +8,130 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_1) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * Provides a UI to add item to the world
+                     */
+                    var AddItemUI = (function () {
+                        function AddItemUI(vishva) {
+                            this._assetDiagMap = {};
+                            this._vishva = vishva;
+                            this._updateAddItemsTable();
+                            this._addItemsDiag = new gui.VDialog("addItemsDiv", "Add items", gui.DialogMgr.leftCenter);
+                        }
+                        AddItemUI.prototype.toggle = function () {
+                            if (this._addItemsDiag.isOpen()) {
+                                this._addItemsDiag.close();
+                            }
+                            else {
+                                this._addItemsDiag.open();
+                            }
+                        };
+                        AddItemUI.prototype._updateAddItemsTable = function () {
+                            var _this = this;
+                            var tbl = document.getElementById("addItemTable");
+                            tbl.onclick = function (e) { return _this._onAssetTypeClick(e); };
+                            var l = tbl.rows.length;
+                            for (var i = l - 1; i >= 0; i--) {
+                                tbl.deleteRow(i);
+                            }
+                            var assetTypes = Object.keys(this._vishva.assets);
+                            for (var _i = 0, assetTypes_1 = assetTypes; _i < assetTypes_1.length; _i++) {
+                                var assetType = assetTypes_1[_i];
+                                if (assetType === "sounds") {
+                                    continue;
+                                }
+                                var row = tbl.insertRow();
+                                var cell = row.insertCell();
+                                cell.innerText = assetType;
+                            }
+                        };
+                        AddItemUI.prototype._onAssetTypeClick = function (e) {
+                            var cell = e.target;
+                            if (!(cell instanceof HTMLTableCellElement))
+                                return;
+                            var assetType = cell.innerHTML;
+                            var assetDialog = this._assetDiagMap[assetType];
+                            if (assetDialog == null) {
+                                assetDialog = this._createAssetDiag(assetType);
+                                this._assetDiagMap[assetType] = assetDialog;
+                            }
+                            assetDialog.open();
+                            return true;
+                        };
+                        AddItemUI.prototype._createAssetDiag = function (assetType) {
+                            var div = document.createElement("div");
+                            div.id = assetType + "Div";
+                            div.setAttribute("title", assetType);
+                            var table = document.createElement("table");
+                            table.id = assetType + "Tbl";
+                            var items = this._vishva.assets[assetType];
+                            this.updateAssetTable(table, assetType, items);
+                            div.appendChild(table);
+                            document.body.appendChild(div);
+                            var assetDiag = new gui.VDialog(div.id, assetType, gui.DialogMgr.centerBottom, "95%", "auto");
+                            return assetDiag;
+                        };
+                        AddItemUI.prototype.updateAssetTable = function (tbl, assetType, items) {
+                            var _this = this;
+                            if (tbl.rows.length > 0) {
+                                return;
+                            }
+                            var f = function (e) { return _this.onAssetImgClick(e); };
+                            var row = tbl.insertRow();
+                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
+                                var item = items_1[_i];
+                                var img = document.createElement("img");
+                                img.id = item;
+                                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
+                                var name_1 = item.split(".")[0];
+                                img.src = "vishva/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
+                                img.setAttribute("style", gui.VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
+                                img.className = assetType;
+                                img.onclick = f;
+                                var cell = row.insertCell();
+                                cell.appendChild(img);
+                            }
+                            var row2 = tbl.insertRow();
+                            for (var _a = 0, items_2 = items; _a < items_2.length; _a++) {
+                                var item = items_2[_a];
+                                var cell_1 = row2.insertCell();
+                                cell_1.innerText = item;
+                            }
+                        };
+                        AddItemUI.prototype.onAssetImgClick = function (e) {
+                            var i = e.target;
+                            if (i.className === "skyboxes") {
+                                this._vishva.setSky(i.id);
+                            }
+                            else if (i.className === "primitives") {
+                                this._vishva.addPrim(i.id);
+                            }
+                            else if (i.className === "water") {
+                                this._vishva.createWater();
+                            }
+                            else {
+                                this._vishva.loadAsset(i.className, i.id);
+                            }
+                            return true;
+                        };
+                        return AddItemUI;
+                    }());
+                    gui.AddItemUI = AddItemUI;
+                })(gui = vishva_1.gui || (vishva_1.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -229,7 +353,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_1) {
+            (function (vishva_2) {
                 var gui;
                 (function (gui) {
                     /**
@@ -321,7 +445,7 @@ var org;
                         return Environment;
                     }());
                     gui.Environment = Environment;
-                })(gui = vishva_1.gui || (vishva_1.gui = {}));
+                })(gui = vishva_2.gui || (vishva_2.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -333,7 +457,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_2) {
+            (function (vishva_3) {
                 var gui;
                 (function (gui) {
                     /**
@@ -971,7 +1095,7 @@ var org;
                             var lightParm = this.vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this.lightAtt.checked = false;
-                                lightParm = new vishva_2.LightParm();
+                                lightParm = new vishva_3.LightParm();
                             }
                             else {
                                 this.lightAtt.checked = true;
@@ -997,7 +1121,7 @@ var org;
                             //            }
                             if (!this.lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_2.LightParm();
+                            var lightParm = new vishva_3.LightParm();
                             lightParm.type = this.lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this.lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this.lightSpec.getColor());
@@ -1150,7 +1274,7 @@ var org;
                         ItemProps.prototype.applyPhysics = function () {
                             var phyParms;
                             if (this.phyEna.checked) {
-                                phyParms = new vishva_2.PhysicsParm();
+                                phyParms = new vishva_3.PhysicsParm();
                                 phyParms.type = parseInt(this.phyType.value);
                                 phyParms.mass = parseFloat(this.phyMass.value);
                                 phyParms.restitution = parseFloat(this.phyRes.value);
@@ -1163,7 +1287,7 @@ var org;
                         };
                         ItemProps.prototype.testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_2.PhysicsParm();
+                            phyParms = new vishva_3.PhysicsParm();
                             phyParms.type = parseInt(this.phyType.value);
                             phyParms.mass = parseFloat(this.phyMass.value);
                             phyParms.restitution = parseFloat(this.phyRes.value);
@@ -1177,7 +1301,7 @@ var org;
                         return ItemProps;
                     }());
                     gui.ItemProps = ItemProps;
-                })(gui = vishva_2.gui || (vishva_2.gui = {}));
+                })(gui = vishva_3.gui || (vishva_3.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1189,7 +1313,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_3) {
+            (function (vishva_4) {
                 var gui;
                 (function (gui) {
                     /*
@@ -1208,7 +1332,7 @@ var org;
                                 _this._updateItemsTable();
                                 _this._itemsDiag.open();
                             };
-                            this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.rightTop);
+                            this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.leftCenter);
                         }
                         Items.prototype.toggle = function () {
                             if (!this._itemsDiag.isOpen()) {
@@ -1252,8 +1376,8 @@ var org;
                             var items = this._vishva.getMeshList();
                             var meshChildMap = this._getMeshChildMap(items);
                             var childs;
-                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-                                var item = items_1[_i];
+                            for (var _i = 0, items_3 = items; _i < items_3.length; _i++) {
+                                var item = items_3[_i];
                                 if (item.parent == null) {
                                     var row = tbl.insertRow();
                                     var cell = row.insertCell();
@@ -1297,7 +1421,7 @@ var org;
                         return Items;
                     }());
                     gui.Items = Items;
-                })(gui = vishva_3.gui || (vishva_3.gui = {}));
+                })(gui = vishva_4.gui || (vishva_4.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1309,7 +1433,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_4) {
+            (function (vishva_5) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1385,7 +1509,7 @@ var org;
                         return Settings;
                     }());
                     gui.Settings = Settings;
-                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+                })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1397,7 +1521,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_5) {
+            (function (vishva_6) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -1406,6 +1530,33 @@ var org;
                             this.local = true;
                             this.menuBarOn = true;
                             this.STATE_IND = "state";
+                            //        private centerBottom: JQueryPositionOptions;
+                            //        private leftCenter: JQueryPositionOptions;
+                            //        private rightCenter: JQueryPositionOptions;
+                            //        private rightTop: JQueryPositionOptions;
+                            //
+                            //        private createJPOs() {
+                            //            this.centerBottom={
+                            //                at: "center bottom",
+                            //                my: "center bottom",
+                            //                of: window
+                            //            };
+                            //            this.leftCenter={
+                            //                at: "left center",
+                            //                my: "left center",
+                            //                of: window
+                            //            };
+                            //            this.rightCenter={
+                            //                at: "right center",
+                            //                my: "right center",
+                            //                of: window
+                            //            };
+                            //            this.rightTop={
+                            //                at: "right top",
+                            //                my: "right top",
+                            //                of: window
+                            //            };
+                            //        }
                             /**
                              * this array will be used store all dialogs whose position needs to be
                              * reset on window resize
@@ -1419,7 +1570,7 @@ var org;
                              */
                             this.firstTime = true;
                             this.addMenuOn = false;
-                            this.vishva = vishva;
+                            this._vishva = vishva;
                             this.setSettings();
                             $(document).tooltip({
                                 open: function (event, ui) {
@@ -1429,13 +1580,9 @@ var org;
                                 }
                             });
                             //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
-                            $("input").on("focus", function () { _this.vishva.disableKeys(); });
-                            $("input").on("blur", function () { _this.vishva.enableKeys(); });
-                            this.createJPOs();
-                            //need to do add menu before main navigation menu
-                            //the content of add menu is not static
-                            //it changes based on the asset.js file
-                            this.createAddMenu();
+                            $("input").on("focus", function () { _this._vishva.disableKeys(); });
+                            $("input").on("blur", function () { _this._vishva.enableKeys(); });
+                            //this.createJPOs();
                             //main navigation menu 
                             this.createNavMenu();
                             this.createDownloadDiag();
@@ -1446,28 +1593,6 @@ var org;
                             this.createEditActDiag();
                             window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
                         }
-                        VishvaGUI.prototype.createJPOs = function () {
-                            this.centerBottom = {
-                                at: "center bottom",
-                                my: "center bottom",
-                                of: window
-                            };
-                            this.leftCenter = {
-                                at: "left center",
-                                my: "left center",
-                                of: window
-                            };
-                            this.rightCenter = {
-                                at: "right center",
-                                my: "right center",
-                                of: window
-                            };
-                            this.rightTop = {
-                                at: "right top",
-                                my: "right top",
-                                of: window
-                            };
-                        };
                         /**
                          * resposition all dialogs to their original default postions without this,
                          * a window resize could end up moving some dialogs outside the window and
@@ -1499,104 +1624,6 @@ var org;
                                 }
                             }
                         };
-                        //skyboxesDiag: JQuery;
-                        VishvaGUI.prototype.createAddMenu = function () {
-                            var _this = this;
-                            var assetTypes = Object.keys(this.vishva.assets);
-                            var addMenu = document.getElementById("AddMenu");
-                            addMenu.style.visibility = "visible";
-                            var f = function (e) { return _this.onAddMenuItemClick(e); };
-                            for (var _i = 0, assetTypes_1 = assetTypes; _i < assetTypes_1.length; _i++) {
-                                var assetType = assetTypes_1[_i];
-                                if (assetType === "sounds") {
-                                    continue;
-                                }
-                                var li = document.createElement("li");
-                                li.id = "add-" + assetType;
-                                li.innerText = assetType;
-                                li.onclick = f;
-                                addMenu.appendChild(li);
-                            }
-                        };
-                        VishvaGUI.prototype.onAddMenuItemClick = function (e) {
-                            var li = e.target;
-                            var jq = li["diag"];
-                            if (jq == null) {
-                                var assetType = li.innerHTML;
-                                jq = this.createAssetDiag(assetType);
-                                li["diag"] = jq;
-                            }
-                            jq.dialog("open");
-                            return true;
-                        };
-                        VishvaGUI.prototype.createAssetDiag = function (assetType) {
-                            var div = document.createElement("div");
-                            div.id = assetType + "Div";
-                            div.setAttribute("title", assetType);
-                            var table = document.createElement("table");
-                            table.id = assetType + "Tbl";
-                            var items = this.vishva.assets[assetType];
-                            this.updateAssetTable(table, assetType, items);
-                            div.appendChild(table);
-                            document.body.appendChild(div);
-                            var jq = $("#" + div.id);
-                            var dos = {
-                                autoOpen: false,
-                                resizable: true,
-                                position: this.centerBottom,
-                                width: "95%",
-                                height: "auto",
-                                closeText: "",
-                                closeOnEscape: false
-                            };
-                            jq.dialog(dos);
-                            jq["jpo"] = this.centerBottom;
-                            this.dialogs.push(jq);
-                            return jq;
-                        };
-                        VishvaGUI.prototype.updateAssetTable = function (tbl, assetType, items) {
-                            var _this = this;
-                            if (tbl.rows.length > 0) {
-                                return;
-                            }
-                            var f = function (e) { return _this.onAssetImgClick(e); };
-                            var row = tbl.insertRow();
-                            for (var _i = 0, items_2 = items; _i < items_2.length; _i++) {
-                                var item = items_2[_i];
-                                var img = document.createElement("img");
-                                img.id = item;
-                                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                                var name_1 = item.split(".")[0];
-                                img.src = "vishva/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
-                                img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
-                                img.className = assetType;
-                                img.onclick = f;
-                                var cell = row.insertCell();
-                                cell.appendChild(img);
-                            }
-                            var row2 = tbl.insertRow();
-                            for (var _a = 0, items_3 = items; _a < items_3.length; _a++) {
-                                var item = items_3[_a];
-                                var cell_1 = row2.insertCell();
-                                cell_1.innerText = item;
-                            }
-                        };
-                        VishvaGUI.prototype.onAssetImgClick = function (e) {
-                            var i = e.target;
-                            if (i.className === "skyboxes") {
-                                this.vishva.setSky(i.id);
-                            }
-                            else if (i.className === "primitives") {
-                                this.vishva.addPrim(i.id);
-                            }
-                            else if (i.className === "water") {
-                                this.vishva.createWater();
-                            }
-                            else {
-                                this.vishva.loadAsset(i.className, i.id);
-                            }
-                            return true;
-                        };
                         VishvaGUI.prototype.createDownloadDiag = function () {
                             this.downloadLink = document.getElementById("downloadLink");
                             this.downloadDialog = $("#saveDiv");
@@ -1621,7 +1648,7 @@ var org;
                                             file = f;
                                         }
                                     }
-                                    _this.vishva.loadAssetFile(file);
+                                    _this._vishva.loadAssetFile(file);
                                     _this.loadDialog.dialog("close");
                                     return true;
                                 };
@@ -1662,8 +1689,8 @@ var org;
                             this.sNaDialog.dialog(dos);
                             this.sensSel = document.getElementById("sensSel");
                             this.actSel = document.getElementById("actSel");
-                            var sensors = this.vishva.getSensorList();
-                            var actuators = this.vishva.getActuatorList();
+                            var sensors = this._vishva.getSensorList();
+                            var actuators = this._vishva.getActuatorList();
                             for (var _i = 0, sensors_1 = sensors; _i < sensors_1.length; _i++) {
                                 var sensor = sensors_1[_i];
                                 var opt = document.createElement("option");
@@ -1683,12 +1710,12 @@ var org;
                         };
                         VishvaGUI.prototype.show_sNaDiag = function () {
                             var _this = this;
-                            var sens = this.vishva.getSensors();
+                            var sens = this._vishva.getSensors();
                             if (sens == null) {
                                 gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
                             }
-                            var acts = this.vishva.getActuators();
+                            var acts = this._vishva.getActuators();
                             if (acts == null) {
                                 gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
@@ -1700,8 +1727,8 @@ var org;
                             addSens.onclick = function (e) {
                                 var s = _this.sensSel.item(_this.sensSel.selectedIndex);
                                 var sensor = s.value;
-                                _this.vishva.addSensorbyName(sensor);
-                                _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
+                                _this._vishva.addSensorbyName(sensor);
+                                _this.updateSensActTbl(_this._vishva.getSensors(), _this.sensTbl);
                                 _this.sNaDialog.dialog("close");
                                 _this.sNaDialog.dialog("open");
                                 return true;
@@ -1710,8 +1737,8 @@ var org;
                             addAct.onclick = function (e) {
                                 var a = _this.actSel.item(_this.actSel.selectedIndex);
                                 var actuator = a.value;
-                                _this.vishva.addActuaorByName(actuator);
-                                _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
+                                _this._vishva.addActuaorByName(actuator);
+                                _this.updateSensActTbl(_this._vishva.getActuators(), _this.actTbl);
                                 _this.sNaDialog.dialog("close");
                                 _this.sNaDialog.dialog("open");
                                 return true;
@@ -1769,7 +1796,7 @@ var org;
                                     var el = e.currentTarget;
                                     var r = el["row"];
                                     tbl.deleteRow(r.rowIndex);
-                                    _this.vishva.removeSensorActuator(el["sa"]);
+                                    _this._vishva.removeSensorActuator(el["sa"]);
                                     return true;
                                 };
                             }
@@ -1786,10 +1813,10 @@ var org;
                             dos.closeText = "";
                             dos.closeOnEscape = false;
                             dos.open = function () {
-                                _this.vishva.disableKeys();
+                                _this._vishva.disableKeys();
                             };
                             dos.close = function () {
-                                _this.vishva.enableKeys();
+                                _this._vishva.enableKeys();
                             };
                             this.editSensDiag.dialog(dos);
                         };
@@ -1815,7 +1842,7 @@ var org;
                             dbo.click = function (e) {
                                 _this.formRead(sensor.getProperties(), parmDiv.id);
                                 sensor.handlePropertiesChange();
-                                _this.updateSensActTbl(_this.vishva.getSensors(), _this.sensTbl);
+                                _this.updateSensActTbl(_this._vishva.getSensors(), _this.sensTbl);
                                 _this.editSensDiag.dialog("close");
                                 return true;
                             };
@@ -1834,10 +1861,10 @@ var org;
                             dos.closeText = "";
                             dos.closeOnEscape = false;
                             dos.open = function (e, ui) {
-                                _this.vishva.disableKeys();
+                                _this._vishva.disableKeys();
                             };
                             dos.close = function (e, ui) {
-                                _this.vishva.enableKeys();
+                                _this._vishva.enableKeys();
                             };
                             this.editActDiag.dialog(dos);
                         };
@@ -1858,7 +1885,7 @@ var org;
                             }
                             if (actuator.getName() === "Sound") {
                                 var prop = actuator.getProperties();
-                                prop.soundFile.values = this.vishva.getSoundFiles();
+                                prop.soundFile.values = this._vishva.getSoundFiles();
                             }
                             var tbl = this.formCreate(actuator.getProperties(), parmDiv.id);
                             parmDiv.appendChild(tbl);
@@ -1867,7 +1894,7 @@ var org;
                             dbo.click = function (e) {
                                 _this.formRead(actuator.getProperties(), parmDiv.id);
                                 actuator.handlePropertiesChange();
-                                _this.updateSensActTbl(_this.vishva.getActuators(), _this.actTbl);
+                                _this.updateSensActTbl(_this._vishva.getActuators(), _this.actTbl);
                                 _this.editActDiag.dialog("close");
                                 return true;
                             };
@@ -1981,12 +2008,12 @@ var org;
                          * Mesh properties section
                          */
                         VishvaGUI.prototype.showPropDiag = function () {
-                            if (!this.vishva.anyMeshSelected()) {
+                            if (!this._vishva.anyMeshSelected()) {
                                 gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
                             }
                             if (this._itemProps == null) {
-                                this._itemProps = new gui.ItemProps(this.vishva, this.sNaDialog, this);
+                                this._itemProps = new gui.ItemProps(this._vishva, this.sNaDialog, this);
                             }
                             this._itemProps.open();
                             return true;
@@ -2041,41 +2068,47 @@ var org;
                                 return true;
                             };
                             //add menu sliding setup
-                            var slideDown = JSON.parse("{\"direction\":\"up\"}");
+                            //            var slideDown: any=JSON.parse("{\"direction\":\"up\"}");
+                            //            var navAdd: HTMLElement=document.getElementById("navAdd");
+                            //            var addMenu: JQuery=$("#AddMenu");
+                            //            addMenu.menu();
+                            //            addMenu.hide(null);
+                            //            navAdd.onclick=(e) => {
+                            //                if(this.firstTime) {
+                            //                    var jpo: JQueryPositionOptions={
+                            //                        my: "left top",
+                            //                        at: "left bottom",
+                            //                        of: navAdd
+                            //                    };
+                            //                    addMenu.menu().position(jpo);
+                            //                    this.firstTime=false;
+                            //                }
+                            //                if(this.addMenuOn) {
+                            //                    addMenu.menu().hide("slide",slideDown,100);
+                            //                } else {
+                            //                    addMenu.show("slide",slideDown,100);
+                            //                }
+                            //                this.addMenuOn=!this.addMenuOn;
+                            //                $(document).one("click",(jqe) => {
+                            //                    if(this.addMenuOn) {
+                            //                        addMenu.menu().hide("slide",slideDown,100);
+                            //                        this.addMenuOn=false;
+                            //                    }
+                            //                    return true;
+                            //                });
+                            //                e.cancelBubble=true;
+                            //                return true;
+                            //            };
                             var navAdd = document.getElementById("navAdd");
-                            var addMenu = $("#AddMenu");
-                            addMenu.menu();
-                            addMenu.hide(null);
                             navAdd.onclick = function (e) {
-                                if (_this.firstTime) {
-                                    var jpo = {
-                                        my: "left top",
-                                        at: "left bottom",
-                                        of: navAdd
-                                    };
-                                    addMenu.menu().position(jpo);
-                                    _this.firstTime = false;
+                                if (_this._addItemUI == null) {
+                                    _this._addItemUI = new gui.AddItemUI(_this._vishva);
                                 }
-                                if (_this.addMenuOn) {
-                                    addMenu.menu().hide("slide", slideDown, 100);
-                                }
-                                else {
-                                    addMenu.show("slide", slideDown, 100);
-                                }
-                                _this.addMenuOn = !_this.addMenuOn;
-                                $(document).one("click", function (jqe) {
-                                    if (_this.addMenuOn) {
-                                        addMenu.menu().hide("slide", slideDown, 100);
-                                        _this.addMenuOn = false;
-                                    }
-                                    return true;
-                                });
-                                e.cancelBubble = true;
-                                return true;
+                                _this._addItemUI.toggle();
                             };
                             var downWorld = document.getElementById("downWorld");
                             downWorld.onclick = function (e) {
-                                var downloadURL = _this.vishva.saveWorld();
+                                var downloadURL = _this._vishva.saveWorld();
                                 if (downloadURL == null)
                                     return true;
                                 _this.downloadLink.href = downloadURL;
@@ -2085,7 +2118,7 @@ var org;
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
                                 if (_this._items == null) {
-                                    _this._items = new gui.Items(_this.vishva);
+                                    _this._items = new gui.Items(_this._vishva);
                                 }
                                 _this._items.toggle();
                                 return false;
@@ -2093,7 +2126,7 @@ var org;
                             var navEnv = document.getElementById("navEnv");
                             navEnv.onclick = function (e) {
                                 if (_this._environment == null) {
-                                    _this._environment = new gui.Environment(_this.vishva);
+                                    _this._environment = new gui.Environment(_this._vishva);
                                 }
                                 _this._environment.toggle();
                                 return false;
@@ -2132,7 +2165,7 @@ var org;
                             };
                             var debugLink = document.getElementById("debugLink");
                             debugLink.onclick = function (e) {
-                                _this.vishva.toggleDebug();
+                                _this._vishva.toggleDebug();
                                 return true;
                             };
                         };
@@ -2143,9 +2176,9 @@ var org;
                         };
                         VishvaGUI.prototype.setSettings = function () {
                             if (this._settingDiag == null) {
-                                this._settingDiag = new gui.Settings(this.vishva, this);
+                                this._settingDiag = new gui.Settings(this._vishva, this);
                             }
-                            var guiSettings = this.vishva.getGuiSettings();
+                            var guiSettings = this._vishva.getGuiSettings();
                             if (guiSettings !== null)
                                 this._settingDiag.enableToolTips = guiSettings.enableToolTips;
                         };
@@ -2191,7 +2224,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_5.gui || (vishva_5.gui = {}));
+                })(gui = vishva_6.gui || (vishva_6.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));

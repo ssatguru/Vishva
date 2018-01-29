@@ -19,7 +19,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._itemsDiag.open();
             }
 
-            this._itemsDiag=new VDialog("itemsDiv","Items",DialogMgr.rightTop);
+            this._itemsDiag=new VDialog("itemsDiv","Items",DialogMgr.leftCenter);
         }
 
         public toggle() {

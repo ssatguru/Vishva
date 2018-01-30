@@ -359,11 +359,11 @@ var org;
                     /**
                      * provides a ui to manage the environment in the world
                      */
-                    var Environment = (function () {
+                    var EnvironmentUI = (function () {
                         /*
                          * Create Environment Dialog
                          */
-                        function Environment(vishva) {
+                        function EnvironmentUI(vishva) {
                             var _this = this;
                             this.vishva = vishva;
                             var sunPos = $("#sunPos");
@@ -407,7 +407,7 @@ var org;
                             });
                             this.envDiag = new gui.VDialog("envDiv", "Environment", gui.DialogMgr.rightCenter, "", "", 350);
                         }
-                        Environment.prototype.sliderOptions = function (min, max, value) {
+                        EnvironmentUI.prototype.sliderOptions = function (min, max, value) {
                             var _this = this;
                             var so = {};
                             so.min = min;
@@ -416,7 +416,7 @@ var org;
                             so.slide = function (e, ui) { return _this.handleSlide(e, ui); };
                             return so;
                         };
-                        Environment.prototype.handleSlide = function (e, ui) {
+                        EnvironmentUI.prototype.handleSlide = function (e, ui) {
                             var slider = e.target.id;
                             if (slider === "fov") {
                                 this.vishva.setFov(ui.value);
@@ -439,12 +439,12 @@ var org;
                             }
                             return true;
                         };
-                        Environment.prototype.toggle = function () {
+                        EnvironmentUI.prototype.toggle = function () {
                             this.envDiag.toggle();
                         };
-                        return Environment;
+                        return EnvironmentUI;
                     }());
-                    gui.Environment = Environment;
+                    gui.EnvironmentUI = EnvironmentUI;
                 })(gui = vishva_2.gui || (vishva_2.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -463,8 +463,8 @@ var org;
                     /**
                      * Provides UI to manage an Item(mesh) properties
                      */
-                    var ItemProps = (function () {
-                        function ItemProps(vishva, sNaDialog, vishvaGUI) {
+                    var ItemPropsUI = (function () {
+                        function ItemPropsUI(vishva, vishvaGUI) {
                             var _this = this;
                             this.propsDiag = null;
                             this.fixingDragIssue = false;
@@ -478,7 +478,6 @@ var org;
                             this.animUIInitialized = false;
                             this.animSelect = null;
                             this.vishva = vishva;
-                            this.sNaDialog = sNaDialog;
                             this._vishvaGUI = vishvaGUI;
                             var propsAcc = $("#propsAcc");
                             propsAcc.accordion({
@@ -521,8 +520,8 @@ var org;
                                 },
                                 closeText: "",
                                 close: function (e, ui) {
-                                    if (!_this.fixingDragIssue && !_this.refreshingPropsDiag && _this.sNaDialog.dialog("isOpen") === true) {
-                                        _this.sNaDialog.dialog("close");
+                                    if (!_this.fixingDragIssue && !_this.refreshingPropsDiag && (_this.snaUI != null) && _this.snaUI.isOpen()) {
+                                        _this.snaUI.close();
                                     }
                                 },
                                 //after drag the dialog box doesnot resize
@@ -537,16 +536,16 @@ var org;
                             this.propsDiag["jpo"] = gui.DialogMgr.leftCenter;
                             this._vishvaGUI.dialogs.push(this.propsDiag);
                         }
-                        ItemProps.prototype.open = function () {
+                        ItemPropsUI.prototype.open = function () {
                             this.propsDiag.dialog("open");
                         };
-                        ItemProps.prototype.isOpen = function () {
+                        ItemPropsUI.prototype.isOpen = function () {
                             return this.propsDiag.dialog("isOpen");
                         };
-                        ItemProps.prototype.close = function () {
+                        ItemPropsUI.prototype.close = function () {
                             this.propsDiag.dialog("close");
                         };
-                        ItemProps.prototype.refreshPropsDiag = function () {
+                        ItemPropsUI.prototype.refreshPropsDiag = function () {
                             if ((this.propsDiag === undefined) || (this.propsDiag === null))
                                 return;
                             if (this.propsDiag.dialog("isOpen") === true) {
@@ -556,11 +555,11 @@ var org;
                             }
                         };
                         //only refresh if general panel is active;
-                        ItemProps.prototype.refreshGeneralPanel = function () {
+                        ItemPropsUI.prototype.refreshGeneralPanel = function () {
                             if (this.activePanel === 0 /* General */)
                                 this.refreshPropsDiag();
                         };
-                        ItemProps.prototype.getPanelIndex = function (ui) {
+                        ItemPropsUI.prototype.getPanelIndex = function (ui) {
                             if (ui.text() == "General")
                                 return 0 /* General */;
                             if (ui.text() == "Physics")
@@ -572,7 +571,7 @@ var org;
                             if (ui.text() == "Animations")
                                 return 4 /* Animations */;
                         };
-                        ItemProps.prototype.refreshPanel = function (panelIndex) {
+                        ItemPropsUI.prototype.refreshPanel = function (panelIndex) {
                             if (panelIndex === 0 /* General */) {
                                 this.updateGeneral();
                             }
@@ -589,12 +588,12 @@ var org;
                                 this.updateMat();
                             }
                             //refresh sNaDialog if open
-                            if (this.sNaDialog.dialog("isOpen") === true) {
-                                this.sNaDialog.dialog("close");
-                                this._vishvaGUI.show_sNaDiag();
+                            if (this.snaUI != null && this.snaUI.isOpen()) {
+                                this.snaUI.close();
+                                this.snaUI.show_sNaDiag();
                             }
                         };
-                        ItemProps.prototype.initAnimUI = function () {
+                        ItemPropsUI.prototype.initAnimUI = function () {
                             var _this = this;
                             this.animUIInitialized = true;
                             var animSkelChange = document.getElementById("animSkelChange");
@@ -689,7 +688,7 @@ var org;
                         //            };
                         //            this.meshAnimDiag.dialog(dos);
                         //        }
-                        ItemProps.prototype.updateAnimations = function () {
+                        ItemPropsUI.prototype.updateAnimations = function () {
                             //this.vishva.switchDisabled = true;
                             if (!this.animUIInitialized)
                                 this.initAnimUI();
@@ -711,7 +710,7 @@ var org;
                         /**
                          * refresh the list of animation ranges
                          */
-                        ItemProps.prototype.refreshAnimSelect = function () {
+                        ItemPropsUI.prototype.refreshAnimSelect = function () {
                             var childs = this.animSelect.children;
                             var l = (childs.length | 0);
                             for (var i = l - 1; i >= 0; i--) {
@@ -744,7 +743,7 @@ var org;
                         /**
                          * refresh list of skeletons shown in animation tab
                          */
-                        ItemProps.prototype.refreshAnimSkelList = function () {
+                        ItemPropsUI.prototype.refreshAnimSkelList = function () {
                             var childs = this.animSkelList.children;
                             var l = (childs.length | 0);
                             for (var i = l - 1; i >= 0; i--) {
@@ -761,10 +760,10 @@ var org;
                                 this.animSkelList.appendChild(opt);
                             }
                         };
-                        ItemProps.prototype.toString = function (d) {
+                        ItemPropsUI.prototype.toString = function (d) {
                             return new Number(d).toFixed(2).toString();
                         };
-                        ItemProps.prototype.initGeneral = function () {
+                        ItemPropsUI.prototype.initGeneral = function () {
                             var _this = this;
                             //name
                             this.genName = document.getElementById("genName");
@@ -992,9 +991,10 @@ var org;
                                     gui.DialogMgr.showAlertDiag("No Mesh Selected");
                                     return true;
                                 }
-                                _this._vishvaGUI.downloadLink.href = downloadURL;
-                                var env = $("#saveDiv");
-                                env.dialog("open");
+                                if (_this._downloadDialog == null)
+                                    _this._createDownloadDiag();
+                                _this._downloadLink.href = downloadURL;
+                                _this._downloadDialog.dialog("open");
                                 return false;
                             };
                             delMesh.onclick = function (e) {
@@ -1019,7 +1019,10 @@ var org;
                                 return true;
                             };
                             sNa.onclick = function (e) {
-                                _this._vishvaGUI.show_sNaDiag();
+                                if (_this.snaUI == null) {
+                                    _this.snaUI = new gui.SnaUI(_this.vishva);
+                                }
+                                _this.snaUI.show_sNaDiag();
                                 return true;
                             };
                             //            addWater.onclick = (e) => {
@@ -1030,7 +1033,7 @@ var org;
                             //                return true;
                             //            };
                         };
-                        ItemProps.prototype.updateGeneral = function () {
+                        ItemPropsUI.prototype.updateGeneral = function () {
                             if (this.genName === undefined)
                                 this.initGeneral();
                             this.genName.value = this.vishva.getName();
@@ -1040,7 +1043,7 @@ var org;
                             this.genColl.checked = this.vishva.isCollideable();
                             this.genVisi.checked = this.vishva.isVisible();
                         };
-                        ItemProps.prototype.updateTransform = function () {
+                        ItemPropsUI.prototype.updateTransform = function () {
                             var loc = this.vishva.getLocation();
                             var rot = this.vishva.getRotation();
                             var scl = this.vishva.getScale();
@@ -1054,7 +1057,7 @@ var org;
                             document.getElementById("scl.y").value = this.toString(scl.y);
                             document.getElementById("scl.z").value = this.toString(scl.z);
                         };
-                        ItemProps.prototype.initLightUI = function () {
+                        ItemPropsUI.prototype.initLightUI = function () {
                             var _this = this;
                             this.lightAtt = document.getElementById("lightAtt");
                             this.lightType = document.getElementById("lightType");
@@ -1089,7 +1092,7 @@ var org;
                             this.lightDirY.onchange = function () { return _this.applyLight(); };
                             this.lightDirZ.onchange = function () { return _this.applyLight(); };
                         };
-                        ItemProps.prototype.updateLight = function () {
+                        ItemPropsUI.prototype.updateLight = function () {
                             if (this.lightAtt === undefined)
                                 this.initLightUI();
                             var lightParm = this.vishva.getAttachedLight();
@@ -1114,7 +1117,7 @@ var org;
                             this.lightDirY.value = Number(lightParm.direction.y).toString();
                             this.lightDirZ.value = Number(lightParm.direction.z).toString();
                         };
-                        ItemProps.prototype.applyLight = function () {
+                        ItemPropsUI.prototype.applyLight = function () {
                             //            if (!this.lightAtt.checked) {
                             //                this.vishva.detachLight();
                             //                return;
@@ -1136,7 +1139,7 @@ var org;
                             lightParm.gndClr = BABYLON.Color3.FromHexString(this.lightGndClr.value);
                             this.vishva.attachAlight(lightParm);
                         };
-                        ItemProps.prototype.initMatUI = function () {
+                        ItemPropsUI.prototype.initMatUI = function () {
                             var _this = this;
                             this.matName = document.getElementById("matName");
                             this.matName.innerText = this.vishva.getMaterialName();
@@ -1170,14 +1173,14 @@ var org;
                                 _this.textureDiag.dialog("open");
                             };
                         };
-                        ItemProps.prototype.updateMat = function () {
+                        ItemPropsUI.prototype.updateMat = function () {
                             if (this.matVis == undefined)
                                 this.initMatUI();
                             this.matVis.value = Number(this.vishva.getMeshVisibility()).toString();
                             this.matVisVal["value"] = Number(this.matVis.value).toFixed(2);
                             this.matColDiag.setColor(this.vishva.getMeshColor(this.matColType.value));
                         };
-                        ItemProps.prototype.createTextureDiag = function () {
+                        ItemPropsUI.prototype.createTextureDiag = function () {
                             var _this = this;
                             this.textureDiag = $("#textureDiag");
                             var dos = {
@@ -1206,7 +1209,7 @@ var org;
                                 textList.appendChild(opt);
                             }
                         };
-                        ItemProps.prototype.initPhyUI = function () {
+                        ItemPropsUI.prototype.initPhyUI = function () {
                             var _this = this;
                             this.phyEna = document.getElementById("phyEna");
                             this.phyType = document.getElementById("phyType");
@@ -1240,14 +1243,14 @@ var org;
                                 return false;
                             };
                         };
-                        ItemProps.prototype.formatValue = function (val) {
+                        ItemPropsUI.prototype.formatValue = function (val) {
                             if (val === "1")
                                 return "1.0";
                             if (val === "0")
                                 return "0.0";
                             return val;
                         };
-                        ItemProps.prototype.updatePhysics = function () {
+                        ItemPropsUI.prototype.updatePhysics = function () {
                             if (this.phyEna === undefined)
                                 this.initPhyUI();
                             var phyParms = this.vishva.getMeshPickedPhyParms();
@@ -1271,7 +1274,7 @@ var org;
                                 this.phyFricVal["value"] = "0.0";
                             }
                         };
-                        ItemProps.prototype.applyPhysics = function () {
+                        ItemPropsUI.prototype.applyPhysics = function () {
                             var phyParms;
                             if (this.phyEna.checked) {
                                 phyParms = new vishva_3.PhysicsParm();
@@ -1285,7 +1288,7 @@ var org;
                             }
                             this.vishva.setMeshPickedPhyParms(phyParms);
                         };
-                        ItemProps.prototype.testPhysics = function () {
+                        ItemPropsUI.prototype.testPhysics = function () {
                             var phyParms;
                             phyParms = new vishva_3.PhysicsParm();
                             phyParms.type = parseInt(this.phyType.value);
@@ -1294,13 +1297,19 @@ var org;
                             phyParms.friction = parseFloat(this.phyFric.value);
                             this.vishva.testPhysics(phyParms);
                         };
-                        ItemProps.prototype.resetPhysics = function () {
+                        ItemPropsUI.prototype.resetPhysics = function () {
                             this.vishva.resetPhysics();
                             /* End of Mesh Properties              */
                         };
-                        return ItemProps;
+                        ItemPropsUI.prototype._createDownloadDiag = function () {
+                            this._downloadLink = document.getElementById("downloadAssetLink");
+                            this._downloadDialog = $("#saveAssetDiv");
+                            this._downloadDialog.dialog();
+                            this._downloadDialog.dialog("close");
+                        };
+                        return ItemPropsUI;
                     }());
-                    gui.ItemProps = ItemProps;
+                    gui.ItemPropsUI = ItemPropsUI;
                 })(gui = vishva_3.gui || (vishva_3.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -1319,8 +1328,8 @@ var org;
                     /*
                      * provides a user interface which list all meshes in the scene
                      */
-                    var Items = (function () {
-                        function Items(vishva) {
+                    var ItemsUI = (function () {
+                        function ItemsUI(vishva) {
                             var _this = this;
                             this._itemTab = "---- ";
                             this._prevCell = null;
@@ -1334,7 +1343,7 @@ var org;
                             };
                             this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.leftCenter);
                         }
-                        Items.prototype.toggle = function () {
+                        ItemsUI.prototype.toggle = function () {
                             if (!this._itemsDiag.isOpen()) {
                                 this._updateItemsTable();
                                 this._itemsDiag.open();
@@ -1343,7 +1352,7 @@ var org;
                                 this._itemsDiag.close();
                             }
                         };
-                        Items.prototype._onItemClick = function (e) {
+                        ItemsUI.prototype._onItemClick = function (e) {
                             var cell = e.target;
                             if (!(cell instanceof HTMLTableCellElement))
                                 return;
@@ -1359,13 +1368,13 @@ var org;
                         /**
                          * can be called when a user unselects a mesh by pressing esc
                          */
-                        Items.prototype.clearPrevItem = function () {
+                        ItemsUI.prototype.clearPrevItem = function () {
                             if (this._prevCell != null) {
                                 this._prevCell.setAttribute("style", "text-decoration: none");
                                 this._prevCell = null;
                             }
                         };
-                        Items.prototype._updateItemsTable = function () {
+                        ItemsUI.prototype._updateItemsTable = function () {
                             var _this = this;
                             var tbl = document.getElementById("itemsTable");
                             tbl.onclick = function (e) { return _this._onItemClick(e); };
@@ -1390,7 +1399,7 @@ var org;
                                 }
                             }
                         };
-                        Items.prototype._addChildren = function (children, tbl, meshChildMap, tab) {
+                        ItemsUI.prototype._addChildren = function (children, tbl, meshChildMap, tab) {
                             for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
                                 var child = children_1[_i];
                                 var row = tbl.insertRow();
@@ -1403,7 +1412,7 @@ var org;
                                 }
                             }
                         };
-                        Items.prototype._getMeshChildMap = function (meshes) {
+                        ItemsUI.prototype._getMeshChildMap = function (meshes) {
                             var meshChildMap = {};
                             for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
                                 var mesh = meshes_1[_i];
@@ -1418,9 +1427,9 @@ var org;
                             }
                             return meshChildMap;
                         };
-                        return Items;
+                        return ItemsUI;
                     }());
-                    gui.Items = Items;
+                    gui.ItemsUI = ItemsUI;
                 })(gui = vishva_4.gui || (vishva_4.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -1439,9 +1448,9 @@ var org;
                     /**
                      * provide ui to manage world/user settings/preferences
                      */
-                    var Settings = (function () {
+                    var SettingsUI = (function () {
                         //TODO pass property dialog instead of VishvaGUI
-                        function Settings(vishva, vishvaGUI) {
+                        function SettingsUI(vishva, vishvaGUI) {
                             var _this = this;
                             this.enableToolTips = true;
                             this._vishva = vishva;
@@ -1492,12 +1501,12 @@ var org;
                             var dbos = [dboSave, dboCancel];
                             this._settingDiag.setButtons(dbos);
                         }
-                        Settings.prototype._updateSettings = function () {
+                        SettingsUI.prototype._updateSettings = function () {
                             this._camCol.prop("checked", this._vishva.isCameraCollisionOn());
                             this._autoEditMenu.prop("checked", this._vishva.isAutoEditMenuOn());
                             this._showToolTips.prop("checked", this.enableToolTips);
                         };
-                        Settings.prototype.toggle = function () {
+                        SettingsUI.prototype.toggle = function () {
                             if (!this._settingDiag.isOpen()) {
                                 this._updateSettings();
                                 this._settingDiag.open();
@@ -1506,9 +1515,9 @@ var org;
                                 this._settingDiag.close();
                             }
                         };
-                        return Settings;
+                        return SettingsUI;
                     }());
-                    gui.Settings = Settings;
+                    gui.SettingsUI = SettingsUI;
                 })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -1524,144 +1533,28 @@ var org;
             (function (vishva_6) {
                 var gui;
                 (function (gui) {
-                    var VishvaGUI = (function () {
-                        function VishvaGUI(vishva) {
-                            var _this = this;
-                            this.local = true;
-                            this.menuBarOn = true;
+                    /**
+                     * Provides a UI to manage sensors and actuators
+                     */
+                    var SnaUI = (function () {
+                        function SnaUI(vishva) {
                             this.STATE_IND = "state";
-                            //        private centerBottom: JQueryPositionOptions;
-                            //        private leftCenter: JQueryPositionOptions;
-                            //        private rightCenter: JQueryPositionOptions;
-                            //        private rightTop: JQueryPositionOptions;
-                            //
-                            //        private createJPOs() {
-                            //            this.centerBottom={
-                            //                at: "center bottom",
-                            //                my: "center bottom",
-                            //                of: window
-                            //            };
-                            //            this.leftCenter={
-                            //                at: "left center",
-                            //                my: "left center",
-                            //                of: window
-                            //            };
-                            //            this.rightCenter={
-                            //                at: "right center",
-                            //                my: "right center",
-                            //                of: window
-                            //            };
-                            //            this.rightTop={
-                            //                at: "right top",
-                            //                my: "right top",
-                            //                of: window
-                            //            };
-                            //        }
-                            /**
-                             * this array will be used store all dialogs whose position needs to be
-                             * reset on window resize
-                             */
-                            this.dialogs = new Array();
-                            /**
-                             * End of Mesh Properties section
-                             */
-                            /**
-                             * Main Navigation Menu Section
-                             */
-                            this.firstTime = true;
-                            this.addMenuOn = false;
                             this._vishva = vishva;
-                            this.setSettings();
-                            $(document).tooltip({
-                                open: function (event, ui) {
-                                    if (!_this._settingDiag.enableToolTips) {
-                                        ui.tooltip.stop().remove();
-                                    }
-                                }
-                            });
-                            //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
-                            $("input").on("focus", function () { _this._vishva.disableKeys(); });
-                            $("input").on("blur", function () { _this._vishva.enableKeys(); });
-                            //this.createJPOs();
-                            //main navigation menu 
-                            this.createNavMenu();
-                            this.createDownloadDiag();
-                            //this.createUploadDiag();
-                            gui.DialogMgr.createAlertDiag();
-                            this.create_sNaDiag();
-                            this.createEditSensDiag();
-                            this.createEditActDiag();
-                            window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
                         }
-                        /**
-                         * resposition all dialogs to their original default postions without this,
-                         * a window resize could end up moving some dialogs outside the window and
-                         * thus make them disappear
-                         * the default position of each dialog will be stored in a new property called "jpo"
-                         * this would be created whenever/wherever the dialog is defined
-                         *
-                         * @param evt
-                         */
-                        VishvaGUI.prototype.onWindowResize = function (evt) {
-                            for (var _i = 0, _a = this.dialogs; _i < _a.length; _i++) {
-                                var jq = _a[_i];
-                                var jpo = jq["jpo"];
-                                if (jpo != null) {
-                                    jq.dialog("option", "position", jpo);
-                                    var open = jq.dialog("isOpen");
-                                    if (open) {
-                                        jq.dialog("close");
-                                        jq.dialog("open");
-                                    }
-                                }
-                            }
-                            for (var _b = 0, _c = gui.DialogMgr.dialogs; _b < _c.length; _b++) {
-                                var diag = _c[_b];
-                                diag.position();
-                                if (diag.isOpen()) {
-                                    diag.close();
-                                    diag.open();
-                                }
-                            }
+                        //        public open(){
+                        //            this.sNaDialog.dialog("open");
+                        //        }
+                        SnaUI.prototype.isOpen = function () {
+                            return this.sNaDialog.dialog("isOpen");
                         };
-                        VishvaGUI.prototype.createDownloadDiag = function () {
-                            this.downloadLink = document.getElementById("downloadLink");
-                            this.downloadDialog = $("#saveDiv");
-                            this.downloadDialog.dialog();
-                            this.downloadDialog.dialog("close");
-                        };
-                        VishvaGUI.prototype.createUploadDiag = function () {
-                            var _this = this;
-                            var loadFileInput = document.getElementById("loadFileInput");
-                            var loadFileOk = document.getElementById("loadFileOk");
-                            loadFileOk.onclick = (function (loadFileInput) {
-                                return function (e) {
-                                    var fl = loadFileInput.files;
-                                    if (fl.length === 0) {
-                                        alert("no file slected");
-                                        return null;
-                                    }
-                                    var file = null;
-                                    for (var index165 = 0; index165 < fl.length; index165++) {
-                                        var f = fl[index165];
-                                        {
-                                            file = f;
-                                        }
-                                    }
-                                    _this._vishva.loadAssetFile(file);
-                                    _this.loadDialog.dialog("close");
-                                    return true;
-                                };
-                            })(loadFileInput);
-                            this.loadDialog = $("#loadDiv");
-                            this.loadDialog.dialog();
-                            this.loadDialog.dialog("close");
+                        SnaUI.prototype.close = function () {
+                            this.sNaDialog.dialog("close");
                         };
                         /*
                          * A dialog box to show the list of available sensors
                          * actuators, each in seperate tabs
                          */
-                        VishvaGUI.prototype.create_sNaDiag = function () {
+                        SnaUI.prototype.create_sNaDiag = function () {
                             var _this = this;
                             //tabs
                             var sNaDetails = $("#sNaDetails");
@@ -1708,7 +1601,7 @@ var org;
                             this.sensTbl = document.getElementById("sensTbl");
                             this.actTbl = document.getElementById("actTbl");
                         };
-                        VishvaGUI.prototype.show_sNaDiag = function () {
+                        SnaUI.prototype.show_sNaDiag = function () {
                             var _this = this;
                             var sens = this._vishva.getSensors();
                             if (sens == null) {
@@ -1720,6 +1613,8 @@ var org;
                                 gui.DialogMgr.showAlertDiag("no mesh selected");
                                 return;
                             }
+                            if (this.sNaDialog == null)
+                                this.create_sNaDiag();
                             //this.vishva.switchDisabled=true;
                             this.updateSensActTbl(sens, this.sensTbl);
                             this.updateSensActTbl(acts, this.actTbl);
@@ -1743,14 +1638,13 @@ var org;
                                 _this.sNaDialog.dialog("open");
                                 return true;
                             };
-                            console.log("opening sna ");
                             this.sNaDialog.dialog("open");
                         };
                         /*
                          * fill up the sensor and actuator tables
                          * with a list of sensors and actuators
                          */
-                        VishvaGUI.prototype.updateSensActTbl = function (sensAct, tbl) {
+                        SnaUI.prototype.updateSensActTbl = function (sensAct, tbl) {
                             var _this = this;
                             var l = tbl.rows.length;
                             for (var i = l - 1; i > 0; i--) {
@@ -1801,7 +1695,7 @@ var org;
                                 };
                             }
                         };
-                        VishvaGUI.prototype.createEditSensDiag = function () {
+                        SnaUI.prototype.createEditSensDiag = function () {
                             var _this = this;
                             this.editSensDiag = $("#editSensDiag");
                             var dos = {};
@@ -1825,10 +1719,12 @@ var org;
                         * dynamically creates an appropriate form.
                         *
                         */
-                        VishvaGUI.prototype.showEditSensDiag = function (sensor) {
+                        SnaUI.prototype.showEditSensDiag = function (sensor) {
                             var _this = this;
                             var sensNameEle = document.getElementById("editSensDiag.sensName");
                             sensNameEle.innerHTML = sensor.getName();
+                            if (this.editSensDiag == null)
+                                this.createEditSensDiag();
                             this.editSensDiag.dialog("open");
                             var parmDiv = document.getElementById("editSensDiag.parms");
                             var node = parmDiv.firstChild;
@@ -1849,7 +1745,7 @@ var org;
                             var dbos = [dbo];
                             this.editSensDiag.dialog("option", "buttons", dbos);
                         };
-                        VishvaGUI.prototype.createEditActDiag = function () {
+                        SnaUI.prototype.createEditActDiag = function () {
                             var _this = this;
                             this.editActDiag = $("#editActDiag");
                             var dos = {};
@@ -1873,10 +1769,12 @@ var org;
                          * dynamically creates an appropriate form.
                          *
                          */
-                        VishvaGUI.prototype.showEditActDiag = function (actuator) {
+                        SnaUI.prototype.showEditActDiag = function (actuator) {
                             var _this = this;
                             var actNameEle = document.getElementById("editActDiag.actName");
                             actNameEle.innerHTML = actuator.getName();
+                            if (this.editActDiag == null)
+                                this.createEditActDiag();
                             this.editActDiag.dialog("open");
                             var parmDiv = document.getElementById("editActDiag.parms");
                             var node = parmDiv.firstChild;
@@ -1904,7 +1802,7 @@ var org;
                         /*
                          * auto generate forms based on properties
                          */
-                        VishvaGUI.prototype.formCreate = function (snaP, idPrefix) {
+                        SnaUI.prototype.formCreate = function (snaP, idPrefix) {
                             idPrefix = idPrefix + ".";
                             var tbl = document.createElement("table");
                             var keys = Object.keys(snaP);
@@ -1965,7 +1863,7 @@ var org;
                             }
                             return tbl;
                         };
-                        VishvaGUI.prototype.formRead = function (snaP, idPrefix) {
+                        SnaUI.prototype.formRead = function (snaP, idPrefix) {
                             idPrefix = idPrefix + ".";
                             var keys = Object.keys(snaP);
                             for (var index170 = 0; index170 < keys.length; index170++) {
@@ -2004,43 +1902,81 @@ var org;
                                 }
                             }
                         };
+                        return SnaUI;
+                    }());
+                    gui.SnaUI = SnaUI;
+                })(gui = vishva_6.gui || (vishva_6.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_7) {
+                var gui;
+                (function (gui) {
+                    var VishvaGUI = (function () {
+                        function VishvaGUI(vishva) {
+                            var _this = this;
+                            this.local = true;
+                            this.menuBarOn = true;
+                            /**
+                             * this array will be used store all dialogs whose position needs to be
+                             * reset on window resize
+                             */
+                            this.dialogs = new Array();
+                            this._vishva = vishva;
+                            this.setSettings();
+                            $(document).tooltip({
+                                open: function (event, ui) {
+                                    if (!_this._settingDiag.enableToolTips) {
+                                        ui.tooltip.stop().remove();
+                                    }
+                                }
+                            });
+                            //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
+                            $("input").on("focus", function () { _this._vishva.disableKeys(); });
+                            $("input").on("blur", function () { _this._vishva.enableKeys(); });
+                            //main navigation menu 
+                            this.createNavMenu();
+                            gui.DialogMgr.createAlertDiag();
+                            window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
+                        }
                         /**
-                         * Mesh properties section
+                         * resposition all dialogs to their original default postions without this,
+                         * a window resize could end up moving some dialogs outside the window and
+                         * thus make them disappear
+                         * the default position of each dialog will be stored in a new property called "jpo"
+                         * this would be created whenever/wherever the dialog is defined
+                         *
+                         * @param evt
                          */
-                        VishvaGUI.prototype.showPropDiag = function () {
-                            if (!this._vishva.anyMeshSelected()) {
-                                gui.DialogMgr.showAlertDiag("no mesh selected");
-                                return;
+                        VishvaGUI.prototype.onWindowResize = function (evt) {
+                            for (var _i = 0, _a = this.dialogs; _i < _a.length; _i++) {
+                                var jq = _a[_i];
+                                var jpo = jq["jpo"];
+                                if (jpo != null) {
+                                    jq.dialog("option", "position", jpo);
+                                    var open = jq.dialog("isOpen");
+                                    if (open) {
+                                        jq.dialog("close");
+                                        jq.dialog("open");
+                                    }
+                                }
                             }
-                            if (this._itemProps == null) {
-                                this._itemProps = new gui.ItemProps(this._vishva, this.sNaDialog, this);
+                            for (var _b = 0, _c = gui.DialogMgr.dialogs; _b < _c.length; _b++) {
+                                var diag = _c[_b];
+                                diag.position();
+                                if (diag.isOpen()) {
+                                    diag.close();
+                                    diag.open();
+                                }
                             }
-                            this._itemProps.open();
-                            return true;
-                        };
-                        /*
-                         * called by vishva when editcontrol
-                         * is removed from mesh
-                         */
-                        VishvaGUI.prototype.handeEditControlClose = function () {
-                            if (this._items != null) {
-                                this._items.clearPrevItem();
-                            }
-                            if (this._itemProps != null)
-                                this._itemProps.close();
-                        };
-                        /*
-                         * called by vishva when editcontrol
-                         * is switched from another mesh
-                         */
-                        VishvaGUI.prototype.refreshPropsDiag = function () {
-                            if (this._itemProps != null)
-                                this._itemProps.refreshPropsDiag();
-                        };
-                        //called when user has changed transforms using editcontrol
-                        VishvaGUI.prototype.handleTransChange = function () {
-                            if (this._itemProps != null)
-                                this._itemProps.refreshGeneralPanel();
                         };
                         VishvaGUI.prototype.createNavMenu = function () {
                             var _this = this;
@@ -2111,14 +2047,16 @@ var org;
                                 var downloadURL = _this._vishva.saveWorld();
                                 if (downloadURL == null)
                                     return true;
-                                _this.downloadLink.href = downloadURL;
-                                _this.downloadDialog.dialog("open");
+                                if (_this._downloadDialog == null)
+                                    _this._createDownloadDiag();
+                                _this._downloadLink.href = downloadURL;
+                                _this._downloadDialog.dialog("open");
                                 return false;
                             };
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
                                 if (_this._items == null) {
-                                    _this._items = new gui.Items(_this._vishva);
+                                    _this._items = new gui.ItemsUI(_this._vishva);
                                 }
                                 _this._items.toggle();
                                 return false;
@@ -2126,7 +2064,7 @@ var org;
                             var navEnv = document.getElementById("navEnv");
                             navEnv.onclick = function (e) {
                                 if (_this._environment == null) {
-                                    _this._environment = new gui.Environment(_this._vishva);
+                                    _this._environment = new gui.EnvironmentUI(_this._vishva);
                                 }
                                 _this._environment.toggle();
                                 return false;
@@ -2141,14 +2079,6 @@ var org;
                                 }
                                 return false;
                             };
-                            //            navEdit.onclick=(e) => {
-                            //                if((this.propsDiag!=null)&&(this.propsDiag.dialog("isOpen")===true)) {
-                            //                    this.closePropDiag();
-                            //                } else {
-                            //                    this.showPropDiag();
-                            //                }
-                            //                return true;
-                            //            };
                             var navSettings = document.getElementById("navSettings");
                             navSettings.onclick = function (e) {
                                 _this._settingDiag.toggle();
@@ -2169,6 +2099,45 @@ var org;
                                 return true;
                             };
                         };
+                        /*
+                         * called by vishva when editcontrol
+                         * is attached to mesh
+                         */
+                        VishvaGUI.prototype.showPropDiag = function () {
+                            if (!this._vishva.anyMeshSelected()) {
+                                gui.DialogMgr.showAlertDiag("no mesh selected");
+                                return;
+                            }
+                            if (this._itemProps == null) {
+                                this._itemProps = new gui.ItemPropsUI(this._vishva, this);
+                            }
+                            this._itemProps.open();
+                            return true;
+                        };
+                        /*
+                         * called by vishva when editcontrol
+                         * is removed from mesh
+                         */
+                        VishvaGUI.prototype.handeEditControlClose = function () {
+                            if (this._items != null) {
+                                this._items.clearPrevItem();
+                            }
+                            if (this._itemProps != null)
+                                this._itemProps.close();
+                        };
+                        /*
+                         * called by vishva when editcontrol
+                         * is switched from another mesh
+                         */
+                        VishvaGUI.prototype.refreshPropsDiag = function () {
+                            if (this._itemProps != null)
+                                this._itemProps.refreshPropsDiag();
+                        };
+                        //called when user has changed transforms using editcontrol
+                        VishvaGUI.prototype.handleTransChange = function () {
+                            if (this._itemProps != null)
+                                this._itemProps.refreshGeneralPanel();
+                        };
                         VishvaGUI.prototype.getSettings = function () {
                             var guiSettings = new GuiSettings();
                             guiSettings.enableToolTips = this._settingDiag.enableToolTips;
@@ -2176,11 +2145,44 @@ var org;
                         };
                         VishvaGUI.prototype.setSettings = function () {
                             if (this._settingDiag == null) {
-                                this._settingDiag = new gui.Settings(this._vishva, this);
+                                this._settingDiag = new gui.SettingsUI(this._vishva, this);
                             }
                             var guiSettings = this._vishva.getGuiSettings();
                             if (guiSettings !== null)
                                 this._settingDiag.enableToolTips = guiSettings.enableToolTips;
+                        };
+                        VishvaGUI.prototype._createDownloadDiag = function () {
+                            this._downloadLink = document.getElementById("downloadLink");
+                            this._downloadDialog = $("#saveDiv");
+                            this._downloadDialog.dialog();
+                            this._downloadDialog.dialog("close");
+                        };
+                        VishvaGUI.prototype._createUploadDiag = function () {
+                            var _this = this;
+                            var loadFileInput = document.getElementById("loadFileInput");
+                            var loadFileOk = document.getElementById("loadFileOk");
+                            loadFileOk.onclick = (function (loadFileInput) {
+                                return function (e) {
+                                    var fl = loadFileInput.files;
+                                    if (fl.length === 0) {
+                                        alert("no file slected");
+                                        return null;
+                                    }
+                                    var file = null;
+                                    for (var index165 = 0; index165 < fl.length; index165++) {
+                                        var f = fl[index165];
+                                        {
+                                            file = f;
+                                        }
+                                    }
+                                    _this._vishva.loadAssetFile(file);
+                                    _this._loadDialog.dialog("close");
+                                    return true;
+                                };
+                            })(loadFileInput);
+                            this._loadDialog = $("#loadDiv");
+                            this._loadDialog.dialog();
+                            this._loadDialog.dialog("close");
                         };
                         VishvaGUI.LARGE_ICON_SIZE = "width:128px;height:128px;";
                         VishvaGUI.SMALL_ICON_SIZE = "width:64px;height:64px;";
@@ -2224,7 +2226,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_6.gui || (vishva_6.gui = {}));
+                })(gui = vishva_7.gui || (vishva_7.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));

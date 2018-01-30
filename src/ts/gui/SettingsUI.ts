@@ -3,7 +3,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * provide ui to manage world/user settings/preferences
      */
-    export class Settings {
+    export class SettingsUI {
         private _vishva: Vishva;
         private _vishvaGUI: VishvaGUI;
         

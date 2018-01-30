@@ -5,7 +5,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * provides a ui to manage the environment in the world
      */
-    export class Environment{
+    export class EnvironmentUI{
         private  vishva:Vishva;
         envDiag: VDialog;
         /*

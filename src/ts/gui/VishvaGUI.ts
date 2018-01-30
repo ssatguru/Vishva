@@ -1,11 +1,6 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
 
-    import AnimationRange=BABYLON.AnimationRange;
-    import ColorPickerDiag=org.ssatguru.babylonjs.vishva.gui.ColorPickerDiag;
-    import Skeleton=BABYLON.Skeleton;
-    import Vector3=BABYLON.Vector3;
-    import DialogButtonOptions=JQueryUI.DialogButtonOptions;
-    import DialogOptions=JQueryUI.DialogOptions;
+       
     import JQueryPositionOptions=JQueryUI.JQueryPositionOptions;
 
 
@@ -15,7 +10,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         local: boolean=true;
 
-        downloadLink: HTMLAnchorElement;
+        
 
         public static LARGE_ICON_SIZE: string="width:128px;height:128px;";
 
@@ -23,7 +18,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private menuBarOn: boolean=true;
 
-        private STATE_IND: string="state";
 
         public constructor(vishva: Vishva) {
             this._vishva=vishva;
@@ -43,49 +37,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             $("input").on("focus",() => {this._vishva.disableKeys();});
             $("input").on("blur",() => {this._vishva.enableKeys();});
 
-            //this.createJPOs();
 
             //main navigation menu 
             this.createNavMenu();
 
-            this.createDownloadDiag();
-            //this.createUploadDiag();
-
             DialogMgr.createAlertDiag();
 
-            this.create_sNaDiag();
-            this.createEditSensDiag();
-            this.createEditActDiag();
             window.addEventListener("resize",(evt) => {return this.onWindowResize(evt)});
         }
 
-//        private centerBottom: JQueryPositionOptions;
-//        private leftCenter: JQueryPositionOptions;
-//        private rightCenter: JQueryPositionOptions;
-//        private rightTop: JQueryPositionOptions;
-//
-//        private createJPOs() {
-//            this.centerBottom={
-//                at: "center bottom",
-//                my: "center bottom",
-//                of: window
-//            };
-//            this.leftCenter={
-//                at: "left center",
-//                my: "left center",
-//                of: window
-//            };
-//            this.rightCenter={
-//                at: "right center",
-//                my: "right center",
-//                of: window
-//            };
-//            this.rightTop={
-//                at: "right top",
-//                my: "right top",
-//                of: window
-//            };
-//        }
+
 
         /**
          * this array will be used store all dialogs whose position needs to be
@@ -126,470 +87,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-
-
-        
-
-
-        downloadDialog: JQuery;
-        private createDownloadDiag() {
-            this.downloadLink=<HTMLAnchorElement>document.getElementById("downloadLink");
-            this.downloadDialog=<JQuery>(<any>$("#saveDiv"));
-            this.downloadDialog.dialog();
-            this.downloadDialog.dialog("close");
-        }
-
-        loadDialog: JQuery;
-
-        private createUploadDiag() {
-            var loadFileInput: HTMLInputElement=<HTMLInputElement>document.getElementById("loadFileInput");
-            var loadFileOk: HTMLButtonElement=<HTMLButtonElement>document.getElementById("loadFileOk");
-            loadFileOk.onclick=((loadFileInput) => {
-                return (e) => {
-                    var fl: FileList=loadFileInput.files;
-                    if(fl.length===0) {
-                        alert("no file slected");
-                        return null;
-                    }
-                    var file: File=null;
-                    for(var index165=0;index165<fl.length;index165++) {
-                        var f=fl[index165];
-                        {
-                            file=f;
-                        }
-                    }
-                    this._vishva.loadAssetFile(file);
-                    this.loadDialog.dialog("close");
-                    return true;
-                }
-            })(loadFileInput);
-            this.loadDialog=<JQuery>(<any>$("#loadDiv"));
-            this.loadDialog.dialog();
-            this.loadDialog.dialog("close");
-        }
-
- 
-
-        sNaDialog: JQuery;
-
-        sensSel: HTMLSelectElement;
-
-        actSel: HTMLSelectElement;
-
-        sensTbl: HTMLTableElement;
-
-        actTbl: HTMLTableElement;
-
-        /*
-         * A dialog box to show the list of available sensors 
-         * actuators, each in seperate tabs
-         */
-        private create_sNaDiag() {
-
-            //tabs
-            var sNaDetails: JQuery=$("#sNaDetails");
-            sNaDetails.tabs();
-
-
-            //dialog box
-            this.sNaDialog=$("#sNaDiag");
-            var dos: DialogOptions={};
-            dos.autoOpen=false;
-            dos.modal=false;
-            dos.resizable=false;
-            dos.width="auto";
-            dos.height="auto";
-            dos.title="Sensors and Actuators";
-            dos.closeOnEscape=false;
-            dos.closeText="";
-            dos.dragStop=(e,ui) => {
-                /* required as jquery dialog's size does not re-adjust to content after it has been dragged 
-                 Thus if the size of sensors tab is different from the size of actuators tab  then the content of
-                 actuator tab is cutoff if its size is greater
-                 so we close and open for it to recalculate the sizes.
-                 */
-                this.sNaDialog.dialog("close");
-                this.sNaDialog.dialog("open");
-            }
-            this.sNaDialog.dialog(dos);
-
-            this.sensSel=<HTMLSelectElement>document.getElementById("sensSel");
-            this.actSel=<HTMLSelectElement>document.getElementById("actSel");
-            var sensors: string[]=this._vishva.getSensorList();
-            var actuators: string[]=this._vishva.getActuatorList();
-
-            for(let sensor of sensors) {
-                var opt: HTMLOptionElement=<HTMLOptionElement>document.createElement("option");
-                opt.value=sensor;
-                opt.innerHTML=sensor;
-                this.sensSel.add(opt);
-            }
-
-            for(let actuator of actuators) {
-                var opt: HTMLOptionElement=<HTMLOptionElement>document.createElement("option");
-                opt.value=actuator;
-                opt.innerHTML=actuator;
-                this.actSel.add(opt);
-            }
-
-            this.sensTbl=<HTMLTableElement>document.getElementById("sensTbl");
-            this.actTbl=<HTMLTableElement>document.getElementById("actTbl");
-        }
-
-        public show_sNaDiag() {
-            var sens: Array<SensorActuator>=<Array<SensorActuator>>this._vishva.getSensors();
-            if(sens==null) {
-                DialogMgr.showAlertDiag("no mesh selected");
-                return;
-            }
-            var acts: Array<SensorActuator>=this._vishva.getActuators();
-            if(acts==null) {
-                DialogMgr.showAlertDiag("no mesh selected");
-                return;
-            }
-
-            //this.vishva.switchDisabled=true;
-            this.updateSensActTbl(sens,this.sensTbl);
-            this.updateSensActTbl(acts,this.actTbl);
-            var addSens: HTMLElement=document.getElementById("addSens");
-            addSens.onclick=(e) => {
-                var s: HTMLOptionElement=<HTMLOptionElement>this.sensSel.item(this.sensSel.selectedIndex);
-                var sensor: string=s.value;
-                this._vishva.addSensorbyName(sensor);
-                this.updateSensActTbl(this._vishva.getSensors(),this.sensTbl);
-                this.sNaDialog.dialog("close");
-                this.sNaDialog.dialog("open");
-                return true;
-            };
-            var addAct: HTMLElement=document.getElementById("addAct");
-            addAct.onclick=(e) => {
-                var a: HTMLOptionElement=<HTMLOptionElement>this.actSel.item(this.actSel.selectedIndex);
-                var actuator: string=a.value;
-                this._vishva.addActuaorByName(actuator);
-                this.updateSensActTbl(this._vishva.getActuators(),this.actTbl);
-                this.sNaDialog.dialog("close");
-                this.sNaDialog.dialog("open");
-                return true;
-            };
-            console.log("opening sna ");
-            this.sNaDialog.dialog("open");
-        }
-        /*
-         * fill up the sensor and actuator tables
-         * with a list of sensors and actuators
-         */
-        private updateSensActTbl(sensAct: Array<SensorActuator>,tbl: HTMLTableElement) {
-            let l: number=tbl.rows.length;
-            for(var i: number=l-1;i>0;i--) {
-                tbl.deleteRow(i);
-            }
-            l=sensAct.length;
-            for(var i: number=0;i<l;i++) {
-                var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-                var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                cell.innerHTML=sensAct[i].getName();
-                cell=<HTMLTableCellElement>row.insertCell();
-                cell.innerHTML=sensAct[i].getProperties().signalId;
-                cell=<HTMLTableCellElement>row.insertCell();
-                var editBut: HTMLButtonElement=<HTMLButtonElement>document.createElement("BUTTON");
-                editBut.innerHTML="edit";
-                var jq: JQuery=<JQuery>(<any>$(editBut));
-                jq.button();
-                var d: number=i;
-                editBut.id=d.toString();
-                editBut["sa"]=sensAct[i];
-                cell.appendChild(editBut);
-                editBut.onclick=(e) => {
-                    var el: HTMLElement=<HTMLElement>e.currentTarget;
-                    var sa: SensorActuator=<SensorActuator>el["sa"];
-                    if(sa.getType()==="SENSOR") {
-                        this.showEditSensDiag(<Sensor>sa);
-                    } else {
-                        this.showEditActDiag(<Actuator>sa);
-                    }
-                    return true;
-                };
-                cell=<HTMLTableCellElement>row.insertCell();
-                var delBut: HTMLButtonElement=<HTMLButtonElement>document.createElement("BUTTON");
-                delBut.innerHTML="del";
-                var jq2: JQuery=<JQuery>(<any>$(delBut));
-                jq2.button();
-                delBut.id=d.toString();
-                delBut["row"]=row;
-                delBut["sa"]=sensAct[i];
-                cell.appendChild(delBut);
-                delBut.onclick=(e) => {
-                    var el: HTMLElement=<HTMLElement>e.currentTarget;
-                    var r: HTMLTableRowElement=<HTMLTableRowElement>el["row"];
-                    tbl.deleteRow(r.rowIndex);
-                    this._vishva.removeSensorActuator(<SensorActuator>el["sa"]);
-                    return true;
-                };
-            }
-        }
-        editSensDiag: JQuery;
-        private createEditSensDiag() {
-            this.editSensDiag=$("#editSensDiag");
-            var dos: DialogOptions={};
-            dos.autoOpen=false;
-            dos.modal=true;
-            dos.resizable=false;
-            dos.width="auto";
-            dos.title="Edit Sensor";
-            dos.closeText="";
-            dos.closeOnEscape=false;
-            dos.open=() => {
-                this._vishva.disableKeys();
-            }
-            dos.close=() => {
-                this._vishva.enableKeys();
-            }
-            this.editSensDiag.dialog(dos);
-        }
-        /*
-        * show a dialog box to edit sensor properties
-        * dynamically creates an appropriate form.
-        * 
-        */
-        private showEditSensDiag(sensor: Sensor) {
-
-            var sensNameEle: HTMLLabelElement=<HTMLLabelElement>document.getElementById("editSensDiag.sensName");
-            sensNameEle.innerHTML=sensor.getName();
-
-            this.editSensDiag.dialog("open");
-
-            var parmDiv: HTMLElement=document.getElementById("editSensDiag.parms");
-            var node: Node=parmDiv.firstChild;
-            if(node!=null) parmDiv.removeChild(node);
-            console.log(sensor.getProperties());
-            var tbl: HTMLTableElement=this.formCreate(sensor.getProperties(),parmDiv.id);
-            parmDiv.appendChild(tbl);
-
-            var dbo: DialogButtonOptions={};
-            dbo.text="save";
-            dbo.click=(e) => {
-                this.formRead(sensor.getProperties(),parmDiv.id);
-                sensor.handlePropertiesChange()
-                this.updateSensActTbl(this._vishva.getSensors(),this.sensTbl);
-                this.editSensDiag.dialog("close");
-                return true;
-            };
-
-            var dbos: DialogButtonOptions[]=[dbo];
-            this.editSensDiag.dialog("option","buttons",dbos);
-
-        }
-
-        editActDiag: JQuery;
-        private createEditActDiag() {
-            this.editActDiag=<JQuery>(<any>$("#editActDiag"));
-            var dos: DialogOptions={};
-            dos.autoOpen=false;
-            dos.modal=true;
-            dos.resizable=false;
-            dos.width="auto";
-            dos.title="Edit Actuator";
-            dos.closeText="";
-            dos.closeOnEscape=false;
-            dos.open=(e,ui) => {
-                this._vishva.disableKeys();
-            }
-            dos.close=(e,ui) => {
-                this._vishva.enableKeys();
-            }
-            this.editActDiag.dialog(dos);
-        }
-
-        /*
-         * show a dialog box to edit actuator properties
-         * dynamically creates an appropriate form.
-         * 
-         */
-        private showEditActDiag(actuator: Actuator) {
-
-            var actNameEle: HTMLLabelElement=<HTMLLabelElement>document.getElementById("editActDiag.actName");
-            actNameEle.innerHTML=actuator.getName();
-
-            this.editActDiag.dialog("open");
-
-            var parmDiv: HTMLElement=document.getElementById("editActDiag.parms");
-            var node: Node=parmDiv.firstChild;
-            if(node!=null) {
-                parmDiv.removeChild(node);
-            }
-            if(actuator.getName()==="Sound") {
-                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
-                prop.soundFile.values=this._vishva.getSoundFiles();
-            }
-            var tbl: HTMLTableElement=this.formCreate(actuator.getProperties(),parmDiv.id);
-            parmDiv.appendChild(tbl);
-            var dbo: DialogButtonOptions={};
-            dbo.text="save";
-            dbo.click=(e) => {
-                this.formRead(actuator.getProperties(),parmDiv.id);
-                actuator.handlePropertiesChange();
-                this.updateSensActTbl(this._vishva.getActuators(),this.actTbl);
-                this.editActDiag.dialog("close");
-                return true;
-            };
-            var dbos: DialogButtonOptions[]=[dbo];
-
-            this.editActDiag.dialog("option","buttons",dbos);
-        }
-        /*
-         * auto generate forms based on properties
-         */
-        private formCreate(snaP: SNAproperties,idPrefix: string): HTMLTableElement {
-            idPrefix=idPrefix+".";
-            var tbl: HTMLTableElement=document.createElement("table");
-            var keys: string[]=Object.keys(snaP);
-            for(var index168=0;index168<keys.length;index168++) {
-                var key=keys[index168];
-                {
-                    if(key.split("_")[0]===this.STATE_IND) continue;
-                    var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-                    var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                    cell.innerHTML=key;
-                    cell=<HTMLTableCellElement>row.insertCell();
-                    var t: string=typeof snaP[key];
-                    if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
-                        var keyValue: SelectType=<SelectType>snaP[key];
-                        var options: string[]=keyValue.values;
-                        var sel: HTMLSelectElement=document.createElement("select");
-                        sel.id=idPrefix+key;
-                        for(var index169=0;index169<options.length;index169++) {
-                            var option=options[index169];
-                            {
-                                var opt: HTMLOptionElement=document.createElement("option");
-                                if(option===keyValue.value) {
-                                    opt.selected=true;
-                                }
-                                opt.innerText=option;
-                                sel.add(opt);
-                            }
-                        }
-                        cell.appendChild(sel);
-                    } else {
-                        var inp: HTMLInputElement=document.createElement("input");
-                        inp.id=idPrefix+key;
-                        inp.className="ui-widget-content ui-corner-all";
-                        inp.value=<string>snaP[key];
-                        if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
-                            var r: Range=<Range>snaP[key];
-                            inp.type="range";
-                            inp.max=(<number>new Number(r.max)).toString();
-                            inp.min=(<number>new Number(r.min)).toString();
-                            inp.step=(<number>new Number(r.step)).toString();
-                            inp.value=(<number>new Number(r.value)).toString();
-                        } else if((t==="string")||(t==="number")) {
-                            inp.type="text";
-                            inp.value=<string>snaP[key];
-                        } else if(t==="boolean") {
-                            var check: boolean=<boolean>snaP[key];
-                            inp.type="checkbox";
-                            if(check) inp.setAttribute("checked","true");
-                        }
-                        cell.appendChild(inp);
-                    }
-                }
-            }
-            return tbl;
-        }
-
-        private formRead(snaP: SNAproperties,idPrefix: string) {
-            idPrefix=idPrefix+".";
-            var keys: string[]=Object.keys(snaP);
-            for(var index170=0;index170<keys.length;index170++) {
-                var key=keys[index170];
-                {
-                    if(key.split("_")[0]===this.STATE_IND) continue;
-                    var t: string=typeof snaP[key];
-                    if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
-                        var s: SelectType=<SelectType>snaP[key];
-                        var sel: HTMLSelectElement=<HTMLSelectElement>document.getElementById(idPrefix+key);
-                        s.value=sel.value;
-                    } else {
-                        var ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
-                        if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
-                            var r: Range=<Range>snaP[key];
-                            r.value=parseFloat(ie.value);
-                        } else if((t==="string")||(t==="number")) {
-                            if(t==="number") {
-                                var v: number=parseFloat(ie.value);
-                                if(isNaN(v)) snaP[key]=0; else snaP[key]=v;
-                            } else {
-                                snaP[key]=ie.value;
-                            }
-                        } else if(t==="boolean") {
-                            snaP[key]=ie.checked;
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-         * Mesh properties section
-         */
-
-        public showPropDiag() {
-            if(!this._vishva.anyMeshSelected()) {
-                DialogMgr.showAlertDiag("no mesh selected")
-                return;
-            }
-            if(this._itemProps==null) {
-                this._itemProps=new ItemProps(this._vishva,this.sNaDialog,this);
-            }
-            this._itemProps.open();
-            return true;
-        }
-        
     
-        /*
-         * called by vishva when editcontrol
-         * is removed from mesh
-         */
-        public handeEditControlClose() {
-            if(this._items!=null) {
-                this._items.clearPrevItem();
-            }
-            if(this._itemProps!=null)this._itemProps.close();
-        }
-
-        
-        /*
-         * called by vishva when editcontrol
-         * is switched from another mesh
-         */
-        public refreshPropsDiag() {
-            if(this._itemProps!=null) this._itemProps.refreshPropsDiag();
-        }
-        
-        //called when user has changed transforms using editcontrol
-        public handleTransChange() {
-            if(this._itemProps!=null) this._itemProps.refreshGeneralPanel();
-        }
+         
       
 
-
-        /**
-         * End of Mesh Properties section
-         */
 
 
         /**
          * Main Navigation Menu Section
          */
 
-        firstTime: boolean=true;
-
-        addMenuOn: boolean=false;
-
         private _addItemUI:AddItemUI;
-        private _items: Items;
-        private _environment: Environment;
-        private _settingDiag: Settings;
-        private _itemProps:ItemProps;
+        private _items: ItemsUI;
+        private _environment: EnvironmentUI;
+        private _settingDiag: SettingsUI;
+        private _itemProps:ItemPropsUI;
 
         private createNavMenu() {
 
@@ -662,15 +174,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             downWorld.onclick=(e) => {
                 var downloadURL: string=this._vishva.saveWorld();
                 if(downloadURL==null) return true;
-                this.downloadLink.href=downloadURL;
-                this.downloadDialog.dialog("open");
+                if(this._downloadDialog==null) this._createDownloadDiag();
+                this._downloadLink.href=downloadURL;
+                this._downloadDialog.dialog("open");
                 return false;
             };
 
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
                 if(this._items==null) {
-                    this._items=new Items(this._vishva);
+                    this._items=new ItemsUI(this._vishva);
                 }
                 this._items.toggle();
                 return false;
@@ -680,7 +193,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var navEnv: HTMLElement=document.getElementById("navEnv");
             navEnv.onclick=(e) => {
                 if(this._environment==null) {
-                    this._environment=new Environment(this._vishva);
+                    this._environment=new EnvironmentUI(this._vishva);
                 }
                 this._environment.toggle();
                 return false;
@@ -696,14 +209,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return false;
             };
             
-//            navEdit.onclick=(e) => {
-//                if((this.propsDiag!=null)&&(this.propsDiag.dialog("isOpen")===true)) {
-//                    this.closePropDiag();
-//                } else {
-//                    this.showPropDiag();
-//                }
-//                return true;
-//            };
 
             var navSettings: HTMLElement=document.getElementById("navSettings");
             navSettings.onclick=(e) => {
@@ -727,7 +232,48 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return true;
             };
         }
+        
+        /*
+         * called by vishva when editcontrol
+         * is attached to mesh
+         */
+        public showPropDiag() {
+            if(!this._vishva.anyMeshSelected()) {
+                DialogMgr.showAlertDiag("no mesh selected")
+                return;
+            }
+            if(this._itemProps==null) {
+                this._itemProps=new ItemPropsUI(this._vishva,this);
+            }
+            this._itemProps.open();
+            return true;
+        }
+        
+        /*
+         * called by vishva when editcontrol
+         * is removed from mesh
+         */
+        public handeEditControlClose() {
+            if(this._items!=null) {
+                this._items.clearPrevItem();
+            }
+            if(this._itemProps!=null)this._itemProps.close();
+        }
+        
+        /*
+         * called by vishva when editcontrol
+         * is switched from another mesh
+         */
+        public refreshPropsDiag() {
+            if(this._itemProps!=null) this._itemProps.refreshPropsDiag();
+        }
+        
+        //called when user has changed transforms using editcontrol
+        public handleTransChange() {
+            if(this._itemProps!=null) this._itemProps.refreshGeneralPanel();
+        }
        
+        
         public getSettings() {
             let guiSettings=new GuiSettings();
             guiSettings.enableToolTips=this._settingDiag.enableToolTips;
@@ -736,11 +282,48 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private setSettings() {
             if(this._settingDiag==null) {
-                this._settingDiag=new Settings(this._vishva,this);
+                this._settingDiag=new SettingsUI(this._vishva,this);
             }
             let guiSettings: GuiSettings=<GuiSettings>this._vishva.getGuiSettings();
             if(guiSettings!==null)
                 this._settingDiag.enableToolTips=guiSettings.enableToolTips;
+        }
+        
+        _downloadLink: HTMLAnchorElement;
+        _downloadDialog: JQuery;
+        private _createDownloadDiag() {
+            this._downloadLink=<HTMLAnchorElement>document.getElementById("downloadLink");
+            this._downloadDialog=<JQuery>(<any>$("#saveDiv"));
+            this._downloadDialog.dialog();
+            this._downloadDialog.dialog("close");
+        }
+
+        _loadDialog: JQuery;
+        private _createUploadDiag() {
+            var loadFileInput: HTMLInputElement=<HTMLInputElement>document.getElementById("loadFileInput");
+            var loadFileOk: HTMLButtonElement=<HTMLButtonElement>document.getElementById("loadFileOk");
+            loadFileOk.onclick=((loadFileInput) => {
+                return (e) => {
+                    var fl: FileList=loadFileInput.files;
+                    if(fl.length===0) {
+                        alert("no file slected");
+                        return null;
+                    }
+                    var file: File=null;
+                    for(var index165=0;index165<fl.length;index165++) {
+                        var f=fl[index165];
+                        {
+                            file=f;
+                        }
+                    }
+                    this._vishva.loadAssetFile(file);
+                    this._loadDialog.dialog("close");
+                    return true;
+                }
+            })(loadFileInput);
+            this._loadDialog=<JQuery>(<any>$("#loadDiv"));
+            this._loadDialog.dialog();
+            this._loadDialog.dialog("close");
         }
 
     }
@@ -749,14 +332,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         enableToolTips: boolean;
     }
 
-    const enum propertyPanel {
-        General,
-        Physics,
-        Material,
-        Lights,
-        Animations
-    }
-
+   
     export declare class ColorPicker {
         public constructor(e: HTMLElement,f: (p1: any,p2: any,p3: RGB) => void);
 

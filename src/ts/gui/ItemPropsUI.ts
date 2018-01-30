@@ -6,22 +6,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides UI to manage an Item(mesh) properties
      */
-    export class ItemProps {
+    export class ItemPropsUI {
         /**
          * Mesh properties section
          */
         private vishva: Vishva;
         private _vishvaGUI: VishvaGUI;
-        private sNaDialog:JQuery;
+        private snaUI:SnaUI;
         
         private propsDiag: JQuery=null;
         private fixingDragIssue: boolean=false;
         private activePanel: number=-1;
 
 
-        constructor(vishva: Vishva,sNaDialog:JQuery,vishvaGUI:VishvaGUI) {
+        constructor(vishva: Vishva,vishvaGUI:VishvaGUI) {
             this.vishva=vishva;
-            this.sNaDialog=sNaDialog;
             this._vishvaGUI=vishvaGUI;
         
             let propsAcc: JQuery=$("#propsAcc");
@@ -67,8 +66,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 },
                 closeText: "",
                 close: (e,ui) => {
-                    if(!this.fixingDragIssue&&!this.refreshingPropsDiag&&this.sNaDialog.dialog("isOpen")===true) {
-                        this.sNaDialog.dialog("close");
+                    if(!this.fixingDragIssue&&!this.refreshingPropsDiag&&(this.snaUI!=null)&&this.snaUI.isOpen()) {
+                        this.snaUI.close();
                     }
                 },
                 //after drag the dialog box doesnot resize
@@ -134,9 +133,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.updateMat();
             }
             //refresh sNaDialog if open
-            if(this.sNaDialog.dialog("isOpen")===true) {
-                this.sNaDialog.dialog("close");
-                this._vishvaGUI.show_sNaDiag();
+            if(this.snaUI!=null && this.snaUI.isOpen()) {
+                this.snaUI.close();
+                this.snaUI.show_sNaDiag();
             }
         }
 
@@ -611,9 +610,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     DialogMgr.showAlertDiag("No Mesh Selected");
                     return true;
                 }
-                this._vishvaGUI.downloadLink.href=downloadURL;
-                var env: JQuery=<JQuery>(<any>$("#saveDiv"));
-                env.dialog("open");
+                if(this._downloadDialog==null) this._createDownloadDiag();
+                this._downloadLink.href=downloadURL;
+                this._downloadDialog.dialog("open");
                 return false;
             };
             delMesh.onclick=(e) => {
@@ -640,7 +639,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             };
 
             sNa.onclick=(e) => {
-                this._vishvaGUI.show_sNaDiag();
+                if (this.snaUI==null){
+                    this.snaUI=new SnaUI(this.vishva);
+                }
+                this.snaUI.show_sNaDiag();
                 return true;
             };
 
@@ -986,6 +988,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.vishva.resetPhysics();
             /* End of Mesh Properties              */
 
+        }
+        
+        
+        _downloadDialog: JQuery;
+        _downloadLink: HTMLAnchorElement;
+        private _createDownloadDiag() {
+            this._downloadLink=<HTMLAnchorElement>document.getElementById("downloadAssetLink");
+            this._downloadDialog=<JQuery>(<any>$("#saveAssetDiv"));
+            this._downloadDialog.dialog();
+            this._downloadDialog.dialog("close");
         }
     }
     const enum propertyPanel {

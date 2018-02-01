@@ -6,13 +6,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
      * provides a ui to manage the environment in the world
      */
     export class EnvironmentUI{
-        private  vishva:Vishva;
-        envDiag: VDialog;
+        private _vishva:Vishva;
+        private _envDiag: VDialog;
         /*
          * Create Environment Dialog
          */
         constructor(vishva:Vishva) {
-            this.vishva=vishva;
+            this._vishva=vishva;
 
             let sunPos: JQuery=$("#sunPos");
             let light: JQuery=$("#light");
@@ -20,26 +20,26 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let fog: JQuery=$("#fog");
             let fov: JQuery=$("#fov");
 
-            sunPos.slider(this.sliderOptions(0,180,this.vishva.getSunPos()));
-            light.slider(this.sliderOptions(0,100,100*this.vishva.getLight()));
-            shade.slider(this.sliderOptions(0,100,100*this.vishva.getShade()));
-            fog.slider(this.sliderOptions(0,100,100*this.vishva.getFog()));
+            sunPos.slider(this._sliderOptions(0,180,this._vishva.getSunPos()));
+            light.slider(this._sliderOptions(0,100,100*this._vishva.getLight()));
+            shade.slider(this._sliderOptions(0,100,100*this._vishva.getShade()));
+            fog.slider(this._sliderOptions(0,100,100*this._vishva.getFog()));
 
-            let fogColDiag: ColorPickerDiag=new ColorPickerDiag("fog color","fogCol",this.vishva.getFogColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
-                this.vishva.setFogColor(hex);
+            let fogColDiag: ColorPickerDiag=new ColorPickerDiag("fog color","fogCol",this._vishva.getFogColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
+                this._vishva.setFogColor(hex);
             });
 
-            fov.slider(this.sliderOptions(0,180,this.vishva.getFov()));
+            fov.slider(this._sliderOptions(0,180,this._vishva.getFov()));
 
             let envSnow: HTMLButtonElement=<HTMLButtonElement>document.getElementById("envSnow");
             envSnow.onclick=(e) => {
-                this.vishva.toggleSnow();
+                this._vishva.toggleSnow();
             };
 
             let envRain: HTMLButtonElement=<HTMLButtonElement>document.getElementById("envRain");
             envRain.onclick=(e) => {
                 //this.showAlertDiag("Sorry. To be implemented");
-                this.vishva.toggleRain();
+                this._vishva.toggleRain();
             };
 
             var skyButton: HTMLButtonElement=<HTMLButtonElement>document.getElementById("skyButton");
@@ -55,49 +55,49 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return true;
             };
 
-            let ambColDiag: ColorPickerDiag=new ColorPickerDiag("ambient color","ambCol",this.vishva.getAmbientColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
-                this.vishva.setAmbientColor(hex);
+            let ambColDiag: ColorPickerDiag=new ColorPickerDiag("ambient color","ambCol",this._vishva.getAmbientColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
+                this._vishva.setAmbientColor(hex);
             });
 
-            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this.vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
-                this.vishva.setGroundColor(hex);
+            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this._vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
+                this._vishva.setGroundColor(hex);
             });
 
-            this.envDiag=new VDialog("envDiv","Environment",DialogMgr.rightCenter,"","",350);
+            this._envDiag=new VDialog("envDiv","Environment",DialogMgr.rightCenter,"","",350);
         }
         
-        private sliderOptions(min: number,max: number,value: number): SliderOptions {
+        private _sliderOptions(min: number,max: number,value: number): SliderOptions {
             var so: SliderOptions={};
             so.min=min;
             so.max=max;
             so.value=value;
-            so.slide=(e,ui) => {return this.handleSlide(e,ui)};
+            so.slide=(e,ui) => {return this._handleSlide(e,ui)};
             return so;
         }
 
 
-        private handleSlide(e: Event,ui: SliderUIParams): boolean {
+        private _handleSlide(e: Event,ui: SliderUIParams): boolean {
             var slider: string=(<HTMLElement>e.target).id;
             if(slider==="fov") {
-                this.vishva.setFov(ui.value);
+                this._vishva.setFov(ui.value);
             } else if(slider==="sunPos") {
-                this.vishva.setSunPos(ui.value);
+                this._vishva.setSunPos(ui.value);
             } else {
                 var v: number=ui.value/100;
                 if(slider==="light") {
-                    this.vishva.setLight(v);
+                    this._vishva.setLight(v);
                 } else if(slider==="shade") {
-                    this.vishva.setShade(v);
+                    this._vishva.setShade(v);
                 } else if(slider==="fog") {
                     console.log(v);
-                    this.vishva.setFog(v/100);
+                    this._vishva.setFog(v/100);
                 }
             }
             return true;
         }
         
         public toggle(){
-            this.envDiag.toggle();
+            this._envDiag.toggle();
         }
     }
 }

@@ -6,7 +6,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         public static dialogs:Array<VDialog>= new Array();
         
-         public static center: JQueryPositionOptions={
+        public static center: JQueryPositionOptions={
             at: "center center",
             my: "center center",
             of: window

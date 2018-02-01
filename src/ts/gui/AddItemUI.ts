@@ -62,7 +62,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let table: HTMLTableElement=document.createElement("table");
             table.id=assetType+"Tbl";
             let items: Array<string>=<Array<string>>this._vishva.assets[assetType];
-            this.updateAssetTable(table,assetType,items);
+            this._updateAssetTable(table,assetType,items);
             div.appendChild(table);
             document.body.appendChild(div);
 
@@ -70,11 +70,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             return assetDiag;
         }
 
-        private updateAssetTable(tbl: HTMLTableElement,assetType: string,items: Array<string>) {
+        private _updateAssetTable(tbl: HTMLTableElement,assetType: string,items: Array<string>) {
             if(tbl.rows.length>0) {
                 return;
             }
-            var f: (p1: MouseEvent) => any=(e) => {return this.onAssetImgClick(e)};
+            var f: (p1: MouseEvent) => any=(e) => {return this._onAssetImgClick(e)};
             var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
             for(let item of items) {
                 let img: HTMLImageElement=document.createElement("img");
@@ -95,7 +95,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-        private onAssetImgClick(e: Event): any {
+        private _onAssetImgClick(e: Event): any {
             var i: HTMLImageElement=<HTMLImageElement>e.target;
             if(i.className==="skyboxes") {
                 this._vishva.setSky(i.id);

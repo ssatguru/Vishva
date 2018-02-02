@@ -959,6 +959,45 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var GuiUtils = (function () {
+                        function GuiUtils() {
+                        }
+                        /**
+                         * populates a html select element with options from the passed string array
+                         */
+                        GuiUtils.PopulateSelect = function (selectEle, options) {
+                            var childs = selectEle.children;
+                            var l = (childs.length | 0);
+                            for (var i = l - 1; i >= 0; i--) {
+                                childs[i].remove();
+                            }
+                            var optEle;
+                            for (var _i = 0, options_1 = options; _i < options_1.length; _i++) {
+                                var option = options_1[_i];
+                                optEle = document.createElement("option");
+                                optEle.value = option;
+                                optEle.innerText = option;
+                                selectEle.appendChild(optEle);
+                            }
+                        };
+                        return GuiUtils;
+                    }());
+                    gui.GuiUtils = GuiUtils;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
             (function (vishva_5) {
                 var gui;
                 (function (gui) {
@@ -1095,7 +1134,7 @@ var org;
                             else if (panelIndex === 2 /* Material */) {
                                 if (this._materialUI == null)
                                     this._materialUI = new gui.MaterialUI(this._vishva);
-                                this._materialUI.updateMat();
+                                this._materialUI.updateMatUI();
                             }
                             //refresh sNaDialog if open
                             if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
@@ -1350,43 +1389,67 @@ var org;
                     var MaterialUI = (function () {
                         function MaterialUI(vishva) {
                             var _this = this;
+                            console.log("mataerialUI");
                             this._vishva = vishva;
-                            this._matName = document.getElementById("matName");
-                            this._matName.innerText = this._vishva.getMaterialName();
-                            this._matVisVal = document.getElementById("matVisVal");
+                            //visibility
                             this._matVis = document.getElementById("matVis");
-                            this._matColType = document.getElementById("matColType");
-                            this._matColType.onchange = function () {
-                                var col = _this._vishva.getMeshColor(_this._matColType.value);
-                                _this._matColDiag.setColor(col);
-                            };
-                            this._matTextType = document.getElementById("matTextType");
-                            ;
-                            this._matColDiag = new gui.ColorPickerDiag("mesh color", "matCol", this._vishva.getMeshColor(this._matColType.value), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
-                                var err = _this._vishva.setMeshColor(_this._matColType.value, hex);
-                                if (err !== null)
-                                    gui.DialogMgr.showAlertDiag(err);
-                            });
+                            this._matVisVal = document.getElementById("matVisVal");
                             this._matVisVal["value"] = "1.00";
                             this._matVis.oninput = function () {
                                 _this._matVisVal["value"] = Number(_this._matVis.value).toFixed(2);
                                 _this._vishva.setMeshVisibility(parseFloat(_this._matVis.value));
                             };
-                            this._matTexture = document.getElementById("matTexture");
-                            this._matTexture.onclick = function () {
-                                console.log("checking texture");
+                            //material details
+                            this._matCount = document.getElementById("matCount");
+                            this._matIDs = document.getElementById("matIDs");
+                            this._matIDs.onchange = function () {
+                                _this._updateMatDetails();
+                            };
+                            this._matID = document.getElementById("matID");
+                            this._matName = document.getElementById("matName");
+                            //material color
+                            this._matColType = document.getElementById("matColType");
+                            this._matColType.onchange = function () {
+                                var col = _this._vishva.getMeshColor(_this._matID.innerText, _this._matColType.value);
+                                _this._matColDiag.setColor(col);
+                            };
+                            this._matColDiag = new gui.ColorPickerDiag("mesh color", "matCol", this._vishva.getMeshColor(this._matID.innerText, this._matColType.value), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                var err = _this._vishva.setMeshColor(_this._matID.innerText, _this._matColType.value, hex);
+                                if (err !== null)
+                                    gui.DialogMgr.showAlertDiag(err);
+                            });
+                            //material texture
+                            this._matTextType = document.getElementById("matTextType");
+                            this._matTextType.onchange = function () {
+                                _this._matTextImg.src = _this._vishva.getMatTexture(_this._matID.innerText, _this._matTextType.value);
+                            };
+                            this._matTextImg = document.getElementById("matTextImg");
+                            this._matTextImg.onclick = function () {
                                 if (_this._textureDiag == null) {
                                     _this._createTextureDiag();
                                 }
-                                _this._textureImg.src = _this._vishva.getMatTexture(_this._matTextType.value);
+                                _this._textureImg.src = _this._matTextImg.src;
                                 console.log(_this._textureImg.src);
                                 _this._textureDiag.open();
                             };
+                            this.updateMatUI();
                         }
-                        MaterialUI.prototype.updateMat = function () {
+                        MaterialUI.prototype.updateMatUI = function () {
+                            //set transparency(visibility)
                             this._matVis.value = Number(this._vishva.getMeshVisibility()).toString();
                             this._matVisVal["value"] = Number(this._matVis.value).toFixed(2);
-                            this._matColDiag.setColor(this._vishva.getMeshColor(this._matColType.value));
+                            var mn = this._vishva.getMatNames();
+                            if (mn != null) {
+                                this._matCount.innerText = Number(mn.length).toString();
+                                gui.GuiUtils.PopulateSelect(this._matIDs, mn);
+                                this._updateMatDetails();
+                            }
+                        };
+                        MaterialUI.prototype._updateMatDetails = function () {
+                            this._matID.innerText = this._matIDs.value;
+                            this._matName.innerText = this._vishva.getMaterialName(this._matIDs.value);
+                            this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value, this._matColType.value));
+                            this._matTextImg.src = this._vishva.getMatTexture(this._matID.innerText, this._matTextType.value);
                         };
                         MaterialUI.prototype._createTextureDiag = function () {
                             var _this = this;
@@ -2433,6 +2496,8 @@ var org;
                         this.skyboxTextures = "vishva/internal/textures/skybox-default/default";
                         this.avatarFolder = "vishva/internal/avatar/";
                         this.avatarFile = "starterAvatars.babylon";
+                        this.NO_TEXTURE = "vishva/internal/textures/no-texture.jpg";
+                        this.TGA_IMAGE = "vishva/internal/textures/tga-image.jpg";
                         this.groundTexture = "vishva/internal/textures/ground.jpg";
                         this.groundBumpTexture = "vishva/internal/textures/ground-normal.jpg";
                         this.groundHeightMap = "vishva/internal/textures/ground_heightMap.png";
@@ -3679,14 +3744,10 @@ var org;
                     Vishva.prototype.getMeshVisibility = function () {
                         return this.meshPicked.visibility;
                     };
-                    Vishva.prototype.setMeshColor = function (colType, hex) {
-                        if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
-                            return "This is multimaterial. Not supported for now";
-                        }
-                        if (!(this.meshPicked.material instanceof BABYLON.StandardMaterial)) {
-                            return "This is not a standard material. Not supported for now";
-                        }
-                        var sm = this.meshPicked.material;
+                    Vishva.prototype.setMeshColor = function (matId, colType, hex) {
+                        var sm = this.scene.getMaterialByID(matId);
+                        if (sm == null)
+                            return "material not found";
                         var col = Color3.FromHexString(hex);
                         if (colType === "diffuse")
                             sm.diffuseColor = col;
@@ -3701,39 +3762,65 @@ var org;
                         }
                         return null;
                     };
-                    Vishva.prototype.getMaterialName = function () {
+                    Vishva.prototype.getMatNames = function () {
+                        var mn = new Array();
                         if (this.isMeshSelected) {
-                            return this.meshPicked.material.name;
-                        }
-                        else {
-                            return "";
-                        }
-                    };
-                    Vishva.prototype.getMatTexture = function (type) {
-                        var stdMat = this.meshPicked.material;
-                        if (type == "diffuse" && stdMat.diffuseTexture != null) {
-                            return stdMat.diffuseTexture.name;
-                        }
-                        else if (type == "ambient" && stdMat.ambientTexture != null) {
-                            return stdMat.ambientTexture.name;
-                        }
-                        else if (type == "opacity" && stdMat.opacityTexture != null) {
-                            return stdMat.opacityTexture.name;
-                        }
-                        else if (type == "reflection" && stdMat.reflectionTexture != null) {
-                            return stdMat.reflectionTexture.name;
-                        }
-                        else if (type == "emissive" && stdMat.emissiveTexture != null) {
-                            return stdMat.emissiveTexture.name;
-                        }
-                        else if (type == "specular" && stdMat.specularTexture != null) {
-                            return stdMat.specularTexture.name;
-                        }
-                        else if (type == "bump" && stdMat.bumpTexture != null) {
-                            return stdMat.bumpTexture.name;
+                            if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+                                var mm = this.meshPicked.material;
+                                for (var _i = 0, _a = mm.subMaterials; _i < _a.length; _i++) {
+                                    var m = _a[_i];
+                                    mn.push(m.id);
+                                }
+                                return mn;
+                            }
+                            else {
+                                mn.push(this.meshPicked.material.id);
+                                return mn;
+                            }
                         }
                         else
-                            return "";
+                            return null;
+                    };
+                    Vishva.prototype.getMaterialName = function (id) {
+                        var mat = this.scene.getMaterialByID(id);
+                        if (mat == null)
+                            return null;
+                        else
+                            return mat.name;
+                    };
+                    Vishva.prototype.getMatTexture = function (matId, type) {
+                        var sm = this.scene.getMaterialByID(matId);
+                        if (sm == null)
+                            return null;
+                        var img = null;
+                        if (type == "diffuse" && sm.diffuseTexture != null) {
+                            img = sm.diffuseTexture.name;
+                        }
+                        else if (type == "ambient" && sm.ambientTexture != null) {
+                            img = sm.ambientTexture.name;
+                        }
+                        else if (type == "opacity" && sm.opacityTexture != null) {
+                            img = sm.opacityTexture.name;
+                        }
+                        else if (type == "reflection" && sm.reflectionTexture != null) {
+                            img = sm.reflectionTexture.name;
+                        }
+                        else if (type == "emissive" && sm.emissiveTexture != null) {
+                            img = sm.emissiveTexture.name;
+                        }
+                        else if (type == "specular" && sm.specularTexture != null) {
+                            img = sm.specularTexture.name;
+                        }
+                        else if (type == "bump" && sm.bumpTexture != null) {
+                            img = sm.bumpTexture.name;
+                        }
+                        else {
+                            img = this.NO_TEXTURE;
+                        }
+                        if (img.indexOf(".tga") >= 0) {
+                            img = this.TGA_IMAGE;
+                        }
+                        return img;
                     };
                     Vishva.prototype.setMatTexture = function (type, textName) {
                         var stdMat = this.meshPicked.material;
@@ -3781,15 +3868,14 @@ var org;
                         }
                         return null;
                     };
-                    Vishva.prototype.getMeshColor = function (colType) {
-                        if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
-                            return "#000000";
-                        }
-                        if (!(this.meshPicked.material instanceof BABYLON.StandardMaterial)) {
+                    Vishva.prototype.getMeshColor = function (matId, colType) {
+                        var sm = this.scene.getMaterialByID(matId);
+                        if (sm == null)
+                            return null;
+                        if (!(sm instanceof BABYLON.StandardMaterial)) {
                             return "#000000";
                             ;
                         }
-                        var sm = this.meshPicked.material;
                         if (colType === "diffuse") {
                             if (sm.diffuseColor !== undefined)
                                 return sm.diffuseColor.toHexString();
@@ -4707,11 +4793,9 @@ var org;
                                     var mm = mesh.material;
                                     mms.push(mm);
                                     var ms = mm.subMaterials;
-                                    for (var index134 = 0; index134 < ms.length; index134++) {
-                                        var mat = ms[index134];
-                                        {
-                                            mats.push(mat);
-                                        }
+                                    for (var _a = 0, ms_1 = ms; _a < ms_1.length; _a++) {
+                                        var mat = ms_1[_a];
+                                        mats.push(mat);
                                     }
                                 }
                                 else {

@@ -93,6 +93,9 @@ namespace org.ssatguru.babylonjs.vishva {
         avatarFolder: string="vishva/internal/avatar/";
 
         avatarFile: string="starterAvatars.babylon";
+        
+        NO_TEXTURE:string="vishva/internal/textures/no-texture.jpg"
+        TGA_IMAGE:string="vishva/internal/textures/tga-image.jpg"
 
         groundTexture: string="vishva/internal/textures/ground.jpg";
         groundBumpTexture: string="vishva/internal/textures/ground-normal.jpg";
@@ -1456,14 +1459,9 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.meshPicked.visibility;
         }
 
-        public setMeshColor(colType: string,hex: string): string {
-            if(this.meshPicked.material instanceof BABYLON.MultiMaterial) {
-                return "This is multimaterial. Not supported for now";
-            }
-            if(!(this.meshPicked.material instanceof BABYLON.StandardMaterial)) {
-                return "This is not a standard material. Not supported for now";
-            }
-            let sm: StandardMaterial=<StandardMaterial>this.meshPicked.material;
+        public setMeshColor(matId:string, colType: string,hex: string): string {
+            let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
+            if (sm==null) return "material not found";
             let col: Color3=Color3.FromHexString(hex);
             if(colType==="diffuse")
                 sm.diffuseColor=col;
@@ -1478,32 +1476,56 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             return null;
         }
-        public getMaterialName(): string {
+        
+        public getMatNames():Array<string>{
+            let mn:Array<string>=new Array();
             if(this.isMeshSelected) {
-                return this.meshPicked.material.name;
-            } else {
-                return "";
-            }
+                if(this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+                    let mm:MultiMaterial=this.meshPicked.material;
+                    for(let m of mm.subMaterials){
+                        mn.push(m.id);
+                    }
+                    return mn;
+                }
+                else{
+                    mn.push(this.meshPicked.material.id);
+                    return mn;
+                }
+            }else return null;
+            
+        }
+        public getMaterialName(id:string): string {
+            let mat:Material=this.scene.getMaterialByID(id);
+            if (mat==null) return null;
+            else return mat.name;
         }
 
-        public getMatTexture(type: string): string {
-            let stdMat: StandardMaterial=<StandardMaterial>this.meshPicked.material;
-            if(type=="diffuse"&&stdMat.diffuseTexture!=null) {
-                return stdMat.diffuseTexture.name;
-            } else if(type=="ambient"&&stdMat.ambientTexture!=null) {
-                return stdMat.ambientTexture.name;
-            } else if(type=="opacity"&&stdMat.opacityTexture!=null) {
-                return stdMat.opacityTexture.name;
-            } else if(type=="reflection"&&stdMat.reflectionTexture!=null) {
-                return stdMat.reflectionTexture.name;
-            } else if(type=="emissive"&&stdMat.emissiveTexture!=null) {
-                return stdMat.emissiveTexture.name;
-            } else if(type=="specular"&&stdMat.specularTexture!=null) {
-                return stdMat.specularTexture.name;
-            } else if(type=="bump"&&stdMat.bumpTexture!=null) {
-                return stdMat.bumpTexture.name;
-            } else
-                return "";
+        public getMatTexture(matId:string,type: string): string {
+            let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
+            if (sm==null) return null;
+            let img:string=null;
+            if(type=="diffuse"&&sm.diffuseTexture!=null) {
+                img=sm.diffuseTexture.name;
+            } else if(type=="ambient"&&sm.ambientTexture!=null) {
+                img=sm.ambientTexture.name;
+            } else if(type=="opacity"&&sm.opacityTexture!=null) {
+                img=sm.opacityTexture.name;
+            } else if(type=="reflection"&&sm.reflectionTexture!=null) {
+                img=sm.reflectionTexture.name;
+            } else if(type=="emissive"&&sm.emissiveTexture!=null) {
+                img=sm.emissiveTexture.name;
+            } else if(type=="specular"&&sm.specularTexture!=null) {
+                img=sm.specularTexture.name;
+            } else if(type=="bump"&&sm.bumpTexture!=null) {
+                img=sm.bumpTexture.name;
+            } else{
+                img=this.NO_TEXTURE;
+            }
+            if (img.indexOf(".tga")>=0){
+                img=this.TGA_IMAGE;
+            }
+            
+            return img;
         }
         public setMatTexture(type: string,textName: string) {
             let stdMat: StandardMaterial=<StandardMaterial>this.meshPicked.material;
@@ -1544,14 +1566,15 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             return null;
         }
-        public getMeshColor(colType: string): string {
-            if(this.meshPicked.material instanceof BABYLON.MultiMaterial) {
-                return "#000000";
-            }
-            if(!(this.meshPicked.material instanceof BABYLON.StandardMaterial)) {
+        public getMeshColor(matId:string,colType: string): string {
+            
+            let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
+            if (sm==null) return null;
+            
+            if(!(sm instanceof BABYLON.StandardMaterial)) {
                 return "#000000";;
             }
-            let sm: StandardMaterial=<StandardMaterial>this.meshPicked.material;
+
             if(colType==="diffuse") {
                 if(sm.diffuseColor!==undefined) return sm.diffuseColor.toHexString();
                 else return "#000000";
@@ -2497,11 +2520,8 @@ namespace org.ssatguru.babylonjs.vishva {
                         var mm: MultiMaterial=<MultiMaterial>mesh.material;
                         mms.push(mm);
                         var ms: Material[]=mm.subMaterials;
-                        for(var index134=0;index134<ms.length;index134++) {
-                            var mat=ms[index134];
-                            {
+                        for (let mat of ms){
                                 mats.push(mat);
-                            }
                         }
                     } else {
                         mats.push(mesh.material);

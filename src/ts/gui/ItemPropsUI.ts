@@ -138,7 +138,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._physicsUI._updatePhysics()
             } else if(panelIndex===propertyPanel.Material) {
                 if(this._materialUI==null) this._materialUI=new MaterialUI(this._vishva);
-                this._materialUI.updateMat();
+                this._materialUI.updateMatUI();
             }
             //refresh sNaDialog if open
             if(this._generalUI._snaUI!=null && this._generalUI._snaUI.isOpen()) {
@@ -146,15 +146,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._generalUI._snaUI.show_sNaDiag();
             }
         }
-
-
-        
-
-
-        
-        
-        
-       
     }
     const enum propertyPanel {
         General,

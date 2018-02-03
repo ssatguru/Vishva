@@ -1385,6 +1385,7 @@ var org;
                 (function (gui) {
                     /**
                      * Provides UI to manage a mesh material
+                     * TODO : Make provision to switch material. Currently one can only alter the material
                      */
                     var MaterialUI = (function () {
                         function MaterialUI(vishva) {
@@ -2077,6 +2078,7 @@ var org;
                     /**
                      * Provides a UI to manage texture of a material
                      * TODO : should be closed or refreshed when mesh switched or deselected
+                     * TODO : should create new texture if no current texture set
                      */
                     var TextureUI = (function () {
                         function TextureUI(vishva) {
@@ -3964,7 +3966,7 @@ var org;
                     };
                     Vishva.prototype.setTextRot = function (textID, rot) {
                         var text = this.getTextureByID(textID);
-                        text.uAng = rot;
+                        text.wAng = rot * Math.PI / 180;
                     };
                     Vishva.prototype.getTextures = function () {
                         var ts = this.scene.textures;

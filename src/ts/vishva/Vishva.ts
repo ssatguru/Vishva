@@ -1583,7 +1583,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         public setTextRot(textID:string,rot:number){
             let text: Texture=<Texture>this.getTextureByID(textID);
-            text.uAng=rot;
+            text.wAng=rot*Math.PI/180;
         }
         public getTextures(): string[] {
             let ts: BaseTexture[]=this.scene.textures;

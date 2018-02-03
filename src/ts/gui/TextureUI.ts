@@ -2,6 +2,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides a UI to manage texture of a material
      * TODO : should be closed or refreshed when mesh switched or deselected
+     * TODO : should create new texture if no current texture set
      */
     export class TextureUI {
 

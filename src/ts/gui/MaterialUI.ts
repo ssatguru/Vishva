@@ -1,6 +1,7 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides UI to manage a mesh material
+     * TODO : Make provision to switch material. Currently one can only alter the material
      */
     export class MaterialUI {
 

@@ -46,8 +46,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             window.addEventListener("resize",(evt) => {return this.onWindowResize(evt)});
         }
 
-
-
         /**
          * this array will be used store all dialogs whose position needs to be
          * reset on window resize
@@ -63,17 +61,18 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * 
          * @param evt
          */
-
+        resizing:boolean=false;
         private onWindowResize(evt: Event) {
-
             for(let jq of this.dialogs) {
                 let jpo: JQueryPositionOptions=<JQueryPositionOptions>jq["jpo"];
                 if(jpo!=null) {
                     jq.dialog("option","position",jpo);
                     var open: boolean=<boolean><any>jq.dialog("isOpen");
                     if(open) {
+                        this.resizing=true;
                         jq.dialog("close");
                         jq.dialog("open");
+                        this.resizing=false;
                     }
                 }
             }
@@ -81,18 +80,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             for(let diag of DialogMgr.dialogs) {
                 diag.position();
                 if(diag.isOpen()) {
+                    this.resizing=true;
                     diag.close();
                     diag.open();
+                    this.resizing=false;
                 }
             }
         }
-
-    
-         
-      
-
-
-
         /**
          * Main Navigation Menu Section
          */
@@ -331,7 +325,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class GuiSettings {
         enableToolTips: boolean;
     }
-
    
     export declare class ColorPicker {
         public constructor(e: HTMLElement,f: (p1: any,p2: any,p3: RGB) => void);

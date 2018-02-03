@@ -642,9 +642,10 @@ var org;
                      * Provides UI for the Genral tab of mesh properties
                      */
                     var GeneralUI = (function () {
-                        function GeneralUI(vishva) {
+                        function GeneralUI(vishva, vishvaGUI) {
                             var _this = this;
                             this._vishva = vishva;
+                            this._vishvaGUI = vishvaGUI;
                             //name
                             this._genName = document.getElementById("genName");
                             this._genName.onchange = function () {
@@ -900,7 +901,7 @@ var org;
                             };
                             sNa.onclick = function (e) {
                                 if (_this._snaUI == null) {
-                                    _this._snaUI = new gui.SnaUI(_this._vishva);
+                                    _this._snaUI = new gui.SnaUI(_this._vishva, _this._vishvaGUI);
                                 }
                                 _this._snaUI.show_sNaDiag();
                                 return true;
@@ -1058,9 +1059,16 @@ var org;
                                     }
                                 },
                                 closeText: "",
-                                close: function (e, ui) {
-                                    if (!_this._fixingDragIssue && !_this.refreshingPropsDiag && (_this._generalUI._snaUI != null) && _this._generalUI._snaUI.isOpen()) {
-                                        _this._generalUI._snaUI.close();
+                                close: function () {
+                                    if (_this._vishvaGUI.resizing)
+                                        return;
+                                    if (!_this._fixingDragIssue && !_this.refreshingPropsDiag) {
+                                        if ((_this._generalUI._snaUI != null) && _this._generalUI._snaUI.isOpen()) {
+                                            _this._generalUI._snaUI.close();
+                                        }
+                                        if ((_this._materialUI != null) && (_this._materialUI._textureUI != null) && _this._materialUI._textureUI.isOpen()) {
+                                            _this._materialUI._textureUI.close();
+                                        }
                                     }
                                 },
                                 //after drag the dialog box doesnot resize
@@ -1113,7 +1121,7 @@ var org;
                         ItemPropsUI.prototype.refreshPanel = function (panelIndex) {
                             if (panelIndex === 0 /* General */) {
                                 if (this._generalUI == null)
-                                    this._generalUI = new gui.GeneralUI(this._vishva);
+                                    this._generalUI = new gui.GeneralUI(this._vishva, this._vishvaGUI);
                                 this._generalUI._updateGeneral();
                             }
                             else if (panelIndex === 3 /* Lights */) {
@@ -1385,7 +1393,7 @@ var org;
                 (function (gui) {
                     /**
                      * Provides UI to manage a mesh material
-                     * TODO : Make provision to switch material. Currently one can only alter the material
+                     * TODO : Make provision to assign new material. Currently one can only alter the material
                      */
                     var MaterialUI = (function () {
                         function MaterialUI(vishva) {
@@ -1422,6 +1430,7 @@ var org;
                             //material texture
                             this._matTextType = document.getElementById("matTextType");
                             this._matTextType.onchange = function () {
+                                console.log("type onchange");
                                 var dtls = _this._vishva.getMatTexture(_this._matID.innerText, _this._matTextType.value);
                                 _this._textID = dtls[0];
                                 _this._textName = dtls[1];
@@ -1432,9 +1441,30 @@ var org;
                                 else {
                                     _this._matTextImg.src = _this._textName;
                                 }
+                                if (_this._textID == null) {
+                                    _this._matCreateText.setAttribute("style", "display:block");
+                                }
+                                else {
+                                    _this._matCreateText.setAttribute("style", "display:none");
+                                }
                             };
                             this._matTextImg = document.getElementById("matTextImg");
                             this._matTextImg.onclick = function () {
+                                if (_this._textID == null) {
+                                    return;
+                                }
+                                if (_this._textureUI == null) {
+                                    _this._textureUI = new gui.TextureUI(_this._vishva);
+                                }
+                                _this._textureUI.setParms(_this._textID, _this._textName, _this._matTextType.value, _this._matID.innerText, _this._matTextImg);
+                                _this._textureUI.open();
+                            };
+                            this._matCreateText = document.getElementById("matCreateText");
+                            this._matCreateText.onclick = function () {
+                                _this._matCreateText.setAttribute("style", "display:none");
+                                _this._textID = _this._vishva.createText();
+                                _this._textName = "";
+                                _this._vishva.setMatTexture(_this._matID.innerText, _this._matTextType.value, _this._textID);
                                 if (_this._textureUI == null) {
                                     _this._textureUI = new gui.TextureUI(_this._vishva);
                                 }
@@ -1467,6 +1497,17 @@ var org;
                             }
                             else {
                                 this._matTextImg.src = this._textName;
+                            }
+                            if (this._textID == null) {
+                                this._matCreateText.setAttribute("style", "display:block");
+                            }
+                            else {
+                                this._matCreateText.setAttribute("style", "display:none");
+                            }
+                            if (this._textureUI != null && this._textureUI.isOpen()) {
+                                this._textureUI.setParms(this._textID, this._textName, this._matTextType.value, this._matID.innerText, this._matTextImg);
+                                this._textureUI.close();
+                                this._textureUI.open();
                             }
                         };
                         return MaterialUI;
@@ -1692,9 +1733,10 @@ var org;
                      * Provides a UI to manage sensors and actuators
                      */
                     var SnaUI = (function () {
-                        function SnaUI(vishva) {
+                        function SnaUI(vishva, vishvaGUI) {
                             this.STATE_IND = "state";
                             this._vishva = vishva;
+                            this._vishvaGUI = vishvaGUI;
                         }
                         //        public open(){
                         //            this.sNaDialog.dialog("open");
@@ -1735,6 +1777,8 @@ var org;
                                 _this.sNaDialog.dialog("open");
                             };
                             this.sNaDialog.dialog(dos);
+                            this.sNaDialog["jpo"] = gui.DialogMgr.center;
+                            this._vishvaGUI.dialogs.push(this.sNaDialog);
                             this.sensSel = document.getElementById("sensSel");
                             this.actSel = document.getElementById("actSel");
                             var sensors = this._vishva.getSensorList();
@@ -2078,7 +2122,6 @@ var org;
                     /**
                      * Provides a UI to manage texture of a material
                      * TODO : should be closed or refreshed when mesh switched or deselected
-                     * TODO : should create new texture if no current texture set
                      */
                     var TextureUI = (function () {
                         function TextureUI(vishva) {
@@ -2128,8 +2171,21 @@ var org;
                             var textures = this._vishva.getTextures();
                             gui.GuiUtils.PopulateSelect(textList, textures);
                         }
+                        TextureUI.prototype.update = function () {
+                            this._matHScale.value = this._vishva.getTextHScale(this._textID);
+                            this._matVScale.value = this._vishva.getTextVScale(this._textID);
+                            this._matRot.value = this._vishva.getTextRot(this._textID);
+                            this._matHO.value = this._vishva.getTextHO(this._textID);
+                            this._matVO.value = this._vishva.getTextVO(this._textID);
+                        };
                         TextureUI.prototype.open = function () {
                             this._textureDiag.open();
+                        };
+                        TextureUI.prototype.isOpen = function () {
+                            return this._textureDiag.isOpen();
+                        };
+                        TextureUI.prototype.close = function () {
+                            this._textureDiag.close();
                         };
                         TextureUI.prototype.setParms = function (textID, textName, textType, matdId, matTextImg) {
                             this._textID = textID;
@@ -2140,6 +2196,7 @@ var org;
                             this._matID = matdId;
                             this._matTextImg = matTextImg;
                             this._textureImg.src = this._matTextImg.src;
+                            this.update();
                         };
                         return TextureUI;
                     }());
@@ -2169,6 +2226,16 @@ var org;
                              * reset on window resize
                              */
                             this.dialogs = new Array();
+                            /**
+                             * resposition all dialogs to their original default postions without this,
+                             * a window resize could end up moving some dialogs outside the window and
+                             * thus make them disappear
+                             * the default position of each dialog will be stored in a new property called "jpo"
+                             * this would be created whenever/wherever the dialog is defined
+                             *
+                             * @param evt
+                             */
+                            this.resizing = false;
                             this._vishva = vishva;
                             this.setSettings();
                             $(document).tooltip({
@@ -2186,15 +2253,6 @@ var org;
                             gui.DialogMgr.createAlertDiag();
                             window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
                         }
-                        /**
-                         * resposition all dialogs to their original default postions without this,
-                         * a window resize could end up moving some dialogs outside the window and
-                         * thus make them disappear
-                         * the default position of each dialog will be stored in a new property called "jpo"
-                         * this would be created whenever/wherever the dialog is defined
-                         *
-                         * @param evt
-                         */
                         VishvaGUI.prototype.onWindowResize = function (evt) {
                             for (var _i = 0, _a = this.dialogs; _i < _a.length; _i++) {
                                 var jq = _a[_i];
@@ -2203,8 +2261,10 @@ var org;
                                     jq.dialog("option", "position", jpo);
                                     var open = jq.dialog("isOpen");
                                     if (open) {
+                                        this.resizing = true;
                                         jq.dialog("close");
                                         jq.dialog("open");
+                                        this.resizing = false;
                                     }
                                 }
                             }
@@ -2212,8 +2272,10 @@ var org;
                                 var diag = _c[_b];
                                 diag.position();
                                 if (diag.isOpen()) {
+                                    this.resizing = true;
                                     diag.close();
                                     diag.open();
+                                    this.resizing = false;
                                 }
                             }
                         };
@@ -3871,6 +3933,10 @@ var org;
                         else
                             return mat.name;
                     };
+                    Vishva.prototype.createText = function () {
+                        var text = new Texture("", this.scene);
+                        return text.uid;
+                    };
                     Vishva.prototype.getMatTexture = function (matId, type) {
                         var sm = this.scene.getMaterialByID(matId);
                         if (sm == null)
@@ -3880,6 +3946,7 @@ var org;
                         if (type == "diffuse" && sm.diffuseTexture != null) {
                             uid = sm.diffuseTexture.uid;
                             img = sm.diffuseTexture.name;
+                            console.log(sm.diffuseTexture.textureType);
                         }
                         else if (type == "ambient" && sm.ambientTexture != null) {
                             uid = sm.ambientTexture.uid;
@@ -3904,6 +3971,7 @@ var org;
                         else if (type == "bump" && sm.bumpTexture != null) {
                             uid = sm.bumpTexture.uid;
                             img = sm.bumpTexture.name;
+                            console.log(sm.bumpTexture.textureType);
                         }
                         else {
                             uid = null;
@@ -3914,8 +3982,8 @@ var org;
                         //            }
                         return [uid, img];
                     };
-                    Vishva.prototype.setMatTexture = function (matId, type, textName) {
-                        var bt = this.getTextureByName(textName);
+                    Vishva.prototype.setMatTexture = function (matId, type, textID) {
+                        var bt = this.getTextureByID(textID);
                         if (bt != null) {
                             var sm = this.scene.getMaterialByID(matId);
                             if (sm == null)
@@ -3952,21 +4020,41 @@ var org;
                         var text = this.getTextureByID(textID);
                         text.uScale = scale;
                     };
+                    Vishva.prototype.getTextHScale = function (textID) {
+                        var text = this.getTextureByID(textID);
+                        return Number(text.uScale).toString();
+                    };
                     Vishva.prototype.setTextVScale = function (textID, scale) {
                         var text = this.getTextureByID(textID);
                         text.vScale = scale;
+                    };
+                    Vishva.prototype.getTextVScale = function (textID) {
+                        var text = this.getTextureByID(textID);
+                        return Number(text.vScale).toString();
                     };
                     Vishva.prototype.setTextHO = function (textID, o) {
                         var text = this.getTextureByID(textID);
                         text.uOffset = o;
                     };
+                    Vishva.prototype.getTextHO = function (textID) {
+                        var text = this.getTextureByID(textID);
+                        return Number(text.uOffset).toString();
+                    };
                     Vishva.prototype.setTextVO = function (textID, o) {
                         var text = this.getTextureByID(textID);
                         text.vOffset = o;
                     };
+                    Vishva.prototype.getTextVO = function (textID) {
+                        var text = this.getTextureByID(textID);
+                        return Number(text.vOffset).toString();
+                    };
                     Vishva.prototype.setTextRot = function (textID, rot) {
                         var text = this.getTextureByID(textID);
                         text.wAng = rot * Math.PI / 180;
+                    };
+                    Vishva.prototype.getTextRot = function (textID) {
+                        var text = this.getTextureByID(textID);
+                        return Number(text.wAng * 180 / Math.PI).toString();
                     };
                     Vishva.prototype.getTextures = function () {
                         var ts = this.scene.textures;

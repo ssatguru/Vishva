@@ -7,6 +7,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class SnaUI{
         
         private _vishva:Vishva;
+        private _vishvaGUI:VishvaGUI;
         private STATE_IND: string="state";
         
         sNaDialog: JQuery;
@@ -20,8 +21,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         actTbl: HTMLTableElement;
         
         
-        constructor(vishva:Vishva){
+        constructor(vishva:Vishva,vishvaGUI:VishvaGUI){
             this._vishva=vishva;
+            this._vishvaGUI=vishvaGUI;
         }
         
 //        public open(){
@@ -67,6 +69,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.sNaDialog.dialog("open");
             }
             this.sNaDialog.dialog(dos);
+            this.sNaDialog["jpo"]=DialogMgr.center;
+            this._vishvaGUI.dialogs.push(this.sNaDialog);
 
             this.sensSel=<HTMLSelectElement>document.getElementById("sensSel");
             this.actSel=<HTMLSelectElement>document.getElementById("actSel");

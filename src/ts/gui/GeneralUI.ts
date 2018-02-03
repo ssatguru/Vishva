@@ -7,6 +7,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class GeneralUI {
 
         private _vishva: Vishva;
+        private _vishvaGUI: VishvaGUI;
         public _snaUI: SnaUI;
 
         private _genName: HTMLInputElement;
@@ -44,8 +45,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _genVisi: HTMLInputElement;
 
 
-        constructor(vishva: Vishva) {
+        constructor(vishva: Vishva, vishvaGUI:VishvaGUI) {
             this._vishva=vishva;
+            this._vishvaGUI=vishvaGUI;
 
             //name
             this._genName=<HTMLInputElement>document.getElementById("genName");
@@ -321,7 +323,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             sNa.onclick=(e) => {
                 if(this._snaUI==null) {
-                    this._snaUI=new SnaUI(this._vishva);
+                    this._snaUI=new SnaUI(this._vishva,this._vishvaGUI);
                 }
                 this._snaUI.show_sNaDiag();
                 return true;

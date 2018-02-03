@@ -7,20 +7,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
      * Provides UI to manage an Item(mesh) properties
      */
     export class ItemPropsUI {
-       
+
         private _vishva: Vishva;
         private _vishvaGUI: VishvaGUI;
         //private _snaUI:SnaUI;
-        
+
         private _propsDiag: JQuery=null;
         private _fixingDragIssue: boolean=false;
         private _activePanel: number=-1;
 
 
-        constructor(vishva: Vishva,vishvaGUI:VishvaGUI) {
+        constructor(vishva: Vishva,vishvaGUI: VishvaGUI) {
             this._vishva=vishva;
             this._vishvaGUI=vishvaGUI;
-        
+
             let propsAcc: JQuery=$("#propsAcc");
 
             propsAcc.accordion({
@@ -63,9 +63,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     }
                 },
                 closeText: "",
-                close: (e,ui) => {
-                    if(!this._fixingDragIssue&&!this.refreshingPropsDiag&&(this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
-                        this._generalUI._snaUI.close();
+                close: () => {
+                    if (this._vishvaGUI.resizing) return;
+                    if(!this._fixingDragIssue&&!this.refreshingPropsDiag) {
+                        if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
+                            this._generalUI._snaUI.close();
+                        }
+                        if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
+                            this._materialUI._textureUI.close();
+                        }
                     }
                 },
                 //after drag the dialog box doesnot resize
@@ -80,17 +86,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._propsDiag["jpo"]=DialogMgr.leftCenter;
             this._vishvaGUI.dialogs.push(this._propsDiag);
         }
-        
-        public open(){
+
+        public open() {
             this._propsDiag.dialog("open");
         }
-        public isOpen():boolean{
+        public isOpen(): boolean {
             return this._propsDiag.dialog("isOpen");
         }
-        public close(){
+        public close() {
             this._propsDiag.dialog("close");
         }
-        
+
         /*
          * called by vishva when editcontrol
          * is switched from another mesh
@@ -117,15 +123,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(ui.text()=="Animations") return propertyPanel.Animations;
 
         }
-        
-        private _generalUI:GeneralUI;
-        private _lightUI:LightUI;
-        private _animationUI:AnimationUI;
-        private _physicsUI:PhysicsUI;
-         private _materialUI:MaterialUI;
+
+        private _generalUI: GeneralUI;
+        private _lightUI: LightUI;
+        private _animationUI: AnimationUI;
+        private _physicsUI: PhysicsUI;
+        private _materialUI: MaterialUI;
         private refreshPanel(panelIndex: number) {
             if(panelIndex===propertyPanel.General) {
-                if(this._generalUI==null) this._generalUI=new GeneralUI(this._vishva);
+                if(this._generalUI==null) this._generalUI=new GeneralUI(this._vishva,this._vishvaGUI);
                 this._generalUI._updateGeneral();
             } else if(panelIndex===propertyPanel.Lights) {
                 if(this._lightUI==null) this._lightUI=new LightUI(this._vishva);
@@ -141,7 +147,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._materialUI.updateMatUI();
             }
             //refresh sNaDialog if open
-            if(this._generalUI._snaUI!=null && this._generalUI._snaUI.isOpen()) {
+            if(this._generalUI._snaUI!=null&&this._generalUI._snaUI.isOpen()) {
                 this._generalUI._snaUI.close();
                 this._generalUI._snaUI.show_sNaDiag();
             }

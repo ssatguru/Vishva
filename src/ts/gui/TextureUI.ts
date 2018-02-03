@@ -2,7 +2,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides a UI to manage texture of a material
      * TODO : should be closed or refreshed when mesh switched or deselected
-     * TODO : should create new texture if no current texture set
      */
     export class TextureUI {
 
@@ -73,11 +72,24 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let textList: HTMLSelectElement=<HTMLSelectElement>document.getElementById("textureList");
             var textures: string[]=this._vishva.getTextures();
             GuiUtils.PopulateSelect(textList,textures);
-            
+        }
+        
+        public update(){
+            this._matHScale.value=this._vishva.getTextHScale(this._textID);
+            this._matVScale.value=this._vishva.getTextVScale(this._textID);
+            this._matRot.value=this._vishva.getTextRot(this._textID);
+            this._matHO.value=this._vishva.getTextHO(this._textID);
+            this._matVO.value=this._vishva.getTextVO(this._textID);
         }
         
         public open(){
             this._textureDiag.open();
+        }
+        public isOpen():boolean{
+            return this._textureDiag.isOpen();
+        }
+        public close(){
+            this._textureDiag.close();
         }
         
         public setParms(textID:string,textName:string, textType:string,matdId: string,matTextImg: HTMLImageElement){
@@ -89,6 +101,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matID=matdId;
             this._matTextImg=matTextImg;
             this._textureImg.src=this._matTextImg.src;
+            
+            this.update();
         }
     }
 

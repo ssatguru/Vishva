@@ -1,7 +1,7 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides UI to manage a mesh material
-     * TODO : Make provision to switch material. Currently one can only alter the material
+     * TODO : Make provision to assign new material. Currently one can only alter the material
      */
     export class MaterialUI {
 
@@ -17,8 +17,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _matColDiag: ColorPickerDiag;
         private _matTextType: HTMLSelectElement;
         private _matTextImg: HTMLImageElement;
+        private _matCreateText: HTMLElement;
 
-        private _textureUI: TextureUI;
+        public _textureUI: TextureUI;
         private _textID: string;
         private _textName: string;
 
@@ -60,6 +61,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //material texture
             this._matTextType=<HTMLSelectElement>document.getElementById("matTextType");
             this._matTextType.onchange=() => {
+                console.log("type onchange");
                 let dtls: Array<string>=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
                 this._textID=dtls[0];
                 this._textName=dtls[1];
@@ -69,15 +71,37 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 } else {
                     this._matTextImg.src=this._textName;
                 }
+                if(this._textID==null) {
+                    this._matCreateText.setAttribute("style","display:block");
+                } else {
+                    this._matCreateText.setAttribute("style","display:none");
+                }
             }
 
             this._matTextImg=<HTMLImageElement>document.getElementById("matTextImg");
             this._matTextImg.onclick=() => {
+                if(this._textID==null) {
+                    return;
+                }
                 if(this._textureUI==null) {
                     this._textureUI=new TextureUI(this._vishva);
                 }
                 this._textureUI.setParms(this._textID,this._textName,this._matTextType.value,this._matID.innerText,this._matTextImg);
                 this._textureUI.open();
+            }
+
+            this._matCreateText=document.getElementById("matCreateText");
+            this._matCreateText.onclick=() => {
+                this._matCreateText.setAttribute("style","display:none");
+                this._textID=this._vishva.createText();
+                this._textName="";
+                this._vishva.setMatTexture(this._matID.innerText,this._matTextType.value,this._textID);
+                if(this._textureUI==null) {
+                    this._textureUI=new TextureUI(this._vishva);
+                }
+                this._textureUI.setParms(this._textID,this._textName,this._matTextType.value,this._matID.innerText,this._matTextImg);
+                this._textureUI.open();
+
             }
 
             this.updateMatUI();
@@ -90,10 +114,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             let mn: Array<string>=this._vishva.getMatNames();
-            if(mn!=null) {
+            if(mn!=null){
                 this._matCount.innerText=Number(mn.length).toString();
                 GuiUtils.PopulateSelect(this._matIDs,mn);
                 this._updateMatDetails();
+               
             }
         }
 
@@ -109,6 +134,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._matTextImg.src=this._vishva.TGA_IMAGE;
             } else {
                 this._matTextImg.src=this._textName;
+            }
+            if(this._textID==null) {
+                this._matCreateText.setAttribute("style","display:block");
+            } else {
+                this._matCreateText.setAttribute("style","display:none");
+            }
+            if(this._textureUI!=null&&this._textureUI.isOpen()){
+                this._textureUI.setParms(this._textID,this._textName,this._matTextType.value,this._matID.innerText,this._matTextImg);
+                this._textureUI.close();
+                this._textureUI.open();
             }
         }
 

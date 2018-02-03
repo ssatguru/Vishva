@@ -1421,16 +1421,24 @@ var org;
                             //material texture
                             this._matTextType = document.getElementById("matTextType");
                             this._matTextType.onchange = function () {
-                                _this._matTextImg.src = _this._vishva.getMatTexture(_this._matID.innerText, _this._matTextType.value);
+                                var dtls = _this._vishva.getMatTexture(_this._matID.innerText, _this._matTextType.value);
+                                _this._textID = dtls[0];
+                                _this._textName = dtls[1];
+                                _this._matTextImg.src = _this._textName;
+                                if (_this._textName.indexOf(".tga") >= 0) {
+                                    _this._matTextImg.src = _this._vishva.TGA_IMAGE;
+                                }
+                                else {
+                                    _this._matTextImg.src = _this._textName;
+                                }
                             };
                             this._matTextImg = document.getElementById("matTextImg");
                             this._matTextImg.onclick = function () {
-                                if (_this._textureDiag == null) {
-                                    _this._createTextureDiag();
+                                if (_this._textureUI == null) {
+                                    _this._textureUI = new gui.TextureUI(_this._vishva);
                                 }
-                                _this._textureImg.src = _this._matTextImg.src;
-                                console.log(_this._textureImg.src);
-                                _this._textureDiag.open();
+                                _this._textureUI.setParms(_this._textID, _this._textName, _this._matTextType.value, _this._matID.innerText, _this._matTextImg);
+                                _this._textureUI.open();
                             };
                             this.updateMatUI();
                         }
@@ -1449,25 +1457,15 @@ var org;
                             this._matID.innerText = this._matIDs.value;
                             this._matName.innerText = this._vishva.getMaterialName(this._matIDs.value);
                             this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value, this._matColType.value));
-                            this._matTextImg.src = this._vishva.getMatTexture(this._matID.innerText, this._matTextType.value);
-                        };
-                        MaterialUI.prototype._createTextureDiag = function () {
-                            var _this = this;
-                            this._textureDiag = new gui.VDialog("textureDiag", "Texture", gui.DialogMgr.centerBottom);
-                            this._textureImg = document.getElementById("textImg");
-                            var chgTexture = document.getElementById("changeTexture");
-                            chgTexture.onclick = function () {
-                                _this._vishva.setMatTexture(_this._matTextType.value, textList.value);
-                            };
-                            var textList = document.getElementById("textureList");
-                            var textures = this._vishva.getTextures();
-                            var opt;
-                            for (var _i = 0, textures_1 = textures; _i < textures_1.length; _i++) {
-                                var text = textures_1[_i];
-                                opt = document.createElement("option");
-                                opt.value = text;
-                                opt.innerText = text;
-                                textList.appendChild(opt);
+                            var dtls = this._vishva.getMatTexture(this._matID.innerText, this._matTextType.value);
+                            this._textID = dtls[0];
+                            this._textName = dtls[1];
+                            this._matTextImg.src = this._textName;
+                            if (this._textName.indexOf(".tga") >= 0) {
+                                this._matTextImg.src = this._vishva.TGA_IMAGE;
+                            }
+                            else {
+                                this._matTextImg.src = this._textName;
                             }
                         };
                         return MaterialUI;
@@ -2076,6 +2074,89 @@ var org;
             (function (vishva_12) {
                 var gui;
                 (function (gui) {
+                    /**
+                     * Provides a UI to manage texture of a material
+                     * TODO : should be closed or refreshed when mesh switched or deselected
+                     */
+                    var TextureUI = (function () {
+                        function TextureUI(vishva) {
+                            var _this = this;
+                            this._vishva = vishva;
+                            this._textureDiag = new gui.VDialog("textureDiag", "Texture", gui.DialogMgr.centerBottom);
+                            this._textureImg = document.getElementById("textImg");
+                            this._textIDEle = document.getElementById("textID");
+                            this._textType = document.getElementById("textType");
+                            this._textImgSrc = document.getElementById("textImgSrc");
+                            this._matHScale = document.getElementById("matHScale");
+                            this._matHScale.onchange = function () {
+                                _this._vishva.setTextHScale(_this._textID, Number(_this._matHScale.value));
+                            };
+                            this._matVScale = document.getElementById("matVScale");
+                            this._matVScale.onchange = function () {
+                                _this._vishva.setTextVScale(_this._textID, Number(_this._matVScale.value));
+                            };
+                            this._matRot = document.getElementById("matRot");
+                            this._matRot.oninput = function () {
+                                _this._vishva.setTextRot(_this._textID, Number(_this._matRot.value));
+                            };
+                            this._matHO = document.getElementById("matHO");
+                            this._matHO.oninput = function () {
+                                _this._vishva.setTextHO(_this._textID, Number(_this._matHO.value));
+                            };
+                            this._matVO = document.getElementById("matVO");
+                            this._matVO.oninput = function () {
+                                _this._vishva.setTextVO(_this._textID, Number(_this._matVO.value));
+                            };
+                            var chgTexture = document.getElementById("changeTexture");
+                            chgTexture.onclick = function () {
+                                var imgsrc = textList.value;
+                                //this._vishva.setMatTexture(this._matID,this._textType.innerText,imgsrc);
+                                _this._vishva.setTextURL(_this._textID, imgsrc);
+                                if (textList.value.indexOf(".tga") >= 0) {
+                                    imgsrc = _this._vishva.TGA_IMAGE;
+                                }
+                                else {
+                                    _this._textureImg.src = imgsrc;
+                                    _this._matTextImg.src = imgsrc;
+                                    _this._textName = imgsrc;
+                                    _this._textImgSrc.innerText = imgsrc;
+                                }
+                            };
+                            var textList = document.getElementById("textureList");
+                            var textures = this._vishva.getTextures();
+                            gui.GuiUtils.PopulateSelect(textList, textures);
+                        }
+                        TextureUI.prototype.open = function () {
+                            this._textureDiag.open();
+                        };
+                        TextureUI.prototype.setParms = function (textID, textName, textType, matdId, matTextImg) {
+                            this._textID = textID;
+                            this._textIDEle.innerText = textID;
+                            this._textName = textName;
+                            this._textImgSrc.innerText = textName;
+                            this._textType.innerText = textType;
+                            this._matID = matdId;
+                            this._matTextImg = matTextImg;
+                            this._textureImg.src = this._matTextImg.src;
+                        };
+                        return TextureUI;
+                    }());
+                    gui.TextureUI = TextureUI;
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_13) {
+                var gui;
+                (function (gui) {
                     var VishvaGUI = (function () {
                         function VishvaGUI(vishva) {
                             var _this = this;
@@ -2382,7 +2463,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3792,63 +3873,98 @@ var org;
                         var sm = this.scene.getMaterialByID(matId);
                         if (sm == null)
                             return null;
+                        var uid = null;
                         var img = null;
                         if (type == "diffuse" && sm.diffuseTexture != null) {
+                            uid = sm.diffuseTexture.uid;
                             img = sm.diffuseTexture.name;
                         }
                         else if (type == "ambient" && sm.ambientTexture != null) {
+                            uid = sm.ambientTexture.uid;
                             img = sm.ambientTexture.name;
                         }
                         else if (type == "opacity" && sm.opacityTexture != null) {
+                            uid = sm.opacityTexture.uid;
                             img = sm.opacityTexture.name;
                         }
                         else if (type == "reflection" && sm.reflectionTexture != null) {
+                            uid = sm.reflectionTexture.uid;
                             img = sm.reflectionTexture.name;
                         }
                         else if (type == "emissive" && sm.emissiveTexture != null) {
+                            uid = sm.emissiveTexture.uid;
                             img = sm.emissiveTexture.name;
                         }
                         else if (type == "specular" && sm.specularTexture != null) {
+                            uid = sm.specularTexture.uid;
                             img = sm.specularTexture.name;
                         }
                         else if (type == "bump" && sm.bumpTexture != null) {
+                            uid = sm.bumpTexture.uid;
                             img = sm.bumpTexture.name;
                         }
                         else {
+                            uid = null;
                             img = this.NO_TEXTURE;
                         }
-                        if (img.indexOf(".tga") >= 0) {
-                            img = this.TGA_IMAGE;
-                        }
-                        return img;
+                        //            if (img.indexOf(".tga")>=0){
+                        //                img=this.TGA_IMAGE;
+                        //            }
+                        return [uid, img];
                     };
-                    Vishva.prototype.setMatTexture = function (type, textName) {
-                        var stdMat = this.meshPicked.material;
+                    Vishva.prototype.setMatTexture = function (matId, type, textName) {
                         var bt = this.getTextureByName(textName);
                         if (bt != null) {
-                            var stdMat_1 = this.meshPicked.material;
+                            var sm = this.scene.getMaterialByID(matId);
+                            if (sm == null)
+                                return;
                             if (type == "diffuse") {
-                                stdMat_1.diffuseTexture = bt;
+                                sm.diffuseTexture = bt;
                             }
                             else if (type == "ambient") {
-                                stdMat_1.ambientTexture = bt;
+                                sm.ambientTexture = bt;
                             }
                             else if (type == "opacity") {
-                                stdMat_1.opacityTexture = bt;
+                                sm.opacityTexture = bt;
                             }
                             else if (type == "reflection") {
-                                stdMat_1.reflectionTexture = bt;
+                                sm.reflectionTexture = bt;
                             }
                             else if (type == "emissive") {
-                                stdMat_1.emissiveTexture = bt;
+                                sm.emissiveTexture = bt;
                             }
                             else if (type == "specular") {
-                                stdMat_1.specularTexture = bt;
+                                sm.specularTexture = bt;
                             }
                             else if (type == "bump") {
-                                stdMat_1.bumpTexture = bt;
+                                sm.bumpTexture = bt;
                             }
                         }
+                    };
+                    Vishva.prototype.setTextURL = function (textID, textName) {
+                        var bt = this.getTextureByID(textID);
+                        bt.name = textName;
+                        bt.updateURL(textName);
+                    };
+                    Vishva.prototype.setTextHScale = function (textID, scale) {
+                        var text = this.getTextureByID(textID);
+                        text.uScale = scale;
+                    };
+                    Vishva.prototype.setTextVScale = function (textID, scale) {
+                        var text = this.getTextureByID(textID);
+                        text.vScale = scale;
+                    };
+                    Vishva.prototype.setTextHO = function (textID, o) {
+                        var text = this.getTextureByID(textID);
+                        text.uOffset = o;
+                    };
+                    Vishva.prototype.setTextVO = function (textID, o) {
+                        var text = this.getTextureByID(textID);
+                        text.vOffset = o;
+                    };
+                    Vishva.prototype.setTextRot = function (textID, rot) {
+                        var text = this.getTextureByID(textID);
+                        text.uAng = rot;
                     };
                     Vishva.prototype.getTextures = function () {
                         var ts = this.scene.textures;
@@ -3864,6 +3980,15 @@ var org;
                         for (var _i = 0, ts_2 = ts; _i < ts_2.length; _i++) {
                             var t = ts_2[_i];
                             if (t.name == name)
+                                return t;
+                        }
+                        return null;
+                    };
+                    Vishva.prototype.getTextureByID = function (id) {
+                        var ts = this.scene.textures;
+                        for (var _i = 0, ts_3 = ts; _i < ts_3.length; _i++) {
+                            var t = ts_3[_i];
+                            if (t.uid == id)
                                 return t;
                         }
                         return null;

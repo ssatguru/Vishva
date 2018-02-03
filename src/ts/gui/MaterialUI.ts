@@ -17,6 +17,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _matTextType: HTMLSelectElement;
         private _matTextImg: HTMLImageElement;
 
+        private _textureUI: TextureUI;
+        private _textID: string;
+        private _textName: string;
+
         constructor(vishva: Vishva) {
             console.log("mataerialUI");
             this._vishva=vishva;
@@ -55,17 +59,24 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //material texture
             this._matTextType=<HTMLSelectElement>document.getElementById("matTextType");
             this._matTextType.onchange=() => {
-                this._matTextImg.src=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
+                let dtls: Array<string>=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
+                this._textID=dtls[0];
+                this._textName=dtls[1];
+                this._matTextImg.src=this._textName;
+                if(this._textName.indexOf(".tga")>=0) {
+                    this._matTextImg.src=this._vishva.TGA_IMAGE;
+                } else {
+                    this._matTextImg.src=this._textName;
+                }
             }
-            
+
             this._matTextImg=<HTMLImageElement>document.getElementById("matTextImg");
             this._matTextImg.onclick=() => {
-                if(this._textureDiag==null) {
-                    this._createTextureDiag();
+                if(this._textureUI==null) {
+                    this._textureUI=new TextureUI(this._vishva);
                 }
-                this._textureImg.src=this._matTextImg.src;
-                console.log(this._textureImg.src);
-                this._textureDiag.open();
+                this._textureUI.setParms(this._textID,this._textName,this._matTextType.value,this._matID.innerText,this._matTextImg);
+                this._textureUI.open();
             }
 
             this.updateMatUI();
@@ -79,7 +90,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             let mn: Array<string>=this._vishva.getMatNames();
             if(mn!=null) {
-
                 this._matCount.innerText=Number(mn.length).toString();
                 GuiUtils.PopulateSelect(this._matIDs,mn);
                 this._updateMatDetails();
@@ -90,30 +100,18 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matID.innerText=this._matIDs.value;
             this._matName.innerText=this._vishva.getMaterialName(this._matIDs.value);
             this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value,this._matColType.value));
-            this._matTextImg.src=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
+            let dtls: Array<string>=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
+            this._textID=dtls[0];
+            this._textName=dtls[1];
+            this._matTextImg.src=this._textName;
+            if(this._textName.indexOf(".tga")>=0) {
+                this._matTextImg.src=this._vishva.TGA_IMAGE;
+            } else {
+                this._matTextImg.src=this._textName;
+            }
         }
 
-        private _textureDiag: VDialog;
-        private _textureImg: HTMLImageElement;
-        private _createTextureDiag() {
-            this._textureDiag=new VDialog("textureDiag","Texture",DialogMgr.centerBottom);
 
-            this._textureImg=<HTMLImageElement>document.getElementById("textImg");
-            let chgTexture: HTMLButtonElement=<HTMLButtonElement>document.getElementById("changeTexture");
-            chgTexture.onclick=() => {
-                this._vishva.setMatTexture(this._matTextType.value,textList.value);
-            }
-            let textList: HTMLSelectElement=<HTMLSelectElement>document.getElementById("textureList");
-            var textures: string[]=this._vishva.getTextures();
-            var opt: HTMLOptionElement;
-            for(let text of textures) {
-                opt=document.createElement("option");
-                opt.value=text;
-                opt.innerText=text;
-                textList.appendChild(opt);
-            }
-
-        }
 
     }
 }

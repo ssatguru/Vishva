@@ -355,7 +355,6 @@
                 properties accordion
                 -->
                 <div id="propsAcc" >
-
                     <h3>General</h3>
                     <div id="gen" >
                         <table >
@@ -750,29 +749,64 @@
             <div id="textureDiag">
                 <table>
                     <tr>
+                        <td>texture id</td>
+                        <td id="textID">id</td>
+                    </tr>
+                    <tr>
+                        <td>texture type</td>
+                        <td id="textType">type</td>
+                    </tr>
+                    <tr>
+                        <td>image</td>
+                        <td ><img id="textImg" src="" height="256" width="256" alt="no images" ></td>
+                    </tr>
+                    <tr>
+                        <td>image source</td>
+                        <td id="textImgSrc">/textures/....</td>
+                    </tr>
+                    <tr>
+                        <td><button id="changeTexture" >change source</button></td>
+                        <td colspan="2"><select id="textureList"></select></td>
+                    </tr>
+                    <tr>
+                        <td>Horizontal Scale</td>
                         <td>
-                            <img id="textImg" src="" height="200" alt="tga images cannot be displayed" width="200">
-                        </td>
-                        <td>
-                            Horizontal Scale<br>
-                            Vertical Scale<br>
-                            Repeats Per Meter <br>
-                            Rotation Degrees <br>
-                            Horizontal Offset <br>
-                            Vertical Offset <br>
+                            <input type="text" id="matHScale" value="1.00">
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <select id="textureList"></select>
+                            Vertical Scale
                         </td>
                         <td>
-                            <button id="changeTexture" >change texture</button>
+                            <input type="text" id="matVScale" value="1.00">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Rotation
+                        </td>
+                        <td>
+                            <input type="range" id="matRot" min="0.0" max="360.0" step="0.01" value="1.00">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Horizontal Offset
+                        </td>
+                        <td>
+                            <input type="range" id="matHO" min="0.0" max="1.0" step="0.01" value="0.00">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Vertical Offset
+                        </td>
+                        <td>
+                            <input type="range" id="matVO" min="0.0" max="1.0" step="0.01" value="0.00">
                         </td>
                     </tr>
                 </table>
-
-
             </div>
 
 

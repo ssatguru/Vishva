@@ -1500,56 +1500,90 @@ namespace org.ssatguru.babylonjs.vishva {
             else return mat.name;
         }
 
-        public getMatTexture(matId:string,type: string): string {
+        public getMatTexture(matId:string,type: string): Array<string> {
             let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
             if (sm==null) return null;
+            let uid:string=null;
             let img:string=null;
             if(type=="diffuse"&&sm.diffuseTexture!=null) {
+                uid=sm.diffuseTexture.uid;
                 img=sm.diffuseTexture.name;
             } else if(type=="ambient"&&sm.ambientTexture!=null) {
+                uid=sm.ambientTexture.uid;
                 img=sm.ambientTexture.name;
             } else if(type=="opacity"&&sm.opacityTexture!=null) {
+                uid=sm.opacityTexture.uid;
                 img=sm.opacityTexture.name;
             } else if(type=="reflection"&&sm.reflectionTexture!=null) {
+                uid=sm.reflectionTexture.uid;
                 img=sm.reflectionTexture.name;
             } else if(type=="emissive"&&sm.emissiveTexture!=null) {
+                uid=sm.emissiveTexture.uid;
                 img=sm.emissiveTexture.name;
             } else if(type=="specular"&&sm.specularTexture!=null) {
+                uid=sm.specularTexture.uid;
                 img=sm.specularTexture.name;
             } else if(type=="bump"&&sm.bumpTexture!=null) {
+                uid=sm.bumpTexture.uid;
                 img=sm.bumpTexture.name;
             } else{
+                uid=null;
                 img=this.NO_TEXTURE;
             }
-            if (img.indexOf(".tga")>=0){
-                img=this.TGA_IMAGE;
-            }
+//            if (img.indexOf(".tga")>=0){
+//                img=this.TGA_IMAGE;
+//            }
             
-            return img;
+            return [uid,img];
         }
-        public setMatTexture(type: string,textName: string) {
-            let stdMat: StandardMaterial=<StandardMaterial>this.meshPicked.material;
-
+        public setMatTexture(matId:string,type: string,textName: string) {
             let bt: BaseTexture=this.getTextureByName(textName);
             if(bt!=null) {
-                let stdMat: StandardMaterial=<StandardMaterial>this.meshPicked.material;
+                let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
+                if (sm==null) return;
                 if(type=="diffuse") {
-                    stdMat.diffuseTexture=bt;
+                    sm.diffuseTexture=bt;
                 } else if(type=="ambient") {
-                    stdMat.ambientTexture=bt;
+                    sm.ambientTexture=bt;
                 } else if(type=="opacity") {
-                    stdMat.opacityTexture=bt;
+                    sm.opacityTexture=bt;
                 } else if(type=="reflection") {
-                    stdMat.reflectionTexture=bt;
+                    sm.reflectionTexture=bt;
                 } else if(type=="emissive") {
-                    stdMat.emissiveTexture=bt;
+                    sm.emissiveTexture=bt;
                 } else if(type=="specular") {
-                    stdMat.specularTexture=bt;
+                    sm.specularTexture=bt;
                 } else if(type=="bump") {
-                    stdMat.bumpTexture=bt;
+                    sm.bumpTexture=bt;
                 }
             }
-
+        }
+        
+        public setTextURL(textID:string,textName:string){
+            let bt: Texture=<Texture>this.getTextureByID(textID);
+            bt.name=textName;
+            bt.updateURL(textName);
+        }
+        
+        public setTextHScale(textID:string,scale:number){
+            let text: Texture=<Texture>this.getTextureByID(textID);
+            text.uScale=scale;
+        }
+        public setTextVScale(textID:string,scale:number){
+            let text: Texture=<Texture>this.getTextureByID(textID);
+            text.vScale=scale;
+        }
+        public setTextHO(textID:string,o:number){
+            let text: Texture=<Texture>this.getTextureByID(textID);
+            text.uOffset=o;
+        }
+        public setTextVO(textID:string,o:number){
+            let text: Texture=<Texture>this.getTextureByID(textID);
+            text.vOffset=o;
+        }
+        public setTextRot(textID:string,rot:number){
+            let text: Texture=<Texture>this.getTextureByID(textID);
+            text.uAng=rot;
         }
         public getTextures(): string[] {
             let ts: BaseTexture[]=this.scene.textures;
@@ -1563,6 +1597,13 @@ namespace org.ssatguru.babylonjs.vishva {
             let ts: BaseTexture[]=this.scene.textures;
             for(let t of ts) {
                 if(t.name==name) return t;
+            }
+            return null;
+        }
+        private getTextureByID(id: String): BaseTexture {
+            let ts: BaseTexture[]=this.scene.textures;
+            for(let t of ts) {
+                if(t.uid==id) return t;
             }
             return null;
         }

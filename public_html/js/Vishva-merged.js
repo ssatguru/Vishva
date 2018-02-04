@@ -143,6 +143,104 @@ var org;
                 var gui;
                 (function (gui) {
                     /**
+                     * Provides a UI to add item to the world
+                     */
+                    var AddItemUI2 = (function () {
+                        function AddItemUI2(vishva) {
+                            this._vishva = vishva;
+                            this.updateAddItemsUL();
+                            this._addItemsDiag = new gui.VDialog("addItemsDiv2", "Add items", gui.DialogMgr.leftCenter, 300, 500);
+                        }
+                        AddItemUI2.prototype.toggle = function () {
+                            if (this._addItemsDiag.isOpen()) {
+                                this._addItemsDiag.close();
+                            }
+                            else {
+                                this._addItemsDiag.open();
+                            }
+                        };
+                        AddItemUI2.prototype.updateAddItemsUL = function () {
+                            var _this = this;
+                            var ul = document.getElementById("addItemUL");
+                            var files = this._vishva.vishvaFiles;
+                            this.buildUL(ul, files);
+                            ul.onclick = function (e) {
+                                return _this.treeClick(e);
+                            };
+                        };
+                        AddItemUI2.prototype.buildUL = function (pUL, files) {
+                            var li;
+                            var ul;
+                            for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
+                                var file = files_1[_i];
+                                li = document.createElement("li");
+                                if (typeof file == 'object') {
+                                    li.innerText = file["d"];
+                                    li.setAttribute("class", "treeFolder");
+                                    pUL.appendChild(li);
+                                    ul = document.createElement("ul");
+                                    ul.setAttribute("class", "hide");
+                                    li.appendChild(ul);
+                                    this.buildUL(ul, file["f"]);
+                                }
+                                else {
+                                    if (file.indexOf(".babylon") > 0 || file.indexOf(".obj") > 0 || file.indexOf(".glb") > 0) {
+                                        li.setAttribute("class", "treeFile");
+                                        li.innerText = file;
+                                        pUL.appendChild(li);
+                                    }
+                                }
+                            }
+                        };
+                        AddItemUI2.prototype.treeClick = function (e) {
+                            var ele = e.target;
+                            console.log(ele.firstChild.textContent);
+                            var c = ele.getAttribute("class");
+                            if (c == "treeFolder") {
+                                ele.setAttribute("class", "treeFolderClose");
+                                ele.firstElementChild.setAttribute("class", "show");
+                            }
+                            else if (c == "treeFolderClose") {
+                                ele.setAttribute("class", "treeFolder");
+                                ele.firstElementChild.setAttribute("class", "hide");
+                            }
+                            else if (c == "treeFile") {
+                                var file = ele.firstChild.textContent;
+                                var path = "";
+                                while (ele != null) {
+                                    if (ele.parentElement instanceof HTMLLIElement) {
+                                        path = ele.parentElement.firstChild.textContent + "/" + path;
+                                    }
+                                    if (ele instanceof HTMLDivElement) {
+                                        ele = null;
+                                    }
+                                    else {
+                                        ele = ele.parentElement;
+                                    }
+                                }
+                                console.log(path + file);
+                                this._vishva.loadAsset2(path, file);
+                            }
+                        };
+                        return AddItemUI2;
+                    }());
+                    gui.AddItemUI2 = AddItemUI2;
+                })(gui = vishva_2.gui || (vishva_2.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_3) {
+                var gui;
+                (function (gui) {
+                    /**
                      * Provides UI for the Animation (Skeleton) tab of mesh properties
                      */
                     var AnimationUI = (function () {
@@ -315,7 +413,7 @@ var org;
                         return AnimationUI;
                     }());
                     gui.AnimationUI = AnimationUI;
-                })(gui = vishva_2.gui || (vishva_2.gui = {}));
+                })(gui = vishva_3.gui || (vishva_3.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -408,12 +506,10 @@ var org;
                 (function (gui) {
                     var VDialog = (function () {
                         function VDialog(id, title, jpo, width, height, minWidth) {
-                            if (width === void 0) { width = "auto"; }
-                            if (height === void 0) { height = "auto"; }
                             if (minWidth === void 0) { minWidth = 0; }
-                            if (width == "")
+                            if (width == null || width == "")
                                 width = "auto";
-                            if (height == "")
+                            if (height == null || height == "")
                                 height = "auto";
                             this._diag = $("#" + id);
                             var dos = {
@@ -531,7 +627,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_3) {
+            (function (vishva_4) {
                 var gui;
                 (function (gui) {
                     /**
@@ -623,7 +719,7 @@ var org;
                         return EnvironmentUI;
                     }());
                     gui.EnvironmentUI = EnvironmentUI;
-                })(gui = vishva_3.gui || (vishva_3.gui = {}));
+                })(gui = vishva_4.gui || (vishva_4.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -635,7 +731,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_4) {
+            (function (vishva_5) {
                 var gui;
                 (function (gui) {
                     /**
@@ -948,7 +1044,7 @@ var org;
                         return GeneralUI;
                     }());
                     gui.GeneralUI = GeneralUI;
-                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+                })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -999,7 +1095,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_5) {
+            (function (vishva_6) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1153,7 +1249,7 @@ var org;
                         return ItemPropsUI;
                     }());
                     gui.ItemPropsUI = ItemPropsUI;
-                })(gui = vishva_5.gui || (vishva_5.gui = {}));
+                })(gui = vishva_6.gui || (vishva_6.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1165,7 +1261,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_6) {
+            (function (vishva_7) {
                 var gui;
                 (function (gui) {
                     /*
@@ -1273,7 +1369,7 @@ var org;
                         return ItemsUI;
                     }());
                     gui.ItemsUI = ItemsUI;
-                })(gui = vishva_6.gui || (vishva_6.gui = {}));
+                })(gui = vishva_7.gui || (vishva_7.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1285,7 +1381,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_7) {
+            (function (vishva_8) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1332,7 +1428,7 @@ var org;
                             var lightParm = this._vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this._lightAtt.checked = false;
-                                lightParm = new vishva_7.LightParm();
+                                lightParm = new vishva_8.LightParm();
                             }
                             else {
                                 this._lightAtt.checked = true;
@@ -1358,7 +1454,7 @@ var org;
                             //            }
                             if (!this._lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_7.LightParm();
+                            var lightParm = new vishva_8.LightParm();
                             lightParm.type = this._lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this._lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this._lightSpec.getColor());
@@ -1376,7 +1472,7 @@ var org;
                         return LightUI;
                     }());
                     gui.LightUI = LightUI;
-                })(gui = vishva_7.gui || (vishva_7.gui = {}));
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1388,7 +1484,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_8) {
+            (function (vishva_9) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1513,7 +1609,7 @@ var org;
                         return MaterialUI;
                     }());
                     gui.MaterialUI = MaterialUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+                })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1525,7 +1621,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_9) {
+            (function (vishva_10) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1599,7 +1695,7 @@ var org;
                         PhysicsUI.prototype._applyPhysics = function () {
                             var phyParms;
                             if (this._phyEna.checked) {
-                                phyParms = new vishva_9.PhysicsParm();
+                                phyParms = new vishva_10.PhysicsParm();
                                 phyParms.type = parseInt(this._phyType.value);
                                 phyParms.mass = parseFloat(this._phyMass.value);
                                 phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1612,7 +1708,7 @@ var org;
                         };
                         PhysicsUI.prototype._testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_9.PhysicsParm();
+                            phyParms = new vishva_10.PhysicsParm();
                             phyParms.type = parseInt(this._phyType.value);
                             phyParms.mass = parseFloat(this._phyMass.value);
                             phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1626,7 +1722,7 @@ var org;
                         return PhysicsUI;
                     }());
                     gui.PhysicsUI = PhysicsUI;
-                })(gui = vishva_9.gui || (vishva_9.gui = {}));
+                })(gui = vishva_10.gui || (vishva_10.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1638,7 +1734,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_10) {
+            (function (vishva_11) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1714,7 +1810,7 @@ var org;
                         return SettingsUI;
                     }());
                     gui.SettingsUI = SettingsUI;
-                })(gui = vishva_10.gui || (vishva_10.gui = {}));
+                })(gui = vishva_11.gui || (vishva_11.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1726,7 +1822,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_11) {
+            (function (vishva_12) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2104,7 +2200,7 @@ var org;
                         return SnaUI;
                     }());
                     gui.SnaUI = SnaUI;
-                })(gui = vishva_11.gui || (vishva_11.gui = {}));
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2116,7 +2212,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_12) {
+            (function (vishva_13) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2201,7 +2297,7 @@ var org;
                         return TextureUI;
                     }());
                     gui.TextureUI = TextureUI;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2213,7 +2309,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_13) {
+            (function (vishva_14) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -2343,6 +2439,13 @@ var org;
                                 }
                                 _this._addItemUI.toggle();
                             };
+                            //            var navAdd: HTMLElement=document.getElementById("navAdd");
+                            //            navAdd.onclick=(e) => {
+                            //                if (this._addItemUI2 == null){
+                            //                    this._addItemUI2=new AddItemUI2(this._vishva);
+                            //                }
+                            //                this._addItemUI2.toggle();
+                            //            }
                             var downWorld = document.getElementById("downWorld");
                             downWorld.onclick = function (e) {
                                 var downloadURL = _this._vishva.saveWorld();
@@ -2527,7 +2630,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_13.gui || (vishva_13.gui = {}));
+                })(gui = vishva_14.gui || (vishva_14.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2618,7 +2721,7 @@ var org;
                  * @author satguru
                  */
                 var Vishva = (function () {
-                    function Vishva(sceneFile, scenePath, editEnabled, assets, canvasId) {
+                    function Vishva(sceneFile, scenePath, editEnabled, assets, vishvaFiles, canvasId) {
                         var _this = this;
                         this.actuator = "none";
                         this.snapTransOn = false;
@@ -2675,6 +2778,7 @@ var org;
                         //RELATIVE_ASSET_LOCATION: string = "../../../../";
                         //we can use below too but then while passing data to scene loader use empty string as root url
                         this.RELATIVE_ASSET_LOCATION = "";
+                        this._animBlend = 0.1;
                         /**
                          * use this to prevent users from switching to another mesh during edit.
                          */
@@ -2722,6 +2826,7 @@ var org;
                         this.loadingStatus = document.getElementById("loadingStatus");
                         this.editEnabled = editEnabled;
                         this.assets = assets;
+                        this.vishvaFiles = vishvaFiles;
                         this.key = new Key();
                         this.canvas = document.getElementById(canvasId);
                         //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
@@ -2930,7 +3035,7 @@ var org;
                             this.createAvatar();
                         }
                         else {
-                            this.avatarSkeleton.enableBlending(0.1);
+                            this.avatarSkeleton.enableBlending(this._animBlend);
                             this.cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
                             //TODO remove below. The character controller should be set using deserialization
                             this.setCharacterController(this.cc);
@@ -5062,11 +5167,17 @@ var org;
                     };
                     Vishva.prototype.loadAsset = function (assetType, file) {
                         var _this = this;
-                        this.assetType = assetType;
+                        this.filePath = assetType;
                         this.file = file;
                         var fileName = file.split(".")[0];
                         //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
                         SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + fileName + "/", file, this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
+                    };
+                    Vishva.prototype.loadAsset2 = function (path, file) {
+                        var _this = this;
+                        this.filePath = path;
+                        this.file = file;
+                        SceneLoader.ImportMesh("", "vishva/" + path, file, this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
                     };
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
@@ -5148,7 +5259,8 @@ var org;
                             return;
                         var textureName = bt.name;
                         if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
-                            bt.name = "vishva/assets/" + this.assetType + "/" + this.file.split(".")[0] + "/" + textureName;
+                            //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
+                            bt.name = "vishva/" + this.filePath + textureName;
                         }
                     };
                     /**
@@ -5263,7 +5375,7 @@ var org;
                             if (this.avatarSkeleton != null) {
                                 Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
                                 this.avatarSkeleton.name = "Vishva.skeleton";
-                                this.avatarSkeleton.enableBlending(0.1);
+                                this.avatarSkeleton.enableBlending(this._animBlend);
                             }
                             this.cc.setAvatar(this.avatar);
                             this.cc.setAvatarSkeleton(this.avatarSkeleton);
@@ -5542,7 +5654,7 @@ var org;
                         }
                         this.fixAnimationRanges(this.avatarSkeleton);
                         this.avatar.skeleton = this.avatarSkeleton;
-                        this.avatarSkeleton.enableBlending(0.1);
+                        this.avatarSkeleton.enableBlending(this._animBlend);
                         //this.avatar.rotation.y = Math.PI;
                         //this.avatar.position = new Vector3(0, 20, 0);
                         this.avatar.position = this.spawnPosition;
@@ -5572,8 +5684,7 @@ var org;
                         //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;
                         //            this.mainCamera.beta = 1.4;
                     };
-                    //TODO
-                    //persist charactercontroller settings
+                    //TODO persist charactercontroller settings
                     Vishva.prototype.setCharacterController = function (cc) {
                         this.mainCamera.lowerRadiusLimit = 1;
                         this.mainCamera.upperRadiusLimit = 100;

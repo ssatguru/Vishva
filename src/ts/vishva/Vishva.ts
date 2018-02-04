@@ -87,6 +87,7 @@ namespace org.ssatguru.babylonjs.vishva {
         //skyboxes: Array<string>;
 
         assets: Object;
+        vishvaFiles:Array<any>;
 
         skyboxTextures: string="vishva/internal/textures/skybox-default/default";
 
@@ -150,6 +151,7 @@ namespace org.ssatguru.babylonjs.vishva {
         avatar: Mesh;
 
         avatarSkeleton: Skeleton;
+        _animBlend=0.1;
 
         mainCamera: ArcRotateCamera;
 
@@ -182,7 +184,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,assets: Object,canvasId: string) {
+        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,assets: Object,vishvaFiles:Array<any>,canvasId: string) {
             this.editEnabled=false;
             this.frames=0;
             this.f=0;
@@ -196,6 +198,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             this.editEnabled=editEnabled;
             this.assets=assets;
+            this.vishvaFiles=vishvaFiles;
             this.key=new Key();
 
             this.canvas=<HTMLCanvasElement>document.getElementById(canvasId);
@@ -430,7 +433,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 //remember loadAvatar is async. process
                 this.createAvatar();
             } else {
-                this.avatarSkeleton.enableBlending(0.1);
+                this.avatarSkeleton.enableBlending(this._animBlend);
                 this.cc=new CharacterController(this.avatar,this.mainCamera,this.scene);
                 //TODO remove below. The character controller should be set using deserialization
                 this.setCharacterController(this.cc);
@@ -2644,16 +2647,22 @@ namespace org.ssatguru.babylonjs.vishva {
             SceneLoader.ImportMesh("","vishva/assets/"+sceneFolderName+"/",file.name,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
         }
 
-        assetType: string;
+        filePath: string;
 
         file: string;
 
         public loadAsset(assetType: string,file: string) {
-            this.assetType=assetType;
+            this.filePath=assetType;
             this.file=file;
             let fileName: string=file.split(".")[0];
             //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
             SceneLoader.ImportMesh("","vishva/assets/"+assetType+"/"+fileName+"/",file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
+        }
+        
+        public loadAsset2(path: string,file: string) {
+            this.filePath=path;
+            this.file=file;
+            SceneLoader.ImportMesh("","vishva/" + path,file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
         }
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
@@ -2738,7 +2747,8 @@ namespace org.ssatguru.babylonjs.vishva {
             if(bt==null) return;
             var textureName: string=bt.name;
             if(textureName.indexOf("vishva/")!==0&&textureName.indexOf("../")!==0) {
-                bt.name="vishva/assets/"+this.assetType+"/"+this.file.split(".")[0]+"/"+textureName;
+                //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
+                bt.name="vishva/" + this.filePath+textureName;
             }
         }
 
@@ -2866,7 +2876,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 if(this.avatarSkeleton!=null) {
                     Tags.AddTagsTo(this.avatarSkeleton,"Vishva.skeleton");
                     this.avatarSkeleton.name="Vishva.skeleton";
-                    this.avatarSkeleton.enableBlending(0.1);
+                    this.avatarSkeleton.enableBlending(this._animBlend);
                 }
                 this.cc.setAvatar(this.avatar);
                 this.cc.setAvatarSkeleton(this.avatarSkeleton);
@@ -3185,7 +3195,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             this.fixAnimationRanges(this.avatarSkeleton);
             this.avatar.skeleton=this.avatarSkeleton;
-            this.avatarSkeleton.enableBlending(0.1);
+            this.avatarSkeleton.enableBlending(this._animBlend);
             //this.avatar.rotation.y = Math.PI;
             //this.avatar.position = new Vector3(0, 20, 0);
             this.avatar.position=this.spawnPosition;
@@ -3223,8 +3233,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         }
-        //TODO
-        //persist charactercontroller settings
+        //TODO persist charactercontroller settings
         private setCharacterController(cc: CharacterController) {
             this.mainCamera.lowerRadiusLimit=1;
             this.mainCamera.upperRadiusLimit=100;

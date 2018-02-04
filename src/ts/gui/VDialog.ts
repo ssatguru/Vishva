@@ -9,9 +9,9 @@ namespace org.ssatguru.babylonjs.vishva.gui{
         private _diag:JQuery;
         public jpo:JQueryPositionOptions;
         
-        constructor(id:string,title:string,jpo:JQueryPositionOptions,width="auto",height="auto",minWidth=0){
-            if (width=="") width="auto";
-            if (height=="") height="auto";
+        constructor(id:string,title:string,jpo:JQueryPositionOptions,width?:string|number,height?:string|number,minWidth=0){
+            if (width==null  || width=="") width="auto";
+            if (height==null || height=="") height="auto";
             
             this._diag = $("#" +id);
             

@@ -92,6 +92,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          */
 
         private _addItemUI:AddItemUI;
+        private _addItemUI2:AddItemUI2;
         private _items: ItemsUI;
         private _environment: EnvironmentUI;
         private _settingDiag: SettingsUI;
@@ -163,6 +164,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
                 this._addItemUI.toggle();
             }
+            
+//            var navAdd: HTMLElement=document.getElementById("navAdd");
+//            navAdd.onclick=(e) => {
+//                if (this._addItemUI2 == null){
+//                    this._addItemUI2=new AddItemUI2(this._vishva);
+//                }
+//                this._addItemUI2.toggle();
+//            }
 
             var downWorld: HTMLElement=document.getElementById("downWorld");
             downWorld.onclick=(e) => {

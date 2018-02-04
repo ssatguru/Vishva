@@ -157,21 +157,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 //                return true;
 //            };
             
-            var navAdd: HTMLElement=document.getElementById("navAdd");
-            navAdd.onclick=(e) => {
-                if (this._addItemUI == null){
-                    this._addItemUI=new AddItemUI(this._vishva);
-                }
-                this._addItemUI.toggle();
-            }
-            
 //            var navAdd: HTMLElement=document.getElementById("navAdd");
 //            navAdd.onclick=(e) => {
-//                if (this._addItemUI2 == null){
-//                    this._addItemUI2=new AddItemUI2(this._vishva);
+//                if (this._addItemUI == null){
+//                    this._addItemUI=new AddItemUI(this._vishva);
 //                }
-//                this._addItemUI2.toggle();
+//                this._addItemUI.toggle();
 //            }
+            
+            var navAdd: HTMLElement=document.getElementById("navAdd");
+            navAdd.onclick=(e) => {
+                if (this._addItemUI2 == null){
+                    this._addItemUI2=new AddItemUI2(this._vishva);
+                }
+                this._addItemUI2.toggle();
+            }
 
             var downWorld: HTMLElement=document.getElementById("downWorld");
             downWorld.onclick=(e) => {

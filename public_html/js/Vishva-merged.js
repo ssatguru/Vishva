@@ -147,79 +147,23 @@ var org;
                      */
                     var AddItemUI2 = (function () {
                         function AddItemUI2(vishva) {
+                            var _this = this;
                             this._vishva = vishva;
-                            this.updateAddItemsUL();
-                            this._addItemsDiag = new gui.VDialog("addItemsDiv2", "Add items", gui.DialogMgr.leftCenter, 300, 500);
+                            if (this._assetDiag == null) {
+                                this._assetDiag = new gui.VTree("addItemsDiv2", "assetList", this._vishva.vishvaFiles, "\.babylon$|\.glb$");
+                                this._assetDiag.addClickListener(function (f, p) { return _this.loadAsset(f, p); });
+                            }
                         }
+                        AddItemUI2.prototype.loadAsset = function (file, path) {
+                            console.log(path + file);
+                            this._vishva.loadAsset2(path, file);
+                        };
                         AddItemUI2.prototype.toggle = function () {
-                            if (this._addItemsDiag.isOpen()) {
-                                this._addItemsDiag.close();
+                            if (this._assetDiag.isOpen()) {
+                                this._assetDiag.close();
                             }
                             else {
-                                this._addItemsDiag.open();
-                            }
-                        };
-                        AddItemUI2.prototype.updateAddItemsUL = function () {
-                            var _this = this;
-                            var ul = document.getElementById("addItemUL");
-                            var files = this._vishva.vishvaFiles;
-                            this.buildUL(ul, files);
-                            ul.onclick = function (e) {
-                                return _this.treeClick(e);
-                            };
-                        };
-                        AddItemUI2.prototype.buildUL = function (pUL, files) {
-                            var li;
-                            var ul;
-                            for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
-                                var file = files_1[_i];
-                                li = document.createElement("li");
-                                if (typeof file == 'object') {
-                                    li.innerText = file["d"];
-                                    li.setAttribute("class", "treeFolder");
-                                    pUL.appendChild(li);
-                                    ul = document.createElement("ul");
-                                    ul.setAttribute("class", "hide");
-                                    li.appendChild(ul);
-                                    this.buildUL(ul, file["f"]);
-                                }
-                                else {
-                                    if (file.indexOf(".babylon") > 0 || file.indexOf(".obj") > 0 || file.indexOf(".glb") > 0) {
-                                        li.setAttribute("class", "treeFile");
-                                        li.innerText = file;
-                                        pUL.appendChild(li);
-                                    }
-                                }
-                            }
-                        };
-                        AddItemUI2.prototype.treeClick = function (e) {
-                            var ele = e.target;
-                            console.log(ele.firstChild.textContent);
-                            var c = ele.getAttribute("class");
-                            if (c == "treeFolder") {
-                                ele.setAttribute("class", "treeFolderClose");
-                                ele.firstElementChild.setAttribute("class", "show");
-                            }
-                            else if (c == "treeFolderClose") {
-                                ele.setAttribute("class", "treeFolder");
-                                ele.firstElementChild.setAttribute("class", "hide");
-                            }
-                            else if (c == "treeFile") {
-                                var file = ele.firstChild.textContent;
-                                var path = "";
-                                while (ele != null) {
-                                    if (ele.parentElement instanceof HTMLLIElement) {
-                                        path = ele.parentElement.firstChild.textContent + "/" + path;
-                                    }
-                                    if (ele instanceof HTMLDivElement) {
-                                        ele = null;
-                                    }
-                                    else {
-                                        ele = ele.parentElement;
-                                    }
-                                }
-                                console.log(path + file);
-                                this._vishva.loadAsset2(path, file);
+                                this._assetDiag.open();
                             }
                         };
                         return AddItemUI2;
@@ -2432,20 +2376,20 @@ var org;
                             //                e.cancelBubble=true;
                             //                return true;
                             //            };
-                            var navAdd = document.getElementById("navAdd");
-                            navAdd.onclick = function (e) {
-                                if (_this._addItemUI == null) {
-                                    _this._addItemUI = new gui.AddItemUI(_this._vishva);
-                                }
-                                _this._addItemUI.toggle();
-                            };
                             //            var navAdd: HTMLElement=document.getElementById("navAdd");
                             //            navAdd.onclick=(e) => {
-                            //                if (this._addItemUI2 == null){
-                            //                    this._addItemUI2=new AddItemUI2(this._vishva);
+                            //                if (this._addItemUI == null){
+                            //                    this._addItemUI=new AddItemUI(this._vishva);
                             //                }
-                            //                this._addItemUI2.toggle();
+                            //                this._addItemUI.toggle();
                             //            }
+                            var navAdd = document.getElementById("navAdd");
+                            navAdd.onclick = function (e) {
+                                if (_this._addItemUI2 == null) {
+                                    _this._addItemUI2 = new gui.AddItemUI2(_this._vishva);
+                                }
+                                _this._addItemUI2.toggle();
+                            };
                             var downWorld = document.getElementById("downWorld");
                             downWorld.onclick = function (e) {
                                 var downloadURL = _this._vishva.saveWorld();
@@ -2631,6 +2575,165 @@ var org;
                     }());
                     gui.SelectType = SelectType;
                 })(gui = vishva_14.gui || (vishva_14.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * Creates an expandable/collapsible tree
+                     */
+                    var VTree = (function () {
+                        function VTree(diagEleId, treeEleID, treeData, filter) {
+                            this._clickListener = null;
+                            this._diagEleId = document.getElementById(diagEleId);
+                            if (this._diagEleId == null) {
+                                console.error("Unable to locate element " + diagEleId);
+                                return;
+                            }
+                            this._treeEle = document.getElementById(treeEleID);
+                            if (this._treeEle == null) {
+                                console.error("Unable to locate element " + treeEleID);
+                                return;
+                            }
+                            this._treeData = treeData;
+                            this._search = filter;
+                            //delete any existing tree
+                            var childULs = this._treeEle.getElementsByTagName("ul");
+                            for (var i = 0; i < childULs.length; i++) {
+                                if (childULs.item(i).id == "vtree") {
+                                    this._treeEle.removeChild(childULs.item(i));
+                                }
+                            }
+                            //create a new one
+                            this.create();
+                            this._treeDiag = new gui.VDialog(diagEleId, "VTree", gui.DialogMgr.leftCenter);
+                        }
+                        VTree.prototype.addClickListener = function (clickListener) {
+                            if (clickListener === void 0) { clickListener = null; }
+                            this._clickListener = clickListener;
+                        };
+                        VTree.prototype.refresh = function (treeData, filter) {
+                            this._treeEle.removeChild(this._vtree);
+                            this._treeData = treeData;
+                            this._search = filter;
+                            this.create();
+                            this._treeDiag.close();
+                            this._treeDiag.open();
+                        };
+                        VTree.prototype.filter = function (filter) {
+                            this.refresh(this._treeData, filter);
+                        };
+                        VTree.prototype.close = function () {
+                            this._treeDiag.close();
+                        };
+                        VTree.prototype.open = function () {
+                            this._treeDiag.open();
+                        };
+                        VTree.prototype.isOpen = function () {
+                            return this._treeDiag.isOpen();
+                        };
+                        VTree.prototype.create = function () {
+                            var _this = this;
+                            if (this._search != null) {
+                                try {
+                                    this._re = new RegExp(this._search);
+                                }
+                                catch (e) {
+                                    console.error("invalid reqular expression " + this._search + ". Will ignore");
+                                    this._re = null;
+                                }
+                            }
+                            else
+                                this._re = null;
+                            this._vtree = document.createElement("ul");
+                            this.buildUL(this._vtree, this._treeData);
+                            this._vtree.onclick = function (e) {
+                                return _this.treeClick(e);
+                            };
+                            this._treeEle.appendChild(this._vtree);
+                        };
+                        VTree.prototype.buildUL = function (pUL, nodes) {
+                            var li;
+                            var span;
+                            var txt;
+                            var ul;
+                            for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
+                                var node = nodes_1[_i];
+                                li = document.createElement("li");
+                                span = document.createElement("span");
+                                if (typeof node == 'object') {
+                                    li.setAttribute("class", "treeFolderClose");
+                                    span.setAttribute("class", "ui-icon ui-icon-folder-collapsed");
+                                    span.setAttribute("style", "display:inline-block");
+                                    li.appendChild(span);
+                                    txt = document.createTextNode(node["d"]);
+                                    li.appendChild(txt);
+                                    ul = document.createElement("ul");
+                                    ul.setAttribute("class", "hide");
+                                    li.appendChild(ul);
+                                    pUL.appendChild(li);
+                                    this.buildUL(ul, node["f"]);
+                                }
+                                else {
+                                    if ((this._re == null) || (this._re.test(node))) {
+                                        li.setAttribute("class", "treeFile");
+                                        span.setAttribute("class", "ui-icon ui-icon-document");
+                                        span.setAttribute("style", "display:inline-block");
+                                        li.appendChild(span);
+                                        txt = document.createTextNode(node);
+                                        li.appendChild(txt);
+                                        pUL.appendChild(li);
+                                    }
+                                }
+                            }
+                        };
+                        VTree.prototype.treeClick = function (e) {
+                            var ele = e.target;
+                            var c = ele.getAttribute("class");
+                            var leaf = null;
+                            var path = "";
+                            if (c == "treeFolderOpen") {
+                                ele.setAttribute("class", "treeFolderClose");
+                                ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-collapsed");
+                                ele.lastElementChild.setAttribute("class", "hide");
+                            }
+                            else if (c == "treeFolderClose") {
+                                ele.setAttribute("class", "treeFolderOpen");
+                                ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-open");
+                                ele.lastElementChild.setAttribute("class", "show");
+                            }
+                            else if (c == "treeFile") {
+                                leaf = ele.lastChild.textContent;
+                                while (ele != null) {
+                                    if (ele.parentElement instanceof HTMLLIElement) {
+                                        path = ele.parentElement.childNodes[1].textContent + "/" + path;
+                                    }
+                                    if (ele instanceof HTMLDivElement) {
+                                        ele = null;
+                                    }
+                                    else {
+                                        ele = ele.parentElement;
+                                    }
+                                }
+                            }
+                            if (leaf != null && this._clickListener != null) {
+                                this._clickListener(leaf, path);
+                            }
+                        };
+                        return VTree;
+                    }());
+                    gui.VTree = VTree;
+                })(gui = vishva.gui || (vishva.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -6639,8 +6742,8 @@ var org;
                     };
                     ActuatorDisabler.prototype.disableChilds = function (mesh, enableState) {
                         var nodes = mesh.getDescendants(false);
-                        for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
-                            var node = nodes_1[_i];
+                        for (var _i = 0, nodes_2 = nodes; _i < nodes_2.length; _i++) {
+                            var node = nodes_2[_i];
                             node.setEnabled(enableState);
                         }
                     };
@@ -6709,8 +6812,8 @@ var org;
                     };
                     ActuatorEnabler.prototype.enableChilds = function (mesh, enableState) {
                         var nodes = mesh.getDescendants(false);
-                        for (var _i = 0, nodes_2 = nodes; _i < nodes_2.length; _i++) {
-                            var node = nodes_2[_i];
+                        for (var _i = 0, nodes_3 = nodes; _i < nodes_3.length; _i++) {
+                            var node = nodes_3[_i];
                             node.setEnabled(enableState);
                         }
                     };
@@ -6811,8 +6914,8 @@ var org;
                     ActuatorLight.prototype.getLights = function (mesh) {
                         var nodes = mesh.getDescendants(false);
                         var lights = [];
-                        for (var _i = 0, nodes_3 = nodes; _i < nodes_3.length; _i++) {
-                            var node = nodes_3[_i];
+                        for (var _i = 0, nodes_4 = nodes; _i < nodes_4.length; _i++) {
+                            var node = nodes_4[_i];
                             if (node instanceof Light) {
                                 lights.push(node);
                             }

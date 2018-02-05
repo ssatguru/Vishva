@@ -149,13 +149,12 @@ var org;
                         function AddItemUI2(vishva) {
                             var _this = this;
                             this._vishva = vishva;
-                            if (this._assetDiag == null) {
-                                this._assetDiag = new gui.VTree("addItemsDiv2", "assetList", this._vishva.vishvaFiles, "\.babylon$|\.glb$");
-                                this._assetDiag.addClickListener(function (f, p) { return _this.loadAsset(f, p); });
-                            }
+                            this._assetTree = new gui.VTree("assetList", this._vishva.vishvaFiles, "\.babylon$|\.glb$");
+                            this._assetTree.addClickListener(function (f, p) { return _this.loadAsset(f, p); });
+                            this._assetDiag = new gui.VDialog("addItemsDiv2", "Assets", gui.DialogMgr.leftCenter);
                         }
                         AddItemUI2.prototype.loadAsset = function (file, path) {
-                            console.log(path + file);
+                            //console.log(path+file);
                             this._vishva.loadAsset2(path, file);
                         };
                         AddItemUI2.prototype.toggle = function () {
@@ -474,6 +473,12 @@ var org;
                             this.jpo = jpo;
                             gui.DialogMgr.dialogs.push(this);
                         }
+                        VDialog.prototype.setModal = function (b) {
+                            this._diag.dialog("option", "modal", b);
+                        };
+                        VDialog.prototype.setResizable = function (b) {
+                            this._diag.dialog("option", "resizable", b);
+                        };
                         VDialog.prototype.open = function () {
                             this._diag.dialog("open");
                         };
@@ -2193,23 +2198,40 @@ var org;
                                 _this._vishva.setTextVO(_this._textID, Number(_this._matVO.value));
                             };
                             var chgTexture = document.getElementById("changeTexture");
+                            //this._textListDiv=document.getElementById("textListDiv");
                             chgTexture.onclick = function () {
-                                var imgsrc = textList.value;
-                                //this._vishva.setMatTexture(this._matID,this._textType.innerText,imgsrc);
-                                _this._vishva.setTextURL(_this._textID, imgsrc);
-                                if (textList.value.indexOf(".tga") >= 0) {
-                                    imgsrc = _this._vishva.TGA_IMAGE;
+                                if (_this._textListDiag == null) {
+                                    var textTree = new gui.VTree("textListTree", _this._vishva.vishvaFiles, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
+                                    textTree.addClickListener(function (f, p) {
+                                        var imgsrc = "vishva/" + p + f;
+                                        _this._vishva.setTextURL(_this._textID, imgsrc);
+                                        _this._textName = imgsrc;
+                                        _this._textImgSrc.innerText = imgsrc;
+                                        if (imgsrc.indexOf(".tga") >= 0) {
+                                            imgsrc = _this._vishva.TGA_IMAGE;
+                                        }
+                                        _this._textureImg.src = imgsrc;
+                                        _this._matTextImg.src = imgsrc;
+                                    });
+                                    _this._textListDiag = new gui.VDialog("textListDiag", "select textures", gui.DialogMgr.center);
+                                    _this._textListDiag.setModal(true);
                                 }
-                                else {
-                                    _this._textureImg.src = imgsrc;
-                                    _this._matTextImg.src = imgsrc;
-                                    _this._textName = imgsrc;
-                                    _this._textImgSrc.innerText = imgsrc;
-                                }
+                                _this._textListDiag.open();
+                                //                let imgsrc: string=textList.value;
+                                //                //this._vishva.setMatTexture(this._matID,this._textType.innerText,imgsrc);
+                                //                this._vishva.setTextURL(this._textID,imgsrc);
+                                //                if(textList.value.indexOf(".tga")>=0) {
+                                //                    imgsrc=this._vishva.TGA_IMAGE;
+                                //                } else {
+                                //                    this._textureImg.src=imgsrc;
+                                //                    this._matTextImg.src=imgsrc;
+                                //                    this._textName=imgsrc;
+                                //                    this._textImgSrc.innerText=imgsrc;
+                                //                }
                             };
-                            var textList = document.getElementById("textureList");
-                            var textures = this._vishva.getTextures();
-                            gui.GuiUtils.PopulateSelect(textList, textures);
+                            //            let textList: HTMLSelectElement=<HTMLSelectElement>document.getElementById("textureList");
+                            //            var textures: string[]=this._vishva.getTextures();
+                            //            GuiUtils.PopulateSelect(textList,textures);
                         }
                         TextureUI.prototype.update = function () {
                             this._matHScale.value = this._vishva.getTextHScale(this._textID);
@@ -2593,20 +2615,17 @@ var org;
                      * Creates an expandable/collapsible tree
                      */
                     var VTree = (function () {
-                        function VTree(diagEleId, treeEleID, treeData, filter) {
+                        function VTree(treeEleID, treeData, filter, open) {
+                            if (open === void 0) { open = false; }
                             this._clickListener = null;
-                            this._diagEleId = document.getElementById(diagEleId);
-                            if (this._diagEleId == null) {
-                                console.error("Unable to locate element " + diagEleId);
-                                return;
-                            }
                             this._treeEle = document.getElementById(treeEleID);
                             if (this._treeEle == null) {
                                 console.error("Unable to locate element " + treeEleID);
                                 return;
                             }
                             this._treeData = treeData;
-                            this._search = filter;
+                            this._filter = filter;
+                            this._open = open;
                             //delete any existing tree
                             var childULs = this._treeEle.getElementsByTagName("ul");
                             for (var i = 0; i < childULs.length; i++) {
@@ -2615,8 +2634,7 @@ var org;
                                 }
                             }
                             //create a new one
-                            this.create();
-                            this._treeDiag = new gui.VDialog(diagEleId, "VTree", gui.DialogMgr.leftCenter);
+                            this._create();
                         }
                         VTree.prototype.addClickListener = function (clickListener) {
                             if (clickListener === void 0) { clickListener = null; }
@@ -2625,64 +2643,65 @@ var org;
                         VTree.prototype.refresh = function (treeData, filter) {
                             this._treeEle.removeChild(this._vtree);
                             this._treeData = treeData;
-                            this._search = filter;
-                            this.create();
-                            this._treeDiag.close();
-                            this._treeDiag.open();
+                            this._filter = filter;
+                            this._create();
                         };
                         VTree.prototype.filter = function (filter) {
                             this.refresh(this._treeData, filter);
                         };
-                        VTree.prototype.close = function () {
-                            this._treeDiag.close();
-                        };
-                        VTree.prototype.open = function () {
-                            this._treeDiag.open();
-                        };
-                        VTree.prototype.isOpen = function () {
-                            return this._treeDiag.isOpen();
-                        };
-                        VTree.prototype.create = function () {
+                        VTree.prototype._create = function () {
                             var _this = this;
-                            if (this._search != null) {
+                            if (this._filter != null) {
                                 try {
-                                    this._re = new RegExp(this._search);
+                                    this._re = new RegExp(this._filter);
                                 }
                                 catch (e) {
-                                    console.error("invalid reqular expression " + this._search + ". Will ignore");
+                                    console.error("invalid reqular expression " + this._filter + ". Will ignore");
                                     this._re = null;
                                 }
                             }
                             else
                                 this._re = null;
                             this._vtree = document.createElement("ul");
-                            this.buildUL(this._vtree, this._treeData);
+                            this._buildUL(this._vtree, this._treeData);
                             this._vtree.onclick = function (e) {
-                                return _this.treeClick(e);
+                                return _this._treeClick(e);
                             };
                             this._treeEle.appendChild(this._vtree);
                         };
-                        VTree.prototype.buildUL = function (pUL, nodes) {
+                        VTree.prototype._buildUL = function (pUL, nodes) {
                             var li;
                             var span;
                             var txt;
                             var ul;
+                            var icon;
+                            var c1, c2;
+                            if (this._open) {
+                                icon = "ui-icon ui-icon-folder-open";
+                                c1 = "treeFolderOpen";
+                                c2 = "show";
+                            }
+                            else {
+                                icon = "ui-icon ui-icon-folder-collapsed";
+                                c1 = "treeFolderClose";
+                                c2 = "hide";
+                            }
                             for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
                                 var node = nodes_1[_i];
                                 li = document.createElement("li");
                                 span = document.createElement("span");
                                 if (typeof node == 'object') {
-                                    li.setAttribute("class", "treeFolderClose");
-                                    span.setAttribute("class", "ui-icon ui-icon-folder-collapsed");
+                                    li.setAttribute("class", c1);
+                                    span.setAttribute("class", icon);
                                     span.setAttribute("style", "display:inline-block");
                                     li.appendChild(span);
                                     txt = document.createTextNode(node["d"]);
                                     li.appendChild(txt);
                                     ul = document.createElement("ul");
-                                    ul.setAttribute("class", "hide");
+                                    ul.setAttribute("class", c2);
                                     li.appendChild(ul);
                                     pUL.appendChild(li);
-                                    this.buildUL(ul, node["f"]);
+                                    this._buildUL(ul, node["f"]);
                                 }
                                 else {
                                     if ((this._re == null) || (this._re.test(node))) {
@@ -2697,7 +2716,7 @@ var org;
                                 }
                             }
                         };
-                        VTree.prototype.treeClick = function (e) {
+                        VTree.prototype._treeClick = function (e) {
                             var ele = e.target;
                             var c = ele.getAttribute("class");
                             var leaf = null;

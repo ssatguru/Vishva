@@ -176,7 +176,7 @@
             li {
                 padding-left: 1em;
             }
-            
+
             .treeFile:hover { 
                 background-color: gray;
             }
@@ -231,7 +231,7 @@
                 <br>
                 <button id="itemsRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
             </div>
-            
+
             <div id="addItemsDiv" title="Add Items"  >
                 <table id="addItemTable" style="width: 100%;text-align:left;cursor:pointer;"  class="noselect">
                     <tbody style="height:400px;overflow-y:auto;display:block;">
@@ -240,7 +240,7 @@
                 <br>
                 <button id="itemsRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
             </div>
-            
+
             <div id="addItemsDiv2" title="Add Items">
                 search <input id="srchAssets" type="text"/>
                 <hr>
@@ -780,7 +780,7 @@
                 </div>
             </div>
 
-            <div id="textureDiag">
+            <div id="textureDiag" title="texture details">
                 <table>
                     <tr>
                         <td>texture id</td>
@@ -791,17 +791,22 @@
                         <td id="textType">type</td>
                     </tr>
                     <tr>
-                        <td>image</td>
+                        <td>image
+                            <br>
+                            <button id="changeTexture" >change</button>
+                        </td>
                         <td ><img id="textImg" src="" height="256" width="256" alt="no images" ></td>
                     </tr>
                     <tr>
-                        <td>image source</td>
+                        <td>
+                            image source
+                        </td>
                         <td id="textImgSrc">/textures/....</td>
                     </tr>
-                    <tr>
+<!--                    <tr>
                         <td><button id="changeTexture" >change source</button></td>
                         <td colspan="2"><select id="textureList"></select></td>
-                    </tr>
+                    </tr>-->
                     <tr>
                         <td>Horizontal Scale</td>
                         <td>
@@ -841,6 +846,12 @@
                         </td>
                     </tr>
                 </table>
+            </div>
+            <div id="textListDiag" title="select texture">
+                <div id="textListTree"
+                     style="height:400px;width:200px;overflow-y:auto;border-style:solid;border-color:white;display:block"
+                     >
+                </div>
             </div>
 
 

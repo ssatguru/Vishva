@@ -33,6 +33,15 @@ namespace org.ssatguru.babylonjs.vishva.gui{
             DialogMgr.dialogs.push(this);
         }
         
+        public setModal(b:boolean){
+            this._diag.dialog("option","modal",b);
+        }
+        
+        public setResizable(b:boolean){
+            this._diag.dialog("option","resizable",b);
+        }
+        
+        
         public open(){
             this._diag.dialog("open");
         }

@@ -6,21 +6,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class AddItemUI2 {
 
         private _vishva: Vishva;
-        private _assetDiag:VTree;
+        private _assetTree: VTree;
+        private _assetDiag: VDialog;
 
         constructor(vishva: Vishva) {
             this._vishva=vishva;
-            if (this._assetDiag==null){
-                this._assetDiag=new VTree("addItemsDiv2","assetList",this._vishva.vishvaFiles,"\.babylon$|\.glb$");
-                this._assetDiag.addClickListener((f,p)=> {return this.loadAsset(f,p);});
-            }
+            this._assetTree=new VTree("assetList",this._vishva.vishvaFiles,"\.babylon$|\.glb$");
+            this._assetTree.addClickListener((f,p) => {return this.loadAsset(f,p);});
+            this._assetDiag=new VDialog("addItemsDiv2","Assets",DialogMgr.leftCenter);
         }
-        
-        private loadAsset(file:string,path:string){
-            console.log(path + file);
+
+        private loadAsset(file: string,path: string) {
+            //console.log(path+file);
             this._vishva.loadAsset2(path,file);
         }
-        
+
         public toggle() {
             if(this._assetDiag.isOpen()) {
                 this._assetDiag.close();
@@ -29,6 +29,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-        
+
     }
 }

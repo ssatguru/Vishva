@@ -12,7 +12,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         constructor(vishva: Vishva) {
             this._vishva=vishva;
             this._assetTree=new VTree("assetList",this._vishva.vishvaFiles,"\.babylon$|\.glb$");
-            this._assetTree.addClickListener((f,p) => {return this.loadAsset(f,p);});
+            this._assetTree.addClickListener((f,p,l) => {if (l) this.loadAsset(f,p);});
             this._assetDiag=new VDialog("addItemsDiv2","Assets",DialogMgr.leftCenter);
         }
 

@@ -94,6 +94,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _addItemUI:AddItemUI;
         private _addItemUI2:AddItemUI2;
         private _items: ItemsUI;
+        private _items2: ItemsUI2;
         private _environment: EnvironmentUI;
         private _settingDiag: SettingsUI;
         private _itemProps:ItemPropsUI;
@@ -185,13 +186,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
-                if(this._items==null) {
-                    this._items=new ItemsUI(this._vishva);
+                if(this._items2==null) {
+                    this._items2=new ItemsUI2(this._vishva);
                 }
-                this._items.toggle();
+                this._items2.toggle();
                 return false;
             }
-
+//            navItems.onclick=(e) => {
+//                if(this._items==null) {
+//                    this._items=new ItemsUI(this._vishva);
+//                }
+//                this._items.toggle();
+//                return false;
+//            }
 
             var navEnv: HTMLElement=document.getElementById("navEnv");
             navEnv.onclick=(e) => {

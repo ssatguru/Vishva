@@ -150,7 +150,8 @@ var org;
                             var _this = this;
                             this._vishva = vishva;
                             this._assetTree = new gui.VTree("assetList", this._vishva.vishvaFiles, "\.babylon$|\.glb$");
-                            this._assetTree.addClickListener(function (f, p) { return _this.loadAsset(f, p); });
+                            this._assetTree.addClickListener(function (f, p, l) { if (l)
+                                _this.loadAsset(f, p); });
                             this._assetDiag = new gui.VDialog("addItemsDiv2", "Assets", gui.DialogMgr.leftCenter);
                         }
                         AddItemUI2.prototype.loadAsset = function (file, path) {
@@ -1333,6 +1334,107 @@ var org;
             (function (vishva_8) {
                 var gui;
                 (function (gui) {
+                    /*
+                     * provides a user interface which list all meshes in the scene
+                     */
+                    var ItemsUI2 = (function () {
+                        function ItemsUI2(vishva) {
+                            var _this = this;
+                            this._vishva = vishva;
+                            var itemsRefresh = document.getElementById("itemsRefresh2");
+                            itemsRefresh.onclick = function () {
+                                _this._itemsDiag.close();
+                                _this._updateTreeData();
+                                _this._itemsTree.refresh(_this.treeData);
+                                _this._itemsDiag.open();
+                            };
+                            this._updateTreeData();
+                            this._itemsTree = new gui.VTree("itemsTree", this.treeData);
+                            this._itemsTree.addClickListener(function (f, p, l) {
+                                var i = f.indexOf(",");
+                                f = f.substring(0, i);
+                                _this._vishva.selectMesh(f);
+                            });
+                            this._itemsDiag = new gui.VDialog("itemsDiv2", "Items", gui.DialogMgr.leftCenter);
+                        }
+                        ItemsUI2.prototype.toggle = function () {
+                            if (!this._itemsDiag.isOpen()) {
+                                this._itemsDiag.open();
+                            }
+                            else {
+                                this._itemsDiag.close();
+                            }
+                        };
+                        ItemsUI2.prototype._updateTreeData = function () {
+                            this.treeData = new Array();
+                            var items = this._vishva.getMeshList();
+                            this._updateMeshChildMap(items);
+                            var childs;
+                            for (var _i = 0, items_4 = items; _i < items_4.length; _i++) {
+                                var item = items_4[_i];
+                                if (item.parent == null) {
+                                    childs = this.meshChildMap[item.uniqueId];
+                                    if (childs != null) {
+                                        var obj = {};
+                                        obj["d"] = Number(item.uniqueId).toString() + ", " + item.name;
+                                        obj["f"] = new Array();
+                                        this.treeData.push(obj);
+                                        this._addChildren(childs, obj["f"]);
+                                    }
+                                    else {
+                                        this.treeData.push(Number(item.uniqueId).toString() + ", " + item.name);
+                                    }
+                                }
+                            }
+                        };
+                        ItemsUI2.prototype._addChildren = function (children, treeData) {
+                            for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
+                                var child = children_2[_i];
+                                var childs = this.meshChildMap[child.uniqueId];
+                                if (childs != null) {
+                                    var obj = {};
+                                    obj["d"] = Number(child.parent.uniqueId).toString() + ", " + child.parent.name;
+                                    obj["f"] = new Array();
+                                    treeData.push(obj);
+                                    this._addChildren(childs, obj["f"]);
+                                }
+                                else {
+                                    treeData.push(Number(child.uniqueId).toString() + ", " + child.name);
+                                }
+                            }
+                        };
+                        ItemsUI2.prototype._updateMeshChildMap = function (meshes) {
+                            this.meshChildMap = {};
+                            for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
+                                var mesh = meshes_2[_i];
+                                if (mesh.parent != null) {
+                                    var childs = this.meshChildMap[mesh.parent.uniqueId];
+                                    if (childs == null) {
+                                        childs = new Array();
+                                        this.meshChildMap[mesh.parent.uniqueId] = childs;
+                                    }
+                                    childs.push(mesh);
+                                }
+                            }
+                        };
+                        return ItemsUI2;
+                    }());
+                    gui.ItemsUI2 = ItemsUI2;
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_9) {
+                var gui;
+                (function (gui) {
                     /**
                      * Provides UI for the Light tab in mesh properties dialog
                      */
@@ -1377,7 +1479,7 @@ var org;
                             var lightParm = this._vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this._lightAtt.checked = false;
-                                lightParm = new vishva_8.LightParm();
+                                lightParm = new vishva_9.LightParm();
                             }
                             else {
                                 this._lightAtt.checked = true;
@@ -1403,7 +1505,7 @@ var org;
                             //            }
                             if (!this._lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_8.LightParm();
+                            var lightParm = new vishva_9.LightParm();
                             lightParm.type = this._lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this._lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this._lightSpec.getColor());
@@ -1421,7 +1523,7 @@ var org;
                         return LightUI;
                     }());
                     gui.LightUI = LightUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+                })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1433,7 +1535,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_9) {
+            (function (vishva_10) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1558,7 +1660,7 @@ var org;
                         return MaterialUI;
                     }());
                     gui.MaterialUI = MaterialUI;
-                })(gui = vishva_9.gui || (vishva_9.gui = {}));
+                })(gui = vishva_10.gui || (vishva_10.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1570,7 +1672,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_10) {
+            (function (vishva_11) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1644,7 +1746,7 @@ var org;
                         PhysicsUI.prototype._applyPhysics = function () {
                             var phyParms;
                             if (this._phyEna.checked) {
-                                phyParms = new vishva_10.PhysicsParm();
+                                phyParms = new vishva_11.PhysicsParm();
                                 phyParms.type = parseInt(this._phyType.value);
                                 phyParms.mass = parseFloat(this._phyMass.value);
                                 phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1657,7 +1759,7 @@ var org;
                         };
                         PhysicsUI.prototype._testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_10.PhysicsParm();
+                            phyParms = new vishva_11.PhysicsParm();
                             phyParms.type = parseInt(this._phyType.value);
                             phyParms.mass = parseFloat(this._phyMass.value);
                             phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1671,7 +1773,7 @@ var org;
                         return PhysicsUI;
                     }());
                     gui.PhysicsUI = PhysicsUI;
-                })(gui = vishva_10.gui || (vishva_10.gui = {}));
+                })(gui = vishva_11.gui || (vishva_11.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1683,7 +1785,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_11) {
+            (function (vishva_12) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1759,7 +1861,7 @@ var org;
                         return SettingsUI;
                     }());
                     gui.SettingsUI = SettingsUI;
-                })(gui = vishva_11.gui || (vishva_11.gui = {}));
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1771,7 +1873,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_12) {
+            (function (vishva_13) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2149,7 +2251,7 @@ var org;
                         return SnaUI;
                     }());
                     gui.SnaUI = SnaUI;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2161,7 +2263,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_13) {
+            (function (vishva_14) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2202,7 +2304,9 @@ var org;
                             chgTexture.onclick = function () {
                                 if (_this._textListDiag == null) {
                                     var textTree = new gui.VTree("textListTree", _this._vishva.vishvaFiles, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
-                                    textTree.addClickListener(function (f, p) {
+                                    textTree.addClickListener(function (f, p, l) {
+                                        if (!l)
+                                            return;
                                         var imgsrc = "vishva/" + p + f;
                                         _this._vishva.setTextURL(_this._textID, imgsrc);
                                         _this._textName = imgsrc;
@@ -2263,7 +2367,7 @@ var org;
                         return TextureUI;
                     }());
                     gui.TextureUI = TextureUI;
-                })(gui = vishva_13.gui || (vishva_13.gui = {}));
+                })(gui = vishva_14.gui || (vishva_14.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2275,7 +2379,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_14) {
+            (function (vishva_15) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -2425,12 +2529,19 @@ var org;
                             };
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
-                                if (_this._items == null) {
-                                    _this._items = new gui.ItemsUI(_this._vishva);
+                                if (_this._items2 == null) {
+                                    _this._items2 = new gui.ItemsUI2(_this._vishva);
                                 }
-                                _this._items.toggle();
+                                _this._items2.toggle();
                                 return false;
                             };
+                            //            navItems.onclick=(e) => {
+                            //                if(this._items==null) {
+                            //                    this._items=new ItemsUI(this._vishva);
+                            //                }
+                            //                this._items.toggle();
+                            //                return false;
+                            //            }
                             var navEnv = document.getElementById("navEnv");
                             navEnv.onclick = function (e) {
                                 if (_this._environment == null) {
@@ -2596,7 +2707,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_14.gui || (vishva_14.gui = {}));
+                })(gui = vishva_15.gui || (vishva_15.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2717,22 +2828,35 @@ var org;
                             }
                         };
                         VTree.prototype._treeClick = function (e) {
+                            var span = false;
                             var ele = e.target;
+                            if (ele instanceof HTMLSpanElement) {
+                                span = true;
+                                ele = ele.parentElement;
+                            }
                             var c = ele.getAttribute("class");
-                            var leaf = null;
-                            var path = "";
-                            if (c == "treeFolderOpen") {
-                                ele.setAttribute("class", "treeFolderClose");
-                                ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-collapsed");
-                                ele.lastElementChild.setAttribute("class", "hide");
+                            //if icon clicked then just expand/collapse
+                            //else find what was clicked and pass that on
+                            if (span) {
+                                if (c == "treeFolderOpen") {
+                                    ele.setAttribute("class", "treeFolderClose");
+                                    ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-collapsed");
+                                    ele.lastElementChild.setAttribute("class", "hide");
+                                }
+                                else if (c == "treeFolderClose") {
+                                    ele.setAttribute("class", "treeFolderOpen");
+                                    ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-open");
+                                    ele.lastElementChild.setAttribute("class", "show");
+                                }
                             }
-                            else if (c == "treeFolderClose") {
-                                ele.setAttribute("class", "treeFolderOpen");
-                                ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-open");
-                                ele.lastElementChild.setAttribute("class", "show");
-                            }
-                            else if (c == "treeFile") {
-                                leaf = ele.lastChild.textContent;
+                            else {
+                                var node = null;
+                                var path = "";
+                                var isLeaf = false;
+                                if (c == "treeFile") {
+                                    isLeaf = true;
+                                }
+                                node = ele.childNodes[1].textContent;
                                 while (ele != null) {
                                     if (ele.parentElement instanceof HTMLLIElement) {
                                         path = ele.parentElement.childNodes[1].textContent + "/" + path;
@@ -2744,9 +2868,9 @@ var org;
                                         ele = ele.parentElement;
                                     }
                                 }
-                            }
-                            if (leaf != null && this._clickListener != null) {
-                                this._clickListener(leaf, path);
+                                if (this._clickListener != null) {
+                                    this._clickListener(node, path, isLeaf);
+                                }
                             }
                         };
                         return VTree;
@@ -5113,8 +5237,8 @@ var org;
                     };
                     Vishva.prototype.removeInstancesFromShadow = function () {
                         var meshes = this.scene.meshes;
-                        for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
-                            var mesh = meshes_2[_i];
+                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
+                            var mesh = meshes_3[_i];
                             if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
                                 var shadowMeshes = this.shadowGenerator.getShadowMap().renderList;
                                 var i = shadowMeshes.indexOf(mesh);
@@ -5228,8 +5352,8 @@ var org;
                         var meshes = this.scene.meshes;
                         var mats = new Array();
                         var mms = new Array();
-                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
-                            var mesh = meshes_3[_i];
+                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
+                            var mesh = meshes_4[_i];
                             if (mesh.material != null) {
                                 if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
                                     var mm = mesh.material;
@@ -5267,8 +5391,8 @@ var org;
                     Vishva.prototype.cleanupSkels = function () {
                         var meshes = this.scene.meshes;
                         var skels = new Array();
-                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
-                            var mesh = meshes_4[_i];
+                        for (var _i = 0, meshes_5 = meshes; _i < meshes_5.length; _i++) {
+                            var mesh = meshes_5[_i];
                             if (mesh.skeleton != null) {
                                 skels.push(mesh.skeleton);
                             }
@@ -5310,8 +5434,8 @@ var org;
                             var skeleton = skeletons_1[_i];
                             this.scene.stopAnimation(skeleton);
                         }
-                        for (var _a = 0, meshes_5 = meshes; _a < meshes_5.length; _a++) {
-                            var mesh = meshes_5[_a];
+                        for (var _a = 0, meshes_6 = meshes; _a < meshes_6.length; _a++) {
+                            var mesh = meshes_6[_a];
                             //mesh = (<Mesh>mesh).toLeftHanded();
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
@@ -5396,8 +5520,8 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var _i = 0, meshes_6 = meshes; _i < meshes_6.length; _i++) {
-                            var mesh = meshes_6[_i];
+                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
+                            var mesh = meshes_7[_i];
                             console.log("==========");
                             console.log(mesh.name);
                             console.log(mesh.absolutePosition);
@@ -6195,8 +6319,8 @@ var org;
                         var sna;
                         var meshes = scene.meshes;
                         var meshId;
-                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
-                            var mesh = meshes_7[_i];
+                        for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
+                            var mesh = meshes_8[_i];
                             meshId = null;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {

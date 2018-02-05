@@ -2,88 +2,88 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Creates an expandable/collapsible tree
      */
-    export class VTree{
-        
-        private _treeEle:HTMLElement;
-        private _treeData:Array<string| object>;
-        private _filter:string;
-        private _vtree:HTMLUListElement;
-        private _open:boolean;
-        
-        constructor( treeEleID:string,treeData:Array<string| object>,filter?:string,open=false){
-            
+    export class VTree {
+
+        private _treeEle: HTMLElement;
+        private _treeData: Array<string|object>;
+        private _filter: string;
+        private _vtree: HTMLUListElement;
+        private _open: boolean;
+
+        constructor(treeEleID: string,treeData: Array<string|object>,filter?: string,open=false) {
+
             this._treeEle=document.getElementById(treeEleID);
-            if (this._treeEle==null){
-                console.error("Unable to locate element " + treeEleID);
-                 return;
+            if(this._treeEle==null) {
+                console.error("Unable to locate element "+treeEleID);
+                return;
             }
-            
+
             this._treeData=treeData;
             this._filter=filter;
             this._open=open;
-            
+
             //delete any existing tree
-            let childULs:NodeListOf<HTMLUListElement>=this._treeEle.getElementsByTagName("ul");
-            for(let i=0;i<childULs.length;i++){
-                if (childULs.item(i).id=="vtree"){
+            let childULs: NodeListOf<HTMLUListElement>=this._treeEle.getElementsByTagName("ul");
+            for(let i=0;i<childULs.length;i++) {
+                if(childULs.item(i).id=="vtree") {
                     this._treeEle.removeChild(childULs.item(i));
                 }
             }
-            
+
             //create a new one
             this._create();
-            
+
         }
-        
-        private _clickListener: (leaf:string, path:string) => void=null;
-        public addClickListener(clickListener:(leaf:string, path:string) => void=null){
+
+        private _clickListener: (leaf: string,path: string,isLeaf: boolean) => void=null;
+        public addClickListener(clickListener: (leaf: string,path: string,isLeaf: boolean) => void=null) {
             this._clickListener=clickListener;
         }
-        
-        public refresh(treeData:Array<string| object>,filter?:string){
+
+        public refresh(treeData: Array<string|object>,filter?: string) {
             this._treeEle.removeChild(this._vtree);
             this._treeData=treeData;
             this._filter=filter;
             this._create();
         }
-        
-        public filter(filter:string){
+
+        public filter(filter: string) {
             this.refresh(this._treeData,filter);
         }
-        
-        private _re:RegExp;
-        private _create(){
-            if (this._filter !=null){
-                try{
-                    this._re = new RegExp(this._filter);
-                }catch(e){
-                    console.error("invalid reqular expression " + this._filter + ". Will ignore");
+
+        private _re: RegExp;
+        private _create() {
+            if(this._filter!=null) {
+                try {
+                    this._re=new RegExp(this._filter);
+                } catch(e) {
+                    console.error("invalid reqular expression "+this._filter+". Will ignore");
                     this._re=null;
                 }
-            }else this._re=null;
-            
+            } else this._re=null;
+
             this._vtree=document.createElement("ul");
             this._buildUL(this._vtree,this._treeData);
-            
+
             this._vtree.onclick=(e) => {
                 return this._treeClick(e);
             }
             this._treeEle.appendChild(this._vtree);
-            
+
         }
-        
+
         private _buildUL(pUL: HTMLUListElement,nodes: Array<string|Object>) {
             let li: HTMLLIElement;
             let span: HTMLSpanElement;
             let txt: Text;
             let ul: HTMLUListElement;
-            let icon:string;
-            let c1,c2:string;
-            if(this._open){
+            let icon: string;
+            let c1,c2: string;
+            if(this._open) {
                 icon="ui-icon ui-icon-folder-open";
                 c1="treeFolderOpen";
                 c2="show";
-            }else{
+            } else {
                 icon="ui-icon ui-icon-folder-collapsed";
                 c1="treeFolderClose";
                 c2="hide";
@@ -110,7 +110,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
                     this._buildUL(ul,node["f"]);
                 } else {
-                    if((this._re==null) || (this._re.test(node))) {
+                    if((this._re==null)||(this._re.test(node))) {
                         li.setAttribute("class","treeFile");
 
                         span.setAttribute("class","ui-icon ui-icon-document");
@@ -127,20 +127,33 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private _treeClick(e: MouseEvent) {
+            let span: boolean=false;
             let ele: HTMLElement=<HTMLElement>e.target;
+            if(ele instanceof HTMLSpanElement) {
+                span=true;
+                ele=ele.parentElement;
+            }
             let c: string=ele.getAttribute("class");
-            let leaf:string=null;
-            let path:string="";
-            if(c=="treeFolderOpen") {
-                ele.setAttribute("class","treeFolderClose");
-                ele.firstElementChild.setAttribute("class","ui-icon ui-icon-folder-collapsed");
-                ele.lastElementChild.setAttribute("class","hide");
-            } else if(c=="treeFolderClose") {
-                ele.setAttribute("class","treeFolderOpen");
-                ele.firstElementChild.setAttribute("class","ui-icon ui-icon-folder-open");
-                ele.lastElementChild.setAttribute("class","show");
-            } else if(c=="treeFile") {
-                leaf=ele.lastChild.textContent;
+            //if icon clicked then just expand/collapse
+            //else find what was clicked and pass that on
+            if(span) {
+                if(c=="treeFolderOpen") {
+                    ele.setAttribute("class","treeFolderClose");
+                    ele.firstElementChild.setAttribute("class","ui-icon ui-icon-folder-collapsed");
+                    ele.lastElementChild.setAttribute("class","hide");
+                } else if(c=="treeFolderClose") {
+                    ele.setAttribute("class","treeFolderOpen");
+                    ele.firstElementChild.setAttribute("class","ui-icon ui-icon-folder-open");
+                    ele.lastElementChild.setAttribute("class","show");
+                }
+            } else {
+                let node: string=null;
+                let path: string="";
+                let isLeaf: boolean=false;
+                if(c=="treeFile") {
+                    isLeaf=true;
+                }
+                node=ele.childNodes[1].textContent;
                 while(ele!=null) {
                     if(ele.parentElement instanceof HTMLLIElement) {
                         path=ele.parentElement.childNodes[1].textContent+"/"+path
@@ -151,12 +164,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                         ele=ele.parentElement;
                     }
                 }
-            }
-            if(leaf!=null&&this._clickListener!=null){
-                this._clickListener(leaf,path);
+
+                if(this._clickListener!=null) {
+                    this._clickListener(node,path,isLeaf);
+                }
             }
         }
-       
+
     }
 }
 

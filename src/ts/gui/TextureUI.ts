@@ -61,7 +61,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             chgTexture.onclick=() => {
                 if(this._textListDiag==null) {
                     let textTree: VTree=new VTree("textListTree",this._vishva.vishvaFiles,"\.jpg$|\.png$|\.tga$|\.bmp$",true);
-                    textTree.addClickListener((f,p) => {
+                    textTree.addClickListener((f,p,l) => {
+                        if (!l) return;
                         let imgsrc: string="vishva/"+p+f;
                         this._vishva.setTextURL(this._textID,imgsrc);
                         this._textName=imgsrc;
@@ -71,8 +72,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                         }
                         this._textureImg.src=imgsrc;
                         this._matTextImg.src=imgsrc;
-
-
                     });
                     this._textListDiag=new VDialog("textListDiag","select textures",DialogMgr.center);
                     this._textListDiag.setModal(true);

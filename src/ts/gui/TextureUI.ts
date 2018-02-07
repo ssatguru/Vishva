@@ -75,6 +75,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     });
                     this._textListDiag=new VDialog("textListDiag","select textures",DialogMgr.center);
                     this._textListDiag.setModal(true);
+                    this._textListDiag.setResizable(true);
                 }
                 this._textListDiag.open();
                 //                let imgsrc: string=textList.value;

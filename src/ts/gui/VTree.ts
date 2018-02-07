@@ -10,6 +10,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vtree: HTMLUListElement;
         private _open: boolean;
 
+        //        private _closeIcon:string="ui-icon ui-icon-circle-triangle-e";
+        //        private _openIcon:string="ui-icon ui-icon-circle-triangle-s";
+        //        private _leafIcon:string="ui-icon ui-icon-blank";
+        //        
+        private _closeIcon: string="ui-icon ui-icon-folder-collapsed";
+        private _openIcon: string="ui-icon ui-icon-folder-open";
+        private _leafIcon: string="ui-icon ui-icon-document";
+
         constructor(treeEleID: string,treeData: Array<string|object>,filter?: string,open=false) {
 
             this._treeEle=document.getElementById(treeEleID);
@@ -48,7 +56,93 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         public filter(filter: string) {
-            this.refresh(this._treeData,filter);
+            this._hideAll();
+            let lis: NodeListOf<Element>=this._vtree.getElementsByClassName("treeFile");
+            for(let i=0;i<lis.length;i++) {
+                let t: string=lis.item(i).childNodes[1].textContent;
+                if(filter.length==0||t.indexOf(filter)>=0) {
+                    lis.item(i).setAttribute("style","display:block");
+                    this._openParent(lis.item(i));
+                }
+            }
+        }
+        private _hideAll(){
+            let lis: NodeListOf<Element>=this._vtree.getElementsByTagName("li");
+             for(let i=0;i<lis.length;i++) {
+                 lis.item(i).setAttribute("style","display:none");
+             }
+        }
+        private _openParent(e:Element){
+            while (e.parentElement!=this._vtree){
+                if(e.parentElement instanceof HTMLUListElement){
+                    e.parentElement.setAttribute("class","show");
+                    e.parentElement.parentElement.setAttribute("class","treeFolderOpen");
+                    e.parentElement.parentElement.setAttribute("style","display:block");
+                    e.parentElement.parentElement.firstElementChild.setAttribute("class",this._openIcon);
+                }
+                e=e.parentElement;
+            }
+        }
+
+
+        public expandAll() {
+            let nl: NodeListOf<Element>;
+            let a: Array<Element>;
+
+            //NOTE 
+            //NodeListAll is being converted to array.
+            //This is because the list of elements returned by getElementsByClassName is "live"
+            //If the class is changed then the list of elements also change immediately
+            //so for example the e.length will keep change with each itertaion in the loop
+
+            nl=this._vtree.getElementsByClassName("treeFolderClose");
+            a=[].slice.call(nl);
+            for(let e of a) {
+                e.setAttribute("class","treeFolderOpen");
+            }
+
+
+            nl=this._vtree.getElementsByClassName("hide");
+            a=[].slice.call(nl);
+            for(let e of a) {
+                e.setAttribute("class","show");
+            }
+
+            nl=this._vtree.getElementsByClassName(this._closeIcon);
+            a=[].slice.call(nl);
+            for(let e of a) {
+                e.setAttribute("class",this._openIcon);
+            }
+
+        }
+        
+        public collapseAll() {
+            let nl: NodeListOf<Element>;
+            let a: Array<Element>;
+
+            //NOTE 
+            //NodeListAll is being converted to array.
+            //This is because the list of elements returned by getElementsByClassName is "live"
+            //If the class is changed then the list of elements also change immediately
+            //so for example the e.length will keep change with each itertaion in the loop
+
+            nl=this._vtree.getElementsByClassName("treeFolderOpen");
+            a=[].slice.call(nl);
+            for(let e of a) {
+                e.setAttribute("class","treeFolderClose");
+            }
+
+            nl=this._vtree.getElementsByClassName("show");
+            a=[].slice.call(nl);
+            for(let e of a) {
+                e.setAttribute("class","hide");
+            }
+
+            nl=this._vtree.getElementsByClassName(this._openIcon);
+            a=[].slice.call(nl);
+            for(let e of a) {
+                e.setAttribute("class",this._closeIcon);
+            }
         }
 
         private _re: RegExp;
@@ -80,11 +174,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let icon: string;
             let c1,c2: string;
             if(this._open) {
-                icon="ui-icon ui-icon-folder-open";
+                icon=this._openIcon;
                 c1="treeFolderOpen";
                 c2="show";
             } else {
-                icon="ui-icon ui-icon-folder-collapsed";
+                icon=this._closeIcon;
                 c1="treeFolderClose";
                 c2="hide";
             }
@@ -110,18 +204,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
                     this._buildUL(ul,node["f"]);
                 } else {
-                    if((this._re==null)||(this._re.test(node))) {
-                        li.setAttribute("class","treeFile");
-
-                        span.setAttribute("class","ui-icon ui-icon-document");
-                        span.setAttribute("style","display:inline-block");
-                        li.appendChild(span);
-
-                        txt=document.createTextNode(node);
-                        li.appendChild(txt);
-
-                        pUL.appendChild(li);
+                    li.setAttribute("class","treeFile");
+                    if((this._re!=null)&&(!this._re.test(node))) {
+                        li.setAttribute("style","display:none;");
                     }
+
+                    span.setAttribute("class",this._leafIcon);
+                    span.setAttribute("style","display:inline-block");
+                    li.appendChild(span);
+
+                    txt=document.createTextNode(node);
+                    li.appendChild(txt);
+
+                    pUL.appendChild(li);
+
                 }
             }
         }
@@ -139,11 +235,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(span) {
                 if(c=="treeFolderOpen") {
                     ele.setAttribute("class","treeFolderClose");
-                    ele.firstElementChild.setAttribute("class","ui-icon ui-icon-folder-collapsed");
+                    ele.firstElementChild.setAttribute("class",this._closeIcon);
                     ele.lastElementChild.setAttribute("class","hide");
                 } else if(c=="treeFolderClose") {
                     ele.setAttribute("class","treeFolderOpen");
-                    ele.firstElementChild.setAttribute("class","ui-icon ui-icon-folder-open");
+                    ele.firstElementChild.setAttribute("class",this._openIcon);
                     ele.lastElementChild.setAttribute("class","show");
                 }
             } else {

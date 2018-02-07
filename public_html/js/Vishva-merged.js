@@ -152,7 +152,21 @@ var org;
                             this._assetTree = new gui.VTree("assetList", this._vishva.vishvaFiles, "\.babylon$|\.glb$");
                             this._assetTree.addClickListener(function (f, p, l) { if (l)
                                 _this.loadAsset(f, p); });
-                            this._assetDiag = new gui.VDialog("addItemsDiv2", "Assets", gui.DialogMgr.leftCenter);
+                            this._assetDiag = new gui.VDialog("addItemsDiv2", "Assets", gui.DialogMgr.leftCenter, 300);
+                            this._assetDiag.setResizable(true);
+                            var fi = document.getElementById("srchInp");
+                            var fb = document.getElementById("srchBtn");
+                            fb.onclick = function () {
+                                _this._assetTree.filter(fi.value.trim());
+                            };
+                            var e = document.getElementById("expandAll");
+                            var c = document.getElementById("collapseAll");
+                            e.onclick = function () {
+                                _this._assetTree.expandAll();
+                            };
+                            c.onclick = function () {
+                                _this._assetTree.collapseAll();
+                            };
                         }
                         AddItemUI2.prototype.loadAsset = function (file, path) {
                             //console.log(path+file);
@@ -2728,6 +2742,13 @@ var org;
                     var VTree = (function () {
                         function VTree(treeEleID, treeData, filter, open) {
                             if (open === void 0) { open = false; }
+                            //        private _closeIcon:string="ui-icon ui-icon-circle-triangle-e";
+                            //        private _openIcon:string="ui-icon ui-icon-circle-triangle-s";
+                            //        private _leafIcon:string="ui-icon ui-icon-blank";
+                            //        
+                            this._closeIcon = "ui-icon ui-icon-folder-collapsed";
+                            this._openIcon = "ui-icon ui-icon-folder-open";
+                            this._leafIcon = "ui-icon ui-icon-document";
                             this._clickListener = null;
                             this._treeEle = document.getElementById(treeEleID);
                             if (this._treeEle == null) {
@@ -2758,7 +2779,86 @@ var org;
                             this._create();
                         };
                         VTree.prototype.filter = function (filter) {
-                            this.refresh(this._treeData, filter);
+                            this._hideAll();
+                            var lis = this._vtree.getElementsByClassName("treeFile");
+                            for (var i = 0; i < lis.length; i++) {
+                                var t = lis.item(i).childNodes[1].textContent;
+                                if (filter.length == 0 || t.indexOf(filter) >= 0) {
+                                    lis.item(i).setAttribute("style", "display:block");
+                                    this._openParent(lis.item(i));
+                                }
+                            }
+                        };
+                        VTree.prototype._hideAll = function () {
+                            var lis = this._vtree.getElementsByTagName("li");
+                            for (var i = 0; i < lis.length; i++) {
+                                lis.item(i).setAttribute("style", "display:none");
+                            }
+                        };
+                        VTree.prototype._openParent = function (e) {
+                            while (e.parentElement != this._vtree) {
+                                if (e.parentElement instanceof HTMLUListElement) {
+                                    e.parentElement.setAttribute("class", "show");
+                                    e.parentElement.parentElement.setAttribute("class", "treeFolderOpen");
+                                    e.parentElement.parentElement.setAttribute("style", "display:block");
+                                    e.parentElement.parentElement.firstElementChild.setAttribute("class", this._openIcon);
+                                }
+                                e = e.parentElement;
+                            }
+                        };
+                        VTree.prototype.expandAll = function () {
+                            var nl;
+                            var a;
+                            //NOTE 
+                            //NodeListAll is being converted to array.
+                            //This is because the list of elements returned by getElementsByClassName is "live"
+                            //If the class is changed then the list of elements also change immediately
+                            //so for example the e.length will keep change with each itertaion in the loop
+                            nl = this._vtree.getElementsByClassName("treeFolderClose");
+                            a = [].slice.call(nl);
+                            for (var _i = 0, a_1 = a; _i < a_1.length; _i++) {
+                                var e = a_1[_i];
+                                e.setAttribute("class", "treeFolderOpen");
+                            }
+                            nl = this._vtree.getElementsByClassName("hide");
+                            a = [].slice.call(nl);
+                            for (var _a = 0, a_2 = a; _a < a_2.length; _a++) {
+                                var e = a_2[_a];
+                                e.setAttribute("class", "show");
+                            }
+                            nl = this._vtree.getElementsByClassName(this._closeIcon);
+                            a = [].slice.call(nl);
+                            for (var _b = 0, a_3 = a; _b < a_3.length; _b++) {
+                                var e = a_3[_b];
+                                e.setAttribute("class", this._openIcon);
+                            }
+                        };
+                        VTree.prototype.collapseAll = function () {
+                            var nl;
+                            var a;
+                            //NOTE 
+                            //NodeListAll is being converted to array.
+                            //This is because the list of elements returned by getElementsByClassName is "live"
+                            //If the class is changed then the list of elements also change immediately
+                            //so for example the e.length will keep change with each itertaion in the loop
+                            nl = this._vtree.getElementsByClassName("treeFolderOpen");
+                            a = [].slice.call(nl);
+                            for (var _i = 0, a_4 = a; _i < a_4.length; _i++) {
+                                var e = a_4[_i];
+                                e.setAttribute("class", "treeFolderClose");
+                            }
+                            nl = this._vtree.getElementsByClassName("show");
+                            a = [].slice.call(nl);
+                            for (var _a = 0, a_5 = a; _a < a_5.length; _a++) {
+                                var e = a_5[_a];
+                                e.setAttribute("class", "hide");
+                            }
+                            nl = this._vtree.getElementsByClassName(this._openIcon);
+                            a = [].slice.call(nl);
+                            for (var _b = 0, a_6 = a; _b < a_6.length; _b++) {
+                                var e = a_6[_b];
+                                e.setAttribute("class", this._closeIcon);
+                            }
                         };
                         VTree.prototype._create = function () {
                             var _this = this;
@@ -2788,12 +2888,12 @@ var org;
                             var icon;
                             var c1, c2;
                             if (this._open) {
-                                icon = "ui-icon ui-icon-folder-open";
+                                icon = this._openIcon;
                                 c1 = "treeFolderOpen";
                                 c2 = "show";
                             }
                             else {
-                                icon = "ui-icon ui-icon-folder-collapsed";
+                                icon = this._closeIcon;
                                 c1 = "treeFolderClose";
                                 c2 = "hide";
                             }
@@ -2815,15 +2915,16 @@ var org;
                                     this._buildUL(ul, node["f"]);
                                 }
                                 else {
-                                    if ((this._re == null) || (this._re.test(node))) {
-                                        li.setAttribute("class", "treeFile");
-                                        span.setAttribute("class", "ui-icon ui-icon-document");
-                                        span.setAttribute("style", "display:inline-block");
-                                        li.appendChild(span);
-                                        txt = document.createTextNode(node);
-                                        li.appendChild(txt);
-                                        pUL.appendChild(li);
+                                    li.setAttribute("class", "treeFile");
+                                    if ((this._re != null) && (!this._re.test(node))) {
+                                        li.setAttribute("style", "display:none;");
                                     }
+                                    span.setAttribute("class", this._leafIcon);
+                                    span.setAttribute("style", "display:inline-block");
+                                    li.appendChild(span);
+                                    txt = document.createTextNode(node);
+                                    li.appendChild(txt);
+                                    pUL.appendChild(li);
                                 }
                             }
                         };
@@ -2840,12 +2941,12 @@ var org;
                             if (span) {
                                 if (c == "treeFolderOpen") {
                                     ele.setAttribute("class", "treeFolderClose");
-                                    ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-collapsed");
+                                    ele.firstElementChild.setAttribute("class", this._closeIcon);
                                     ele.lastElementChild.setAttribute("class", "hide");
                                 }
                                 else if (c == "treeFolderClose") {
                                     ele.setAttribute("class", "treeFolderOpen");
-                                    ele.firstElementChild.setAttribute("class", "ui-icon ui-icon-folder-open");
+                                    ele.firstElementChild.setAttribute("class", this._openIcon);
                                     ele.lastElementChild.setAttribute("class", "show");
                                 }
                             }

@@ -2333,6 +2333,7 @@ var org;
                                     });
                                     _this._textListDiag = new gui.VDialog("textListDiag", "select textures", gui.DialogMgr.center);
                                     _this._textListDiag.setModal(true);
+                                    _this._textListDiag.setResizable(true);
                                 }
                                 _this._textListDiag.open();
                                 //                let imgsrc: string=textList.value;

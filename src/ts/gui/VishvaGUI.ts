@@ -92,7 +92,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          */
 
         private _addItemUI:AddItemUI;
-        private _addItemUI2:AddItemUI2;
+        private _addItemUI2:VTreeDialog;
         private _items: ItemsUI;
         private _items2: ItemsUI2;
         private _environment: EnvironmentUI;
@@ -169,8 +169,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var navAdd: HTMLElement=document.getElementById("navAdd");
             navAdd.onclick=(e) => {
                 if (this._addItemUI2 == null){
-                    this._addItemUI2=new AddItemUI2(this._vishva);
+                    this._addItemUI2=new VTreeDialog(this._vishva,"Assets",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.babylon$|\.glb$",false);
+                    this._addItemUI2.addTreeListener((f,p,l)=>{
+                        if (l) this._vishva.loadAsset2(p,f);
+                    })
                 }
+                
                 this._addItemUI2.toggle();
             }
 

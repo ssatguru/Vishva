@@ -57,11 +57,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             let chgTexture: HTMLButtonElement=<HTMLButtonElement>document.getElementById("changeTexture");
-            //this._textListDiv=document.getElementById("textListDiv");
             chgTexture.onclick=() => {
                 if(this._textListDiag==null) {
-                    let textTree: VTree=new VTree("textListTree",this._vishva.vishvaFiles,"\.jpg$|\.png$|\.tga$|\.bmp$",true);
-                    textTree.addClickListener((f,p,l) => {
+                    this._textListDiag=new VTreeDialog(this._vishva,"select texture",DialogMgr.center,this._vishva.vishvaFiles,"\.jpg$|\.png$|\.tga$|\.bmp$",true);
+                    this._textListDiag.addTreeListener((f,p,l) => {
                         if (!l) return;
                         let imgsrc: string="vishva/"+p+f;
                         this._vishva.setTextURL(this._textID,imgsrc);
@@ -73,28 +72,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                         this._textureImg.src=imgsrc;
                         this._matTextImg.src=imgsrc;
                     });
-                    this._textListDiag=new VDialog("textListDiag","select textures",DialogMgr.center);
+
                     this._textListDiag.setModal(true);
-                    this._textListDiag.setResizable(true);
                 }
                 this._textListDiag.open();
-                //                let imgsrc: string=textList.value;
-                //                //this._vishva.setMatTexture(this._matID,this._textType.innerText,imgsrc);
-                //                this._vishva.setTextURL(this._textID,imgsrc);
-                //                if(textList.value.indexOf(".tga")>=0) {
-                //                    imgsrc=this._vishva.TGA_IMAGE;
-                //                } else {
-                //                    this._textureImg.src=imgsrc;
-                //                    this._matTextImg.src=imgsrc;
-                //                    this._textName=imgsrc;
-                //                    this._textImgSrc.innerText=imgsrc;
-                //                }
+
             }
-//            let textList: HTMLSelectElement=<HTMLSelectElement>document.getElementById("textureList");
-//            var textures: string[]=this._vishva.getTextures();
-//            GuiUtils.PopulateSelect(textList,textures);
+
         }
-        private _textListDiag: VDialog;
+        private _textListDiag: VTreeDialog;
 
         public update() {
             this._matHScale.value=this._vishva.getTextHScale(this._textID);

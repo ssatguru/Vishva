@@ -18,11 +18,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _openIcon: string="ui-icon ui-icon-folder-open";
         private _leafIcon: string="ui-icon ui-icon-document";
 
-        constructor(treeEleID: string,treeData: Array<string|object>,filter?: string,open=false) {
-
-            this._treeEle=document.getElementById(treeEleID);
+        constructor(treeEle: string|HTMLDivElement,treeData: Array<string|object>,filter?: string,open=false) {
+            if(treeEle instanceof HTMLDivElement) {
+                this._treeEle=treeEle;
+            } else {
+                this._treeEle=document.getElementById(treeEle);
+            }
             if(this._treeEle==null) {
-                console.error("Unable to locate element "+treeEleID);
+                console.error("Unable to locate element "+treeEle);
                 return;
             }
 
@@ -40,7 +43,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             //create a new one
             this._create();
-
         }
 
         private _clickListener: (leaf: string,path: string,isLeaf: boolean) => void=null;
@@ -56,25 +58,48 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         public filter(filter: string) {
+            if(filter.length==0) {
+                this._showAll();
+                return;
+            }
             this._hideAll();
             let lis: NodeListOf<Element>=this._vtree.getElementsByClassName("treeFile");
             for(let i=0;i<lis.length;i++) {
                 let t: string=lis.item(i).childNodes[1].textContent;
-                if(filter.length==0||t.indexOf(filter)>=0) {
+                if(t.indexOf(filter)>=0) {
                     lis.item(i).setAttribute("style","display:block");
                     this._openParent(lis.item(i));
                 }
             }
         }
-        private _hideAll(){
+
+        private _hideAll() {
             let lis: NodeListOf<Element>=this._vtree.getElementsByTagName("li");
-             for(let i=0;i<lis.length;i++) {
-                 lis.item(i).setAttribute("style","display:none");
-             }
+            for(let i=0;i<lis.length;i++) {
+                lis.item(i).setAttribute("style","display:none");
+            }
         }
-        private _openParent(e:Element){
-            while (e.parentElement!=this._vtree){
-                if(e.parentElement instanceof HTMLUListElement){
+
+        private _showAll() {
+            let e: NodeListOf<Element>;
+            e=this._vtree.getElementsByTagName("li");
+            for(let i=0;i<e.length;i++) {
+                e.item(i).setAttribute("style","display:block");
+            }
+            e=this._vtree.getElementsByTagName("ul");
+            for(let i=0;i<e.length;i++) {
+                e.item(i).setAttribute("class","show");
+            }
+            e=this._vtree.getElementsByClassName("treeFolderClose");
+            for(let i=e.length-1;i>=0;i--) {
+                e.item(i).setAttribute("class","treeFolderClose");
+            }
+
+        }
+
+        private _openParent(e: Element) {
+            while(e.parentElement!=this._vtree) {
+                if(e.parentElement instanceof HTMLUListElement) {
                     e.parentElement.setAttribute("class","show");
                     e.parentElement.parentElement.setAttribute("class","treeFolderOpen");
                     e.parentElement.parentElement.setAttribute("style","display:block");
@@ -84,64 +109,53 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-
         public expandAll() {
             let nl: NodeListOf<Element>;
-            let a: Array<Element>;
 
             //NOTE 
-            //NodeListAll is being converted to array.
-            //This is because the list of elements returned by getElementsByClassName is "live"
+            //the for loop is descending.
+            //This is because NodeListAll returned by getElementsByClassName is "live"
             //If the class is changed then the list of elements also change immediately
             //so for example the e.length will keep change with each itertaion in the loop
 
             nl=this._vtree.getElementsByClassName("treeFolderClose");
-            a=[].slice.call(nl);
-            for(let e of a) {
-                e.setAttribute("class","treeFolderOpen");
+            for(let i=nl.length-1;i>=0;i--) {
+                nl.item(i).setAttribute("class","treeFolderOpen");
             }
 
-
             nl=this._vtree.getElementsByClassName("hide");
-            a=[].slice.call(nl);
-            for(let e of a) {
-                e.setAttribute("class","show");
+            for(let i=nl.length-1;i>=0;i--) {
+                nl.item(i).setAttribute("class","show");
             }
 
             nl=this._vtree.getElementsByClassName(this._closeIcon);
-            a=[].slice.call(nl);
-            for(let e of a) {
-                e.setAttribute("class",this._openIcon);
+            for(let i=nl.length-1;i>=0;i--) {
+                nl.item(i).setAttribute("class",this._openIcon);
             }
-
         }
-        
+
         public collapseAll() {
             let nl: NodeListOf<Element>;
-            let a: Array<Element>;
 
             //NOTE 
-            //NodeListAll is being converted to array.
-            //This is because the list of elements returned by getElementsByClassName is "live"
+            //the for loop is descending.
+            //This is because NodeListAll returned by getElementsByClassName is "live"
             //If the class is changed then the list of elements also change immediately
             //so for example the e.length will keep change with each itertaion in the loop
 
             nl=this._vtree.getElementsByClassName("treeFolderOpen");
-            a=[].slice.call(nl);
-            for(let e of a) {
-                e.setAttribute("class","treeFolderClose");
+            for(let i=nl.length-1;i>=0;i--) {
+                nl.item(i).setAttribute("class","treeFolderClose");
             }
 
             nl=this._vtree.getElementsByClassName("show");
-            a=[].slice.call(nl);
-            for(let e of a) {
-                e.setAttribute("class","hide");
+            for(let i=nl.length-1;i>=0;i--) {
+                nl.item(i).setAttribute("class","hide");
             }
 
             nl=this._vtree.getElementsByClassName(this._openIcon);
-            a=[].slice.call(nl);
-            for(let e of a) {
-                e.setAttribute("class",this._closeIcon);
+            for(let i=nl.length-1;i>=0;i--) {
+                nl.item(i).setAttribute("class",this._closeIcon);
             }
         }
 

@@ -31,6 +31,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._treeDiag=new VDialog(diagDiv,diagTitle,pos,300);
             this._treeDiag.setResizable(true);
             this._tree=new VTree(treeDiv,treeData,filter,openAll);
+            //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});
 
             let fi: HTMLInputElement=diagDiv.getElementsByTagName("input")[0];
             let btns: NodeListOf<HTMLButtonElement>=diagDiv.getElementsByTagName("button");
@@ -39,6 +40,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let c: HTMLButtonElement=btns.item(2);
             this._refreshBtn=btns.item(3);
             
+           
             fi.onchange=() => {
                 this._tree.filter(fi.value.trim());
             }
@@ -87,18 +89,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._tree.refresh(treeData);
         }
 
-        private _createHTML(): string {
-            let html: string='search <input id="srchInp" type="text">'
-                +'<button id="srchBtn" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
-                +'<hr>'
-                +'<div id="tree" style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
-                +'</div>'
-                +'<hr>'
-                +'<button id="expandAll" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-plus" title="expand all"></span></span></button>'
-                +'<button id="collapseAll" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-minus" title="collapse all"></span></span></button>'
-                +'<button id="treeRefresh" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-refresh" title="refresh"></span></span></button>'
-            return html;
-        }
 
     }
 }

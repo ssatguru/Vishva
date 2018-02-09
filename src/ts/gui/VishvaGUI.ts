@@ -93,7 +93,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private _addInternalAssetUI: InternalAssetsUI;
         private _addAssetTDiag: VTreeDialog;
-        private _items2: ItemsUI;
+        private _items: ItemsUI;
         private _environment: EnvironmentUI;
         private _settingDiag: SettingsUI;
         private _itemProps: ItemPropsUI;
@@ -190,10 +190,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
-                if(this._items2==null) {
-                    this._items2=new ItemsUI(this._vishva);
+                if(this._items==null) {
+                    this._items=new ItemsUI(this._vishva);
                 }
-                this._items2.toggle();
+                this._items.toggle();
                 return false;
             }
 
@@ -264,9 +264,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * is removed from mesh
          */
         public handeEditControlClose() {
-            if(this._items2!=null) {
-                
-            }
             if(this._itemProps!=null) this._itemProps.close();
         }
 

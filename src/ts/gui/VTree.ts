@@ -10,13 +10,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vtree: HTMLUListElement;
         private _open: boolean;
 
-        //        private _closeIcon:string="ui-icon ui-icon-circle-triangle-e";
-        //        private _openIcon:string="ui-icon ui-icon-circle-triangle-s";
-        //        private _leafIcon:string="ui-icon ui-icon-blank";
-        //        
-        private _closeIcon: string="ui-icon ui-icon-folder-collapsed";
-        private _openIcon: string="ui-icon ui-icon-folder-open";
-        private _leafIcon: string="ui-icon ui-icon-document";
+                private _closeIcon:string="ui-icon ui-icon-plus";
+                private _openIcon:string="ui-icon ui-icon-minus";
+                private _leafIcon:string="ui-icon ui-icon-blank";
+                
+//        private _closeIcon: string="ui-icon ui-icon-folder-collapsed";
+//        private _openIcon: string="ui-icon ui-icon-folder-open";
+//        private _leafIcon: string="ui-icon ui-icon-document";
 
         constructor(treeEle: string|HTMLDivElement,treeData: Array<string|object>,filter?: string,open=false) {
             if(treeEle instanceof HTMLDivElement) {
@@ -67,16 +67,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             for(let i=0;i<lis.length;i++) {
                 let t: string=lis.item(i).childNodes[1].textContent;
                 if(t.indexOf(filter)>=0) {
-                    lis.item(i).setAttribute("style","display:block");
+                    (<HTMLElement>lis.item(i)).style.display="block";
                     this._openParent(lis.item(i));
                 }
             }
         }
 
         private _hideAll() {
-            let lis: NodeListOf<Element>=this._vtree.getElementsByTagName("li");
+            let lis: NodeListOf<HTMLElement>=this._vtree.getElementsByTagName("li");
             for(let i=0;i<lis.length;i++) {
-                lis.item(i).setAttribute("style","display:none");
+                lis.item(i).style.display="none";
             }
         }
 
@@ -84,7 +84,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let e: NodeListOf<Element>;
             e=this._vtree.getElementsByTagName("li");
             for(let i=0;i<e.length;i++) {
-                e.item(i).setAttribute("style","display:block");
+                (<HTMLElement>e.item(i)).style.display="block";
             }
             e=this._vtree.getElementsByTagName("ul");
             for(let i=0;i<e.length;i++) {
@@ -92,7 +92,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             e=this._vtree.getElementsByClassName("treeFolderClose");
             for(let i=e.length-1;i>=0;i--) {
-                e.item(i).setAttribute("class","treeFolderClose");
+                e.item(i).setAttribute("class","treeFolderOpen");
             }
 
         }
@@ -102,7 +102,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if(e.parentElement instanceof HTMLUListElement) {
                     e.parentElement.setAttribute("class","show");
                     e.parentElement.parentElement.setAttribute("class","treeFolderOpen");
-                    e.parentElement.parentElement.setAttribute("style","display:block");
+                    e.parentElement.parentElement.style.display="block";
                     e.parentElement.parentElement.firstElementChild.setAttribute("class",this._openIcon);
                 }
                 e=e.parentElement;
@@ -183,7 +183,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _buildUL(pUL: HTMLUListElement,nodes: Array<string|Object>) {
             let li: HTMLLIElement;
             let span: HTMLSpanElement;
-            let txt: Text;
+            //let txt: Text;
+            let txt: HTMLSpanElement;
             let ul: HTMLUListElement;
             let icon: string;
             let c1,c2: string;
@@ -204,10 +205,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     li.setAttribute("class",c1);
 
                     span.setAttribute("class",icon);
-                    span.setAttribute("style","display:inline-block");
+                    span.style.display="inline-block";
                     li.appendChild(span);
 
-                    txt=document.createTextNode(node["d"]);
+                    //txt=document.createTextNode(node["d"]);
+                    txt=document.createElement("span");
+                    txt.className="txt";
+                    txt.innerText=node["d"];
                     li.appendChild(txt);
 
                     ul=document.createElement("ul");
@@ -220,14 +224,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 } else {
                     li.setAttribute("class","treeFile");
                     if((this._re!=null)&&(!this._re.test(node))) {
-                        li.setAttribute("style","display:none;");
+                        li.style.display="none";
                     }
 
                     span.setAttribute("class",this._leafIcon);
-                    span.setAttribute("style","display:inline-block");
+                    span.style.display="inline-block";
                     li.appendChild(span);
 
-                    txt=document.createTextNode(node);
+                    //txt=document.createTextNode(node);
+                    txt=document.createElement("span");
+                    txt.className="txt";
+                    txt.innerText=node;
                     li.appendChild(txt);
 
                     pUL.appendChild(li);
@@ -236,45 +243,66 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-        private _treeClick(e: MouseEvent) {
-            let span: boolean=false;
-            let ele: HTMLElement=<HTMLElement>e.target;
-            if(ele instanceof HTMLSpanElement) {
-                span=true;
-                ele=ele.parentElement;
+        public onClose(e:Event,ui:Object) {
+            if(this.prevEle!=null) {
+                this.prevEle.style.backgroundColor="transparent";
+                this.prevEle.style.color="white";
             }
-            let c: string=ele.getAttribute("class");
+        }
+
+        prevEle: HTMLElement=null;
+        private _treeClick(e: MouseEvent) {
+            let icon: boolean=false;
+            let ele: HTMLElement=<HTMLElement>e.target;
+            let pe: HTMLElement=ele.parentElement;
+            if(ele instanceof HTMLSpanElement) {
+                if(ele.className!="txt") {
+                    icon=true;
+                }
+            }else{
+                return;
+            }
+            let c: string=pe.getAttribute("class");
             //if icon clicked then just expand/collapse
             //else find what was clicked and pass that on
-            if(span) {
+            if(icon) {
                 if(c=="treeFolderOpen") {
-                    ele.setAttribute("class","treeFolderClose");
-                    ele.firstElementChild.setAttribute("class",this._closeIcon);
-                    ele.lastElementChild.setAttribute("class","hide");
+                    pe.setAttribute("class","treeFolderClose");
+                    pe.firstElementChild.setAttribute("class",this._closeIcon);
+                    pe.lastElementChild.setAttribute("class","hide");
                 } else if(c=="treeFolderClose") {
-                    ele.setAttribute("class","treeFolderOpen");
-                    ele.firstElementChild.setAttribute("class",this._openIcon);
-                    ele.lastElementChild.setAttribute("class","show");
+                    pe.setAttribute("class","treeFolderOpen");
+                    pe.firstElementChild.setAttribute("class",this._openIcon);
+                    pe.lastElementChild.setAttribute("class","show");
                 }
             } else {
+                ele.style.backgroundColor="white";
+                ele.style.color="black";
+                if(this.prevEle!=null) {
+                    this.prevEle.style.backgroundColor="transparent";
+                    this.prevEle.style.color="white";
+                }
+                this.prevEle=ele;
+
                 let node: string=null;
                 let path: string="";
                 let isLeaf: boolean=false;
                 if(c=="treeFile") {
                     isLeaf=true;
                 }
-                node=ele.childNodes[1].textContent;
-                while(ele!=null) {
-                    if(ele.parentElement instanceof HTMLLIElement) {
-                        path=ele.parentElement.childNodes[1].textContent+"/"+path
+                //node=ele.childNodes[1].textContent;
+                node=ele.innerText;
+                while(pe!=null) {
+                    if(pe.parentElement instanceof HTMLLIElement) {
+                        path=pe.parentElement.childNodes[1].textContent+"/"+path
                     }
-                    if(ele instanceof HTMLDivElement) {
-                        ele=null;
+                    if(pe instanceof HTMLDivElement) {
+                        pe=null;
                     } else {
-                        ele=ele.parentElement;
+                        pe=pe.parentElement;
+
                     }
                 }
-
                 if(this._clickListener!=null) {
                     this._clickListener(node,path,isLeaf);
                 }

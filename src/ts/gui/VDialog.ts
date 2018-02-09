@@ -38,6 +38,10 @@ namespace org.ssatguru.babylonjs.vishva.gui{
             DialogMgr.dialogs.push(this);
         }
         
+        public onClose(f:(e:Event,ui:object)=>void){
+            this._diag.on("dialogclose",f);
+        }
+        
         public setModal(b:boolean){
             this._diag.dialog("option","modal",b);
         }

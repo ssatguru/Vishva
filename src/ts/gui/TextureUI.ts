@@ -1,7 +1,6 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides a UI to manage texture of a material
-     * TODO : should be closed or refreshed when mesh switched or deselected
      */
     export class TextureUI {
 
@@ -13,7 +12,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _textImgSrc: HTMLElement;
         //private _textListDiv: HTMLElement;
 
-        //TODo need to set the initial values
         private _matHScale: HTMLInputElement;
         private _matVScale: HTMLInputElement;
         private _matRot: HTMLInputElement;

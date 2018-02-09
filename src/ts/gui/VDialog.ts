@@ -20,6 +20,7 @@ namespace org.ssatguru.babylonjs.vishva.gui{
             }
             
             var dos: DialogOptions={
+                title:title,
                 autoOpen: false,
                 resizable: false,
                 position: jpo,

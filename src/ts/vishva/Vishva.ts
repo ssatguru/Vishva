@@ -2347,7 +2347,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public setSky(sky: any) {
             var mat: StandardMaterial=<StandardMaterial>this.skybox.material;
             mat.reflectionTexture.dispose();
-            var skyFile: string="vishva/assets/skyboxes/"+sky+"/"+sky;
+            var skyFile: string="vishva/internal/assets/skyboxes/"+sky+"/"+sky;
             mat.reflectionTexture=new CubeTexture(skyFile,this.scene);
             mat.reflectionTexture.coordinatesMode=Texture.SKYBOX_MODE;
             //            if (this.primMaterial !=null)

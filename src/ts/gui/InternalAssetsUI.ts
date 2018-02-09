@@ -1,67 +1,39 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     import AbstractMesh=BABYLON.AbstractMesh;
     /**
-     * Provides a UI to add item to the world
+     * Provides a UI to add items from Internal Assets to the world
      */
-    export class AddItemUI {
+    export class InternalAssetsUI {
 
         private _vishva: Vishva;
-        private _addItemsDiag: VDialog;
+        private _assetDiagMap: Object={};
+        private _vishvaFiles: Array<string|object>;
 
-        constructor(vishva: Vishva) {
+        constructor(vishva: Vishva,vishvaFiles: Array<string|object>) {
             this._vishva=vishva;
-            this._updateAddItemsTable();
-            this._addItemsDiag=new VDialog("addItemsDiv","Add items",DialogMgr.leftCenter);
-        }
-        
-        public toggle(){
-            if (this._addItemsDiag.isOpen()){
-                this._addItemsDiag.close();
-            }else{
-                this._addItemsDiag.open();
-            }
+            this._vishvaFiles=vishvaFiles;
         }
 
-        private _updateAddItemsTable() {
-            let tbl: HTMLTableElement=<HTMLTableElement>document.getElementById("addItemTable");
-            tbl.onclick=(e) => {return this._onAssetTypeClick(e)};
-            let l: number=tbl.rows.length;
-            for(var i: number=l-1;i>=0;i--) {
-                tbl.deleteRow(i);
-            }
-
-            var assetTypes: string[]=Object.keys(this._vishva.assets);
-            for(let assetType of assetTypes) {
-                if(assetType==="sounds") {
-                    continue;
-                }
-                let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-                let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                cell.innerText=assetType;
-            }
-        }
-        
-        private _assetDiagMap:Object = {};
-        private _onAssetTypeClick(e: MouseEvent) {
-            let cell: HTMLTableCellElement=<HTMLTableCellElement>e.target;
-            if(!(cell instanceof HTMLTableCellElement)) return;
-            let assetType: string=cell.innerHTML;
-            let assetDialog:VDialog = this._assetDiagMap[assetType]
-            if (assetDialog==null){
+        public toggleAssetDiag(assetType: string) {
+            let assetDialog: VDialog=this._assetDiagMap[assetType]
+            if(assetDialog==null) {
                 assetDialog=this._createAssetDiag(assetType);
                 this._assetDiagMap[assetType]=assetDialog;
             }
-            assetDialog.open();
-            return true;
+            if(assetDialog.isOpen()) {
+                assetDialog.close();
+            } else {
+                assetDialog.open();
+            }
         }
-        
+
         private _createAssetDiag(assetType: string): VDialog {
             let div: HTMLDivElement=document.createElement("div");
             div.id=assetType+"Div";
             div.setAttribute("title",assetType);
             let table: HTMLTableElement=document.createElement("table");
             table.id=assetType+"Tbl";
-            let items: Array<string>=<Array<string>>this._vishva.assets[assetType];
+            let items: Array<string|object>=this._getFiles(["internal","assets",assetType],this._vishvaFiles);
             this._updateAssetTable(table,assetType,items);
             div.appendChild(table);
             document.body.appendChild(div);
@@ -70,7 +42,23 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             return assetDiag;
         }
 
-        private _updateAssetTable(tbl: HTMLTableElement,assetType: string,items: Array<string>) {
+        private _getFiles(path: string[],files: Array<string|object>): Array<string|object> {
+            for(let file of files) {
+                if(file instanceof Object) {
+                    if(file["d"]==path[0]) {
+                        if(path.length>1) {
+                            path.splice(0,1);
+                            return this._getFiles(path,file["f"]);
+                        } else
+                            return file["f"];
+                    }
+                }
+            }
+            return files;
+        }
+
+
+        private _updateAssetTable(tbl: HTMLTableElement,assetType: string,items: Array<string|object>) {
             if(tbl.rows.length>0) {
                 return;
             }
@@ -78,10 +66,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
             for(let item of items) {
                 let img: HTMLImageElement=document.createElement("img");
-                img.id=item;
-                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                let name: string=item.split(".")[0];
-                img.src="vishva/assets/"+assetType+"/"+name+"/"+name+".jpg";
+                img.id=item["d"];
+                let name: string=item["d"];
+                img.src="vishva/internal/assets/"+assetType+"/"+name+"/"+name+".jpg";
                 img.setAttribute("style",VishvaGUI.SMALL_ICON_SIZE+"cursor:pointer;");
                 img.className=assetType;
                 img.onclick=f;
@@ -91,7 +78,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var row2: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
             for(let item of items) {
                 let cell: HTMLTableCellElement=<HTMLTableCellElement>row2.insertCell();
-                cell.innerText=item;
+                cell.innerText=item["d"];
             }
         }
 

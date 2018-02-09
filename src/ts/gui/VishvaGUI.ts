@@ -1,6 +1,6 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
 
-       
+
     import JQueryPositionOptions=JQueryUI.JQueryPositionOptions;
 
 
@@ -10,7 +10,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         local: boolean=true;
 
-        
+
 
         public static LARGE_ICON_SIZE: string="width:128px;height:128px;";
 
@@ -61,7 +61,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * 
          * @param evt
          */
-        resizing:boolean=false;
+        resizing: boolean=false;
         private onWindowResize(evt: Event) {
             for(let jq of this.dialogs) {
                 let jpo: JQueryPositionOptions=<JQueryPositionOptions>jq["jpo"];
@@ -91,13 +91,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          * Main Navigation Menu Section
          */
 
-        private _addItemUI:AddItemUI;
-        private _addItemUI2:VTreeDialog;
-        private _items: ItemsUI;
-        private _items2: ItemsUI2;
+        private _addInternalAssetUI: InternalAssetsUI;
+        private _addAssetTDiag: VTreeDialog;
+        private _items2: ItemsUI;
         private _environment: EnvironmentUI;
         private _settingDiag: SettingsUI;
-        private _itemProps:ItemPropsUI;
+        private _itemProps: ItemPropsUI;
 
         private createNavMenu() {
 
@@ -125,58 +124,59 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return true;
             };
 
-            //add menu sliding setup
-//            var slideDown: any=JSON.parse("{\"direction\":\"up\"}");
-//            var navAdd: HTMLElement=document.getElementById("navAdd");
-//            var addMenu: JQuery=$("#AddMenu");
-//            addMenu.menu();
-//            addMenu.hide(null);
-//            navAdd.onclick=(e) => {
-//                if(this.firstTime) {
-//                    var jpo: JQueryPositionOptions={
-//                        my: "left top",
-//                        at: "left bottom",
-//                        of: navAdd
+//              add menu sliding setup
+//            var slideDown: any=JSON.parse("{\            "direction\":\"up\"}");
+//            var navAdd: HTMLElement=document.ge            tElementById("navAdd");
+//            var addMenu            : JQuery=$("#AddMenu");
+//                        addMenu.menu();
+//                        addMenu.hide(null);
+//                        navAdd.onclick=(e) => {
+//                            if(this.firstTime) {
+//                    var jpo:             JQueryPositionOptions={
+//                                    my: "left top",
+//                                    at: "left bottom",
+//                                    of: navAdd
 //                    };
-//                    addMenu.menu().position(jpo);
-//                    this.firstTime=false;
+//                    addMen            u.menu().position(jpo);
+//                                this.firstTime=fal            se;
 //                }
-//                if(this.addMenuOn) {
-//                    addMenu.menu().hide("slide",slideDown,100);
-//                } else {
-//                    addMenu.show("slide",slideDown,100);
+//                            if(this.addMenuOn) {
+//                    addMenu.menu().hide(            "slide",slideDown,100);
+//                            } else {
+//                    addMenu.show(            "slide",slideDown,10            0);
 //                }
-//                this.addMenuOn=!this.addMenuOn;
-//                $(document).one("click",(jqe) => {
-//                    if(this.addMenuOn) {
-//                        addMenu.menu().hide("slide",slideDown,100);
-//                        this.addMenuOn=false;
-//                    }
-//                    return true;
+//                this.add            MenuOn=!this.addMenuOn;
+//                $(document)            .one("click",(jqe) => {
+//                                if(this.addMenuOn) {
+//                        addMenu.menu().hide(            "slide",slideDown,100);
+//                                    this.addMenuOn=false;
+            //                    }
+//                                return true            ;
 //                });
-//                e.cancelBubble=true;
-//                return true;
-//            };
-            
-//            var navAdd: HTMLElement=document.getElementById("navAdd");
-//            navAdd.onclick=(e) => {
-//                if (this._addItemUI == null){
-//                    this._addItemUI=new AddItemUI(this._vishva);
-//                }
-//                this._addItemUI.toggle();
-//            }
-            
+//                            e.cancelBubble=true;
+//                            return true;
+//                        };
+
+
             var navAdd: HTMLElement=document.getElementById("navAdd");
             navAdd.onclick=(e) => {
-                if (this._addItemUI2 == null){
-                    this._addItemUI2=new VTreeDialog(this._vishva,"Assets",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.babylon$|\.glb$",false);
-                    this._addItemUI2.addTreeListener((f,p,l)=>{
-                        if (l) this._vishva.loadAsset2(p,f);
+                if(this._addAssetTDiag==null) {
+                    this._addAssetTDiag=new VTreeDialog(this._vishva,"Assets",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.babylon$|\.glb$",false);
+                    this._addAssetTDiag.addTreeListener((f,p,l) => {
+                        if(l) this._vishva.loadAsset2(p,f);
                     })
                 }
-                
-                this._addItemUI2.toggle();
+
+                this._addAssetTDiag.toggle();
             }
+            var navPrim: HTMLElement=document.getElementById("navPrim");
+            navPrim.onclick=() => {
+                if(this._addInternalAssetUI==null) {
+                    this._addInternalAssetUI=new InternalAssetsUI(this._vishva,this._vishva.vishvaFiles);
+                }
+                this._addInternalAssetUI.toggleAssetDiag("primitives");
+            }
+
 
             var downWorld: HTMLElement=document.getElementById("downWorld");
             downWorld.onclick=(e) => {
@@ -191,23 +191,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
                 if(this._items2==null) {
-                    this._items2=new ItemsUI2(this._vishva);
+                    this._items2=new ItemsUI(this._vishva);
                 }
                 this._items2.toggle();
                 return false;
             }
-//            navItems.onclick=(e) => {
-//                if(this._items==null) {
-//                    this._items=new ItemsUI(this._vishva);
-//                }
-//                this._items.toggle();
-//                return false;
-//            }
 
             var navEnv: HTMLElement=document.getElementById("navEnv");
             navEnv.onclick=(e) => {
                 if(this._environment==null) {
-                    this._environment=new EnvironmentUI(this._vishva);
+                    if(this._addInternalAssetUI==null) {
+                        this._addInternalAssetUI=new InternalAssetsUI(this._vishva,this._vishva.vishvaFiles);
+                    }
+                    this._environment=new EnvironmentUI(this._vishva,this._addInternalAssetUI);
                 }
                 this._environment.toggle();
                 return false;
@@ -222,7 +218,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
                 return false;
             };
-            
+
 
             var navSettings: HTMLElement=document.getElementById("navSettings");
             navSettings.onclick=(e) => {
@@ -246,7 +242,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return true;
             };
         }
-        
+
         /*
          * called by vishva when editcontrol
          * is attached to mesh
@@ -262,18 +258,18 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._itemProps.open();
             return true;
         }
-        
+
         /*
          * called by vishva when editcontrol
          * is removed from mesh
          */
         public handeEditControlClose() {
-            if(this._items!=null) {
-                this._items.clearPrevItem();
+            if(this._items2!=null) {
+                
             }
-            if(this._itemProps!=null)this._itemProps.close();
+            if(this._itemProps!=null) this._itemProps.close();
         }
-        
+
         /*
          * called by vishva when editcontrol
          * is switched from another mesh
@@ -281,13 +277,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public refreshPropsDiag() {
             if(this._itemProps!=null) this._itemProps.refreshPropsDiag();
         }
-        
+
         //called when user has changed transforms using editcontrol
         public handleTransChange() {
             if(this._itemProps!=null) this._itemProps.refreshGeneralPanel();
         }
-       
-        
+
+
         public getSettings() {
             let guiSettings=new GuiSettings();
             guiSettings.enableToolTips=this._settingDiag.enableToolTips;
@@ -302,7 +298,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(guiSettings!==null)
                 this._settingDiag.enableToolTips=guiSettings.enableToolTips;
         }
-        
+
         _downloadLink: HTMLAnchorElement;
         _downloadDialog: JQuery;
         private _createDownloadDiag() {
@@ -345,7 +341,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class GuiSettings {
         enableToolTips: boolean;
     }
-   
+
     export declare class ColorPicker {
         public constructor(e: HTMLElement,f: (p1: any,p2: any,p3: RGB) => void);
 

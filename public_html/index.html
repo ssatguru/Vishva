@@ -209,8 +209,9 @@
 
             <div id="navMenubar" style="padding: 4px; display: inline-block; position: absolute;display:block;">
                 <button id="downWorld"><span class="ui-icon  ui-icon ui-icon-arrowthickstop-1-s" title="download scene"></span></button>
-                <button id="navItems" title="list items">list </button>
-                <button id="navAdd"><span class="ui-icon ui-icon-plusthick" title="add items"></span> </button>
+                <button id="navItems" title="list items">list</button>
+                <button id="navAdd" title="add assets">assets</button>
+                <button id="navPrim" title="add primitives">prim</button>
                 <button id="navEnv"><span class="ui-icon ui-icon-image" title="environment"></span> </button>
                 <button id="navEdit"><span class="ui-icon ui-icon-wrench" title="edit"></span> </button>
                 <button id="navSettings"><span class="ui-icon ui-icon-gear" title="settings"></span> </button>
@@ -222,37 +223,6 @@
 
         <!-- all elements used by jquery ui -->
         <div id="gui-items-2"  >
-
-            <div id="itemsDiv" title="Items"  >
-                <table id="itemsTable" style="width: 100%;text-align:left;cursor:pointer;"  class="noselect">
-                    <tbody style="height:400px;overflow-y:auto;display:block;">
-                    </tbody>
-                </table>
-                <br>
-                <button id="itemsRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
-            </div>
-            
-
-            <div id="addItemsDiv" title="Add Items"  >
-                <table id="addItemTable" style="width: 100%;text-align:left;cursor:pointer;"  class="noselect">
-                    <tbody style="height:400px;overflow-y:auto;display:block;">
-                    </tbody>
-                </table>
-                <br>
-                <button id="itemsRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
-            </div>
-
-            <div id="treeDiag" title="Add Items">
-                search <input id="srchInp" type="text"/>
-                <button id="srchBtn"><span class="ui-icon ui-icon-search" title="filter"></span></button>
-                <hr>
-                <div id="tree" style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">
-                </div>
-                <hr>
-                <button id="expandAll"><span class="ui-icon ui-icon-plus" title="expand all"></span></button>
-                <button id="collapseAll"><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>
-                <button id="treeRefresh" ><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
-            </div>
 
             <div id="envDiv" title="Environment" class="noselect">
                 <table style="width: 100%; text-align: center;">
@@ -805,10 +775,6 @@
                         </td>
                         <td id="textImgSrc">/textures/....</td>
                     </tr>
-<!--                    <tr>
-                        <td><button id="changeTexture" >change source</button></td>
-                        <td colspan="2"><select id="textureList"></select></td>
-                    </tr>-->
                     <tr>
                         <td>Horizontal Scale</td>
                         <td>

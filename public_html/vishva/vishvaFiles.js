@@ -25,6 +25,8 @@ vishvaFiles=[
         "minotour001.mtl",
         "minotour001.obj"
       ]},
+      "newalex.bin",
+      "newalex.gltf",
       {"d":"NPC",
        "f":[
         "NPC.babylon",
@@ -62,130 +64,6 @@ vishvaFiles=[
       {"d":"vincent2",
        "f":[
         "vincent2.glb"
-      ]}
-    ]},
-    {"d":"primitives",
-     "f":[
-      {"d":"box",
-       "f":[
-        "box.jpg"
-      ]},
-      {"d":"cone",
-       "f":[
-        "cone.jpg"
-      ]},
-      {"d":"cylinder",
-       "f":[
-        "cylinder.jpg"
-      ]},
-      {"d":"disc",
-       "f":[
-        "disc.jpg"
-      ]},
-      {"d":"plane",
-       "f":[
-        "plane.jpg"
-      ]},
-      {"d":"sphere",
-       "f":[
-        "sphere.jpg"
-      ]},
-      {"d":"torus",
-       "f":[
-        "torus.jpg"
-      ]}
-    ]},
-    {"d":"skyboxes",
-     "f":[
-      {"d":"city",
-       "f":[
-        "city.jpg",
-        "city_nx.jpg",
-        "city_ny.jpg",
-        "city_nz.jpg",
-        "city_px.jpg",
-        "city_py.jpg",
-        "city_pz.jpg"
-      ]},
-      {"d":"desert",
-       "f":[
-        "desert.jpg",
-        "desert_nx.jpg",
-        "desert_ny.jpg",
-        "desert_nz.jpg",
-        "desert_px.jpg",
-        "desert_py.jpg",
-        "desert_pz.jpg"
-      ]},
-      {"d":"dusk",
-       "f":[
-        "dusk.jpg",
-        "dusk_nx.jpg",
-        "dusk_ny.jpg",
-        "dusk_nz.jpg",
-        "dusk_px.jpg",
-        "dusk_py.jpg",
-        "dusk_pz.jpg"
-      ]},
-      {"d":"hilly",
-       "f":[
-        "hilly.jpg",
-        "hilly_nx.jpg",
-        "hilly_ny.jpg",
-        "hilly_nz.jpg",
-        "hilly_px.jpg",
-        "hilly_py.jpg",
-        "hilly_pz.jpg"
-      ]},
-      {"d":"hot",
-       "f":[
-        "hot.jpg",
-        "hot_nx.jpg",
-        "hot_ny.jpg",
-        "hot_nz.jpg",
-        "hot_px.jpg",
-        "hot_py.jpg",
-        "hot_pz.jpg"
-      ]},
-      {"d":"moon",
-       "f":[
-        "moon.jpg",
-        "moon_nx.jpg",
-        "moon_ny.jpg",
-        "moon_nz.jpg",
-        "moon_px.jpg",
-        "moon_py.jpg",
-        "moon_pz.jpg"
-      ]},
-      {"d":"rain",
-       "f":[
-        "rain.jpg",
-        "rain_nx.jpg",
-        "rain_ny.jpg",
-        "rain_nz.jpg",
-        "rain_px.jpg",
-        "rain_py.jpg",
-        "rain_pz.jpg"
-      ]},
-      {"d":"snow1",
-       "f":[
-        "snow1.jpg",
-        "snow1_nx.jpg",
-        "snow1_ny.jpg",
-        "snow1_nz.jpg",
-        "snow1_px.jpg",
-        "snow1_py.jpg",
-        "snow1_pz.jpg"
-      ]},
-      {"d":"TropicalSunnyDay",
-       "f":[
-        "TropicalSunnyDay.jpg",
-        "TropicalSunnyDay_nx.jpg",
-        "TropicalSunnyDay_ny.jpg",
-        "TropicalSunnyDay_nz.jpg",
-        "TropicalSunnyDay_px.jpg",
-        "TropicalSunnyDay_py.jpg",
-        "TropicalSunnyDay_pz.jpg"
       ]}
     ]},
     {"d":"sounds",
@@ -368,6 +246,133 @@ vishvaFiles=[
   "config.js",
   {"d":"internal",
    "f":[
+    {"d":"assets",
+     "f":[
+      {"d":"primitives",
+       "f":[
+        {"d":"box",
+         "f":[
+          "box.jpg"
+        ]},
+        {"d":"cone",
+         "f":[
+          "cone.jpg"
+        ]},
+        {"d":"cylinder",
+         "f":[
+          "cylinder.jpg"
+        ]},
+        {"d":"disc",
+         "f":[
+          "disc.jpg"
+        ]},
+        {"d":"plane",
+         "f":[
+          "plane.jpg"
+        ]},
+        {"d":"sphere",
+         "f":[
+          "sphere.jpg"
+        ]},
+        {"d":"torus",
+         "f":[
+          "torus.jpg"
+        ]}
+      ]},
+      {"d":"skyboxes",
+       "f":[
+        {"d":"city",
+         "f":[
+          "city.jpg",
+          "city_nx.jpg",
+          "city_ny.jpg",
+          "city_nz.jpg",
+          "city_px.jpg",
+          "city_py.jpg",
+          "city_pz.jpg"
+        ]},
+        {"d":"desert",
+         "f":[
+          "desert.jpg",
+          "desert_nx.jpg",
+          "desert_ny.jpg",
+          "desert_nz.jpg",
+          "desert_px.jpg",
+          "desert_py.jpg",
+          "desert_pz.jpg"
+        ]},
+        {"d":"dusk",
+         "f":[
+          "dusk.jpg",
+          "dusk_nx.jpg",
+          "dusk_ny.jpg",
+          "dusk_nz.jpg",
+          "dusk_px.jpg",
+          "dusk_py.jpg",
+          "dusk_pz.jpg"
+        ]},
+        {"d":"hilly",
+         "f":[
+          "hilly.jpg",
+          "hilly_nx.jpg",
+          "hilly_ny.jpg",
+          "hilly_nz.jpg",
+          "hilly_px.jpg",
+          "hilly_py.jpg",
+          "hilly_pz.jpg"
+        ]},
+        {"d":"hot",
+         "f":[
+          "hot.jpg",
+          "hot_nx.jpg",
+          "hot_ny.jpg",
+          "hot_nz.jpg",
+          "hot_px.jpg",
+          "hot_py.jpg",
+          "hot_pz.jpg"
+        ]},
+        {"d":"moon",
+         "f":[
+          "moon.jpg",
+          "moon_nx.jpg",
+          "moon_ny.jpg",
+          "moon_nz.jpg",
+          "moon_px.jpg",
+          "moon_py.jpg",
+          "moon_pz.jpg"
+        ]},
+        {"d":"rain",
+         "f":[
+          "rain.jpg",
+          "rain_nx.jpg",
+          "rain_ny.jpg",
+          "rain_nz.jpg",
+          "rain_px.jpg",
+          "rain_py.jpg",
+          "rain_pz.jpg"
+        ]},
+        {"d":"snow1",
+         "f":[
+          "snow1.jpg",
+          "snow1_nx.jpg",
+          "snow1_ny.jpg",
+          "snow1_nz.jpg",
+          "snow1_px.jpg",
+          "snow1_py.jpg",
+          "snow1_pz.jpg"
+        ]},
+        {"d":"TropicalSunnyDay",
+         "f":[
+          "TropicalSunnyDay.jpg",
+          "TropicalSunnyDay_nx.jpg",
+          "TropicalSunnyDay_ny.jpg",
+          "TropicalSunnyDay_nz.jpg",
+          "TropicalSunnyDay_px.jpg",
+          "TropicalSunnyDay_py.jpg",
+          "TropicalSunnyDay_pz.jpg"
+        ]}
+      ]}
+    ]},
     {"d":"avatar",
      "f":[
       "starterAvatars.babylon",
@@ -402,6 +407,7 @@ vishvaFiles=[
       "worldHeightMap.jpg"
     ]}
   ]},
+  "u.bat",
   "updateAssets.js",
   "vishvaFiles.js",
   {"d":"worlds",
@@ -417,4 +423,4 @@ vishvaFiles=[
     "myworld4.js",
     "myworld5.js"
   ]}
-];
+]

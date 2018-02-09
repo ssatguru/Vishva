@@ -8,12 +8,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class EnvironmentUI{
         private _vishva:Vishva;
         private _envDiag: VDialog;
+        private _addInternalAssetUI: InternalAssetsUI; 
         /*
          * Create Environment Dialog
          */
-        constructor(vishva:Vishva) {
+        constructor(vishva:Vishva,addInternalAssetUI: InternalAssetsUI) {
             this._vishva=vishva;
-
+            this._addInternalAssetUI=addInternalAssetUI;
+            
             let sunPos: JQuery=$("#sunPos");
             let light: JQuery=$("#light");
             let shade: JQuery=$("#shade");
@@ -44,8 +46,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             var skyButton: HTMLButtonElement=<HTMLButtonElement>document.getElementById("skyButton");
             skyButton.onclick=(e) => {
-                var foo: HTMLElement=document.getElementById("add-skyboxes");
-                foo.click();
+                this._addInternalAssetUI.toggleAssetDiag("skyboxes");
                 return true;
             };
 

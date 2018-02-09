@@ -19,130 +19,6 @@ var org;
                 var gui;
                 (function (gui) {
                     /**
-                     * Provides a UI to add item to the world
-                     */
-                    var AddItemUI = (function () {
-                        function AddItemUI(vishva) {
-                            this._assetDiagMap = {};
-                            this._vishva = vishva;
-                            this._updateAddItemsTable();
-                            this._addItemsDiag = new gui.VDialog("addItemsDiv", "Add items", gui.DialogMgr.leftCenter);
-                        }
-                        AddItemUI.prototype.toggle = function () {
-                            if (this._addItemsDiag.isOpen()) {
-                                this._addItemsDiag.close();
-                            }
-                            else {
-                                this._addItemsDiag.open();
-                            }
-                        };
-                        AddItemUI.prototype._updateAddItemsTable = function () {
-                            var _this = this;
-                            var tbl = document.getElementById("addItemTable");
-                            tbl.onclick = function (e) { return _this._onAssetTypeClick(e); };
-                            var l = tbl.rows.length;
-                            for (var i = l - 1; i >= 0; i--) {
-                                tbl.deleteRow(i);
-                            }
-                            var assetTypes = Object.keys(this._vishva.assets);
-                            for (var _i = 0, assetTypes_1 = assetTypes; _i < assetTypes_1.length; _i++) {
-                                var assetType = assetTypes_1[_i];
-                                if (assetType === "sounds") {
-                                    continue;
-                                }
-                                var row = tbl.insertRow();
-                                var cell = row.insertCell();
-                                cell.innerText = assetType;
-                            }
-                        };
-                        AddItemUI.prototype._onAssetTypeClick = function (e) {
-                            var cell = e.target;
-                            if (!(cell instanceof HTMLTableCellElement))
-                                return;
-                            var assetType = cell.innerHTML;
-                            var assetDialog = this._assetDiagMap[assetType];
-                            if (assetDialog == null) {
-                                assetDialog = this._createAssetDiag(assetType);
-                                this._assetDiagMap[assetType] = assetDialog;
-                            }
-                            assetDialog.open();
-                            return true;
-                        };
-                        AddItemUI.prototype._createAssetDiag = function (assetType) {
-                            var div = document.createElement("div");
-                            div.id = assetType + "Div";
-                            div.setAttribute("title", assetType);
-                            var table = document.createElement("table");
-                            table.id = assetType + "Tbl";
-                            var items = this._vishva.assets[assetType];
-                            this._updateAssetTable(table, assetType, items);
-                            div.appendChild(table);
-                            document.body.appendChild(div);
-                            var assetDiag = new gui.VDialog(div.id, assetType, gui.DialogMgr.centerBottom, "95%", "auto");
-                            return assetDiag;
-                        };
-                        AddItemUI.prototype._updateAssetTable = function (tbl, assetType, items) {
-                            var _this = this;
-                            if (tbl.rows.length > 0) {
-                                return;
-                            }
-                            var f = function (e) { return _this._onAssetImgClick(e); };
-                            var row = tbl.insertRow();
-                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
-                                var item = items_1[_i];
-                                var img = document.createElement("img");
-                                img.id = item;
-                                //img.src = "vishva/assets/" + assetType + "/" + item + "/" + item + ".jpg";
-                                var name_1 = item.split(".")[0];
-                                img.src = "vishva/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
-                                img.setAttribute("style", gui.VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
-                                img.className = assetType;
-                                img.onclick = f;
-                                var cell = row.insertCell();
-                                cell.appendChild(img);
-                            }
-                            var row2 = tbl.insertRow();
-                            for (var _a = 0, items_2 = items; _a < items_2.length; _a++) {
-                                var item = items_2[_a];
-                                var cell_1 = row2.insertCell();
-                                cell_1.innerText = item;
-                            }
-                        };
-                        AddItemUI.prototype._onAssetImgClick = function (e) {
-                            var i = e.target;
-                            if (i.className === "skyboxes") {
-                                this._vishva.setSky(i.id);
-                            }
-                            else if (i.className === "primitives") {
-                                this._vishva.addPrim(i.id);
-                            }
-                            else if (i.className === "water") {
-                                this._vishva.createWater();
-                            }
-                            else {
-                                this._vishva.loadAsset(i.className, i.id);
-                            }
-                            return true;
-                        };
-                        return AddItemUI;
-                    }());
-                    gui.AddItemUI = AddItemUI;
-                })(gui = vishva_1.gui || (vishva_1.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva_2) {
-                var gui;
-                (function (gui) {
-                    /**
                      * Provides UI for the Animation (Skeleton) tab of mesh properties
                      */
                     var AnimationUI = (function () {
@@ -315,7 +191,7 @@ var org;
                         return AnimationUI;
                     }());
                     gui.AnimationUI = AnimationUI;
-                })(gui = vishva_2.gui || (vishva_2.gui = {}));
+                })(gui = vishva_1.gui || (vishva_1.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -420,6 +296,7 @@ var org;
                                 this._diag = $("#" + id);
                             }
                             var dos = {
+                                title: title,
                                 autoOpen: false,
                                 resizable: false,
                                 position: jpo,
@@ -540,7 +417,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_3) {
+            (function (vishva_2) {
                 var gui;
                 (function (gui) {
                     /**
@@ -550,9 +427,10 @@ var org;
                         /*
                          * Create Environment Dialog
                          */
-                        function EnvironmentUI(vishva) {
+                        function EnvironmentUI(vishva, addInternalAssetUI) {
                             var _this = this;
                             this._vishva = vishva;
+                            this._addInternalAssetUI = addInternalAssetUI;
                             var sunPos = $("#sunPos");
                             var light = $("#light");
                             var shade = $("#shade");
@@ -577,8 +455,7 @@ var org;
                             };
                             var skyButton = document.getElementById("skyButton");
                             skyButton.onclick = function (e) {
-                                var foo = document.getElementById("add-skyboxes");
-                                foo.click();
+                                _this._addInternalAssetUI.toggleAssetDiag("skyboxes");
                                 return true;
                             };
                             var trnButton = document.getElementById("trnButton");
@@ -632,7 +509,7 @@ var org;
                         return EnvironmentUI;
                     }());
                     gui.EnvironmentUI = EnvironmentUI;
-                })(gui = vishva_3.gui || (vishva_3.gui = {}));
+                })(gui = vishva_2.gui || (vishva_2.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -644,7 +521,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_4) {
+            (function (vishva_3) {
                 var gui;
                 (function (gui) {
                     /**
@@ -957,7 +834,7 @@ var org;
                         return GeneralUI;
                     }());
                     gui.GeneralUI = GeneralUI;
-                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+                })(gui = vishva_3.gui || (vishva_3.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -997,6 +874,117 @@ var org;
                     }());
                     gui.GuiUtils = GuiUtils;
                 })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_4) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * Provides a UI to add items from Internal Assets to the world
+                     */
+                    var InternalAssetsUI = (function () {
+                        function InternalAssetsUI(vishva, vishvaFiles) {
+                            this._assetDiagMap = {};
+                            this._vishva = vishva;
+                            this._vishvaFiles = vishvaFiles;
+                        }
+                        InternalAssetsUI.prototype.toggleAssetDiag = function (assetType) {
+                            var assetDialog = this._assetDiagMap[assetType];
+                            if (assetDialog == null) {
+                                assetDialog = this._createAssetDiag(assetType);
+                                this._assetDiagMap[assetType] = assetDialog;
+                            }
+                            if (assetDialog.isOpen()) {
+                                assetDialog.close();
+                            }
+                            else {
+                                assetDialog.open();
+                            }
+                        };
+                        InternalAssetsUI.prototype._createAssetDiag = function (assetType) {
+                            var div = document.createElement("div");
+                            div.id = assetType + "Div";
+                            div.setAttribute("title", assetType);
+                            var table = document.createElement("table");
+                            table.id = assetType + "Tbl";
+                            var items = this._getFiles(["internal", "assets", assetType], this._vishvaFiles);
+                            this._updateAssetTable(table, assetType, items);
+                            div.appendChild(table);
+                            document.body.appendChild(div);
+                            var assetDiag = new gui.VDialog(div.id, assetType, gui.DialogMgr.centerBottom, "95%", "auto");
+                            return assetDiag;
+                        };
+                        InternalAssetsUI.prototype._getFiles = function (path, files) {
+                            for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
+                                var file = files_1[_i];
+                                if (file instanceof Object) {
+                                    if (file["d"] == path[0]) {
+                                        if (path.length > 1) {
+                                            path.splice(0, 1);
+                                            return this._getFiles(path, file["f"]);
+                                        }
+                                        else
+                                            return file["f"];
+                                    }
+                                }
+                            }
+                            return files;
+                        };
+                        InternalAssetsUI.prototype._updateAssetTable = function (tbl, assetType, items) {
+                            var _this = this;
+                            if (tbl.rows.length > 0) {
+                                return;
+                            }
+                            var f = function (e) { return _this._onAssetImgClick(e); };
+                            var row = tbl.insertRow();
+                            for (var _i = 0, items_1 = items; _i < items_1.length; _i++) {
+                                var item = items_1[_i];
+                                var img = document.createElement("img");
+                                img.id = item["d"];
+                                var name_1 = item["d"];
+                                img.src = "vishva/internal/assets/" + assetType + "/" + name_1 + "/" + name_1 + ".jpg";
+                                img.setAttribute("style", gui.VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
+                                img.className = assetType;
+                                img.onclick = f;
+                                var cell = row.insertCell();
+                                cell.appendChild(img);
+                            }
+                            var row2 = tbl.insertRow();
+                            for (var _a = 0, items_2 = items; _a < items_2.length; _a++) {
+                                var item = items_2[_a];
+                                var cell_1 = row2.insertCell();
+                                cell_1.innerText = item["d"];
+                            }
+                        };
+                        InternalAssetsUI.prototype._onAssetImgClick = function (e) {
+                            var i = e.target;
+                            if (i.className === "skyboxes") {
+                                this._vishva.setSky(i.id);
+                            }
+                            else if (i.className === "primitives") {
+                                this._vishva.addPrim(i.id);
+                            }
+                            else if (i.className === "water") {
+                                this._vishva.createWater();
+                            }
+                            else {
+                                this._vishva.loadAsset(i.className, i.id);
+                            }
+                            return true;
+                        };
+                        return InternalAssetsUI;
+                    }());
+                    gui.InternalAssetsUI = InternalAssetsUI;
+                })(gui = vishva_4.gui || (vishva_4.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1183,101 +1171,81 @@ var org;
                     var ItemsUI = (function () {
                         function ItemsUI(vishva) {
                             var _this = this;
-                            this._itemTab = "---- ";
-                            this._prevCell = null;
-                            console.log("sceneitems");
                             this._vishva = vishva;
-                            var itemsRefresh = document.getElementById("itemsRefresh");
-                            itemsRefresh.onclick = function () {
+                            this._updateTreeData();
+                            this._itemsDiag = new gui.VTreeDialog(this._vishva, "Items in Scene", gui.DialogMgr.leftCenter, this.treeData);
+                            this._itemsDiag.addTreeListener(function (f, p, l) {
+                                var i = f.indexOf(",");
+                                f = f.substring(0, i);
+                                _this._vishva.selectMesh(f);
+                            });
+                            this._itemsDiag.addRefreshHandler(function () {
                                 _this._itemsDiag.close();
-                                _this._updateItemsTable();
+                                _this._updateTreeData();
+                                _this._itemsDiag.refresh(_this.treeData);
                                 _this._itemsDiag.open();
-                            };
-                            this._itemsDiag = new gui.VDialog("itemsDiv", "Items", gui.DialogMgr.leftCenter);
+                                return false;
+                            });
                         }
                         ItemsUI.prototype.toggle = function () {
                             if (!this._itemsDiag.isOpen()) {
-                                this._updateItemsTable();
                                 this._itemsDiag.open();
                             }
                             else {
                                 this._itemsDiag.close();
                             }
                         };
-                        ItemsUI.prototype._onItemClick = function (e) {
-                            var cell = e.target;
-                            if (!(cell instanceof HTMLTableCellElement))
-                                return;
-                            if (cell == this._prevCell)
-                                return;
-                            this._vishva.selectMesh(cell.id);
-                            cell.setAttribute("style", "text-decoration: underline");
-                            if (this._prevCell != null) {
-                                this._prevCell.setAttribute("style", "text-decoration: none");
-                            }
-                            this._prevCell = cell;
-                        };
-                        /**
-                         * can be called when a user unselects a mesh by pressing esc
-                         */
-                        ItemsUI.prototype.clearPrevItem = function () {
-                            if (this._prevCell != null) {
-                                this._prevCell.setAttribute("style", "text-decoration: none");
-                                this._prevCell = null;
-                            }
-                        };
-                        ItemsUI.prototype._updateItemsTable = function () {
-                            var _this = this;
-                            var tbl = document.getElementById("itemsTable");
-                            tbl.onclick = function (e) { return _this._onItemClick(e); };
-                            var l = tbl.rows.length;
-                            for (var i = l - 1; i >= 0; i--) {
-                                tbl.deleteRow(i);
-                            }
+                        ItemsUI.prototype._updateTreeData = function () {
+                            this.treeData = new Array();
                             var items = this._vishva.getMeshList();
-                            var meshChildMap = this._getMeshChildMap(items);
+                            this._updateMeshChildMap(items);
                             var childs;
                             for (var _i = 0, items_3 = items; _i < items_3.length; _i++) {
                                 var item = items_3[_i];
                                 if (item.parent == null) {
-                                    var row = tbl.insertRow();
-                                    var cell = row.insertCell();
-                                    cell.innerText = item.name;
-                                    cell.id = Number(item.uniqueId).toString();
-                                    childs = meshChildMap[item.uniqueId];
+                                    childs = this.meshChildMap[item.uniqueId];
                                     if (childs != null) {
-                                        this._addChildren(childs, tbl, meshChildMap, this._itemTab);
+                                        var obj = {};
+                                        obj["d"] = Number(item.uniqueId).toString() + ", " + item.name;
+                                        obj["f"] = new Array();
+                                        this.treeData.push(obj);
+                                        this._addChildren(childs, obj["f"]);
+                                    }
+                                    else {
+                                        this.treeData.push(Number(item.uniqueId).toString() + ", " + item.name);
                                     }
                                 }
                             }
                         };
-                        ItemsUI.prototype._addChildren = function (children, tbl, meshChildMap, tab) {
+                        ItemsUI.prototype._addChildren = function (children, treeData) {
                             for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
                                 var child = children_1[_i];
-                                var row = tbl.insertRow();
-                                var cell = row.insertCell();
-                                cell.innerText = tab + child.name;
-                                cell.id = Number(child.uniqueId).toString();
-                                var childs = meshChildMap[child.uniqueId];
+                                var childs = this.meshChildMap[child.uniqueId];
                                 if (childs != null) {
-                                    this._addChildren(childs, tbl, meshChildMap, tab + this._itemTab);
+                                    var obj = {};
+                                    obj["d"] = Number(child.parent.uniqueId).toString() + ", " + child.parent.name;
+                                    obj["f"] = new Array();
+                                    treeData.push(obj);
+                                    this._addChildren(childs, obj["f"]);
+                                }
+                                else {
+                                    treeData.push(Number(child.uniqueId).toString() + ", " + child.name);
                                 }
                             }
                         };
-                        ItemsUI.prototype._getMeshChildMap = function (meshes) {
-                            var meshChildMap = {};
+                        ItemsUI.prototype._updateMeshChildMap = function (meshes) {
+                            this.meshChildMap = {};
                             for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
                                 var mesh = meshes_1[_i];
                                 if (mesh.parent != null) {
-                                    var childs = meshChildMap[mesh.parent.uniqueId];
+                                    var childs = this.meshChildMap[mesh.parent.uniqueId];
                                     if (childs == null) {
                                         childs = new Array();
-                                        meshChildMap[mesh.parent.uniqueId] = childs;
+                                        this.meshChildMap[mesh.parent.uniqueId] = childs;
                                     }
                                     childs.push(mesh);
                                 }
                             }
-                            return meshChildMap;
                         };
                         return ItemsUI;
                     }());
@@ -1295,106 +1263,6 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva_7) {
-                var gui;
-                (function (gui) {
-                    /*
-                     * provides a user interface which list all meshes in the scene
-                     */
-                    var ItemsUI2 = (function () {
-                        function ItemsUI2(vishva) {
-                            var _this = this;
-                            this._vishva = vishva;
-                            this._updateTreeData();
-                            this._itemsDiag = new gui.VTreeDialog(this._vishva, "Items in Scene", gui.DialogMgr.leftCenter, this.treeData);
-                            this._itemsDiag.addTreeListener(function (f, p, l) {
-                                var i = f.indexOf(",");
-                                f = f.substring(0, i);
-                                _this._vishva.selectMesh(f);
-                            });
-                            this._itemsDiag.addRefreshHandler(function () {
-                                _this._itemsDiag.close();
-                                _this._updateTreeData();
-                                _this._itemsDiag.refresh(_this.treeData);
-                                _this._itemsDiag.open();
-                                return false;
-                            });
-                        }
-                        ItemsUI2.prototype.toggle = function () {
-                            if (!this._itemsDiag.isOpen()) {
-                                this._itemsDiag.open();
-                            }
-                            else {
-                                this._itemsDiag.close();
-                            }
-                        };
-                        ItemsUI2.prototype._updateTreeData = function () {
-                            this.treeData = new Array();
-                            var items = this._vishva.getMeshList();
-                            this._updateMeshChildMap(items);
-                            var childs;
-                            for (var _i = 0, items_4 = items; _i < items_4.length; _i++) {
-                                var item = items_4[_i];
-                                if (item.parent == null) {
-                                    childs = this.meshChildMap[item.uniqueId];
-                                    if (childs != null) {
-                                        var obj = {};
-                                        obj["d"] = Number(item.uniqueId).toString() + ", " + item.name;
-                                        obj["f"] = new Array();
-                                        this.treeData.push(obj);
-                                        this._addChildren(childs, obj["f"]);
-                                    }
-                                    else {
-                                        this.treeData.push(Number(item.uniqueId).toString() + ", " + item.name);
-                                    }
-                                }
-                            }
-                        };
-                        ItemsUI2.prototype._addChildren = function (children, treeData) {
-                            for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
-                                var child = children_2[_i];
-                                var childs = this.meshChildMap[child.uniqueId];
-                                if (childs != null) {
-                                    var obj = {};
-                                    obj["d"] = Number(child.parent.uniqueId).toString() + ", " + child.parent.name;
-                                    obj["f"] = new Array();
-                                    treeData.push(obj);
-                                    this._addChildren(childs, obj["f"]);
-                                }
-                                else {
-                                    treeData.push(Number(child.uniqueId).toString() + ", " + child.name);
-                                }
-                            }
-                        };
-                        ItemsUI2.prototype._updateMeshChildMap = function (meshes) {
-                            this.meshChildMap = {};
-                            for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
-                                var mesh = meshes_2[_i];
-                                if (mesh.parent != null) {
-                                    var childs = this.meshChildMap[mesh.parent.uniqueId];
-                                    if (childs == null) {
-                                        childs = new Array();
-                                        this.meshChildMap[mesh.parent.uniqueId] = childs;
-                                    }
-                                    childs.push(mesh);
-                                }
-                            }
-                        };
-                        return ItemsUI2;
-                    }());
-                    gui.ItemsUI2 = ItemsUI2;
-                })(gui = vishva_7.gui || (vishva_7.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva_8) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1441,7 +1309,7 @@ var org;
                             var lightParm = this._vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this._lightAtt.checked = false;
-                                lightParm = new vishva_8.LightParm();
+                                lightParm = new vishva_7.LightParm();
                             }
                             else {
                                 this._lightAtt.checked = true;
@@ -1467,7 +1335,7 @@ var org;
                             //            }
                             if (!this._lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_8.LightParm();
+                            var lightParm = new vishva_7.LightParm();
                             lightParm.type = this._lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this._lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this._lightSpec.getColor());
@@ -1485,7 +1353,7 @@ var org;
                         return LightUI;
                     }());
                     gui.LightUI = LightUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+                })(gui = vishva_7.gui || (vishva_7.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1497,7 +1365,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_9) {
+            (function (vishva_8) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1622,7 +1490,7 @@ var org;
                         return MaterialUI;
                     }());
                     gui.MaterialUI = MaterialUI;
-                })(gui = vishva_9.gui || (vishva_9.gui = {}));
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1634,7 +1502,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_10) {
+            (function (vishva_9) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1708,7 +1576,7 @@ var org;
                         PhysicsUI.prototype._applyPhysics = function () {
                             var phyParms;
                             if (this._phyEna.checked) {
-                                phyParms = new vishva_10.PhysicsParm();
+                                phyParms = new vishva_9.PhysicsParm();
                                 phyParms.type = parseInt(this._phyType.value);
                                 phyParms.mass = parseFloat(this._phyMass.value);
                                 phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1721,7 +1589,7 @@ var org;
                         };
                         PhysicsUI.prototype._testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_10.PhysicsParm();
+                            phyParms = new vishva_9.PhysicsParm();
                             phyParms.type = parseInt(this._phyType.value);
                             phyParms.mass = parseFloat(this._phyMass.value);
                             phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1735,7 +1603,7 @@ var org;
                         return PhysicsUI;
                     }());
                     gui.PhysicsUI = PhysicsUI;
-                })(gui = vishva_10.gui || (vishva_10.gui = {}));
+                })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1747,7 +1615,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_11) {
+            (function (vishva_10) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1823,7 +1691,7 @@ var org;
                         return SettingsUI;
                     }());
                     gui.SettingsUI = SettingsUI;
-                })(gui = vishva_11.gui || (vishva_11.gui = {}));
+                })(gui = vishva_10.gui || (vishva_10.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1835,7 +1703,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_12) {
+            (function (vishva_11) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2213,7 +2081,7 @@ var org;
                         return SnaUI;
                     }());
                     gui.SnaUI = SnaUI;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_11.gui || (vishva_11.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2225,7 +2093,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_13) {
+            (function (vishva_12) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2313,7 +2181,7 @@ var org;
                         return TextureUI;
                     }());
                     gui.TextureUI = TextureUI;
-                })(gui = vishva_13.gui || (vishva_13.gui = {}));
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2325,7 +2193,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_14) {
+            (function (vishva_13) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -2416,55 +2284,55 @@ var org;
                                 _this.menuBarOn = !_this.menuBarOn;
                                 return true;
                             };
-                            //add menu sliding setup
-                            //            var slideDown: any=JSON.parse("{\"direction\":\"up\"}");
-                            //            var navAdd: HTMLElement=document.getElementById("navAdd");
-                            //            var addMenu: JQuery=$("#AddMenu");
-                            //            addMenu.menu();
-                            //            addMenu.hide(null);
-                            //            navAdd.onclick=(e) => {
-                            //                if(this.firstTime) {
-                            //                    var jpo: JQueryPositionOptions={
-                            //                        my: "left top",
-                            //                        at: "left bottom",
-                            //                        of: navAdd
+                            //              add menu sliding setup
+                            //            var slideDown: any=JSON.parse("{\            "direction\":\"up\"}");
+                            //            var navAdd: HTMLElement=document.ge            tElementById("navAdd");
+                            //            var addMenu            : JQuery=$("#AddMenu");
+                            //                        addMenu.menu();
+                            //                        addMenu.hide(null);
+                            //                        navAdd.onclick=(e) => {
+                            //                            if(this.firstTime) {
+                            //                    var jpo:             JQueryPositionOptions={
+                            //                                    my: "left top",
+                            //                                    at: "left bottom",
+                            //                                    of: navAdd
                             //                    };
-                            //                    addMenu.menu().position(jpo);
-                            //                    this.firstTime=false;
+                            //                    addMen            u.menu().position(jpo);
+                            //                                this.firstTime=fal            se;
                             //                }
-                            //                if(this.addMenuOn) {
-                            //                    addMenu.menu().hide("slide",slideDown,100);
-                            //                } else {
-                            //                    addMenu.show("slide",slideDown,100);
+                            //                            if(this.addMenuOn) {
+                            //                    addMenu.menu().hide(            "slide",slideDown,100);
+                            //                            } else {
+                            //                    addMenu.show(            "slide",slideDown,10            0);
                             //                }
-                            //                this.addMenuOn=!this.addMenuOn;
-                            //                $(document).one("click",(jqe) => {
-                            //                    if(this.addMenuOn) {
-                            //                        addMenu.menu().hide("slide",slideDown,100);
-                            //                        this.addMenuOn=false;
+                            //                this.add            MenuOn=!this.addMenuOn;
+                            //                $(document)            .one("click",(jqe) => {
+                            //                                if(this.addMenuOn) {
+                            //                        addMenu.menu().hide(            "slide",slideDown,100);
+                            //                                    this.addMenuOn=false;
                             //                    }
-                            //                    return true;
+                            //                                return true            ;
                             //                });
-                            //                e.cancelBubble=true;
-                            //                return true;
-                            //            };
-                            //            var navAdd: HTMLElement=document.getElementById("navAdd");
-                            //            navAdd.onclick=(e) => {
-                            //                if (this._addItemUI == null){
-                            //                    this._addItemUI=new AddItemUI(this._vishva);
-                            //                }
-                            //                this._addItemUI.toggle();
-                            //            }
+                            //                            e.cancelBubble=true;
+                            //                            return true;
+                            //                        };
                             var navAdd = document.getElementById("navAdd");
                             navAdd.onclick = function (e) {
-                                if (_this._addItemUI2 == null) {
-                                    _this._addItemUI2 = new gui.VTreeDialog(_this._vishva, "Assets", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.babylon$|\.glb$", false);
-                                    _this._addItemUI2.addTreeListener(function (f, p, l) {
+                                if (_this._addAssetTDiag == null) {
+                                    _this._addAssetTDiag = new gui.VTreeDialog(_this._vishva, "Assets", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.babylon$|\.glb$", false);
+                                    _this._addAssetTDiag.addTreeListener(function (f, p, l) {
                                         if (l)
                                             _this._vishva.loadAsset2(p, f);
                                     });
                                 }
-                                _this._addItemUI2.toggle();
+                                _this._addAssetTDiag.toggle();
+                            };
+                            var navPrim = document.getElementById("navPrim");
+                            navPrim.onclick = function () {
+                                if (_this._addInternalAssetUI == null) {
+                                    _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, _this._vishva.vishvaFiles);
+                                }
+                                _this._addInternalAssetUI.toggleAssetDiag("primitives");
                             };
                             var downWorld = document.getElementById("downWorld");
                             downWorld.onclick = function (e) {
@@ -2480,22 +2348,18 @@ var org;
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
                                 if (_this._items2 == null) {
-                                    _this._items2 = new gui.ItemsUI2(_this._vishva);
+                                    _this._items2 = new gui.ItemsUI(_this._vishva);
                                 }
                                 _this._items2.toggle();
                                 return false;
                             };
-                            //            navItems.onclick=(e) => {
-                            //                if(this._items==null) {
-                            //                    this._items=new ItemsUI(this._vishva);
-                            //                }
-                            //                this._items.toggle();
-                            //                return false;
-                            //            }
                             var navEnv = document.getElementById("navEnv");
                             navEnv.onclick = function (e) {
                                 if (_this._environment == null) {
-                                    _this._environment = new gui.EnvironmentUI(_this._vishva);
+                                    if (_this._addInternalAssetUI == null) {
+                                        _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, _this._vishva.vishvaFiles);
+                                    }
+                                    _this._environment = new gui.EnvironmentUI(_this._vishva, _this._addInternalAssetUI);
                                 }
                                 _this._environment.toggle();
                                 return false;
@@ -2550,8 +2414,7 @@ var org;
                          * is removed from mesh
                          */
                         VishvaGUI.prototype.handeEditControlClose = function () {
-                            if (this._items != null) {
-                                this._items.clearPrevItem();
+                            if (this._items2 != null) {
                             }
                             if (this._itemProps != null)
                                 this._itemProps.close();
@@ -2657,7 +2520,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_14.gui || (vishva_14.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2935,7 +2798,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_15) {
+            (function (vishva_14) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2944,24 +2807,41 @@ var org;
                     var VTreeDialog = (function () {
                         function VTreeDialog(vishva, diagTitle, pos, treeData, filter, openAll) {
                             var _this = this;
+                            this._diagHtml = 'search <input type="text">'
+                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
+                                + '<hr>'
+                                + '<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
+                                + '</div>'
+                                + '<hr>'
+                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-plus" title="expand all"></span></span></button>'
+                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-minus" title="collapse all"></span></span></button>'
+                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-refresh" title="refresh"></span></span></button>';
                             this._vishva = vishva;
-                            this._treeDiag = new gui.VDialog("treeDiag", diagTitle, pos, 300);
+                            var diagDiv = document.createElement("div");
+                            diagDiv.innerHTML = this._diagHtml;
+                            document.body.appendChild(diagDiv);
+                            var treeDiv = diagDiv.getElementsByTagName("div")[0];
+                            this._treeDiag = new gui.VDialog(diagDiv, diagTitle, pos, 300);
                             this._treeDiag.setResizable(true);
-                            this._tree = new gui.VTree("tree", treeData, filter, openAll);
-                            var fi = document.getElementById("srchInp");
-                            var fb = document.getElementById("srchBtn");
+                            this._tree = new gui.VTree(treeDiv, treeData, filter, openAll);
+                            var fi = diagDiv.getElementsByTagName("input")[0];
+                            var btns = diagDiv.getElementsByTagName("button");
+                            var fb = btns.item(0);
+                            var e = btns.item(1);
+                            var c = btns.item(2);
+                            this._refreshBtn = btns.item(3);
+                            fi.onchange = function () {
+                                _this._tree.filter(fi.value.trim());
+                            };
                             fb.onclick = function () {
                                 _this._tree.filter(fi.value.trim());
                             };
-                            var e = document.getElementById("expandAll");
-                            var c = document.getElementById("collapseAll");
                             e.onclick = function () {
                                 _this._tree.expandAll();
                             };
                             c.onclick = function () {
                                 _this._tree.collapseAll();
                             };
-                            this._refreshBtn = document.getElementById("treeRefresh");
                         }
                         VTreeDialog.prototype.addTreeListener = function (treeListener) {
                             if (treeListener === void 0) { treeListener = null; }
@@ -2993,10 +2873,22 @@ var org;
                         VTreeDialog.prototype.refresh = function (treeData) {
                             this._tree.refresh(treeData);
                         };
+                        VTreeDialog.prototype._createHTML = function () {
+                            var html = 'search <input id="srchInp" type="text">'
+                                + '<button id="srchBtn" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
+                                + '<hr>'
+                                + '<div id="tree" style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
+                                + '</div>'
+                                + '<hr>'
+                                + '<button id="expandAll" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-plus" title="expand all"></span></span></button>'
+                                + '<button id="collapseAll" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-minus" title="collapse all"></span></span></button>'
+                                + '<button id="treeRefresh" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-refresh" title="refresh"></span></span></button>';
+                            return html;
+                        };
                         return VTreeDialog;
                     }());
                     gui.VTreeDialog = VTreeDialog;
-                })(gui = vishva_15.gui || (vishva_15.gui = {}));
+                })(gui = vishva_14.gui || (vishva_14.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -5244,7 +5136,7 @@ var org;
                     Vishva.prototype.setSky = function (sky) {
                         var mat = this.skybox.material;
                         mat.reflectionTexture.dispose();
-                        var skyFile = "vishva/assets/skyboxes/" + sky + "/" + sky;
+                        var skyFile = "vishva/internal/assets/skyboxes/" + sky + "/" + sky;
                         mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
                         mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
                         //            if (this.primMaterial !=null)
@@ -5357,8 +5249,8 @@ var org;
                     };
                     Vishva.prototype.removeInstancesFromShadow = function () {
                         var meshes = this.scene.meshes;
-                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
-                            var mesh = meshes_3[_i];
+                        for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
+                            var mesh = meshes_2[_i];
                             if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
                                 var shadowMeshes = this.shadowGenerator.getShadowMap().renderList;
                                 var i = shadowMeshes.indexOf(mesh);
@@ -5472,8 +5364,8 @@ var org;
                         var meshes = this.scene.meshes;
                         var mats = new Array();
                         var mms = new Array();
-                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
-                            var mesh = meshes_4[_i];
+                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
+                            var mesh = meshes_3[_i];
                             if (mesh.material != null) {
                                 if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
                                     var mm = mesh.material;
@@ -5511,8 +5403,8 @@ var org;
                     Vishva.prototype.cleanupSkels = function () {
                         var meshes = this.scene.meshes;
                         var skels = new Array();
-                        for (var _i = 0, meshes_5 = meshes; _i < meshes_5.length; _i++) {
-                            var mesh = meshes_5[_i];
+                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
+                            var mesh = meshes_4[_i];
                             if (mesh.skeleton != null) {
                                 skels.push(mesh.skeleton);
                             }
@@ -5554,8 +5446,8 @@ var org;
                             var skeleton = skeletons_1[_i];
                             this.scene.stopAnimation(skeleton);
                         }
-                        for (var _a = 0, meshes_6 = meshes; _a < meshes_6.length; _a++) {
-                            var mesh = meshes_6[_a];
+                        for (var _a = 0, meshes_5 = meshes; _a < meshes_5.length; _a++) {
+                            var mesh = meshes_5[_a];
                             //mesh = (<Mesh>mesh).toLeftHanded();
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
@@ -5640,8 +5532,8 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
-                            var mesh = meshes_7[_i];
+                        for (var _i = 0, meshes_6 = meshes; _i < meshes_6.length; _i++) {
+                            var mesh = meshes_6[_i];
                             console.log("==========");
                             console.log(mesh.name);
                             console.log(mesh.absolutePosition);
@@ -6439,8 +6331,8 @@ var org;
                         var sna;
                         var meshes = scene.meshes;
                         var meshId;
-                        for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
-                            var mesh = meshes_8[_i];
+                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
+                            var mesh = meshes_7[_i];
                             meshId = null;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {

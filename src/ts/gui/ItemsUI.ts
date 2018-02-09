@@ -6,106 +6,90 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class ItemsUI {
 
         private _vishva: Vishva;
-        private _itemsDiag: VDialog;
-        private _itemTab: string="---- ";
+        private _itemsDiag: VTreeDialog;
+
 
         constructor(vishva: Vishva) {
-            console.log("sceneitems");
-            this._vishva=vishva;
-            let itemsRefresh: HTMLElement=document.getElementById("itemsRefresh");
-            itemsRefresh.onclick=() => {
-                this._itemsDiag.close();
-                this._updateItemsTable();
-                this._itemsDiag.open();
-            }
 
-            this._itemsDiag=new VDialog("itemsDiv","Items",DialogMgr.leftCenter);
+            this._vishva=vishva;
+
+
+            this._updateTreeData();
+
+            this._itemsDiag=new VTreeDialog(this._vishva,"Items in Scene",DialogMgr.leftCenter,this.treeData);
+            this._itemsDiag.addTreeListener((f,p,l) => {
+                let i: number=f.indexOf(",");
+                f=f.substring(0,i);
+                this._vishva.selectMesh(f);
+            });
+            this._itemsDiag.addRefreshHandler(() => {
+                this._itemsDiag.close();
+                this._updateTreeData();
+                this._itemsDiag.refresh(this.treeData);
+                this._itemsDiag.open();
+                return false;
+            });
         }
 
         public toggle() {
             if(!this._itemsDiag.isOpen()) {
-                this._updateItemsTable();
                 this._itemsDiag.open();
             } else {
                 this._itemsDiag.close();
             }
         }
 
+        treeData: Array<string|object>;
+        private _updateTreeData() {
+            this.treeData=new Array();
 
-        _prevCell: HTMLTableCellElement=null;
-        private _onItemClick(e: MouseEvent) {
-            let cell: HTMLTableCellElement=<HTMLTableCellElement>e.target;
-            if(!(cell instanceof HTMLTableCellElement)) return;
-            if(cell==this._prevCell) return;
-
-            this._vishva.selectMesh(cell.id);
-            cell.setAttribute("style","text-decoration: underline");
-            if(this._prevCell!=null) {
-                this._prevCell.setAttribute("style","text-decoration: none");
-            }
-            this._prevCell=cell;
-        }
-        /**
-         * can be called when a user unselects a mesh by pressing esc
-         */
-        public clearPrevItem() {
-            if(this._prevCell!=null) {
-                this._prevCell.setAttribute("style","text-decoration: none");
-                this._prevCell=null;
-            }
-        }
-
-        private _updateItemsTable() {
-            let tbl: HTMLTableElement=<HTMLTableElement>document.getElementById("itemsTable");
-            tbl.onclick=(e) => {return this._onItemClick(e)};
-            let l: number=tbl.rows.length;
-            for(var i: number=l-1;i>=0;i--) {
-                tbl.deleteRow(i);
-            }
             let items: Array<AbstractMesh>=this._vishva.getMeshList();
-            let meshChildMap: any=this._getMeshChildMap(items);
+            this._updateMeshChildMap(items);
             let childs: Array<AbstractMesh>;
             for(let item of items) {
                 if(item.parent==null) {
-                    let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-                    let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                    cell.innerText=item.name;
-                    cell.id=Number(item.uniqueId).toString();
-                    childs=meshChildMap[item.uniqueId];
+                    childs=this.meshChildMap[item.uniqueId];
                     if(childs!=null) {
-                        this._addChildren(childs,tbl,meshChildMap,this._itemTab);
+                        let obj: object={};
+                        obj["d"]=Number(item.uniqueId).toString()+", "+item.name;
+                        obj["f"]=new Array<string|object>();
+                        this.treeData.push(obj);
+                        this._addChildren(childs,obj["f"]);
+                    } else {
+                        this.treeData.push(Number(item.uniqueId).toString()+", "+item.name);
                     }
-
                 }
             }
         }
 
-        private _addChildren(children: Array<AbstractMesh>,tbl: HTMLTableElement,meshChildMap: any,tab: string) {
+        private _addChildren(children: Array<AbstractMesh>,treeData: Array<string|object>) {
             for(let child of children) {
-                let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-                let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                cell.innerText=tab+child.name;
-                cell.id=Number(child.uniqueId).toString();
-                let childs: Array<AbstractMesh>=meshChildMap[child.uniqueId];
+                let childs: Array<AbstractMesh>=this.meshChildMap[child.uniqueId];
                 if(childs!=null) {
-                    this._addChildren(childs,tbl,meshChildMap,tab+this._itemTab);
+                    let obj: object={};
+                    obj["d"]=Number(child.parent.uniqueId).toString()+", "+child.parent.name;
+                    obj["f"]=new Array<string|object>();
+                    treeData.push(obj);
+                    this._addChildren(childs,obj["f"]);
+                } else {
+                    treeData.push(Number(child.uniqueId).toString()+", "+child.name);
                 }
             }
         }
 
-        private _getMeshChildMap(meshes: Array<AbstractMesh>) {
-            let meshChildMap: any={};
+        meshChildMap: any;
+        private _updateMeshChildMap(meshes: Array<AbstractMesh>) {
+            this.meshChildMap={};
             for(let mesh of meshes) {
                 if(mesh.parent!=null) {
-                    let childs: Array<AbstractMesh>=meshChildMap[mesh.parent.uniqueId];
+                    let childs: Array<AbstractMesh>=this.meshChildMap[mesh.parent.uniqueId];
                     if(childs==null) {
                         childs=new Array();
-                        meshChildMap[mesh.parent.uniqueId]=childs;
+                        this.meshChildMap[mesh.parent.uniqueId]=childs;
                     }
                     childs.push(mesh);
                 }
             }
-            return meshChildMap;
         }
 
     }

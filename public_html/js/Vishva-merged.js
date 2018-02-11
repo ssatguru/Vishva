@@ -463,7 +463,11 @@ var org;
                             };
                             var trnButton = document.getElementById("trnButton");
                             trnButton.onclick = function (e) {
-                                gui.DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
+                                //DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
+                                var r = _this._vishva.spreadOnGround();
+                                if (r != null) {
+                                    gui.DialogMgr.showAlertDiag(r);
+                                }
                                 return true;
                             };
                             var ambColDiag = new gui.ColorPickerDiag("ambient color", "ambCol", this._vishva.getAmbientColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
@@ -2544,9 +2548,9 @@ var org;
                         //        private _leafIcon: string="ui-icon ui-icon-document";
                         function VTree(treeEle, treeData, filter, open) {
                             if (open === void 0) { open = false; }
-                            this._closeIcon = "ui-icon ui-icon-plus";
-                            this._openIcon = "ui-icon ui-icon-minus";
-                            this._leafIcon = "ui-icon ui-icon-blank";
+                            this._closeIcon = "vt-icon ui-icon ui-icon-plus";
+                            this._openIcon = "vt-icon ui-icon ui-icon-minus";
+                            this._leafIcon = "vt-icon ui-icon ui-icon-blank";
                             this._clickListener = null;
                             this.prevEle = null;
                             if (treeEle instanceof HTMLDivElement) {
@@ -2950,6 +2954,44 @@ var org;
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
+/**
+ * Generates a repeatable set of random number based on a seed
+ * copied from
+ * http://indiegamr.com/generate-repeatable-random-numbers-in-js/
+ *
+ */
+var org;
+/**
+ * Generates a repeatable set of random number based on a seed
+ * copied from
+ * http://indiegamr.com/generate-repeatable-random-numbers-in-js/
+ *
+ */
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var util;
+            (function (util) {
+                var Random = (function () {
+                    function Random(seed) {
+                        this._seed = seed;
+                    }
+                    Random.prototype.generate = function (min, max) {
+                        if (min === void 0) { min = 0; }
+                        if (max === void 0) { max = 1; }
+                        this._seed = (this._seed * 9301 + 49297) % 233280;
+                        var rnd = this._seed / 233280;
+                        return min + rnd * (max - min);
+                    };
+                    return Random;
+                }());
+                util.Random = Random;
+            })(util = babylonjs.util || (babylonjs.util = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
 var org;
 (function (org) {
     var ssatguru;
@@ -2978,6 +3020,7 @@ var org;
                 var ParticleSystem = BABYLON.ParticleSystem;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
                 var Quaternion = BABYLON.Quaternion;
+                var Random = org.ssatguru.babylonjs.util.Random;
                 var Scene = BABYLON.Scene;
                 var SceneLoader = BABYLON.SceneLoader;
                 var SceneSerializer = BABYLON.SceneSerializer;
@@ -3051,6 +3094,9 @@ var org;
                         //RELATIVE_ASSET_LOCATION: string = "../../../../";
                         //we can use below too but then while passing data to scene loader use empty string as root url
                         this.RELATIVE_ASSET_LOCATION = "";
+                        //spawnPosition:Vector3=new Vector3(-360,620,225);
+                        //spawnPosition: Vector3=new Vector3(0,0.2,0);
+                        this.spawnPosition = new Vector3(0, 12, 0);
                         this._animBlend = 0.1;
                         /**
                          * use this to prevent users from switching to another mesh during edit.
@@ -3084,9 +3130,20 @@ var org;
                         this.meshPickedPhyParms = null;
                         this.didPhysTest = false;
                         this.skelViewerArr = [];
+                        this.sx = 0;
+                        this.sz = 0;
+                        this.sXmin = 0;
+                        this.sXmax = 0;
+                        this.sZmin = 0;
+                        this.sZmax = 0;
+                        this.sCount = 0;
+                        this._step = 10;
+                        this._posRange = 0.5;
+                        this._sclRange = 0.5;
+                        this._rotRange = Math.PI / 20;
+                        this._posMin = new Vector3(-10, -1, -10);
+                        this._posMax = new Vector3(10, -0.5, 10);
                         this.debugVisible = false;
-                        //spawnPosition:Vector3=new Vector3(-360,620,225);
-                        this.spawnPosition = new Vector3(0, 0.2, 0);
                         this.editEnabled = false;
                         this.frames = 0;
                         this.f = 0;
@@ -3272,8 +3329,8 @@ var org;
                         this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
                         if (!groundFound) {
                             console.log("no vishva ground found. creating ground");
-                            this.ground = this.createGround(this.scene);
-                            //this.createGround_htmap(this.scene);
+                            //                this.ground=this.createGround(this.scene);
+                            this.createGround_htmap(this.scene);
                             //this.creatDynamicTerrain();
                         }
                         else {
@@ -4038,6 +4095,15 @@ var org;
                             for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
                                 var mesh = _a[_i];
                                 if (mesh !== this.meshPicked) {
+                                    if ((mesh.parent != null)) {
+                                        //If the mesh parent is already in the selection then when it is cloned this mesh will
+                                        //also be cloned. So no need to clone it now.
+                                        //TODO what about ancestors!!
+                                        if ((mesh.parent == this.meshPicked) || this.meshesPicked.indexOf(mesh.parent) >= 0) {
+                                            mesh.renderOutline = false;
+                                            continue;
+                                        }
+                                    }
                                     if (!(mesh != null && mesh instanceof BABYLON.InstancedMesh)) {
                                         clone = this.clonetheMesh(mesh);
                                         clonedMeshesPicked.push(clone);
@@ -4045,6 +4111,7 @@ var org;
                                 }
                             }
                         }
+                        //TODO what if mesh selected is a child or grandchild of another selected mesh!!
                         clone = this.clonetheMesh(this.meshPicked);
                         if (this.meshesPicked != null) {
                             clonedMeshesPicked.push(clone);
@@ -4055,7 +4122,10 @@ var org;
                     };
                     Vishva.prototype.clonetheMesh = function (mesh) {
                         var name = new Number(Date.now()).toString();
-                        var clone = mesh.clone(name, null, true);
+                        //TODO should clone the children too.
+                        //TODO to do that make sure the children are also not selected
+                        //let clone: AbstractMesh=mesh.clone(name,null,true);
+                        var clone = mesh.clone(name, null, false);
                         clone.scaling.copyFrom(mesh.scaling);
                         delete clone["sensors"];
                         delete clone["actuators"];
@@ -4355,8 +4425,8 @@ var org;
                             uid = null;
                             img = this.NO_TEXTURE;
                         }
-                        //            if (img.indexOf(".tga")>=0){
-                        //                img=this.TGA_IMAGE;
+                        //            if (img.indexOf("            .tga")>=0){
+                        //                img=this            .TGA_IMAGE;
                         //            }
                         return [uid, img];
                     };
@@ -5169,15 +5239,6 @@ var org;
                     Vishva.prototype.setAmbientColor = function (hex) {
                         this.scene.ambientColor = Color3.FromHexString(hex);
                     };
-                    Vishva.prototype.setGroundColor_old = function (gcolor) {
-                        var ground_color = gcolor;
-                        var r = ground_color[0] / 255;
-                        var g = ground_color[1] / 255;
-                        var b = ground_color[2] / 255;
-                        var color = new Color3(r, g, b);
-                        var gmat = this.ground.material;
-                        gmat.diffuseColor = color;
-                    };
                     Vishva.prototype.setGroundColor = function (hex) {
                         var sm = this.ground.material;
                         sm.diffuseColor = Color3.FromHexString(hex);
@@ -5186,17 +5247,103 @@ var org;
                         var sm = this.ground.material;
                         return sm.diffuseColor.toHexString();
                     };
-                    Vishva.prototype.getGroundColor_old = function () {
-                        var ground_color = new Array(3);
-                        var gmat = this.ground.material;
-                        if (gmat.diffuseColor != null) {
-                            ground_color[0] = (gmat.diffuseColor.r * 255);
-                            ground_color[1] = (gmat.diffuseColor.g * 255);
-                            ground_color[2] = (gmat.diffuseColor.b * 255);
-                            return ground_color;
+                    Vishva.prototype.spreadOnGround = function () {
+                        var _this = this;
+                        if (!this.isMeshSelected) {
+                            return "no mesh selected";
                         }
-                        else {
-                            return null;
+                        var seed = Math.random() * 100;
+                        this.setSpreadParms(this.meshPicked, this.ground, seed);
+                        var SPS = new BABYLON.SolidParticleSystem('SPS', this.scene, { updatable: false, isPickable: false });
+                        SPS.addShape(this.meshPicked, this.sCount, { positionFunction: function (p, i, s) { _this.posOnGround(p); } });
+                        var mesh = SPS.buildMesh();
+                        console.log(SPS.nbParticles);
+                        console.log(SPS.particles.length);
+                        mesh.material = this.meshPicked.material;
+                        mesh.doNotSerialize = true;
+                        return null;
+                    };
+                    Vishva.prototype.spreadOnGround_inst = function () {
+                        if (!this.isMeshSelected) {
+                            return "no mesh selected";
+                        }
+                        this.setSpreadParms(this.meshPicked, this.ground, 6);
+                        for (var i = 0; i < this.sCount; i++) {
+                            var inst = this.meshPicked.createInstance(Number(i).toString());
+                            ;
+                            this.posOnGround_inst(inst);
+                        }
+                        return null;
+                    };
+                    ;
+                    Vishva.prototype.setSpreadParms = function (mesh, g, seed) {
+                        this._rand = new Random(seed);
+                        if (this._step == 0)
+                            this._step = mesh.getBoundingInfo().boundingSphere.radius;
+                        this.sXmin = g._minX + this._step;
+                        this.sXmax = g._maxX - this._step;
+                        this.sZmin = g._minZ + this._step;
+                        this.sZmax = g._maxZ - this._step;
+                        this.sCount = (g._width / this._step - 1) * (g._height / this._step - 1);
+                        console.log(this.sCount);
+                        this.sx = this.sXmin;
+                        this.sz = this.sZmax;
+                        var n;
+                        if (this._posMax == null) {
+                            n = this._step * (1 + this._posRange);
+                            this._posMax = new Vector3(n, n, n);
+                        }
+                        if (this._posMin == null) {
+                            n = this._step * (1 - this._posRange);
+                            this._posMin = new Vector3(n, n, n);
+                        }
+                        if (this._sclMax == null) {
+                            n = (1 + this._sclRange);
+                            this._sclMax = new Vector3(n, n, n);
+                        }
+                        if (this._sclMin == null) {
+                            n = (1 - this._sclRange);
+                            this._sclMin = new Vector3(n, n, n);
+                        }
+                        if (this._rotMax == null) {
+                            n = (this._rotRange);
+                            this._rotMax = new Vector3(n, n, n);
+                        }
+                        if (this._rotMin == null) {
+                            n = (-this._rotRange);
+                            this._rotMin = new Vector3(n, n, n);
+                        }
+                    };
+                    Vishva.prototype.posOnGround = function (part) {
+                        //position
+                        part.position.x = this.sx + this._rand.generate(this._posMin.x, this._posMax.x);
+                        part.position.z = this.sz + this._rand.generate(this._posMin.z, this._posMax.z);
+                        part.position.y = this.ground.getHeightAtCoordinates(part.position.x, part.position.z);
+                        part.position.y = part.position.y + this._rand.generate(this._posMin.y, this._posMax.y);
+                        //scale
+                        part.scaling.x = this._rand.generate(this._sclMin.x, this._sclMax.x);
+                        part.scaling.y = this._rand.generate(this._sclMin.y, this._sclMax.y);
+                        part.scaling.z = this._rand.generate(this._sclMin.z, this._sclMax.z);
+                        //rotation
+                        part.rotation.x = this._rand.generate(this._rotMin.x, this._rotMax.x);
+                        part.rotation.y = this._rand.generate(this._rotMin.y, this._rotMax.y);
+                        part.rotation.z = this._rand.generate(this._rotMin.z, this._rotMax.z);
+                        this.sx = this.sx + this._step;
+                        if (this.sx > this.sXmax) {
+                            this.sx = this.sXmin;
+                            this.sz = this.sz - this._step;
+                        }
+                    };
+                    Vishva.prototype.posOnGround_inst = function (part) {
+                        var sign = (Math.random() < 0.5 ? -1 : 1);
+                        part.position.x = this.sx + Math.random() * sign * this._step * this._posRange;
+                        sign = (Math.random() < 0.5 ? -1 : 1);
+                        part.position.z = this.sz + Math.random() * sign * this._step * this._posRange;
+                        part.position.y = this.ground.getHeightAtCoordinates(part.position.x, part.position.z);
+                        this.sx = this.sx + this._step;
+                        if (this.sx > this.sXmax) {
+                            this.sx = this.sXmin;
+                            this.sz = this.sz - this._step;
                         }
                     };
                     Vishva.prototype.toggleDebug = function () {
@@ -5706,14 +5853,14 @@ var org;
                         var _this = this;
                         var groundMaterial = this.createGroundMaterial(scene);
                         MeshBuilder.CreateGroundFromHeightMap("ground", this.groundHeightMap, {
-                            //                width: 256,
-                            //                height: 256,
-                            width: 10240,
-                            height: 10240,
-                            //                minHeight: 0,
-                            //                maxHeight: 20,
+                            width: 256,
+                            height: 256,
+                            //                width: 10240,
+                            //                height: 10240,
                             minHeight: 0,
-                            maxHeight: 1000,
+                            maxHeight: 20,
+                            //                minHeight: 0,
+                            //                maxHeight: 1000,
                             subdivisions: 32,
                             onReady: function (grnd) {
                                 console.log("ground created");
@@ -5737,10 +5884,10 @@ var org;
                         groundMaterial.bumpTexture = new Texture(this.groundBumpTexture, scene);
                         //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
                         //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
-                        groundMaterial.diffuseTexture.uScale = 100.0;
-                        groundMaterial.diffuseTexture.vScale = 100.0;
-                        groundMaterial.bumpTexture.uScale = 100.0;
-                        groundMaterial.bumpTexture.vScale = 100.0;
+                        groundMaterial.diffuseTexture.uScale = 50.0;
+                        groundMaterial.diffuseTexture.vScale = 50.0;
+                        groundMaterial.bumpTexture.uScale = 50.0;
+                        groundMaterial.bumpTexture.vScale = 50.0;
                         groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
                         groundMaterial.specularColor = new Color3(0, 0, 0);
                         return groundMaterial;

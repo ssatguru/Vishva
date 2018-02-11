@@ -14,7 +14,7 @@
   "scripts": {
     "compile": "tsc -p src/ts",
     "min": "uglifyjs public_html/js/Vishva-merged.js -o public_html/js/Vishva-merged.min.js -mc --warn",
-    "cp":  "uglifyjs public_html/lib/colorpicker.js -o public_html/lib/colorpicker.uglified.js -mc",  
+    "cp": "uglifyjs public_html/lib/colorpicker.js -o public_html/lib/colorpicker.uglified.js -mc",
     "build": "npm run compile && npm run min"
   }
 }

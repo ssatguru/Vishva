@@ -10,13 +10,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vtree: HTMLUListElement;
         private _open: boolean;
 
-                private _closeIcon:string="ui-icon ui-icon-plus";
-                private _openIcon:string="ui-icon ui-icon-minus";
-                private _leafIcon:string="ui-icon ui-icon-blank";
-                
-//        private _closeIcon: string="ui-icon ui-icon-folder-collapsed";
-//        private _openIcon: string="ui-icon ui-icon-folder-open";
-//        private _leafIcon: string="ui-icon ui-icon-document";
+        private _closeIcon: string="vt-icon ui-icon ui-icon-plus";
+        private _openIcon: string="vt-icon ui-icon ui-icon-minus";
+        private _leafIcon: string="vt-icon ui-icon ui-icon-blank";
+
+        //        private _closeIcon: string="ui-icon ui-icon-folder-collapsed";
+        //        private _openIcon: string="ui-icon ui-icon-folder-open";
+        //        private _leafIcon: string="ui-icon ui-icon-document";
 
         constructor(treeEle: string|HTMLDivElement,treeData: Array<string|object>,filter?: string,open=false) {
             if(treeEle instanceof HTMLDivElement) {
@@ -243,7 +243,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
         }
 
-        public onClose(e:Event,ui:Object) {
+        public onClose(e: Event,ui: Object) {
             if(this.prevEle!=null) {
                 this.prevEle.style.backgroundColor="transparent";
                 this.prevEle.style.color="white";
@@ -259,7 +259,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if(ele.className!="txt") {
                     icon=true;
                 }
-            }else{
+            } else {
                 return;
             }
             let c: string=pe.getAttribute("class");

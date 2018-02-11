@@ -34,12 +34,15 @@ namespace org.ssatguru.babylonjs.vishva {
     import PhysicsImpostor=BABYLON.PhysicsImpostor;
     import PickingInfo=BABYLON.PickingInfo;
     import Quaternion=BABYLON.Quaternion;
+    import Random=org.ssatguru.babylonjs.util.Random;
     import Scene=BABYLON.Scene;
     import SceneLoader=BABYLON.SceneLoader;
     import SceneSerializer=BABYLON.SceneSerializer;
     import ShadowGenerator=BABYLON.ShadowGenerator;
     import Skeleton=BABYLON.Skeleton;
     import SkeletonViewer=BABYLON.Debug.SkeletonViewer;
+    import SolidParticleSystem=BABYLON.SolidParticleSystem;
+    import SolidParticle=BABYLON.SolidParticle;
     import StandardMaterial=BABYLON.StandardMaterial;
     import Tags=BABYLON.Tags;
     import TextFileAssetTask=BABYLON.TextFileAssetTask;
@@ -87,16 +90,16 @@ namespace org.ssatguru.babylonjs.vishva {
         //skyboxes: Array<string>;
 
         assets: Object;
-        vishvaFiles:Array<any>;
+        vishvaFiles: Array<any>;
 
         skyboxTextures: string="vishva/internal/textures/skybox-default/default";
 
         avatarFolder: string="vishva/internal/avatar/";
 
         avatarFile: string="starterAvatars.babylon";
-        
-        NO_TEXTURE:string="vishva/internal/textures/no-texture.jpg"
-        TGA_IMAGE:string="vishva/internal/textures/tga-image.jpg"
+
+        NO_TEXTURE: string="vishva/internal/textures/no-texture.jpg"
+        TGA_IMAGE: string="vishva/internal/textures/tga-image.jpg"
 
         groundTexture: string="vishva/internal/textures/ground.jpg";
         groundBumpTexture: string="vishva/internal/textures/ground-normal.jpg";
@@ -149,6 +152,9 @@ namespace org.ssatguru.babylonjs.vishva {
         ground: Mesh;
 
         avatar: Mesh;
+        //spawnPosition:Vector3=new Vector3(-360,620,225);
+        //spawnPosition: Vector3=new Vector3(0,0.2,0);
+        spawnPosition: Vector3=new Vector3(0,12,0);
 
         avatarSkeleton: Skeleton;
         _animBlend=0.1;
@@ -184,7 +190,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,assets: Object,vishvaFiles:Array<any>,canvasId: string) {
+        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,assets: Object,vishvaFiles: Array<any>,canvasId: string) {
             this.editEnabled=false;
             this.frames=0;
             this.f=0;
@@ -350,8 +356,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.shadowGenerator=new ShadowGenerator(1024,sl);
                 this.setShadowProperty(sl,this.shadowGenerator);
 
-//                this.avShadowGenerator=new ShadowGenerator(512,sl);
-//                this.setShadowProperty(sl,this.avShadowGenerator);
+                //                this.avShadowGenerator=new ShadowGenerator(512,sl);
+                //                this.setShadowProperty(sl,this.avShadowGenerator);
 
 
             } else {
@@ -397,10 +403,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             if(!groundFound) {
                 console.log("no vishva ground found. creating ground");
-                this.ground=this.createGround(this.scene);
-                //this.createGround_htmap(this.scene);
+                //                this.ground=this.createGround(this.scene);
+                this.createGround_htmap(this.scene);
                 //this.creatDynamicTerrain();
-                
+
             } else {
                 //in case this wasn't set in serialized scene
                 this.ground.receiveShadows=true;
@@ -765,7 +771,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //            }
             this.editControl.detach();
             this.editControl=null;
-            
+
             //if(this.autoEditMenu) this.vishvaGUI.closePropDiag();
             //close properties dialog if open
             this.vishvaGUI.handeEditControlClose();
@@ -1224,6 +1230,15 @@ namespace org.ssatguru.babylonjs.vishva {
             if(this.meshesPicked!=null) {
                 for(let mesh of this.meshesPicked) {
                     if(mesh!==this.meshPicked) {
+                        if((mesh.parent!=null)) {
+                            //If the mesh parent is already in the selection then when it is cloned this mesh will
+                            //also be cloned. So no need to clone it now.
+                            //TODO what about ancestors!!
+                            if((mesh.parent==this.meshPicked)||this.meshesPicked.indexOf(<AbstractMesh>mesh.parent)>=0) {
+                                mesh.renderOutline=false;
+                                continue;
+                            }
+                        }
                         if(!(mesh!=null&&mesh instanceof BABYLON.InstancedMesh)) {
                             clone=this.clonetheMesh(mesh);
                             clonedMeshesPicked.push(clone);
@@ -1231,6 +1246,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     }
                 }
             }
+            //TODO what if mesh selected is a child or grandchild of another selected mesh!!
             clone=this.clonetheMesh(this.meshPicked);
             if(this.meshesPicked!=null) {
                 clonedMeshesPicked.push(clone);
@@ -1240,9 +1256,15 @@ namespace org.ssatguru.babylonjs.vishva {
             return null;
         }
 
+       
+
         public clonetheMesh(mesh: AbstractMesh): AbstractMesh {
+            
             var name: string=(<number>new Number(Date.now())).toString();
-            var clone: AbstractMesh=mesh.clone(name,null,true);
+            //TODO should clone the children too.
+            //TODO to do that make sure the children are also not selected
+            //let clone: AbstractMesh=mesh.clone(name,null,true);
+            let clone: AbstractMesh=mesh.clone(name,null,false);
             clone.scaling.copyFrom(mesh.scaling);
             delete clone["sensors"];
             delete clone["actuators"];
@@ -1462,9 +1484,9 @@ namespace org.ssatguru.babylonjs.vishva {
             return this.meshPicked.visibility;
         }
 
-        public setMeshColor(matId:string, colType: string,hex: string): string {
+        public setMeshColor(matId: string,colType: string,hex: string): string {
             let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
-            if (sm==null) return "material not found";
+            if(sm==null) return "material not found";
             let col: Color3=Color3.FromHexString(hex);
             if(colType==="diffuse")
                 sm.diffuseColor=col;
@@ -1479,42 +1501,42 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             return null;
         }
-        
-        public getMatNames():Array<string>{
-            let mn:Array<string>=new Array();
+
+        public getMatNames(): Array<string> {
+            let mn: Array<string>=new Array();
             if(this.isMeshSelected) {
                 if(this.meshPicked.material instanceof BABYLON.MultiMaterial) {
-                    let mm:MultiMaterial=this.meshPicked.material;
-                    for(let m of mm.subMaterials){
+                    let mm: MultiMaterial=this.meshPicked.material;
+                    for(let m of mm.subMaterials) {
                         mn.push(m.id);
                     }
                     return mn;
                 }
-                else{
+                else {
                     mn.push(this.meshPicked.material.id);
                     return mn;
                 }
-            }else return null;
-            
+            } else return null;
+
         }
-        public getMaterialName(id:string): string {
-            let mat:Material=this.scene.getMaterialByID(id);
-            if (mat==null) return null;
+        public getMaterialName(id: string): string {
+            let mat: Material=this.scene.getMaterialByID(id);
+            if(mat==null) return null;
             else return mat.name;
         }
-        
-        public createText():string{
+
+        public createText(): string {
             let text: Texture=new Texture("",this.scene);
             return text.uid;
-            
+
         }
 
-        public getMatTexture(matId:string,type: string): Array<string> {
-            
+        public getMatTexture(matId: string,type: string): Array<string> {
+
             let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
-            if (sm==null) return null;
-            let uid:string=null;
-            let img:string=null;
+            if(sm==null) return null;
+            let uid: string=null;
+            let img: string=null;
             if(type=="diffuse"&&sm.diffuseTexture!=null) {
                 uid=sm.diffuseTexture.uid;
                 img=sm.diffuseTexture.name;
@@ -1538,21 +1560,21 @@ namespace org.ssatguru.babylonjs.vishva {
                 uid=sm.bumpTexture.uid;
                 img=sm.bumpTexture.name;
                 console.log(sm.bumpTexture.textureType);
-            } else{
+            } else {
                 uid=null;
                 img=this.NO_TEXTURE;
             }
-//            if (img.indexOf(".tga")>=0){
-//                img=this.TGA_IMAGE;
-//            }
-            
+            //            if (img.indexOf("            .tga")>=0){
+            //                img=this            .TGA_IMAGE;
+            //            }
+
             return [uid,img];
         }
-        public setMatTexture(matId:string,type: string,textID: string) {
+        public setMatTexture(matId: string,type: string,textID: string) {
             let bt: BaseTexture=this.getTextureByID(textID);
             if(bt!=null) {
                 let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
-                if (sm==null) return;
+                if(sm==null) return;
                 if(type=="diffuse") {
                     sm.diffuseTexture=bt;
                 } else if(type=="ambient") {
@@ -1570,52 +1592,52 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
-        
-        public setTextURL(textID:string,textName:string){
+
+        public setTextURL(textID: string,textName: string) {
             let bt: Texture=<Texture>this.getTextureByID(textID);
             bt.name=textName;
             bt.updateURL(textName);
         }
-        
-        public setTextHScale(textID:string,scale:number){
+
+        public setTextHScale(textID: string,scale: number) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             text.uScale=scale;
         }
-        public getTextHScale(textID:string):string{
+        public getTextHScale(textID: string): string {
             let text: Texture=<Texture>this.getTextureByID(textID);
             return Number(text.uScale).toString();
         }
-        public setTextVScale(textID:string,scale:number){
+        public setTextVScale(textID: string,scale: number) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             text.vScale=scale;
         }
-        public getTextVScale(textID:string){
+        public getTextVScale(textID: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             return Number(text.vScale).toString();
         }
-        
-        
-        public setTextHO(textID:string,o:number){
+
+
+        public setTextHO(textID: string,o: number) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             text.uOffset=o;
         }
-        public getTextHO(textID:string){
+        public getTextHO(textID: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             return Number(text.uOffset).toString();
         }
-        public setTextVO(textID:string,o:number){
+        public setTextVO(textID: string,o: number) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             text.vOffset=o;
         }
-        public getTextVO(textID:string){
+        public getTextVO(textID: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             return Number(text.vOffset).toString();
         }
-        public setTextRot(textID:string,rot:number){
+        public setTextRot(textID: string,rot: number) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             text.wAng=rot*Math.PI/180;
         }
-        public getTextRot(textID:string){
+        public getTextRot(textID: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             return Number(text.wAng*180/Math.PI).toString();
         }
@@ -1641,11 +1663,11 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             return null;
         }
-        public getMeshColor(matId:string,colType: string): string {
-            
+        public getMeshColor(matId: string,colType: string): string {
+
             let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
-            if (sm==null) return null;
-            
+            if(sm==null) return null;
+
             if(!(sm instanceof BABYLON.StandardMaterial)) {
                 return "#000000";;
             }
@@ -1668,27 +1690,27 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
         }
-        
-        public getMeshList():Array<AbstractMesh>{
-            let meshList:Array<AbstractMesh>= new Array();
-            for(let mesh of this.scene.meshes){
+
+        public getMeshList(): Array<AbstractMesh> {
+            let meshList: Array<AbstractMesh>=new Array();
+            for(let mesh of this.scene.meshes) {
                 if(mesh!=this.ground&&mesh!=this.avatar&&mesh!=this.skybox&&mesh.name!="EditControl")
-                meshList.push(mesh);
+                    meshList.push(mesh);
             }
             return meshList;
         }
-        
-        public selectMesh(meshId:string){
-            let mesh:AbstractMesh = this.scene.getMeshByUniqueID(Number(meshId));
+
+        public selectMesh(meshId: string) {
+            let mesh: AbstractMesh=this.scene.getMeshByUniqueID(Number(meshId));
             if(!this.isMeshSelected) {
-                    this.selectForEdit(mesh);
-            }else{
+                this.selectForEdit(mesh);
+            } else {
                 this.switchEditControl(mesh);
             }
-            
+
         }
-        
-        
+
+
         //
         // LIGHTS
 
@@ -2368,15 +2390,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.scene.ambientColor=Color3.FromHexString(hex);
         }
 
-        public setGroundColor_old(gcolor: any) {
-            var ground_color: number[]=<number[]>gcolor;
-            var r: number=ground_color[0]/255;
-            var g: number=ground_color[1]/255;
-            var b: number=ground_color[2]/255;
-            var color: Color3=new Color3(r,g,b);
-            var gmat: StandardMaterial=<StandardMaterial>this.ground.material;
-            gmat.diffuseColor=color;
-        }
 
         public setGroundColor(hex: string) {
             let sm: StandardMaterial=<StandardMaterial>this.ground.material;
@@ -2387,18 +2400,137 @@ namespace org.ssatguru.babylonjs.vishva {
             return sm.diffuseColor.toHexString();
         }
 
-        public getGroundColor_old(): number[] {
-            var ground_color: number[]=new Array(3);
-            var gmat: StandardMaterial=<StandardMaterial>this.ground.material;
-            if(gmat.diffuseColor!=null) {
-                ground_color[0]=(gmat.diffuseColor.r*255);
-                ground_color[1]=(gmat.diffuseColor.g*255);
-                ground_color[2]=(gmat.diffuseColor.b*255);
-                return ground_color;
-            } else {
-                return null;
+        public spreadOnGround(): string {
+            if(!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            let seed: number=Math.random()*100;
+            this.setSpreadParms(<Mesh>this.meshPicked,<GroundMesh>this.ground,seed);
+            let SPS=new BABYLON.SolidParticleSystem('SPS',this.scene,{updatable: false,isPickable: false});
+            SPS.addShape(<Mesh>this.meshPicked,this.sCount,{positionFunction: (p,i,s) => {this.posOnGround(p);}});
+            let mesh=SPS.buildMesh();
+            console.log(SPS.nbParticles);
+            console.log(SPS.particles.length);
+            mesh.material=this.meshPicked.material;
+            mesh.doNotSerialize=true;
+            return null;
+        }
+        public spreadOnGround_inst(): string {
+            if(!this.isMeshSelected) {
+                return "no mesh selected";
+            }
+            this.setSpreadParms(<Mesh>this.meshPicked,<GroundMesh>this.ground,6);
+            for(let i=0;i<this.sCount;i++) {
+                let inst: InstancedMesh=(<Mesh>this.meshPicked).createInstance(Number(i).toString());;
+                this.posOnGround_inst(inst);
+            }
+            return null;
+        }
+        sx: number=0;
+        sz: number=0;
+        sXmin: number=0;
+        sXmax: number=0;
+        sZmin: number=0;
+        sZmax: number=0;
+        sCount: number=0;
+        _step: number=10;
+        _posRange: number=0.5
+        _sclRange: number=0.5
+        _rotRange: number=Math.PI/20;
+        _posMin: Vector3=new Vector3(-10,-1,-10);
+        _posMax: Vector3=new Vector3(10,-0.5,10);;
+        _sclMin: Vector3;
+        _sclMax: Vector3;
+        _rotMin: Vector3;
+        _rotMax: Vector3;
+        _rand: Random;
+
+        public setSpreadParms(mesh: Mesh,g: GroundMesh,seed: number) {
+
+            this._rand=new Random(seed);
+
+            if(this._step==0)
+                this._step=mesh.getBoundingInfo().boundingSphere.radius;
+
+            this.sXmin=g._minX+this._step;
+            this.sXmax=g._maxX-this._step;
+            this.sZmin=g._minZ+this._step;
+            this.sZmax=g._maxZ-this._step;
+            this.sCount=(g._width/this._step-1)*(g._height/this._step-1);
+            console.log(this.sCount);
+            this.sx=this.sXmin;
+            this.sz=this.sZmax;
+
+            let n: number;
+            if(this._posMax==null) {
+                n=this._step*(1+this._posRange);
+                this._posMax=new Vector3(n,n,n);
+            }
+            if(this._posMin==null) {
+                n=this._step*(1-this._posRange);
+                this._posMin=new Vector3(n,n,n);
+            }
+            if(this._sclMax==null) {
+                n=(1+this._sclRange);
+                this._sclMax=new Vector3(n,n,n);
+            }
+            if(this._sclMin==null) {
+                n=(1-this._sclRange);
+                this._sclMin=new Vector3(n,n,n);
+            }
+            if(this._rotMax==null) {
+                n=(this._rotRange);
+                this._rotMax=new Vector3(n,n,n);
+            }
+            if(this._rotMin==null) {
+                n=(-this._rotRange);
+                this._rotMin=new Vector3(n,n,n);
+            }
+
+
+
+
+        }
+        private posOnGround(part: SolidParticle) {
+            //position
+            part.position.x=this.sx+this._rand.generate(this._posMin.x,this._posMax.x);
+            part.position.z=this.sz+this._rand.generate(this._posMin.z,this._posMax.z);
+            part.position.y=(<GroundMesh>this.ground).getHeightAtCoordinates(part.position.x,part.position.z);
+            part.position.y=part.position.y+this._rand.generate(this._posMin.y,this._posMax.y);
+
+            //scale
+            part.scaling.x=this._rand.generate(this._sclMin.x,this._sclMax.x);
+            part.scaling.y=this._rand.generate(this._sclMin.y,this._sclMax.y);
+            part.scaling.z=this._rand.generate(this._sclMin.z,this._sclMax.z);
+
+            //rotation
+            part.rotation.x=this._rand.generate(this._rotMin.x,this._rotMax.x);
+            part.rotation.y=this._rand.generate(this._rotMin.y,this._rotMax.y);
+            part.rotation.z=this._rand.generate(this._rotMin.z,this._rotMax.z);
+
+
+            this.sx=this.sx+this._step;
+            if(this.sx>this.sXmax) {
+                this.sx=this.sXmin;
+                this.sz=this.sz-this._step;
             }
         }
+
+        private posOnGround_inst(part: InstancedMesh) {
+            let sign: number=(Math.random()<0.5? -1:1);
+            part.position.x=this.sx+Math.random()*sign*this._step*this._posRange;
+            sign=(Math.random()<0.5? -1:1);
+            part.position.z=this.sz+Math.random()*sign*this._step*this._posRange;
+            part.position.y=(<GroundMesh>this.ground).getHeightAtCoordinates(part.position.x,part.position.z);
+            this.sx=this.sx+this._step;
+            if(this.sx>this.sXmax) {
+                this.sx=this.sXmin;
+                this.sz=this.sz-this._step;
+            }
+        }
+
+
+
         debugVisible: boolean=false;
         public toggleDebug() {
             //if (this.scene.debugLayer.isVisible()) {
@@ -2595,8 +2727,8 @@ namespace org.ssatguru.babylonjs.vishva {
                         var mm: MultiMaterial=<MultiMaterial>mesh.material;
                         mms.push(mm);
                         var ms: Material[]=mm.subMaterials;
-                        for (let mat of ms){
-                                mats.push(mat);
+                        for(let mat of ms) {
+                            mats.push(mat);
                         }
                     } else {
                         mats.push(mesh.material);
@@ -2658,11 +2790,11 @@ namespace org.ssatguru.babylonjs.vishva {
             //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
             SceneLoader.ImportMesh("","vishva/assets/"+assetType+"/"+fileName+"/",file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
         }
-        
+
         public loadAsset2(path: string,file: string) {
             this.filePath=path;
             this.file=file;
-            SceneLoader.ImportMesh("","vishva/" + path,file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
+            SceneLoader.ImportMesh("","vishva/"+path,file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
         }
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
@@ -2679,13 +2811,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 mesh.isPickable=true;
                 mesh.checkCollisions=true;
                 //gltb file
-//                if (mesh.parent!=null){
-//                    if (mesh.parent.id=="root"){
-//                        console.log("removing parent of " + mesh.id);
-//                        (<Mesh>mesh.parent).removeChild(mesh)
-//                    }
-//                }
-//                
+                //                if (mesh.parent!=null){
+                //                    if (mesh.parent.id=="root"){
+                //                        console.log("removing parent of " + mesh.id);
+                //                        (<Mesh>mesh.parent).removeChild(mesh)
+                //                    }
+                //                }
+                //                
                 if(mesh.parent==null) {
                     var placementLocal: Vector3=new Vector3(0,0,-(boundingRadius+2));
                     var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
@@ -2748,7 +2880,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var textureName: string=bt.name;
             if(textureName.indexOf("vishva/")!==0&&textureName.indexOf("../")!==0) {
                 //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
-                bt.name="vishva/" + this.filePath+textureName;
+                bt.name="vishva/"+this.filePath+textureName;
             }
         }
 
@@ -2941,14 +3073,14 @@ namespace org.ssatguru.babylonjs.vishva {
         private createGround_htmap(scene: Scene) {
             let groundMaterial: StandardMaterial=this.createGroundMaterial(scene);
             MeshBuilder.CreateGroundFromHeightMap("ground",this.groundHeightMap,{
-                //                width: 256,
-                //                height: 256,
-                width: 10240,
-                height: 10240,
-                //                minHeight: 0,
-                //                maxHeight: 20,
+                width: 256,
+                height: 256,
+                //                width: 10240,
+                //                height: 10240,
                 minHeight: 0,
-                maxHeight: 1000,
+                maxHeight: 20,
+                //                minHeight: 0,
+                //                maxHeight: 1000,
                 subdivisions: 32,
                 onReady: (grnd: GroundMesh) => {
                     console.log("ground created");
@@ -2977,10 +3109,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
             //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
-            (<Texture>groundMaterial.diffuseTexture).uScale=100.0;
-            (<Texture>groundMaterial.diffuseTexture).vScale=100.0;
-            (<Texture>groundMaterial.bumpTexture).uScale=100.0;
-            (<Texture>groundMaterial.bumpTexture).vScale=100.0;
+            (<Texture>groundMaterial.diffuseTexture).uScale=50.0;
+            (<Texture>groundMaterial.diffuseTexture).vScale=50.0;
+            (<Texture>groundMaterial.bumpTexture).uScale=50.0;
+            (<Texture>groundMaterial.bumpTexture).vScale=50.0;
             groundMaterial.diffuseColor=new Color3(0.9,0.6,0.4);
             groundMaterial.specularColor=new Color3(0,0,0);
             return groundMaterial;
@@ -3010,7 +3142,7 @@ namespace org.ssatguru.babylonjs.vishva {
             (<Texture>mat.bumpTexture).vScale=64.0;
             mat.specularColor=Color3.Black();
             mat.diffuseColor=new Color3(0.9,0.6,0.4);
-            
+
             terrain.mesh.material=mat;
 
             // compute the UVs to stretch the image on the whole map
@@ -3168,8 +3300,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private createAvatar() {
             SceneLoader.ImportMesh("",this.avatarFolder,this.avatarFile,this.scene,(meshes,particleSystems,skeletons) => {return this.onAvatarLoaded(meshes,particleSystems,skeletons)});
         }
-        //spawnPosition:Vector3=new Vector3(-360,620,225);
-        spawnPosition: Vector3=new Vector3(0,0.2,0);
+
         private onAvatarLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
             this.avatar=<Mesh>meshes[0];
 

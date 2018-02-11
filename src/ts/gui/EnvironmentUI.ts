@@ -52,7 +52,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             var trnButton: HTMLButtonElement=<HTMLButtonElement>document.getElementById("trnButton");
             trnButton.onclick=(e) => {
-                DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
+                //DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
+                let r =this._vishva.spreadOnGround();
+                if (r!=null){
+                    DialogMgr.showAlertDiag(r);
+                }
                 return true;
             };
 

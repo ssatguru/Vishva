@@ -185,7 +185,8 @@ vishvaFiles=[
        "f":[
         "farm_trees_rocks_flowers_D.tga",
         "farm_tree_01.babylon",
-        "farm_tree_01.jpg"
+        "farm_tree_01.jpg",
+        "farm_tree_02.babylon"
       ]},
       {"d":"grass",
        "f":[
@@ -390,6 +391,7 @@ vishvaFiles=[
       "ground-normal.png",
       "ground.jpg",
       "ground_heightMap.png",
+      "ground_heightMap_bkup.png",
       "no-texture.jpg",
       "raindrop-1.png",
       "raindrop-2.png",
@@ -403,6 +405,7 @@ vishvaFiles=[
         "default_pz.jpg"
       ]},
       "tga-image.jpg",
+      "water.jpg",
       "wood.jpg",
       "worldHeightMap.jpg"
     ]}
@@ -421,6 +424,7 @@ vishvaFiles=[
     "junk.js",
     "junkasset.js",
     "myworld4.js",
-    "myworld5.js"
+    "myworld5.js",
+    "sps_world.js"
   ]}
 ]

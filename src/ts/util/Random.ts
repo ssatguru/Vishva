@@ -14,10 +14,10 @@ namespace org.ssatguru.babylonjs.util {
             this._seed=seed;
         }
         
-        public generate(min=0,max=1){
+        public generate(n1=0,n2=1){
             this._seed = (this._seed * 9301 + 49297) % 233280;
             let rnd:number  = this._seed / 233280;
-            return min + rnd * (max - min);
+            return n1 + rnd * (n2 - n1);
         }
     }
 } 

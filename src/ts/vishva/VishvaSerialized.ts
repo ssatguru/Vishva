@@ -12,10 +12,12 @@ namespace org.ssatguru.babylonjs.vishva {
         public settings: SettingsSerialized;
         public guiSettings:Object;
         public misc:MiscSerialized;
+        public groundSPSserializeds:GroundSPSserialized[];
         
         public constructor(){
             this.settings = new SettingsSerialized();
             this.misc = new MiscSerialized();
+            
         }
     }
     

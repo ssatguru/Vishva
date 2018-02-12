@@ -2978,17 +2978,129 @@ var org;
                     function Random(seed) {
                         this._seed = seed;
                     }
-                    Random.prototype.generate = function (min, max) {
-                        if (min === void 0) { min = 0; }
-                        if (max === void 0) { max = 1; }
+                    Random.prototype.generate = function (n1, n2) {
+                        if (n1 === void 0) { n1 = 0; }
+                        if (n2 === void 0) { n2 = 1; }
                         this._seed = (this._seed * 9301 + 49297) % 233280;
                         var rnd = this._seed / 233280;
-                        return min + rnd * (max - min);
+                        return n1 + rnd * (n2 - n1);
                     };
                     return Random;
                 }());
                 util.Random = Random;
             })(util = babylonjs.util || (babylonjs.util = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_15) {
+                var Vector3 = BABYLON.Vector3;
+                var Random = org.ssatguru.babylonjs.util.Random;
+                /**
+                 * Manages a SPS whose particles are spread over a gound mesh.
+                 */
+                var GroundSPS = (function () {
+                    function GroundSPS(vishva, mesh, groundMesh, spreadDtls) {
+                        var _this = this;
+                        this.sx = 0;
+                        this.sz = 0;
+                        this.sXmin = 0;
+                        this.sXmax = 0;
+                        this.sZmin = 0;
+                        this.sZmax = 0;
+                        this.sCount = 0;
+                        this._vishva = vishva;
+                        this._mesh = mesh;
+                        this._groundMesh = groundMesh;
+                        this._spreadDtls = spreadDtls;
+                        this._rand = new Random(this._spreadDtls.seed);
+                        this._setSpreadParms(mesh, groundMesh, spreadDtls);
+                        var SPS = new BABYLON.SolidParticleSystem('SPS', this._vishva.scene, { updatable: false, isPickable: false });
+                        SPS.addShape(this._mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
+                        this.sps = SPS.buildMesh();
+                        this.sps.material = this._mesh.material;
+                        this.sps.doNotSerialize = true;
+                    }
+                    GroundSPS.prototype.serialize = function () {
+                        return {
+                            meshID: this._mesh.id,
+                            groundMeshID: this._groundMesh.id,
+                            spreadDtls: this._spreadDtls
+                        };
+                    };
+                    GroundSPS.prototype._setSpreadParms = function (m, gm, sd) {
+                        if (!sd.step)
+                            sd.step = m.getBoundingInfo().boundingSphere.radius;
+                        this.sXmin = gm._minX + sd.step;
+                        this.sZmin = gm._minZ + sd.step;
+                        this.sXmax = gm._maxX - sd.step;
+                        this.sZmax = gm._maxZ - sd.step;
+                        this.sCount = (gm._width / sd.step - 1) * (gm._height / sd.step - 1);
+                        this.sx = this.sXmin;
+                        this.sz = this.sZmax;
+                        if (!sd.posRange)
+                            sd.posRange = 0.5;
+                        if (!sd.sclRange)
+                            sd.sclRange = 0.5;
+                        if (!sd.rotRange)
+                            sd.rotRange = Math.PI / 20;
+                        var n;
+                        if (!sd.posMax) {
+                            n = sd.step * sd.posRange;
+                            sd.posMax = new Vector3(n, n, n);
+                        }
+                        if (!sd.posMin) {
+                            n = -sd.step * sd.posRange;
+                            sd.posMin = new Vector3(n, n, n);
+                        }
+                        if (!sd.sclMax) {
+                            n = (1 + sd.sclRange);
+                            sd.sclMax = new Vector3(n, n, n);
+                        }
+                        if (!sd.sclMin) {
+                            n = (1 - sd.sclRange);
+                            sd.sclMin = new Vector3(n, n, n);
+                        }
+                        if (!sd.rotMax) {
+                            n = (sd.rotRange);
+                            sd.rotMax = new Vector3(n, n, n);
+                        }
+                        if (!sd.rotMin) {
+                            n = (-sd.rotRange);
+                            sd.rotMin = new Vector3(n, n, n);
+                        }
+                        console.log(sd);
+                    };
+                    GroundSPS.prototype._spread = function (part) {
+                        //position
+                        part.position.x = this.sx + this._rand.generate(this._spreadDtls.posMin.x, this._spreadDtls.posMax.x);
+                        part.position.z = this.sz + this._rand.generate(this._spreadDtls.posMin.z, this._spreadDtls.posMax.z);
+                        part.position.y = (this._groundMesh).getHeightAtCoordinates(part.position.x, part.position.z);
+                        part.position.y = part.position.y + this._rand.generate(this._spreadDtls.posMin.y, this._spreadDtls.posMax.y);
+                        //scale
+                        part.scaling.x = this._rand.generate(this._spreadDtls.sclMin.x, this._spreadDtls.sclMax.x);
+                        part.scaling.y = this._rand.generate(this._spreadDtls.sclMin.y, this._spreadDtls.sclMax.y);
+                        part.scaling.z = this._rand.generate(this._spreadDtls.sclMin.z, this._spreadDtls.sclMax.z);
+                        //rotation
+                        part.rotation.x = this._rand.generate(this._spreadDtls.rotMin.x, this._spreadDtls.rotMax.x);
+                        part.rotation.y = this._rand.generate(this._spreadDtls.rotMin.y, this._spreadDtls.rotMax.y);
+                        part.rotation.z = this._rand.generate(this._spreadDtls.rotMin.z, this._spreadDtls.rotMax.z);
+                        this.sx = this.sx + this._spreadDtls.step;
+                        if (this.sx > this.sXmax) {
+                            this.sx = this.sXmin;
+                            this.sz = this.sz - this._spreadDtls.step;
+                        }
+                    };
+                    return GroundSPS;
+                }());
+                vishva_15.GroundSPS = GroundSPS;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
@@ -3012,6 +3124,7 @@ var org;
                 var DirectionalLight = BABYLON.DirectionalLight;
                 var DynamicTerrain = BABYLON.DynamicTerrain;
                 var Engine = BABYLON.Engine;
+                var GroundSPS = org.ssatguru.babylonjs.vishva.GroundSPS;
                 var HemisphericLight = BABYLON.HemisphericLight;
                 var Light = BABYLON.Light;
                 var Matrix = BABYLON.Matrix;
@@ -3020,7 +3133,6 @@ var org;
                 var ParticleSystem = BABYLON.ParticleSystem;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
                 var Quaternion = BABYLON.Quaternion;
-                var Random = org.ssatguru.babylonjs.util.Random;
                 var Scene = BABYLON.Scene;
                 var SceneLoader = BABYLON.SceneLoader;
                 var SceneSerializer = BABYLON.SceneSerializer;
@@ -3130,19 +3242,6 @@ var org;
                         this.meshPickedPhyParms = null;
                         this.didPhysTest = false;
                         this.skelViewerArr = [];
-                        this.sx = 0;
-                        this.sz = 0;
-                        this.sXmin = 0;
-                        this.sXmax = 0;
-                        this.sZmin = 0;
-                        this.sZmax = 0;
-                        this.sCount = 0;
-                        this._step = 10;
-                        this._posRange = 0.5;
-                        this._sclRange = 0.5;
-                        this._rotRange = Math.PI / 20;
-                        this._posMin = new Vector3(-10, -1, -10);
-                        this._posMax = new Vector3(10, -0.5, 10);
                         this.debugVisible = false;
                         this.editEnabled = false;
                         this.frames = 0;
@@ -3340,6 +3439,16 @@ var org;
                             //                if (this.enablePhysics) {
                             //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
                             //                }
+                            if (this.vishvaSerialized.groundSPSserializeds != null) {
+                                this.GroundSPSs = new Array();
+                                for (var _m = 0, _o = this.vishvaSerialized.groundSPSserializeds; _m < _o.length; _m++) {
+                                    var gSPSs = _o[_m];
+                                    var mesh = this.scene.getMeshByID(gSPSs.meshID);
+                                    var groundMesh = this.scene.getMeshByID(gSPSs.groundMeshID);
+                                    var gSPS = new GroundSPS(this, mesh, groundMesh, gSPSs.spreadDtls);
+                                    this.GroundSPSs.push(gSPS);
+                                }
+                            }
                         }
                         if (!skyFound) {
                             console.log("no vishva sky found. creating sky");
@@ -5248,103 +5357,21 @@ var org;
                         return sm.diffuseColor.toHexString();
                     };
                     Vishva.prototype.spreadOnGround = function () {
-                        var _this = this;
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
                         }
                         var seed = Math.random() * 100;
-                        this.setSpreadParms(this.meshPicked, this.ground, seed);
-                        var SPS = new BABYLON.SolidParticleSystem('SPS', this.scene, { updatable: false, isPickable: false });
-                        SPS.addShape(this.meshPicked, this.sCount, { positionFunction: function (p, i, s) { _this.posOnGround(p); } });
-                        var mesh = SPS.buildMesh();
-                        console.log(SPS.nbParticles);
-                        console.log(SPS.particles.length);
-                        mesh.material = this.meshPicked.material;
-                        mesh.doNotSerialize = true;
+                        var spreadDtls = {
+                            seed: seed,
+                            step: 5,
+                            posMax: new Vector3(5, -1, 5)
+                        };
+                        var groundSPS = new GroundSPS(this, this.meshPicked, this.ground, spreadDtls);
+                        if (this.GroundSPSs == null) {
+                            this.GroundSPSs = new Array();
+                        }
+                        this.GroundSPSs.push(groundSPS);
                         return null;
-                    };
-                    Vishva.prototype.spreadOnGround_inst = function () {
-                        if (!this.isMeshSelected) {
-                            return "no mesh selected";
-                        }
-                        this.setSpreadParms(this.meshPicked, this.ground, 6);
-                        for (var i = 0; i < this.sCount; i++) {
-                            var inst = this.meshPicked.createInstance(Number(i).toString());
-                            ;
-                            this.posOnGround_inst(inst);
-                        }
-                        return null;
-                    };
-                    ;
-                    Vishva.prototype.setSpreadParms = function (mesh, g, seed) {
-                        this._rand = new Random(seed);
-                        if (this._step == 0)
-                            this._step = mesh.getBoundingInfo().boundingSphere.radius;
-                        this.sXmin = g._minX + this._step;
-                        this.sXmax = g._maxX - this._step;
-                        this.sZmin = g._minZ + this._step;
-                        this.sZmax = g._maxZ - this._step;
-                        this.sCount = (g._width / this._step - 1) * (g._height / this._step - 1);
-                        console.log(this.sCount);
-                        this.sx = this.sXmin;
-                        this.sz = this.sZmax;
-                        var n;
-                        if (this._posMax == null) {
-                            n = this._step * (1 + this._posRange);
-                            this._posMax = new Vector3(n, n, n);
-                        }
-                        if (this._posMin == null) {
-                            n = this._step * (1 - this._posRange);
-                            this._posMin = new Vector3(n, n, n);
-                        }
-                        if (this._sclMax == null) {
-                            n = (1 + this._sclRange);
-                            this._sclMax = new Vector3(n, n, n);
-                        }
-                        if (this._sclMin == null) {
-                            n = (1 - this._sclRange);
-                            this._sclMin = new Vector3(n, n, n);
-                        }
-                        if (this._rotMax == null) {
-                            n = (this._rotRange);
-                            this._rotMax = new Vector3(n, n, n);
-                        }
-                        if (this._rotMin == null) {
-                            n = (-this._rotRange);
-                            this._rotMin = new Vector3(n, n, n);
-                        }
-                    };
-                    Vishva.prototype.posOnGround = function (part) {
-                        //position
-                        part.position.x = this.sx + this._rand.generate(this._posMin.x, this._posMax.x);
-                        part.position.z = this.sz + this._rand.generate(this._posMin.z, this._posMax.z);
-                        part.position.y = this.ground.getHeightAtCoordinates(part.position.x, part.position.z);
-                        part.position.y = part.position.y + this._rand.generate(this._posMin.y, this._posMax.y);
-                        //scale
-                        part.scaling.x = this._rand.generate(this._sclMin.x, this._sclMax.x);
-                        part.scaling.y = this._rand.generate(this._sclMin.y, this._sclMax.y);
-                        part.scaling.z = this._rand.generate(this._sclMin.z, this._sclMax.z);
-                        //rotation
-                        part.rotation.x = this._rand.generate(this._rotMin.x, this._rotMax.x);
-                        part.rotation.y = this._rand.generate(this._rotMin.y, this._rotMax.y);
-                        part.rotation.z = this._rand.generate(this._rotMin.z, this._rotMax.z);
-                        this.sx = this.sx + this._step;
-                        if (this.sx > this.sXmax) {
-                            this.sx = this.sXmin;
-                            this.sz = this.sz - this._step;
-                        }
-                    };
-                    Vishva.prototype.posOnGround_inst = function (part) {
-                        var sign = (Math.random() < 0.5 ? -1 : 1);
-                        part.position.x = this.sx + Math.random() * sign * this._step * this._posRange;
-                        sign = (Math.random() < 0.5 ? -1 : 1);
-                        part.position.z = this.sz + Math.random() * sign * this._step * this._posRange;
-                        part.position.y = this.ground.getHeightAtCoordinates(part.position.x, part.position.z);
-                        this.sx = this.sx + this._step;
-                        if (this.sx > this.sXmax) {
-                            this.sx = this.sXmin;
-                            this.sz = this.sz - this._step;
-                        }
                     };
                     Vishva.prototype.toggleDebug = function () {
                         //if (this.scene.debugLayer.isVisible()) {
@@ -5395,9 +5422,16 @@ var org;
                         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
                         vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
                         vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
-                        //serialize sna first
+                        if (this.GroundSPSs != null) {
+                            vishvaSerialzed.groundSPSserializeds = new Array();
+                            for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
+                                var gSPS = _a[_i];
+                                vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
+                            }
+                        }
+                        //serialize sna before scene
                         //we might add tags to meshes in scene during sna serialize.
-                        //if we serialize scene before we would miss those
+                        //if we serialize scene before then we would miss those
                         //var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
                         vishvaSerialzed.snas = vishva.SNAManager.getSNAManager().serializeSnAs(this.scene);
                         var sceneObj = SceneSerializer.Serialize(this.scene);

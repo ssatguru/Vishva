@@ -18,6 +18,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import DynamicTerrain=BABYLON.DynamicTerrain;
     import Engine=BABYLON.Engine;
     import GroundMesh=BABYLON.GroundMesh;
+    import GroundSPS=org.ssatguru.babylonjs.vishva.GroundSPS;
     import HemisphericLight=BABYLON.HemisphericLight;
     import IAssetTask=BABYLON.IAssetTask;
     import IShadowLight=BABYLON.IShadowLight;
@@ -43,6 +44,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import SkeletonViewer=BABYLON.Debug.SkeletonViewer;
     import SolidParticleSystem=BABYLON.SolidParticleSystem;
     import SolidParticle=BABYLON.SolidParticle;
+    import SpreadDtls=org.ssatguru.babylonjs.vishva.SpreadDtls;
     import StandardMaterial=BABYLON.StandardMaterial;
     import Tags=BABYLON.Tags;
     import TextFileAssetTask=BABYLON.TextFileAssetTask;
@@ -162,6 +164,8 @@ namespace org.ssatguru.babylonjs.vishva {
         mainCamera: ArcRotateCamera;
 
         vishvaGUI: VishvaGUI;
+        
+        GroundSPSs:GroundSPS[];
 
 
 
@@ -414,6 +418,15 @@ namespace org.ssatguru.babylonjs.vishva {
                 //                if (this.enablePhysics) {
                 //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
                 //                }
+                if (this.vishvaSerialized.groundSPSserializeds!=null){
+                    this.GroundSPSs = new Array()
+                    for (let gSPSs of this.vishvaSerialized.groundSPSserializeds){
+                        let mesh: Mesh=<Mesh> this.scene.getMeshByID(gSPSs.meshID);
+                        let groundMesh: GroundMesh=<GroundMesh> this.scene.getMeshByID(gSPSs.groundMeshID);
+                        let gSPS=new GroundSPS(this,mesh,groundMesh,gSPSs.spreadDtls);
+                        this.GroundSPSs.push(gSPS);
+                    }
+                }
             }
 
             if(!skyFound) {
@@ -2399,136 +2412,24 @@ namespace org.ssatguru.babylonjs.vishva {
             let sm: StandardMaterial=<StandardMaterial>this.ground.material;
             return sm.diffuseColor.toHexString();
         }
-
+        
         public spreadOnGround(): string {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
             }
             let seed: number=Math.random()*100;
-            this.setSpreadParms(<Mesh>this.meshPicked,<GroundMesh>this.ground,seed);
-            let SPS=new BABYLON.SolidParticleSystem('SPS',this.scene,{updatable: false,isPickable: false});
-            SPS.addShape(<Mesh>this.meshPicked,this.sCount,{positionFunction: (p,i,s) => {this.posOnGround(p);}});
-            let mesh=SPS.buildMesh();
-            console.log(SPS.nbParticles);
-            console.log(SPS.particles.length);
-            mesh.material=this.meshPicked.material;
-            mesh.doNotSerialize=true;
+            let spreadDtls:SpreadDtls={
+                seed:seed,
+                step:5,
+                posMax:new Vector3(5,-1,5)
+            };
+            let groundSPS:GroundSPS=new GroundSPS(this,<Mesh>this.meshPicked,<GroundMesh>this.ground,spreadDtls);
+            if (this.GroundSPSs == null){
+                this.GroundSPSs= new Array();
+            }
+            this.GroundSPSs.push(groundSPS);
             return null;
         }
-        public spreadOnGround_inst(): string {
-            if(!this.isMeshSelected) {
-                return "no mesh selected";
-            }
-            this.setSpreadParms(<Mesh>this.meshPicked,<GroundMesh>this.ground,6);
-            for(let i=0;i<this.sCount;i++) {
-                let inst: InstancedMesh=(<Mesh>this.meshPicked).createInstance(Number(i).toString());;
-                this.posOnGround_inst(inst);
-            }
-            return null;
-        }
-        sx: number=0;
-        sz: number=0;
-        sXmin: number=0;
-        sXmax: number=0;
-        sZmin: number=0;
-        sZmax: number=0;
-        sCount: number=0;
-        _step: number=10;
-        _posRange: number=0.5
-        _sclRange: number=0.5
-        _rotRange: number=Math.PI/20;
-        _posMin: Vector3=new Vector3(-10,-1,-10);
-        _posMax: Vector3=new Vector3(10,-0.5,10);;
-        _sclMin: Vector3;
-        _sclMax: Vector3;
-        _rotMin: Vector3;
-        _rotMax: Vector3;
-        _rand: Random;
-
-        public setSpreadParms(mesh: Mesh,g: GroundMesh,seed: number) {
-
-            this._rand=new Random(seed);
-
-            if(this._step==0)
-                this._step=mesh.getBoundingInfo().boundingSphere.radius;
-
-            this.sXmin=g._minX+this._step;
-            this.sXmax=g._maxX-this._step;
-            this.sZmin=g._minZ+this._step;
-            this.sZmax=g._maxZ-this._step;
-            this.sCount=(g._width/this._step-1)*(g._height/this._step-1);
-            console.log(this.sCount);
-            this.sx=this.sXmin;
-            this.sz=this.sZmax;
-
-            let n: number;
-            if(this._posMax==null) {
-                n=this._step*(1+this._posRange);
-                this._posMax=new Vector3(n,n,n);
-            }
-            if(this._posMin==null) {
-                n=this._step*(1-this._posRange);
-                this._posMin=new Vector3(n,n,n);
-            }
-            if(this._sclMax==null) {
-                n=(1+this._sclRange);
-                this._sclMax=new Vector3(n,n,n);
-            }
-            if(this._sclMin==null) {
-                n=(1-this._sclRange);
-                this._sclMin=new Vector3(n,n,n);
-            }
-            if(this._rotMax==null) {
-                n=(this._rotRange);
-                this._rotMax=new Vector3(n,n,n);
-            }
-            if(this._rotMin==null) {
-                n=(-this._rotRange);
-                this._rotMin=new Vector3(n,n,n);
-            }
-
-
-
-
-        }
-        private posOnGround(part: SolidParticle) {
-            //position
-            part.position.x=this.sx+this._rand.generate(this._posMin.x,this._posMax.x);
-            part.position.z=this.sz+this._rand.generate(this._posMin.z,this._posMax.z);
-            part.position.y=(<GroundMesh>this.ground).getHeightAtCoordinates(part.position.x,part.position.z);
-            part.position.y=part.position.y+this._rand.generate(this._posMin.y,this._posMax.y);
-
-            //scale
-            part.scaling.x=this._rand.generate(this._sclMin.x,this._sclMax.x);
-            part.scaling.y=this._rand.generate(this._sclMin.y,this._sclMax.y);
-            part.scaling.z=this._rand.generate(this._sclMin.z,this._sclMax.z);
-
-            //rotation
-            part.rotation.x=this._rand.generate(this._rotMin.x,this._rotMax.x);
-            part.rotation.y=this._rand.generate(this._rotMin.y,this._rotMax.y);
-            part.rotation.z=this._rand.generate(this._rotMin.z,this._rotMax.z);
-
-
-            this.sx=this.sx+this._step;
-            if(this.sx>this.sXmax) {
-                this.sx=this.sXmin;
-                this.sz=this.sz-this._step;
-            }
-        }
-
-        private posOnGround_inst(part: InstancedMesh) {
-            let sign: number=(Math.random()<0.5? -1:1);
-            part.position.x=this.sx+Math.random()*sign*this._step*this._posRange;
-            sign=(Math.random()<0.5? -1:1);
-            part.position.z=this.sz+Math.random()*sign*this._step*this._posRange;
-            part.position.y=(<GroundMesh>this.ground).getHeightAtCoordinates(part.position.x,part.position.z);
-            this.sx=this.sx+this._step;
-            if(this.sx>this.sXmax) {
-                this.sx=this.sXmin;
-                this.sz=this.sz-this._step;
-            }
-        }
-
 
 
         debugVisible: boolean=false;
@@ -2586,9 +2487,17 @@ namespace org.ssatguru.babylonjs.vishva {
             vishvaSerialzed.settings.autoEditMenu=this.autoEditMenu;
             vishvaSerialzed.guiSettings=this.vishvaGUI.getSettings();
             vishvaSerialzed.misc.activeCameraTarget=this.mainCamera.target;
-            //serialize sna first
+            if (this.GroundSPSs!=null){
+                vishvaSerialzed.groundSPSserializeds = new Array();
+                for(let gSPS of this.GroundSPSs){
+                    vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
+                }
+            }
+            
+            
+            //serialize sna before scene
             //we might add tags to meshes in scene during sna serialize.
-            //if we serialize scene before we would miss those
+            //if we serialize scene before then we would miss those
             //var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
             vishvaSerialzed.snas=<SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.scene);
 

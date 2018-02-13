@@ -8,7 +8,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     export class EnvironmentUI{
         private _vishva:Vishva;
         private _envDiag: VDialog;
-        private _addInternalAssetUI: InternalAssetsUI; 
+        private _addInternalAssetUI: InternalAssetsUI;
+        private _groundUI:GroundUI; 
         /*
          * Create Environment Dialog
          */
@@ -52,7 +53,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             var trnButton: HTMLButtonElement=<HTMLButtonElement>document.getElementById("trnButton");
             trnButton.onclick=(e) => {
-                //DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
+//                if (this._groundUI==null){
+//                    this._groundUI=new GroundUI(this._vishva);
+//                }
+//                this._groundUI.toggle();
                 let r =this._vishva.spreadOnGround();
                 if (r!=null){
                     DialogMgr.showAlertDiag(r);

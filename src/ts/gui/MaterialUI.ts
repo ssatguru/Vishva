@@ -24,7 +24,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _textName: string;
 
         constructor(vishva: Vishva) {
-            console.log("mataerialUI");
             this._vishva=vishva;
 
             //visibility

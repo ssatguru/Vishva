@@ -463,11 +463,14 @@ var org;
                             };
                             var trnButton = document.getElementById("trnButton");
                             trnButton.onclick = function (e) {
-                                //DialogMgr.showAlertDiag("Sorry. To be implemneted soon");
-                                var r = _this._vishva.spreadOnGround();
-                                if (r != null) {
-                                    gui.DialogMgr.showAlertDiag(r);
+                                if (_this._groundUI == null) {
+                                    _this._groundUI = new gui.GroundUI(_this._vishva);
                                 }
+                                _this._groundUI.toggle();
+                                //                let r =this._vishva.spreadOnGround();
+                                //                if (r!=null){
+                                //                    DialogMgr.showAlertDiag(r);
+                                //                }
                                 return true;
                             };
                             var ambColDiag = new gui.ColorPickerDiag("ambient color", "ambCol", this._vishva.getAmbientColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
@@ -853,6 +856,41 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
+            (function (vishva_4) {
+                var gui;
+                (function (gui) {
+                    var GroundUI = (function () {
+                        function GroundUI(vishva) {
+                            this._vishva = vishva;
+                            this._grndDiag = new gui.VDialog("grndDiv", "Manage Ground", gui.DialogMgr.center, "", "", 350);
+                        }
+                        GroundUI.prototype.open = function () {
+                            this._grndDiag.open();
+                        };
+                        GroundUI.prototype.isOpen = function () {
+                            return this._grndDiag.isOpen();
+                        };
+                        GroundUI.prototype.close = function () {
+                            this._grndDiag.close();
+                        };
+                        GroundUI.prototype.toggle = function () {
+                            this._grndDiag.toggle();
+                        };
+                        return GroundUI;
+                    }());
+                    gui.GroundUI = GroundUI;
+                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
             (function (vishva) {
                 var gui;
                 (function (gui) {
@@ -892,7 +930,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_4) {
+            (function (vishva_5) {
                 var gui;
                 (function (gui) {
                     /**
@@ -991,7 +1029,7 @@ var org;
                         return InternalAssetsUI;
                     }());
                     gui.InternalAssetsUI = InternalAssetsUI;
-                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+                })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1003,7 +1041,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_5) {
+            (function (vishva_6) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1157,7 +1195,7 @@ var org;
                         return ItemPropsUI;
                     }());
                     gui.ItemPropsUI = ItemPropsUI;
-                })(gui = vishva_5.gui || (vishva_5.gui = {}));
+                })(gui = vishva_6.gui || (vishva_6.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1169,7 +1207,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_6) {
+            (function (vishva_7) {
                 var gui;
                 (function (gui) {
                     /*
@@ -1257,7 +1295,7 @@ var org;
                         return ItemsUI;
                     }());
                     gui.ItemsUI = ItemsUI;
-                })(gui = vishva_6.gui || (vishva_6.gui = {}));
+                })(gui = vishva_7.gui || (vishva_7.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1269,7 +1307,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_7) {
+            (function (vishva_8) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1316,7 +1354,7 @@ var org;
                             var lightParm = this._vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this._lightAtt.checked = false;
-                                lightParm = new vishva_7.LightParm();
+                                lightParm = new vishva_8.LightParm();
                             }
                             else {
                                 this._lightAtt.checked = true;
@@ -1342,7 +1380,7 @@ var org;
                             //            }
                             if (!this._lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_7.LightParm();
+                            var lightParm = new vishva_8.LightParm();
                             lightParm.type = this._lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this._lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this._lightSpec.getColor());
@@ -1360,7 +1398,7 @@ var org;
                         return LightUI;
                     }());
                     gui.LightUI = LightUI;
-                })(gui = vishva_7.gui || (vishva_7.gui = {}));
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1372,7 +1410,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_8) {
+            (function (vishva_9) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1382,7 +1420,6 @@ var org;
                     var MaterialUI = (function () {
                         function MaterialUI(vishva) {
                             var _this = this;
-                            console.log("mataerialUI");
                             this._vishva = vishva;
                             //visibility
                             this._matVis = document.getElementById("matVis");
@@ -1497,7 +1534,7 @@ var org;
                         return MaterialUI;
                     }());
                     gui.MaterialUI = MaterialUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+                })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1509,7 +1546,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_9) {
+            (function (vishva_10) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1583,7 +1620,7 @@ var org;
                         PhysicsUI.prototype._applyPhysics = function () {
                             var phyParms;
                             if (this._phyEna.checked) {
-                                phyParms = new vishva_9.PhysicsParm();
+                                phyParms = new vishva_10.PhysicsParm();
                                 phyParms.type = parseInt(this._phyType.value);
                                 phyParms.mass = parseFloat(this._phyMass.value);
                                 phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1596,7 +1633,7 @@ var org;
                         };
                         PhysicsUI.prototype._testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_9.PhysicsParm();
+                            phyParms = new vishva_10.PhysicsParm();
                             phyParms.type = parseInt(this._phyType.value);
                             phyParms.mass = parseFloat(this._phyMass.value);
                             phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1610,7 +1647,7 @@ var org;
                         return PhysicsUI;
                     }());
                     gui.PhysicsUI = PhysicsUI;
-                })(gui = vishva_9.gui || (vishva_9.gui = {}));
+                })(gui = vishva_10.gui || (vishva_10.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1622,7 +1659,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_10) {
+            (function (vishva_11) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1698,7 +1735,7 @@ var org;
                         return SettingsUI;
                     }());
                     gui.SettingsUI = SettingsUI;
-                })(gui = vishva_10.gui || (vishva_10.gui = {}));
+                })(gui = vishva_11.gui || (vishva_11.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1710,7 +1747,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_11) {
+            (function (vishva_12) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2088,7 +2125,7 @@ var org;
                         return SnaUI;
                     }());
                     gui.SnaUI = SnaUI;
-                })(gui = vishva_11.gui || (vishva_11.gui = {}));
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2100,7 +2137,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_12) {
+            (function (vishva_13) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2187,7 +2224,7 @@ var org;
                         return TextureUI;
                     }());
                     gui.TextureUI = TextureUI;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2199,7 +2236,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_13) {
+            (function (vishva_14) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -2524,7 +2561,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_13.gui || (vishva_13.gui = {}));
+                })(gui = vishva_14.gui || (vishva_14.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2828,7 +2865,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_14) {
+            (function (vishva_15) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2907,7 +2944,7 @@ var org;
                         return VTreeDialog;
                     }());
                     gui.VTreeDialog = VTreeDialog;
-                })(gui = vishva_14.gui || (vishva_14.gui = {}));
+                })(gui = vishva_15.gui || (vishva_15.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2999,7 +3036,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_15) {
+            (function (vishva_16) {
                 var Vector3 = BABYLON.Vector3;
                 var Random = org.ssatguru.babylonjs.util.Random;
                 /**
@@ -3099,7 +3136,7 @@ var org;
                     };
                     return GroundSPS;
                 }());
-                vishva_15.GroundSPS = GroundSPS;
+                vishva_16.GroundSPS = GroundSPS;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));

@@ -13,15 +13,26 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         //private _snaUI:SnaUI;
 
         private _propsDiag: JQuery=null;
+        private _propsDiagDiv: HTMLElement=null;
         private _fixingDragIssue: boolean=false;
         private _activePanel: number=-1;
+        
+        //panels;
+        private _generalUI: GeneralUI;
+        private _lightUI: LightUI;
+        private _animationUI: AnimationUI;
+        private _physicsUI: PhysicsUI;
+        private _materialUI: MaterialUI;
+        private _grndSPSUI:GrndSPSUI;
 
-
+        
         constructor(vishva: Vishva,vishvaGUI: VishvaGUI) {
             this._vishva=vishva;
             this._vishvaGUI=vishvaGUI;
 
-            let propsAcc: JQuery=$("#propsAcc");
+
+            this._propsDiagDiv=document.getElementById("propsAcc");
+            let propsAcc: JQuery=$(this._propsDiagDiv);
 
             propsAcc.accordion({
                 animate: 100,
@@ -36,6 +47,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
             });
 
+            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
+
             //property dialog box
             this._propsDiag=$("#propsDiag");
             var dos: DialogOptions={
@@ -48,10 +61,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 height: 650,
                 closeOnEscape: false,
                 //a) on open set the values of the fields in the active panel.
-                //b) also if we switched from another mesh vishav will close open
-                //by calling refreshPropsDiag()
-                //c) donot bother refreshing values if we are just restarting
-                //dialog for height and width re-sizing after drag
+                //   also if we switched from another mesh vishav will close open
+                //   by calling refreshPropsDiag().
+                //b) donot bother refreshing values if we are just restarting
+                //   dialog for height and width re-sizing after drag.
                 open: (e,ui) => {
                     if(!this._fixingDragIssue) {
                         // refresh the active tab
@@ -64,13 +77,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 },
                 closeText: "",
                 close: () => {
-                    if (this._vishvaGUI.resizing) return;
+                    if(this._vishvaGUI.resizing) return;
                     if(!this._fixingDragIssue&&!this.refreshingPropsDiag) {
                         if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
                             this._generalUI._snaUI.close();
                         }
                         if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
                             this._materialUI._textureUI.close();
+                        }
+                        if(this._vishva.isGroundPicked()) {
+                            this._vishva.unSelectGrnd();
                         }
                     }
                 },
@@ -88,6 +104,29 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         public open() {
+            let es: NodeListOf<Element>
+            if(this._vishva.isGroundPicked()) {
+                es=this._propsDiagDiv.getElementsByClassName("mesh");
+                for(let i=0;i<es.length;i++) {
+                    (<HTMLElement>es.item(i)).style.display="none";
+                }
+                es=document.getElementsByClassName("grnd");
+                for(let i=0;i<es.length;i++) {
+                    if(es.item(i).tagName=="H3")
+                        (<HTMLElement>es.item(i)).style.display="block";
+                    //TODO : if panel is active then open div too
+                }
+            } else {
+                es=this._propsDiagDiv.getElementsByClassName("grnd");
+                for(let i=0;i<es.length;i++) {
+                    (<HTMLElement>es.item(i)).style.display="none";
+                }
+                es=document.getElementsByClassName("mesh");
+                for(let i=0;i<es.length;i++) {
+                    if(es.item(i).tagName=="H3")
+                        (<HTMLElement>es.item(i)).style.display="block";
+                }
+            }
             this._propsDiag.dialog("open");
         }
         public isOpen(): boolean {
@@ -106,8 +145,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if((this._propsDiag===undefined)||(this._propsDiag===null)) return;
             if(this._propsDiag.dialog("isOpen")===true) {
                 this.refreshingPropsDiag=true;
-                this._propsDiag.dialog("close");
-                this._propsDiag.dialog("open");
+                this.close();
+                this.open();
             }
         }
         //only refresh if general panel is active;
@@ -117,34 +156,34 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private getPanelIndex(ui: JQuery): number {
             if(ui.text()=="General") return propertyPanel.General;
+            if(ui.text()=="Ground Dimensions") return propertyPanel.GrndDim;
             if(ui.text()=="Physics") return propertyPanel.Physics;
             if(ui.text()=="Material") return propertyPanel.Material;
             if(ui.text()=="Lights") return propertyPanel.Lights;
             if(ui.text()=="Animations") return propertyPanel.Animations;
-
+            if(ui.text()=="Ground SPS") return propertyPanel.GrndSPS;
         }
 
-        private _generalUI: GeneralUI;
-        private _lightUI: LightUI;
-        private _animationUI: AnimationUI;
-        private _physicsUI: PhysicsUI;
-        private _materialUI: MaterialUI;
+        
         private refreshPanel(panelIndex: number) {
             if(panelIndex===propertyPanel.General) {
                 if(this._generalUI==null) this._generalUI=new GeneralUI(this._vishva,this._vishvaGUI);
-                this._generalUI._updateGeneral();
+                this._generalUI.update();
             } else if(panelIndex===propertyPanel.Lights) {
                 if(this._lightUI==null) this._lightUI=new LightUI(this._vishva);
-                this._lightUI._updateLight();
+                this._lightUI.update();
             } else if(panelIndex===propertyPanel.Animations) {
                 if(this._animationUI==null) this._animationUI=new AnimationUI(this._vishva);
-                this._animationUI._updateAnimations();
+                this._animationUI.update();
             } else if(panelIndex===propertyPanel.Physics) {
                 if(this._physicsUI==null) this._physicsUI=new PhysicsUI(this._vishva);
-                this._physicsUI._updatePhysics()
+                this._physicsUI.update()
             } else if(panelIndex===propertyPanel.Material) {
                 if(this._materialUI==null) this._materialUI=new MaterialUI(this._vishva);
-                this._materialUI.updateMatUI();
+                this._materialUI.update();
+            } else if(panelIndex===propertyPanel.GrndSPS) {
+                if(this._grndSPSUI==null) this._grndSPSUI=new GrndSPSUI(this._vishva);
+                this._grndSPSUI.update();
             }
             //refresh sNaDialog if open
             if(this._generalUI._snaUI!=null&&this._generalUI._snaUI.isOpen()) {
@@ -155,10 +194,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     }
     const enum propertyPanel {
         General,
+        GrndDim,
         Physics,
         Material,
         Lights,
-        Animations
+        Animations,
+        GrndSPS
     }
 }
 

@@ -161,9 +161,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var navAdd: HTMLElement=document.getElementById("navAdd");
             navAdd.onclick=(e) => {
                 if(this._addAssetTDiag==null) {
-                    this._addAssetTDiag=new VTreeDialog(this._vishva,"Assets",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.babylon$|\.glb$",false);
+                    this._addAssetTDiag=new VTreeDialog(this._vishva,"Assets",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.obj$|\.babylon$|\.glb$|\.gltf$",false);
                     this._addAssetTDiag.addTreeListener((f,p,l) => {
-                        if(l) this._vishva.loadAsset2(p,f);
+                        if (l) {
+                            if (f.indexOf(".obj")>0 || f.indexOf(".babylon")>0 || f.indexOf(".glb")>0 ||f.indexOf(".gltf")>0){
+                                this._vishva.loadAsset2(p,f);
+                            }
+                        }
                     })
                 }
 
@@ -203,7 +207,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     if(this._addInternalAssetUI==null) {
                         this._addInternalAssetUI=new InternalAssetsUI(this._vishva,this._vishva.vishvaFiles);
                     }
-                    this._environment=new EnvironmentUI(this._vishva,this._addInternalAssetUI);
+                    this._environment=new EnvironmentUI(this._vishva,this._addInternalAssetUI,this);
                 }
                 this._environment.toggle();
                 return false;

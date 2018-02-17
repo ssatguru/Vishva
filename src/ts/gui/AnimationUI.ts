@@ -34,14 +34,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             animSkelChange.onclick=(e) => {
 
                 if(this._vishva.changeSkeleton(this._animSkelList.selectedOptions[0].value))
-                    this._updateAnimations();
+                    this.update();
                 else DialogMgr.showAlertDiag("Error: unable to switch");
             }
             //clone the selected skeleton and swicth to it
             animSkelClone.onclick=(e) => {
 
                 if(this._vishva.cloneChangeSkeleton(this._animSkelList.selectedOptions[0].value))
-                    this._updateAnimations();
+                    this.update();
                 else DialogMgr.showAlertDiag("Error: unable to clone and switch");
             }
 
@@ -120,7 +120,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         //            this.meshAnimDiag.dialog(dos);
         //        }
 
-        public _updateAnimations() {
+        public update() {
             //this.vishva.switchDisabled = true;
             this._skel=this._vishva.getSkeleton();
             var skelName: string;

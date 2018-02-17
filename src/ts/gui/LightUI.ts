@@ -57,7 +57,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         }
 
-        public _updateLight() {
+        public update() {
 
             let lightParm: LightParm=this._vishva.getAttachedLight();
             if(lightParm===null) {

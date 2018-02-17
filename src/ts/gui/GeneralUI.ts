@@ -338,7 +338,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //            };
         }
 
-        public _updateGeneral() {
+        public update() {
             
             this._genName.value=this._vishva.getName();
 

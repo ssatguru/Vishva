@@ -11,10 +11,18 @@ vishvaFiles=[
        "f":[
         "insect.glb"
       ]},
+      {"d":"Jamik",
+       "f":[
+        "GD_Jamik.png",
+        "Jamik.babylon",
+        "Jamik.babylon.manifest",
+        "Jamik2.babylon"
+      ]},
       {"d":"Joan",
        "f":[
         "Joan.babylon",
         "Joan.jpg",
+        "Joan2.babylon",
         "Joan_texture_image.jpg"
       ]},
       {"d":"minotour001",
@@ -30,9 +38,15 @@ vishvaFiles=[
       {"d":"NPC",
        "f":[
         "NPC.babylon",
-        "npc.blend",
-        "npc.blend1",
-        "NPC.log"
+        {"d":"NPC.fbm",
+         "f":[
+          "169aba19.jpg",
+          "3b6c645d.jpg",
+          "575d1bef.png",
+          "8c6f6e56.jpg",
+          "91bb8e40.jpg",
+          "c4e48af6.jpg"
+        ]}
       ]},
       {"d":"skeleton",
        "f":[
@@ -421,10 +435,10 @@ vishvaFiles=[
     "demo_backup.js",
     "dr.js",
     "greenery.js",
+    "groundSPS.js",
     "junk.js",
     "junkasset.js",
     "myworld4.js",
-    "myworld5.js",
-    "sps_world.js"
+    "myworld5.js"
   ]}
 ]

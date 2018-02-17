@@ -38,14 +38,14 @@ var org;
                             //change the mesh skeleton
                             animSkelChange.onclick = function (e) {
                                 if (_this._vishva.changeSkeleton(_this._animSkelList.selectedOptions[0].value))
-                                    _this._updateAnimations();
+                                    _this.update();
                                 else
                                     gui.DialogMgr.showAlertDiag("Error: unable to switch");
                             };
                             //clone the selected skeleton and swicth to it
                             animSkelClone.onclick = function (e) {
                                 if (_this._vishva.cloneChangeSkeleton(_this._animSkelList.selectedOptions[0].value))
-                                    _this._updateAnimations();
+                                    _this.update();
                                 else
                                     gui.DialogMgr.showAlertDiag("Error: unable to clone and switch");
                             };
@@ -118,7 +118,7 @@ var org;
                         //            };
                         //            this.meshAnimDiag.dialog(dos);
                         //        }
-                        AnimationUI.prototype._updateAnimations = function () {
+                        AnimationUI.prototype.update = function () {
                             //this.vishva.switchDisabled = true;
                             this._skel = this._vishva.getSkeleton();
                             var skelName;
@@ -430,9 +430,10 @@ var org;
                         /*
                          * Create Environment Dialog
                          */
-                        function EnvironmentUI(vishva, addInternalAssetUI) {
+                        function EnvironmentUI(vishva, addInternalAssetUI, vishvaGUI) {
                             var _this = this;
                             this._vishva = vishva;
+                            this._vishvaGUI = vishvaGUI;
                             this._addInternalAssetUI = addInternalAssetUI;
                             var sunPos = $("#sunPos");
                             var light = $("#light");
@@ -463,22 +464,24 @@ var org;
                             };
                             var trnButton = document.getElementById("trnButton");
                             trnButton.onclick = function (e) {
-                                if (_this._groundUI == null) {
-                                    _this._groundUI = new gui.GroundUI(_this._vishva);
-                                }
-                                _this._groundUI.toggle();
+                                //                if (this._groundUI2==null){
+                                //                    this._groundUI2=new GroundUI2(this._vishva,this._vishvaGUI);
+                                //                }
+                                //                this._groundUI2.toggle();
                                 //                let r =this._vishva.spreadOnGround();
                                 //                if (r!=null){
                                 //                    DialogMgr.showAlertDiag(r);
                                 //                }
+                                _this._vishva.selectGround();
                                 return true;
                             };
                             var ambColDiag = new gui.ColorPickerDiag("ambient color", "ambCol", this._vishva.getAmbientColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
                                 _this._vishva.setAmbientColor(hex);
                             });
-                            var trnColDiag = new gui.ColorPickerDiag("terrain color", "trnCol", this._vishva.getGroundColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
-                                _this._vishva.setGroundColor(hex);
-                            });
+                            //            
+                            //            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this._vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
+                            //                this._vishva.setGroundColor(hex);
+                            //            });
                             this._envDiag = new gui.VDialog("envDiv", "Environment", gui.DialogMgr.rightCenter, "", "", 350);
                         }
                         EnvironmentUI.prototype._sliderOptions = function (min, max, value) {
@@ -810,7 +813,7 @@ var org;
                             //                return true;
                             //            };
                         }
-                        GeneralUI.prototype._updateGeneral = function () {
+                        GeneralUI.prototype.update = function () {
                             this._genName.value = this._vishva.getName();
                             this._genSpace.value = this._vishva.getSpace();
                             this._updateTransform();
@@ -859,27 +862,165 @@ var org;
             (function (vishva_4) {
                 var gui;
                 (function (gui) {
-                    var GroundUI = (function () {
-                        function GroundUI(vishva) {
+                    /**
+                     * Provides a UI to manage GroundSPS
+                     */
+                    var GrndSPSUI = (function () {
+                        function GrndSPSUI(vishva) {
                             this._vishva = vishva;
-                            this._grndDiag = new gui.VDialog("grndDiv", "Manage Ground", gui.DialogMgr.center, "", "", 350);
+                            var spsSeed = new gui.InputNumber("spsSeed");
+                            var spsStep = new gui.InputNumber("spsStep");
+                            var sprdMin = new gui.InputVector2("sprdMin");
+                            var sprdMax = new gui.InputVector2("sprdMax");
+                            var posMin = new gui.InputVector3("posMin");
+                            var posMax = new gui.InputVector3("posMax");
+                            var sclMin = new gui.InputVector3("sclMin");
+                            var sclMax = new gui.InputVector3("sclMax");
+                            var rotMin = new gui.InputVector3("rotMin");
+                            var rotMax = new gui.InputVector3("rotMax");
                         }
-                        GroundUI.prototype.open = function () {
-                            this._grndDiag.open();
+                        GrndSPSUI.prototype.update = function () {
                         };
-                        GroundUI.prototype.isOpen = function () {
-                            return this._grndDiag.isOpen();
-                        };
-                        GroundUI.prototype.close = function () {
-                            this._grndDiag.close();
-                        };
-                        GroundUI.prototype.toggle = function () {
-                            this._grndDiag.toggle();
-                        };
-                        return GroundUI;
+                        return GrndSPSUI;
                     }());
-                    gui.GroundUI = GroundUI;
+                    gui.GrndSPSUI = GrndSPSUI;
                 })(gui = vishva_4.gui || (vishva_4.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_5) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * Provides UI to manage an Item(mesh) properties
+                     */
+                    var GroundUI2 = (function () {
+                        function GroundUI2(vishva, vishvaGUI) {
+                            var _this = this;
+                            //private _snaUI:SnaUI;
+                            this._grndDiag = null;
+                            this._fixingDragIssue = false;
+                            this._activePanel = -1;
+                            this._vishva = vishva;
+                            this._vishvaGUI = vishvaGUI;
+                            var propsAcc = $("#grndAcc");
+                            propsAcc.accordion({
+                                animate: 100,
+                                heightStyle: "content",
+                                collapsible: true,
+                                activate: function () {
+                                    _this._activePanel = propsAcc.accordion("option", "active");
+                                },
+                                beforeActivate: function (e, ui) {
+                                    _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
+                                }
+                            });
+                            //property dialog box
+                            this._grndDiag = $("#grndDiag");
+                            var dos = {
+                                autoOpen: false,
+                                resizable: false,
+                                position: gui.DialogMgr.leftCenter,
+                                minWidth: 420,
+                                width: 420,
+                                // height: "auto",
+                                height: 650,
+                                closeOnEscape: false,
+                                //a) on open set the values of the fields in the active panel.
+                                //b) also if we switched from another mesh vishav will close open
+                                //by calling refreshPropsDiag()
+                                //c) donot bother refreshing values if we are just restarting
+                                //dialog for height and width re-sizing after drag
+                                open: function (e, ui) {
+                                    if (!_this._fixingDragIssue) {
+                                        // refresh the active tab
+                                        _this._activePanel = propsAcc.accordion("option", "active");
+                                        _this.refreshPanel(_this._activePanel);
+                                    }
+                                    else {
+                                        _this._fixingDragIssue = false;
+                                    }
+                                },
+                                closeText: "",
+                                close: function () {
+                                    if (_this._vishvaGUI.resizing)
+                                        return;
+                                    if (!_this._fixingDragIssue) {
+                                        if ((_this._materialUI != null) && (_this._materialUI._textureUI != null) && _this._materialUI._textureUI.isOpen()) {
+                                            _this._materialUI._textureUI.close();
+                                        }
+                                    }
+                                },
+                                //after drag the dialog box doesnot resize
+                                //force resize by closing and opening
+                                dragStop: function (e, ui) {
+                                    _this._fixingDragIssue = true;
+                                    _this._grndDiag.dialog("close");
+                                    _this._grndDiag.dialog("open");
+                                }
+                            };
+                            this._grndDiag.dialog(dos);
+                            this._grndDiag["jpo"] = gui.DialogMgr.leftCenter;
+                            this._vishvaGUI.dialogs.push(this._grndDiag);
+                        }
+                        GroundUI2.prototype.open = function () {
+                            this._grndDiag.dialog("open");
+                        };
+                        GroundUI2.prototype.isOpen = function () {
+                            return this._grndDiag.dialog("isOpen");
+                        };
+                        GroundUI2.prototype.close = function () {
+                            this._grndDiag.dialog("close");
+                        };
+                        GroundUI2.prototype.toggle = function () {
+                            console.log("toggling");
+                            if (this.isOpen())
+                                this.close();
+                            else
+                                this.open();
+                        };
+                        GroundUI2.prototype.getPanelIndex = function (ui) {
+                            if (ui.text() == "General")
+                                return 0 /* General */;
+                            if (ui.text() == "Material")
+                                return 1 /* Material */;
+                            if (ui.text() == "SPS")
+                                return 2 /* SPS */;
+                        };
+                        GroundUI2.prototype.refreshPanel = function (panelIndex) {
+                            if (panelIndex === 0 /* General */) {
+                                if (this._generalUI == null)
+                                    this._generalUI = new gui.GeneralUI(this._vishva, this._vishvaGUI);
+                                this._generalUI.update();
+                            }
+                            else if (panelIndex === 2 /* SPS */) {
+                                if (this._SPSUI == null)
+                                    this._SPSUI = new gui.LightUI(this._vishva);
+                                this._SPSUI.update();
+                            }
+                            else if (panelIndex === 1 /* Material */) {
+                                if (this._materialUI == null)
+                                    this._materialUI = new gui.MaterialUI(this._vishva);
+                                this._materialUI.update();
+                            }
+                            //refresh sNaDialog if open
+                            if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
+                                this._generalUI._snaUI.close();
+                                this._generalUI._snaUI.show_sNaDiag();
+                            }
+                        };
+                        return GroundUI2;
+                    }());
+                    gui.GroundUI2 = GroundUI2;
+                })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -930,7 +1071,172 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_5) {
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
+                    var InputNumber = (function () {
+                        function InputNumber(eID, value) {
+                            if (value === void 0) { value = 0; }
+                            var _this = this;
+                            var e = document.getElementById(eID);
+                            this._inE = document.createElement("input");
+                            this._inE.type = "text";
+                            this._inE.value = Number(value).toString();
+                            this._inE.size = 2;
+                            this._inE.style.display = "inline-block";
+                            this._inE.onkeypress = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onkeydown = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onkeyup = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onchange = function (e) {
+                                var n = Number(_this._inE.value);
+                                if (isNaN(n))
+                                    _this._inE.value = "0";
+                                e.preventDefault();
+                                if (_this.onChange != null) {
+                                    _this.onChange(Number(_this._inE.value));
+                                }
+                            };
+                            e.appendChild(this._inE);
+                        }
+                        InputNumber.prototype.getValue = function () {
+                            var n = Number(this._inE.value);
+                            if (isNaN(n))
+                                return 0;
+                            else
+                                return n;
+                        };
+                        InputNumber.prototype.setValue = function (n) {
+                            this._inE.value = Number(n).toString();
+                        };
+                        return InputNumber;
+                    }());
+                    gui.InputNumber = InputNumber;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var Vector2 = BABYLON.Vector2;
+                    /**
+                     * provides a ui to input a vector2 value
+                     */
+                    var InputVector2 = (function () {
+                        function InputVector2(v3eID, v) {
+                            var _this = this;
+                            if (v) {
+                                this._v = v.clone();
+                            }
+                            else {
+                                this._v = new Vector2(0, 0);
+                            }
+                            this._x = new gui.InputNumber(v3eID, this._v.x);
+                            this._x.onChange = function (n) {
+                                _this._v.x = n;
+                            };
+                            this._y = new gui.InputNumber(v3eID, this._v.y);
+                            this._y.onChange = function (n) {
+                                _this._v.y = n;
+                            };
+                        }
+                        InputVector2.prototype.getValue = function () {
+                            return this._v;
+                        };
+                        InputVector2.prototype.setValue = function (v) {
+                            this._v.x = v.x;
+                            this._v.y = v.y;
+                            this._x.setValue(v.x);
+                            this._y.setValue(v.y);
+                        };
+                        return InputVector2;
+                    }());
+                    gui.InputVector2 = InputVector2;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var Vector3 = BABYLON.Vector3;
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
+                    var InputVector3 = (function () {
+                        function InputVector3(v3eID, v) {
+                            var _this = this;
+                            if (v) {
+                                this._v = v.clone();
+                            }
+                            else {
+                                this._v = new Vector3(0, 0, 0);
+                            }
+                            this._x = new gui.InputNumber(v3eID, this._v.x);
+                            this._x.onChange = function (n) {
+                                _this._v.x = n;
+                            };
+                            this._y = new gui.InputNumber(v3eID, this._v.y);
+                            this._y.onChange = function (n) {
+                                _this._v.y = n;
+                            };
+                            this._z = new gui.InputNumber(v3eID, this._v.z);
+                            this._z.onChange = function (n) {
+                                _this._v.z = n;
+                            };
+                        }
+                        InputVector3.prototype.getValue = function () {
+                            return this._v;
+                        };
+                        InputVector3.prototype.setValue = function (v) {
+                            this._v.x = v.x;
+                            this._v.y = v.y;
+                            this._v.z = v.z;
+                            this._x.setValue(v.x);
+                            this._y.setValue(v.y);
+                            this._z.setValue(v.z);
+                        };
+                        return InputVector3;
+                    }());
+                    gui.InputVector3 = InputVector3;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_6) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1029,7 +1335,7 @@ var org;
                         return InternalAssetsUI;
                     }());
                     gui.InternalAssetsUI = InternalAssetsUI;
-                })(gui = vishva_5.gui || (vishva_5.gui = {}));
+                })(gui = vishva_6.gui || (vishva_6.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1041,7 +1347,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_6) {
+            (function (vishva_7) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1052,6 +1358,7 @@ var org;
                             var _this = this;
                             //private _snaUI:SnaUI;
                             this._propsDiag = null;
+                            this._propsDiagDiv = null;
                             this._fixingDragIssue = false;
                             this._activePanel = -1;
                             /*
@@ -1061,7 +1368,8 @@ var org;
                             this.refreshingPropsDiag = false;
                             this._vishva = vishva;
                             this._vishvaGUI = vishvaGUI;
-                            var propsAcc = $("#propsAcc");
+                            this._propsDiagDiv = document.getElementById("propsAcc");
+                            var propsAcc = $(this._propsDiagDiv);
                             propsAcc.accordion({
                                 animate: 100,
                                 heightStyle: "content",
@@ -1073,6 +1381,7 @@ var org;
                                     _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
                                 }
                             });
+                            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
                             //property dialog box
                             this._propsDiag = $("#propsDiag");
                             var dos = {
@@ -1085,10 +1394,10 @@ var org;
                                 height: 650,
                                 closeOnEscape: false,
                                 //a) on open set the values of the fields in the active panel.
-                                //b) also if we switched from another mesh vishav will close open
-                                //by calling refreshPropsDiag()
-                                //c) donot bother refreshing values if we are just restarting
-                                //dialog for height and width re-sizing after drag
+                                //   also if we switched from another mesh vishav will close open
+                                //   by calling refreshPropsDiag().
+                                //b) donot bother refreshing values if we are just restarting
+                                //   dialog for height and width re-sizing after drag.
                                 open: function (e, ui) {
                                     if (!_this._fixingDragIssue) {
                                         // refresh the active tab
@@ -1111,6 +1420,9 @@ var org;
                                         if ((_this._materialUI != null) && (_this._materialUI._textureUI != null) && _this._materialUI._textureUI.isOpen()) {
                                             _this._materialUI._textureUI.close();
                                         }
+                                        if (_this._vishva.isGroundPicked()) {
+                                            _this._vishva.unSelectGrnd();
+                                        }
                                     }
                                 },
                                 //after drag the dialog box doesnot resize
@@ -1126,6 +1438,30 @@ var org;
                             this._vishvaGUI.dialogs.push(this._propsDiag);
                         }
                         ItemPropsUI.prototype.open = function () {
+                            var es;
+                            if (this._vishva.isGroundPicked()) {
+                                es = this._propsDiagDiv.getElementsByClassName("mesh");
+                                for (var i = 0; i < es.length; i++) {
+                                    es.item(i).style.display = "none";
+                                }
+                                es = document.getElementsByClassName("grnd");
+                                for (var i = 0; i < es.length; i++) {
+                                    if (es.item(i).tagName == "H3")
+                                        es.item(i).style.display = "block";
+                                    //TODO : if panel is active then open div too
+                                }
+                            }
+                            else {
+                                es = this._propsDiagDiv.getElementsByClassName("grnd");
+                                for (var i = 0; i < es.length; i++) {
+                                    es.item(i).style.display = "none";
+                                }
+                                es = document.getElementsByClassName("mesh");
+                                for (var i = 0; i < es.length; i++) {
+                                    if (es.item(i).tagName == "H3")
+                                        es.item(i).style.display = "block";
+                                }
+                            }
                             this._propsDiag.dialog("open");
                         };
                         ItemPropsUI.prototype.isOpen = function () {
@@ -1139,8 +1475,8 @@ var org;
                                 return;
                             if (this._propsDiag.dialog("isOpen") === true) {
                                 this.refreshingPropsDiag = true;
-                                this._propsDiag.dialog("close");
-                                this._propsDiag.dialog("open");
+                                this.close();
+                                this.open();
                             }
                         };
                         //only refresh if general panel is active;
@@ -1151,40 +1487,49 @@ var org;
                         ItemPropsUI.prototype.getPanelIndex = function (ui) {
                             if (ui.text() == "General")
                                 return 0 /* General */;
+                            if (ui.text() == "Ground Dimensions")
+                                return 1 /* GrndDim */;
                             if (ui.text() == "Physics")
-                                return 1 /* Physics */;
+                                return 2 /* Physics */;
                             if (ui.text() == "Material")
-                                return 2 /* Material */;
+                                return 3 /* Material */;
                             if (ui.text() == "Lights")
-                                return 3 /* Lights */;
+                                return 4 /* Lights */;
                             if (ui.text() == "Animations")
-                                return 4 /* Animations */;
+                                return 5 /* Animations */;
+                            if (ui.text() == "Ground SPS")
+                                return 6 /* GrndSPS */;
                         };
                         ItemPropsUI.prototype.refreshPanel = function (panelIndex) {
                             if (panelIndex === 0 /* General */) {
                                 if (this._generalUI == null)
                                     this._generalUI = new gui.GeneralUI(this._vishva, this._vishvaGUI);
-                                this._generalUI._updateGeneral();
+                                this._generalUI.update();
                             }
-                            else if (panelIndex === 3 /* Lights */) {
+                            else if (panelIndex === 4 /* Lights */) {
                                 if (this._lightUI == null)
                                     this._lightUI = new gui.LightUI(this._vishva);
-                                this._lightUI._updateLight();
+                                this._lightUI.update();
                             }
-                            else if (panelIndex === 4 /* Animations */) {
+                            else if (panelIndex === 5 /* Animations */) {
                                 if (this._animationUI == null)
                                     this._animationUI = new gui.AnimationUI(this._vishva);
-                                this._animationUI._updateAnimations();
+                                this._animationUI.update();
                             }
-                            else if (panelIndex === 1 /* Physics */) {
+                            else if (panelIndex === 2 /* Physics */) {
                                 if (this._physicsUI == null)
                                     this._physicsUI = new gui.PhysicsUI(this._vishva);
-                                this._physicsUI._updatePhysics();
+                                this._physicsUI.update();
                             }
-                            else if (panelIndex === 2 /* Material */) {
+                            else if (panelIndex === 3 /* Material */) {
                                 if (this._materialUI == null)
                                     this._materialUI = new gui.MaterialUI(this._vishva);
-                                this._materialUI.updateMatUI();
+                                this._materialUI.update();
+                            }
+                            else if (panelIndex === 6 /* GrndSPS */) {
+                                if (this._grndSPSUI == null)
+                                    this._grndSPSUI = new gui.GrndSPSUI(this._vishva);
+                                this._grndSPSUI.update();
                             }
                             //refresh sNaDialog if open
                             if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
@@ -1195,7 +1540,7 @@ var org;
                         return ItemPropsUI;
                     }());
                     gui.ItemPropsUI = ItemPropsUI;
-                })(gui = vishva_6.gui || (vishva_6.gui = {}));
+                })(gui = vishva_7.gui || (vishva_7.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1207,7 +1552,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_7) {
+            (function (vishva_8) {
                 var gui;
                 (function (gui) {
                     /*
@@ -1295,7 +1640,7 @@ var org;
                         return ItemsUI;
                     }());
                     gui.ItemsUI = ItemsUI;
-                })(gui = vishva_7.gui || (vishva_7.gui = {}));
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1307,7 +1652,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_8) {
+            (function (vishva_9) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1350,11 +1695,11 @@ var org;
                             this._lightDirY.onchange = function () { return _this._applyLight(); };
                             this._lightDirZ.onchange = function () { return _this._applyLight(); };
                         }
-                        LightUI.prototype._updateLight = function () {
+                        LightUI.prototype.update = function () {
                             var lightParm = this._vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this._lightAtt.checked = false;
-                                lightParm = new vishva_8.LightParm();
+                                lightParm = new vishva_9.LightParm();
                             }
                             else {
                                 this._lightAtt.checked = true;
@@ -1380,7 +1725,7 @@ var org;
                             //            }
                             if (!this._lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_8.LightParm();
+                            var lightParm = new vishva_9.LightParm();
                             lightParm.type = this._lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this._lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this._lightSpec.getColor());
@@ -1398,7 +1743,7 @@ var org;
                         return LightUI;
                     }());
                     gui.LightUI = LightUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+                })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1410,7 +1755,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_9) {
+            (function (vishva_10) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1437,6 +1782,12 @@ var org;
                             };
                             this._matID = document.getElementById("matID");
                             this._matName = document.getElementById("matName");
+                            this._matType = document.getElementById("matType");
+                            this._matClone = document.getElementById("matClone");
+                            this._matClone.onclick = function () {
+                                _this._vishva.cloneMaterial(_this._matID.innerText);
+                                _this.update();
+                            };
                             //material color
                             this._matColType = document.getElementById("matColType");
                             this._matColType.onchange = function () {
@@ -1492,9 +1843,9 @@ var org;
                                 _this._textureUI.setParms(_this._textID, _this._textName, _this._matTextType.value, _this._matID.innerText, _this._matTextImg);
                                 _this._textureUI.open();
                             };
-                            this.updateMatUI();
+                            this.update();
                         }
-                        MaterialUI.prototype.updateMatUI = function () {
+                        MaterialUI.prototype.update = function () {
                             //set transparency(visibility)
                             this._matVis.value = Number(this._vishva.getMeshVisibility()).toString();
                             this._matVisVal["value"] = Number(this._matVis.value).toFixed(2);
@@ -1508,6 +1859,7 @@ var org;
                         MaterialUI.prototype._updateMatDetails = function () {
                             this._matID.innerText = this._matIDs.value;
                             this._matName.innerText = this._vishva.getMaterialName(this._matIDs.value);
+                            this._matType.innerText = this._vishva.getMaterialType(this._matIDs.value);
                             this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value, this._matColType.value));
                             var dtls = this._vishva.getMatTexture(this._matID.innerText, this._matTextType.value);
                             this._textID = dtls[0];
@@ -1534,7 +1886,7 @@ var org;
                         return MaterialUI;
                     }());
                     gui.MaterialUI = MaterialUI;
-                })(gui = vishva_9.gui || (vishva_9.gui = {}));
+                })(gui = vishva_10.gui || (vishva_10.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1546,7 +1898,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_10) {
+            (function (vishva_11) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1595,7 +1947,7 @@ var org;
                                 return "0.0";
                             return val;
                         };
-                        PhysicsUI.prototype._updatePhysics = function () {
+                        PhysicsUI.prototype.update = function () {
                             var phyParms = this._vishva.getMeshPickedPhyParms();
                             if (phyParms !== null) {
                                 this._phyEna.setAttribute("checked", "true");
@@ -1620,7 +1972,7 @@ var org;
                         PhysicsUI.prototype._applyPhysics = function () {
                             var phyParms;
                             if (this._phyEna.checked) {
-                                phyParms = new vishva_10.PhysicsParm();
+                                phyParms = new vishva_11.PhysicsParm();
                                 phyParms.type = parseInt(this._phyType.value);
                                 phyParms.mass = parseFloat(this._phyMass.value);
                                 phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1633,7 +1985,7 @@ var org;
                         };
                         PhysicsUI.prototype._testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_10.PhysicsParm();
+                            phyParms = new vishva_11.PhysicsParm();
                             phyParms.type = parseInt(this._phyType.value);
                             phyParms.mass = parseFloat(this._phyMass.value);
                             phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1647,7 +1999,7 @@ var org;
                         return PhysicsUI;
                     }());
                     gui.PhysicsUI = PhysicsUI;
-                })(gui = vishva_10.gui || (vishva_10.gui = {}));
+                })(gui = vishva_11.gui || (vishva_11.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1659,7 +2011,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_11) {
+            (function (vishva_12) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1735,7 +2087,7 @@ var org;
                         return SettingsUI;
                     }());
                     gui.SettingsUI = SettingsUI;
-                })(gui = vishva_11.gui || (vishva_11.gui = {}));
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1747,7 +2099,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_12) {
+            (function (vishva_13) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2125,7 +2477,7 @@ var org;
                         return SnaUI;
                     }());
                     gui.SnaUI = SnaUI;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2137,7 +2489,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_13) {
+            (function (vishva_14) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2224,7 +2576,7 @@ var org;
                         return TextureUI;
                     }());
                     gui.TextureUI = TextureUI;
-                })(gui = vishva_13.gui || (vishva_13.gui = {}));
+                })(gui = vishva_14.gui || (vishva_14.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2236,7 +2588,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_14) {
+            (function (vishva_15) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -2362,10 +2714,13 @@ var org;
                             var navAdd = document.getElementById("navAdd");
                             navAdd.onclick = function (e) {
                                 if (_this._addAssetTDiag == null) {
-                                    _this._addAssetTDiag = new gui.VTreeDialog(_this._vishva, "Assets", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.babylon$|\.glb$", false);
+                                    _this._addAssetTDiag = new gui.VTreeDialog(_this._vishva, "Assets", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                                     _this._addAssetTDiag.addTreeListener(function (f, p, l) {
-                                        if (l)
-                                            _this._vishva.loadAsset2(p, f);
+                                        if (l) {
+                                            if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
+                                                _this._vishva.loadAsset2(p, f);
+                                            }
+                                        }
                                     });
                                 }
                                 _this._addAssetTDiag.toggle();
@@ -2402,7 +2757,7 @@ var org;
                                     if (_this._addInternalAssetUI == null) {
                                         _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, _this._vishva.vishvaFiles);
                                     }
-                                    _this._environment = new gui.EnvironmentUI(_this._vishva, _this._addInternalAssetUI);
+                                    _this._environment = new gui.EnvironmentUI(_this._vishva, _this._addInternalAssetUI, _this);
                                 }
                                 _this._environment.toggle();
                                 return false;
@@ -2561,7 +2916,7 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
-                })(gui = vishva_14.gui || (vishva_14.gui = {}));
+                })(gui = vishva_15.gui || (vishva_15.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2657,6 +3012,10 @@ var org;
                             e = this._vtree.getElementsByClassName("treeFolderClose");
                             for (var i = e.length - 1; i >= 0; i--) {
                                 e.item(i).setAttribute("class", "treeFolderOpen");
+                            }
+                            e = this._vtree.getElementsByClassName(this._closeIcon);
+                            for (var i = e.length - 1; i >= 0; i--) {
+                                e.item(i).setAttribute("class", this._openIcon);
                             }
                         };
                         VTree.prototype._openParent = function (e) {
@@ -2865,7 +3224,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_15) {
+            (function (vishva_16) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2944,7 +3303,7 @@ var org;
                         return VTreeDialog;
                     }());
                     gui.VTreeDialog = VTreeDialog;
-                })(gui = vishva_15.gui || (vishva_15.gui = {}));
+                })(gui = vishva_16.gui || (vishva_16.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3036,7 +3395,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_16) {
+            (function (vishva_17) {
                 var Vector3 = BABYLON.Vector3;
                 var Random = org.ssatguru.babylonjs.util.Random;
                 /**
@@ -3136,7 +3495,7 @@ var org;
                     };
                     return GroundSPS;
                 }());
-                vishva_16.GroundSPS = GroundSPS;
+                vishva_17.GroundSPS = GroundSPS;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -4527,6 +4886,27 @@ var org;
                         else
                             return mat.name;
                     };
+                    Vishva.prototype.getMaterialType = function (id) {
+                        var mat = this.scene.getMaterialByID(id);
+                        if (mat == null)
+                            return null;
+                        if (mat instanceof StandardMaterial)
+                            return "standard material";
+                        else
+                            return "not standard material";
+                    };
+                    Vishva.prototype.cloneMaterial = function (id) {
+                        var mat = this.scene.getMaterialByID(id);
+                        if (mat == null)
+                            return null;
+                        if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+                            var mm = this.meshPicked.material;
+                            this.meshPicked.material = mm.clone(mat.name + "Clone", true);
+                        }
+                        else {
+                            this.meshPicked.material = mat.clone(mat.name + "Clone");
+                        }
+                    };
                     Vishva.prototype.createText = function () {
                         var text = new Texture("", this.scene);
                         return text.uid;
@@ -4731,6 +5111,18 @@ var org;
                         else {
                             this.switchEditControl(mesh);
                         }
+                    };
+                    Vishva.prototype.selectGround = function () {
+                        if (!this.isMeshSelected) {
+                            this.selectForEdit(this.ground);
+                        }
+                        else {
+                            this.switchEditControl(this.ground);
+                        }
+                        this.ground.unfreezeWorldMatrix();
+                    };
+                    Vishva.prototype.unSelectGrnd = function () {
+                        this.removeEditControl();
                     };
                     //
                     // LIGHTS
@@ -5385,14 +5777,24 @@ var org;
                     Vishva.prototype.setAmbientColor = function (hex) {
                         this.scene.ambientColor = Color3.FromHexString(hex);
                     };
-                    Vishva.prototype.setGroundColor = function (hex) {
-                        var sm = this.ground.material;
-                        sm.diffuseColor = Color3.FromHexString(hex);
+                    Vishva.prototype.isGroundPicked = function () {
+                        if (!this.isMeshSelected)
+                            return false;
+                        if (this.meshPicked == this.ground)
+                            return true;
+                        else
+                            return false;
                     };
-                    Vishva.prototype.getGroundColor = function () {
-                        var sm = this.ground.material;
+                    /*
+                    public setGroundColor(hex: string) {
+                        let sm: StandardMaterial=<StandardMaterial>this.ground.material;
+                        sm.diffuseColor=Color3.FromHexString(hex);
+                    }
+                    public getGroundColor(): string {
+                        let sm: StandardMaterial=<StandardMaterial>this.ground.material;
                         return sm.diffuseColor.toHexString();
-                    };
+                    }
+                    */
                     Vishva.prototype.spreadOnGround = function () {
                         if (!this.isMeshSelected) {
                             return "no mesh selected";
@@ -5433,10 +5835,29 @@ var org;
                             return null;
                         }
                         //this.renameWorldTextures();
-                        var clone = this.meshPicked.clone(this.meshPicked.name, null);
+                        var p = this.meshPicked.position.clone();
+                        var re = this.meshPicked.rotation.clone();
+                        var rq = this.meshPicked.rotationQuaternion.clone();
+                        this.meshPicked.position = Vector3.Zero();
+                        this.meshPicked.rotation = Vector3.Zero();
+                        var meshObj = SceneSerializer.SerializeMesh(this.meshPicked, false, true);
+                        this.meshPicked.position = p;
+                        this.meshPicked.rotation = re;
+                        this.meshPicked.rotationQuaternion = rq;
+                        var meshString = JSON.stringify(meshObj);
+                        var file = new File([meshString], "AssetFile.babylon");
+                        return URL.createObjectURL(file);
+                    };
+                    Vishva.prototype.saveAsset_old = function () {
+                        if (!this.isMeshSelected) {
+                            return null;
+                        }
+                        //this.renameWorldTextures();
+                        var clone = this.meshPicked.clone(this.meshPicked.name, null, false);
                         clone.position = Vector3.Zero();
                         clone.rotation = Vector3.Zero();
-                        var meshObj = SceneSerializer.SerializeMesh(clone, false);
+                        //var meshObj: any=SceneSerializer.SerializeMesh(clone,false);
+                        var meshObj = SceneSerializer.SerializeMesh(this.meshPicked, false, true);
                         clone.dispose();
                         var meshString = JSON.stringify(meshObj);
                         var file = new File([meshString], "AssetFile.babylon");
@@ -5700,27 +6121,11 @@ var org;
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             //TODO think
                             //mesh.receiveShadows = true;
-                            if (mesh.material != null) {
-                                if (mesh.material instanceof BABYLON.MultiMaterial) {
-                                    var mm = mesh.material;
-                                    var mats = mm.subMaterials;
-                                    for (var _b = 0, mats_2 = mats; _b < mats_2.length; _b++) {
-                                        var mat = mats_2[_b];
-                                        mesh.material.backFaceCulling = false;
-                                        mesh.material.alpha = 1;
-                                        if (mat != null && mat instanceof BABYLON.StandardMaterial) {
-                                            this.renameAssetTextures(mat);
-                                        }
-                                    }
-                                }
-                                else {
-                                    mesh.material.backFaceCulling = false;
-                                    mesh.material.alpha = 1;
-                                    var sm = mesh.material;
-                                    this.renameAssetTextures(sm);
-                                }
-                            }
+                            //no need to rename 3.1 version seems to preserve the texture img urls
+                            //                this._renameTextures(mesh);
+                            this.scene.stopAnimation(mesh);
                             if (mesh.skeleton != null) {
+                                console.log("stopping animation");
                                 this.scene.stopAnimation(mesh.skeleton);
                                 this.fixAnimationRanges(mesh.skeleton);
                             }
@@ -5737,6 +6142,28 @@ var org;
                             this.animateMesh(lastMesh);
                         }
                     };
+                    Vishva.prototype._renameTextures = function (mesh) {
+                        if (mesh.material != null) {
+                            if (mesh.material instanceof BABYLON.MultiMaterial) {
+                                var mm = mesh.material;
+                                var mats = mm.subMaterials;
+                                for (var _i = 0, mats_2 = mats; _i < mats_2.length; _i++) {
+                                    var mat = mats_2[_i];
+                                    mesh.material.backFaceCulling = false;
+                                    mesh.material.alpha = 1;
+                                    if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                                        this.renameAssetTextures(mat);
+                                    }
+                                }
+                            }
+                            else {
+                                mesh.material.backFaceCulling = false;
+                                mesh.material.alpha = 1;
+                                var sm = mesh.material;
+                                this.renameAssetTextures(sm);
+                            }
+                        }
+                    };
                     Vishva.prototype.renameAssetTextures = function (sm) {
                         console.log("renameAssetTextures");
                         this.renameAssetTexture(sm.diffuseTexture);
@@ -5749,9 +6176,11 @@ var org;
                         if (bt == null)
                             return;
                         var textureName = bt.name;
+                        console.log("renaming " + textureName);
                         if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
                             //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
                             bt.name = "vishva/" + this.filePath + textureName;
+                            console.log("renamed to " + bt.name);
                         }
                     };
                     /**

@@ -1537,7 +1537,24 @@ namespace org.ssatguru.babylonjs.vishva {
             if(mat==null) return null;
             else return mat.name;
         }
-
+        public getMaterialType(id: string): string {
+            let mat: Material=this.scene.getMaterialByID(id);
+            if(mat==null) return null;
+            if (mat instanceof StandardMaterial) return "standard material";
+            else return "not standard material";
+        }
+        
+        public cloneMaterial(id:string){
+            let mat: Material=this.scene.getMaterialByID(id);
+            if(mat==null) return null;
+            if(this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+                    let mm: MultiMaterial=this.meshPicked.material;
+                    this.meshPicked.material=mm.clone(mat.name+"Clone",true);
+                }else {
+                    this.meshPicked.material=mat.clone(mat.name+"Clone");
+                }
+        }
+        
         public createText(): string {
             let text: Texture=new Texture("",this.scene);
             return text.uid;
@@ -1721,6 +1738,19 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.switchEditControl(mesh);
             }
 
+        }
+        
+        public selectGround(){
+            if(!this.isMeshSelected) {
+                this.selectForEdit(this.ground);
+            } else {
+                this.switchEditControl(this.ground);
+            }
+            this.ground.unfreezeWorldMatrix();
+        }
+        
+        public unSelectGrnd(){
+            this.removeEditControl();
         }
 
 
@@ -2403,7 +2433,13 @@ namespace org.ssatguru.babylonjs.vishva {
             this.scene.ambientColor=Color3.FromHexString(hex);
         }
 
-
+        public isGroundPicked():boolean{
+            if(!this.isMeshSelected) return false;
+            if (this.meshPicked==this.ground) return true;
+            else return false;
+        }
+        
+        /*
         public setGroundColor(hex: string) {
             let sm: StandardMaterial=<StandardMaterial>this.ground.material;
             sm.diffuseColor=Color3.FromHexString(hex);
@@ -2412,7 +2448,7 @@ namespace org.ssatguru.babylonjs.vishva {
             let sm: StandardMaterial=<StandardMaterial>this.ground.material;
             return sm.diffuseColor.toHexString();
         }
-        
+        */
         public spreadOnGround(): string {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
@@ -2458,16 +2494,34 @@ namespace org.ssatguru.babylonjs.vishva {
                 return null;
             }
             //this.renameWorldTextures();
-            var clone: Mesh=<Mesh>this.meshPicked.clone(this.meshPicked.name,null);
+            let p: Vector3=this.meshPicked.position.clone();
+            let re: Vector3=this.meshPicked.rotation.clone();
+            let rq: Quaternion=this.meshPicked.rotationQuaternion.clone();
+            this.meshPicked.position=Vector3.Zero();
+            this.meshPicked.rotation=Vector3.Zero();
+            var meshObj: any=SceneSerializer.SerializeMesh(this.meshPicked,false,true);
+            this.meshPicked.position=p;
+            this.meshPicked.rotation=re;
+            this.meshPicked.rotationQuaternion=rq;
+            var meshString: string=JSON.stringify(meshObj);
+            var file: File=new File([meshString],"AssetFile.babylon");
+            return URL.createObjectURL(file);
+        }
+        public saveAsset_old(): string {
+            if(!this.isMeshSelected) {
+                return null;
+            }
+            //this.renameWorldTextures();
+            var clone: Mesh=<Mesh>this.meshPicked.clone(this.meshPicked.name,null,false);
             clone.position=Vector3.Zero();
             clone.rotation=Vector3.Zero();
-            var meshObj: any=SceneSerializer.SerializeMesh(clone,false);
+            //var meshObj: any=SceneSerializer.SerializeMesh(clone,false);
+            var meshObj: any=SceneSerializer.SerializeMesh(this.meshPicked,false,true);
             clone.dispose();
             var meshString: string=JSON.stringify(meshObj);
             var file: File=new File([meshString],"AssetFile.babylon");
             return URL.createObjectURL(file);
         }
-
         public saveWorld(): string {
 
             if(this.editControl!=null) {
@@ -2736,25 +2790,12 @@ namespace org.ssatguru.babylonjs.vishva {
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                 //TODO think
                 //mesh.receiveShadows = true;
-                if(mesh.material!=null) {
-                    if(mesh.material instanceof BABYLON.MultiMaterial) {
-                        var mm: MultiMaterial=<MultiMaterial>mesh.material;
-                        var mats: Material[]=mm.subMaterials;
-                        for(let mat of mats) {
-                            mesh.material.backFaceCulling=false;
-                            mesh.material.alpha=1;
-                            if(mat!=null&&mat instanceof BABYLON.StandardMaterial) {
-                                this.renameAssetTextures(<StandardMaterial>mat);
-                            }
-                        }
-                    } else {
-                        mesh.material.backFaceCulling=false;
-                        mesh.material.alpha=1;
-                        var sm: StandardMaterial=<StandardMaterial>mesh.material;
-                        this.renameAssetTextures(sm);
-                    }
-                }
+                //no need to rename 3.1 version seems to preserve the texture img urls
+//                this._renameTextures(mesh);
+                
+                this.scene.stopAnimation(mesh);
                 if(mesh.skeleton!=null) {
+                    console.log("stopping animation");
                     this.scene.stopAnimation(mesh.skeleton);
                     this.fixAnimationRanges(mesh.skeleton);
                 }
@@ -2774,6 +2815,27 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         }
+        
+        private _renameTextures(mesh:AbstractMesh){
+            if(mesh.material!=null) {
+                    if(mesh.material instanceof BABYLON.MultiMaterial) {
+                        var mm: MultiMaterial=<MultiMaterial>mesh.material;
+                        var mats: Material[]=mm.subMaterials;
+                        for(let mat of mats) {
+                            mesh.material.backFaceCulling=false;
+                            mesh.material.alpha=1;
+                            if(mat!=null&&mat instanceof BABYLON.StandardMaterial) {
+                                this.renameAssetTextures(<StandardMaterial>mat);
+                            }
+                        }
+                    } else {
+                        mesh.material.backFaceCulling=false;
+                        mesh.material.alpha=1;
+                        var sm: StandardMaterial=<StandardMaterial>mesh.material;
+                        this.renameAssetTextures(sm);
+                    }
+                }
+        }
 
         private renameAssetTextures(sm: StandardMaterial) {
             console.log("renameAssetTextures");
@@ -2787,9 +2849,11 @@ namespace org.ssatguru.babylonjs.vishva {
         public renameAssetTexture(bt: BaseTexture) {
             if(bt==null) return;
             var textureName: string=bt.name;
+            console.log("renaming " + textureName);
             if(textureName.indexOf("vishva/")!==0&&textureName.indexOf("../")!==0) {
                 //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
                 bt.name="vishva/"+this.filePath+textureName;
+                console.log("renamed to " + bt.name);
             }
         }
 

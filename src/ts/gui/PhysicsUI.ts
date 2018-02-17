@@ -62,7 +62,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             return val;
         }
 
-        public _updatePhysics() {
+        public update() {
 
             let phyParms: PhysicsParm=this._vishva.getMeshPickedPhyParms();
             if(phyParms!==null) {

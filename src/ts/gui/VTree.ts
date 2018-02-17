@@ -94,6 +94,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             for(let i=e.length-1;i>=0;i--) {
                 e.item(i).setAttribute("class","treeFolderOpen");
             }
+            
+            e=this._vtree.getElementsByClassName(this._closeIcon);
+            for(let i=e.length-1;i>=0;i--) {
+                e.item(i).setAttribute("class",this._openIcon);
+            }
 
         }
 

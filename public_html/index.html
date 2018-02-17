@@ -171,12 +171,12 @@
                 list-style: none;
                 margin-left: 0;
                 padding-left: 0;
-                
+
             }
             li {
                 padding-left: 1em;
             }
-            
+
             .vt-icon {
                 cursor:pointer;
             }
@@ -275,12 +275,14 @@
                     </tr>
                     <tr>
                         <td>terrain</td>
-                        <td><Button id="trnButton">Select Terrain</button></td>
+                        <td><Button id="trnButton">Edit Terrain</button></td>
                     </tr>
+                    <!--
                     <tr>
                         <td>terrain color</td>
                         <td><div id="trnCol"></div></td>
                     </tr>
+                    -->
                 </table>
             </div>
 
@@ -366,8 +368,8 @@
                 properties accordion
                 -->
                 <div id="propsAcc" >
-                    <h3>General</h3>
-                    <div id="gen" >
+                    <h3 class="mesh">General</h3>
+                    <div id="gen" class="mesh">
                         <table >
                             <tr>
                                 <td>
@@ -484,9 +486,47 @@
                                                         </tr>-->
                         </table>
                     </div>
-
-                    <h3>Physics</h3>
-                    <div id="Physics" >
+                    
+                    <h3 class="grnd">Ground Dimensions</h3>
+                    <div id="grndDiv" class="grnd">
+                        <table>
+                            <tr>
+                                <td>ground name</td>
+                                <td id="grndID">name</td>
+                            </tr>
+                            <tr>
+                                <td>height map</td>
+                                <td id="grndHM">name</td>
+                            </tr>
+                            <tr>
+                                <td>width</td>
+                                <td id="grndW">name</td>
+                            </tr>
+                            <tr>
+                                <td>length</td>
+                                <td id="grndL">name</td>
+                            </tr>
+                            <tr>
+                                <td>subdivisions</td>
+                                <td id="grndS">name</td>
+                            </tr>
+                            <tr>
+                                <td>min height</td>
+                                <td id="grndminH">name</td>
+                            </tr>
+                            <tr>
+                                <td>max height</td>
+                                <td id="grndmaxH">name</td>
+                            </tr>
+                            <tr>
+                                <td>color filter</td>
+                                <td id="grndCF">name</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <h3 class="mesh">Physics</h3>
+                    <div id="Physics" class="mesh">
                         <table>
                             <tr>
                                 <td>enabled</td>
@@ -533,8 +573,8 @@
                         <button id ="phyReset" title="reset to state before test">reset</button>
                     </div>
 
-                    <h3>Material</h3>
-                    <div id="Material" >
+                    <h3 >Material</h3>
+                    <div id="Material">
                         <table>
                             <tr>
                                 <td>
@@ -581,6 +621,14 @@
                                         </tr>
                                         <tr>
                                             <td>
+                                                type
+                                            </td>
+                                            <td id="matType" colspan="2">
+                                                name
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
                                                 colors
                                             </td>
                                             <td>
@@ -617,14 +665,17 @@
                                                 <button id="matCreateText" style="display:none">create texture</button>
                                             </td>
                                         </tr>
+
                                     </table>
                                 </td>
                             </tr>
                         </table>
+                        <br>
+                        <button id="matClone"> clone and use </button>
                     </div>
 
-                    <h3>Lights</h3>
-                    <div id="Lights" >
+                    <h3 class="mesh">Lights</h3>
+                    <div id="Lights" class="mesh">
                         <table>
                             <tr>
                                 <td>attach</td>
@@ -702,8 +753,8 @@
                         </script>
                     </div>
 
-                    <h3>Animations</h3>
-                    <div id="meshAnimDiag" >
+                    <h3 class="mesh">Animations</h3>
+                    <div id="meshAnimDiag" class="mesh">
 
                         <br>skeleton name : <label id="skelName"></label>
                         <br>
@@ -755,6 +806,72 @@
                         <button id="animSkelClone">clone and switch to</button>
 
                     </div>
+                    
+                    <h3 class="grnd">Ground SPS</h3>
+                    <div id="grndSPS" class="grnd">
+                        <table>
+                            <tr>
+                                <td>seed</td>
+                                <td id="spsSeed"></td>
+                            </tr>
+                            <tr>
+                                <td>step</td>
+                                <td id="spsStep"></td>
+                            </tr>
+                            <tr>
+                                <td>lower corner</td>
+                                <td id="sprdMin"></td>
+                            </tr>
+                            <tr>
+                                <td>upper corner</td>
+                                <td id="sprdMax"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Generic Range</td>
+                            </tr>
+                            </tr>
+                                <td>position range (0,1)</td>
+                                <td id="posRange"></td>
+                            </tr>
+                             </tr>
+                                <td>scale range </td>
+                                <td id="sclRange"></td>
+                            </tr>
+                            </tr>
+                                <td>rotation range (0,180)</td>
+                                <td id="sclRange"></td>
+                            </tr> 
+                            <tr>
+                                <td colspan="2">Specific Range (overrides Generic)</td>
+                            </tr>
+                            </tr>
+                                <td>position min</td>
+                                <td id="posMin"></td>
+                            </tr>
+                            </tr>
+                                <td>position max</td>
+                                <td id="posMax"></td>
+                            </tr>
+                            </tr>
+                                <td>scaling min</td>
+                                <td id="sclMin"></td>
+                            </tr>
+                            </tr>
+                                <td>scaling max</td>
+                                <td id="sclMax"></td>
+                            </tr>
+                            </tr>
+                                <td>rotation min</td>
+                                <td id="rotMin"></td>
+                            </tr>
+                            </tr>
+                                <td>rotation max</td>
+                                <td id="rotMax"></td>
+                            </tr>
+                        </table>
+                        
+                    </div>
+                    
                 </div>
             </div>
 
@@ -821,49 +938,8 @@
                     </tr>
                 </table>
             </div>
+
             
-            <div id="grndDiv" title="Manage Terrain">
-                <table>
-                     <tr>
-                        <td>ground name</td>
-                        <td id="grndID">name</td>
-                    </tr>
-                    <tr>
-                        <td>height map</td>
-                        <td id="grndHM">name</td>
-                    </tr>
-                    <tr>
-                        <td>width</td>
-                        <td id="grndW">name</td>
-                    </tr>
-                    <tr>
-                        <td>length</td>
-                        <td id="grndL">name</td>
-                    </tr>
-                    <tr>
-                        <td>subdivisions</td>
-                        <td id="grndS">name</td>
-                    </tr>
-                    <tr>
-                        <td>min height</td>
-                        <td id="grndminH">name</td>
-                    </tr>
-                    <tr>
-                        <td>max height</td>
-                        <td id="grndmaxH">name</td>
-                    </tr>
-                    <tr>
-                        <td>color filter</td>
-                        <td id="grndCF">name</td>
-                    </tr>
-                    <tr>
-                        <td>material</td>
-                        <td id="grndMtl">name</td>
-                    </tr>
-                </table>
-            </div>
-            
-                
 
             <div id="saveDiv" oncontextmenu="event.stopPropagation();return true;">
                 <br>Your world file is ready for download.

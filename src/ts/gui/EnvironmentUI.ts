@@ -7,14 +7,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
      */
     export class EnvironmentUI{
         private _vishva:Vishva;
+        private _vishvaGUI:VishvaGUI;
         private _envDiag: VDialog;
         private _addInternalAssetUI: InternalAssetsUI;
-        private _groundUI:GroundUI; 
         /*
          * Create Environment Dialog
          */
-        constructor(vishva:Vishva,addInternalAssetUI: InternalAssetsUI) {
+        constructor(vishva:Vishva,addInternalAssetUI: InternalAssetsUI,vishvaGUI:VishvaGUI) {
             this._vishva=vishva;
+            this._vishvaGUI=vishvaGUI;
             this._addInternalAssetUI=addInternalAssetUI;
             
             let sunPos: JQuery=$("#sunPos");
@@ -53,24 +54,28 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             var trnButton: HTMLButtonElement=<HTMLButtonElement>document.getElementById("trnButton");
             trnButton.onclick=(e) => {
-//                if (this._groundUI==null){
-//                    this._groundUI=new GroundUI(this._vishva);
+//                if (this._groundUI2==null){
+//                    this._groundUI2=new GroundUI2(this._vishva,this._vishvaGUI);
 //                }
-//                this._groundUI.toggle();
-                let r =this._vishva.spreadOnGround();
-                if (r!=null){
-                    DialogMgr.showAlertDiag(r);
-                }
+//                this._groundUI2.toggle();
+                
+//                let r =this._vishva.spreadOnGround();
+//                if (r!=null){
+//                    DialogMgr.showAlertDiag(r);
+//                }
+                
+                this._vishva.selectGround();
                 return true;
             };
 
             let ambColDiag: ColorPickerDiag=new ColorPickerDiag("ambient color","ambCol",this._vishva.getAmbientColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
                 this._vishva.setAmbientColor(hex);
             });
-
-            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this._vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
-                this._vishva.setGroundColor(hex);
-            });
+            
+//            
+//            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this._vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
+//                this._vishva.setGroundColor(hex);
+//            });
 
             this._envDiag=new VDialog("envDiv","Environment",DialogMgr.rightCenter,"","",350);
         }

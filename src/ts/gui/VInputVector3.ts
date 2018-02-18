@@ -3,12 +3,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * provides a ui to input a vector3 value
      */
-    export class InputVector3{
+    export class VInputVector3{
 
         private _v:Vector3;
-        private _x:InputNumber;
-        private _y:InputNumber;
-        private _z:InputNumber;
+        private _x:VInputNumber;
+        private _y:VInputNumber;
+        private _z:VInputNumber;
         
         constructor (v3eID :string,v?:Vector3){
             if (v){
@@ -17,15 +17,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._v=new Vector3(0,0,0)
             }
             
-            this._x=new InputNumber(v3eID,this._v.x);
+            this._x=new VInputNumber(v3eID,this._v.x);
             this._x.onChange=(n)=>{
                 this._v.x=n;
             }
-            this._y=new InputNumber(v3eID,this._v.y);
+            this._y=new VInputNumber(v3eID,this._v.y);
             this._y.onChange=(n)=>{
                 this._v.y=n;
             }
-            this._z=new InputNumber(v3eID,this._v.z);
+            this._z=new VInputNumber(v3eID,this._v.z);
             this._z.onChange=(n)=>{
                 this._v.z=n;
             }

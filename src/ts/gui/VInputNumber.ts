@@ -2,7 +2,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * provides a ui to input a vector3 value
      */
-    export class InputNumber {
+    export class VInputNumber {
 
         private _inE: HTMLInputElement;
         public onChange:(n:number)=>void;

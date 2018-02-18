@@ -7,9 +7,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _phyEna: HTMLInputElement;
         private _phyType: HTMLSelectElement;
         private _phyMass: HTMLInputElement;
-        private _phyResVal: HTMLElement;
+        private _phyResVal: HTMLOutputElement;
         private _phyRes: HTMLInputElement;
-        private _phyFricVal: HTMLElement;
+        private _phyFricVal: HTMLOutputElement;
         private _phyFric: HTMLInputElement;
 
         constructor(vishva:Vishva) {
@@ -22,17 +22,18 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._phyMass=<HTMLInputElement>document.getElementById("phyMass");
 
             this._phyRes=<HTMLInputElement>document.getElementById("phyRes");
-            this._phyResVal=<HTMLElement>document.getElementById("phyResVal");
-            this._phyResVal["value"]="0.0";
+            this._phyResVal=<HTMLOutputElement>document.getElementById("phyResVal");
+            this._phyResVal.value="0.0";
             this._phyRes.oninput=() => {
-                this._phyResVal["value"]=this._formatValue(this._phyRes.value);
+                this._phyResVal.value=this._formatValue(this._phyRes.value);
             }
 
             this._phyFric=<HTMLInputElement>document.getElementById("phyFric");
-            this._phyFricVal=<HTMLElement>document.getElementById("phyFricVal");
-            this._phyFricVal["value"]="0.0";
+            this._phyFricVal=<HTMLOutputElement>document.getElementById("phyFricVal");
+            let abc: HTMLOutputElement;
+            this._phyFricVal.value="0.0";
             this._phyFric.oninput=() => {
-                this._phyFricVal["value"]=this._formatValue(this._phyFric.value);
+                this._phyFricVal.value=this._formatValue(this._phyFric.value);
             }
 
             let phyApply=<HTMLButtonElement>document.getElementById("phyApply");

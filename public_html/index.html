@@ -553,10 +553,10 @@
                                 <td><input type="text" id="phyMass" size="3" value="1"></td>
                             </tr>
                             <tr>
-                                <td>restitution : <output for="phyRes" id="phyResVal"></output></td>
+                                <td>restitution : </td>
                                 <td>
-                                    <input type="range" id="phyRes" min="0.0" max="1.0" step="0.1" value="0.0">
-
+                                    0.0<input type="range" id="phyRes" min="0.0" max="1.0" step="0.1" value="0.0">1.0
+                                    <output for="phyRes" id="phyResVal"></output>
                                 </td>
                             </tr>
                             <tr>
@@ -809,6 +809,7 @@
                     
                     <h3 class="grnd">Ground SPS</h3>
                     <div id="grndSPS" class="grnd">
+                        <button id="genSPSParms">generate parms</button>
                         <table>
                             <tr>
                                 <td>seed</td>
@@ -831,15 +832,18 @@
                             </tr>
                             </tr>
                                 <td>position range (0,1)</td>
-                                <td id="posRange"></td>
+                                <td id="posRange">
+                                </td>
                             </tr>
                              </tr>
-                                <td>scale range </td>
-                                <td id="sclRange"></td>
+                                <td>scale range(0,1)</td>
+                                <td id="sclRange">
+                                </td>
                             </tr>
                             </tr>
                                 <td>rotation range (0,180)</td>
-                                <td id="sclRange"></td>
+                                <td id="rotRange">
+                                </td>
                             </tr> 
                             <tr>
                                 <td colspan="2">Specific Range (overrides Generic)</td>
@@ -869,7 +873,7 @@
                                 <td id="rotMax"></td>
                             </tr>
                         </table>
-                        
+                        <button id="genSPS">generate parms</button>
                     </div>
                     
                 </div>

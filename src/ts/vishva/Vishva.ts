@@ -578,6 +578,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         //list of meshes selected in addition to the currently picked mesh
         //doesnot include the currently picked mesh (the one with edit control)
+        //is set to null when all are deslected
         private meshesPicked: Array<AbstractMesh>=null;
 
 
@@ -2449,6 +2450,31 @@ namespace org.ssatguru.babylonjs.vishva {
             return sm.diffuseColor.toHexString();
         }
         */
+        
+        private _grndSPS:GroundSPS;
+        public getSpreadDtls():SpreadDtls|string{
+            if (this.meshesPicked==null){
+                return "select a mesh to spread - use ctl-right click to select";
+            } else if (this.meshesPicked.length>1){
+                return "more than one mesh selected to spread - select only one";
+            }
+            if (! this._grndSPS){
+                this._grndSPS=new GroundSPS(this,<Mesh>this.meshesPicked[0],<GroundMesh>this.ground,{});
+            }
+            return this._grndSPS.getSpreadDtls();
+        }
+        public setSpreadDtls(sd:SpreadDtls){
+            this._grndSPS.setSpreadDtls(sd);
+        }
+        public generateSPS(){
+            this._grndSPS.generate();
+            if (this.GroundSPSs == null){
+                this.GroundSPSs= new Array();
+            }
+            this.GroundSPSs.push(this._grndSPS);
+        }
+        
+        
         public spreadOnGround(): string {
             if(!this.isMeshSelected) {
                 return "no mesh selected";

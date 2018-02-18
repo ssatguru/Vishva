@@ -867,18 +867,99 @@ var org;
                      */
                     var GrndSPSUI = (function () {
                         function GrndSPSUI(vishva) {
+                            var _this = this;
+                            this._ready = false;
                             this._vishva = vishva;
-                            var spsSeed = new gui.InputNumber("spsSeed");
-                            var spsStep = new gui.InputNumber("spsStep");
-                            var sprdMin = new gui.InputVector2("sprdMin");
-                            var sprdMax = new gui.InputVector2("sprdMax");
-                            var posMin = new gui.InputVector3("posMin");
-                            var posMax = new gui.InputVector3("posMax");
-                            var sclMin = new gui.InputVector3("sclMin");
-                            var sclMax = new gui.InputVector3("sclMax");
-                            var rotMin = new gui.InputVector3("rotMin");
-                            var rotMax = new gui.InputVector3("rotMax");
+                            var genSPSParms = document.getElementById("genSPSParms");
+                            genSPSParms.onclick = function () {
+                                if (_this._updateUI()) {
+                                    _this._ready = true;
+                                }
+                                else {
+                                    _this._ready = false;
+                                }
+                                ;
+                                genSPS.disabled = !_this._ready;
+                            };
+                            var genSPS = document.getElementById("genSPS");
+                            genSPS.disabled = this._ready;
+                            genSPS.onclick = function () {
+                                if (_this._updateSpreadParms()) {
+                                    _this._ready = true;
+                                }
+                                else {
+                                    _this._ready = false;
+                                }
+                                ;
+                                genSPS.disabled = !_this._ready;
+                            };
+                            this.spsSeed = new gui.VInputNumber("spsSeed");
+                            this.spsStep = new gui.VInputNumber("spsStep");
+                            this.sprdMin = new gui.VInputVector2("sprdMin");
+                            this.sprdMax = new gui.VInputVector2("sprdMax");
+                            this.posMin = new gui.VInputVector3("posMin");
+                            this.posMax = new gui.VInputVector3("posMax");
+                            this.sclMin = new gui.VInputVector3("sclMin");
+                            this.sclMax = new gui.VInputVector3("sclMax");
+                            this.rotMin = new gui.VInputVector3("rotMin");
+                            this.rotMax = new gui.VInputVector3("rotMax");
+                            this.posRange = new gui.VRange("posRange", 0, 1, 0.1, 0.5);
+                            this.sclRange = new gui.VRange("sclRange", 0, 1, 0.1, 0.5);
+                            this.rotRange = new gui.VRange("rotRange", 0, 180, 1, 5);
                         }
+                        GrndSPSUI.prototype._updateUI = function () {
+                            var sdo;
+                            var sd = this._vishva.getSpreadDtls();
+                            if (!(sd instanceof Object)) {
+                                gui.DialogMgr.showAlertDiag(sd);
+                                return false;
+                            }
+                            else {
+                                sdo = sd;
+                            }
+                            this.spsSeed.setValue(sdo.seed);
+                            this.spsStep.setValue(sdo.step);
+                            this.sprdMin.setValue(sdo.sprdMin);
+                            this.sprdMax.setValue(sdo.sprdMax);
+                            this.posMin.setValue(sdo.posMin);
+                            this.posMax.setValue(sdo.posMax);
+                            this.sclMin.setValue(sdo.sclMin);
+                            this.sclMax.setValue(sdo.sclMax);
+                            this.rotMin.setValue(sdo.rotMin);
+                            this.rotMax.setValue(sdo.rotMax);
+                            this.posRange.setValue(sdo.posRange);
+                            this.sclRange.setValue(sdo.sclRange);
+                            this.rotRange.setValue(sdo.rotRange);
+                            return true;
+                        };
+                        GrndSPSUI.prototype._updateSpreadParms = function () {
+                            console.log("_updateSpreadParms");
+                            var sdo;
+                            var sd = this._vishva.getSpreadDtls();
+                            if (!(sd instanceof Object)) {
+                                gui.DialogMgr.showAlertDiag(sd);
+                                return false;
+                            }
+                            else {
+                                sdo = sd;
+                            }
+                            sdo.seed = this.spsSeed.getValue();
+                            sdo.step = this.spsStep.getValue();
+                            sdo.sprdMin = this.sprdMin.getValue();
+                            sdo.sprdMax = this.sprdMax.getValue();
+                            sdo.posMin = this.posMin.getValue();
+                            sdo.posMax = this.posMax.getValue();
+                            sdo.sclMin = this.sclMin.getValue();
+                            sdo.sclMax = this.sclMax.getValue();
+                            sdo.rotMin = this.rotMin.getValue();
+                            sdo.rotMax = this.rotMax.getValue();
+                            sdo.posRange = this.posRange.getValue();
+                            sdo.sclRange = this.sclRange.getValue();
+                            sdo.rotRange = this.rotRange.getValue();
+                            this._vishva.setSpreadDtls(sdo);
+                            this._vishva.generateSPS();
+                            return true;
+                        };
                         GrndSPSUI.prototype.update = function () {
                         };
                         return GrndSPSUI;
@@ -1059,171 +1140,6 @@ var org;
                         return GuiUtils;
                     }());
                     gui.GuiUtils = GuiUtils;
-                })(gui = vishva.gui || (vishva.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva) {
-                var gui;
-                (function (gui) {
-                    /**
-                     * provides a ui to input a vector3 value
-                     */
-                    var InputNumber = (function () {
-                        function InputNumber(eID, value) {
-                            if (value === void 0) { value = 0; }
-                            var _this = this;
-                            var e = document.getElementById(eID);
-                            this._inE = document.createElement("input");
-                            this._inE.type = "text";
-                            this._inE.value = Number(value).toString();
-                            this._inE.size = 2;
-                            this._inE.style.display = "inline-block";
-                            this._inE.onkeypress = function (e) {
-                                e.stopPropagation();
-                            };
-                            this._inE.onkeydown = function (e) {
-                                e.stopPropagation();
-                            };
-                            this._inE.onkeyup = function (e) {
-                                e.stopPropagation();
-                            };
-                            this._inE.onchange = function (e) {
-                                var n = Number(_this._inE.value);
-                                if (isNaN(n))
-                                    _this._inE.value = "0";
-                                e.preventDefault();
-                                if (_this.onChange != null) {
-                                    _this.onChange(Number(_this._inE.value));
-                                }
-                            };
-                            e.appendChild(this._inE);
-                        }
-                        InputNumber.prototype.getValue = function () {
-                            var n = Number(this._inE.value);
-                            if (isNaN(n))
-                                return 0;
-                            else
-                                return n;
-                        };
-                        InputNumber.prototype.setValue = function (n) {
-                            this._inE.value = Number(n).toString();
-                        };
-                        return InputNumber;
-                    }());
-                    gui.InputNumber = InputNumber;
-                })(gui = vishva.gui || (vishva.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva) {
-                var gui;
-                (function (gui) {
-                    var Vector2 = BABYLON.Vector2;
-                    /**
-                     * provides a ui to input a vector2 value
-                     */
-                    var InputVector2 = (function () {
-                        function InputVector2(v3eID, v) {
-                            var _this = this;
-                            if (v) {
-                                this._v = v.clone();
-                            }
-                            else {
-                                this._v = new Vector2(0, 0);
-                            }
-                            this._x = new gui.InputNumber(v3eID, this._v.x);
-                            this._x.onChange = function (n) {
-                                _this._v.x = n;
-                            };
-                            this._y = new gui.InputNumber(v3eID, this._v.y);
-                            this._y.onChange = function (n) {
-                                _this._v.y = n;
-                            };
-                        }
-                        InputVector2.prototype.getValue = function () {
-                            return this._v;
-                        };
-                        InputVector2.prototype.setValue = function (v) {
-                            this._v.x = v.x;
-                            this._v.y = v.y;
-                            this._x.setValue(v.x);
-                            this._y.setValue(v.y);
-                        };
-                        return InputVector2;
-                    }());
-                    gui.InputVector2 = InputVector2;
-                })(gui = vishva.gui || (vishva.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva) {
-                var gui;
-                (function (gui) {
-                    var Vector3 = BABYLON.Vector3;
-                    /**
-                     * provides a ui to input a vector3 value
-                     */
-                    var InputVector3 = (function () {
-                        function InputVector3(v3eID, v) {
-                            var _this = this;
-                            if (v) {
-                                this._v = v.clone();
-                            }
-                            else {
-                                this._v = new Vector3(0, 0, 0);
-                            }
-                            this._x = new gui.InputNumber(v3eID, this._v.x);
-                            this._x.onChange = function (n) {
-                                _this._v.x = n;
-                            };
-                            this._y = new gui.InputNumber(v3eID, this._v.y);
-                            this._y.onChange = function (n) {
-                                _this._v.y = n;
-                            };
-                            this._z = new gui.InputNumber(v3eID, this._v.z);
-                            this._z.onChange = function (n) {
-                                _this._v.z = n;
-                            };
-                        }
-                        InputVector3.prototype.getValue = function () {
-                            return this._v;
-                        };
-                        InputVector3.prototype.setValue = function (v) {
-                            this._v.x = v.x;
-                            this._v.y = v.y;
-                            this._v.z = v.z;
-                            this._x.setValue(v.x);
-                            this._y.setValue(v.y);
-                            this._z.setValue(v.z);
-                        };
-                        return InputVector3;
-                    }());
-                    gui.InputVector3 = InputVector3;
                 })(gui = vishva.gui || (vishva.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -1913,15 +1829,16 @@ var org;
                             this._phyMass = document.getElementById("phyMass");
                             this._phyRes = document.getElementById("phyRes");
                             this._phyResVal = document.getElementById("phyResVal");
-                            this._phyResVal["value"] = "0.0";
+                            this._phyResVal.value = "0.0";
                             this._phyRes.oninput = function () {
-                                _this._phyResVal["value"] = _this._formatValue(_this._phyRes.value);
+                                _this._phyResVal.value = _this._formatValue(_this._phyRes.value);
                             };
                             this._phyFric = document.getElementById("phyFric");
                             this._phyFricVal = document.getElementById("phyFricVal");
-                            this._phyFricVal["value"] = "0.0";
+                            var abc;
+                            this._phyFricVal.value = "0.0";
                             this._phyFric.oninput = function () {
-                                _this._phyFricVal["value"] = _this._formatValue(_this._phyFric.value);
+                                _this._phyFricVal.value = _this._formatValue(_this._phyFric.value);
                             };
                             var phyApply = document.getElementById("phyApply");
                             var phyTest = document.getElementById("phyTest");
@@ -2588,6 +2505,171 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
+                    var VInputNumber = (function () {
+                        function VInputNumber(eID, value) {
+                            if (value === void 0) { value = 0; }
+                            var _this = this;
+                            var e = document.getElementById(eID);
+                            this._inE = document.createElement("input");
+                            this._inE.type = "text";
+                            this._inE.value = Number(value).toString();
+                            this._inE.size = 2;
+                            this._inE.style.display = "inline-block";
+                            this._inE.onkeypress = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onkeydown = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onkeyup = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onchange = function (e) {
+                                var n = Number(_this._inE.value);
+                                if (isNaN(n))
+                                    _this._inE.value = "0";
+                                e.preventDefault();
+                                if (_this.onChange != null) {
+                                    _this.onChange(Number(_this._inE.value));
+                                }
+                            };
+                            e.appendChild(this._inE);
+                        }
+                        VInputNumber.prototype.getValue = function () {
+                            var n = Number(this._inE.value);
+                            if (isNaN(n))
+                                return 0;
+                            else
+                                return n;
+                        };
+                        VInputNumber.prototype.setValue = function (n) {
+                            this._inE.value = Number(n).toString();
+                        };
+                        return VInputNumber;
+                    }());
+                    gui.VInputNumber = VInputNumber;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var Vector2 = BABYLON.Vector2;
+                    /**
+                     * provides a ui to input a vector2 value
+                     */
+                    var VInputVector2 = (function () {
+                        function VInputVector2(v3eID, v) {
+                            var _this = this;
+                            if (v) {
+                                this._v = v.clone();
+                            }
+                            else {
+                                this._v = new Vector2(0, 0);
+                            }
+                            this._x = new gui.VInputNumber(v3eID, this._v.x);
+                            this._x.onChange = function (n) {
+                                _this._v.x = n;
+                            };
+                            this._y = new gui.VInputNumber(v3eID, this._v.y);
+                            this._y.onChange = function (n) {
+                                _this._v.y = n;
+                            };
+                        }
+                        VInputVector2.prototype.getValue = function () {
+                            return this._v;
+                        };
+                        VInputVector2.prototype.setValue = function (v) {
+                            this._v.x = v.x;
+                            this._v.y = v.y;
+                            this._x.setValue(v.x);
+                            this._y.setValue(v.y);
+                        };
+                        return VInputVector2;
+                    }());
+                    gui.VInputVector2 = VInputVector2;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var Vector3 = BABYLON.Vector3;
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
+                    var VInputVector3 = (function () {
+                        function VInputVector3(v3eID, v) {
+                            var _this = this;
+                            if (v) {
+                                this._v = v.clone();
+                            }
+                            else {
+                                this._v = new Vector3(0, 0, 0);
+                            }
+                            this._x = new gui.VInputNumber(v3eID, this._v.x);
+                            this._x.onChange = function (n) {
+                                _this._v.x = n;
+                            };
+                            this._y = new gui.VInputNumber(v3eID, this._v.y);
+                            this._y.onChange = function (n) {
+                                _this._v.y = n;
+                            };
+                            this._z = new gui.VInputNumber(v3eID, this._v.z);
+                            this._z.onChange = function (n) {
+                                _this._v.z = n;
+                            };
+                        }
+                        VInputVector3.prototype.getValue = function () {
+                            return this._v;
+                        };
+                        VInputVector3.prototype.setValue = function (v) {
+                            this._v.x = v.x;
+                            this._v.y = v.y;
+                            this._v.z = v.z;
+                            this._x.setValue(v.x);
+                            this._y.setValue(v.y);
+                            this._z.setValue(v.z);
+                        };
+                        return VInputVector3;
+                    }());
+                    gui.VInputVector3 = VInputVector3;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
             (function (vishva_15) {
                 var gui;
                 (function (gui) {
@@ -2917,6 +2999,60 @@ var org;
                     }());
                     gui.SelectType = SelectType;
                 })(gui = vishva_15.gui || (vishva_15.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
+                    var VRange = (function () {
+                        function VRange(eID, min, max, step, value) {
+                            if (min === void 0) { min = 0; }
+                            if (max === void 0) { max = 1; }
+                            if (step === void 0) { step = 0.01; }
+                            if (value === void 0) { value = 0; }
+                            var e = document.getElementById(eID);
+                            var d = document.createElement("div");
+                            var h = document.createElement("div");
+                            h.setAttribute("class", "ui-slider-handle");
+                            d.appendChild(h);
+                            var hndl = $(h);
+                            e.appendChild(d);
+                            this._r = $(d);
+                            this._r.slider({
+                                min: min,
+                                max: max,
+                                step: step,
+                                value: value,
+                                create: function () {
+                                    hndl.text(value);
+                                },
+                                slide: function (e, ui) {
+                                    hndl.text(ui.value);
+                                }
+                            });
+                        }
+                        VRange.prototype.getValue = function () {
+                            return this._r.slider("option", "value");
+                        };
+                        VRange.prototype.setValue = function (n) {
+                            return this._r.slider("option", "value", n);
+                        };
+                        return VRange;
+                    }());
+                    gui.VRange = VRange;
+                })(gui = vishva.gui || (vishva.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3396,33 +3532,37 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva_17) {
+                var Vector2 = BABYLON.Vector2;
                 var Vector3 = BABYLON.Vector3;
                 var Random = org.ssatguru.babylonjs.util.Random;
+                var SolidParticleSystem = BABYLON.SolidParticleSystem;
                 /**
                  * Manages a SPS whose particles are spread over a gound mesh.
                  */
                 var GroundSPS = (function () {
                     function GroundSPS(vishva, mesh, groundMesh, spreadDtls) {
-                        var _this = this;
                         this.sx = 0;
                         this.sz = 0;
-                        this.sXmin = 0;
-                        this.sXmax = 0;
-                        this.sZmin = 0;
-                        this.sZmax = 0;
                         this.sCount = 0;
                         this._vishva = vishva;
                         this._mesh = mesh;
                         this._groundMesh = groundMesh;
                         this._spreadDtls = spreadDtls;
+                        if (!spreadDtls.seed) {
+                            this._spreadDtls.seed = Math.random() * 100;
+                        }
                         this._rand = new Random(this._spreadDtls.seed);
-                        this._setSpreadParms(mesh, groundMesh, spreadDtls);
-                        var SPS = new BABYLON.SolidParticleSystem('SPS', this._vishva.scene, { updatable: false, isPickable: false });
-                        SPS.addShape(this._mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
-                        this.sps = SPS.buildMesh();
-                        this.sps.material = this._mesh.material;
-                        this.sps.doNotSerialize = true;
+                        this._sps = new SolidParticleSystem('SPS', this._vishva.scene, { updatable: false, isPickable: false });
+                        this._updateSpreadParms(this._mesh, this._groundMesh, this._spreadDtls);
                     }
+                    GroundSPS.prototype.generate = function () {
+                        var _this = this;
+                        this._updateSpreadParms(this._mesh, this._groundMesh, this._spreadDtls);
+                        this._sps.addShape(this._mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
+                        this.spsMesh = this._sps.buildMesh();
+                        this.spsMesh.material = this._mesh.material;
+                        this.spsMesh.doNotSerialize = true;
+                    };
                     GroundSPS.prototype.serialize = function () {
                         return {
                             meshID: this._mesh.id,
@@ -3430,16 +3570,24 @@ var org;
                             spreadDtls: this._spreadDtls
                         };
                     };
-                    GroundSPS.prototype._setSpreadParms = function (m, gm, sd) {
+                    GroundSPS.prototype.setSpreadDtls = function (sd) {
+                        this._spreadDtls = sd;
+                    };
+                    GroundSPS.prototype.getSpreadDtls = function () {
+                        return this._spreadDtls;
+                    };
+                    GroundSPS.prototype._updateSpreadParms = function (m, gm, sd) {
                         if (!sd.step)
                             sd.step = m.getBoundingInfo().boundingSphere.radius;
-                        this.sXmin = gm._minX + sd.step;
-                        this.sZmin = gm._minZ + sd.step;
-                        this.sXmax = gm._maxX - sd.step;
-                        this.sZmax = gm._maxZ - sd.step;
-                        this.sCount = (gm._width / sd.step - 1) * (gm._height / sd.step - 1);
-                        this.sx = this.sXmin;
-                        this.sz = this.sZmax;
+                        if (!sd.sprdMin) {
+                            sd.sprdMin = new Vector2(gm._minX + sd.step, gm._minZ + sd.step);
+                        }
+                        if (!sd.sprdMax) {
+                            sd.sprdMax = new Vector2(gm._maxX - sd.step, gm._maxZ - sd.step);
+                        }
+                        this.sCount = ((sd.sprdMax.x - sd.sprdMin.x) / sd.step - 1) * ((sd.sprdMax.y - sd.sprdMin.y) / sd.step - 1);
+                        this.sx = sd.sprdMin.x;
+                        this.sz = sd.sprdMax.y;
                         if (!sd.posRange)
                             sd.posRange = 0.5;
                         if (!sd.sclRange)
@@ -3488,8 +3636,8 @@ var org;
                         part.rotation.y = this._rand.generate(this._spreadDtls.rotMin.y, this._spreadDtls.rotMax.y);
                         part.rotation.z = this._rand.generate(this._spreadDtls.rotMin.z, this._spreadDtls.rotMax.z);
                         this.sx = this.sx + this._spreadDtls.step;
-                        if (this.sx > this.sXmax) {
-                            this.sx = this.sXmin;
+                        if (this.sx > this._spreadDtls.sprdMax.x) {
+                            this.sx = this._spreadDtls.sprdMin.x;
                             this.sz = this.sz - this._spreadDtls.step;
                         }
                     };
@@ -3627,6 +3775,7 @@ var org;
                         this.fogDensity = 0;
                         //list of meshes selected in addition to the currently picked mesh
                         //doesnot include the currently picked mesh (the one with edit control)
+                        //is set to null when all are deslected
                         this.meshesPicked = null;
                         this.isMeshSelected = false;
                         this.cameraTargetPos = new Vector3(0, 0, 0);
@@ -5785,16 +5934,24 @@ var org;
                         else
                             return false;
                     };
-                    /*
-                    public setGroundColor(hex: string) {
-                        let sm: StandardMaterial=<StandardMaterial>this.ground.material;
-                        sm.diffuseColor=Color3.FromHexString(hex);
-                    }
-                    public getGroundColor(): string {
-                        let sm: StandardMaterial=<StandardMaterial>this.ground.material;
-                        return sm.diffuseColor.toHexString();
-                    }
-                    */
+                    Vishva.prototype.getSpreadDtls = function () {
+                        if (this.meshesPicked == null) {
+                            return "select a mesh to spread - use ctl-right click to select";
+                        }
+                        else if (this.meshesPicked.length > 1) {
+                            return "more than one mesh selected to spread - select only one";
+                        }
+                        if (!this._grndSPS) {
+                            this._grndSPS = new GroundSPS(this, this.meshesPicked[0], this.ground, {});
+                        }
+                        return this._grndSPS.getSpreadDtls();
+                    };
+                    Vishva.prototype.setSpreadDtls = function (sd) {
+                        this._grndSPS.setSpreadDtls(sd);
+                    };
+                    Vishva.prototype.generateSPS = function () {
+                        this._grndSPS.generate();
+                    };
                     Vishva.prototype.spreadOnGround = function () {
                         if (!this.isMeshSelected) {
                             return "no mesh selected";

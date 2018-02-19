@@ -4,23 +4,27 @@ namespace org.ssatguru.babylonjs.vishva.gui {
      * Provides a UI to manage GroundSPS
      */
     export class GrndSPSUI {
+        
         private _vishva: Vishva;
         private _grndSPS: GroundSPS;
-        private _ready:boolean=false;
+        private _ready: boolean=false;
 
-        spsSeed: VInputNumber;
-        spsStep: VInputNumber;
-        sprdMin: VInputVector2;
-        sprdMax: VInputVector2;
-        posMin: VInputVector3;
-        posMax: VInputVector3;
-        sclMin: VInputVector3;
-        sclMax: VInputVector3;
-        rotMin: VInputVector3;
-        rotMax: VInputVector3;
-        posRange: VRange;
-        sclRange: VRange;
-        rotRange: VRange;
+        private _spsList: VInputSelect;
+        private _spsName:HTMLElement;
+        private _spsMesh:HTMLElement;
+        private spsSeed: VInputNumber;
+        private spsStep: VInputNumber;
+        private sprdMin: VInputVector2;
+        private sprdMax: VInputVector2;
+        private posMin: VInputVector3;
+        private posMax: VInputVector3;
+        private sclMin: VInputVector3;
+        private sclMax: VInputVector3;
+        private rotMin: VInputVector3;
+        private rotMax: VInputVector3;
+        private posRange: VRange;
+        private sclRange: VRange;
+        private rotRange: VRange;
 
 
 
@@ -29,9 +33,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             let genSPSParms: HTMLElement=document.getElementById("genSPSParms");
             genSPSParms.onclick=() => {
-                if (this._updateUI()){
+                if(this._updateUI()) {
                     this._ready=true;
-                }else{
+                } else {
                     this._ready=false;
                 };
                 genSPS.disabled=!this._ready;
@@ -39,13 +43,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let genSPS: HTMLButtonElement=<HTMLButtonElement>document.getElementById("genSPS");
             genSPS.disabled=this._ready;
             genSPS.onclick=() => {
-                if (this._updateSpreadParms()){
+                if(this._updateSpreadParms()) {
                     this._ready=true;
-                }else{
+                } else {
                     this._ready=false;
                 };
                 genSPS.disabled=!this._ready;
             }
+            this._spsList=new VInputSelect("spsList",this._vishva.getGrndSPSList());
+            this._spsList.onSelect=(id: string) => {
+                this._updateUI(id);
+            }
+            
+            this._spsName=document.getElementById("spsName");
+            this._spsMesh=document.getElementById("spsMesh");
             this.spsSeed=new VInputNumber("spsSeed");
             this.spsStep=new VInputNumber("spsStep");
             this.sprdMin=new VInputVector2("sprdMin");
@@ -60,18 +71,31 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.sclRange=new VRange("sclRange",0,1,0.1,0.5);
             this.rotRange=new VRange("rotRange",0,180,1,5);
         }
-        
 
-        private _updateUI():boolean {
-            let sdo:SpreadDtls;
-            let sd: SpreadDtls|string=this._vishva.getSpreadDtls()
-            
-            if(!(sd instanceof Object)) {
-                DialogMgr.showAlertDiag(sd);
-                return false;
-            }else{
-                sdo=<SpreadDtls>sd;
+
+        private _updateUI(gSPSid?: string): boolean {
+            let sdo: SpreadDtls;
+            if(gSPSid) {
+                let gs: GroundSPS;
+                gs=this._vishva.getGrndSPSbyID(gSPSid);
+                if(gs==null) {
+                    DialogMgr.showAlertDiag("could not find gound sps with id : "+gSPSid);
+                    return;
+                }
+                sdo=gs.getSpreadDtls();
+                this._grndSPS=gs;
+            } else {
+                let gs: GroundSPS|string=this._vishva.createGrndSPS();
+                if(!(gs instanceof Object)) {
+                    DialogMgr.showAlertDiag(gs);
+                    return false;
+                } else {
+                    sdo=(<GroundSPS>gs).getSpreadDtls();
+                    this._grndSPS=<GroundSPS>gs;
+                }
             }
+            this._spsName.innerText=this._grndSPS.name +"("+this._grndSPS.id+")";
+            this._spsMesh.innerText=this._grndSPS.mesh.name +"("+this._grndSPS.mesh.id+")";
             this.spsSeed.setValue(sdo.seed);
             this.spsStep.setValue(sdo.step);
             this.sprdMin.setValue(sdo.sprdMin);
@@ -87,18 +111,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this.rotRange.setValue(sdo.rotRange);
             return true;
         }
-        
-        private _updateSpreadParms():boolean {
-            console.log("_updateSpreadParms");
-            let sdo:SpreadDtls;
-            let sd: SpreadDtls|string=this._vishva.getSpreadDtls()
-            
-            if(!(sd instanceof Object)) {
-                DialogMgr.showAlertDiag(sd);
-                return false;
-            }else{
-                sdo=<SpreadDtls>sd;
-            }
+
+        private _updateSpreadParms(): boolean {
+            let sdo: SpreadDtls=this._grndSPS.getSpreadDtls();
             sdo.seed=this.spsSeed.getValue();
             sdo.step=this.spsStep.getValue();
             sdo.sprdMin=this.sprdMin.getValue();
@@ -112,14 +127,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             sdo.posRange=this.posRange.getValue();
             sdo.sclRange=this.sclRange.getValue();
             sdo.rotRange=this.rotRange.getValue();
-            this._vishva.setSpreadDtls(sdo);
-            this._vishva.generateSPS();
+            this._grndSPS.setSpreadDtls(sdo);
+            this._grndSPS.generate();
+            this._vishva.updateSPSArray(this._grndSPS);
             return true;
         }
-
-        public update() {
-
-        }
-
     }
 }

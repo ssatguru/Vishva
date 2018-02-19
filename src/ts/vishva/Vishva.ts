@@ -91,7 +91,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
         //skyboxes: Array<string>;
 
-        assets: Object;
         vishvaFiles: Array<any>;
 
         skyboxTextures: string="vishva/internal/textures/skybox-default/default";
@@ -126,21 +125,25 @@ namespace org.ssatguru.babylonjs.vishva {
         SOUND_ASSET_LOCATION: string="vishva/assets/sounds/";
 
         //each asset has a name and a url
-        //the url seems to be ignored.
-        //babylonjs gets the location of the asset as below
+        //the url is used by loadmesh but ignored by scene loader function
+        //
+        //scene loader gets the location of the asset as below
         //
         //location = (home url) + (root url specified in the scene loader functions) + (asset name)
         //
+        //Unfortunately the root url is also suppose to be the root url of the scene file.
         //if scene file name is passed as parm to the scene loader functions then root url should point to the scene file location
-        //if "data:" is used instead, then root url can point to the base url for resources.
         //
-        //might bea good idea to load scene file directly and then just pass data to scene loader functions
+        //Which means the scene root url and resource root url should be the same.
+        //Thus it might be good idea to load scene file directly and then just pass data to scene loader functions
         //this way we can use different base url for scene file and resources
+        //Read the file using load asset , parse the file data and pass it to the scene loader fucntion as data
+        //So if "data:" is used then root url can point to the base url for resources.
         //
         //sound is different. 
         //location of sound file = home url + sound url
         //
-        //RELATIVE_ASSET_LOCATION: string = "../../../../";
+
         //we can use below too but then while passing data to scene loader use empty string as root url
         RELATIVE_ASSET_LOCATION: string="";
 
@@ -164,8 +167,8 @@ namespace org.ssatguru.babylonjs.vishva {
         mainCamera: ArcRotateCamera;
 
         vishvaGUI: VishvaGUI;
-        
-        GroundSPSs:GroundSPS[];
+
+        GroundSPSs: GroundSPS[];
 
 
 
@@ -194,7 +197,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
 
-        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,assets: Object,vishvaFiles: Array<any>,canvasId: string) {
+        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,vishvaFiles: Array<any>,canvasId: string) {
             this.editEnabled=false;
             this.frames=0;
             this.f=0;
@@ -207,7 +210,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.loadingStatus=document.getElementById("loadingStatus");
 
             this.editEnabled=editEnabled;
-            this.assets=assets;
             this.vishvaFiles=vishvaFiles;
             this.key=new Key();
 
@@ -418,13 +420,23 @@ namespace org.ssatguru.babylonjs.vishva {
                 //                if (this.enablePhysics) {
                 //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
                 //                }
-                if (this.vishvaSerialized.groundSPSserializeds!=null){
-                    this.GroundSPSs = new Array()
-                    for (let gSPSs of this.vishvaSerialized.groundSPSserializeds){
-                        let mesh: Mesh=<Mesh> this.scene.getMeshByID(gSPSs.meshID);
-                        let groundMesh: GroundMesh=<GroundMesh> this.scene.getMeshByID(gSPSs.groundMeshID);
-                        let gSPS=new GroundSPS(this,mesh,groundMesh,gSPSs.spreadDtls);
-                        this.GroundSPSs.push(gSPS);
+                if(this.vishvaSerialized.groundSPSserializeds!=null) {
+                    this.GroundSPSs=new Array()
+                    for(let gSPSs of this.vishvaSerialized.groundSPSserializeds) {
+                        let mesh: Mesh=<Mesh>this.scene.getMeshByID(gSPSs.meshID);
+                        if(mesh!=null) {
+                            let groundMesh: GroundMesh=<GroundMesh>this.scene.getMeshByID(gSPSs.groundMeshID);
+                            let gSPS=new GroundSPS(gSPSs.name,this,mesh,groundMesh,gSPSs.spreadDtls);
+                            try {
+                                gSPS.generate();
+                            } catch(e) {
+                                console.log("error during gSPS.generate()")
+                                console.log(e);
+                            }
+                            this.GroundSPSs.push(gSPS);
+                        }else{
+                            console.log("could not find sps mesh for id = " + gSPSs.meshID)
+                        }
                     }
                 }
             }
@@ -1270,10 +1282,10 @@ namespace org.ssatguru.babylonjs.vishva {
             return null;
         }
 
-       
+
 
         public clonetheMesh(mesh: AbstractMesh): AbstractMesh {
-            
+
             var name: string=(<number>new Number(Date.now())).toString();
             //TODO should clone the children too.
             //TODO to do that make sure the children are also not selected
@@ -1541,21 +1553,21 @@ namespace org.ssatguru.babylonjs.vishva {
         public getMaterialType(id: string): string {
             let mat: Material=this.scene.getMaterialByID(id);
             if(mat==null) return null;
-            if (mat instanceof StandardMaterial) return "standard material";
+            if(mat instanceof StandardMaterial) return "standard material";
             else return "not standard material";
         }
-        
-        public cloneMaterial(id:string){
+
+        public cloneMaterial(id: string) {
             let mat: Material=this.scene.getMaterialByID(id);
             if(mat==null) return null;
             if(this.meshPicked.material instanceof BABYLON.MultiMaterial) {
-                    let mm: MultiMaterial=this.meshPicked.material;
-                    this.meshPicked.material=mm.clone(mat.name+"Clone",true);
-                }else {
-                    this.meshPicked.material=mat.clone(mat.name+"Clone");
-                }
+                let mm: MultiMaterial=this.meshPicked.material;
+                this.meshPicked.material=mm.clone(mat.name+"Clone",true);
+            } else {
+                this.meshPicked.material=mat.clone(mat.name+"Clone");
+            }
         }
-        
+
         public createText(): string {
             let text: Texture=new Texture("",this.scene);
             return text.uid;
@@ -1740,8 +1752,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
         }
-        
-        public selectGround(){
+
+        public selectGround() {
             if(!this.isMeshSelected) {
                 this.selectForEdit(this.ground);
             } else {
@@ -1749,8 +1761,8 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.ground.unfreezeWorldMatrix();
         }
-        
-        public unSelectGrnd(){
+
+        public unSelectGrnd() {
             this.removeEditControl();
         }
 
@@ -2063,7 +2075,9 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public getSoundFiles(): string[] {
-            return <string[]>this.assets["sounds"];
+            //TODO implement this.
+            return null;
+            //return <string[]>this.assets["sounds"];
         }
 
         public anyMeshSelected(): boolean {
@@ -2434,12 +2448,12 @@ namespace org.ssatguru.babylonjs.vishva {
             this.scene.ambientColor=Color3.FromHexString(hex);
         }
 
-        public isGroundPicked():boolean{
+        public isGroundPicked(): boolean {
             if(!this.isMeshSelected) return false;
-            if (this.meshPicked==this.ground) return true;
+            if(this.meshPicked==this.ground) return true;
             else return false;
         }
-        
+
         /*
         public setGroundColor(hex: string) {
             let sm: StandardMaterial=<StandardMaterial>this.ground.material;
@@ -2450,44 +2464,68 @@ namespace org.ssatguru.babylonjs.vishva {
             return sm.diffuseColor.toHexString();
         }
         */
-        
-        private _grndSPS:GroundSPS;
-        public getSpreadDtls():SpreadDtls|string{
-            if (this.meshesPicked==null){
+
+        //private _grndSPS: GroundSPS;
+        public getGrndSPSbyID(gSpsId: string): GroundSPS {
+            for(let g of this.GroundSPSs) {
+                if(g.id==gSpsId) {
+                    return g;
+                }
+            }
+            return null;
+        }
+
+        public createGrndSPS(): GroundSPS|string {
+            let gs:GroundSPS;
+            if(this.meshesPicked==null) {
                 return "select a mesh to spread - use ctl-right click to select";
-            } else if (this.meshesPicked.length>1){
+            } else if(this.meshesPicked.length>1) {
                 return "more than one mesh selected to spread - select only one";
             }
-            if (! this._grndSPS){
-                this._grndSPS=new GroundSPS(this,<Mesh>this.meshesPicked[0],<GroundMesh>this.ground,{});
-            }
-            return this._grndSPS.getSpreadDtls();
-        }
-        public setSpreadDtls(sd:SpreadDtls){
-            this._grndSPS.setSpreadDtls(sd);
-        }
-        public generateSPS(){
-            this._grndSPS.generate();
-            if (this.GroundSPSs == null){
-                this.GroundSPSs= new Array();
-            }
-            this.GroundSPSs.push(this._grndSPS);
+            let mesh:Mesh=<Mesh>this.meshesPicked[0];
+            gs=new GroundSPS(mesh.name+"-SPS",this,mesh,<GroundMesh>this.ground,{});
+            return gs;
         }
         
-        
+        public getMeshSpreadDtls(meshId: string): SpreadDtls|string {
+            let gs:GroundSPS;
+            let mesh: Mesh=<Mesh>this.scene.getMeshByID(meshId);
+            if(mesh==null) {
+                return "no mesh found with id : "+meshId;
+            }
+            gs=new GroundSPS(mesh.name+"-SPS",this,mesh,<GroundMesh>this.ground,{});
+            return gs.getSpreadDtls();
+        }
+
+        public updateSPSArray(gs:GroundSPS) {
+            if(this.GroundSPSs==null) {
+                this.GroundSPSs=new Array();
+            }
+            this.GroundSPSs.push(gs);
+        }
+        public getGrndSPSList(): Array<{id: string,desc: string}> {
+            let sl: Array<{id: string,desc: string}>=new Array();
+            if(this.GroundSPSs==null) return sl;
+            for(let gSps of this.GroundSPSs) {
+                sl.push({id: gSps.id,desc: gSps.name});
+            }
+            return sl;
+        }
+
+
         public spreadOnGround(): string {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
             }
             let seed: number=Math.random()*100;
-            let spreadDtls:SpreadDtls={
-                seed:seed,
-                step:5,
-                posMax:new Vector3(5,-1,5)
+            let spreadDtls: SpreadDtls={
+                seed: seed,
+                step: 5,
+                posMax: new Vector3(5,-1,5)
             };
-            let groundSPS:GroundSPS=new GroundSPS(this,<Mesh>this.meshPicked,<GroundMesh>this.ground,spreadDtls);
-            if (this.GroundSPSs == null){
-                this.GroundSPSs= new Array();
+            let groundSPS: GroundSPS=new GroundSPS("sps",this,<Mesh>this.meshPicked,<GroundMesh>this.ground,spreadDtls);
+            if(this.GroundSPSs==null) {
+                this.GroundSPSs=new Array();
             }
             this.GroundSPSs.push(groundSPS);
             return null;
@@ -2567,14 +2605,14 @@ namespace org.ssatguru.babylonjs.vishva {
             vishvaSerialzed.settings.autoEditMenu=this.autoEditMenu;
             vishvaSerialzed.guiSettings=this.vishvaGUI.getSettings();
             vishvaSerialzed.misc.activeCameraTarget=this.mainCamera.target;
-            if (this.GroundSPSs!=null){
-                vishvaSerialzed.groundSPSserializeds = new Array();
-                for(let gSPS of this.GroundSPSs){
+            if(this.GroundSPSs!=null) {
+                vishvaSerialzed.groundSPSserializeds=new Array();
+                for(let gSPS of this.GroundSPSs) {
                     vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
                 }
             }
-            
-            
+
+
             //serialize sna before scene
             //we might add tags to meshes in scene during sna serialize.
             //if we serialize scene before then we would miss those
@@ -2674,9 +2712,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public rename(bt: BaseTexture) {
             if(bt==null) return;
-            if(bt.name.substring(0,2)!=="..") {
-                bt.name=this.RELATIVE_ASSET_LOCATION+bt.name;
-            }
+            //bt.name=this.RELATIVE_ASSET_LOCATION+bt.name;
+            bt.name=this.RELATIVE_ASSET_LOCATION+(<Texture>bt).url;
         }
         /*
          * since 2.5, June 17 2016  sound is being serialized.
@@ -2776,7 +2813,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.filePath=assetType;
             this.file=file;
             let fileName: string=file.split(".")[0];
-            //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
             SceneLoader.ImportMesh("","vishva/assets/"+assetType+"/"+fileName+"/",file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
         }
 
@@ -2785,7 +2821,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.file=file;
             SceneLoader.ImportMesh("","vishva/"+path,file,this.scene,(meshes,particleSystems,skeletons) => {return this.onMeshLoaded(meshes,particleSystems,skeletons)});
         }
-        //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
+
+        //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
             var boundingRadius: number=this.getBoundingRadius(meshes);
             console.log("meshes "+meshes.length);
@@ -2816,12 +2853,12 @@ namespace org.ssatguru.babylonjs.vishva {
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                 //TODO think
                 //mesh.receiveShadows = true;
+                //
                 //no need to rename 3.1 version seems to preserve the texture img urls
-//                this._renameTextures(mesh);
-                
+                //this._renameTextures(mesh);
+
                 this.scene.stopAnimation(mesh);
                 if(mesh.skeleton!=null) {
-                    console.log("stopping animation");
                     this.scene.stopAnimation(mesh.skeleton);
                     this.fixAnimationRanges(mesh.skeleton);
                 }
@@ -2841,30 +2878,31 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         }
-        
-        private _renameTextures(mesh:AbstractMesh){
+
+        private _renameTextures(mesh: AbstractMesh) {
             if(mesh.material!=null) {
-                    if(mesh.material instanceof BABYLON.MultiMaterial) {
-                        var mm: MultiMaterial=<MultiMaterial>mesh.material;
-                        var mats: Material[]=mm.subMaterials;
-                        for(let mat of mats) {
-                            mesh.material.backFaceCulling=false;
-                            mesh.material.alpha=1;
-                            if(mat!=null&&mat instanceof BABYLON.StandardMaterial) {
-                                this.renameAssetTextures(<StandardMaterial>mat);
-                            }
+                if(mesh.material instanceof BABYLON.MultiMaterial) {
+                    var mm: MultiMaterial=<MultiMaterial>mesh.material;
+                    var mats: Material[]=mm.subMaterials;
+                    for(let mat of mats) {
+                        //TODO remove this
+                        //mesh.material.backFaceCulling=false;
+                        //mesh.material.alpha=1;
+                        if(mat!=null&&mat instanceof BABYLON.StandardMaterial) {
+                            this.renameAssetTextures(<StandardMaterial>mat);
                         }
-                    } else {
-                        mesh.material.backFaceCulling=false;
-                        mesh.material.alpha=1;
-                        var sm: StandardMaterial=<StandardMaterial>mesh.material;
-                        this.renameAssetTextures(sm);
                     }
+                } else {
+                    //TODO remove this
+                    //mesh.material.backFaceCulling=false;
+                    //mesh.material.alpha=1;
+                    var sm: StandardMaterial=<StandardMaterial>mesh.material;
+                    this.renameAssetTextures(sm);
                 }
+            }
         }
 
         private renameAssetTextures(sm: StandardMaterial) {
-            console.log("renameAssetTextures");
             this.renameAssetTexture(sm.diffuseTexture);
             this.renameAssetTexture(sm.reflectionTexture);
             this.renameAssetTexture(sm.opacityTexture);
@@ -2875,11 +2913,11 @@ namespace org.ssatguru.babylonjs.vishva {
         public renameAssetTexture(bt: BaseTexture) {
             if(bt==null) return;
             var textureName: string=bt.name;
-            console.log("renaming " + textureName);
+            console.log("renaming "+textureName);
             if(textureName.indexOf("vishva/")!==0&&textureName.indexOf("../")!==0) {
                 //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
-                bt.name="vishva/"+this.filePath+textureName;
-                console.log("renamed to " + bt.name);
+                bt.name=(<Texture>bt).url;
+                console.log("renamed to "+bt.name);
             }
         }
 

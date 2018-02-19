@@ -1,8 +1,5 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     import DialogOptions=JQueryUI.DialogOptions;
-    import Skeleton=BABYLON.Skeleton;
-    import AnimationRange=BABYLON.AnimationRange;
-    import Vector3=BABYLON.Vector3;
     /**
      * Provides UI to manage an Item(mesh) properties
      */
@@ -183,7 +180,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._materialUI.update();
             } else if(panelIndex===propertyPanel.GrndSPS) {
                 if(this._grndSPSUI==null) this._grndSPSUI=new GrndSPSUI(this._vishva);
-                this._grndSPSUI.update();
+                //this._grndSPSUI.update();
             }
             //refresh sNaDialog if open
             if(this._generalUI._snaUI!=null&&this._generalUI._snaUI.isOpen()) {

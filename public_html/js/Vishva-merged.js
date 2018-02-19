@@ -893,6 +893,12 @@ var org;
                                 ;
                                 genSPS.disabled = !_this._ready;
                             };
+                            this._spsList = new gui.VInputSelect("spsList", this._vishva.getGrndSPSList());
+                            this._spsList.onSelect = function (id) {
+                                _this._updateUI(id);
+                            };
+                            this._spsName = document.getElementById("spsName");
+                            this._spsMesh = document.getElementById("spsMesh");
                             this.spsSeed = new gui.VInputNumber("spsSeed");
                             this.spsStep = new gui.VInputNumber("spsStep");
                             this.sprdMin = new gui.VInputVector2("sprdMin");
@@ -907,16 +913,31 @@ var org;
                             this.sclRange = new gui.VRange("sclRange", 0, 1, 0.1, 0.5);
                             this.rotRange = new gui.VRange("rotRange", 0, 180, 1, 5);
                         }
-                        GrndSPSUI.prototype._updateUI = function () {
+                        GrndSPSUI.prototype._updateUI = function (gSPSid) {
                             var sdo;
-                            var sd = this._vishva.getSpreadDtls();
-                            if (!(sd instanceof Object)) {
-                                gui.DialogMgr.showAlertDiag(sd);
-                                return false;
+                            if (gSPSid) {
+                                var gs = void 0;
+                                gs = this._vishva.getGrndSPSbyID(gSPSid);
+                                if (gs == null) {
+                                    gui.DialogMgr.showAlertDiag("could not find gound sps with id : " + gSPSid);
+                                    return;
+                                }
+                                sdo = gs.getSpreadDtls();
+                                this._grndSPS = gs;
                             }
                             else {
-                                sdo = sd;
+                                var gs = this._vishva.createGrndSPS();
+                                if (!(gs instanceof Object)) {
+                                    gui.DialogMgr.showAlertDiag(gs);
+                                    return false;
+                                }
+                                else {
+                                    sdo = gs.getSpreadDtls();
+                                    this._grndSPS = gs;
+                                }
                             }
+                            this._spsName.innerText = this._grndSPS.name + "(" + this._grndSPS.id + ")";
+                            this._spsMesh.innerText = this._grndSPS.mesh.name + "(" + this._grndSPS.mesh.id + ")";
                             this.spsSeed.setValue(sdo.seed);
                             this.spsStep.setValue(sdo.step);
                             this.sprdMin.setValue(sdo.sprdMin);
@@ -933,16 +954,7 @@ var org;
                             return true;
                         };
                         GrndSPSUI.prototype._updateSpreadParms = function () {
-                            console.log("_updateSpreadParms");
-                            var sdo;
-                            var sd = this._vishva.getSpreadDtls();
-                            if (!(sd instanceof Object)) {
-                                gui.DialogMgr.showAlertDiag(sd);
-                                return false;
-                            }
-                            else {
-                                sdo = sd;
-                            }
+                            var sdo = this._grndSPS.getSpreadDtls();
                             sdo.seed = this.spsSeed.getValue();
                             sdo.step = this.spsStep.getValue();
                             sdo.sprdMin = this.sprdMin.getValue();
@@ -956,11 +968,10 @@ var org;
                             sdo.posRange = this.posRange.getValue();
                             sdo.sclRange = this.sclRange.getValue();
                             sdo.rotRange = this.rotRange.getValue();
-                            this._vishva.setSpreadDtls(sdo);
-                            this._vishva.generateSPS();
+                            this._grndSPS.setSpreadDtls(sdo);
+                            this._grndSPS.generate();
+                            this._vishva.updateSPSArray(this._grndSPS);
                             return true;
-                        };
-                        GrndSPSUI.prototype.update = function () {
                         };
                         return GrndSPSUI;
                     }());
@@ -1445,7 +1456,7 @@ var org;
                             else if (panelIndex === 6 /* GrndSPS */) {
                                 if (this._grndSPSUI == null)
                                     this._grndSPSUI = new gui.GrndSPSUI(this._vishva);
-                                this._grndSPSUI.update();
+                                //this._grndSPSUI.update();
                             }
                             //refresh sNaDialog if open
                             if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
@@ -2569,6 +2580,59 @@ var org;
             (function (vishva) {
                 var gui;
                 (function (gui) {
+                    var VInputSelect = (function () {
+                        function VInputSelect(eId, options) {
+                            var _this = this;
+                            this.onSelect = null;
+                            var e = document.getElementById(eId);
+                            this._s = document.createElement("select");
+                            this._s.onchange = function () {
+                                if (_this.onSelect != null) {
+                                    _this.onSelect(_this._s.value);
+                                }
+                            };
+                            e.appendChild(this._s);
+                            this.populateSelect(options);
+                        }
+                        /**
+                         * populates a html select element with options from the passed string array
+                         */
+                        VInputSelect.prototype.populateSelect = function (options) {
+                            var childs = this._s.children;
+                            var l = (childs.length | 0);
+                            for (var i = l - 1; i >= 0; i--) {
+                                childs[i].remove();
+                            }
+                            var optEle;
+                            for (var _i = 0, options_2 = options; _i < options_2.length; _i++) {
+                                var option = options_2[_i];
+                                optEle = document.createElement("option");
+                                optEle.value = option.id;
+                                optEle.innerText = option.desc;
+                                this._s.appendChild(optEle);
+                            }
+                        };
+                        VInputSelect.prototype.getValue = function () {
+                            return this._s.value;
+                        };
+                        return VInputSelect;
+                    }());
+                    gui.VInputSelect = VInputSelect;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
                     var Vector2 = BABYLON.Vector2;
                     /**
                      * provides a ui to input a vector2 value
@@ -3540,32 +3604,33 @@ var org;
                  * Manages a SPS whose particles are spread over a gound mesh.
                  */
                 var GroundSPS = (function () {
-                    function GroundSPS(vishva, mesh, groundMesh, spreadDtls) {
+                    function GroundSPS(name, vishva, mesh, groundMesh, spreadDtls) {
                         this.sx = 0;
                         this.sz = 0;
                         this.sCount = 0;
+                        this.name = name;
                         this._vishva = vishva;
-                        this._mesh = mesh;
+                        this.mesh = mesh;
                         this._groundMesh = groundMesh;
                         this._spreadDtls = spreadDtls;
-                        if (!spreadDtls.seed) {
-                            this._spreadDtls.seed = Math.random() * 100;
-                        }
-                        this._rand = new Random(this._spreadDtls.seed);
-                        this._sps = new SolidParticleSystem('SPS', this._vishva.scene, { updatable: false, isPickable: false });
-                        this._updateSpreadParms(this._mesh, this._groundMesh, this._spreadDtls);
+                        this._sps = new SolidParticleSystem(name, this._vishva.scene, { updatable: false, isPickable: false });
+                        //generate default spread details based on mesh bounding box size
+                        this._updateSpreadParms(this.mesh, this._groundMesh, this._spreadDtls);
                     }
                     GroundSPS.prototype.generate = function () {
                         var _this = this;
-                        this._updateSpreadParms(this._mesh, this._groundMesh, this._spreadDtls);
-                        this._sps.addShape(this._mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
+                        this._updateSpreadParms(this.mesh, this._groundMesh, this._spreadDtls);
+                        this._sps.addShape(this.mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
                         this.spsMesh = this._sps.buildMesh();
-                        this.spsMesh.material = this._mesh.material;
+                        this.spsMesh.material = this.mesh.material;
                         this.spsMesh.doNotSerialize = true;
+                        this.id = this.spsMesh.id;
                     };
                     GroundSPS.prototype.serialize = function () {
                         return {
-                            meshID: this._mesh.id,
+                            id: this.id,
+                            name: this.name,
+                            meshID: this.mesh.id,
                             groundMeshID: this._groundMesh.id,
                             spreadDtls: this._spreadDtls
                         };
@@ -3577,6 +3642,10 @@ var org;
                         return this._spreadDtls;
                     };
                     GroundSPS.prototype._updateSpreadParms = function (m, gm, sd) {
+                        if (!sd.seed) {
+                            this._spreadDtls.seed = Math.random() * 100;
+                        }
+                        this._rand = new Random(this._spreadDtls.seed);
                         if (!sd.step)
                             sd.step = m.getBoundingInfo().boundingSphere.radius;
                         if (!sd.sprdMin) {
@@ -3585,7 +3654,7 @@ var org;
                         if (!sd.sprdMax) {
                             sd.sprdMax = new Vector2(gm._maxX - sd.step, gm._maxZ - sd.step);
                         }
-                        this.sCount = ((sd.sprdMax.x - sd.sprdMin.x) / sd.step - 1) * ((sd.sprdMax.y - sd.sprdMin.y) / sd.step - 1);
+                        this.sCount = (((sd.sprdMax.x - sd.sprdMin.x) / sd.step) + 1) * (((sd.sprdMax.y - sd.sprdMin.y) / sd.step) + 1);
                         this.sx = sd.sprdMin.x;
                         this.sz = sd.sprdMax.y;
                         if (!sd.posRange)
@@ -3619,7 +3688,6 @@ var org;
                             n = (-sd.rotRange);
                             sd.rotMin = new Vector3(n, n, n);
                         }
-                        console.log(sd);
                     };
                     GroundSPS.prototype._spread = function (part) {
                         //position
@@ -3693,7 +3761,7 @@ var org;
                  * @author satguru
                  */
                 var Vishva = (function () {
-                    function Vishva(sceneFile, scenePath, editEnabled, assets, vishvaFiles, canvasId) {
+                    function Vishva(sceneFile, scenePath, editEnabled, vishvaFiles, canvasId) {
                         var _this = this;
                         this.actuator = "none";
                         this.snapTransOn = false;
@@ -3733,21 +3801,24 @@ var org;
                         this.raining = false;
                         this.SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
                         //each asset has a name and a url
-                        //the url seems to be ignored.
-                        //babylonjs gets the location of the asset as below
+                        //the url is used by loadmesh but ignored by scene loader function
+                        //
+                        //scene loader gets the location of the asset as below
                         //
                         //location = (home url) + (root url specified in the scene loader functions) + (asset name)
                         //
+                        //Unfortunately the root url is also suppose to be the root url of the scene file.
                         //if scene file name is passed as parm to the scene loader functions then root url should point to the scene file location
-                        //if "data:" is used instead, then root url can point to the base url for resources.
                         //
-                        //might bea good idea to load scene file directly and then just pass data to scene loader functions
+                        //Which means the scene root url and resource root url should be the same.
+                        //Thus it might be good idea to load scene file directly and then just pass data to scene loader functions
                         //this way we can use different base url for scene file and resources
+                        //Read the file using load asset , parse the file data and pass it to the scene loader fucntion as data
+                        //So if "data:" is used then root url can point to the base url for resources.
                         //
                         //sound is different. 
                         //location of sound file = home url + sound url
                         //
-                        //RELATIVE_ASSET_LOCATION: string = "../../../../";
                         //we can use below too but then while passing data to scene loader use empty string as root url
                         this.RELATIVE_ASSET_LOCATION = "";
                         //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -3799,7 +3870,6 @@ var org;
                         this.loadingMsg.style.visibility = "visible";
                         this.loadingStatus = document.getElementById("loadingStatus");
                         this.editEnabled = editEnabled;
-                        this.assets = assets;
                         this.vishvaFiles = vishvaFiles;
                         this.key = new Key();
                         this.canvas = document.getElementById(canvasId);
@@ -3989,9 +4059,21 @@ var org;
                                 for (var _m = 0, _o = this.vishvaSerialized.groundSPSserializeds; _m < _o.length; _m++) {
                                     var gSPSs = _o[_m];
                                     var mesh = this.scene.getMeshByID(gSPSs.meshID);
-                                    var groundMesh = this.scene.getMeshByID(gSPSs.groundMeshID);
-                                    var gSPS = new GroundSPS(this, mesh, groundMesh, gSPSs.spreadDtls);
-                                    this.GroundSPSs.push(gSPS);
+                                    if (mesh != null) {
+                                        var groundMesh = this.scene.getMeshByID(gSPSs.groundMeshID);
+                                        var gSPS = new GroundSPS(gSPSs.name, this, mesh, groundMesh, gSPSs.spreadDtls);
+                                        try {
+                                            gSPS.generate();
+                                        }
+                                        catch (e) {
+                                            console.log("error during gSPS.generate()");
+                                            console.log(e);
+                                        }
+                                        this.GroundSPSs.push(gSPS);
+                                    }
+                                    else {
+                                        console.log("could not find sps mesh for id = " + gSPSs.meshID);
+                                    }
                                 }
                             }
                         }
@@ -5570,7 +5652,9 @@ var org;
                         }
                     };
                     Vishva.prototype.getSoundFiles = function () {
-                        return this.assets["sounds"];
+                        //TODO implement this.
+                        return null;
+                        //return <string[]>this.assets["sounds"];
                     };
                     Vishva.prototype.anyMeshSelected = function () {
                         return this.isMeshSelected;
@@ -5934,23 +6018,62 @@ var org;
                         else
                             return false;
                     };
-                    Vishva.prototype.getSpreadDtls = function () {
+                    /*
+                    public setGroundColor(hex: string) {
+                        let sm: StandardMaterial=<StandardMaterial>this.ground.material;
+                        sm.diffuseColor=Color3.FromHexString(hex);
+                    }
+                    public getGroundColor(): string {
+                        let sm: StandardMaterial=<StandardMaterial>this.ground.material;
+                        return sm.diffuseColor.toHexString();
+                    }
+                    */
+                    //private _grndSPS: GroundSPS;
+                    Vishva.prototype.getGrndSPSbyID = function (gSpsId) {
+                        for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
+                            var g = _a[_i];
+                            if (g.id == gSpsId) {
+                                return g;
+                            }
+                        }
+                        return null;
+                    };
+                    Vishva.prototype.createGrndSPS = function () {
+                        var gs;
                         if (this.meshesPicked == null) {
                             return "select a mesh to spread - use ctl-right click to select";
                         }
                         else if (this.meshesPicked.length > 1) {
                             return "more than one mesh selected to spread - select only one";
                         }
-                        if (!this._grndSPS) {
-                            this._grndSPS = new GroundSPS(this, this.meshesPicked[0], this.ground, {});
+                        var mesh = this.meshesPicked[0];
+                        gs = new GroundSPS(mesh.name + "-SPS", this, mesh, this.ground, {});
+                        return gs;
+                    };
+                    Vishva.prototype.getMeshSpreadDtls = function (meshId) {
+                        var gs;
+                        var mesh = this.scene.getMeshByID(meshId);
+                        if (mesh == null) {
+                            return "no mesh found with id : " + meshId;
                         }
-                        return this._grndSPS.getSpreadDtls();
+                        gs = new GroundSPS(mesh.name + "-SPS", this, mesh, this.ground, {});
+                        return gs.getSpreadDtls();
                     };
-                    Vishva.prototype.setSpreadDtls = function (sd) {
-                        this._grndSPS.setSpreadDtls(sd);
+                    Vishva.prototype.updateSPSArray = function (gs) {
+                        if (this.GroundSPSs == null) {
+                            this.GroundSPSs = new Array();
+                        }
+                        this.GroundSPSs.push(gs);
                     };
-                    Vishva.prototype.generateSPS = function () {
-                        this._grndSPS.generate();
+                    Vishva.prototype.getGrndSPSList = function () {
+                        var sl = new Array();
+                        if (this.GroundSPSs == null)
+                            return sl;
+                        for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
+                            var gSps = _a[_i];
+                            sl.push({ id: gSps.id, desc: gSps.name });
+                        }
+                        return sl;
                     };
                     Vishva.prototype.spreadOnGround = function () {
                         if (!this.isMeshSelected) {
@@ -5962,7 +6085,7 @@ var org;
                             step: 5,
                             posMax: new Vector3(5, -1, 5)
                         };
-                        var groundSPS = new GroundSPS(this, this.meshPicked, this.ground, spreadDtls);
+                        var groundSPS = new GroundSPS("sps", this, this.meshPicked, this.ground, spreadDtls);
                         if (this.GroundSPSs == null) {
                             this.GroundSPSs = new Array();
                         }
@@ -6139,9 +6262,8 @@ var org;
                     Vishva.prototype.rename = function (bt) {
                         if (bt == null)
                             return;
-                        if (bt.name.substring(0, 2) !== "..") {
-                            bt.name = this.RELATIVE_ASSET_LOCATION + bt.name;
-                        }
+                        //bt.name=this.RELATIVE_ASSET_LOCATION+bt.name;
+                        bt.name = this.RELATIVE_ASSET_LOCATION + bt.url;
                     };
                     /*
                      * since 2.5, June 17 2016  sound is being serialized.
@@ -6239,7 +6361,6 @@ var org;
                         this.filePath = assetType;
                         this.file = file;
                         var fileName = file.split(".")[0];
-                        //SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + file + "/", file + ".babylon", this.scene, (meshes, particleSystems, skeletons) => {return this.onMeshLoaded(meshes, particleSystems, skeletons)});
                         SceneLoader.ImportMesh("", "vishva/assets/" + assetType + "/" + fileName + "/", file, this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
                     };
                     Vishva.prototype.loadAsset2 = function (path, file) {
@@ -6248,7 +6369,7 @@ var org;
                         this.file = file;
                         SceneLoader.ImportMesh("", "vishva/" + path, file, this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
                     };
-                    //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment from frame  by 1
+                    //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
                         var boundingRadius = this.getBoundingRadius(meshes);
                         console.log("meshes " + meshes.length);
@@ -6278,11 +6399,11 @@ var org;
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             //TODO think
                             //mesh.receiveShadows = true;
+                            //
                             //no need to rename 3.1 version seems to preserve the texture img urls
-                            //                this._renameTextures(mesh);
+                            //this._renameTextures(mesh);
                             this.scene.stopAnimation(mesh);
                             if (mesh.skeleton != null) {
-                                console.log("stopping animation");
                                 this.scene.stopAnimation(mesh.skeleton);
                                 this.fixAnimationRanges(mesh.skeleton);
                             }
@@ -6306,23 +6427,24 @@ var org;
                                 var mats = mm.subMaterials;
                                 for (var _i = 0, mats_2 = mats; _i < mats_2.length; _i++) {
                                     var mat = mats_2[_i];
-                                    mesh.material.backFaceCulling = false;
-                                    mesh.material.alpha = 1;
+                                    //TODO remove this
+                                    //mesh.material.backFaceCulling=false;
+                                    //mesh.material.alpha=1;
                                     if (mat != null && mat instanceof BABYLON.StandardMaterial) {
                                         this.renameAssetTextures(mat);
                                     }
                                 }
                             }
                             else {
-                                mesh.material.backFaceCulling = false;
-                                mesh.material.alpha = 1;
+                                //TODO remove this
+                                //mesh.material.backFaceCulling=false;
+                                //mesh.material.alpha=1;
                                 var sm = mesh.material;
                                 this.renameAssetTextures(sm);
                             }
                         }
                     };
                     Vishva.prototype.renameAssetTextures = function (sm) {
-                        console.log("renameAssetTextures");
                         this.renameAssetTexture(sm.diffuseTexture);
                         this.renameAssetTexture(sm.reflectionTexture);
                         this.renameAssetTexture(sm.opacityTexture);
@@ -6336,7 +6458,7 @@ var org;
                         console.log("renaming " + textureName);
                         if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
                             //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
-                            bt.name = "vishva/" + this.filePath + textureName;
+                            bt.name = bt.url;
                             console.log("renamed to " + bt.name);
                         }
                     };

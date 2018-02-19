@@ -12,13 +12,14 @@ namespace org.ssatguru.babylonjs.vishva {
      * Manages a SPS whose particles are spread over a gound mesh.
      */
     export class GroundSPS {
-
+        public id;
+        public name;
         private _vishva: Vishva;
-        private _mesh: Mesh;
+        public mesh: Mesh;
         private _groundMesh: GroundMesh;
 
         private _spreadDtls: SpreadDtls;
-        private _sps:SolidParticleSystem;
+        private _sps: SolidParticleSystem;
         public spsMesh: Mesh;
 
         private sx: number=0;
@@ -27,56 +28,62 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private _rand: Random;
 
-        constructor(vishva: Vishva,mesh: Mesh,groundMesh: GroundMesh,spreadDtls: SpreadDtls) {
+        constructor(name: string,vishva: Vishva,mesh: Mesh,groundMesh: GroundMesh,spreadDtls: SpreadDtls) {
+            this.name=name;
             this._vishva=vishva;
-            this._mesh=mesh;
+            this.mesh=mesh;
             this._groundMesh=groundMesh;
             this._spreadDtls=spreadDtls;
-            if (!spreadDtls.seed){
-                this._spreadDtls.seed=Math.random()*100;
-            }
-            this._rand=new Random(this._spreadDtls.seed);
-            this._sps=new SolidParticleSystem('SPS',this._vishva.scene,{updatable: false,isPickable: false});
-            this._updateSpreadParms(this._mesh,this._groundMesh,this._spreadDtls);
+            
+            this._sps=new SolidParticleSystem(name,this._vishva.scene,{updatable: false,isPickable: false});
+            //generate default spread details based on mesh bounding box size
+            this._updateSpreadParms(this.mesh,this._groundMesh,this._spreadDtls);
         }
-        
-        public generate(){
-            this._updateSpreadParms(this._mesh,this._groundMesh,this._spreadDtls);
-            this._sps.addShape(this._mesh,this.sCount,{positionFunction: (p,i,s) => {this._spread(p);}});
+
+        public generate() {
+            this._updateSpreadParms(this.mesh,this._groundMesh,this._spreadDtls);
+            this._sps.addShape(this.mesh,this.sCount,{positionFunction: (p,i,s) => {this._spread(p);}});
             this.spsMesh=this._sps.buildMesh();
-            this.spsMesh.material=this._mesh.material;
+            this.spsMesh.material=this.mesh.material;
             this.spsMesh.doNotSerialize=true;
+            this.id=this.spsMesh.id;
         }
 
         public serialize(): GroundSPSserialized {
             return {
-                meshID: this._mesh.id,
+                id: this.id,
+                name: this.name,
+                meshID: this.mesh.id,
                 groundMeshID: this._groundMesh.id,
                 spreadDtls: this._spreadDtls
             };
         }
-        
-        public setSpreadDtls(sd: SpreadDtls){
+
+        public setSpreadDtls(sd: SpreadDtls) {
             this._spreadDtls=sd;
-            
+
         }
-        public getSpreadDtls():SpreadDtls{
+        public getSpreadDtls(): SpreadDtls {
             return this._spreadDtls;
         }
 
         private _updateSpreadParms(m: Mesh,gm: GroundMesh,sd: SpreadDtls) {
+            if(!sd.seed) {
+                this._spreadDtls.seed=Math.random()*100;
+            }
+            this._rand=new Random(this._spreadDtls.seed);
 
             if(!sd.step)
                 sd.step=m.getBoundingInfo().boundingSphere.radius;
 
             if(!sd.sprdMin) {
-                sd.sprdMin = new Vector2(gm._minX+sd.step,gm._minZ+sd.step);
+                sd.sprdMin=new Vector2(gm._minX+sd.step,gm._minZ+sd.step);
             }
             if(!sd.sprdMax) {
                 sd.sprdMax=new Vector2(gm._maxX-sd.step,gm._maxZ-sd.step);
             }
-            
-            this.sCount=((sd.sprdMax.x-sd.sprdMin.x)/sd.step-1)*((sd.sprdMax.y-sd.sprdMin.y)/sd.step-1);
+
+            this.sCount=(((sd.sprdMax.x-sd.sprdMin.x)/sd.step)+1)*(((sd.sprdMax.y-sd.sprdMin.y)/sd.step)+1);
 
             this.sx=sd.sprdMin.x;
             this.sz=sd.sprdMax.y;
@@ -111,7 +118,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 sd.rotMin=new Vector3(n,n,n);
             }
 
-            console.log(sd);
         }
 
         private _spread(part: SolidParticle) {
@@ -141,6 +147,8 @@ namespace org.ssatguru.babylonjs.vishva {
     }
 
     export interface GroundSPSserialized {
+        id: string;
+        name: string;
         meshID: string;
         groundMeshID: string;
         spreadDtls: SpreadDtls;

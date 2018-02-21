@@ -10,7 +10,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         //private _snaUI:SnaUI;
 
         private _propsDiag: JQuery=null;
-        private _propsDiagDiv: HTMLElement=null;
+        private _propsAcc: HTMLElement=null;
         private _fixingDragIssue: boolean=false;
         private _activePanel: number=-1;
         
@@ -28,8 +28,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._vishvaGUI=vishvaGUI;
 
 
-            this._propsDiagDiv=document.getElementById("propsAcc");
-            let propsAcc: JQuery=$(this._propsDiagDiv);
+            this._propsAcc=document.getElementById("propsAcc");
+            let propsAcc: JQuery=$(this._propsAcc);
 
             propsAcc.accordion({
                 animate: 100,
@@ -103,25 +103,47 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public open() {
             let es: NodeListOf<Element>
             if(this._vishva.isGroundPicked()) {
-                es=this._propsDiagDiv.getElementsByClassName("mesh");
+                es=this._propsAcc.getElementsByClassName("mesh");
                 for(let i=0;i<es.length;i++) {
                     (<HTMLElement>es.item(i)).style.display="none";
                 }
-                es=document.getElementsByClassName("grnd");
+//                es=document.getElementsByClassName("grnd");
+//                
+//                for(let i=0;i<es.length;i++) {
+//                    if(es.item(i).tagName=="H3")
+//                        (<HTMLElement>es.item(i)).style.display="block";
+//                    //TODO : if panel is active then open div too
+//                }
+                
+                es=this._propsAcc.getElementsByTagName("h3");
+                console.log("in grnd - h3 found "+es.length);
                 for(let i=0;i<es.length;i++) {
-                    if(es.item(i).tagName=="H3")
+                     if(es.item(i).className.indexOf("grnd")>=0){
                         (<HTMLElement>es.item(i)).style.display="block";
-                    //TODO : if panel is active then open div too
+                        if (this._activePanel==i) {
+                            (<HTMLElement>es.item(i).nextElementSibling).style.display="block";
+                        }
+                    }
                 }
             } else {
-                es=this._propsDiagDiv.getElementsByClassName("grnd");
+                es=this._propsAcc.getElementsByClassName("grnd");
                 for(let i=0;i<es.length;i++) {
                     (<HTMLElement>es.item(i)).style.display="none";
                 }
-                es=document.getElementsByClassName("mesh");
+//                es=document.getElementsByClassName("mesh");
+//                for(let i=0;i<es.length;i++) {
+//                    if(es.item(i).tagName=="H3")
+//                        (<HTMLElement>es.item(i)).style.display="block";
+//                }
+                es=this._propsAcc.getElementsByTagName("h3");
+                console.log("in mesh - h3 found "+es.length);
                 for(let i=0;i<es.length;i++) {
-                    if(es.item(i).tagName=="H3")
+                    if(es.item(i).className.indexOf("mesh")>=0){
                         (<HTMLElement>es.item(i)).style.display="block";
+                        if (this._activePanel==i) {
+                            (<HTMLElement>es.item(i).nextElementSibling).style.display="block";
+                        }
+                    }
                 }
             }
             this._propsDiag.dialog("open");

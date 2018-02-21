@@ -1,5 +1,6 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     import Vector3=BABYLON.Vector3;
+    import Vector2=BABYLON.Vector2;
     /**
      * Provides a UI to manage GroundSPS
      */
@@ -113,6 +114,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private _updateSpreadParms(): boolean {
+            let smax:Vector2=this.sprdMax.getValue();
+            let smin:Vector2=this.sprdMin.getValue();
+            if (smax.x<=smin.x){
+                DialogMgr.showAlertDiag("upper cormer x cannot be less than or equal to lower corner x");
+                return false;
+            }
+            if (smax.y<=smin.y){
+                DialogMgr.showAlertDiag("upper cormer y cannot be less than or equal to lower corner y");
+                return false;
+            }
             let sdo: SpreadDtls=this._grndSPS.getSpreadDtls();
             sdo.seed=this.spsSeed.getValue();
             sdo.step=this.spsStep.getValue();

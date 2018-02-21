@@ -65,6 +65,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 //                }
                 
                 this._vishva.selectGround();
+                vishvaGUI.showPropDiag();
                 return true;
             };
 

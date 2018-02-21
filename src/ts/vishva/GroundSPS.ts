@@ -95,7 +95,7 @@ namespace org.ssatguru.babylonjs.vishva {
             let n: number;
             if(!sd.posMax) {
                 n=sd.step*sd.posRange;
-                sd.posMax=new Vector3(n,n,n);
+                sd.posMax=new Vector3(n,0,n);
             }
             if(!sd.posMin) {
                 n=-sd.step*sd.posRange;

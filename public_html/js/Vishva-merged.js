@@ -473,6 +473,7 @@ var org;
                                 //                    DialogMgr.showAlertDiag(r);
                                 //                }
                                 _this._vishva.selectGround();
+                                vishvaGUI.showPropDiag();
                                 return true;
                             };
                             var ambColDiag = new gui.ColorPickerDiag("ambient color", "ambCol", this._vishva.getAmbientColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
@@ -954,6 +955,16 @@ var org;
                             return true;
                         };
                         GrndSPSUI.prototype._updateSpreadParms = function () {
+                            var smax = this.sprdMax.getValue();
+                            var smin = this.sprdMin.getValue();
+                            if (smax.x <= smin.x) {
+                                gui.DialogMgr.showAlertDiag("upper cormer x cannot be less than or equal to lower corner x");
+                                return false;
+                            }
+                            if (smax.y <= smin.y) {
+                                gui.DialogMgr.showAlertDiag("upper cormer y cannot be less than or equal to lower corner y");
+                                return false;
+                            }
                             var sdo = this._grndSPS.getSpreadDtls();
                             sdo.seed = this.spsSeed.getValue();
                             sdo.step = this.spsStep.getValue();
@@ -1285,7 +1296,7 @@ var org;
                             var _this = this;
                             //private _snaUI:SnaUI;
                             this._propsDiag = null;
-                            this._propsDiagDiv = null;
+                            this._propsAcc = null;
                             this._fixingDragIssue = false;
                             this._activePanel = -1;
                             /*
@@ -1295,8 +1306,8 @@ var org;
                             this.refreshingPropsDiag = false;
                             this._vishva = vishva;
                             this._vishvaGUI = vishvaGUI;
-                            this._propsDiagDiv = document.getElementById("propsAcc");
-                            var propsAcc = $(this._propsDiagDiv);
+                            this._propsAcc = document.getElementById("propsAcc");
+                            var propsAcc = $(this._propsAcc);
                             propsAcc.accordion({
                                 animate: 100,
                                 heightStyle: "content",
@@ -1367,26 +1378,47 @@ var org;
                         ItemPropsUI.prototype.open = function () {
                             var es;
                             if (this._vishva.isGroundPicked()) {
-                                es = this._propsDiagDiv.getElementsByClassName("mesh");
+                                es = this._propsAcc.getElementsByClassName("mesh");
                                 for (var i = 0; i < es.length; i++) {
                                     es.item(i).style.display = "none";
                                 }
-                                es = document.getElementsByClassName("grnd");
+                                //                es=document.getElementsByClassName("grnd");
+                                //                
+                                //                for(let i=0;i<es.length;i++) {
+                                //                    if(es.item(i).tagName=="H3")
+                                //                        (<HTMLElement>es.item(i)).style.display="block";
+                                //                    //TODO : if panel is active then open div too
+                                //                }
+                                es = this._propsAcc.getElementsByTagName("h3");
+                                console.log("in grnd - h3 found " + es.length);
                                 for (var i = 0; i < es.length; i++) {
-                                    if (es.item(i).tagName == "H3")
+                                    if (es.item(i).className.indexOf("grnd") >= 0) {
                                         es.item(i).style.display = "block";
-                                    //TODO : if panel is active then open div too
+                                        if (this._activePanel == i) {
+                                            es.item(i).nextElementSibling.style.display = "block";
+                                        }
+                                    }
                                 }
                             }
                             else {
-                                es = this._propsDiagDiv.getElementsByClassName("grnd");
+                                es = this._propsAcc.getElementsByClassName("grnd");
                                 for (var i = 0; i < es.length; i++) {
                                     es.item(i).style.display = "none";
                                 }
-                                es = document.getElementsByClassName("mesh");
+                                //                es=document.getElementsByClassName("mesh");
+                                //                for(let i=0;i<es.length;i++) {
+                                //                    if(es.item(i).tagName=="H3")
+                                //                        (<HTMLElement>es.item(i)).style.display="block";
+                                //                }
+                                es = this._propsAcc.getElementsByTagName("h3");
+                                console.log("in mesh - h3 found " + es.length);
                                 for (var i = 0; i < es.length; i++) {
-                                    if (es.item(i).tagName == "H3")
+                                    if (es.item(i).className.indexOf("mesh") >= 0) {
                                         es.item(i).style.display = "block";
+                                        if (this._activePanel == i) {
+                                            es.item(i).nextElementSibling.style.display = "block";
+                                        }
+                                    }
                                 }
                             }
                             this._propsDiag.dialog("open");
@@ -3666,7 +3698,7 @@ var org;
                         var n;
                         if (!sd.posMax) {
                             n = sd.step * sd.posRange;
-                            sd.posMax = new Vector3(n, n, n);
+                            sd.posMax = new Vector3(n, 0, n);
                         }
                         if (!sd.posMin) {
                             n = -sd.step * sd.posRange;

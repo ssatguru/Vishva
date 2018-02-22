@@ -4346,46 +4346,17 @@ var org;
                             m.rotationQuaternion = Quaternion.RotationYawPitchRoll(r.y, r.x, r.z);
                         }
                     };
-                    //        private multiSelect() {
-                    //            if (this.meshesPicked == null) {
-                    //                this.meshesPicked = new Array<AbstractMesh>();
-                    //                
-                    //            }
-                    //            //if already selected then unselect it
-                    //            var i: number = this.meshesPicked.indexOf(this.meshPicked);
-                    //            if (i >= 0) {
-                    //                this.meshesPicked.splice(i, 1);
-                    //                this.meshPicked.renderOutline = false;
-                    //            } else {
-                    //                this.meshesPicked.push(this.meshPicked);
-                    //                this.meshPicked.renderOutline = true;
-                    //            }
-                    //        }
-                    Vishva.prototype.multiSelect_old = function (prevMesh, currentMesh) {
-                        if (this.meshesPicked == null) {
-                            this.meshesPicked = new Array();
-                        }
-                        //if previous mesh isn't selected then select it too
-                        var i;
-                        if (prevMesh != null) {
-                            i = this.meshesPicked.indexOf(prevMesh);
-                            if (!(i >= 0)) {
-                                this.meshesPicked.push(prevMesh);
-                                prevMesh.renderOutline = true;
-                                prevMesh.outlineWidth = this.ow;
-                            }
-                        }
-                        //if current mesh was already selected then unselect it
-                        i = this.meshesPicked.indexOf(currentMesh);
-                        if (i >= 0) {
-                            this.meshesPicked.splice(i, 1);
-                            this.meshPicked.renderOutline = false;
-                        }
-                        else {
-                            this.meshesPicked.push(currentMesh);
-                            currentMesh.renderOutline = true;
-                            currentMesh.outlineWidth = this.ow;
-                        }
+                    Vishva.prototype.highLight = function (am) {
+                        //            am.renderOutline=true;
+                        //            am.outlineWidth=this.ow;
+                        //            am.showBoundingBox=true;
+                        am.enableEdgesRendering();
+                        am.edgesWidth = 4.0;
+                    };
+                    Vishva.prototype.unHighLight = function (am) {
+                        //            am.renderOutline=false;
+                        //            am.showBoundingBox=false;
+                        am.disableEdgesRendering();
                     };
                     Vishva.prototype.multiSelect = function (currentMesh) {
                         if (this.meshesPicked == null) {
@@ -4395,8 +4366,7 @@ var org;
                         //else select it
                         if (!this.multiUnSelect(currentMesh)) {
                             this.meshesPicked.push(currentMesh);
-                            currentMesh.renderOutline = true;
-                            currentMesh.outlineWidth = this.ow;
+                            this.highLight(currentMesh);
                         }
                     };
                     //if mesh was already selected then unselect it
@@ -4407,7 +4377,7 @@ var org;
                         var i = this.meshesPicked.indexOf(mesh);
                         if (i >= 0) {
                             this.meshesPicked.splice(i, 1);
-                            mesh.renderOutline = false;
+                            this.unHighLight(mesh);
                             return true;
                         }
                         return false;
@@ -4417,7 +4387,7 @@ var org;
                             return;
                         for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
                             var mesh = _a[_i];
-                            mesh.renderOutline = false;
+                            this.unHighLight(mesh);
                         }
                         this.meshesPicked = null;
                     };
@@ -4706,7 +4676,7 @@ var org;
                         for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
                             var mesh = _a[_i];
                             if (!mesh.isEnabled()) {
-                                mesh.renderOutline = true;
+                                this.highLight(mesh);
                                 mesh.outlineWidth = this.ow;
                             }
                         }
@@ -4715,7 +4685,7 @@ var org;
                         for (var _i = 0, _a = this.scene.meshes; _i < _a.length; _i++) {
                             var mesh = _a[_i];
                             if (!mesh.isEnabled()) {
-                                mesh.renderOutline = false;
+                                this.unHighLight(mesh);
                             }
                         }
                     };
@@ -4730,15 +4700,14 @@ var org;
                                 this.meshPicked.visibility = 1;
                                 this.meshPicked.isPickable = true;
                                 if (this.showingAllInvisibles)
-                                    mesh.renderOutline = false;
+                                    this.unHighLight(mesh);
                             }
                         }
                         else {
                             Tags.AddTagsTo(this.meshPicked, "invisible");
                             if (this.showingAllInvisibles) {
                                 this.meshPicked.visibility = 0.5;
-                                mesh.renderOutline = true;
-                                mesh.outlineWidth = this.ow;
+                                this.highLight(mesh);
                                 this.meshPicked.isPickable = true;
                             }
                             else {
@@ -4762,8 +4731,7 @@ var org;
                             if (Tags.HasTags(mesh)) {
                                 if (Tags.MatchesQuery(mesh, "invisible")) {
                                     mesh.visibility = 0.5;
-                                    mesh.renderOutline = true;
-                                    mesh.outlineWidth = this.ow;
+                                    this.highLight(mesh);
                                     mesh.isPickable = true;
                                 }
                             }
@@ -4777,7 +4745,7 @@ var org;
                                 if (Tags.HasTags(mesh)) {
                                     if (Tags.MatchesQuery(mesh, "invisible")) {
                                         mesh.visibility = 0;
-                                        mesh.renderOutline = false;
+                                        this.unHighLight(mesh);
                                         mesh.isPickable = false;
                                     }
                                 }
@@ -4804,14 +4772,14 @@ var org;
                                     this.meshPicked.parent = null;
                                 }
                                 if (mesh !== this.meshPicked) {
-                                    mesh.renderOutline = false;
+                                    this.unHighLight(mesh);
                                     m = mesh.getWorldMatrix().multiply(invParentMatrix);
                                     m.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
                                     mesh.parent = this.meshPicked;
                                 }
                             }
                         }
-                        this.meshPicked.renderOutline = false;
+                        this.unHighLight(this.meshPicked);
                         this.meshesPicked = null;
                         return null;
                     };
@@ -4868,7 +4836,7 @@ var org;
                                         //also be cloned. So no need to clone it now.
                                         //TODO what about ancestors!!
                                         if ((mesh.parent == this.meshPicked) || this.meshesPicked.indexOf(mesh.parent) >= 0) {
-                                            mesh.renderOutline = false;
+                                            this.unHighLight(mesh);
                                             continue;
                                         }
                                     }
@@ -4903,7 +4871,7 @@ var org;
                         //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
                         //TODO think
                         //clone.receiveShadows = true;
-                        mesh.renderOutline = false;
+                        this.unHighLight(mesh);
                         (this.shadowGenerator.getShadowMap().renderList).push(clone);
                         return clone;
                     };

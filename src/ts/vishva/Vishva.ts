@@ -704,49 +704,19 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        //        private multiSelect() {
-        //            if (this.meshesPicked == null) {
-        //                this.meshesPicked = new Array<AbstractMesh>();
-        //                
-        //            }
-        //            //if already selected then unselect it
-        //            var i: number = this.meshesPicked.indexOf(this.meshPicked);
-        //            if (i >= 0) {
-        //                this.meshesPicked.splice(i, 1);
-        //                this.meshPicked.renderOutline = false;
-        //            } else {
-        //                this.meshesPicked.push(this.meshPicked);
-        //                this.meshPicked.renderOutline = true;
-        //            }
-        //        }
-
-        private multiSelect_old(prevMesh: AbstractMesh,currentMesh: AbstractMesh) {
-            if(this.meshesPicked==null) {
-                this.meshesPicked=new Array<AbstractMesh>();
-
-            }
-            //if previous mesh isn't selected then select it too
-            var i: number;
-            if(prevMesh!=null) {
-                i=this.meshesPicked.indexOf(prevMesh);
-                if(!(i>=0)) {
-                    this.meshesPicked.push(prevMesh);
-                    prevMesh.renderOutline=true;
-                    prevMesh.outlineWidth=this.ow;
-                }
-            }
-
-            //if current mesh was already selected then unselect it
-            i=this.meshesPicked.indexOf(currentMesh);
-            if(i>=0) {
-                this.meshesPicked.splice(i,1);
-                this.meshPicked.renderOutline=false;
-            } else {
-                this.meshesPicked.push(currentMesh);
-                currentMesh.renderOutline=true;
-                currentMesh.outlineWidth=this.ow;
-            }
-
+        private highLight(am:AbstractMesh){
+//            am.renderOutline=true;
+//            am.outlineWidth=this.ow;
+//            am.showBoundingBox=true;
+            am.enableEdgesRendering();
+            am.edgesWidth=4.0;
+        }
+        
+        private unHighLight(am:AbstractMesh){
+//            am.renderOutline=false;
+//            am.showBoundingBox=false;
+            am.disableEdgesRendering();
+            
         }
         private multiSelect(currentMesh: AbstractMesh) {
             if(this.meshesPicked==null) {
@@ -758,8 +728,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //else select it
             if(!this.multiUnSelect(currentMesh)) {
                 this.meshesPicked.push(currentMesh);
-                currentMesh.renderOutline=true;
-                currentMesh.outlineWidth=this.ow;
+                this.highLight(currentMesh);
             }
         }
 
@@ -770,7 +739,7 @@ namespace org.ssatguru.babylonjs.vishva {
             let i=this.meshesPicked.indexOf(mesh);
             if(i>=0) {
                 this.meshesPicked.splice(i,1);
-                mesh.renderOutline=false;
+                this.unHighLight(mesh);
                 return true;
             }
             return false;
@@ -778,7 +747,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private multiUnSelectAll() {
             if(this.meshesPicked===null) return;
             for(let mesh of this.meshesPicked) {
-                mesh.renderOutline=false;
+                this.unHighLight(mesh);
             }
             this.meshesPicked=null;
         }
@@ -1095,7 +1064,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public showAllDisabled() {
             for(let mesh of this.scene.meshes) {
                 if(!mesh.isEnabled()) {
-                    mesh.renderOutline=true;
+                    this.highLight(mesh);
                     mesh.outlineWidth=this.ow;
                 }
             }
@@ -1103,7 +1072,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public hideAllDisabled() {
             for(let mesh of this.scene.meshes) {
                 if(!mesh.isEnabled()) {
-                    mesh.renderOutline=false;
+                    this.unHighLight(mesh);
                 }
             }
         }
@@ -1119,15 +1088,14 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.meshPicked.visibility=1;
                     this.meshPicked.isPickable=true;
                     if(this.showingAllInvisibles)
-                        mesh.renderOutline=false;
+                        this.unHighLight(mesh);
                 }
             }
             else {
                 Tags.AddTagsTo(this.meshPicked,"invisible");
                 if(this.showingAllInvisibles) {
                     this.meshPicked.visibility=0.5;
-                    mesh.renderOutline=true;
-                    mesh.outlineWidth=this.ow;
+                    this.highLight(mesh);
                     this.meshPicked.isPickable=true;
                 } else {
                     this.meshPicked.visibility=0;
@@ -1152,8 +1120,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 if(Tags.HasTags(mesh)) {
                     if(Tags.MatchesQuery(mesh,"invisible")) {
                         mesh.visibility=0.5;
-                        mesh.renderOutline=true;
-                        mesh.outlineWidth=this.ow;
+                        this.highLight(mesh);
                         mesh.isPickable=true;
                     }
                 }
@@ -1168,7 +1135,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     if(Tags.HasTags(mesh)) {
                         if(Tags.MatchesQuery(mesh,"invisible")) {
                             mesh.visibility=0;
-                            mesh.renderOutline=false;
+                            this.unHighLight(mesh);
                             mesh.isPickable=false;
                         }
                     }
@@ -1195,14 +1162,14 @@ namespace org.ssatguru.babylonjs.vishva {
                         this.meshPicked.parent=null;
                     }
                     if(mesh!==this.meshPicked) {
-                        mesh.renderOutline=false;
+                        this.unHighLight(mesh);
                         m=mesh.getWorldMatrix().multiply(invParentMatrix);
                         m.decompose(mesh.scaling,mesh.rotationQuaternion,mesh.position);
                         mesh.parent=this.meshPicked;
                     }
                 }
             }
-            this.meshPicked.renderOutline=false;
+            this.unHighLight(this.meshPicked);
             this.meshesPicked=null;
             return null;
         }
@@ -1261,7 +1228,7 @@ namespace org.ssatguru.babylonjs.vishva {
                             //also be cloned. So no need to clone it now.
                             //TODO what about ancestors!!
                             if((mesh.parent==this.meshPicked)||this.meshesPicked.indexOf(<AbstractMesh>mesh.parent)>=0) {
-                                mesh.renderOutline=false;
+                                this.unHighLight(mesh);
                                 continue;
                             }
                         }
@@ -1301,7 +1268,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //clone.position = mesh.position.add(new Vector3(0.1, 0.1, 0.1));
             //TODO think
             //clone.receiveShadows = true;
-            mesh.renderOutline=false;
+            this.unHighLight(mesh);
             (this.shadowGenerator.getShadowMap().renderList).push(clone);
             return clone;
         }

@@ -136,7 +136,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 //                        (<HTMLElement>es.item(i)).style.display="block";
 //                }
                 es=this._propsAcc.getElementsByTagName("h3");
-                console.log("in mesh - h3 found "+es.length);
                 for(let i=0;i<es.length;i++) {
                     if(es.item(i).className.indexOf("mesh")>=0){
                         (<HTMLElement>es.item(i)).style.display="block";

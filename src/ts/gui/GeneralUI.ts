@@ -44,7 +44,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _genColl: HTMLInputElement;
         private _genVisi: HTMLInputElement;
 
-
         constructor(vishva: Vishva, vishvaGUI:VishvaGUI) {
             this._vishva=vishva;
             this._vishvaGUI=vishvaGUI;
@@ -197,7 +196,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._genVisi.onchange=() => {
                 this._vishva.makeVisibile(this._genVisi.checked);
             }
-
+            
             var undo: HTMLElement=document.getElementById("undo");
             var redo: HTMLElement=document.getElementById("redo");
 

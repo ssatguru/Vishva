@@ -1411,7 +1411,6 @@ var org;
                                 //                        (<HTMLElement>es.item(i)).style.display="block";
                                 //                }
                                 es = this._propsAcc.getElementsByTagName("h3");
-                                console.log("in mesh - h3 found " + es.length);
                                 for (var i = 0; i < es.length; i++) {
                                     if (es.item(i).className.indexOf("mesh") >= 0) {
                                         es.item(i).style.display = "block";
@@ -1742,6 +1741,10 @@ var org;
                             this._matID = document.getElementById("matID");
                             this._matName = document.getElementById("matName");
                             this._matType = document.getElementById("matType");
+                            this._matBF = document.getElementById("matBF");
+                            this._matBF.onchange = function () {
+                                _this._vishva.setMaterialBFC(_this._matIDs.value, _this._matBF.checked);
+                            };
                             this._matClone = document.getElementById("matClone");
                             this._matClone.onclick = function () {
                                 _this._vishva.cloneMaterial(_this._matID.innerText);
@@ -1819,6 +1822,12 @@ var org;
                             this._matID.innerText = this._matIDs.value;
                             this._matName.innerText = this._vishva.getMaterialName(this._matIDs.value);
                             this._matType.innerText = this._vishva.getMaterialType(this._matIDs.value);
+                            var b = this._vishva.getMaterialBFC(this._matIDs.value);
+                            if (typeof (b) == 'string') {
+                                gui.DialogMgr.showAlertDiag(b);
+                            }
+                            else
+                                this._matBF.checked = b;
                             this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value, this._matColType.value));
                             var dtls = this._vishva.getMatTexture(this._matID.innerText, this._matTextType.value);
                             this._textID = dtls[0];
@@ -2665,6 +2674,63 @@ var org;
             (function (vishva) {
                 var gui;
                 (function (gui) {
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
+                    var VInputText = (function () {
+                        function VInputText(eID, value) {
+                            if (value === void 0) { value = ""; }
+                            var _this = this;
+                            var e;
+                            if (eID instanceof HTMLElement) {
+                                e = eID;
+                            }
+                            else
+                                e = document.getElementById(eID);
+                            this._inE = document.createElement("input");
+                            this._inE.type = "text";
+                            this._inE.style.display = "inline-block";
+                            this._inE.onkeypress = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onkeydown = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onkeyup = function (e) {
+                                e.stopPropagation();
+                            };
+                            this._inE.onchange = function (e) {
+                                e.preventDefault();
+                                if (_this.onChange != null) {
+                                    _this.onChange(_this._inE.value);
+                                }
+                            };
+                            e.appendChild(this._inE);
+                        }
+                        VInputText.prototype.getValue = function () {
+                            return this._inE.value;
+                        };
+                        VInputText.prototype.setValue = function (s) {
+                            this._inE.value = s;
+                        };
+                        return VInputText;
+                    }());
+                    gui.VInputText = VInputText;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
                     var Vector2 = BABYLON.Vector2;
                     /**
                      * provides a ui to input a vector2 value
@@ -3465,8 +3531,10 @@ var org;
                     var VTreeDialog = (function () {
                         function VTreeDialog(vishva, diagTitle, pos, treeData, filter, openAll) {
                             var _this = this;
-                            this._diagHtml = 'search <input type="text">'
+                            //private _diagHtml: string='search <div></div> <input type="text">'
+                            this._diagHtml = '<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
                                 + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
+                                + '</div>'
                                 + '<hr>'
                                 + '<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
                                 + '</div>'
@@ -3478,22 +3546,23 @@ var org;
                             var diagDiv = document.createElement("div");
                             diagDiv.innerHTML = this._diagHtml;
                             document.body.appendChild(diagDiv);
-                            var treeDiv = diagDiv.getElementsByTagName("div")[0];
+                            var treeDiv = diagDiv.getElementsByTagName("div")[1];
                             this._treeDiag = new gui.VDialog(diagDiv, diagTitle, pos, 300);
                             this._treeDiag.setResizable(true);
                             this._tree = new gui.VTree(treeDiv, treeData, filter, openAll);
                             //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});
-                            var fi = diagDiv.getElementsByTagName("input")[0];
+                            //let fi: HTMLInputElement=diagDiv.getElementsByTagName("input")[0];
+                            var fi = new gui.VInputText(diagDiv.getElementsByTagName("span")[0]);
                             var btns = diagDiv.getElementsByTagName("button");
                             var fb = btns.item(0);
                             var e = btns.item(1);
                             var c = btns.item(2);
                             this._refreshBtn = btns.item(3);
-                            fi.onchange = function () {
-                                _this._tree.filter(fi.value.trim());
+                            fi.onChange = function () {
+                                _this._tree.filter(fi.getValue().trim());
                             };
                             fb.onclick = function () {
-                                _this._tree.filter(fi.value.trim());
+                                _this._tree.filter(fi.getValue().trim());
                             };
                             e.onclick = function () {
                                 _this._tree.expandAll();
@@ -4762,21 +4831,29 @@ var org;
                         this.meshPicked.computeWorldMatrix(true);
                         var invParentMatrix = Matrix.Invert(this.meshPicked.getWorldMatrix());
                         var m;
-                        for (var index122 = 0; index122 < this.meshesPicked.length; index122++) {
-                            var mesh = this.meshesPicked[index122];
-                            {
+                        for (var _i = 0, _a = this.meshesPicked; _i < _a.length; _i++) {
+                            var mesh = _a[_i];
+                            try {
                                 mesh.computeWorldMatrix(true);
                                 if (mesh === this.meshPicked.parent) {
                                     m = this.meshPicked.getWorldMatrix();
+                                    if (this.meshPicked.rotationQuaternion == null)
+                                        this.meshPicked.rotationQuaternion = Quaternion.Identity();
                                     m.decompose(this.meshPicked.scaling, this.meshPicked.rotationQuaternion, this.meshPicked.position);
                                     this.meshPicked.parent = null;
                                 }
                                 if (mesh !== this.meshPicked) {
                                     this.unHighLight(mesh);
                                     m = mesh.getWorldMatrix().multiply(invParentMatrix);
+                                    if (mesh.rotationQuaternion == null)
+                                        mesh.rotationQuaternion = Quaternion.Identity();
                                     m.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
                                     mesh.parent = this.meshPicked;
                                 }
+                            }
+                            catch (e) {
+                                console.error("was not able to parent " + mesh.id + " - " + mesh.name);
+                                console.error(e);
                             }
                         }
                         this.unHighLight(this.meshPicked);
@@ -4806,13 +4883,19 @@ var org;
                         }
                         var m;
                         var i = 0;
-                        for (var index123 = 0; index123 < children.length; index123++) {
-                            var child = children[index123];
-                            {
+                        for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
+                            var child = children_2[_i];
+                            try {
                                 m = child.getWorldMatrix();
+                                if (child.rotationQuaternion == null)
+                                    child.rotationQuaternion = Quaternion.Identity();
                                 m.decompose(child.scaling, child.rotationQuaternion, child.position);
                                 child.parent = null;
                                 i++;
+                            }
+                            catch (e) {
+                                console.error("was not able to remove child " + child.id + " - " + child.name);
+                                console.error(e);
                             }
                         }
                         return i + " children removed";
@@ -4997,6 +5080,10 @@ var org;
                             }
                             var name_2 = new Number(Date.now()).toString();
                             var newMesh = csg3.toMesh(name_2, this.meshesPicked[0].material, this.scene, false);
+                            if (this.meshesPicked[0].parent != null) {
+                                newMesh.parent = this.meshesPicked[0].parent;
+                            }
+                            this.multiUnSelectAll();
                             this.switchEditControl(newMesh);
                             this.animateMesh(newMesh);
                             return null;
@@ -5125,6 +5212,20 @@ var org;
                             return "standard material";
                         else
                             return "not standard material";
+                    };
+                    //back face culling
+                    Vishva.prototype.setMaterialBFC = function (id, b) {
+                        var mat = this.scene.getMaterialByID(id);
+                        if (mat == null)
+                            return null;
+                        mat.backFaceCulling = b;
+                    };
+                    //back face culling
+                    Vishva.prototype.getMaterialBFC = function (id) {
+                        var mat = this.scene.getMaterialByID(id);
+                        if (mat == null)
+                            return "material not found";
+                        return mat.backFaceCulling;
                     };
                     Vishva.prototype.cloneMaterial = function (id) {
                         var mat = this.scene.getMaterialByID(id);
@@ -6372,15 +6473,12 @@ var org;
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
                         var boundingRadius = this.getBoundingRadius(meshes);
-                        console.log("meshes " + meshes.length);
-                        console.log("skels " + skeletons.length);
                         for (var _i = 0, skeletons_1 = skeletons; _i < skeletons_1.length; _i++) {
                             var skeleton = skeletons_1[_i];
                             this.scene.stopAnimation(skeleton);
                         }
                         for (var _a = 0, meshes_5 = meshes; _a < meshes_5.length; _a++) {
                             var mesh = meshes_5[_a];
-                            //mesh = (<Mesh>mesh).toLeftHanded();
                             mesh.isPickable = true;
                             mesh.checkCollisions = true;
                             //gltb file
@@ -6459,7 +6557,6 @@ var org;
                         if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
                             //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
                             bt.name = bt.url;
-                            console.log("renamed to " + bt.name);
                         }
                     };
                     /**
@@ -6475,22 +6572,16 @@ var org;
                         var maxRadius = 0;
                         for (var _i = 0, meshes_6 = meshes; _i < meshes_6.length; _i++) {
                             var mesh = meshes_6[_i];
-                            console.log("==========");
-                            console.log(mesh.name);
-                            console.log(mesh.absolutePosition);
-                            console.log(mesh.absolutePosition.length());
                             if (mesh.parent != null)
                                 console.log("parent " + mesh.parent.name);
                             var bi = mesh.getBoundingInfo();
                             var rw = bi.boundingSphere.radiusWorld;
-                            console.log(bi.boundingSphere.radiusWorld);
                             if (isFinite(rw)) {
                                 var r = rw + mesh.absolutePosition.length();
                                 if (maxRadius < r)
                                     maxRadius = r;
                             }
                         }
-                        console.log("max radius " + maxRadius);
                         return maxRadius;
                     };
                     Vishva.prototype.loadWorldFile = function (file) {

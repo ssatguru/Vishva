@@ -8,12 +8,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vishva: Vishva;
 
         private _matIDs: HTMLSelectElement;
-        private _matID: HTMLSelectElement;
-        private _matName: HTMLSelectElement;
+        private _matID: HTMLElement;
+        private _matName: HTMLElement;
         private _matCount: HTMLLabelElement;
         private _matVis: HTMLInputElement;
         private _matVisVal: HTMLElement;
-        private _matType: HTMLSelectElement;
+        private _matType: HTMLElement;
+        private _matBF: HTMLInputElement;
         private _matColType: HTMLSelectElement;
         private _matColDiag: ColorPickerDiag;
         private _matTextType: HTMLSelectElement;
@@ -47,6 +48,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matID=<HTMLSelectElement>document.getElementById("matID");
             this._matName=<HTMLSelectElement>document.getElementById("matName");
             this._matType=<HTMLSelectElement>document.getElementById("matType");
+            this._matBF=<HTMLInputElement>document.getElementById("matBF");
+            this._matBF.onchange=() => {
+                this._vishva.setMaterialBFC(this._matIDs.value,this._matBF.checked);
+            }
             this._matClone=<HTMLSelectElement>document.getElementById("matClone");
             this._matClone.onclick=()=>{
                 this._vishva.cloneMaterial(this._matID.innerText);
@@ -133,6 +138,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matID.innerText=this._matIDs.value;
             this._matName.innerText=this._vishva.getMaterialName(this._matIDs.value);
             this._matType.innerText=this._vishva.getMaterialType(this._matIDs.value);
+            let b:boolean|string =this._vishva.getMaterialBFC(this._matIDs.value);
+            if (typeof(b)== 'string' ){
+                DialogMgr.showAlertDiag(b);
+            }else  this._matBF.checked=b;
+            
             this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value,this._matColType.value));
             let dtls: Array<string>=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
             this._textID=dtls[0];

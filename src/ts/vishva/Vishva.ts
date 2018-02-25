@@ -434,8 +434,8 @@ namespace org.ssatguru.babylonjs.vishva {
                                 console.log(e);
                             }
                             this.GroundSPSs.push(gSPS);
-                        }else{
-                            console.log("could not find sps mesh for id = " + gSPSs.meshID)
+                        } else {
+                            console.log("could not find sps mesh for id = "+gSPSs.meshID)
                         }
                     }
                 }
@@ -704,19 +704,19 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        private highLight(am:AbstractMesh){
-//            am.renderOutline=true;
-//            am.outlineWidth=this.ow;
-//            am.showBoundingBox=true;
+        private highLight(am: AbstractMesh) {
+            //            am.renderOutline=true;
+            //            am.outlineWidth=this.ow;
+            //            am.showBoundingBox=true;
             am.enableEdgesRendering();
             am.edgesWidth=4.0;
         }
-        
-        private unHighLight(am:AbstractMesh){
-//            am.renderOutline=false;
-//            am.showBoundingBox=false;
+
+        private unHighLight(am: AbstractMesh) {
+            //            am.renderOutline=false;
+            //            am.showBoundingBox=false;
             am.disableEdgesRendering();
-            
+
         }
         private multiSelect(currentMesh: AbstractMesh) {
             if(this.meshesPicked==null) {
@@ -1142,6 +1142,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
         }
+
+
         public makeParent(): string {
             if(!this.isMeshSelected) {
                 return "no mesh selected";
@@ -1152,22 +1154,29 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.computeWorldMatrix(true);
             var invParentMatrix: Matrix=Matrix.Invert(this.meshPicked.getWorldMatrix());
             var m: Matrix;
-            for(var index122=0;index122<this.meshesPicked.length;index122++) {
-                var mesh=this.meshesPicked[index122];
-                {
+            for(let mesh of this.meshesPicked) {
+                try {
                     mesh.computeWorldMatrix(true);
                     if(mesh===this.meshPicked.parent) {
                         m=this.meshPicked.getWorldMatrix();
+                        if(this.meshPicked.rotationQuaternion==null) this.meshPicked.rotationQuaternion=Quaternion.Identity();
                         m.decompose(this.meshPicked.scaling,this.meshPicked.rotationQuaternion,this.meshPicked.position);
                         this.meshPicked.parent=null;
                     }
                     if(mesh!==this.meshPicked) {
+
                         this.unHighLight(mesh);
                         m=mesh.getWorldMatrix().multiply(invParentMatrix);
+                        if(mesh.rotationQuaternion==null) mesh.rotationQuaternion=Quaternion.Identity();
                         m.decompose(mesh.scaling,mesh.rotationQuaternion,mesh.position);
                         mesh.parent=this.meshPicked;
+
                     }
+                } catch(e) {
+                    console.error("was not able to parent "+mesh.id+" - "+mesh.name);
+                    console.error(e);
                 }
+
             }
             this.unHighLight(this.meshPicked);
             this.meshesPicked=null;
@@ -1198,15 +1207,20 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             var m: Matrix;
             var i: number=0;
-            for(var index123=0;index123<children.length;index123++) {
-                var child=children[index123];
-                {
+
+            for(let child of children) {
+                try {
                     m=child.getWorldMatrix();
+                    if(child.rotationQuaternion==null) child.rotationQuaternion=Quaternion.Identity();
                     m.decompose(child.scaling,child.rotationQuaternion,child.position);
                     child.parent=null;
                     i++;
+                } catch(e) {
+                    console.error("was not able to remove child "+child.id+" - "+child.name);
+                    console.error(e);
                 }
             }
+
             return i+" children removed";
         }
 
@@ -1389,7 +1403,11 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 let name: string=(<number>new Number(Date.now())).toString();
                 let newMesh: Mesh=csg3.toMesh(name,this.meshesPicked[0].material,this.scene,false);
-
+                if (this.meshesPicked[0].parent!=null){
+                    newMesh.parent=this.meshesPicked[0].parent;
+                }
+                
+                this.multiUnSelectAll();
                 this.switchEditControl(newMesh);
                 this.animateMesh(newMesh);
                 return null;
@@ -1522,6 +1540,18 @@ namespace org.ssatguru.babylonjs.vishva {
             if(mat==null) return null;
             if(mat instanceof StandardMaterial) return "standard material";
             else return "not standard material";
+        }
+        //back face culling
+        public setMaterialBFC(id: string,b: boolean): string {
+            let mat: Material=this.scene.getMaterialByID(id);
+            if(mat==null) return null;
+            mat.backFaceCulling=b;
+        }
+        //back face culling
+        public getMaterialBFC(id: string): boolean|string {
+            let mat: Material=this.scene.getMaterialByID(id);
+            if(mat==null) return "material not found";
+            return mat.backFaceCulling;
         }
 
         public cloneMaterial(id: string) {
@@ -2443,19 +2473,19 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public createGrndSPS(): GroundSPS|string {
-            let gs:GroundSPS;
+            let gs: GroundSPS;
             if(this.meshesPicked==null) {
                 return "select a mesh to spread - use ctl-right click to select";
             } else if(this.meshesPicked.length>1) {
                 return "more than one mesh selected to spread - select only one";
             }
-            let mesh:Mesh=<Mesh>this.meshesPicked[0];
+            let mesh: Mesh=<Mesh>this.meshesPicked[0];
             gs=new GroundSPS(mesh.name+"-SPS",this,mesh,<GroundMesh>this.ground,{});
             return gs;
         }
-        
+
         public getMeshSpreadDtls(meshId: string): SpreadDtls|string {
-            let gs:GroundSPS;
+            let gs: GroundSPS;
             let mesh: Mesh=<Mesh>this.scene.getMeshByID(meshId);
             if(mesh==null) {
                 return "no mesh found with id : "+meshId;
@@ -2464,7 +2494,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return gs.getSpreadDtls();
         }
 
-        public updateSPSArray(gs:GroundSPS) {
+        public updateSPSArray(gs: GroundSPS) {
             if(this.GroundSPSs==null) {
                 this.GroundSPSs=new Array();
             }
@@ -2792,15 +2822,12 @@ namespace org.ssatguru.babylonjs.vishva {
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
             var boundingRadius: number=this.getBoundingRadius(meshes);
-            console.log("meshes "+meshes.length);
-            console.log("skels "+skeletons.length);
 
             for(let skeleton of skeletons) {
                 this.scene.stopAnimation(skeleton);
             }
 
             for(let mesh of meshes) {
-                //mesh = (<Mesh>mesh).toLeftHanded();
                 mesh.isPickable=true;
                 mesh.checkCollisions=true;
                 //gltb file
@@ -2884,7 +2911,6 @@ namespace org.ssatguru.babylonjs.vishva {
             if(textureName.indexOf("vishva/")!==0&&textureName.indexOf("../")!==0) {
                 //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
                 bt.name=(<Texture>bt).url;
-                console.log("renamed to "+bt.name);
             }
         }
 
@@ -2900,21 +2926,15 @@ namespace org.ssatguru.babylonjs.vishva {
         private getBoundingRadius(meshes: AbstractMesh[]): number {
             var maxRadius: number=0;
             for(let mesh of meshes) {
-                console.log("==========");
-                console.log(mesh.name);
-                console.log(mesh.absolutePosition);
-                console.log(mesh.absolutePosition.length());
                 if(mesh.parent!=null) console.log("parent "+mesh.parent.name);
                 var bi: BoundingInfo=mesh.getBoundingInfo();
                 var rw: number=bi.boundingSphere.radiusWorld;
-                console.log(bi.boundingSphere.radiusWorld);
                 if(isFinite(rw)) {
                     var r: number=rw+mesh.absolutePosition.length();
                     if(maxRadius<r) maxRadius=r;
                 }
 
             }
-            console.log("max radius "+maxRadius);
             return maxRadius;
         }
 

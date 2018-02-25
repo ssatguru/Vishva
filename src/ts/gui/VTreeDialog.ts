@@ -9,8 +9,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _tree: VTree;
         private _treeDiag: VDialog;
         private _refreshBtn: HTMLElement;
-        private _diagHtml: string='search <input type="text">'
+        //private _diagHtml: string='search <div></div> <input type="text">'
+        private _diagHtml: string='<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
         +'<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
+        +'</div>'
         +'<hr>'
         +'<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
         +'</div>'
@@ -26,14 +28,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             diagDiv.innerHTML = this._diagHtml;
             document.body.appendChild(diagDiv);
             
-            let treeDiv:HTMLDivElement=diagDiv.getElementsByTagName("div")[0];
+            let treeDiv:HTMLDivElement=diagDiv.getElementsByTagName("div")[1];
             
             this._treeDiag=new VDialog(diagDiv,diagTitle,pos,300);
             this._treeDiag.setResizable(true);
             this._tree=new VTree(treeDiv,treeData,filter,openAll);
             //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});
 
-            let fi: HTMLInputElement=diagDiv.getElementsByTagName("input")[0];
+            //let fi: HTMLInputElement=diagDiv.getElementsByTagName("input")[0];
+            let fi: VInputText=new VInputText(diagDiv.getElementsByTagName("span")[0]);
             let btns: NodeListOf<HTMLButtonElement>=diagDiv.getElementsByTagName("button");
             let fb: HTMLButtonElement=btns.item(0);
             let e: HTMLButtonElement=btns.item(1);
@@ -41,12 +44,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._refreshBtn=btns.item(3);
             
            
-            fi.onchange=() => {
-                this._tree.filter(fi.value.trim());
+            fi.onChange=() => {
+                this._tree.filter(fi.getValue().trim());
             }
             
             fb.onclick=() => {
-                this._tree.filter(fi.value.trim());
+                this._tree.filter(fi.getValue().trim());
             }
             e.onclick=() => {
                 this._tree.expandAll();

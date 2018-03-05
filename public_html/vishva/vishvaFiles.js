@@ -82,153 +82,6 @@ vishvaFiles=[
     ]},
     {"d":"misc",
      "f":[
-      {"d":"DeadProject Goal2",
-       "f":[
-        {"d":"DeadProject Goal1",
-         "f":[
-          {"d":"audio",
-           "f":[
-            {"d":"sounds",
-             "f":[
-              "door_steam.wav",
-              "door_steam_close.wav",
-              "enem_crooked_att1.wav",
-              "enem_crooked_att2.wav",
-              "enem_crooked_dead1.wav",
-              "enem_crooked_dead2.wav",
-              "enem_crooked_hit1.wav",
-              "enem_crooked_hit2.wav",
-              "foot_steps_att_1.wav",
-              "sfx_chainsaw_active_1.wav",
-              "sfx_chainsaw_active_2.wav",
-              "sfx_chainsaw_end.wav",
-              "sfx_chainsaw_idle_1.wav",
-              "sfx_chainsaw_idle_2.wav",
-              "sfx_chainsaw_idle_3.wav",
-              "sfx_computer_bleep_1.wav",
-              "sfx_explosion_1_temporary.wav",
-              "sfx_fire_burning.wav",
-              "sfx_freezegun_fire_1.wav",
-              "sfx_freeze_gun_WIP.wav",
-              "sfx_gunshot5.wav",
-              "sfx_gunshot6.wav",
-              "sfx_large_cell_blown.wav",
-              "sfx_ricochet1.wav",
-              "sfx_ricochet2.wav",
-              "sfx_ricochet3.wav",
-              "sfx_ricochet4.wav",
-              "sfx_rocket_launch_1.wav",
-              "sfx_rocket_launch_2.wav",
-              "sfx_shotgun_fire_1.wav",
-              "sfx_shotgun_fire_2.wav",
-              "sfx_shotgun_reload_2.wav",
-              "sfx_tcell_blown.wav",
-              "sfx_window_break_1.wav",
-              "sfx_window_break_big_1.wav",
-              "sfx_window_break_big_2.wav",
-              "sfx_window_break_big_3.wav"
-            ]}
-          ]},
-          {"d":"Chars",
-           "f":[
-            "player.blend"
-          ]},
-          {"d":"Documentation",
-           "f":[
-            "doc_1.png",
-            "doc_2.png",
-            "light_doc1.png",
-            "light_doc2.png"
-          ]},
-          {"d":"enemies",
-           "f":[
-            "CH1.blend",
-            "ch2.blend"
-          ]},
-          "enemies_playground.blend",
-          {"d":"levels",
-           "f":[
-            "enviro_super_test.blend",
-            "level.blend",
-            {"d":"Props",
-             "f":[
-              "Props_packed.blend"
-            ]}
-          ]},
-          {"d":"optilighting",
-           "f":[
-            "lighting optimized.blend",
-            "read the docs.txt"
-          ]},
-          {"d":"player",
-           "f":[
-            "player.blend",
-            "player.blend1",
-            "player.blend2"
-          ]},
-          {"d":"textures",
-           "f":[
-            "ammo_box_col.dds",
-            "ammo_box_nrm2.dds",
-            "dec_explosion_hole.png",
-            "dec_glow_random.png",
-            "dec_liquid_pool.png",
-            "dec_liquid_pool_NRM.dds",
-            "dec_liquid_pool_NRM.tga",
-            "dec_paper_warning.png",
-            "dec_part_points.png",
-            "dec_scratches_alpha.png",
-            "dec_shattering_glass.png",
-            "dec_splatters_mask_cpoy.png",
-            "dec_weapon_fx.png",
-            "dec_wind_mask.png",
-            "disort_noise.png",
-            "enem2_col.png",
-            "enem_1_col.png",
-            "enem_1_nrm.png",
-            "enem_1_spc.png",
-            "enem_2_nrm.png",
-            "enem_2_spec.png",
-            "grill_floors.png",
-            "large_generator_1_col.dds",
-            "large_generator_1_nrm.dds",
-            "large_generator_1_nrm.tga",
-            "metal_metal_burned.dds",
-            "metal_metal_burned_NRM.dds",
-            "modular_texture.dds",
-            "modular_texture_2_COL.dds",
-            "modular_texture_2_NRM.dds",
-            "modular_texture_NRM.dds",
-            "part_fire_steam_electricity.png",
-            "point_spot.png",
-            "ref_map_cubic.dds",
-            "text_various.png",
-            "text_various_2.dds",
-            "trashes.png",
-            "trashes_nrm.png",
-            "trash_cont_col.dds",
-            "trash_cont_nrm.dds",
-            {"d":"weapons",
-             "f":[
-              "chain_saw_col.dds",
-              "chain_saw_nrm.tga",
-              "DBar_Shotgun_col.dds",
-              "DBar_Shotgun_NRM.tga",
-              "freeze_fun_nrm.tga",
-              "freeze_gun_col.dds",
-              "rocket_launcher_col.dds",
-              "rocket_launcher_nrm.tga"
-            ]}
-          ]},
-          "update..read.txt",
-          {"d":"weapons",
-           "f":[
-            "high_poly_wp.blend",
-            "weapons_pack.blend"
-          ]},
-          "weapon_fx.blend"
-        ]}
-      ]}
     ]},
     {"d":"sounds",
      "f":[
@@ -275,58 +128,34 @@ vishvaFiles=[
        "f":[
         "gate.babylon"
       ]},
+      {"d":"house1",
+       "f":[
+        "75519 - Medieval houses - License.html",
+        "DoorType1_1.jpg",
+        "DoorType1_2.jpg",
+        "GreyBricks2.jpg",
+        "GreyStone2.jpg",
+        "house1.babylon",
+        "house1.blend",
+        "house1.blend1",
+        "house1.log",
+        "House1Upload.babylon",
+        "House1Upload.log",
+        "PlasterLarge.jpg",
+        "preview_75519.jpg",
+        "RoofTiles.jpg",
+        "Rusted Metal.jpg",
+        "Stone.jpg",
+        "TreeLogEdgeWeathered.jpg",
+        "WindowBlue1.jpg",
+        "WindowsBlue2.jpg",
+        "Wood.jpg"
+      ]},
       {"d":"huts",
        "f":[
         "huts.babylon",
         "huts.jpg",
         "hut_texture.jpg"
-      ]},
-      {"d":"medieval",
-       "f":[
-        {"d":"75519_House1Upload_blend",
-         "f":[
-          "75519 - Medieval houses - License.html",
-          "DoorType1_1.jpg",
-          "DoorType1_2.jpg",
-          "GreyBricks2.jpg",
-          "GreyStone2.jpg",
-          "House1Upload.babylon",
-          "House1Upload.blend",
-          "House1Upload.log",
-          "PlasterLarge.jpg",
-          "preview_75519.jpg",
-          "RoofTiles.jpg",
-          "Rusted Metal.jpg",
-          "Stone.jpg",
-          "TreeLogEdgeWeathered.jpg",
-          "WindowBlue1.jpg",
-          "WindowsBlue2.jpg",
-          "Wood.jpg"
-        ]},
-        "75519_House1Upload_blend.zip",
-        {"d":"75861_House2_1Upload_blend",
-         "f":[
-          "75861 - Medieval House - License.html",
-          "House2_1Upload.blend",
-          "preview_75861.jpg"
-        ]},
-        "75861_House2_1Upload_blend.zip",
-        {"d":"75862_House3Upload_blend",
-         "f":[
-          "75862 - Medieval house - License.html",
-          "House3Upload.blend",
-          "preview_75862.jpg"
-        ]},
-        "75862_House3Upload_blend.zip",
-        {"d":"75864_House4Upload_blend",
-         "f":[
-          "75864 - Medieval House - License.html",
-          "House4Upload.blend",
-          "preview_75864.jpg"
-        ]},
-        "75864_House4Upload_blend.zip",
-        "Medieval Props textured - OpenGameArt.org.url",
-        "rts_props.blend"
       ]},
       {"d":"scene",
        "f":[

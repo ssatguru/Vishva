@@ -37,12 +37,12 @@ namespace org.ssatguru.babylonjs.vishva {
                 moveBy = Vector3.TransformCoordinates(localMove, meshMatrix).subtract(this.mesh.position);
             } else moveBy = new Vector3(props.x, props.y, props.z);
             if (props.toggle) {
-                if (props.notReversed) {
+                if (props.state_notReversed) {
                     nPos = cPos.add(moveBy);
                 } else {
                     nPos = cPos.subtract(moveBy);
                 }
-                props.notReversed = !props.notReversed;
+                props.state_notReversed = !props.state_notReversed;
             } else {
                 nPos = cPos.add(moveBy);
             }

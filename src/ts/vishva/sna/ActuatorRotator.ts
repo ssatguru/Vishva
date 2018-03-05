@@ -37,13 +37,13 @@ namespace org.ssatguru.babylonjs.vishva {
             var rotZ: Quaternion = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
             var abc: Quaternion = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
             if (properties.toggle) {
-                if (properties.notReversed) {
+                if (properties.state_notReversed) {
                     nPos = cPos.multiply(abc);
                 } else {
                     nPos = cPos.multiply(Quaternion.Inverse(abc));
                 }
             } else nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
-            properties.notReversed = !properties.notReversed;
+            properties.state_notReversed = !properties.state_notReversed;
             var cY: number = this.mesh.position.y;
             var nY: number = this.mesh.position.y + 5;
             this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, () => {

@@ -27,12 +27,12 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public actuate() {
             if (this.properties.toggle) {
-                if (this.properties.notReversed) {
+                if (this.properties.state_notReversed) {
                     this.sound.play();
                 } else {
                     window.setTimeout((() => { return this.onActuateEnd() }), 0);
                 }
-                this.properties.notReversed = !this.properties.notReversed;
+                this.properties.state_notReversed = !this.properties.state_notReversed;
             } else {
                 this.sound.play();
             }

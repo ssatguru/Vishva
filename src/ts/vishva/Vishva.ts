@@ -96,8 +96,18 @@ namespace org.ssatguru.babylonjs.vishva {
         skyboxTextures: string="vishva/internal/textures/skybox-default/default";
 
         avatarFolder: string="vishva/internal/avatar/";
-
         avatarFile: string="starterAvatars.babylon";
+        avatar: Mesh;
+        //spawnPosition:Vector3=new Vector3(-360,620,225);
+        spawnPosition: Vector3=new Vector3(0,0.2,0);
+        //spawnPosition: Vector3=new Vector3(0,12,0);
+
+        
+        //avatar stuff
+        avatarSkeleton: Skeleton;
+        _animBlend=0.1;
+        private _avEllipsoid:Vector3=new Vector3(0.1,1,0.1);
+        private _avEllipsoidOffset:Vector3=new Vector3(0,1,0);
 
         NO_TEXTURE: string="vishva/internal/textures/no-texture.jpg"
         TGA_IMAGE: string="vishva/internal/textures/tga-image.jpg"
@@ -156,15 +166,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
         ground: Mesh;
 
-        avatar: Mesh;
-        //spawnPosition:Vector3=new Vector3(-360,620,225);
-        //spawnPosition: Vector3=new Vector3(0,0.2,0);
-        spawnPosition: Vector3=new Vector3(0,12,0);
-
-        avatarSkeleton: Skeleton;
-        _animBlend=0.1;
+        
 
         mainCamera: ArcRotateCamera;
+        private _cameraCollision: boolean=true;
+        private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
 
         vishvaGUI: VishvaGUI;
 
@@ -189,15 +195,17 @@ namespace org.ssatguru.babylonjs.vishva {
 
         showBoundingBox: boolean=false;
 
-        cameraCollision: boolean=true;
+        
         //automatcally open edit menu whenever a mesh is selected
         private autoEditMenu: boolean=true;
 
         private enablePhysics: boolean=true;
 
-
+        public static vishva:Vishva;
+        
 
         public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,vishvaFiles: Array<any>,canvasId: string) {
+            Vishva.vishva = this;
             this.editEnabled=false;
             this.frames=0;
             this.f=0;
@@ -271,7 +279,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.vishvaSerialized=foo["VishvaSerialized"];
             //this.snas = <SNAserialized[]>foo["VishvaSNA"];
             this.snas=this.vishvaSerialized.snas;
-            this.cameraCollision=this.vishvaSerialized.settings.cameraCollision;
+            this._cameraCollision=this.vishvaSerialized.settings.cameraCollision;
             this.autoEditMenu=this.vishvaSerialized.settings.autoEditMenu;
 
             var sceneData: string="data:"+tfat.text;
@@ -316,7 +324,9 @@ namespace org.ssatguru.babylonjs.vishva {
                         avFound=true;
                         this.avatar=<Mesh>mesh;
                         //TODO ellipsoidOffset not serialized?
-                        this.avatar.ellipsoidOffset=new Vector3(0,1,0);
+                        this.avatar.ellipsoidOffset=this._avEllipsoidOffset;
+                        //TODO override ellipsoid ?
+                        this.avatar.ellipsoid=this._avEllipsoid;
                     } else if(Tags.MatchesQuery(mesh,"Vishva.sky")) {
                         skyFound=true;
                         this.skybox=<Mesh>mesh;
@@ -404,9 +414,10 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
             //TODO
-            this.mainCamera.checkCollisions=true;
-            this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
-
+            this.mainCamera.checkCollisions=this._cameraCollision;
+            //this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
+            this.mainCamera.collisionRadius=this._cameraEllipsoid;
+            
             if(!groundFound) {
                 console.log("no vishva ground found. creating ground");
                 //                this.ground=this.createGround(this.scene);
@@ -2598,7 +2609,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.renameWorldTextures();
             //TODO add support for CharacterController serialization.
             let vishvaSerialzed=new VishvaSerialized();
-            vishvaSerialzed.settings.cameraCollision=this.cameraCollision;
+            vishvaSerialzed.settings.cameraCollision=this._cameraCollision;
             vishvaSerialzed.settings.autoEditMenu=this.autoEditMenu;
             vishvaSerialzed.guiSettings=this.vishvaGUI.getSettings();
             vishvaSerialzed.misc.activeCameraTarget=this.mainCamera.target;
@@ -2829,7 +2840,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             for(let mesh of meshes) {
                 mesh.isPickable=true;
-                mesh.checkCollisions=true;
+                //mesh.checkCollisions=true;
                 //gltb file
                 //                if (mesh.parent!=null){
                 //                    if (mesh.parent.id=="root"){
@@ -3038,8 +3049,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.cc.setAvatarSkeleton(this.avatarSkeleton);
 
                 this.avatar.checkCollisions=true;
-                this.avatar.ellipsoid=new Vector3(0.5,1,0.5);
-                this.avatar.ellipsoidOffset=new Vector3(0,1,0);
+                this.avatar.ellipsoid=this._avEllipsoid
+                this.avatar.ellipsoidOffset=this._avEllipsoidOffset
                 this.avatar.isPickable=false;
                 this.avatar.rotation=this.avatar.rotationQuaternion.toEulerAngles();
                 this.avatar.rotationQuaternion=null;
@@ -3133,11 +3144,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
             //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
             //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
-            (<Texture>groundMaterial.diffuseTexture).uScale=50.0;
-            (<Texture>groundMaterial.diffuseTexture).vScale=50.0;
+            (<Texture>groundMaterial.diffuseTexture).uScale=25.0;
+            (<Texture>groundMaterial.diffuseTexture).vScale=25.0;
             (<Texture>groundMaterial.bumpTexture).uScale=50.0;
             (<Texture>groundMaterial.bumpTexture).vScale=50.0;
-            groundMaterial.diffuseColor=new Color3(0.9,0.6,0.4);
+            //groundMaterial.diffuseColor=new Color3(0.9,0.6,0.4);
             groundMaterial.specularColor=new Color3(0,0,0);
             return groundMaterial;
         }
@@ -3314,8 +3325,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 camera.target=new Vector3(this.avatar.position.x,this.avatar.position.y+1.5,this.avatar.position.z);
                 camera.alpha=-this.avatar.rotation.y-4.69;
             }
-            camera.checkCollisions=this.cameraCollision;
-            camera.collisionRadius=new Vector3(0.5,0.5,0.5);
+            camera.checkCollisions=this._cameraCollision;
+            camera.collisionRadius=this._cameraEllipsoid
 
             Tags.AddTagsTo(camera,"Vishva.camera");
             return camera;
@@ -3356,8 +3367,8 @@ namespace org.ssatguru.babylonjs.vishva {
             this.avatar.position=this.spawnPosition;
 
             this.avatar.checkCollisions=true;
-            this.avatar.ellipsoid=new Vector3(0.5,1,0.5);
-            this.avatar.ellipsoidOffset=new Vector3(0,1,0);
+            this.avatar.ellipsoid=this._avEllipsoid
+            this.avatar.ellipsoidOffset=this._avEllipsoidOffset;
             this.avatar.isPickable=false;
             Tags.AddTagsTo(this.avatar,"Vishva.avatar");
             Tags.AddTagsTo(this.avatarSkeleton,"Vishva.skeleton");
@@ -3379,6 +3390,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.setCharacterController(this.cc);
             this.cc.setCameraElasticity(true);
             //this.cc.setNoFirstPerson(true);
+            
             this.cc.start();
 
             //in 3.0 need to set the camera values again
@@ -3388,6 +3400,19 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         }
+        
+        public disableAV(){
+            this.cc.stop();
+            (<Mesh>this.avatar).checkCollisions=false;
+            this.scene.stopAnimation(this.avatar.skeleton);
+        }
+        
+        public enableAV(){
+            this.scene.stopAnimation(this.avatar.skeleton);
+            this.cc.start();
+            (<Mesh>this.avatar).checkCollisions=true;
+        }
+        
         //TODO persist charactercontroller settings
         private setCharacterController(cc: CharacterController) {
             this.mainCamera.lowerRadiusLimit=1;
@@ -3399,7 +3424,10 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setWalkBackAnim("walkBack",0.5,true);
             cc.setJumpAnim("jump",4,false);
             cc.setFallAnim("fall",2,false);
+            //cc.setFallAnim(null,2,false);
             cc.setSlideBackAnim("slideBack",1,false);
+            
+            this.cc.setSlopeLimit(45,90);
         }
 
         /**
@@ -3462,13 +3490,13 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public enableCameraCollision(yesNo: boolean) {
-            this.cameraCollision=yesNo;
+            this._cameraCollision=yesNo;
             this.mainCamera.checkCollisions=yesNo;
             this.cc.cameraCollisionChanged();
         }
 
         public isCameraCollisionOn(): boolean {
-            return this.cameraCollision;
+            return this._cameraCollision;
         }
 
         public enableAutoEditMenu(yesNo: boolean) {

@@ -28,14 +28,14 @@ namespace org.ssatguru.babylonjs.vishva {
         public actuate() {
             var props: ActCloakerProp = <ActCloakerProp>this.properties;
             if (props.toggle) {
-                if (props.notReversed) {
+                if (props.state_notReversed) {
                     this.s = 1;
                     this.e = 0;
                 } else {
                     this.s = 0;
                     this.e = 1;
                 }
-                props.notReversed = !props.notReversed;
+                props.state_notReversed = !props.state_notReversed;
             } else {
                 this.s = 1;
                 this.e = 0;

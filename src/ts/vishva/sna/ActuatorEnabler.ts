@@ -22,8 +22,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public actuate() {
             let enableState: boolean=true;
             if(this.properties.toggle) {
-                enableState = this.properties.notReversed;
-                this.properties.notReversed=!this.properties.notReversed;
+                enableState = this.properties.state_notReversed;
+                this.properties.state_notReversed=!this.properties.state_notReversed;
             } 
             this.mesh.setEnabled(enableState);
             this.enableChilds(this.mesh,enableState);

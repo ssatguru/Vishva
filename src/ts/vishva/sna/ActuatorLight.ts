@@ -45,10 +45,10 @@ namespace org.ssatguru.babylonjs.vishva {
             else enable=false;
 
             if(this.properties.toggle) {
-                if(!this.properties.notReversed) {
+                if(!this.properties.state_notReversed) {
                     enable=!enable;
                 }
-                this.properties.notReversed=!this.properties.notReversed;
+                this.properties.state_notReversed=!this.properties.state_notReversed;
             }
 
             this.switchLights(lights,enable);

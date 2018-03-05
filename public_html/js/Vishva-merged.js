@@ -2271,7 +2271,6 @@ var org;
                             var node = parmDiv.firstChild;
                             if (node != null)
                                 parmDiv.removeChild(node);
-                            console.log(sensor.getProperties());
                             var tbl = this.formCreate(sensor.getProperties(), parmDiv.id);
                             parmDiv.appendChild(tbl);
                             var dbo = {};
@@ -2350,6 +2349,8 @@ var org;
                             for (var index168 = 0; index168 < keys.length; index168++) {
                                 var key = keys[index168];
                                 {
+                                    //ignore all properties starting with "state"
+                                    //they are probably created to handle internal state
                                     if (key.split("_")[0] === this.STATE_IND)
                                         continue;
                                     var row = tbl.insertRow();
@@ -3885,6 +3886,11 @@ var org;
                         this.skyboxTextures = "vishva/internal/textures/skybox-default/default";
                         this.avatarFolder = "vishva/internal/avatar/";
                         this.avatarFile = "starterAvatars.babylon";
+                        //spawnPosition:Vector3=new Vector3(-360,620,225);
+                        this.spawnPosition = new Vector3(0, 0.2, 0);
+                        this._animBlend = 0.1;
+                        this._avEllipsoid = new Vector3(0.1, 1, 0.1);
+                        this._avEllipsoidOffset = new Vector3(0, 1, 0);
                         this.NO_TEXTURE = "vishva/internal/textures/no-texture.jpg";
                         this.TGA_IMAGE = "vishva/internal/textures/tga-image.jpg";
                         this.groundTexture = "vishva/internal/textures/ground.jpg";
@@ -3922,17 +3928,14 @@ var org;
                         //
                         //we can use below too but then while passing data to scene loader use empty string as root url
                         this.RELATIVE_ASSET_LOCATION = "";
-                        //spawnPosition:Vector3=new Vector3(-360,620,225);
-                        //spawnPosition: Vector3=new Vector3(0,0.2,0);
-                        this.spawnPosition = new Vector3(0, 12, 0);
-                        this._animBlend = 0.1;
+                        this._cameraCollision = true;
+                        this._cameraEllipsoid = new Vector3(0.01, 0.01, 0.01);
                         /**
                          * use this to prevent users from switching to another mesh during edit.
                          */
                         this.switchDisabled = false;
                         this.keysDisabled = false;
                         this.showBoundingBox = false;
-                        this.cameraCollision = true;
                         //automatcally open edit menu whenever a mesh is selected
                         this.autoEditMenu = true;
                         this.enablePhysics = true;
@@ -3960,6 +3963,7 @@ var org;
                         this.didPhysTest = false;
                         this.skelViewerArr = [];
                         this.debugVisible = false;
+                        Vishva.vishva = this;
                         this.editEnabled = false;
                         this.frames = 0;
                         this.f = 0;
@@ -4021,7 +4025,7 @@ var org;
                         this.vishvaSerialized = foo["VishvaSerialized"];
                         //this.snas = <SNAserialized[]>foo["VishvaSNA"];
                         this.snas = this.vishvaSerialized.snas;
-                        this.cameraCollision = this.vishvaSerialized.settings.cameraCollision;
+                        this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
                         this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
                         var sceneData = "data:" + tfat.text;
                         SceneLoader.ShowLoadingScreen = false;
@@ -4061,7 +4065,9 @@ var org;
                                     avFound = true;
                                     this.avatar = mesh;
                                     //TODO ellipsoidOffset not serialized?
-                                    this.avatar.ellipsoidOffset = new Vector3(0, 1, 0);
+                                    this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
+                                    //TODO override ellipsoid ?
+                                    this.avatar.ellipsoid = this._avEllipsoid;
                                 }
                                 else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
                                     skyFound = true;
@@ -4140,8 +4146,9 @@ var org;
                             this.scene.activeCamera = this.mainCamera;
                         }
                         //TODO
-                        this.mainCamera.checkCollisions = true;
-                        this.mainCamera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+                        this.mainCamera.checkCollisions = this._cameraCollision;
+                        //this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
+                        this.mainCamera.collisionRadius = this._cameraEllipsoid;
                         if (!groundFound) {
                             console.log("no vishva ground found. creating ground");
                             //                this.ground=this.createGround(this.scene);
@@ -6257,7 +6264,7 @@ var org;
                         this.renameWorldTextures();
                         //TODO add support for CharacterController serialization.
                         var vishvaSerialzed = new vishva.VishvaSerialized();
-                        vishvaSerialzed.settings.cameraCollision = this.cameraCollision;
+                        vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
                         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
                         vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
                         vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
@@ -6480,7 +6487,7 @@ var org;
                         for (var _a = 0, meshes_5 = meshes; _a < meshes_5.length; _a++) {
                             var mesh = meshes_5[_a];
                             mesh.isPickable = true;
-                            mesh.checkCollisions = true;
+                            //mesh.checkCollisions=true;
                             //gltb file
                             //                if (mesh.parent!=null){
                             //                    if (mesh.parent.id=="root"){
@@ -6670,8 +6677,8 @@ var org;
                             this.cc.setAvatar(this.avatar);
                             this.cc.setAvatarSkeleton(this.avatarSkeleton);
                             this.avatar.checkCollisions = true;
-                            this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
-                            this.avatar.ellipsoidOffset = new Vector3(0, 1, 0);
+                            this.avatar.ellipsoid = this._avEllipsoid;
+                            this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
                             this.avatar.isPickable = false;
                             this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
                             this.avatar.rotationQuaternion = null;
@@ -6754,11 +6761,11 @@ var org;
                         groundMaterial.bumpTexture = new Texture(this.groundBumpTexture, scene);
                         //            (<Texture> groundMaterial.diffuseTexture).uScale = 6.0;
                         //            (<Texture> groundMaterial.diffuseTexture).vScale = 6.0;
-                        groundMaterial.diffuseTexture.uScale = 50.0;
-                        groundMaterial.diffuseTexture.vScale = 50.0;
+                        groundMaterial.diffuseTexture.uScale = 25.0;
+                        groundMaterial.diffuseTexture.vScale = 25.0;
                         groundMaterial.bumpTexture.uScale = 50.0;
                         groundMaterial.bumpTexture.vScale = 50.0;
-                        groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
+                        //groundMaterial.diffuseColor=new Color3(0.9,0.6,0.4);
                         groundMaterial.specularColor = new Color3(0, 0, 0);
                         return groundMaterial;
                     };
@@ -6915,8 +6922,8 @@ var org;
                             camera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
                             camera.alpha = -this.avatar.rotation.y - 4.69;
                         }
-                        camera.checkCollisions = this.cameraCollision;
-                        camera.collisionRadius = new Vector3(0.5, 0.5, 0.5);
+                        camera.checkCollisions = this._cameraCollision;
+                        camera.collisionRadius = this._cameraEllipsoid;
                         Tags.AddTagsTo(camera, "Vishva.camera");
                         return camera;
                     };
@@ -6949,8 +6956,8 @@ var org;
                         //this.avatar.position = new Vector3(0, 20, 0);
                         this.avatar.position = this.spawnPosition;
                         this.avatar.checkCollisions = true;
-                        this.avatar.ellipsoid = new Vector3(0.5, 1, 0.5);
-                        this.avatar.ellipsoidOffset = new Vector3(0, 1, 0);
+                        this.avatar.ellipsoid = this._avEllipsoid;
+                        this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
                         this.avatar.isPickable = false;
                         Tags.AddTagsTo(this.avatar, "Vishva.avatar");
                         Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
@@ -6974,6 +6981,16 @@ var org;
                         //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;
                         //            this.mainCamera.beta = 1.4;
                     };
+                    Vishva.prototype.disableAV = function () {
+                        this.cc.stop();
+                        this.avatar.checkCollisions = false;
+                        this.scene.stopAnimation(this.avatar.skeleton);
+                    };
+                    Vishva.prototype.enableAV = function () {
+                        this.scene.stopAnimation(this.avatar.skeleton);
+                        this.cc.start();
+                        this.avatar.checkCollisions = true;
+                    };
                     //TODO persist charactercontroller settings
                     Vishva.prototype.setCharacterController = function (cc) {
                         this.mainCamera.lowerRadiusLimit = 1;
@@ -6985,7 +7002,9 @@ var org;
                         cc.setWalkBackAnim("walkBack", 0.5, true);
                         cc.setJumpAnim("jump", 4, false);
                         cc.setFallAnim("fall", 2, false);
+                        //cc.setFallAnim(null,2,false);
                         cc.setSlideBackAnim("slideBack", 1, false);
+                        this.cc.setSlopeLimit(45, 90);
                     };
                     /**
                      * workaround for bugs in blender exporter
@@ -7038,12 +7057,12 @@ var org;
                             this.cc.start();
                     };
                     Vishva.prototype.enableCameraCollision = function (yesNo) {
-                        this.cameraCollision = yesNo;
+                        this._cameraCollision = yesNo;
                         this.mainCamera.checkCollisions = yesNo;
                         this.cc.cameraCollisionChanged();
                     };
                     Vishva.prototype.isCameraCollisionOn = function () {
-                        return this.cameraCollision;
+                        return this._cameraCollision;
                     };
                     Vishva.prototype.enableAutoEditMenu = function (yesNo) {
                         this.autoEditMenu = yesNo;
@@ -7238,6 +7257,8 @@ var org;
                         if (signalId.trim() === "")
                             return;
                         var actuators = this.sig2actMap[signalId];
+                        if (actuators == null)
+                            return;
                         for (var _i = 0, actuators_2 = actuators; _i < actuators_2.length; _i++) {
                             var actuator = actuators_2[_i];
                             actuator.start(signalId);
@@ -7462,6 +7483,16 @@ var org;
                             return uid;
                         }
                     };
+                    //vishva proxy methods
+                    SNAManager.prototype.getAV = function () {
+                        return vishva.Vishva.vishva.avatar;
+                    };
+                    SNAManager.prototype.disableAV = function () {
+                        vishva.Vishva.vishva.disableAV();
+                    };
+                    SNAManager.prototype.enableAV = function () {
+                        vishva.Vishva.vishva.enableAV();
+                    };
                     return SNAManager;
                 }());
                 vishva.SNAManager = SNAManager;
@@ -7554,6 +7585,7 @@ var org;
                         this.queued = 0;
                         this.disposed = false;
                         this.disabled = false;
+                        this.stopped = false;
                         this.properties = prop;
                         this.mesh = mesh;
                         this.handlePropertiesChange();
@@ -7575,15 +7607,26 @@ var org;
                             return false;
                         if (signal == this.signalDisable) {
                             this.disabled = true;
-                            return;
+                            this.queued = 0;
+                            this.stopped = true;
+                            this.stop();
+                            return false;
                         }
                         if (signal == this.signalEnable) {
                             this.disabled = false;
-                            if (this.queued == 0)
-                                return;
-                            this.queued--;
+                            if (this.queued == 0) {
+                                if (signal != this.signalId)
+                                    return false;
+                            }
+                            else
+                                this.queued--;
                         }
-                        if (this.actuating || this.disabled) {
+                        if (this.disabled) {
+                            return false;
+                        }
+                        this.stopped = false;
+                        //if(this.actuating||this.disabled) {
+                        if (this.actuating) {
                             if (!this.properties.loop) {
                                 this.queued++;
                             }
@@ -7664,6 +7707,9 @@ var org;
                     ActuatorAbstract.prototype.onActuateEnd = function () {
                         SNAManager.getSNAManager().emitSignal(this.properties.signalEnd);
                         this.actuating = false;
+                        if (this.disabled || this.stopped) {
+                            return;
+                        }
                         if (this.queued > 0) {
                             this.queued--;
                             this.start(this.signalId);
@@ -7711,8 +7757,11 @@ var org;
                         _this.loop = false;
                         _this.toggle = true;
                         //when toggle is true then actuator can be in normal or reversed state
-                        //else its always in normal (notReversed state);
-                        _this.notReversed = true;
+                        //when toggle is false then its will always be in normal state (or notReversed state);
+                        //the following property will be used to keep track of what state it is in
+                        //the prefix "state_" indicates it is a private variable for tracking internal state
+                        //and thus should not be exposed to the users by the UI
+                        _this.state_notReversed = true;
                         return _this;
                     }
                     return ActProperties;
@@ -7812,6 +7861,98 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva) {
+                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var AvAnimatorProp = (function (_super) {
+                    __extends(AvAnimatorProp, _super);
+                    function AvAnimatorProp() {
+                        var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.animationRange = new SelectType();
+                        _this.rate = 1;
+                        return _this;
+                    }
+                    return AvAnimatorProp;
+                }(vishva.ActProperties));
+                vishva.AvAnimatorProp = AvAnimatorProp;
+                /**
+                 * this actuator will play animation on the Avatar
+                 */
+                var ActuatorAvAnimator = (function (_super) {
+                    __extends(ActuatorAvAnimator, _super);
+                    function ActuatorAvAnimator(mesh, parms) {
+                        var _this = this;
+                        if (parms != null) {
+                            _this = _super.call(this, mesh, parms) || this;
+                        }
+                        else {
+                            _this = _super.call(this, mesh, new AvAnimatorProp()) || this;
+                        }
+                        var prop = _this.properties;
+                        var scene = _this.mesh.getScene();
+                        var avMesh = scene.getMeshesByTags("Vishva.avatar")[0];
+                        var skel = avMesh.skeleton;
+                        if (skel != null) {
+                            var getAnimationRanges = skel["getAnimationRanges"];
+                            var ranges = getAnimationRanges.call(skel);
+                            var animNames = new Array(ranges.length);
+                            var i = 0;
+                            for (var index160 = 0; index160 < ranges.length; index160++) {
+                                var range = ranges[index160];
+                                {
+                                    animNames[i] = range.name;
+                                    i++;
+                                }
+                            }
+                            prop.animationRange.values = animNames;
+                        }
+                        else {
+                            prop.animationRange.values = [""];
+                        }
+                        return _this;
+                    }
+                    ActuatorAvAnimator.prototype.actuate = function () {
+                        var _this = this;
+                        var prop = this.properties;
+                        var avMesh = vishva.SNAManager.getSNAManager().getAV();
+                        var skel = avMesh.skeleton;
+                        if (skel != null) {
+                            vishva.SNAManager.getSNAManager().disableAV();
+                            this.anim = skel.beginAnimation(prop.animationRange.value, false, prop.rate, function () { return _this.onActuateEnd(); });
+                        }
+                    };
+                    ActuatorAvAnimator.prototype.stop = function () {
+                        this.anim.stop();
+                        vishva.SNAManager.getSNAManager().enableAV();
+                    };
+                    ActuatorAvAnimator.prototype.isReady = function () {
+                        return true;
+                    };
+                    ActuatorAvAnimator.prototype.getName = function () {
+                        return "AvAnimator";
+                    };
+                    ActuatorAvAnimator.prototype.onPropertiesChange = function () {
+                        if (this.properties.autoStart) {
+                            var started = this.start(this.properties.signalId);
+                        }
+                    };
+                    ActuatorAvAnimator.prototype.cleanUp = function () {
+                        this.properties.loop = false;
+                    };
+                    return ActuatorAvAnimator;
+                }(vishva.ActuatorAbstract));
+                vishva.ActuatorAvAnimator = ActuatorAvAnimator;
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("AvAnimator", org.ssatguru.babylonjs.vishva.ActuatorAvAnimator);
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
                 var Animation = BABYLON.Animation;
                 var ActCloakerProp = (function (_super) {
                     __extends(ActCloakerProp, _super);
@@ -7841,7 +7982,7 @@ var org;
                         var _this = this;
                         var props = this.properties;
                         if (props.toggle) {
-                            if (props.notReversed) {
+                            if (props.state_notReversed) {
                                 this.s = 1;
                                 this.e = 0;
                             }
@@ -7849,7 +7990,7 @@ var org;
                                 this.s = 0;
                                 this.e = 1;
                             }
-                            props.notReversed = !props.notReversed;
+                            props.state_notReversed = !props.state_notReversed;
                         }
                         else {
                             this.s = 1;
@@ -7917,8 +8058,8 @@ var org;
                     ActuatorDisabler.prototype.actuate = function () {
                         var enableState = false;
                         if (this.properties.toggle) {
-                            enableState = !this.properties.notReversed;
-                            this.properties.notReversed = !this.properties.notReversed;
+                            enableState = !this.properties.state_notReversed;
+                            this.properties.state_notReversed = !this.properties.state_notReversed;
                         }
                         else {
                             enableState = false;
@@ -7990,8 +8131,8 @@ var org;
                     ActuatorEnabler.prototype.actuate = function () {
                         var enableState = true;
                         if (this.properties.toggle) {
-                            enableState = this.properties.notReversed;
-                            this.properties.notReversed = !this.properties.notReversed;
+                            enableState = this.properties.state_notReversed;
+                            this.properties.state_notReversed = !this.properties.state_notReversed;
                         }
                         this.mesh.setEnabled(enableState);
                         this.enableChilds(this.mesh, enableState);
@@ -8084,10 +8225,10 @@ var org;
                         else
                             enable = false;
                         if (this.properties.toggle) {
-                            if (!this.properties.notReversed) {
+                            if (!this.properties.state_notReversed) {
                                 enable = !enable;
                             }
-                            this.properties.notReversed = !this.properties.notReversed;
+                            this.properties.state_notReversed = !this.properties.state_notReversed;
                         }
                         this.switchLights(lights, enable);
                         this.onActuateEnd();
@@ -8190,13 +8331,13 @@ var org;
                         else
                             moveBy = new Vector3(props.x, props.y, props.z);
                         if (props.toggle) {
-                            if (props.notReversed) {
+                            if (props.state_notReversed) {
                                 nPos = cPos.add(moveBy);
                             }
                             else {
                                 nPos = cPos.subtract(moveBy);
                             }
-                            props.notReversed = !props.notReversed;
+                            props.state_notReversed = !props.state_notReversed;
                         }
                         else {
                             nPos = cPos.add(moveBy);
@@ -8282,7 +8423,7 @@ var org;
                         var rotZ = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
                         var abc = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
                         if (properties.toggle) {
-                            if (properties.notReversed) {
+                            if (properties.state_notReversed) {
                                 nPos = cPos.multiply(abc);
                             }
                             else {
@@ -8291,7 +8432,7 @@ var org;
                         }
                         else
                             nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
-                        properties.notReversed = !properties.notReversed;
+                        properties.state_notReversed = !properties.state_notReversed;
                         var cY = this.mesh.position.y;
                         var nY = this.mesh.position.y + 5;
                         this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, function () {
@@ -8368,13 +8509,13 @@ var org;
                     ActuatorSound.prototype.actuate = function () {
                         var _this = this;
                         if (this.properties.toggle) {
-                            if (this.properties.notReversed) {
+                            if (this.properties.state_notReversed) {
                                 this.sound.play();
                             }
                             else {
                                 window.setTimeout((function () { return _this.onActuateEnd(); }), 0);
                             }
-                            this.properties.notReversed = !this.properties.notReversed;
+                            this.properties.state_notReversed = !this.properties.state_notReversed;
                         }
                         else {
                             this.sound.play();

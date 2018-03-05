@@ -52,6 +52,7 @@ var org;
                         this.cameraTarget = new Vector3(0, 0, 0);
                         this.noFirstPerson = false;
                         this.started = false;
+                        this._stopAnim = false;
                         this.prevAnim = null;
                         this.avStartPos = new Vector3(0, 0, 0);
                         this.grounded = false;
@@ -243,6 +244,13 @@ var org;
                             return;
                         this.started = false;
                         this.scene.unregisterBeforeRender(this.renderer);
+                        this.prevAnim = null;
+                    };
+                    CharacterController.prototype.pauseAnim = function () {
+                        this._stopAnim = true;
+                    };
+                    CharacterController.prototype.resumeAnim = function () {
+                        this._stopAnim = false;
                     };
                     CharacterController.prototype.moveAVandCamera = function () {
                         this.avStartPos.copyFrom(this.avatar.position);
@@ -261,13 +269,15 @@ var org;
                         else if (!this.inFreeFall) {
                             anim = this.doIdle(dt);
                         }
-                        if (anim != null) {
-                            if (this.skeleton !== null) {
-                                if (this.prevAnim !== anim) {
-                                    if (anim.exist) {
-                                        this.skeleton.beginAnimation(anim.name, anim.loop, anim.rate);
+                        if (!this._stopAnim) {
+                            if (anim != null) {
+                                if (this.skeleton !== null) {
+                                    if (this.prevAnim !== anim) {
+                                        if (anim.exist) {
+                                            this.skeleton.beginAnimation(anim.name, anim.loop, anim.rate);
+                                        }
+                                        this.prevAnim = anim;
                                     }
-                                    this.prevAnim = anim;
                                 }
                             }
                         }
@@ -511,25 +521,25 @@ var org;
                     };
                     CharacterController.prototype.snapCamera = function () {
                         var _this = this;
-                        
+                        if (this.skip < 120) {
+                            this.skip++;
+                            return;
+                        }
+                        this.skip = 0;
                         this.camera.position.subtractToRef(this.camera.target, this.rayDir);
                         this.ray.origin = this.camera.target;
                         this.ray.length = this.rayDir.length();
                         this.ray.direction = this.rayDir.normalize();
                         var pi = this.scene.pickWithRay(this.ray, function (mesh) {
-                            if (mesh == _this.avatar || !mesh.isPickable)
+                            if (mesh == _this.avatar || !mesh.isPickable || !mesh.checkCollisions)
                                 return false;
                             else
                                 return true;
                         }, true);
                         if (pi.hit) {
-                            if (this.skip < 120) {
-                            this.skip++;
-                            return;
-                        }
-                        this.skip = 0;
                             if (this.camera.checkCollisions) {
-                                this.camera.position = pi.pickedPoint;
+                                var newPos = this.camera.target.subtract(pi.pickedPoint).normalize().scale(this.cameraSkin);
+                                pi.pickedPoint.addToRef(newPos, this.camera.position);
                             }
                             else {
                                 var nr = pi.pickedPoint.subtract(this.camera.target).length();

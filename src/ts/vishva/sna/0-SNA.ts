@@ -26,6 +26,7 @@ namespace org.ssatguru.babylonjs.vishva {
         static sm: SNAManager;
 
         constructor() {
+            
         }
 
         public static getSNAManager(): SNAManager {
@@ -83,6 +84,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public emitSignal(signalId: string) {
             if(signalId.trim()==="") return;
             let actuators: Actuator[]=<Actuator[]>this.sig2actMap[signalId];
+            if (actuators==null) return;
             for(let actuator of actuators) {
                 actuator.start(signalId);
             }
@@ -298,7 +300,20 @@ namespace org.ssatguru.babylonjs.vishva {
                 Tags.AddTagsTo(mesh,uid);
                 return uid;
             }
-
+        }
+        
+        //vishva proxy methods
+        
+        public getAV():Mesh{
+            return Vishva.vishva.avatar;
+        }
+        
+        public disableAV(){
+            Vishva.vishva.disableAV();
+        }
+        
+        public enableAV(){
+            Vishva.vishva.enableAV();
         }
     }
 
@@ -360,7 +375,6 @@ namespace org.ssatguru.babylonjs.vishva {
         actions: Action[]=new Array();
 
         public constructor(mesh: Mesh,properties: SNAproperties) {
-
             this.properties=properties;
             this.mesh=mesh;
             var sensors: Array<Sensor>=<Array<Sensor>>this.mesh["sensors"];
@@ -457,6 +471,7 @@ namespace org.ssatguru.babylonjs.vishva {
         queued: number=0;
         disposed: boolean=false;
         disabled: boolean=false;
+        stopped:boolean=false;
 
         public constructor(mesh: Mesh,prop: ActProperties) {
             this.properties=prop;
@@ -478,14 +493,23 @@ namespace org.ssatguru.babylonjs.vishva {
             if(i>=0) return false;
             if(signal==this.signalDisable) {
                 this.disabled=true;
-                return;
+                this.queued=0;
+                this.stopped=true;
+                this.stop();
+                return false;
             }
             if(signal==this.signalEnable) {
                 this.disabled=false;
-                if(this.queued==0) return;
-                this.queued--;
+                if(this.queued==0){
+                    if (signal!=this.signalId) return false;
+                }else this.queued--;
             }
-            if(this.actuating||this.disabled) {
+            if(this.disabled) {
+                return false;
+            }
+            this.stopped=false;
+            //if(this.actuating||this.disabled) {
+            if(this.actuating) {
                 if(!this.properties.loop) {
                     this.queued++;
                 }
@@ -572,6 +596,9 @@ namespace org.ssatguru.babylonjs.vishva {
         public onActuateEnd(): any {
             SNAManager.getSNAManager().emitSignal(this.properties.signalEnd);
             this.actuating=false;
+            if (this.disabled||this.stopped){
+                return;
+            }
             if(this.queued>0) {
                 this.queued--;
                 this.start(this.signalId);
@@ -614,9 +641,13 @@ namespace org.ssatguru.babylonjs.vishva {
         autoStart: boolean=false;
         loop: boolean=false;
         toggle: boolean=true;
+        
         //when toggle is true then actuator can be in normal or reversed state
-        //else its always in normal (notReversed state);
-        notReversed: boolean=true;
+        //when toggle is false then its will always be in normal state (or notReversed state);
+        //the following property will be used to keep track of what state it is in
+        //the prefix "state_" indicates it is a private variable for tracking internal state
+        //and thus should not be exposed to the users by the UI
+        state_notReversed: boolean=true;
     }
 
 }

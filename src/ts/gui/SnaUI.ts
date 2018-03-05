@@ -223,7 +223,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var parmDiv: HTMLElement=document.getElementById("editSensDiag.parms");
             var node: Node=parmDiv.firstChild;
             if(node!=null) parmDiv.removeChild(node);
-            console.log(sensor.getProperties());
             var tbl: HTMLTableElement=this.formCreate(sensor.getProperties(),parmDiv.id);
             parmDiv.appendChild(tbl);
 
@@ -309,6 +308,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             for(var index168=0;index168<keys.length;index168++) {
                 var key=keys[index168];
                 {
+                    //ignore all properties starting with "state"
+                    //they are probably created to handle internal state
                     if(key.split("_")[0]===this.STATE_IND) continue;
                     var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
                     var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();

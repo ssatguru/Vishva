@@ -7880,9 +7880,10 @@ var org;
                     __extends(AvAnimatorProp, _super);
                     function AvAnimatorProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.changeTrans = true;
                         _this.position = new Vector3(0, 0, 0);
                         _this.rotation = new Vector3(0, 0, 0);
-                        _this.child = true;
+                        _this.makeChild = true;
                         _this.animationRange = new SelectType();
                         _this.rate = 1;
                         return _this;
@@ -7903,6 +7904,8 @@ var org;
                         else {
                             _this = _super.call(this, mesh, new AvAnimatorProp()) || this;
                         }
+                        _this._sp = new Vector3(0, 0, 0);
+                        _this._sr = new Vector3(0, 0, 0);
                         var prop = _this.properties;
                         var scene = _this.mesh.getScene();
                         var avMesh = scene.getMeshesByTags("Vishva.avatar")[0];
@@ -7933,20 +7936,31 @@ var org;
                         var skel = this.avMesh.skeleton;
                         if (skel != null) {
                             vishva.SNAManager.getSNAManager().disableAV();
-                            if (prop.child) {
+                            this._sp.copyFrom(this.avMesh.position);
+                            this._sr.copyFrom(this.avMesh.rotation);
+                            if (prop.makeChild) {
                                 this.avMesh.parent = this.mesh;
-                                this.avMesh.position = prop.position;
+                                if (prop.changeTrans) {
+                                    this.avMesh.position.copyFrom(prop.position);
+                                }
+                                else {
+                                    this.avMesh.position.subtractInPlace(this.mesh.position);
+                                }
                             }
                             else {
-                                this.mesh.position.addToRef(prop.position, this.avMesh.position);
+                                if (prop.changeTrans) {
+                                    this.mesh.position.addToRef(prop.position, this.avMesh.position);
+                                }
                             }
-                            this.avMesh.rotation = prop.rotation;
+                            this.avMesh.rotation.copyFrom(prop.rotation);
                             this.anim = skel.beginAnimation(prop.animationRange.value, prop.loop, prop.rate, function () { return _this.onActuateEnd(); });
                         }
                     };
                     ActuatorAvAnimator.prototype.stop = function () {
                         this.anim.stop();
                         this.avMesh.parent = null;
+                        this.avMesh.position.copyFrom(this._sp);
+                        this.avMesh.rotation.copyFrom(this._sr);
                         vishva.SNAManager.getSNAManager().enableAV();
                     };
                     ActuatorAvAnimator.prototype.isReady = function () {

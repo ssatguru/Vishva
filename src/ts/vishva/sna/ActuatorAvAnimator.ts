@@ -10,9 +10,10 @@ namespace org.ssatguru.babylonjs.vishva {
     import Vector3 = BABYLON.Vector3;
     
     export class AvAnimatorProp extends ActProperties {
+        changeTrans:boolean=true;
         position:Vector3 = new Vector3(0,0,0);
         rotation:Vector3 = new Vector3(0,0,0);
-        child:boolean=true;
+        makeChild:boolean=true;
         animationRange: SelectType = new SelectType();
         rate: number = 1;
      }
@@ -28,6 +29,10 @@ namespace org.ssatguru.babylonjs.vishva {
             } else {
                 super(mesh, new AvAnimatorProp());
             }
+            
+            this._sp = new Vector3(0,0,0);
+            this._sr=new Vector3(0,0,0);
+            
             var prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
             var scene: Scene = this.mesh.getScene();
             let avMesh = scene.getMeshesByTags("Vishva.avatar" )[0];
@@ -51,6 +56,9 @@ namespace org.ssatguru.babylonjs.vishva {
         }
         private anim:Animatable;
         private avMesh:Mesh;
+        //save AV position, rotation
+        private _sp:Vector3;
+        private _sr:Vector3;
         public actuate() {
             let prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
             this.avMesh=SNAManager.getSNAManager().getAV();
@@ -58,14 +66,22 @@ namespace org.ssatguru.babylonjs.vishva {
             if (skel != null) {
                 SNAManager.getSNAManager().disableAV();
                 
-                if (prop.child){
+                this._sp.copyFrom(this.avMesh.position);
+                this._sr.copyFrom(this.avMesh.rotation);
+                
+                if (prop.makeChild){
                     this.avMesh.parent=this.mesh;
-                    this.avMesh.position=prop.position;
-                    
+                    if (prop.changeTrans){
+                        this.avMesh.position.copyFrom(prop.position);
+                    }else{
+                        this.avMesh.position.subtractInPlace(this.mesh.position);
+                    }
                 }else{
-                    this.mesh.position.addToRef(prop.position,this.avMesh.position);
+                    if (prop.changeTrans){
+                        this.mesh.position.addToRef(prop.position,this.avMesh.position);
+                    }
                 }
-                this.avMesh.rotation=prop.rotation;
+                this.avMesh.rotation.copyFrom(prop.rotation);
                 this.anim=skel.beginAnimation(prop.animationRange.value,prop.loop, prop.rate, () => { return this.onActuateEnd() });
             }
         }
@@ -73,6 +89,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public stop() {
             this.anim.stop();
             this.avMesh.parent=null;
+            this.avMesh.position.copyFrom(this._sp);
+            this.avMesh.rotation.copyFrom(this._sr);
             SNAManager.getSNAManager().enableAV();
         }
 

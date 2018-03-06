@@ -10,7 +10,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _y:VInputNumber;
         private _z:VInputNumber;
         
-        constructor (v3eID :string,v?:Vector3){
+        constructor(v3eID: string|HTMLElement,v?:Vector3){
             if (v){
                 this._v=v.clone();
             }else{

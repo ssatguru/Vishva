@@ -7,8 +7,12 @@ namespace org.ssatguru.babylonjs.vishva {
     import Skeleton = BABYLON.Skeleton;
     import Scene = BABYLON.Scene;
     import Tags = BABYLON.Tags;
+    import Vector3 = BABYLON.Vector3;
     
     export class AvAnimatorProp extends ActProperties {
+        position:Vector3 = new Vector3(0,0,0);
+        rotation:Vector3 = new Vector3(0,0,0);
+        child:boolean=true;
         animationRange: SelectType = new SelectType();
         rate: number = 1;
      }
@@ -22,7 +26,6 @@ namespace org.ssatguru.babylonjs.vishva {
             if (parms != null) {
                 super(mesh, parms);
             } else {
-                
                 super(mesh, new AvAnimatorProp());
             }
             var prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
@@ -47,18 +50,29 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
         private anim:Animatable;
+        private avMesh:Mesh;
         public actuate() {
             let prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
-            let avMesh=SNAManager.getSNAManager().getAV();
-            let skel: Skeleton = avMesh.skeleton;
+            this.avMesh=SNAManager.getSNAManager().getAV();
+            let skel: Skeleton = this.avMesh.skeleton;
             if (skel != null) {
                 SNAManager.getSNAManager().disableAV();
-                this.anim=skel.beginAnimation(prop.animationRange.value, false, prop.rate, () => { return this.onActuateEnd() });
+                
+                if (prop.child){
+                    this.avMesh.parent=this.mesh;
+                    this.avMesh.position=prop.position;
+                    
+                }else{
+                    this.mesh.position.addToRef(prop.position,this.avMesh.position);
+                }
+                this.avMesh.rotation=prop.rotation;
+                this.anim=skel.beginAnimation(prop.animationRange.value,prop.loop, prop.rate, () => { return this.onActuateEnd() });
             }
         }
 
         public stop() {
             this.anim.stop();
+            this.avMesh.parent=null;
             SNAManager.getSNAManager().enableAV();
         }
 
@@ -71,6 +85,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public onPropertiesChange() {
+            let p: AvAnimatorProp=<AvAnimatorProp>this.properties;
+            console.log(p.position);
             if (this.properties.autoStart) {
                 var started: boolean=this.start(this.properties.signalId);
             }

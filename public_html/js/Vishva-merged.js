@@ -2071,6 +2071,7 @@ var org;
             (function (vishva_13) {
                 var gui;
                 (function (gui) {
+                    var Vector3 = BABYLON.Vector3;
                     /**
                      * Provides a UI to manage sensors and actuators
                      */
@@ -2080,8 +2081,8 @@ var org;
                             this._vishva = vishva;
                             this._vishvaGUI = vishvaGUI;
                         }
-                        //        public open(){
-                        //            this.sNaDialog.dialog("open");
+                        //        public         open(){
+                        //            this.sNaDialog.dialog("        open");
                         //        }
                         SnaUI.prototype.isOpen = function () {
                             return this.sNaDialog.dialog("isOpen");
@@ -2339,68 +2340,69 @@ var org;
                             var dbos = [dbo];
                             this.editActDiag.dialog("option", "buttons", dbos);
                         };
-                        /*
-                         * auto generate forms based on properties
-                         */
                         SnaUI.prototype.formCreate = function (snaP, idPrefix) {
+                            this.mapKey2Ele = {};
                             idPrefix = idPrefix + ".";
                             var tbl = document.createElement("table");
                             var keys = Object.keys(snaP);
-                            for (var index168 = 0; index168 < keys.length; index168++) {
-                                var key = keys[index168];
-                                {
-                                    //ignore all properties starting with "state"
-                                    //they are probably created to handle internal state
-                                    if (key.split("_")[0] === this.STATE_IND)
-                                        continue;
-                                    var row = tbl.insertRow();
-                                    var cell = row.insertCell();
-                                    cell.innerHTML = key;
-                                    cell = row.insertCell();
-                                    var t = typeof snaP[key];
-                                    if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
+                            for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+                                var key = keys_1[_i];
+                                //ignore all properties starting with "state"
+                                //they were probably created to handle internal state
+                                if (key.split("_")[0] === this.STATE_IND)
+                                    continue;
+                                var row = tbl.insertRow();
+                                var cell = row.insertCell();
+                                cell.innerHTML = key;
+                                cell = row.insertCell();
+                                var t = typeof snaP[key];
+                                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
+                                if (t === "object") {
+                                    if (snaP[key] instanceof gui.SelectType) {
                                         var keyValue = snaP[key];
                                         var options = keyValue.values;
                                         var sel = document.createElement("select");
                                         sel.id = idPrefix + key;
-                                        for (var index169 = 0; index169 < options.length; index169++) {
-                                            var option = options[index169];
-                                            {
-                                                var opt = document.createElement("option");
-                                                if (option === keyValue.value) {
-                                                    opt.selected = true;
-                                                }
-                                                opt.innerText = option;
-                                                sel.add(opt);
+                                        for (var _a = 0, options_2 = options; _a < options_2.length; _a++) {
+                                            var option = options_2[_a];
+                                            var opt = document.createElement("option");
+                                            if (option === keyValue.value) {
+                                                opt.selected = true;
                                             }
+                                            opt.innerText = option;
+                                            sel.add(opt);
                                         }
                                         cell.appendChild(sel);
                                     }
-                                    else {
-                                        var inp = document.createElement("input");
-                                        inp.id = idPrefix + key;
-                                        inp.className = "ui-widget-content ui-corner-all";
-                                        inp.value = snaP[key];
-                                        if ((t === "object") && (snaP[key]["type"] === "Range")) {
-                                            var r = snaP[key];
-                                            inp.type = "range";
-                                            inp.max = new Number(r.max).toString();
-                                            inp.min = new Number(r.min).toString();
-                                            inp.step = new Number(r.step).toString();
-                                            inp.value = new Number(r.value).toString();
-                                        }
-                                        else if ((t === "string") || (t === "number")) {
-                                            inp.type = "text";
-                                            inp.value = snaP[key];
-                                        }
-                                        else if (t === "boolean") {
-                                            var check = snaP[key];
-                                            inp.type = "checkbox";
-                                            if (check)
-                                                inp.setAttribute("checked", "true");
-                                        }
-                                        cell.appendChild(inp);
+                                    else if (snaP[key] instanceof Vector3) {
+                                        var v = new gui.VInputVector3(cell, snaP[key]);
+                                        this.mapKey2Ele[key] = v;
                                     }
+                                }
+                                else {
+                                    var inp = document.createElement("input");
+                                    inp.id = idPrefix + key;
+                                    inp.className = "ui-widget-content ui-corner-all";
+                                    inp.value = snaP[key];
+                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                        var r = snaP[key];
+                                        inp.type = "range";
+                                        inp.max = new Number(r.max).toString();
+                                        inp.min = new Number(r.min).toString();
+                                        inp.step = new Number(r.step).toString();
+                                        inp.value = new Number(r.value).toString();
+                                    }
+                                    else if ((t === "string") || (t === "number")) {
+                                        inp.type = "text";
+                                        inp.value = snaP[key];
+                                    }
+                                    else if (t === "boolean") {
+                                        var check = snaP[key];
+                                        inp.type = "checkbox";
+                                        if (check)
+                                            inp.setAttribute("checked", "true");
+                                    }
+                                    cell.appendChild(inp);
                                 }
                             }
                             return tbl;
@@ -2408,38 +2410,43 @@ var org;
                         SnaUI.prototype.formRead = function (snaP, idPrefix) {
                             idPrefix = idPrefix + ".";
                             var keys = Object.keys(snaP);
-                            for (var index170 = 0; index170 < keys.length; index170++) {
-                                var key = keys[index170];
-                                {
-                                    if (key.split("_")[0] === this.STATE_IND)
-                                        continue;
-                                    var t = typeof snaP[key];
-                                    if ((t === "object") && (snaP[key]["type"] === "SelectType")) {
+                            for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
+                                var key = keys_2[_i];
+                                if (key.split("_")[0] === this.STATE_IND)
+                                    continue;
+                                var t = typeof snaP[key];
+                                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
+                                if (t === "object") {
+                                    if (snaP[key] instanceof gui.SelectType) {
                                         var s = snaP[key];
                                         var sel = document.getElementById(idPrefix + key);
                                         s.value = sel.value;
                                     }
-                                    else {
-                                        var ie = document.getElementById(idPrefix + key);
-                                        if ((t === "object") && (snaP[key]["type"] === "Range")) {
-                                            var r = snaP[key];
-                                            r.value = parseFloat(ie.value);
+                                    else if (snaP[key] instanceof Vector3) {
+                                        var v_1 = this.mapKey2Ele[key];
+                                        snaP[key] = v_1.getValue();
+                                    }
+                                }
+                                else {
+                                    var ie = document.getElementById(idPrefix + key);
+                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                        var r = snaP[key];
+                                        r.value = parseFloat(ie.value);
+                                    }
+                                    else if ((t === "string") || (t === "number")) {
+                                        if (t === "number") {
+                                            var v = parseFloat(ie.value);
+                                            if (isNaN(v))
+                                                snaP[key] = 0;
+                                            else
+                                                snaP[key] = v;
                                         }
-                                        else if ((t === "string") || (t === "number")) {
-                                            if (t === "number") {
-                                                var v = parseFloat(ie.value);
-                                                if (isNaN(v))
-                                                    snaP[key] = 0;
-                                                else
-                                                    snaP[key] = v;
-                                            }
-                                            else {
-                                                snaP[key] = ie.value;
-                                            }
+                                        else {
+                                            snaP[key] = ie.value;
                                         }
-                                        else if (t === "boolean") {
-                                            snaP[key] = ie.checked;
-                                        }
+                                    }
+                                    else if (t === "boolean") {
+                                        snaP[key] = ie.checked;
                                     }
                                 }
                             }
@@ -2568,7 +2575,13 @@ var org;
                         function VInputNumber(eID, value) {
                             if (value === void 0) { value = 0; }
                             var _this = this;
-                            var e = document.getElementById(eID);
+                            var e;
+                            if (eID instanceof HTMLElement) {
+                                e = eID;
+                            }
+                            else
+                                e = document.getElementById(eID);
+                            //let e: HTMLElement=document.getElementById(eID);
                             this._inE = document.createElement("input");
                             this._inE.type = "text";
                             this._inE.value = Number(value).toString();
@@ -2646,8 +2659,8 @@ var org;
                                 childs[i].remove();
                             }
                             var optEle;
-                            for (var _i = 0, options_2 = options; _i < options_2.length; _i++) {
-                                var option = options_2[_i];
+                            for (var _i = 0, options_3 = options; _i < options_3.length; _i++) {
+                                var option = options_3[_i];
                                 optEle = document.createElement("option");
                                 optEle.value = option.id;
                                 optEle.innerText = option.desc;
@@ -7862,10 +7875,14 @@ var org;
             var vishva;
             (function (vishva) {
                 var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var Vector3 = BABYLON.Vector3;
                 var AvAnimatorProp = (function (_super) {
                     __extends(AvAnimatorProp, _super);
                     function AvAnimatorProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
+                        _this.position = new Vector3(0, 0, 0);
+                        _this.rotation = new Vector3(0, 0, 0);
+                        _this.child = true;
                         _this.animationRange = new SelectType();
                         _this.rate = 1;
                         return _this;
@@ -7912,15 +7929,24 @@ var org;
                     ActuatorAvAnimator.prototype.actuate = function () {
                         var _this = this;
                         var prop = this.properties;
-                        var avMesh = vishva.SNAManager.getSNAManager().getAV();
-                        var skel = avMesh.skeleton;
+                        this.avMesh = vishva.SNAManager.getSNAManager().getAV();
+                        var skel = this.avMesh.skeleton;
                         if (skel != null) {
                             vishva.SNAManager.getSNAManager().disableAV();
-                            this.anim = skel.beginAnimation(prop.animationRange.value, false, prop.rate, function () { return _this.onActuateEnd(); });
+                            if (prop.child) {
+                                this.avMesh.parent = this.mesh;
+                                this.avMesh.position = prop.position;
+                            }
+                            else {
+                                this.mesh.position.addToRef(prop.position, this.avMesh.position);
+                            }
+                            this.avMesh.rotation = prop.rotation;
+                            this.anim = skel.beginAnimation(prop.animationRange.value, prop.loop, prop.rate, function () { return _this.onActuateEnd(); });
                         }
                     };
                     ActuatorAvAnimator.prototype.stop = function () {
                         this.anim.stop();
+                        this.avMesh.parent = null;
                         vishva.SNAManager.getSNAManager().enableAV();
                     };
                     ActuatorAvAnimator.prototype.isReady = function () {
@@ -7930,6 +7956,8 @@ var org;
                         return "AvAnimator";
                     };
                     ActuatorAvAnimator.prototype.onPropertiesChange = function () {
+                        var p = this.properties;
+                        console.log(p.position);
                         if (this.properties.autoStart) {
                             var started = this.start(this.properties.signalId);
                         }

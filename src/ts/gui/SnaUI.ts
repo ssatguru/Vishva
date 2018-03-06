@@ -1,15 +1,16 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     import DialogOptions=JQueryUI.DialogOptions;
     import DialogButtonOptions=JQueryUI.DialogButtonOptions;
+    import Vector3=BABYLON.Vector3;
     /**
      * Provides a UI to manage sensors and actuators
      */
-    export class SnaUI{
-        
-        private _vishva:Vishva;
-        private _vishvaGUI:VishvaGUI;
+    export class SnaUI {
+
+        private _vishva: Vishva;
+        private _vishvaGUI: VishvaGUI;
         private STATE_IND: string="state";
-        
+
         sNaDialog: JQuery;
 
         sensSel: HTMLSelectElement;
@@ -19,22 +20,22 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         sensTbl: HTMLTableElement;
 
         actTbl: HTMLTableElement;
-        
-        
-        constructor(vishva:Vishva,vishvaGUI:VishvaGUI){
+
+
+        constructor(vishva: Vishva,vishvaGUI: VishvaGUI) {
             this._vishva=vishva;
             this._vishvaGUI=vishvaGUI;
         }
-        
-//        public open(){
-//            this.sNaDialog.dialog("open");
-//        }
-        
-        public isOpen():boolean{
+
+        //        public         open(){
+        //            this.sNaDialog.dialog("        open");
+        //        }
+
+        public isOpen(): boolean {
             return this.sNaDialog.dialog("isOpen");
         }
-        
-        public close(){
+
+        public close() {
             this.sNaDialog.dialog("close");
         }
         /*
@@ -107,8 +108,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return;
             }
 
-             if(this.sNaDialog==null) this.create_sNaDiag();
-             
+            if(this.sNaDialog==null) this.create_sNaDiag();
+
             //this.vishva.switchDisabled=true;
             this.updateSensActTbl(sens,this.sensTbl);
             this.updateSensActTbl(acts,this.actTbl);
@@ -132,7 +133,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this.sNaDialog.dialog("open");
                 return true;
             };
-           
+
             this.sNaDialog.dialog("open");
         }
         /*
@@ -216,7 +217,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
             var sensNameEle: HTMLLabelElement=<HTMLLabelElement>document.getElementById("editSensDiag.sensName");
             sensNameEle.innerHTML=sensor.getName();
-            
+
             if(this.editSensDiag==null) this.createEditSensDiag();
             this.editSensDiag.dialog("open");
 
@@ -301,95 +302,105 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         /*
          * auto generate forms based on properties
          */
+        //mapKey2Ele maps each property to a corresponding UI Element which represents it
+        mapKey2Ele: Object;
         private formCreate(snaP: SNAproperties,idPrefix: string): HTMLTableElement {
+            this.mapKey2Ele={};
             idPrefix=idPrefix+".";
-            var tbl: HTMLTableElement=document.createElement("table");
-            var keys: string[]=Object.keys(snaP);
-            for(var index168=0;index168<keys.length;index168++) {
-                var key=keys[index168];
-                {
-                    //ignore all properties starting with "state"
-                    //they are probably created to handle internal state
-                    if(key.split("_")[0]===this.STATE_IND) continue;
-                    var row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
-                    var cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
-                    cell.innerHTML=key;
-                    cell=<HTMLTableCellElement>row.insertCell();
-                    var t: string=typeof snaP[key];
-                    if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
-                        var keyValue: SelectType=<SelectType>snaP[key];
-                        var options: string[]=keyValue.values;
-                        var sel: HTMLSelectElement=document.createElement("select");
+            let tbl: HTMLTableElement=document.createElement("table");
+            let keys: string[]=Object.keys(snaP);
+            for(let key of keys) {
+                //ignore all properties starting with "state"
+                //they were probably created to handle internal state
+                if(key.split("_")[0]===this.STATE_IND) continue;
+
+                let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
+                let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
+                cell.innerHTML=key;
+                cell=<HTMLTableCellElement>row.insertCell();
+                let t: string=typeof snaP[key];
+                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
+                if(t==="object") {
+                    if(snaP[key] instanceof SelectType) {
+                        let keyValue: SelectType=<SelectType>snaP[key];
+                        let options: string[]=keyValue.values;
+                        let sel: HTMLSelectElement=document.createElement("select");
                         sel.id=idPrefix+key;
-                        for(var index169=0;index169<options.length;index169++) {
-                            var option=options[index169];
-                            {
-                                var opt: HTMLOptionElement=document.createElement("option");
-                                if(option===keyValue.value) {
-                                    opt.selected=true;
-                                }
-                                opt.innerText=option;
-                                sel.add(opt);
+                        for(let option of options) {
+                            let opt: HTMLOptionElement=document.createElement("option");
+                            if(option===keyValue.value) {
+                                opt.selected=true;
                             }
+                            opt.innerText=option;
+                            sel.add(opt);
                         }
                         cell.appendChild(sel);
-                    } else {
-                        var inp: HTMLInputElement=document.createElement("input");
-                        inp.id=idPrefix+key;
-                        inp.className="ui-widget-content ui-corner-all";
-                        inp.value=<string>snaP[key];
-                        if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
-                            var r: Range=<Range>snaP[key];
-                            inp.type="range";
-                            inp.max=(<number>new Number(r.max)).toString();
-                            inp.min=(<number>new Number(r.min)).toString();
-                            inp.step=(<number>new Number(r.step)).toString();
-                            inp.value=(<number>new Number(r.value)).toString();
-                        } else if((t==="string")||(t==="number")) {
-                            inp.type="text";
-                            inp.value=<string>snaP[key];
-                        } else if(t==="boolean") {
-                            var check: boolean=<boolean>snaP[key];
-                            inp.type="checkbox";
-                            if(check) inp.setAttribute("checked","true");
-                        }
-                        cell.appendChild(inp);
+                    } else if(snaP[key] instanceof Vector3) {
+                        let v: VInputVector3=new VInputVector3(cell,snaP[key]);
+                        this.mapKey2Ele[key]=v;
                     }
+                } else {
+                    let inp: HTMLInputElement=document.createElement("input");
+                    inp.id=idPrefix+key;
+                    inp.className="ui-widget-content ui-corner-all";
+                    inp.value=<string>snaP[key];
+                    if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
+                        let r: Range=<Range>snaP[key];
+                        inp.type="range";
+                        inp.max=(<number>new Number(r.max)).toString();
+                        inp.min=(<number>new Number(r.min)).toString();
+                        inp.step=(<number>new Number(r.step)).toString();
+                        inp.value=(<number>new Number(r.value)).toString();
+                    } else if((t==="string")||(t==="number")) {
+                        inp.type="text";
+                        inp.value=<string>snaP[key];
+                    } else if(t==="boolean") {
+                        let check: boolean=<boolean>snaP[key];
+                        inp.type="checkbox";
+                        if(check) inp.setAttribute("checked","true");
+                    }
+                    cell.appendChild(inp);
                 }
             }
+
             return tbl;
         }
 
         private formRead(snaP: SNAproperties,idPrefix: string) {
             idPrefix=idPrefix+".";
             var keys: string[]=Object.keys(snaP);
-            for(var index170=0;index170<keys.length;index170++) {
-                var key=keys[index170];
-                {
-                    if(key.split("_")[0]===this.STATE_IND) continue;
-                    var t: string=typeof snaP[key];
-                    if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
+            for(let key of keys) {
+                if(key.split("_")[0]===this.STATE_IND) continue;
+
+                var t: string=typeof snaP[key];
+                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
+                if(t==="object") {
+                    if(snaP[key] instanceof SelectType) {
                         var s: SelectType=<SelectType>snaP[key];
                         var sel: HTMLSelectElement=<HTMLSelectElement>document.getElementById(idPrefix+key);
                         s.value=sel.value;
-                    } else {
-                        var ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
-                        if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
-                            var r: Range=<Range>snaP[key];
-                            r.value=parseFloat(ie.value);
-                        } else if((t==="string")||(t==="number")) {
-                            if(t==="number") {
-                                var v: number=parseFloat(ie.value);
-                                if(isNaN(v)) snaP[key]=0; else snaP[key]=v;
-                            } else {
-                                snaP[key]=ie.value;
-                            }
-                        } else if(t==="boolean") {
-                            snaP[key]=ie.checked;
+                    }else if(snaP[key] instanceof Vector3) {
+                        let v: VInputVector3=this.mapKey2Ele[key];
+                        snaP[key]=v.getValue();
+                    }
+                } else {
+                    var ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                    if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
+                        var r: Range=<Range>snaP[key];
+                        r.value=parseFloat(ie.value);
+                    } else if((t==="string")||(t==="number")) {
+                        if(t==="number") {
+                            var v: number=parseFloat(ie.value);
+                            if(isNaN(v)) snaP[key]=0; else snaP[key]=v;
+                        } else {
+                            snaP[key]=ie.value;
                         }
+                    } else if(t==="boolean") {
+                        snaP[key]=ie.checked;
                     }
                 }
             }
+
         }
     }
 }

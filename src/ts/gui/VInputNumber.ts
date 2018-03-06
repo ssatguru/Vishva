@@ -7,8 +7,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _inE: HTMLInputElement;
         public onChange:(n:number)=>void;
 
-        constructor(eID: string,value=0) {
-            let e: HTMLElement=document.getElementById(eID);
+        constructor(eID: string|HTMLElement,value=0) {
+            let e: HTMLElement;
+            if(eID instanceof HTMLElement) {
+                e=eID;
+            } else e=document.getElementById(eID);
+            //let e: HTMLElement=document.getElementById(eID);
 
             this._inE=document.createElement("input");
             this._inE.type="text";

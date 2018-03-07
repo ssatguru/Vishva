@@ -7506,6 +7506,9 @@ var org;
                     SNAManager.prototype.enableAV = function () {
                         vishva.Vishva.vishva.enableAV();
                     };
+                    SNAManager.prototype.getCamera = function () {
+                        return vishva.Vishva.vishva.mainCamera;
+                    };
                     return SNAManager;
                 }());
                 vishva.SNAManager = SNAManager;
@@ -7884,6 +7887,8 @@ var org;
                         _this.position = new Vector3(0, 0, 0);
                         _this.rotation = new Vector3(0, 0, 0);
                         _this.makeChild = true;
+                        _this.focusOnAV = true;
+                        _this.focusPosition = new Vector3(0, 0, 0);
                         _this.animationRange = new SelectType();
                         _this.rate = 1;
                         return _this;
@@ -7906,6 +7911,8 @@ var org;
                         }
                         _this._sp = new Vector3(0, 0, 0);
                         _this._sr = new Vector3(0, 0, 0);
+                        _this._sct = new Vector3(0, 0, 0);
+                        _this._scp = new Vector3(0, 0, 0);
                         var prop = _this.properties;
                         var scene = _this.mesh.getScene();
                         var avMesh = scene.getMeshesByTags("Vishva.avatar")[0];
@@ -7942,6 +7949,7 @@ var org;
                                 this.avMesh.parent = this.mesh;
                                 if (prop.changeTrans) {
                                     this.avMesh.position.copyFrom(prop.position);
+                                    this.avMesh.rotation.copyFrom(prop.rotation);
                                 }
                                 else {
                                     this.avMesh.position.subtractInPlace(this.mesh.position);
@@ -7950,17 +7958,32 @@ var org;
                             else {
                                 if (prop.changeTrans) {
                                     this.mesh.position.addToRef(prop.position, this.avMesh.position);
+                                    this.avMesh.rotation.copyFrom(prop.rotation);
                                 }
                             }
-                            this.avMesh.rotation.copyFrom(prop.rotation);
+                            if (prop.focusOnAV) {
+                                var camera = vishva.SNAManager.getSNAManager().getCamera();
+                                this._scp.copyFrom(camera.position);
+                                this._sct.copyFrom(camera.target);
+                                camera.setTarget(this.avMesh);
+                                //camera.target.copyFrom(this.avMesh.position);
+                            }
                             this.anim = skel.beginAnimation(prop.animationRange.value, prop.loop, prop.rate, function () { return _this.onActuateEnd(); });
                         }
                     };
                     ActuatorAvAnimator.prototype.stop = function () {
-                        this.anim.stop();
+                        var prop = this.properties;
+                        //anim would be null if user deletes the actuator without it ever being actuated
+                        if (this.anim != null)
+                            this.anim.stop();
                         this.avMesh.parent = null;
                         this.avMesh.position.copyFrom(this._sp);
                         this.avMesh.rotation.copyFrom(this._sr);
+                        if (prop.focusOnAV) {
+                            var camera = vishva.SNAManager.getSNAManager().getCamera();
+                            camera.setPosition(this._scp.clone());
+                            camera.setTarget(this._sct.clone());
+                        }
                         vishva.SNAManager.getSNAManager().enableAV();
                     };
                     ActuatorAvAnimator.prototype.isReady = function () {
@@ -7970,10 +7993,8 @@ var org;
                         return "AvAnimator";
                     };
                     ActuatorAvAnimator.prototype.onPropertiesChange = function () {
-                        var p = this.properties;
-                        console.log(p.position);
                         if (this.properties.autoStart) {
-                            var started = this.start(this.properties.signalId);
+                            this.start(this.properties.signalId);
                         }
                     };
                     ActuatorAvAnimator.prototype.cleanUp = function () {

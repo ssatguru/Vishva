@@ -315,6 +315,10 @@ namespace org.ssatguru.babylonjs.vishva {
         public enableAV(){
             Vishva.vishva.enableAV();
         }
+        
+        public getCamera(){
+            return Vishva.vishva.mainCamera;
+        }
     }
 
     export class SNAserialized {

@@ -2,6 +2,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
     import AnimationRange = BABYLON.AnimationRange;
     import Animatable=BABYLON.Animatable;
+    import AbstractMesh=BABYLON.AbstractMesh;
+    import ArcRotateCamera=BABYLON.ArcRotateCamera;
     import Mesh = BABYLON.Mesh;
     import SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
     import Skeleton = BABYLON.Skeleton;
@@ -14,6 +16,8 @@ namespace org.ssatguru.babylonjs.vishva {
         position:Vector3 = new Vector3(0,0,0);
         rotation:Vector3 = new Vector3(0,0,0);
         makeChild:boolean=true;
+        focusOnAV:boolean=true;
+        focusPosition:Vector3 = new Vector3(0,0,0);
         animationRange: SelectType = new SelectType();
         rate: number = 1;
      }
@@ -32,6 +36,8 @@ namespace org.ssatguru.babylonjs.vishva {
             
             this._sp = new Vector3(0,0,0);
             this._sr=new Vector3(0,0,0);
+            this._sct=new Vector3(0,0,0);
+            this._scp=new Vector3(0,0,0);
             
             var prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
             var scene: Scene = this.mesh.getScene();
@@ -59,6 +65,9 @@ namespace org.ssatguru.babylonjs.vishva {
         //save AV position, rotation
         private _sp:Vector3;
         private _sr:Vector3;
+        //save camera target and postion
+        private _sct:Vector3;
+        private _scp:Vector3;
         public actuate() {
             let prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
             this.avMesh=SNAManager.getSNAManager().getAV();
@@ -73,24 +82,42 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.avMesh.parent=this.mesh;
                     if (prop.changeTrans){
                         this.avMesh.position.copyFrom(prop.position);
+                        this.avMesh.rotation.copyFrom(prop.rotation);
                     }else{
                         this.avMesh.position.subtractInPlace(this.mesh.position);
                     }
                 }else{
                     if (prop.changeTrans){
                         this.mesh.position.addToRef(prop.position,this.avMesh.position);
+                        this.avMesh.rotation.copyFrom(prop.rotation);
                     }
                 }
-                this.avMesh.rotation.copyFrom(prop.rotation);
+                if(prop.focusOnAV){
+                    let camera: ArcRotateCamera=SNAManager.getSNAManager().getCamera();
+                    this._scp.copyFrom(camera.position);
+                    this._sct.copyFrom(camera.target);
+                    camera.setTarget(this.avMesh);
+                    //camera.target.copyFrom(this.avMesh.position);
+                    
+                    
+                }
+                
                 this.anim=skel.beginAnimation(prop.animationRange.value,prop.loop, prop.rate, () => { return this.onActuateEnd() });
             }
         }
 
         public stop() {
-            this.anim.stop();
+            let prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
+            //anim would be null if user deletes the actuator without it ever being actuated
+            if (this.anim!=null) this.anim.stop();
             this.avMesh.parent=null;
             this.avMesh.position.copyFrom(this._sp);
             this.avMesh.rotation.copyFrom(this._sr);
+             if(prop.focusOnAV){
+                 let camera: ArcRotateCamera=SNAManager.getSNAManager().getCamera();
+                 camera.setPosition(this._scp.clone());
+                 camera.setTarget(this._sct.clone());
+             }
             SNAManager.getSNAManager().enableAV();
         }
 
@@ -103,10 +130,8 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public onPropertiesChange() {
-            let p: AvAnimatorProp=<AvAnimatorProp>this.properties;
-            console.log(p.position);
             if (this.properties.autoStart) {
-                var started: boolean=this.start(this.properties.signalId);
+                this.start(this.properties.signalId);
             }
         }
 

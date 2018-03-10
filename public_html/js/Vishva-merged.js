@@ -7213,7 +7213,10 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva) {
+                var Quaternion = BABYLON.Quaternion;
                 var Tags = BABYLON.Tags;
+                var Vector3 = BABYLON.Vector3;
+                var Vector2 = BABYLON.Vector2;
                 var SNAManager = (function () {
                     function SNAManager() {
                         this.sensorList = [];
@@ -7415,6 +7418,8 @@ var org;
                             }
                             var sensors = mesh["sensors"];
                             if (sensors != null) {
+                                //if this mesh had actuators then we might have already assigned a uniue id
+                                //in the previous step
                                 if (meshId == null)
                                     meshId = this.getMeshVishvaUid(mesh);
                                 for (var _b = 0, sensors_2 = sensors; _b < sensors_2.length; _b++) {
@@ -7437,6 +7442,8 @@ var org;
                         for (var _i = 0, snas_1 = snas; _i < snas_1.length; _i++) {
                             var sna = snas_1[_i];
                             var mesh = scene.getMeshesByTags(sna.meshId)[0];
+                            //if null then we might be dealing with a instance mesh
+                            //search by name
                             if (mesh == null) {
                                 mesh = scene.getMeshByName(sna.meshId);
                                 if (mesh != null) {
@@ -7445,6 +7452,7 @@ var org;
                                 }
                             }
                             if (mesh != null) {
+                                this.unMarshalProps(sna.properties);
                                 if (sna.type === "SENSOR") {
                                     this.createSensorByName(sna.name, mesh, sna.properties);
                                 }
@@ -7462,8 +7470,44 @@ var org;
                         }
                     };
                     /**
-                     * Instance mesh id is not serialized by Babylonjs.
-                     * Instance mesh name is serialized.
+                     * Vectors/Quaternions are stored as plain objects with x,y,z or w properties
+                     * We need to convert them back to Vector/Quaternions objects
+                     */
+                    SNAManager.prototype.unMarshalProps = function (obj) {
+                        var pNames = Object.keys(obj);
+                        for (var _i = 0, pNames_1 = pNames; _i < pNames_1.length; _i++) {
+                            var pName = pNames_1[_i];
+                            var t = typeof obj[pName];
+                            if (t == "object") {
+                                var o = obj[pName];
+                                var ns = Object.keys(o);
+                                var l = ns.length;
+                                if (ns.indexOf("x") >= 0) {
+                                    if (ns.indexOf("y") >= 0) {
+                                        if (ns.indexOf("z") >= 0) {
+                                            if (ns.indexOf("w") >= 0) {
+                                                if (l == 4)
+                                                    obj[pName] = new Quaternion(o["x"], o["y"], o["z"], o["w"]);
+                                            }
+                                            else {
+                                                if (l == 3)
+                                                    obj[pName] = new Vector3(o["x"], o["y"], o["z"]);
+                                            }
+                                        }
+                                        else {
+                                            if (l == 2)
+                                                obj[pName] = new Vector2(o["x"], o["y"]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    /**
+                     * Assign a unique id to a mesh
+                     * NOTE:
+                     * Instance mesh "id" is not serialized by Babylonjs.
+                     * Instance mesh "name" is serialized.
                      * As such we would append the new vishva.uid to the name during save.
                      * When de-serializing, during load, we will remove the vishva.uid from name.
                      * see unmarhsall() also.

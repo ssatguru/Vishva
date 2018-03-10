@@ -7,8 +7,11 @@ namespace org.ssatguru.babylonjs.vishva {
     import Action=BABYLON.Action;
     import ActionEvent=BABYLON.ActionEvent;
     import Mesh=BABYLON.Mesh;
+    import Quaternion=BABYLON.Quaternion;
     import Scene=BABYLON.Scene;
     import Tags=BABYLON.Tags;
+    import Vector3=BABYLON.Vector3;
+    import Vector2=BABYLON.Vector2;
 
     export interface SNAConfig {}
 
@@ -26,7 +29,7 @@ namespace org.ssatguru.babylonjs.vishva {
         static sm: SNAManager;
 
         constructor() {
-            
+
         }
 
         public static getSNAManager(): SNAManager {
@@ -84,7 +87,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public emitSignal(signalId: string) {
             if(signalId.trim()==="") return;
             let actuators: Actuator[]=<Actuator[]>this.sig2actMap[signalId];
-            if (actuators==null) return;
+            if(actuators==null) return;
             for(let actuator of actuators) {
                 actuator.start(signalId);
             }
@@ -228,6 +231,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 var sensors: Array<Sensor>=<Array<Sensor>>mesh["sensors"];
                 if(sensors!=null) {
+                    //if this mesh had actuators then we might have already assigned a uniue id
+                    //in the previous step
                     if(meshId==null) meshId=this.getMeshVishvaUid(mesh);
                     for(let sensor of sensors) {
                         sna=new SNAserialized();
@@ -247,6 +252,8 @@ namespace org.ssatguru.babylonjs.vishva {
             if(snas==null) return;
             for(let sna of snas) {
                 var mesh: AbstractMesh=scene.getMeshesByTags(sna.meshId)[0];
+                //if null then we might be dealing with a instance mesh
+                //search by name
                 if(mesh==null) {
                     mesh=scene.getMeshByName(sna.meshId);
                     if(mesh!=null) {
@@ -254,6 +261,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     }
                 }
                 if(mesh!=null) {
+                    this.unMarshalProps(sna.properties);
                     if(sna.type==="SENSOR") {
                         this.createSensorByName(sna.name,<Mesh>mesh,sna.properties);
                     } else if(sna.type==="ACTUATOR") {
@@ -268,10 +276,42 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
+        /**
+         * Vectors/Quaternions are stored as plain objects with x,y,z or w properties
+         * We need to convert them back to Vector/Quaternions objects
+         */
+        private unMarshalProps(obj: Object) {
+            let pNames: string[]=Object.keys(obj);
+            for(let pName of pNames) {
+                let t: string=typeof obj[pName];
+                if(t=="object") {
+                    let o:Object=obj[pName];
+                    let ns: string[]=Object.keys(o); 
+                    let l: number=ns.length;
+                    if (ns.indexOf("x") >=0){
+                        if (ns.indexOf("y") >=0){
+                            if (ns.indexOf("z") >=0){
+                                if (ns.indexOf("w") >=0){
+                                    if (l==4) obj[pName] = new Quaternion(o["x"] ,o["y"],o["z"],o["w"]);
+                                }else{
+                                    if (l==3) obj[pName] = new Vector3(o["x"] ,o["y"],o["z"]);
+                                }
+                            }else{
+                                if (l==2) obj[pName] = new Vector2(o["x"] ,o["y"] );
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
         prevUID: string="";
         /**
-         * Instance mesh id is not serialized by Babylonjs.
-         * Instance mesh name is serialized.
+         * Assign a unique id to a mesh
+         * NOTE:
+         * Instance mesh "id" is not serialized by Babylonjs.
+         * Instance mesh "name" is serialized.
          * As such we would append the new vishva.uid to the name during save.
          * When de-serializing, during load, we will remove the vishva.uid from name.
          * see unmarhsall() also.
@@ -301,22 +341,22 @@ namespace org.ssatguru.babylonjs.vishva {
                 return uid;
             }
         }
-        
+
         //vishva proxy methods
-        
-        public getAV():Mesh{
+
+        public getAV(): Mesh {
             return Vishva.vishva.avatar;
         }
-        
-        public disableAV(){
+
+        public disableAV() {
             Vishva.vishva.disableAV();
         }
-        
-        public enableAV(){
+
+        public enableAV() {
             Vishva.vishva.enableAV();
         }
-        
-        public getCamera(){
+
+        public getCamera() {
             return Vishva.vishva.mainCamera;
         }
     }
@@ -475,7 +515,7 @@ namespace org.ssatguru.babylonjs.vishva {
         queued: number=0;
         disposed: boolean=false;
         disabled: boolean=false;
-        stopped:boolean=false;
+        stopped: boolean=false;
 
         public constructor(mesh: Mesh,prop: ActProperties) {
             this.properties=prop;
@@ -504,9 +544,9 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             if(signal==this.signalEnable) {
                 this.disabled=false;
-                if(this.queued==0){
-                    if (signal!=this.signalId) return false;
-                }else this.queued--;
+                if(this.queued==0) {
+                    if(signal!=this.signalId) return false;
+                } else this.queued--;
             }
             if(this.disabled) {
                 return false;
@@ -600,7 +640,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public onActuateEnd(): any {
             SNAManager.getSNAManager().emitSignal(this.properties.signalEnd);
             this.actuating=false;
-            if (this.disabled||this.stopped){
+            if(this.disabled||this.stopped) {
                 return;
             }
             if(this.queued>0) {
@@ -645,7 +685,7 @@ namespace org.ssatguru.babylonjs.vishva {
         autoStart: boolean=false;
         loop: boolean=false;
         toggle: boolean=true;
-        
+
         //when toggle is true then actuator can be in normal or reversed state
         //when toggle is false then its will always be in normal state (or notReversed state);
         //the following property will be used to keep track of what state it is in

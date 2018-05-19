@@ -3,89 +3,22 @@ vishvaFiles=[
    "f":[
     {"d":"characters",
      "f":[
-      {"d":"deer",
-       "f":[
-        "deer.glb"
-      ]},
-      {"d":"insect",
-       "f":[
-        "insect.glb"
-      ]},
-      {"d":"Jamik",
-       "f":[
-        "GD_Jamik.png",
-        "Jamik.babylon",
-        "Jamik.babylon.manifest",
-        "Jamik2.babylon"
-      ]},
       {"d":"Joan",
        "f":[
         "Joan.babylon",
         "Joan.jpg",
-        "Joan2.babylon",
         "Joan_texture_image.jpg"
-      ]},
-      {"d":"minotour001",
-       "f":[
-        "mino01.jpg",
-        "minotour001.bakup.glb",
-        "minotour001.glb",
-        "minotour001.mtl",
-        "minotour001.obj"
-      ]},
-      "newalex.bin",
-      "newalex.gltf",
-      {"d":"NPC",
-       "f":[
-        "NPC.babylon",
-        {"d":"NPC.fbm",
-         "f":[
-          "169aba19.jpg",
-          "3b6c645d.jpg",
-          "575d1bef.png",
-          "8c6f6e56.jpg",
-          "91bb8e40.jpg",
-          "c4e48af6.jpg"
-        ]}
-      ]},
-      {"d":"skeleton",
-       "f":[
-        "skeleton.babylon",
-        "skeleton.babylon.old",
-        "skeleton.blend",
-        "skeleton.log",
-        "texture.png"
-      ]},
-      {"d":"test3",
-       "f":[
-        "test3.babylon",
-        "young_lightskinned_female_diffuse.png"
-      ]},
-      {"d":"test5",
-       "f":[
-        "brown_eye.png",
-        "male_casualsuit06_diffuse.png",
-        "old_lightskinned_male_diffuse.png",
-        "shoes02_diffuse.png",
-        "test5.babylon"
       ]},
       {"d":"Vincent",
        "f":[
         "Vincent.babylon",
         "Vincent.jpg",
+        "Vincent_old.babylon",
         "Vincent_texture_image.jpg"
-      ]},
-      {"d":"vincent2",
-       "f":[
-        "vincent2.glb"
       ]}
-    ]},
-    {"d":"misc",
-     "f":[
     ]},
     {"d":"sounds",
      "f":[
-      "amb_birdtree_flyaway_01.wav",
       "birdsFlap.ogg",
       "door.mp3",
       "forest-ambient.ogg",
@@ -128,75 +61,21 @@ vishvaFiles=[
        "f":[
         "gate.babylon"
       ]},
-      {"d":"house1",
-       "f":[
-        "75519 - Medieval houses - License.html",
-        "DoorType1_1.jpg",
-        "DoorType1_2.jpg",
-        "GreyBricks2.jpg",
-        "GreyStone2.jpg",
-        "house1.babylon",
-        "house1.blend",
-        "house1.blend1",
-        "house1.log",
-        "House1Upload.babylon",
-        "House1Upload.log",
-        "PlasterLarge.jpg",
-        "preview_75519.jpg",
-        "RoofTiles.jpg",
-        "Rusted Metal.jpg",
-        "Stone.jpg",
-        "TreeLogEdgeWeathered.jpg",
-        "WindowBlue1.jpg",
-        "WindowsBlue2.jpg",
-        "Wood.jpg"
-      ]},
       {"d":"huts",
        "f":[
         "huts.babylon",
         "huts.jpg",
         "hut_texture.jpg"
       ]},
-      {"d":"scene",
-       "f":[
-        "AUTHOR",
-        "LICENSE",
-        "scene.bin",
-        "scene.gltf",
-        {"d":"textures",
-         "f":[
-          "Bordo_Zolla_01_Mat_baseColor.jpg",
-          "Bordo_Zolla_02_Mat_baseColor.jpg",
-          "Erba_01_TileMat_baseColor.jpg",
-          "Mura_01_TileMat_baseColor.jpg",
-          "Mura_03_TileMat_baseColor.jpg",
-          "Passerella_Legno_TopMura_02_Mat_baseColor.jpg",
-          "Passerella_Legno_TopMura_TileMura_baseColor.jpg",
-          "Terreno_TileMat_1_baseColor.jpg",
-          "Terreno_TileMat_2_baseColor.jpg",
-          "Terreno_TileMat_3_baseColor.jpg",
-          "Terreno_TileMat_4_baseColor.jpg",
-          "Terreno_TileMat_7_baseColor.jpg",
-          "Terreno_TileMat_8_baseColor.jpg",
-          "Terreno_TileMat_9_baseColor.jpg"
-        ]}
-      ]},
       {"d":"tipi",
        "f":[
         "tipi.babylon",
         "tipi.jpg",
         "tipi_texture.png"
-      ]},
-      {"d":"tower_lowpoly",
-       "f":[
-        "tower_lowpoly.jpg",
-        "tower_lowpoly.obj",
-        "tower_lowpoly_normals.jpg"
       ]}
     ]},
     {"d":"terrains",
      "f":[
-      "Heightmap.png",
       {"d":"hill1",
        "f":[
         "hill1_diffuse.jpg",
@@ -225,8 +104,7 @@ vishvaFiles=[
        "f":[
         "farm_trees_rocks_flowers_D.tga",
         "farm_tree_01.babylon",
-        "farm_tree_01.jpg",
-        "farm_tree_02.babylon"
+        "farm_tree_01.jpg"
       ]},
       {"d":"grass",
        "f":[
@@ -416,7 +294,6 @@ vishvaFiles=[
     {"d":"avatar",
      "f":[
       "starterAvatars.babylon",
-      "starterAvatars.babylon.old",
       "Vincent_texture_image.jpg"
     ]},
     {"d":"textures",
@@ -425,17 +302,20 @@ vishvaFiles=[
       "Birch.jpg",
       "earth.jpg",
       "flare.png",
+      "ground-1.jpg",
       "ground-normal-0.png",
       "ground-normal.jpg",
       "ground-normal.png",
       "ground.jpg",
       "ground_heightMap.png",
+      "ground_heightMap1.png",
       "ground_heightMap_bkup.png",
       "no-texture.jpg",
       "raindrop-1.png",
       "raindrop-2.png",
       {"d":"skybox-default",
        "f":[
+        "default.jpg",
         "default_nx.jpg",
         "default_ny.jpg",
         "default_nz.jpg",
@@ -454,18 +334,11 @@ vishvaFiles=[
   "vishvaFiles.js",
   {"d":"worlds",
    "f":[
-    "babylon.d.ts",
     "demo.js",
     "demo1.js",
     "demo2.js",
-    "demo_backup.js",
     "dr.js",
-    "greenery.js",
-    "groundSPS.js",
     "groundSPS2.js",
-    "junk.js",
-    "junkasset.js",
-    "myworld4.js",
-    "myworld5.js"
+    "junkasset.js"
   ]}
 ]

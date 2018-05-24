@@ -7,7 +7,13 @@ vishvaFiles=[
        "f":[
         "Joan.babylon",
         "Joan.jpg",
+        "Joan2.babylon",
         "Joan_texture_image.jpg"
+      ]},
+      {"d":"skeleton",
+       "f":[
+        "skeleton.babylon",
+        "texture.png"
       ]},
       {"d":"Vincent",
        "f":[
@@ -19,6 +25,7 @@ vishvaFiles=[
     ]},
     {"d":"sounds",
      "f":[
+      "amb_birdtree_flyaway_01.wav",
       "birdsFlap.ogg",
       "door.mp3",
       "forest-ambient.ogg",
@@ -57,10 +64,6 @@ vishvaFiles=[
         "prop_fence1_col.jpg",
         "prop_fence1_nor.jpg"
       ]},
-      {"d":"gate",
-       "f":[
-        "gate.babylon"
-      ]},
       {"d":"huts",
        "f":[
         "huts.babylon",
@@ -76,6 +79,7 @@ vishvaFiles=[
     ]},
     {"d":"terrains",
      "f":[
+      "Heightmap.png",
       {"d":"hill1",
        "f":[
         "hill1_diffuse.jpg",
@@ -104,7 +108,8 @@ vishvaFiles=[
        "f":[
         "farm_trees_rocks_flowers_D.tga",
         "farm_tree_01.babylon",
-        "farm_tree_01.jpg"
+        "farm_tree_01.jpg",
+        "farm_tree_02.babylon"
       ]},
       {"d":"grass",
        "f":[
@@ -294,6 +299,7 @@ vishvaFiles=[
     {"d":"avatar",
      "f":[
       "starterAvatars.babylon",
+      "starterAvatars.babylon.old",
       "Vincent_texture_image.jpg"
     ]},
     {"d":"textures",
@@ -334,11 +340,17 @@ vishvaFiles=[
   "vishvaFiles.js",
   {"d":"worlds",
    "f":[
+    "babylon.d.ts",
+    "demo-terrain-fixed.js",
     "demo.js",
     "demo1.js",
-    "demo2.js",
-    "dr.js",
-    "groundSPS2.js",
-    "junkasset.js"
+    "demo_backup.js",
+    "greenery.js",
+    "groundSPS.js",
+    "junk.js",
+    "myworld4.js",
+    "myworld5.js",
+    "spsDemo.js",
+    "test-ava.js"
   ]}
 ]

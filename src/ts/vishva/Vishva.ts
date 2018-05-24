@@ -20,7 +20,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import GroundMesh=BABYLON.GroundMesh;
     import GroundSPS=org.ssatguru.babylonjs.vishva.GroundSPS;
     import HemisphericLight=BABYLON.HemisphericLight;
-    import IAssetTask=BABYLON.IAssetTask;
+    //import IAssetTask=BABYLON.IAssetTask;
     import IShadowLight=BABYLON.IShadowLight;
     import InstancedMesh=BABYLON.InstancedMesh;
     import Light=BABYLON.Light;
@@ -256,7 +256,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         private loadSceneFile(scenePath: string,sceneFile: string,scene: Scene) {
             var am: AssetsManager=new AssetsManager(scene);
-            var task: IAssetTask=am.addTextFileTask("sceneLoader",scenePath+sceneFile);
+            var task: TextFileAssetTask=am.addTextFileTask("sceneLoader",scenePath+sceneFile);
             task.onSuccess=(obj) => {return this.onTaskSuccess(obj)};
             task.onError=(obj) => {return this.onTaskFailure(obj)};
             am.load();

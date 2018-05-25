@@ -1,4 +1,5 @@
-
+//TODO Vishva.getSoundFiles() needs to be implemented.
+//     This populates ActSoundProp.soundFile  value.
 namespace org.ssatguru.babylonjs.vishva {
     
     
@@ -8,6 +9,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Sound = BABYLON.Sound;
     
     export class ActSoundProp extends ActProperties {
+  
         soundFile: SelectType = new SelectType();
         attachToMesh: boolean = false;
         volume: Range = new Range(0.0, 1.0, 1.0, 0.1);

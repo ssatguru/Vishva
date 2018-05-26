@@ -4,13 +4,13 @@ namespace org.ssatguru.babylonjs.vishva {
     
     
     import Mesh = BABYLON.Mesh;
-    import SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+    import FileInputType = org.ssatguru.babylonjs.vishva.gui.FileInputType;
     import Range = org.ssatguru.babylonjs.vishva.gui.Range;
     import Sound = BABYLON.Sound;
     
     export class ActSoundProp extends ActProperties {
   
-        soundFile: SelectType = new SelectType();
+        soundFile: FileInputType = new FileInputType();
         attachToMesh: boolean = false;
         volume: Range = new Range(0.0, 1.0, 1.0, 0.1);
     }
@@ -57,7 +57,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.sound.dispose();
                 }
                 this.ready = false;
-                this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
+                console.log("soundFile.value : "+properties.soundFile.value);
+                //this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
+                this.sound = new Sound(properties.soundFile.value, "vishva/"+properties.soundFile.value, this.mesh.getScene(), ((properties) => {
                     return () => {
                         this.updateSound(properties);
                     }

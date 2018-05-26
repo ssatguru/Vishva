@@ -124,38 +124,38 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 return true;
             };
 
-//              add menu sliding setup
-//            var slideDown: any=JSON.parse("{\            "direction\":\"up\"}");
-//            var navAdd: HTMLElement=document.ge            tElementById("navAdd");
-//            var addMenu            : JQuery=$("#AddMenu");
-//                        addMenu.menu();
-//                        addMenu.hide(null);
-//                        navAdd.onclick=(e) => {
-//                            if(this.firstTime) {
-//                    var jpo:             JQueryPositionOptions={
-//                                    my: "left top",
-//                                    at: "left bottom",
-//                                    of: navAdd
-//                    };
-//                    addMen            u.menu().position(jpo);
-//                                this.firstTime=fal            se;
-//                }
-//                            if(this.addMenuOn) {
-//                    addMenu.menu().hide(            "slide",slideDown,100);
-//                            } else {
-//                    addMenu.show(            "slide",slideDown,10            0);
-//                }
-//                this.add            MenuOn=!this.addMenuOn;
-//                $(document)            .one("click",(jqe) => {
-//                                if(this.addMenuOn) {
-//                        addMenu.menu().hide(            "slide",slideDown,100);
-//                                    this.addMenuOn=false;
+            //              add menu sliding setup
+            //            var slideDown: any=JSON.parse("{\            "direction\":\"up\"}");
+            //            var navAdd: HTMLElement=document.ge            tElementById("navAdd");
+            //            var addMenu            : JQuery=$("#AddMenu");
+            //                        addMenu.menu();
+            //                        addMenu.hide(null);
+            //                        navAdd.onclick=(e) => {
+            //                            if(this.firstTime) {
+            //                    var jpo:             JQueryPositionOptions={
+            //                                    my: "left top",
+            //                                    at: "left bottom",
+            //                                    of: navAdd
+            //                    };
+            //                    addMen            u.menu().position(jpo);
+            //                                this.firstTime=fal            se;
+            //                }
+            //                            if(this.addMenuOn) {
+            //                    addMenu.menu().hide(            "slide",slideDown,100);
+            //                            } else {
+            //                    addMenu.show(            "slide",slideDown,10            0);
+            //                }
+            //                this.add            MenuOn=!this.addMenuOn;
+            //                $(document)            .one("click",(jqe) => {
+            //                                if(this.addMenuOn) {
+            //                        addMenu.menu().hide(            "slide",slideDown,100);
+            //                                    this.addMenuOn=false;
             //                    }
-//                                return true            ;
-//                });
-//                            e.cancelBubble=true;
-//                            return true;
-//                        };
+            //                                return true            ;
+            //                });
+            //                            e.cancelBubble=true;
+            //                            return true;
+            //                        };
 
 
             var navAdd: HTMLElement=document.getElementById("navAdd");
@@ -163,8 +163,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if(this._addAssetTDiag==null) {
                     this._addAssetTDiag=new VTreeDialog(this._vishva,"Assets",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.obj$|\.babylon$|\.glb$|\.gltf$",false);
                     this._addAssetTDiag.addTreeListener((f,p,l) => {
-                        if (l) {
-                            if (f.indexOf(".obj")>0 || f.indexOf(".babylon")>0 || f.indexOf(".glb")>0 ||f.indexOf(".gltf")>0){
+                        if(l) {
+                            if(f.indexOf(".obj")>0||f.indexOf(".babylon")>0||f.indexOf(".glb")>0||f.indexOf(".gltf")>0) {
                                 this._vishva.loadAsset2(p,f);
                             }
                         }
@@ -394,6 +394,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public value: string;
 
         constructor() {
+        }
+    }
+
+    export class FileInputType {
+        public type: string="FileInputType";
+        
+        public value:string;
+        
+        constructor() {
+            
         }
     }
 }

@@ -280,10 +280,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(node!=null) {
                 parmDiv.removeChild(node);
             }
-            if(actuator.getName()==="Sound") {
-                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
-                prop.soundFile.values=this._vishva.getSoundFiles();
-            }
+            //TODO REMOVE
+            //            if(actuator.getName()==="Sound") {
+            //                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
+            //                prop.soundFile.values=this._vishva.getSoundFiles();
+            //            }
             var tbl: HTMLTableElement=this.formCreate(actuator.getProperties(),parmDiv.id);
             parmDiv.appendChild(tbl);
             var dbo: DialogButtonOptions={};
@@ -315,11 +316,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if(key.split("_")[0]===this.STATE_IND) continue;
 
                 let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
+
+                //label
                 let cell: HTMLTableCellElement=<HTMLTableCellElement>row.insertCell();
                 cell.innerHTML=key;
+
+                //value
                 cell=<HTMLTableCellElement>row.insertCell();
                 let t: string=typeof snaP[key];
-                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
                 if(t==="object") {
                     if(snaP[key] instanceof SelectType) {
                         let keyValue: SelectType=<SelectType>snaP[key];
@@ -338,20 +342,29 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     } else if(snaP[key] instanceof Vector3) {
                         let v: VInputVector3=new VInputVector3(cell,snaP[key]);
                         this.mapKey2Ele[key]=v;
-                    }
-                } else {
-                    let inp: HTMLInputElement=document.createElement("input");
-                    inp.id=idPrefix+key;
-                    inp.className="ui-widget-content ui-corner-all";
-                    inp.value=<string>snaP[key];
-                    if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
+                    } else if(snaP[key] instanceof FileInputType) {
+                        let h: HTMLElement=this._createFileInput(snaP[key]);
+                        this.mapKey2Ele[key]=h;
+                        cell.appendChild(h);
+                    } else if(snaP[key] instanceof Range) {
+                        let inp: HTMLInputElement=document.createElement("input");
+                        inp.id=idPrefix+key;
+                        inp.className="ui-widget-content ui-corner-all";
+                        inp.value=<string>snaP[key];
                         let r: Range=<Range>snaP[key];
                         inp.type="range";
                         inp.max=(<number>new Number(r.max)).toString();
                         inp.min=(<number>new Number(r.min)).toString();
                         inp.step=(<number>new Number(r.step)).toString();
                         inp.value=(<number>new Number(r.value)).toString();
-                    } else if((t==="string")||(t==="number")) {
+                        cell.appendChild(inp);
+                    }
+                } else {
+                    let inp: HTMLInputElement=document.createElement("input");
+                    inp.id=idPrefix+key;
+                    inp.className="ui-widget-content ui-corner-all";
+                    inp.value=<string>snaP[key];
+                    if((t==="string")||(t==="number")) {
                         inp.type="text";
                         inp.value=<string>snaP[key];
                     } else if(t==="boolean") {
@@ -373,22 +386,22 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if(key.split("_")[0]===this.STATE_IND) continue;
 
                 var t: string=typeof snaP[key];
-                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
                 if(t==="object") {
                     if(snaP[key] instanceof SelectType) {
                         var s: SelectType=<SelectType>snaP[key];
                         var sel: HTMLSelectElement=<HTMLSelectElement>document.getElementById(idPrefix+key);
                         s.value=sel.value;
-                    }else if(snaP[key] instanceof Vector3) {
+                    } else if(snaP[key] instanceof Vector3) {
                         let v: VInputVector3=this.mapKey2Ele[key];
                         snaP[key]=v.getValue();
+                    }else if(snaP[key] instanceof Range) {
+                        let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                        let r: Range=<Range>snaP[key];
+                        r.value=parseFloat(ie.value);
                     }
                 } else {
-                    var ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
-                    if((t==="object")&&((<Object>snaP[key])["type"]==="Range")) {
-                        var r: Range=<Range>snaP[key];
-                        r.value=parseFloat(ie.value);
-                    } else if((t==="string")||(t==="number")) {
+                    let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                    if((t==="string")||(t==="number")) {
                         if(t==="number") {
                             var v: number=parseFloat(ie.value);
                             if(isNaN(v)) snaP[key]=0; else snaP[key]=v;
@@ -401,6 +414,35 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
             }
 
+        }
+        private _sndAssetTDiag: VTreeDialog;
+        private _createFileInput(fit: FileInputType): HTMLElement {
+            let fib: HTMLButtonElement=document.createElement("button");
+            let fibL: HTMLLabelElement=document.createElement("label");
+            fibL.textContent="No file chosen";
+            fib.innerText="Choose File";
+            fib.onclick=(e) => {
+                if(this._sndAssetTDiag==null) {
+                    this._sndAssetTDiag=new VTreeDialog(this._vishva,"Sound Files",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.wav$|\.ogg$|\.mp3$",false);
+                    this._sndAssetTDiag.addTreeListener((f,p,l) => {
+                        if(l) {
+                            if(f.indexOf(".wav")>0||f.indexOf(".ogg")>0||f.indexOf(".mp3")>0) {
+                                fit.value=p+f;
+                                fibL.textContent=fit.value;
+                            }
+                        }
+                    })
+                }
+
+                this._sndAssetTDiag.toggle();
+            }
+            let div: HTMLDivElement=document.createElement("div");
+            div.appendChild(fibL);
+            div.appendChild(document.createElement("br"));
+            div.appendChild(fib);
+            
+            
+            return div;
         }
     }
 }

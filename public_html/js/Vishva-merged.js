@@ -2322,10 +2322,11 @@ var org;
                             if (node != null) {
                                 parmDiv.removeChild(node);
                             }
-                            if (actuator.getName() === "Sound") {
-                                var prop = actuator.getProperties();
-                                prop.soundFile.values = this._vishva.getSoundFiles();
-                            }
+                            //TODO REMOVE
+                            //            if(actuator.getName()==="Sound") {
+                            //                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
+                            //                prop.soundFile.values=this._vishva.getSoundFiles();
+                            //            }
                             var tbl = this.formCreate(actuator.getProperties(), parmDiv.id);
                             parmDiv.appendChild(tbl);
                             var dbo = {};
@@ -2352,11 +2353,12 @@ var org;
                                 if (key.split("_")[0] === this.STATE_IND)
                                     continue;
                                 var row = tbl.insertRow();
+                                //label
                                 var cell = row.insertCell();
                                 cell.innerHTML = key;
+                                //value
                                 cell = row.insertCell();
                                 var t = typeof snaP[key];
-                                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
                                 if (t === "object") {
                                     if (snaP[key] instanceof gui.SelectType) {
                                         var keyValue = snaP[key];
@@ -2378,21 +2380,31 @@ var org;
                                         var v = new gui.VInputVector3(cell, snaP[key]);
                                         this.mapKey2Ele[key] = v;
                                     }
-                                }
-                                else {
-                                    var inp = document.createElement("input");
-                                    inp.id = idPrefix + key;
-                                    inp.className = "ui-widget-content ui-corner-all";
-                                    inp.value = snaP[key];
-                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                    else if (snaP[key] instanceof gui.FileInputType) {
+                                        var h = this._createFileInput(snaP[key]);
+                                        this.mapKey2Ele[key] = h;
+                                        cell.appendChild(h);
+                                    }
+                                    else if (snaP[key] instanceof gui.Range) {
+                                        var inp = document.createElement("input");
+                                        inp.id = idPrefix + key;
+                                        inp.className = "ui-widget-content ui-corner-all";
+                                        inp.value = snaP[key];
                                         var r = snaP[key];
                                         inp.type = "range";
                                         inp.max = new Number(r.max).toString();
                                         inp.min = new Number(r.min).toString();
                                         inp.step = new Number(r.step).toString();
                                         inp.value = new Number(r.value).toString();
+                                        cell.appendChild(inp);
                                     }
-                                    else if ((t === "string") || (t === "number")) {
+                                }
+                                else {
+                                    var inp = document.createElement("input");
+                                    inp.id = idPrefix + key;
+                                    inp.className = "ui-widget-content ui-corner-all";
+                                    inp.value = snaP[key];
+                                    if ((t === "string") || (t === "number")) {
                                         inp.type = "text";
                                         inp.value = snaP[key];
                                     }
@@ -2415,7 +2427,6 @@ var org;
                                 if (key.split("_")[0] === this.STATE_IND)
                                     continue;
                                 var t = typeof snaP[key];
-                                //if((t==="object")&&((<Object>snaP[key])["type"]==="SelectType")) {
                                 if (t === "object") {
                                     if (snaP[key] instanceof gui.SelectType) {
                                         var s = snaP[key];
@@ -2426,14 +2437,15 @@ var org;
                                         var v_1 = this.mapKey2Ele[key];
                                         snaP[key] = v_1.getValue();
                                     }
-                                }
-                                else {
-                                    var ie = document.getElementById(idPrefix + key);
-                                    if ((t === "object") && (snaP[key]["type"] === "Range")) {
+                                    else if (snaP[key] instanceof gui.Range) {
+                                        var ie = document.getElementById(idPrefix + key);
                                         var r = snaP[key];
                                         r.value = parseFloat(ie.value);
                                     }
-                                    else if ((t === "string") || (t === "number")) {
+                                }
+                                else {
+                                    var ie = document.getElementById(idPrefix + key);
+                                    if ((t === "string") || (t === "number")) {
                                         if (t === "number") {
                                             var v = parseFloat(ie.value);
                                             if (isNaN(v))
@@ -2450,6 +2462,32 @@ var org;
                                     }
                                 }
                             }
+                        };
+                        SnaUI.prototype._createFileInput = function (fit) {
+                            var _this = this;
+                            var fib = document.createElement("button");
+                            var fibL = document.createElement("label");
+                            fibL.textContent = "No file chosen";
+                            fib.innerText = "Choose File";
+                            fib.onclick = function (e) {
+                                if (_this._sndAssetTDiag == null) {
+                                    _this._sndAssetTDiag = new gui.VTreeDialog(_this._vishva, "Sound Files", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.wav$|\.ogg$|\.mp3$", false);
+                                    _this._sndAssetTDiag.addTreeListener(function (f, p, l) {
+                                        if (l) {
+                                            if (f.indexOf(".wav") > 0 || f.indexOf(".ogg") > 0 || f.indexOf(".mp3") > 0) {
+                                                fit.value = p + f;
+                                                fibL.textContent = fit.value;
+                                            }
+                                        }
+                                    });
+                                }
+                                _this._sndAssetTDiag.toggle();
+                            };
+                            var div = document.createElement("div");
+                            div.appendChild(fibL);
+                            div.appendChild(document.createElement("br"));
+                            div.appendChild(fib);
+                            return div;
                         };
                         return SnaUI;
                     }());
@@ -3174,6 +3212,13 @@ var org;
                         return SelectType;
                     }());
                     gui.SelectType = SelectType;
+                    var FileInputType = (function () {
+                        function FileInputType() {
+                            this.type = "FileInputType";
+                        }
+                        return FileInputType;
+                    }());
+                    gui.FileInputType = FileInputType;
                 })(gui = vishva_15.gui || (vishva_15.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -8578,7 +8623,11 @@ var org;
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
 org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Rotator", org.ssatguru.babylonjs.vishva.ActuatorRotator);
+//TODO Vishva.getSoundFiles() needs to be implemented.
+//     This populates ActSoundProp.soundFile  value.
 var org;
+//TODO Vishva.getSoundFiles() needs to be implemented.
+//     This populates ActSoundProp.soundFile  value.
 (function (org) {
     var ssatguru;
     (function (ssatguru) {
@@ -8586,14 +8635,14 @@ var org;
         (function (babylonjs) {
             var vishva;
             (function (vishva) {
-                var SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
+                var FileInputType = org.ssatguru.babylonjs.vishva.gui.FileInputType;
                 var Range = org.ssatguru.babylonjs.vishva.gui.Range;
                 var Sound = BABYLON.Sound;
                 var ActSoundProp = (function (_super) {
                     __extends(ActSoundProp, _super);
                     function ActSoundProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.soundFile = new SelectType();
+                        _this.soundFile = new FileInputType();
                         _this.attachToMesh = false;
                         _this.volume = new Range(0.0, 1.0, 1.0, 0.1);
                         return _this;
@@ -8647,7 +8696,9 @@ var org;
                                 this.sound.dispose();
                             }
                             this.ready = false;
-                            this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), (function (properties) {
+                            console.log("soundFile.value : " + properties.soundFile.value);
+                            //this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
+                            this.sound = new Sound(properties.soundFile.value, "vishva/" + properties.soundFile.value, this.mesh.getScene(), (function (properties) {
                                 return function () {
                                     _this.updateSound(properties);
                                 };

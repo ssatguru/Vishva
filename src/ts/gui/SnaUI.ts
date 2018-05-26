@@ -224,13 +224,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var parmDiv: HTMLElement=document.getElementById("editSensDiag.parms");
             var node: Node=parmDiv.firstChild;
             if(node!=null) parmDiv.removeChild(node);
-            var tbl: HTMLTableElement=this.formCreate(sensor.getProperties(),parmDiv.id);
+            var tbl: HTMLTableElement=this.formCreate(sensor.getProperties());
             parmDiv.appendChild(tbl);
 
             var dbo: DialogButtonOptions={};
             dbo.text="save";
             dbo.click=(e) => {
-                this.formRead(sensor.getProperties(),parmDiv.id);
+                this.formRead(sensor.getProperties());
                 sensor.handlePropertiesChange()
                 this.updateSensActTbl(this._vishva.getSensors(),this.sensTbl);
                 this.editSensDiag.dialog("close");
@@ -285,12 +285,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
             //                prop.soundFile.values=this._vishva.getSoundFiles();
             //            }
-            var tbl: HTMLTableElement=this.formCreate(actuator.getProperties(),parmDiv.id);
+            var tbl: HTMLTableElement=this.formCreate(actuator.getProperties());
             parmDiv.appendChild(tbl);
             var dbo: DialogButtonOptions={};
             dbo.text="save";
             dbo.click=(e) => {
-                this.formRead(actuator.getProperties(),parmDiv.id);
+                this.formRead(actuator.getProperties());
                 actuator.handlePropertiesChange();
                 this.updateSensActTbl(this._vishva.getActuators(),this.actTbl);
                 this.editActDiag.dialog("close");
@@ -303,18 +303,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         /*
          * auto generate forms based on properties
          */
-        //mapKey2Ele maps each property to a corresponding UI Element which represents it
+        //"mapKey2Ele" maps each sna property to a corresponding UI Element which represents it
         mapKey2Ele: Object;
-        private formCreate(snaP: SNAproperties,idPrefix: string): HTMLTableElement {
+        private formCreate(snaP: SNAproperties): HTMLTableElement {
             this.mapKey2Ele={};
-            idPrefix=idPrefix+".";
             let tbl: HTMLTableElement=document.createElement("table");
             let keys: string[]=Object.keys(snaP);
             for(let key of keys) {
                 //ignore all properties starting with "state"
-                //they were probably created to handle internal state
+                //they were created to handle internal state
                 if(key.split("_")[0]===this.STATE_IND) continue;
-
                 let row: HTMLTableRowElement=<HTMLTableRowElement>tbl.insertRow();
 
                 //label
@@ -329,7 +327,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                         let keyValue: SelectType=<SelectType>snaP[key];
                         let options: string[]=keyValue.values;
                         let sel: HTMLSelectElement=document.createElement("select");
-                        sel.id=idPrefix+key;
+                        this.mapKey2Ele[key]=sel;
                         for(let option of options) {
                             let opt: HTMLOptionElement=document.createElement("option");
                             if(option===keyValue.value) {
@@ -348,7 +346,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                         cell.appendChild(h);
                     } else if(snaP[key] instanceof Range) {
                         let inp: HTMLInputElement=document.createElement("input");
-                        inp.id=idPrefix+key;
+                        this.mapKey2Ele[key]=inp;
                         inp.className="ui-widget-content ui-corner-all";
                         inp.value=<string>snaP[key];
                         let r: Range=<Range>snaP[key];
@@ -361,7 +359,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     }
                 } else {
                     let inp: HTMLInputElement=document.createElement("input");
-                    inp.id=idPrefix+key;
+                    this.mapKey2Ele[key]=inp;
+                    //inp.id=idPrefix+key;
                     inp.className="ui-widget-content ui-corner-all";
                     inp.value=<string>snaP[key];
                     if((t==="string")||(t==="number")) {
@@ -379,28 +378,27 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             return tbl;
         }
 
-        private formRead(snaP: SNAproperties,idPrefix: string) {
-            idPrefix=idPrefix+".";
+        private formRead(snaP: SNAproperties) {
             var keys: string[]=Object.keys(snaP);
             for(let key of keys) {
                 if(key.split("_")[0]===this.STATE_IND) continue;
-
                 var t: string=typeof snaP[key];
                 if(t==="object") {
                     if(snaP[key] instanceof SelectType) {
                         var s: SelectType=<SelectType>snaP[key];
-                        var sel: HTMLSelectElement=<HTMLSelectElement>document.getElementById(idPrefix+key);
+                        var sel: HTMLSelectElement=this.mapKey2Ele[key];
                         s.value=sel.value;
                     } else if(snaP[key] instanceof Vector3) {
                         let v: VInputVector3=this.mapKey2Ele[key];
                         snaP[key]=v.getValue();
                     }else if(snaP[key] instanceof Range) {
-                        let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                        let ie: HTMLInputElement=this.mapKey2Ele[key];
                         let r: Range=<Range>snaP[key];
                         r.value=parseFloat(ie.value);
                     }
                 } else {
-                    let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                    //let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                    let ie: HTMLInputElement=this.mapKey2Ele[key];
                     if((t==="string")||(t==="number")) {
                         if(t==="number") {
                             var v: number=parseFloat(ie.value);
@@ -427,8 +425,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     this._sndAssetTDiag.addTreeListener((f,p,l) => {
                         if(l) {
                             if(f.indexOf(".wav")>0||f.indexOf(".ogg")>0||f.indexOf(".mp3")>0) {
-                                fit.value=p+f;
-                                fibL.textContent=fit.value;
+                                fibL.textContent=p+f
+                                fit.value="vishva/"+fibL.textContent;
+
                             }
                         }
                     })

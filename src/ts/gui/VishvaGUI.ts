@@ -10,8 +10,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         local: boolean=true;
 
-
-
         public static LARGE_ICON_SIZE: string="width:128px;height:128px;";
 
         public static SMALL_ICON_SIZE: string="width:64px;height:64px;";
@@ -22,7 +20,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public constructor(vishva: Vishva) {
             this._vishva=vishva;
 
-            this.setSettings();
+            this._setSettings();
 
             $(document).tooltip({
                 open: (event,ui: any) => {
@@ -291,7 +289,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             return guiSettings;
         }
 
-        private setSettings() {
+        private _setSettings() {
             if(this._settingDiag==null) {
                 this._settingDiag=new SettingsUI(this._vishva,this);
             }
@@ -351,9 +349,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
     export class RGB {
         r: number;
-
         g: number;
-
         b: number;
 
         constructor() {

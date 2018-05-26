@@ -2272,12 +2272,12 @@ var org;
                             var node = parmDiv.firstChild;
                             if (node != null)
                                 parmDiv.removeChild(node);
-                            var tbl = this.formCreate(sensor.getProperties(), parmDiv.id);
+                            var tbl = this.formCreate(sensor.getProperties());
                             parmDiv.appendChild(tbl);
                             var dbo = {};
                             dbo.text = "save";
                             dbo.click = function (e) {
-                                _this.formRead(sensor.getProperties(), parmDiv.id);
+                                _this.formRead(sensor.getProperties());
                                 sensor.handlePropertiesChange();
                                 _this.updateSensActTbl(_this._vishva.getSensors(), _this.sensTbl);
                                 _this.editSensDiag.dialog("close");
@@ -2327,12 +2327,12 @@ var org;
                             //                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
                             //                prop.soundFile.values=this._vishva.getSoundFiles();
                             //            }
-                            var tbl = this.formCreate(actuator.getProperties(), parmDiv.id);
+                            var tbl = this.formCreate(actuator.getProperties());
                             parmDiv.appendChild(tbl);
                             var dbo = {};
                             dbo.text = "save";
                             dbo.click = function (e) {
-                                _this.formRead(actuator.getProperties(), parmDiv.id);
+                                _this.formRead(actuator.getProperties());
                                 actuator.handlePropertiesChange();
                                 _this.updateSensActTbl(_this._vishva.getActuators(), _this.actTbl);
                                 _this.editActDiag.dialog("close");
@@ -2341,15 +2341,14 @@ var org;
                             var dbos = [dbo];
                             this.editActDiag.dialog("option", "buttons", dbos);
                         };
-                        SnaUI.prototype.formCreate = function (snaP, idPrefix) {
+                        SnaUI.prototype.formCreate = function (snaP) {
                             this.mapKey2Ele = {};
-                            idPrefix = idPrefix + ".";
                             var tbl = document.createElement("table");
                             var keys = Object.keys(snaP);
                             for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
                                 var key = keys_1[_i];
                                 //ignore all properties starting with "state"
-                                //they were probably created to handle internal state
+                                //they were created to handle internal state
                                 if (key.split("_")[0] === this.STATE_IND)
                                     continue;
                                 var row = tbl.insertRow();
@@ -2364,7 +2363,7 @@ var org;
                                         var keyValue = snaP[key];
                                         var options = keyValue.values;
                                         var sel = document.createElement("select");
-                                        sel.id = idPrefix + key;
+                                        this.mapKey2Ele[key] = sel;
                                         for (var _a = 0, options_2 = options; _a < options_2.length; _a++) {
                                             var option = options_2[_a];
                                             var opt = document.createElement("option");
@@ -2387,7 +2386,7 @@ var org;
                                     }
                                     else if (snaP[key] instanceof gui.Range) {
                                         var inp = document.createElement("input");
-                                        inp.id = idPrefix + key;
+                                        this.mapKey2Ele[key] = inp;
                                         inp.className = "ui-widget-content ui-corner-all";
                                         inp.value = snaP[key];
                                         var r = snaP[key];
@@ -2401,7 +2400,8 @@ var org;
                                 }
                                 else {
                                     var inp = document.createElement("input");
-                                    inp.id = idPrefix + key;
+                                    this.mapKey2Ele[key] = inp;
+                                    //inp.id=idPrefix+key;
                                     inp.className = "ui-widget-content ui-corner-all";
                                     inp.value = snaP[key];
                                     if ((t === "string") || (t === "number")) {
@@ -2419,8 +2419,7 @@ var org;
                             }
                             return tbl;
                         };
-                        SnaUI.prototype.formRead = function (snaP, idPrefix) {
-                            idPrefix = idPrefix + ".";
+                        SnaUI.prototype.formRead = function (snaP) {
                             var keys = Object.keys(snaP);
                             for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
                                 var key = keys_2[_i];
@@ -2430,7 +2429,7 @@ var org;
                                 if (t === "object") {
                                     if (snaP[key] instanceof gui.SelectType) {
                                         var s = snaP[key];
-                                        var sel = document.getElementById(idPrefix + key);
+                                        var sel = this.mapKey2Ele[key];
                                         s.value = sel.value;
                                     }
                                     else if (snaP[key] instanceof Vector3) {
@@ -2438,13 +2437,14 @@ var org;
                                         snaP[key] = v_1.getValue();
                                     }
                                     else if (snaP[key] instanceof gui.Range) {
-                                        var ie = document.getElementById(idPrefix + key);
+                                        var ie = this.mapKey2Ele[key];
                                         var r = snaP[key];
                                         r.value = parseFloat(ie.value);
                                     }
                                 }
                                 else {
-                                    var ie = document.getElementById(idPrefix + key);
+                                    //let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
+                                    var ie = this.mapKey2Ele[key];
                                     if ((t === "string") || (t === "number")) {
                                         if (t === "number") {
                                             var v = parseFloat(ie.value);
@@ -2475,8 +2475,8 @@ var org;
                                     _this._sndAssetTDiag.addTreeListener(function (f, p, l) {
                                         if (l) {
                                             if (f.indexOf(".wav") > 0 || f.indexOf(".ogg") > 0 || f.indexOf(".mp3") > 0) {
-                                                fit.value = p + f;
-                                                fibL.textContent = fit.value;
+                                                fibL.textContent = p + f;
+                                                fit.value = "vishva/" + fibL.textContent;
                                             }
                                         }
                                     });
@@ -2908,7 +2908,7 @@ var org;
                              */
                             this.resizing = false;
                             this._vishva = vishva;
-                            this.setSettings();
+                            this._setSettings();
                             $(document).tooltip({
                                 open: function (event, ui) {
                                     if (!_this._settingDiag.enableToolTips) {
@@ -3129,7 +3129,7 @@ var org;
                             guiSettings.enableToolTips = this._settingDiag.enableToolTips;
                             return guiSettings;
                         };
-                        VishvaGUI.prototype.setSettings = function () {
+                        VishvaGUI.prototype._setSettings = function () {
                             if (this._settingDiag == null) {
                                 this._settingDiag = new gui.SettingsUI(this._vishva, this);
                             }
@@ -6339,7 +6339,7 @@ var org;
                         //var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
                         vishvaSerialzed.snas = vishva.SNAManager.getSNAManager().serializeSnAs(this.scene);
                         var sceneObj = SceneSerializer.Serialize(this.scene);
-                        this.changeSoundUrl(sceneObj);
+                        //this.changeSoundUrl(sceneObj);
                         //sceneObj["VishvaSNA"] = snaObj;
                         sceneObj["VishvaSerialized"] = vishvaSerialzed;
                         var sceneString = JSON.stringify(sceneObj);
@@ -8623,11 +8623,7 @@ var org;
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
 })(org || (org = {}));
 org.ssatguru.babylonjs.vishva.SNAManager.getSNAManager().addActuator("Rotator", org.ssatguru.babylonjs.vishva.ActuatorRotator);
-//TODO Vishva.getSoundFiles() needs to be implemented.
-//     This populates ActSoundProp.soundFile  value.
 var org;
-//TODO Vishva.getSoundFiles() needs to be implemented.
-//     This populates ActSoundProp.soundFile  value.
 (function (org) {
     var ssatguru;
     (function (ssatguru) {
@@ -8684,9 +8680,6 @@ var org;
                     */
                     ActuatorSound.prototype.onPropertiesChange = function () {
                         var _this = this;
-                        var SOUND_ASSET_LOCATION = "vishva/assets/sounds/";
-                        //let RELATIVE_ASSET_LOCATION: string = "../../../../";
-                        var RELATIVE_ASSET_LOCATION = "";
                         var properties = this.properties;
                         if (properties.soundFile.value == null)
                             return;
@@ -8696,9 +8689,7 @@ var org;
                                 this.sound.dispose();
                             }
                             this.ready = false;
-                            console.log("soundFile.value : " + properties.soundFile.value);
-                            //this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
-                            this.sound = new Sound(properties.soundFile.value, "vishva/" + properties.soundFile.value, this.mesh.getScene(), (function (properties) {
+                            this.sound = new Sound(properties.soundFile.value, properties.soundFile.value, this.mesh.getScene(), (function (properties) {
                                 return function () {
                                     _this.updateSound(properties);
                                 };

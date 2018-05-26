@@ -1,5 +1,3 @@
-//TODO Vishva.getSoundFiles() needs to be implemented.
-//     This populates ActSoundProp.soundFile  value.
 namespace org.ssatguru.babylonjs.vishva {
     
     
@@ -46,9 +44,6 @@ namespace org.ssatguru.babylonjs.vishva {
         it is not ready to play immediately
         */
         public onPropertiesChange() {
-            var SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
-            //let RELATIVE_ASSET_LOCATION: string = "../../../../";
-            let RELATIVE_ASSET_LOCATION: string = "";
             var properties: ActSoundProp = <ActSoundProp>this.properties;
             if (properties.soundFile.value == null) return;
             if (this.sound == null || properties.soundFile.value !== this.sound.name) {
@@ -57,9 +52,7 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.sound.dispose();
                 }
                 this.ready = false;
-                console.log("soundFile.value : "+properties.soundFile.value);
-                //this.sound = new Sound(properties.soundFile.value, RELATIVE_ASSET_LOCATION + SOUND_ASSET_LOCATION + properties.soundFile.value, this.mesh.getScene(), ((properties) => {
-                this.sound = new Sound(properties.soundFile.value, "vishva/"+properties.soundFile.value, this.mesh.getScene(), ((properties) => {
+                this.sound = new Sound(properties.soundFile.value, properties.soundFile.value, this.mesh.getScene(), ((properties) => {
                     return () => {
                         this.updateSound(properties);
                     }

@@ -2628,7 +2628,7 @@ namespace org.ssatguru.babylonjs.vishva {
             vishvaSerialzed.snas=<SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.scene);
 
             var sceneObj: Object=<Object>SceneSerializer.Serialize(this.scene);
-            this.changeSoundUrl(sceneObj);
+            //this.changeSoundUrl(sceneObj);
 
             //sceneObj["VishvaSNA"] = snaObj;
             sceneObj["VishvaSerialized"]=vishvaSerialzed;

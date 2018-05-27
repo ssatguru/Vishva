@@ -8,7 +8,7 @@ namespace org.ssatguru.babylonjs.vishva {
     
     export class ActSoundProp extends ActProperties {
   
-        soundFile: FileInputType = new FileInputType();
+        soundFile: FileInputType = new FileInputType("Sounf Files","\.wav$|\.ogg$|\.mp3$",true);
         attachToMesh: boolean = false;
         volume: Range = new Range(0.0, 1.0, 1.0, 0.1);
     }

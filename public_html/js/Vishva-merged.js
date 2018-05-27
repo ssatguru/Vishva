@@ -2471,10 +2471,10 @@ var org;
                             fib.innerText = "Choose File";
                             fib.onclick = function (e) {
                                 if (_this._sndAssetTDiag == null) {
-                                    _this._sndAssetTDiag = new gui.VTreeDialog(_this._vishva, "Sound Files", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.wav$|\.ogg$|\.mp3$", false);
+                                    _this._sndAssetTDiag = new gui.VTreeDialog(_this._vishva, fit.title, gui.DialogMgr.centerBottom, _this._vishva.vishvaFiles, fit.filter, fit.openAll);
                                     _this._sndAssetTDiag.addTreeListener(function (f, p, l) {
                                         if (l) {
-                                            if (f.indexOf(".wav") > 0 || f.indexOf(".ogg") > 0 || f.indexOf(".mp3") > 0) {
+                                            if (fit.filter.indexOf(f.substring(f.length - 4)) >= 0) {
                                                 fibL.textContent = p + f;
                                                 fit.value = "vishva/" + fibL.textContent;
                                             }
@@ -3213,7 +3213,13 @@ var org;
                     }());
                     gui.SelectType = SelectType;
                     var FileInputType = (function () {
-                        function FileInputType() {
+                        function FileInputType(title, filter, openAll) {
+                            if (title === void 0) { title = ""; }
+                            if (filter === void 0) { filter = ""; }
+                            if (openAll === void 0) { openAll = true; }
+                            this.title = title;
+                            this.filter = filter;
+                            this.openAll = openAll;
                             this.type = "FileInputType";
                         }
                         return FileInputType;
@@ -8638,7 +8644,7 @@ var org;
                     __extends(ActSoundProp, _super);
                     function ActSoundProp() {
                         var _this = _super !== null && _super.apply(this, arguments) || this;
-                        _this.soundFile = new FileInputType();
+                        _this.soundFile = new FileInputType("Sounf Files", "\.wav$|\.ogg$|\.mp3$", true);
                         _this.attachToMesh = false;
                         _this.volume = new Range(0.0, 1.0, 1.0, 0.1);
                         return _this;

@@ -398,7 +398,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         
         public value:string;
         
-        constructor() {
+        constructor(public title="",public filter="",public openAll=true) {
             
         }
     }

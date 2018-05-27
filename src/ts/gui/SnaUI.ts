@@ -421,10 +421,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             fib.innerText="Choose File";
             fib.onclick=(e) => {
                 if(this._sndAssetTDiag==null) {
-                    this._sndAssetTDiag=new VTreeDialog(this._vishva,"Sound Files",DialogMgr.leftCenter,this._vishva.vishvaFiles,"\.wav$|\.ogg$|\.mp3$",false);
+                    this._sndAssetTDiag=new VTreeDialog(this._vishva,fit.title,DialogMgr.centerBottom,this._vishva.vishvaFiles,fit.filter,fit.openAll);
                     this._sndAssetTDiag.addTreeListener((f,p,l) => {
                         if(l) {
-                            if(f.indexOf(".wav")>0||f.indexOf(".ogg")>0||f.indexOf(".mp3")>0) {
+                            if(fit.filter.indexOf(f.substring(f.length-4))>=0) {
                                 fibL.textContent=p+f
                                 fit.value="vishva/"+fibL.textContent;
 

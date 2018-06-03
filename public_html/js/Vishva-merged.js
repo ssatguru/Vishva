@@ -864,6 +864,145 @@ var org;
                 var gui;
                 (function (gui) {
                     /**
+                     * Provides a UI to manage Ground Dimensions
+                     */
+                    var GrndDimUI = (function () {
+                        function GrndDimUI(vishva) {
+                            var _this = this;
+                            this._ready = false;
+                            this._vishva = vishva;
+                            var genSPSParms = document.getElementById("genSPSParms");
+                            genSPSParms.onclick = function () {
+                                if (_this._updateUI()) {
+                                    _this._ready = true;
+                                }
+                                else {
+                                    _this._ready = false;
+                                }
+                                ;
+                                genSPS.disabled = !_this._ready;
+                            };
+                            var genSPS = document.getElementById("genSPS");
+                            genSPS.disabled = this._ready;
+                            genSPS.onclick = function () {
+                                if (_this._updateSpreadParms()) {
+                                    _this._ready = true;
+                                }
+                                else {
+                                    _this._ready = false;
+                                }
+                                ;
+                                genSPS.disabled = !_this._ready;
+                            };
+                            this._spsList = new gui.VInputSelect("spsList", this._vishva.getGrndSPSList());
+                            this._spsList.onSelect = function (id) {
+                                _this._updateUI(id);
+                            };
+                            this._spsName = document.getElementById("spsName");
+                            this._spsMesh = document.getElementById("spsMesh");
+                            this._spsSeed = new gui.VInputNumber("spsSeed");
+                            this.spsStep = new gui.VInputNumber("spsStep");
+                            this.sprdMin = new gui.VInputVector2("sprdMin");
+                            this.sprdMax = new gui.VInputVector2("sprdMax");
+                            this.posMin = new gui.VInputVector3("posMin");
+                            this.posMax = new gui.VInputVector3("posMax");
+                            this.sclMin = new gui.VInputVector3("sclMin");
+                            this.sclMax = new gui.VInputVector3("sclMax");
+                            this.rotMin = new gui.VInputVector3("rotMin");
+                            this.rotMax = new gui.VInputVector3("rotMax");
+                            this.posRange = new gui.VRange("posRange", 0, 1, 0.1, 0.5);
+                            this.sclRange = new gui.VRange("sclRange", 0, 1, 0.1, 0.5);
+                            this.rotRange = new gui.VRange("rotRange", 0, 180, 1, 5);
+                        }
+                        GrndDimUI.prototype._updateUI = function (gSPSid) {
+                            var sdo;
+                            if (gSPSid) {
+                                var gs = void 0;
+                                gs = this._vishva.getGrndSPSbyID(gSPSid);
+                                if (gs == null) {
+                                    gui.DialogMgr.showAlertDiag("could not find gound sps with id : " + gSPSid);
+                                    return;
+                                }
+                                sdo = gs.getSpreadDtls();
+                                this._grndSPS = gs;
+                            }
+                            else {
+                                var gs = this._vishva.createGrndSPS();
+                                if (!(gs instanceof Object)) {
+                                    gui.DialogMgr.showAlertDiag(gs);
+                                    return false;
+                                }
+                                else {
+                                    sdo = gs.getSpreadDtls();
+                                    this._grndSPS = gs;
+                                }
+                            }
+                            this._spsName.innerText = this._grndSPS.name + "(" + this._grndSPS.id + ")";
+                            this._spsMesh.innerText = this._grndSPS.mesh.name + "(" + this._grndSPS.mesh.id + ")";
+                            this._spsSeed.setValue(sdo.seed);
+                            this.spsStep.setValue(sdo.step);
+                            this.sprdMin.setValue(sdo.sprdMin);
+                            this.sprdMax.setValue(sdo.sprdMax);
+                            this.posMin.setValue(sdo.posMin);
+                            this.posMax.setValue(sdo.posMax);
+                            this.sclMin.setValue(sdo.sclMin);
+                            this.sclMax.setValue(sdo.sclMax);
+                            this.rotMin.setValue(sdo.rotMin);
+                            this.rotMax.setValue(sdo.rotMax);
+                            this.posRange.setValue(sdo.posRange);
+                            this.sclRange.setValue(sdo.sclRange);
+                            this.rotRange.setValue(sdo.rotRange);
+                            return true;
+                        };
+                        GrndDimUI.prototype._updateSpreadParms = function () {
+                            var smax = this.sprdMax.getValue();
+                            var smin = this.sprdMin.getValue();
+                            if (smax.x <= smin.x) {
+                                gui.DialogMgr.showAlertDiag("upper cormer x cannot be less than or equal to lower corner x");
+                                return false;
+                            }
+                            if (smax.y <= smin.y) {
+                                gui.DialogMgr.showAlertDiag("upper cormer y cannot be less than or equal to lower corner y");
+                                return false;
+                            }
+                            var sdo = this._grndSPS.getSpreadDtls();
+                            sdo.seed = this._spsSeed.getValue();
+                            sdo.step = this.spsStep.getValue();
+                            sdo.sprdMin = this.sprdMin.getValue();
+                            sdo.sprdMax = this.sprdMax.getValue();
+                            sdo.posMin = this.posMin.getValue();
+                            sdo.posMax = this.posMax.getValue();
+                            sdo.sclMin = this.sclMin.getValue();
+                            sdo.sclMax = this.sclMax.getValue();
+                            sdo.rotMin = this.rotMin.getValue();
+                            sdo.rotMax = this.rotMax.getValue();
+                            sdo.posRange = this.posRange.getValue();
+                            sdo.sclRange = this.sclRange.getValue();
+                            sdo.rotRange = this.rotRange.getValue();
+                            this._grndSPS.setSpreadDtls(sdo);
+                            this._grndSPS.generate();
+                            this._vishva.updateSPSArray(this._grndSPS);
+                            return true;
+                        };
+                        return GrndDimUI;
+                    }());
+                    gui.GrndDimUI = GrndDimUI;
+                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_5) {
+                var gui;
+                (function (gui) {
+                    /**
                      * Provides a UI to manage GroundSPS
                      */
                     var GrndSPSUI = (function () {
@@ -900,7 +1039,7 @@ var org;
                             };
                             this._spsName = document.getElementById("spsName");
                             this._spsMesh = document.getElementById("spsMesh");
-                            this.spsSeed = new gui.VInputNumber("spsSeed");
+                            this._spsSeed = new gui.VInputNumber("spsSeed");
                             this.spsStep = new gui.VInputNumber("spsStep");
                             this.sprdMin = new gui.VInputVector2("sprdMin");
                             this.sprdMax = new gui.VInputVector2("sprdMax");
@@ -939,7 +1078,7 @@ var org;
                             }
                             this._spsName.innerText = this._grndSPS.name + "(" + this._grndSPS.id + ")";
                             this._spsMesh.innerText = this._grndSPS.mesh.name + "(" + this._grndSPS.mesh.id + ")";
-                            this.spsSeed.setValue(sdo.seed);
+                            this._spsSeed.setValue(sdo.seed);
                             this.spsStep.setValue(sdo.step);
                             this.sprdMin.setValue(sdo.sprdMin);
                             this.sprdMax.setValue(sdo.sprdMax);
@@ -966,7 +1105,7 @@ var org;
                                 return false;
                             }
                             var sdo = this._grndSPS.getSpreadDtls();
-                            sdo.seed = this.spsSeed.getValue();
+                            sdo.seed = this._spsSeed.getValue();
                             sdo.step = this.spsStep.getValue();
                             sdo.sprdMin = this.sprdMin.getValue();
                             sdo.sprdMax = this.sprdMax.getValue();
@@ -987,7 +1126,7 @@ var org;
                         return GrndSPSUI;
                     }());
                     gui.GrndSPSUI = GrndSPSUI;
-                })(gui = vishva_4.gui || (vishva_4.gui = {}));
+                })(gui = vishva_5.gui || (vishva_5.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -999,7 +1138,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_5) {
+            (function (vishva_6) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1123,7 +1262,7 @@ var org;
                         return GroundUI2;
                     }());
                     gui.GroundUI2 = GroundUI2;
-                })(gui = vishva_5.gui || (vishva_5.gui = {}));
+                })(gui = vishva_6.gui || (vishva_6.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1174,7 +1313,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_6) {
+            (function (vishva_7) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1273,7 +1412,7 @@ var org;
                         return InternalAssetsUI;
                     }());
                     gui.InternalAssetsUI = InternalAssetsUI;
-                })(gui = vishva_6.gui || (vishva_6.gui = {}));
+                })(gui = vishva_7.gui || (vishva_7.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1285,7 +1424,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_7) {
+            (function (vishva_8) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1377,7 +1516,10 @@ var org;
                         }
                         ItemPropsUI.prototype.open = function () {
                             var es;
+                            //if ground selected show only ground related tabs or those common to both mesh and ground
+                            //those common to both mesh and ground will not have a "grnd" or "mesh" class
                             if (this._vishva.isGroundPicked()) {
+                                //hide all non ground related tabs
                                 es = this._propsAcc.getElementsByClassName("mesh");
                                 for (var i = 0; i < es.length; i++) {
                                     es.item(i).style.display = "none";
@@ -1389,6 +1531,7 @@ var org;
                                 //                        (<HTMLElement>es.item(i)).style.display="block";
                                 //                    //TODO : if panel is active then open div too
                                 //                }
+                                //display all ground related tabs
                                 es = this._propsAcc.getElementsByTagName("h3");
                                 console.log("in grnd - h3 found " + es.length);
                                 for (var i = 0; i < es.length; i++) {
@@ -1401,6 +1544,7 @@ var org;
                                 }
                             }
                             else {
+                                //hide all ground related tabs
                                 es = this._propsAcc.getElementsByClassName("grnd");
                                 for (var i = 0; i < es.length; i++) {
                                     es.item(i).style.display = "none";
@@ -1410,6 +1554,7 @@ var org;
                                 //                    if(es.item(i).tagName=="H3")
                                 //                        (<HTMLElement>es.item(i)).style.display="block";
                                 //                }
+                                //display all mesh related tabs
                                 es = this._propsAcc.getElementsByTagName("h3");
                                 for (var i = 0; i < es.length; i++) {
                                     if (es.item(i).className.indexOf("mesh") >= 0) {
@@ -1489,6 +1634,9 @@ var org;
                                     this._grndSPSUI = new gui.GrndSPSUI(this._vishva);
                                 //this._grndSPSUI.update();
                             }
+                            else if (panelIndex === 1 /* GrndDim */) {
+                                console.log("ground dimension selected");
+                            }
                             //refresh sNaDialog if open
                             if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
                                 this._generalUI._snaUI.close();
@@ -1498,7 +1646,7 @@ var org;
                         return ItemPropsUI;
                     }());
                     gui.ItemPropsUI = ItemPropsUI;
-                })(gui = vishva_7.gui || (vishva_7.gui = {}));
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1510,7 +1658,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_8) {
+            (function (vishva_9) {
                 var gui;
                 (function (gui) {
                     /*
@@ -1598,7 +1746,7 @@ var org;
                         return ItemsUI;
                     }());
                     gui.ItemsUI = ItemsUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+                })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1610,7 +1758,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_9) {
+            (function (vishva_10) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1657,7 +1805,7 @@ var org;
                             var lightParm = this._vishva.getAttachedLight();
                             if (lightParm === null) {
                                 this._lightAtt.checked = false;
-                                lightParm = new vishva_9.LightParm();
+                                lightParm = new vishva_10.LightParm();
                             }
                             else {
                                 this._lightAtt.checked = true;
@@ -1683,7 +1831,7 @@ var org;
                             //            }
                             if (!this._lightAtt.checked)
                                 return;
-                            var lightParm = new vishva_9.LightParm();
+                            var lightParm = new vishva_10.LightParm();
                             lightParm.type = this._lightType.value;
                             lightParm.diffuse = BABYLON.Color3.FromHexString(this._lightDiff.getColor());
                             lightParm.specular = BABYLON.Color3.FromHexString(this._lightSpec.getColor());
@@ -1701,7 +1849,7 @@ var org;
                         return LightUI;
                     }());
                     gui.LightUI = LightUI;
-                })(gui = vishva_9.gui || (vishva_9.gui = {}));
+                })(gui = vishva_10.gui || (vishva_10.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1713,7 +1861,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_10) {
+            (function (vishva_11) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1854,7 +2002,7 @@ var org;
                         return MaterialUI;
                     }());
                     gui.MaterialUI = MaterialUI;
-                })(gui = vishva_10.gui || (vishva_10.gui = {}));
+                })(gui = vishva_11.gui || (vishva_11.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1866,7 +2014,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_11) {
+            (function (vishva_12) {
                 var gui;
                 (function (gui) {
                     /**
@@ -1941,7 +2089,7 @@ var org;
                         PhysicsUI.prototype._applyPhysics = function () {
                             var phyParms;
                             if (this._phyEna.checked) {
-                                phyParms = new vishva_11.PhysicsParm();
+                                phyParms = new vishva_12.PhysicsParm();
                                 phyParms.type = parseInt(this._phyType.value);
                                 phyParms.mass = parseFloat(this._phyMass.value);
                                 phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1954,7 +2102,7 @@ var org;
                         };
                         PhysicsUI.prototype._testPhysics = function () {
                             var phyParms;
-                            phyParms = new vishva_11.PhysicsParm();
+                            phyParms = new vishva_12.PhysicsParm();
                             phyParms.type = parseInt(this._phyType.value);
                             phyParms.mass = parseFloat(this._phyMass.value);
                             phyParms.restitution = parseFloat(this._phyRes.value);
@@ -1968,7 +2116,7 @@ var org;
                         return PhysicsUI;
                     }());
                     gui.PhysicsUI = PhysicsUI;
-                })(gui = vishva_11.gui || (vishva_11.gui = {}));
+                })(gui = vishva_12.gui || (vishva_12.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -1980,7 +2128,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_12) {
+            (function (vishva_13) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2056,7 +2204,7 @@ var org;
                         return SettingsUI;
                     }());
                     gui.SettingsUI = SettingsUI;
-                })(gui = vishva_12.gui || (vishva_12.gui = {}));
+                })(gui = vishva_13.gui || (vishva_13.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2068,7 +2216,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_13) {
+            (function (vishva_14) {
                 var gui;
                 (function (gui) {
                     var Vector3 = BABYLON.Vector3;
@@ -2467,20 +2615,26 @@ var org;
                             var _this = this;
                             var fib = document.createElement("button");
                             var fibL = document.createElement("label");
-                            fibL.textContent = "No file chosen";
+                            if (fit.value == null) {
+                                fibL.textContent = "No file chosen";
+                            }
+                            else {
+                                fibL.textContent = fit.value;
+                            }
                             fib.innerText = "Choose File";
                             fib.onclick = function (e) {
                                 if (_this._sndAssetTDiag == null) {
                                     _this._sndAssetTDiag = new gui.VTreeDialog(_this._vishva, fit.title, gui.DialogMgr.centerBottom, _this._vishva.vishvaFiles, fit.filter, fit.openAll);
-                                    _this._sndAssetTDiag.addTreeListener(function (f, p, l) {
-                                        if (l) {
-                                            if (fit.filter.indexOf(f.substring(f.length - 4)) >= 0) {
-                                                fibL.textContent = p + f;
-                                                fit.value = "vishva/" + fibL.textContent;
-                                            }
-                                        }
-                                    });
                                 }
+                                _this._sndAssetTDiag.addTreeListener(function (f, p, l) {
+                                    if (l) {
+                                        if (fit.filter.indexOf(f.substring(f.length - 4)) >= 0) {
+                                            fibL.textContent = p + f;
+                                            //TODO set this value only if "save button clicked
+                                            fit.value = "vishva/" + fibL.textContent;
+                                        }
+                                    }
+                                });
                                 _this._sndAssetTDiag.toggle();
                             };
                             var div = document.createElement("div");
@@ -2492,7 +2646,7 @@ var org;
                         return SnaUI;
                     }());
                     gui.SnaUI = SnaUI;
-                })(gui = vishva_13.gui || (vishva_13.gui = {}));
+                })(gui = vishva_14.gui || (vishva_14.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2504,7 +2658,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_14) {
+            (function (vishva_15) {
                 var gui;
                 (function (gui) {
                     /**
@@ -2591,7 +2745,7 @@ var org;
                         return TextureUI;
                     }());
                     gui.TextureUI = TextureUI;
-                })(gui = vishva_14.gui || (vishva_14.gui = {}));
+                })(gui = vishva_15.gui || (vishva_15.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -2884,7 +3038,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_15) {
+            (function (vishva_16) {
                 var gui;
                 (function (gui) {
                     var VishvaGUI = (function () {
@@ -3225,7 +3379,7 @@ var org;
                         return FileInputType;
                     }());
                     gui.FileInputType = FileInputType;
-                })(gui = vishva_15.gui || (vishva_15.gui = {}));
+                })(gui = vishva_16.gui || (vishva_16.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3587,7 +3741,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_16) {
+            (function (vishva_17) {
                 var gui;
                 (function (gui) {
                     /**
@@ -3669,7 +3823,7 @@ var org;
                         return VTreeDialog;
                     }());
                     gui.VTreeDialog = VTreeDialog;
-                })(gui = vishva_16.gui || (vishva_16.gui = {}));
+                })(gui = vishva_17.gui || (vishva_17.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -3761,7 +3915,7 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
-            (function (vishva_17) {
+            (function (vishva_18) {
                 var Vector2 = BABYLON.Vector2;
                 var Vector3 = BABYLON.Vector3;
                 var Random = org.ssatguru.babylonjs.util.Random;
@@ -3877,7 +4031,7 @@ var org;
                     };
                     return GroundSPS;
                 }());
-                vishva_17.GroundSPS = GroundSPS;
+                vishva_18.GroundSPS = GroundSPS;
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
     })(ssatguru = org.ssatguru || (org.ssatguru = {}));
@@ -5322,33 +5476,31 @@ var org;
                         var img = null;
                         if (type == "diffuse" && sm.diffuseTexture != null) {
                             uid = sm.diffuseTexture.uid;
-                            img = sm.diffuseTexture.name;
-                            console.log(sm.diffuseTexture.textureType);
+                            img = sm.diffuseTexture.url;
                         }
                         else if (type == "ambient" && sm.ambientTexture != null) {
                             uid = sm.ambientTexture.uid;
-                            img = sm.ambientTexture.name;
+                            img = sm.ambientTexture.url;
                         }
                         else if (type == "opacity" && sm.opacityTexture != null) {
                             uid = sm.opacityTexture.uid;
-                            img = sm.opacityTexture.name;
+                            img = sm.opacityTexture.url;
                         }
                         else if (type == "reflection" && sm.reflectionTexture != null) {
                             uid = sm.reflectionTexture.uid;
-                            img = sm.reflectionTexture.name;
+                            img = sm.reflectionTexture.url;
                         }
                         else if (type == "emissive" && sm.emissiveTexture != null) {
                             uid = sm.emissiveTexture.uid;
-                            img = sm.emissiveTexture.name;
+                            img = sm.emissiveTexture.url;
                         }
                         else if (type == "specular" && sm.specularTexture != null) {
                             uid = sm.specularTexture.uid;
-                            img = sm.specularTexture.name;
+                            img = sm.specularTexture.url;
                         }
                         else if (type == "bump" && sm.bumpTexture != null) {
                             uid = sm.bumpTexture.uid;
-                            img = sm.bumpTexture.name;
-                            console.log(sm.bumpTexture.textureType);
+                            img = sm.bumpTexture.url;
                         }
                         else {
                             uid = null;
@@ -7268,6 +7420,7 @@ var org;
                 var Tags = BABYLON.Tags;
                 var Vector3 = BABYLON.Vector3;
                 var Vector2 = BABYLON.Vector2;
+                var FileInputType = org.ssatguru.babylonjs.vishva.gui.FileInputType;
                 var SNAManager = (function () {
                     function SNAManager() {
                         this.sensorList = [];
@@ -7523,6 +7676,9 @@ var org;
                     /**
                      * Vectors/Quaternions are stored as plain objects with x,y,z or w properties
                      * We need to convert them back to Vector/Quaternions objects
+                     *
+                     * FileINputType are stored as objects too
+                     *
                      */
                     SNAManager.prototype.unMarshalProps = function (obj) {
                         var pNames = Object.keys(obj);
@@ -7549,6 +7705,13 @@ var org;
                                             if (l == 2)
                                                 obj[pName] = new Vector2(o["x"], o["y"]);
                                         }
+                                    }
+                                }
+                                else if (ns.indexOf("type") >= 0) {
+                                    if (o["type"] === "FileInputType") {
+                                        var fit = new FileInputType(o["tile"], o["filter"], o["openAll"]);
+                                        fit.value = o["value"];
+                                        obj[pName] = fit;
                                     }
                                 }
                             }

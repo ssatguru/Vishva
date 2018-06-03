@@ -102,7 +102,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         public open() {
             let es: NodeListOf<Element>
+            
+            //if ground selected show only ground related tabs or those common to both mesh and ground
+            //those common to both mesh and ground will not have a "grnd" or "mesh" class
             if(this._vishva.isGroundPicked()) {
+                
+                //hide all non ground related tabs
                 es=this._propsAcc.getElementsByClassName("mesh");
                 for(let i=0;i<es.length;i++) {
                     (<HTMLElement>es.item(i)).style.display="none";
@@ -115,6 +120,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 //                    //TODO : if panel is active then open div too
 //                }
                 
+                //display all ground related tabs
                 es=this._propsAcc.getElementsByTagName("h3");
                 console.log("in grnd - h3 found "+es.length);
                 for(let i=0;i<es.length;i++) {
@@ -126,6 +132,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     }
                 }
             } else {
+                //hide all ground related tabs
                 es=this._propsAcc.getElementsByClassName("grnd");
                 for(let i=0;i<es.length;i++) {
                     (<HTMLElement>es.item(i)).style.display="none";
@@ -135,6 +142,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 //                    if(es.item(i).tagName=="H3")
 //                        (<HTMLElement>es.item(i)).style.display="block";
 //                }
+                
+                //display all mesh related tabs
                 es=this._propsAcc.getElementsByTagName("h3");
                 for(let i=0;i<es.length;i++) {
                     if(es.item(i).className.indexOf("mesh")>=0){
@@ -147,9 +156,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             this._propsDiag.dialog("open");
         }
+        
         public isOpen(): boolean {
             return this._propsDiag.dialog("isOpen");
         }
+        
         public close() {
             this._propsDiag.dialog("close");
         }
@@ -202,6 +213,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             } else if(panelIndex===propertyPanel.GrndSPS) {
                 if(this._grndSPSUI==null) this._grndSPSUI=new GrndSPSUI(this._vishva);
                 //this._grndSPSUI.update();
+            } else if(panelIndex===propertyPanel.GrndDim) {
+                console.log("ground dimension selected");
             }
             //refresh sNaDialog if open
             if(this._generalUI._snaUI!=null&&this._generalUI._snaUI.isOpen()) {

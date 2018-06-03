@@ -391,7 +391,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     } else if(snaP[key] instanceof Vector3) {
                         let v: VInputVector3=this.mapKey2Ele[key];
                         snaP[key]=v.getValue();
-                    }else if(snaP[key] instanceof Range) {
+                    } else if(snaP[key] instanceof Range) {
                         let ie: HTMLInputElement=this.mapKey2Ele[key];
                         let r: Range=<Range>snaP[key];
                         r.value=parseFloat(ie.value);
@@ -417,21 +417,27 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _createFileInput(fit: FileInputType): HTMLElement {
             let fib: HTMLButtonElement=document.createElement("button");
             let fibL: HTMLLabelElement=document.createElement("label");
-            fibL.textContent="No file chosen";
+            if(fit.value==null) {
+                fibL.textContent="No file chosen";
+            } else {
+                fibL.textContent=fit.value;
+            }
             fib.innerText="Choose File";
             fib.onclick=(e) => {
                 if(this._sndAssetTDiag==null) {
                     this._sndAssetTDiag=new VTreeDialog(this._vishva,fit.title,DialogMgr.centerBottom,this._vishva.vishvaFiles,fit.filter,fit.openAll);
-                    this._sndAssetTDiag.addTreeListener((f,p,l) => {
-                        if(l) {
-                            if(fit.filter.indexOf(f.substring(f.length-4))>=0) {
-                                fibL.textContent=p+f
-                                fit.value="vishva/"+fibL.textContent;
-
-                            }
-                        }
-                    })
                 }
+                this._sndAssetTDiag.addTreeListener((f,p,l) => {
+                    if(l) {
+                        if(fit.filter.indexOf(f.substring(f.length-4))>=0) {
+                            fibL.textContent=p+f
+                            //TODO set this value only if "save button clicked
+                            fit.value="vishva/"+fibL.textContent;
+
+                        }
+                    }
+                })
+
 
                 this._sndAssetTDiag.toggle();
             }
@@ -439,8 +445,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             div.appendChild(fibL);
             div.appendChild(document.createElement("br"));
             div.appendChild(fib);
-            
-            
+
+
             return div;
         }
     }

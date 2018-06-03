@@ -12,6 +12,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Tags=BABYLON.Tags;
     import Vector3=BABYLON.Vector3;
     import Vector2=BABYLON.Vector2;
+    import FileInputType=org.ssatguru.babylonjs.vishva.gui.FileInputType;
 
     export interface SNAConfig {}
 
@@ -279,6 +280,9 @@ namespace org.ssatguru.babylonjs.vishva {
         /**
          * Vectors/Quaternions are stored as plain objects with x,y,z or w properties
          * We need to convert them back to Vector/Quaternions objects
+         * 
+         * FileINputType are stored as objects too
+         * 
          */
         private unMarshalProps(obj: Object) {
             let pNames: string[]=Object.keys(obj);
@@ -299,6 +303,12 @@ namespace org.ssatguru.babylonjs.vishva {
                             }else{
                                 if (l==2) obj[pName] = new Vector2(o["x"] ,o["y"] );
                             }
+                        }
+                    }else if (ns.indexOf("type") >=0){
+                        if (o["type"]==="FileInputType"){
+                            let fit:FileInputType=new FileInputType(o["tile"],o["filter"],o["openAll"]);
+                            fit.value=o["value"];
+                            obj[pName] = fit;
                         }
                     }
                 }

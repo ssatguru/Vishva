@@ -1,9 +1,9 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     import Vector2=BABYLON.Vector2;
     /**
-     * Provides a UI to manage GroundSPS
+     * Provides a UI to manage Ground Dimensions
      */
-    export class GrndSPSUI {
+    export class GrndDimUI {
         
         private _vishva: Vishva;
         private _grndSPS: GroundSPS;

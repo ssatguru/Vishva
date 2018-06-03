@@ -1590,27 +1590,25 @@ namespace org.ssatguru.babylonjs.vishva {
             let img: string=null;
             if(type=="diffuse"&&sm.diffuseTexture!=null) {
                 uid=sm.diffuseTexture.uid;
-                img=sm.diffuseTexture.name;
-                console.log(sm.diffuseTexture.textureType);
+                img=(<Texture>sm.diffuseTexture).url;
             } else if(type=="ambient"&&sm.ambientTexture!=null) {
                 uid=sm.ambientTexture.uid;
-                img=sm.ambientTexture.name;
+                img=(<Texture>sm.ambientTexture).url;
             } else if(type=="opacity"&&sm.opacityTexture!=null) {
                 uid=sm.opacityTexture.uid;
-                img=sm.opacityTexture.name;
+                img=(<Texture>sm.opacityTexture).url;
             } else if(type=="reflection"&&sm.reflectionTexture!=null) {
                 uid=sm.reflectionTexture.uid;
-                img=sm.reflectionTexture.name;
+                img=(<Texture>sm.reflectionTexture).url;
             } else if(type=="emissive"&&sm.emissiveTexture!=null) {
                 uid=sm.emissiveTexture.uid;
-                img=sm.emissiveTexture.name;
+                img=(<Texture>sm.emissiveTexture).url;
             } else if(type=="specular"&&sm.specularTexture!=null) {
                 uid=sm.specularTexture.uid;
-                img=sm.specularTexture.name;
+                img=(<Texture>sm.specularTexture).url;
             } else if(type=="bump"&&sm.bumpTexture!=null) {
                 uid=sm.bumpTexture.uid;
-                img=sm.bumpTexture.name;
-                console.log(sm.bumpTexture.textureType);
+                img=(<Texture>sm.bumpTexture).url;
             } else {
                 uid=null;
                 img=this.NO_TEXTURE;

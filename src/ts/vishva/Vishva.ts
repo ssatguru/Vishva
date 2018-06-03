@@ -3130,6 +3130,10 @@ namespace org.ssatguru.babylonjs.vishva {
                     //                    }
                     grnd.freezeWorldMatrix();
                     this.ground=grnd;
+                    this.spawnPosition.y = grnd.getHeightAtCoordinates(0,0) + 5;
+                    if (this.avatar != null){
+                        this.avatar.position = this.spawnPosition;
+                    }
                 }
 
             },scene);

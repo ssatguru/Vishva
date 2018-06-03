@@ -6968,6 +6968,10 @@ var org;
                                 //                    }
                                 grnd.freezeWorldMatrix();
                                 _this.ground = grnd;
+                                _this.spawnPosition.y = grnd.getHeightAtCoordinates(0, 0) + 5;
+                                if (_this.avatar != null) {
+                                    _this.avatar.position = _this.spawnPosition;
+                                }
                             }
                         }, scene);
                     };

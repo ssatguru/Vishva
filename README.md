@@ -38,7 +38,7 @@ a) "npm install"
 
 b) "npm run build"   
 This will  
-compile the src and output javascript to src/js,  
+compile the src and output javascript to  src/js,  
 minify the javascript and output the minified javascript to public_html/js/Vishva-merged.min.js.  
 
 

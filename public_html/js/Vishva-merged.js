@@ -870,6 +870,7 @@ var org;
                         function GrndDimUI(vishva) {
                             this._vishva = vishva;
                             this._grndID = new gui.VInputText("grndID");
+                            this._grndHM = new gui.VFileInput("grndHM", null, "Height Map Image", gui.DialogMgr.centerBottom, this._vishva.vishvaFiles, "\.bmp$|\.png$|\.tga$\.jpg$", true);
                             this._grndW = new gui.VInputNumber("grndW");
                             this._grndL = new gui.VInputNumber("grndL");
                             this._grndS = new gui.VInputNumber("grndS");
@@ -2662,6 +2663,75 @@ var org;
                     /**
                      * provides a ui to input a vector3 value
                      */
+                    var VFileInput = (function () {
+                        function VFileInput(eID, value, title, pos, treeContent, filter, openAll) {
+                            if (value === void 0) { value = ""; }
+                            if (title === void 0) { title = ""; }
+                            if (pos === void 0) { pos = gui.DialogMgr.centerBottom; }
+                            if (filter === void 0) { filter = ""; }
+                            if (openAll === void 0) { openAll = true; }
+                            var _this = this;
+                            this.value = value;
+                            var e;
+                            if (eID instanceof HTMLElement) {
+                                e = eID;
+                            }
+                            else
+                                e = document.getElementById(eID);
+                            var fib = document.createElement("button");
+                            var fibL = document.createElement("label");
+                            if (value == null) {
+                                fibL.textContent = "No file chosen";
+                            }
+                            else {
+                                fibL.textContent = value;
+                            }
+                            fib.innerText = "Choose File";
+                            var fiTD;
+                            fib.onclick = function (e) {
+                                fiTD = new gui.VTreeDialog(null, title, pos, treeContent, filter, openAll);
+                                fiTD.addTreeListener(function (f, p, l) {
+                                    if (l) {
+                                        if (filter.indexOf(f.substring(f.length - 4)) >= 0) {
+                                            fibL.textContent = p + f;
+                                            //TODO set this value only if "save button clicked
+                                            _this.value = "vishva/" + fibL.textContent;
+                                        }
+                                    }
+                                });
+                                fiTD.toggle();
+                            };
+                            e.appendChild(fibL);
+                            e.appendChild(document.createElement("br"));
+                            e.appendChild(fib);
+                        }
+                        VFileInput.prototype.getValue = function () {
+                            return this.value;
+                        };
+                        VFileInput.prototype.setValue = function (s) {
+                            this.value = s;
+                        };
+                        return VFileInput;
+                    }());
+                    gui.VFileInput = VFileInput;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    /**
+                     * provides a ui to input a vector3 value
+                     */
                     var VInputNumber = (function () {
                         function VInputNumber(eID, value) {
                             if (value === void 0) { value = 0; }
@@ -4046,7 +4116,8 @@ var org;
                         //we can use below too but then while passing data to scene loader use empty string as root url
                         this.RELATIVE_ASSET_LOCATION = "";
                         this._cameraCollision = true;
-                        this._cameraEllipsoid = new Vector3(0.01, 0.01, 0.01);
+                        //private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
+                        this._cameraEllipsoid = new Vector3(1, 1, 1);
                         /**
                          * use this to prevent users from switching to another mesh during edit.
                          */

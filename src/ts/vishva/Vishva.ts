@@ -170,7 +170,8 @@ namespace org.ssatguru.babylonjs.vishva {
 
         mainCamera: ArcRotateCamera;
         private _cameraCollision: boolean=true;
-        private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
+        //private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
+        private _cameraEllipsoid:Vector3= new Vector3(1,1,1);
 
         vishvaGUI: VishvaGUI;
 
@@ -3328,7 +3329,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 camera.alpha=-this.avatar.rotation.y-4.69;
             }
             camera.checkCollisions=this._cameraCollision;
-            camera.collisionRadius=this._cameraEllipsoid
+            camera.collisionRadius=this._cameraEllipsoid;
+            
 
             Tags.AddTagsTo(camera,"Vishva.camera");
             return camera;

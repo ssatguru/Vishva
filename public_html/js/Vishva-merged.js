@@ -868,120 +868,18 @@ var org;
                      */
                     var GrndDimUI = (function () {
                         function GrndDimUI(vishva) {
-                            var _this = this;
-                            this._ready = false;
                             this._vishva = vishva;
-                            var genSPSParms = document.getElementById("genSPSParms");
-                            genSPSParms.onclick = function () {
-                                if (_this._updateUI()) {
-                                    _this._ready = true;
-                                }
-                                else {
-                                    _this._ready = false;
-                                }
-                                ;
-                                genSPS.disabled = !_this._ready;
-                            };
-                            var genSPS = document.getElementById("genSPS");
-                            genSPS.disabled = this._ready;
-                            genSPS.onclick = function () {
-                                if (_this._updateSpreadParms()) {
-                                    _this._ready = true;
-                                }
-                                else {
-                                    _this._ready = false;
-                                }
-                                ;
-                                genSPS.disabled = !_this._ready;
-                            };
-                            this._spsList = new gui.VInputSelect("spsList", this._vishva.getGrndSPSList());
-                            this._spsList.onSelect = function (id) {
-                                _this._updateUI(id);
-                            };
-                            this._spsName = document.getElementById("spsName");
-                            this._spsMesh = document.getElementById("spsMesh");
-                            this._spsSeed = new gui.VInputNumber("spsSeed");
-                            this.spsStep = new gui.VInputNumber("spsStep");
-                            this.sprdMin = new gui.VInputVector2("sprdMin");
-                            this.sprdMax = new gui.VInputVector2("sprdMax");
-                            this.posMin = new gui.VInputVector3("posMin");
-                            this.posMax = new gui.VInputVector3("posMax");
-                            this.sclMin = new gui.VInputVector3("sclMin");
-                            this.sclMax = new gui.VInputVector3("sclMax");
-                            this.rotMin = new gui.VInputVector3("rotMin");
-                            this.rotMax = new gui.VInputVector3("rotMax");
-                            this.posRange = new gui.VRange("posRange", 0, 1, 0.1, 0.5);
-                            this.sclRange = new gui.VRange("sclRange", 0, 1, 0.1, 0.5);
-                            this.rotRange = new gui.VRange("rotRange", 0, 180, 1, 5);
+                            this._grndID = new gui.VInputText("grndID");
+                            this._grndW = new gui.VInputNumber("grndW");
+                            this._grndL = new gui.VInputNumber("grndL");
+                            this._grndS = new gui.VInputNumber("grndS");
+                            this._grndminH = new gui.VInputNumber("grndminH");
+                            this._grndmaxH = new gui.VInputNumber("grndmaxH");
+                            var _grndCF = new gui.ColorPickerDiag("color filter", "grndCF", this._vishva.getFogColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
+                                //this._vishva.setFogColor(hex);
+                            });
                         }
                         GrndDimUI.prototype._updateUI = function (gSPSid) {
-                            var sdo;
-                            if (gSPSid) {
-                                var gs = void 0;
-                                gs = this._vishva.getGrndSPSbyID(gSPSid);
-                                if (gs == null) {
-                                    gui.DialogMgr.showAlertDiag("could not find gound sps with id : " + gSPSid);
-                                    return;
-                                }
-                                sdo = gs.getSpreadDtls();
-                                this._grndSPS = gs;
-                            }
-                            else {
-                                var gs = this._vishva.createGrndSPS();
-                                if (!(gs instanceof Object)) {
-                                    gui.DialogMgr.showAlertDiag(gs);
-                                    return false;
-                                }
-                                else {
-                                    sdo = gs.getSpreadDtls();
-                                    this._grndSPS = gs;
-                                }
-                            }
-                            this._spsName.innerText = this._grndSPS.name + "(" + this._grndSPS.id + ")";
-                            this._spsMesh.innerText = this._grndSPS.mesh.name + "(" + this._grndSPS.mesh.id + ")";
-                            this._spsSeed.setValue(sdo.seed);
-                            this.spsStep.setValue(sdo.step);
-                            this.sprdMin.setValue(sdo.sprdMin);
-                            this.sprdMax.setValue(sdo.sprdMax);
-                            this.posMin.setValue(sdo.posMin);
-                            this.posMax.setValue(sdo.posMax);
-                            this.sclMin.setValue(sdo.sclMin);
-                            this.sclMax.setValue(sdo.sclMax);
-                            this.rotMin.setValue(sdo.rotMin);
-                            this.rotMax.setValue(sdo.rotMax);
-                            this.posRange.setValue(sdo.posRange);
-                            this.sclRange.setValue(sdo.sclRange);
-                            this.rotRange.setValue(sdo.rotRange);
-                            return true;
-                        };
-                        GrndDimUI.prototype._updateSpreadParms = function () {
-                            var smax = this.sprdMax.getValue();
-                            var smin = this.sprdMin.getValue();
-                            if (smax.x <= smin.x) {
-                                gui.DialogMgr.showAlertDiag("upper cormer x cannot be less than or equal to lower corner x");
-                                return false;
-                            }
-                            if (smax.y <= smin.y) {
-                                gui.DialogMgr.showAlertDiag("upper cormer y cannot be less than or equal to lower corner y");
-                                return false;
-                            }
-                            var sdo = this._grndSPS.getSpreadDtls();
-                            sdo.seed = this._spsSeed.getValue();
-                            sdo.step = this.spsStep.getValue();
-                            sdo.sprdMin = this.sprdMin.getValue();
-                            sdo.sprdMax = this.sprdMax.getValue();
-                            sdo.posMin = this.posMin.getValue();
-                            sdo.posMax = this.posMax.getValue();
-                            sdo.sclMin = this.sclMin.getValue();
-                            sdo.sclMax = this.sclMax.getValue();
-                            sdo.rotMin = this.rotMin.getValue();
-                            sdo.rotMax = this.rotMax.getValue();
-                            sdo.posRange = this.posRange.getValue();
-                            sdo.sclRange = this.sclRange.getValue();
-                            sdo.rotRange = this.rotRange.getValue();
-                            this._grndSPS.setSpreadDtls(sdo);
-                            this._grndSPS.generate();
-                            this._vishva.updateSPSArray(this._grndSPS);
                             return true;
                         };
                         return GrndDimUI;
@@ -1635,7 +1533,8 @@ var org;
                                 //this._grndSPSUI.update();
                             }
                             else if (panelIndex === 1 /* GrndDim */) {
-                                console.log("ground dimension selected");
+                                if (this._grndDimUI == null)
+                                    this._grndDimUI = new gui.GrndDimUI(this._vishva);
                             }
                             //refresh sNaDialog if open
                             if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {

@@ -21,6 +21,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _physicsUI: PhysicsUI;
         private _materialUI: MaterialUI;
         private _grndSPSUI:GrndSPSUI;
+        private _grndDimUI:GrndDimUI;
+
 
         
         constructor(vishva: Vishva,vishvaGUI: VishvaGUI) {
@@ -214,7 +216,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 if(this._grndSPSUI==null) this._grndSPSUI=new GrndSPSUI(this._vishva);
                 //this._grndSPSUI.update();
             } else if(panelIndex===propertyPanel.GrndDim) {
-                console.log("ground dimension selected");
+                if(this._grndDimUI==null) this._grndDimUI=new GrndDimUI(this._vishva);
             }
             //refresh sNaDialog if open
             if(this._generalUI._snaUI!=null&&this._generalUI._snaUI.isOpen()) {

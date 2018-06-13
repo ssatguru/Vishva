@@ -217,6 +217,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 //this._grndSPSUI.update();
             } else if(panelIndex===propertyPanel.GrndDim) {
                 if(this._grndDimUI==null) this._grndDimUI=new GrndDimUI(this._vishva);
+                this._grndDimUI.update();
             }
             //refresh sNaDialog if open
             if(this._generalUI._snaUI!=null&&this._generalUI._snaUI.isOpen()) {

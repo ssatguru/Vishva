@@ -863,25 +863,39 @@ var org;
             (function (vishva_4) {
                 var gui;
                 (function (gui) {
+                    var Vector2 = BABYLON.Vector2;
                     /**
                      * Provides a UI to manage Ground Dimensions
                      */
                     var GrndDimUI = (function () {
                         function GrndDimUI(vishva) {
+                            var _this = this;
                             this._vishva = vishva;
-                            this._grndID = new gui.VInputText("grndID");
+                            var grnd = vishva.ground;
+                            this._grndID = new gui.VInputText("grndID", grnd.name);
                             this._grndHM = new gui.VFileInput("grndHM", null, "Height Map Image", gui.DialogMgr.centerBottom, this._vishva.vishvaFiles, "\.bmp$|\.png$|\.tga$\.jpg$", true);
-                            this._grndW = new gui.VInputNumber("grndW");
-                            this._grndL = new gui.VInputNumber("grndL");
-                            this._grndS = new gui.VInputNumber("grndS");
+                            this._grndW = new gui.VInputNumber("grndW", grnd._width);
+                            this._grndL = new gui.VInputNumber("grndL", grnd._height);
+                            this._grndS = new gui.VInputNumber("grndS", grnd.subdivisions);
                             this._grndminH = new gui.VInputNumber("grndminH");
                             this._grndmaxH = new gui.VInputNumber("grndmaxH");
-                            var _grndCF = new gui.ColorPickerDiag("color filter", "grndCF", this._vishva.getFogColor(), gui.DialogMgr.centerBottom, function (hex, hsv, rgb) {
-                                //this._vishva.setFogColor(hex);
-                            });
+                            this._grndUVOffset = new gui.VInputVector2("grndUVOffset", new Vector2(0, 0));
+                            this._grndUVScale = new gui.VInputVector2("grndUVScale", new Vector2(1, 1));
+                            this._grndUpdate = document.getElementById("grndUpdate");
+                            this._grndUpdate.onclick = function () { _this.updateGround(); };
                         }
-                        GrndDimUI.prototype._updateUI = function (gSPSid) {
+                        GrndDimUI.prototype.update = function () {
+                            var grnd = this._vishva.ground;
+                            this._grndID.setValue(grnd.name);
                             return true;
+                        };
+                        GrndDimUI.prototype.updateGround = function () {
+                            console.log("updateGround");
+                            var grnd = this._vishva.ground;
+                            grnd.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind, true);
+                            grnd.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind, true);
+                            console.log(this._grndHM.getValue());
+                            grnd.applyDisplacementMap(this._grndHM.getValue(), this._grndminH.getValue(), this._grndmaxH.getValue(), function () { console.log("ground updated"); }, this._grndUVOffset.getValue(), this._grndUVScale.getValue());
                         };
                         return GrndDimUI;
                     }());
@@ -1536,6 +1550,7 @@ var org;
                             else if (panelIndex === 1 /* GrndDim */) {
                                 if (this._grndDimUI == null)
                                     this._grndDimUI = new gui.GrndDimUI(this._vishva);
+                                this._grndDimUI.update();
                             }
                             //refresh sNaDialog if open
                             if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
@@ -4080,7 +4095,7 @@ var org;
                         this._avEllipsoidOffset = new Vector3(0, 1, 0);
                         this.NO_TEXTURE = "vishva/internal/textures/no-texture.jpg";
                         this.TGA_IMAGE = "vishva/internal/textures/tga-image.jpg";
-                        this.groundTexture = "vishva/internal/textures/ground.jpg";
+                        this.groundTexture = "vishva/internal/textures/ground.png";
                         this.groundBumpTexture = "vishva/internal/textures/ground-normal.jpg";
                         this.groundHeightMap = "vishva/internal/textures/ground_heightMap.png";
                         this.terrainTexture = "vishva/internal/textures/earth.jpg";

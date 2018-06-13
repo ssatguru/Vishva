@@ -40,7 +40,7 @@
         <!-- BABYLONJS LOADER -->
         <script src="lib/3.2/babylon.glTFFileLoader.min.js"></script>
         <!--<script src="lib/babylon.glTFFileLoader3.1-preview.min.js"></script>-->
-        
+
         <script src="lib/3.2/babylon.objFileLoader.min.js"></script>
         <!--<script src="lib/babylon.objFileLoader3.0-stable.min.js"></script>-->
 
@@ -500,10 +500,6 @@
                                 <td id="grndID"/>
                             </tr>
                             <tr>
-                                <td>height map</td>
-                                <td id="grndHM"/>
-                            </tr>
-                            <tr>
                                 <td>width</td>
                                 <td id="grndW"/>
                             </tr>
@@ -515,6 +511,19 @@
                                 <td>subdivisions</td>
                                 <td id="grndS"/>
                             </tr>
+                        </table>
+                        <br>
+                        <table>
+                            <tr>
+                                <td colspan="2">
+                                    Contour
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>height map</td>
+                                <td id="grndHM"/>
+                            </tr>
+
                             <tr>
                                 <td>min height</td>
                                 <td id="grndminH"/>
@@ -524,11 +533,21 @@
                                 <td id="grndmaxH"/>
                             </tr>
                             <tr>
-                                <td>color filter</td>
-                                <td id="grndCF"/>
+                                <td>uv offset</td>
+                                <td id="grndUVOffset"/>
+                            </tr>
+                            <tr>
+                                <td>uv scale</td>
+                                <td id="grndUVScale"/>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <button id="grndUpdate">update contour</button>
+                                </td>
                             </tr>
                         </table>
-                        <button id="genGrnd">update ground</button>
+
+
                     </div>
 
                     <h3 class="mesh">Physics</h3>

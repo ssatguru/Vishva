@@ -112,7 +112,7 @@ namespace org.ssatguru.babylonjs.vishva {
         NO_TEXTURE: string="vishva/internal/textures/no-texture.jpg"
         TGA_IMAGE: string="vishva/internal/textures/tga-image.jpg"
 
-        groundTexture: string="vishva/internal/textures/ground.png";
+        groundTexture: string="vishva/internal/textures/ground.jpg";
         groundBumpTexture: string="vishva/internal/textures/ground-normal.jpg";
         groundHeightMap: string="vishva/internal/textures/ground_heightMap.png";
 
@@ -3116,6 +3116,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 //                minHeight: 0,
                 //                maxHeight: 1000,
                 subdivisions: 32,
+                updatable: false,
                 onReady: (grnd: GroundMesh) => {
                     console.log("ground created");
                     grnd.material=groundMaterial;

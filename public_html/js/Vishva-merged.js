@@ -929,6 +929,7 @@ var org;
                                 //                maxHeight: 1000,
                                 subdivisions: this._grndS.getValue(),
                                 colorFilter: color,
+                                updatable: false,
                                 onReady: function (grnd) {
                                     console.log("ground created");
                                     grnd.material = _grnd_old.material;
@@ -4149,7 +4150,7 @@ var org;
                         this._avEllipsoidOffset = new Vector3(0, 1, 0);
                         this.NO_TEXTURE = "vishva/internal/textures/no-texture.jpg";
                         this.TGA_IMAGE = "vishva/internal/textures/tga-image.jpg";
-                        this.groundTexture = "vishva/internal/textures/ground.png";
+                        this.groundTexture = "vishva/internal/textures/ground.jpg";
                         this.groundBumpTexture = "vishva/internal/textures/ground-normal.jpg";
                         this.groundHeightMap = "vishva/internal/textures/ground_heightMap.png";
                         this.terrainTexture = "vishva/internal/textures/earth.jpg";
@@ -6994,6 +6995,7 @@ var org;
                             //                minHeight: 0,
                             //                maxHeight: 1000,
                             subdivisions: 32,
+                            updatable: false,
                             onReady: function (grnd) {
                                 console.log("ground created");
                                 grnd.material = groundMaterial;

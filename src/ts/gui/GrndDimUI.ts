@@ -84,6 +84,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 //                maxHeight: 1000,
                 subdivisions: this._grndS.getValue(),
                 colorFilter: color,
+                updatable:false,
                 onReady: (grnd: GroundMesh) => {
                     console.log("ground created");
                     grnd.material=_grnd_old.material;

@@ -864,6 +864,10 @@ var org;
                 var gui;
                 (function (gui) {
                     var Vector2 = BABYLON.Vector2;
+                    var Vector3 = BABYLON.Vector3;
+                    var Color3 = BABYLON.Color3;
+                    var MeshBuilder = BABYLON.MeshBuilder;
+                    var Tags = BABYLON.Tags;
                     /**
                      * Provides a UI to manage Ground Dimensions
                      */
@@ -881,6 +885,7 @@ var org;
                             this._grndmaxH = new gui.VInputNumber("grndmaxH");
                             this._grndUVOffset = new gui.VInputVector2("grndUVOffset", new Vector2(0, 0));
                             this._grndUVScale = new gui.VInputVector2("grndUVScale", new Vector2(1, 1));
+                            this._grndFC = new gui.VInputVector3("grndFC", new Vector3(0.3, 0.59, 0.11));
                             this._grndUpdate = document.getElementById("grndUpdate");
                             this._grndUpdate.onclick = function () { _this.updateGround(); };
                         }
@@ -890,12 +895,61 @@ var org;
                             return true;
                         };
                         GrndDimUI.prototype.updateGround = function () {
+                            var _this = this;
                             console.log("updateGround");
-                            var grnd = this._vishva.ground;
-                            grnd.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind, true);
-                            grnd.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind, true);
-                            console.log(this._grndHM.getValue());
-                            grnd.applyDisplacementMap(this._grndHM.getValue(), this._grndminH.getValue(), this._grndmaxH.getValue(), function () { console.log("ground updated"); }, this._grndUVOffset.getValue(), this._grndUVScale.getValue());
+                            var _grnd_old = this._vishva.ground;
+                            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind,true);
+                            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind,true);
+                            //            console.log(this._grndHM.getValue());
+                            //            _grnd_old.applyDisplacementMap(
+                            //                this._grndHM.getValue(),
+                            //                this._grndminH.getValue(),
+                            //                this._grndmaxH.getValue(),
+                            //                () => {console.log("ground updated");},
+                            //                this._grndUVOffset.getValue(),
+                            //                this._grndUVScale.getValue()
+                            //            );
+                            //
+                            //            _grnd_old.freezeWorldMatrix();
+                            //            _grnd_old.checkCollisions=true;
+                            //            let x=this._vishva.avatar.position.x;
+                            //            let z=this._vishva.avatar.position.z;
+                            //
+                            //            this._vishva.avatar.position.y=_grnd_old.getHeightAtCoordinates(x,z)+5;
+                            var v = this._grndFC.getValue();
+                            var color = new Color3(v.x, v.y, v.z);
+                            MeshBuilder.CreateGroundFromHeightMap("ground", this._grndHM.getValue(), {
+                                width: this._grndW.getValue(),
+                                height: this._grndL.getValue(),
+                                //                width: 10240,
+                                //                height: 10240,
+                                minHeight: this._grndminH.getValue(),
+                                maxHeight: this._grndmaxH.getValue(),
+                                //                minHeight: 0,
+                                //                maxHeight: 1000,
+                                subdivisions: this._grndS.getValue(),
+                                colorFilter: color,
+                                onReady: function (grnd) {
+                                    console.log("ground created");
+                                    grnd.material = _grnd_old.material;
+                                    grnd.checkCollisions = true;
+                                    grnd.isPickable = false;
+                                    Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+                                    grnd.receiveShadows = true;
+                                    //HeightmapImpostor doesnot seem to work.
+                                    //                    if(this.enablePhysics) {
+                                    //                        grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.HeightmapImpostor,{mass: 0,restitution: 0.1},this.scene);
+                                    //                    }
+                                    grnd.freezeWorldMatrix();
+                                    _this._vishva.ground = grnd;
+                                    _this._vishva.switchEditControl(grnd);
+                                    _grnd_old.dispose();
+                                    var x = _this._vishva.avatar.position.x;
+                                    var z = _this._vishva.avatar.position.z;
+                                    _this._vishva.avatar.position.y = grnd.getHeightAtCoordinates(x, z) + 1;
+                                    _this._vishva.spawnPosition.y = grnd.getHeightAtCoordinates(_this._vishva.spawnPosition.x, _this._vishva.spawnPosition.z) + 1;
+                                }
+                            }, this._vishva.scene);
                         };
                         return GrndDimUI;
                     }());

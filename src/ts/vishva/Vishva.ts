@@ -692,7 +692,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * 
          * @param mesh
          */
-        private switchEditControl(mesh: AbstractMesh) {
+        public switchEditControl(mesh: AbstractMesh) {
             if(this.switchDisabled) return;
             SNAManager.getSNAManager().enableSnAs(this.meshPicked);
             this.restorePhyParms();

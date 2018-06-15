@@ -5,6 +5,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     import GroundMesh=BABYLON.GroundMesh;
     import MeshBuilder=BABYLON.MeshBuilder;
     import Tags=BABYLON.Tags;
+    import AbstractMesh=BABYLON.AbstractMesh;
     /**
      * Provides a UI to manage Ground Dimensions
      */
@@ -20,7 +21,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _grndmaxH: VInputNumber;
         private _grndUVOffset: VInputVector2;
         private _grndUVScale: VInputVector2;
-        private _grndFC:VInputVector3;
+        private _grndFC: VInputVector3;
         private _grndUpdate: HTMLButtonElement;
 
         constructor(vishva: Vishva) {
@@ -37,7 +38,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._grndmaxH=new VInputNumber("grndmaxH");
             this._grndUVOffset=new VInputVector2("grndUVOffset",new Vector2(0,0));
             this._grndUVScale=new VInputVector2("grndUVScale",new Vector2(1,1));
-            this._grndFC=new VInputVector3("grndFC",new Vector3(0.3, 0.59, 0.11));
+            this._grndFC=new VInputVector3("grndFC",new Vector3(0.3,0.59,0.11));
             this._grndUpdate=<HTMLButtonElement>document.getElementById("grndUpdate");
             this._grndUpdate.onclick=() => {this.updateGround();};
         }
@@ -52,27 +53,27 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private updateGround() {
             console.log("updateGround");
             let _grnd_old: GroundMesh=<GroundMesh>this._vishva.ground;
-            
-//            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind,true);
-//            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind,true);
-//            console.log(this._grndHM.getValue());
-//            _grnd_old.applyDisplacementMap(
-//                this._grndHM.getValue(),
-//                this._grndminH.getValue(),
-//                this._grndmaxH.getValue(),
-//                () => {console.log("ground updated");},
-//                this._grndUVOffset.getValue(),
-//                this._grndUVScale.getValue()
-//            );
-//
-//            _grnd_old.freezeWorldMatrix();
-//            _grnd_old.checkCollisions=true;
-//            let x=this._vishva.avatar.position.x;
-//            let z=this._vishva.avatar.position.z;
-//
-//            this._vishva.avatar.position.y=_grnd_old.getHeightAtCoordinates(x,z)+5;
-            let v:Vector3=this._grndFC.getValue();
-            let color:Color3= new Color3(v.x,v.y,v.z);
+
+            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind,true);
+            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind,true);
+            //            console.log(this._grndHM.getValue());
+            //            _grnd_old.applyDisplacementMap(
+            //                this._grndHM.getValue(),
+            //                this._grndminH.getValue(),
+            //                this._grndmaxH.getValue(),
+            //                () => {console.log("ground updated");},
+            //                this._grndUVOffset.getValue(),
+            //                this._grndUVScale.getValue()
+            //            );
+            //
+            //            _grnd_old.freezeWorldMatrix();
+            //            _grnd_old.checkCollisions=true;
+            //            let x=this._vishva.avatar.position.x;
+            //            let z=this._vishva.avatar.position.z;
+            //
+            //            this._vishva.avatar.position.y=_grnd_old.getHeightAtCoordinates(x,z)+5;
+            let v: Vector3=this._grndFC.getValue();
+            let color: Color3=new Color3(v.x,v.y,v.z);
             MeshBuilder.CreateGroundFromHeightMap("ground",this._grndHM.getValue(),{
                 width: this._grndW.getValue(),
                 height: this._grndL.getValue(),
@@ -84,9 +85,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 //                maxHeight: 1000,
                 subdivisions: this._grndS.getValue(),
                 colorFilter: color,
-                updatable:false,
+                updatable: false,
                 onReady: (grnd: GroundMesh) => {
-                    console.log("ground created");
                     grnd.material=_grnd_old.material;
                     grnd.checkCollisions=true;
                     grnd.isPickable=false;
@@ -101,18 +101,40 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     grnd.freezeWorldMatrix();
                     this._vishva.ground=grnd;
                     this._vishva.switchEditControl(grnd);
+                    this._adjustHts(grnd,_grnd_old);
                     _grnd_old.dispose();
-                    
-                    
-                    let x=this._vishva.avatar.position.x;
-                    let z=this._vishva.avatar.position.z;
-                    this._vishva.avatar.position.y=grnd.getHeightAtCoordinates(x,z)+1;
-                    this._vishva.spawnPosition.y=grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x,this._vishva.spawnPosition.z)+1;
+
+
+//                    let x=this._vishva.avatar.position.x;
+//                    let z=this._vishva.avatar.position.z;
+//                    this._vishva.avatar.position.y=grnd.getHeightAtCoordinates(x,z)+1;
+//                    this._vishva.spawnPosition.y=grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x,this._vishva.spawnPosition.z)+1;
                 }
 
             },this._vishva.scene);
         }
 
+        private _adjustHts(grnd: GroundMesh,grnd_old: GroundMesh) {
+            //all meshes
+            let meshes: AbstractMesh[]=this._vishva.scene.meshes;
+            for(let mesh of meshes) {
+                if(mesh.parent!=null) continue;
+                let x=mesh.position.x;
+                let y=mesh.position.y;
+                let z=mesh.position.z;
+                let dy=y-grnd_old.getHeightAtCoordinates(x,z);
+                mesh.position.y=grnd.getHeightAtCoordinates(x,z)+dy;
+            }
+            
+            let cam=this._vishva.mainCamera;
+            let x=cam.position.x;
+            let y=cam.position.y;
+            let z=cam.position.z;
+            let dy=y-grnd_old.getHeightAtCoordinates(x,z);
+            cam.position.y=grnd.getHeightAtCoordinates(x,z)+dy;
+            
+            this._vishva.spawnPosition.y=grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x,this._vishva.spawnPosition.z)+1;
 
+        }
     }
 }

@@ -931,7 +931,6 @@ var org;
                                 colorFilter: color,
                                 updatable: false,
                                 onReady: function (grnd) {
-                                    console.log("ground created");
                                     grnd.material = _grnd_old.material;
                                     grnd.checkCollisions = true;
                                     grnd.isPickable = false;
@@ -944,13 +943,35 @@ var org;
                                     grnd.freezeWorldMatrix();
                                     _this._vishva.ground = grnd;
                                     _this._vishva.switchEditControl(grnd);
+                                    _this._adjustHts(grnd, _grnd_old);
                                     _grnd_old.dispose();
-                                    var x = _this._vishva.avatar.position.x;
-                                    var z = _this._vishva.avatar.position.z;
-                                    _this._vishva.avatar.position.y = grnd.getHeightAtCoordinates(x, z) + 1;
-                                    _this._vishva.spawnPosition.y = grnd.getHeightAtCoordinates(_this._vishva.spawnPosition.x, _this._vishva.spawnPosition.z) + 1;
+                                    //                    let x=this._vishva.avatar.position.x;
+                                    //                    let z=this._vishva.avatar.position.z;
+                                    //                    this._vishva.avatar.position.y=grnd.getHeightAtCoordinates(x,z)+1;
+                                    //                    this._vishva.spawnPosition.y=grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x,this._vishva.spawnPosition.z)+1;
                                 }
                             }, this._vishva.scene);
+                        };
+                        GrndDimUI.prototype._adjustHts = function (grnd, grnd_old) {
+                            //all meshes
+                            var meshes = this._vishva.scene.meshes;
+                            for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
+                                var mesh = meshes_1[_i];
+                                if (mesh.parent != null)
+                                    continue;
+                                var x_1 = mesh.position.x;
+                                var y_1 = mesh.position.y;
+                                var z_1 = mesh.position.z;
+                                var dy_1 = y_1 - grnd_old.getHeightAtCoordinates(x_1, z_1);
+                                mesh.position.y = grnd.getHeightAtCoordinates(x_1, z_1) + dy_1;
+                            }
+                            var cam = this._vishva.mainCamera;
+                            var x = cam.position.x;
+                            var y = cam.position.y;
+                            var z = cam.position.z;
+                            var dy = y - grnd_old.getHeightAtCoordinates(x, z);
+                            cam.position.y = grnd.getHeightAtCoordinates(x, z) + dy;
+                            this._vishva.spawnPosition.y = grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x, this._vishva.spawnPosition.z) + 1;
                         };
                         return GrndDimUI;
                     }());
@@ -1701,8 +1722,8 @@ var org;
                         };
                         ItemsUI.prototype._updateMeshChildMap = function (meshes) {
                             this.meshChildMap = {};
-                            for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
-                                var mesh = meshes_1[_i];
+                            for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
+                                var mesh = meshes_2[_i];
                                 if (mesh.parent != null) {
                                     var childs = this.meshChildMap[mesh.parent.uniqueId];
                                     if (childs == null) {
@@ -6547,8 +6568,8 @@ var org;
                     };
                     Vishva.prototype.removeInstancesFromShadow = function () {
                         var meshes = this.scene.meshes;
-                        for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
-                            var mesh = meshes_2[_i];
+                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
+                            var mesh = meshes_3[_i];
                             if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
                                 var shadowMeshes = this.shadowGenerator.getShadowMap().renderList;
                                 var i = shadowMeshes.indexOf(mesh);
@@ -6661,8 +6682,8 @@ var org;
                         var meshes = this.scene.meshes;
                         var mats = new Array();
                         var mms = new Array();
-                        for (var _i = 0, meshes_3 = meshes; _i < meshes_3.length; _i++) {
-                            var mesh = meshes_3[_i];
+                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
+                            var mesh = meshes_4[_i];
                             if (mesh.material != null) {
                                 if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
                                     var mm = mesh.material;
@@ -6700,8 +6721,8 @@ var org;
                     Vishva.prototype.cleanupSkels = function () {
                         var meshes = this.scene.meshes;
                         var skels = new Array();
-                        for (var _i = 0, meshes_4 = meshes; _i < meshes_4.length; _i++) {
-                            var mesh = meshes_4[_i];
+                        for (var _i = 0, meshes_5 = meshes; _i < meshes_5.length; _i++) {
+                            var mesh = meshes_5[_i];
                             if (mesh.skeleton != null) {
                                 skels.push(mesh.skeleton);
                             }
@@ -6740,8 +6761,8 @@ var org;
                             var skeleton = skeletons_1[_i];
                             this.scene.stopAnimation(skeleton);
                         }
-                        for (var _a = 0, meshes_5 = meshes; _a < meshes_5.length; _a++) {
-                            var mesh = meshes_5[_a];
+                        for (var _a = 0, meshes_6 = meshes; _a < meshes_6.length; _a++) {
+                            var mesh = meshes_6[_a];
                             mesh.isPickable = true;
                             //mesh.checkCollisions=true;
                             //gltb file
@@ -6833,8 +6854,8 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var _i = 0, meshes_6 = meshes; _i < meshes_6.length; _i++) {
-                            var mesh = meshes_6[_i];
+                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
+                            var mesh = meshes_7[_i];
                             if (mesh.parent != null)
                                 console.log("parent " + mesh.parent.name);
                             var bi = mesh.getBoundingInfo();
@@ -7649,8 +7670,8 @@ var org;
                         var sna;
                         var meshes = scene.meshes;
                         var meshId;
-                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
-                            var mesh = meshes_7[_i];
+                        for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
+                            var mesh = meshes_8[_i];
                             meshId = null;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {

@@ -918,15 +918,11 @@ var org;
                             //            this._vishva.avatar.position.y=_grnd_old.getHeightAtCoordinates(x,z)+5;
                             var v = this._grndFC.getValue();
                             var color = new Color3(v.x, v.y, v.z);
-                            MeshBuilder.CreateGroundFromHeightMap("ground", this._grndHM.getValue(), {
+                            MeshBuilder.CreateGroundFromHeightMap(this._grndID.getValue(), this._grndHM.getValue(), {
                                 width: this._grndW.getValue(),
                                 height: this._grndL.getValue(),
-                                //                width: 10240,
-                                //                height: 10240,
                                 minHeight: this._grndminH.getValue(),
                                 maxHeight: this._grndmaxH.getValue(),
-                                //                minHeight: 0,
-                                //                maxHeight: 1000,
                                 subdivisions: this._grndS.getValue(),
                                 colorFilter: color,
                                 updatable: false,
@@ -936,19 +932,11 @@ var org;
                                     grnd.isPickable = false;
                                     Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
                                     grnd.receiveShadows = true;
-                                    //HeightmapImpostor doesnot seem to work.
-                                    //                    if(this.enablePhysics) {
-                                    //                        grnd.physicsImpostor=new BABYLON.PhysicsImpostor(grnd,BABYLON.PhysicsImpostor.HeightmapImpostor,{mass: 0,restitution: 0.1},this.scene);
-                                    //                    }
                                     grnd.freezeWorldMatrix();
                                     _this._vishva.ground = grnd;
                                     _this._vishva.switchEditControl(grnd);
                                     _this._adjustHts(grnd, _grnd_old);
                                     _grnd_old.dispose();
-                                    //                    let x=this._vishva.avatar.position.x;
-                                    //                    let z=this._vishva.avatar.position.z;
-                                    //                    this._vishva.avatar.position.y=grnd.getHeightAtCoordinates(x,z)+1;
-                                    //                    this._vishva.spawnPosition.y=grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x,this._vishva.spawnPosition.z)+1;
                                 }
                             }, this._vishva.scene);
                         };
@@ -957,6 +945,10 @@ var org;
                             var meshes = this._vishva.scene.meshes;
                             for (var _i = 0, meshes_1 = meshes; _i < meshes_1.length; _i++) {
                                 var mesh = meshes_1[_i];
+                                if (mesh == grnd)
+                                    continue;
+                                if (mesh == grnd_old)
+                                    continue;
                                 if (mesh.parent != null)
                                     continue;
                                 var x_1 = mesh.position.x;
@@ -971,7 +963,6 @@ var org;
                             var z = cam.position.z;
                             var dy = y - grnd_old.getHeightAtCoordinates(x, z);
                             cam.position.y = grnd.getHeightAtCoordinates(x, z) + dy;
-                            this._vishva.spawnPosition.y = grnd.getHeightAtCoordinates(this._vishva.spawnPosition.x, this._vishva.spawnPosition.z) + 1;
                         };
                         return GrndDimUI;
                     }());

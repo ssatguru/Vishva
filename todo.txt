@@ -13,5 +13,25 @@ bugs
   make a mesh, create instance of it, create new mesh makes this parent of the other two save and load
   instance mesh is no longer child of the last mesh
 
+
+
+
 enhancements
+
+av customization
+    allow 
+        anim mapping
+        anim blending
+
+animation        
+    delete animation
+    
+material bug
+    when new item selected material is not effective - clone and use works
+
+material enhancement
+    allow to change material
+
+instancing
+    instance all children too
 

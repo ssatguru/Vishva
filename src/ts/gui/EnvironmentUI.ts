@@ -51,6 +51,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._addInternalAssetUI.toggleAssetDiag("skyboxes");
                 return true;
             };
+            
+            let envSea: HTMLButtonElement=<HTMLButtonElement>document.getElementById("envSea");
+            envSea.onclick=(e) => {
+                if (this._vishva.waterMesh == null || this._vishva.waterMesh.isDisposed()){
+                    this._vishva.createWater();
+                }
+            };
 
             var trnButton: HTMLButtonElement=<HTMLButtonElement>document.getElementById("trnButton");
             trnButton.onclick=(e) => {

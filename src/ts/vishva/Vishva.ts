@@ -102,12 +102,12 @@ namespace org.ssatguru.babylonjs.vishva {
         spawnPosition: Vector3=new Vector3(0,0.2,0);
         //spawnPosition: Vector3=new Vector3(0,12,0);
 
-        
+
         //avatar stuff
         avatarSkeleton: Skeleton;
         _animBlend=0.1;
-        private _avEllipsoid:Vector3=new Vector3(0.1,1,0.1);
-        private _avEllipsoidOffset:Vector3=new Vector3(0,1,0);
+        private _avEllipsoid: Vector3=new BABYLON.Vector3(0.5,1,0.5);
+        private _avEllipsoidOffset: Vector3=new Vector3(0,1,0);
 
         NO_TEXTURE: string="vishva/internal/textures/no-texture.jpg"
         TGA_IMAGE: string="vishva/internal/textures/tga-image.jpg"
@@ -164,14 +164,16 @@ namespace org.ssatguru.babylonjs.vishva {
 
         skybox: Mesh;
 
+        waterMesh: Mesh;
+
         ground: Mesh;
 
-        
+
 
         mainCamera: ArcRotateCamera;
         private _cameraCollision: boolean=true;
         //private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
-        private _cameraEllipsoid:Vector3= new Vector3(1,1,1);
+        private _cameraEllipsoid: Vector3=new Vector3(1,1,1);
 
         vishvaGUI: VishvaGUI;
 
@@ -196,17 +198,20 @@ namespace org.ssatguru.babylonjs.vishva {
 
         showBoundingBox: boolean=false;
 
-        
+
         //automatcally open edit menu whenever a mesh is selected
         private autoEditMenu: boolean=true;
 
         private enablePhysics: boolean=true;
 
-        public static vishva:Vishva;
-        
+        public static vishva: Vishva;
+
 
         public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,vishvaFiles: Array<any>,canvasId: string) {
-            Vishva.vishva = this;
+
+
+
+            Vishva.vishva=this;
             this.editEnabled=false;
             this.frames=0;
             this.f=0;
@@ -233,7 +238,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //lets make night black
             this.scene.clearColor=new Color4(0,0,0,1);
             //set ambient to white in case user wants to bypass light conditions for some objects
-            this.scene.ambientColor=new Color3(1,1,1);
+            this.scene.ambientColor=new Color3(0,0,0);
             this.scene.fogColor=new BABYLON.Color3(0.9,0.9,0.85);
 
             window.addEventListener("resize",(event) => {return this.onWindowResize(event)});
@@ -418,7 +423,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.mainCamera.checkCollisions=this._cameraCollision;
             //this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
             this.mainCamera.collisionRadius=this._cameraEllipsoid;
-            
+
             if(!groundFound) {
                 console.log("no vishva ground found. creating ground");
                 //                this.ground=this.createGround(this.scene);
@@ -1331,6 +1336,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 meshes.splice(i,1);
             }
             mesh.dispose();
+            mesh==null;
         }
 
         public mergeMeshes_old() {
@@ -1415,10 +1421,10 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 let name: string=(<number>new Number(Date.now())).toString();
                 let newMesh: Mesh=csg3.toMesh(name,this.meshesPicked[0].material,this.scene,false);
-                if (this.meshesPicked[0].parent!=null){
+                if(this.meshesPicked[0].parent!=null) {
                     newMesh.parent=this.meshesPicked[0].parent;
                 }
-                
+
                 this.multiUnSelectAll();
                 this.switchEditControl(newMesh);
                 this.animateMesh(newMesh);
@@ -1582,6 +1588,10 @@ namespace org.ssatguru.babylonjs.vishva {
             return text.uid;
 
         }
+        
+        /**
+         * returns an array containing 2 elements - texture id and texture name
+         */
 
         public getMatTexture(matId: string,type: string): Array<string> {
 
@@ -1641,6 +1651,26 @@ namespace org.ssatguru.babylonjs.vishva {
                     sm.bumpTexture=bt;
                 }
             }
+        }
+        public removeMatTexture(matId: string,type: string) {
+            let sm: StandardMaterial=<StandardMaterial>this.scene.getMaterialByID(matId);
+            if(sm==null) return;
+            if(type=="diffuse") {
+                sm.diffuseTexture=null;
+            } else if(type=="ambient") {
+                sm.ambientTexture=null;
+            } else if(type=="opacity") {
+                sm.opacityTexture=null;
+            } else if(type=="reflection") {
+                sm.reflectionTexture=null;
+            } else if(type=="emissive") {
+                sm.emissiveTexture=null;
+            } else if(type=="specular") {
+                sm.specularTexture=null;
+            } else if(type=="bump") {
+                sm.bumpTexture=null;
+            }
+
         }
 
         public setTextURL(textID: string,textName: string) {
@@ -2232,6 +2262,10 @@ namespace org.ssatguru.babylonjs.vishva {
             //remove the range if it already exist
             this.meshPicked.skeleton.deleteAnimationRange(name,false);
             this.meshPicked.skeleton.createAnimationRange(name,start,end);
+        }
+        public delAnimRange(name: string) {
+            //remove the range
+            this.meshPicked.skeleton.deleteAnimationRange(name,false);
         }
 
         public getAnimationRanges(): AnimationRange[] {
@@ -2831,6 +2865,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
+            console.log("onMeshLoaded");
             var boundingRadius: number=this.getBoundingRadius(meshes);
 
             for(let skeleton of skeletons) {
@@ -2839,7 +2874,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
             for(let mesh of meshes) {
                 mesh.isPickable=true;
-                //mesh.checkCollisions=true;
                 //gltb file
                 //                if (mesh.parent!=null){
                 //                    if (mesh.parent.id=="root"){
@@ -2855,12 +2889,13 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
 
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+
                 //TODO think
                 //mesh.receiveShadows = true;
-                //
+
                 //no need to rename 3.1 version seems to preserve the texture img urls
                 //this._renameTextures(mesh);
-
+                
                 this.scene.stopAnimation(mesh);
                 if(mesh.skeleton!=null) {
                     this.scene.stopAnimation(mesh.skeleton);
@@ -2869,7 +2904,30 @@ namespace org.ssatguru.babylonjs.vishva {
             }
 
             //select and animate the last mesh loaded
+//            if(meshes.length>0) {
+//                let lastMesh: AbstractMesh=meshes[meshes.length-1];
+//                if(!this.isMeshSelected) {
+//                    this.selectForEdit(lastMesh);
+//                } else {
+//                    this.switchEditControl(lastMesh);
+//                }
+//                this.animateMesh(lastMesh);
+//            }
+//            
+            //some loader like the obj loader are not done loading the material when this onSuccess is called.
+            //to make any material changes call it after this method is done using the setTimeout trick
+            window.setTimeout(() => {this._postLoad(meshes);},0);
+
+        }
+        
+        private _postLoad(meshes: AbstractMesh[]){
+            //select and animate the last mesh loaded
             if(meshes.length>0) {
+                
+                for (let mesh of meshes){
+                    this._makeMatIdUnique(mesh);
+                }
+                
                 let lastMesh: AbstractMesh=meshes[meshes.length-1];
                 if(!this.isMeshSelected) {
                     this.selectForEdit(lastMesh);
@@ -2878,9 +2936,28 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 this.animateMesh(lastMesh);
             }
+        }
 
 
-
+        private _makeMatIdUnique(msh: AbstractMesh) {
+            let mesh: Mesh=<Mesh>msh;
+            console.log("_makeMatIdUnique "+mesh.name);
+            console.log(mesh.toString());
+            if(mesh.material!=null) {
+                if(mesh.material instanceof BABYLON.MultiMaterial) {
+                    var mm: MultiMaterial=<MultiMaterial>mesh.material;
+                    var mats: Material[]=mm.subMaterials;
+                    for(let mat of mats) {
+                        console.log("old mat id "+mat.id);
+                        mat.id=(<number>new Number(Date.now())).toString();
+                        console.log("new mat id "+mat.id);
+                    }
+                } else {
+                    console.log("old mat id "+mesh.material.id);
+                    mesh.material.id=(<number>new Number(Date.now())).toString();;
+                    console.log("new mat id "+mesh.material.id);
+                }
+            }
         }
 
         private _renameTextures(mesh: AbstractMesh) {
@@ -2982,8 +3059,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public createWater() {
             console.log("creating water");
-            var waterMesh: Mesh=Mesh.CreateGround("waterMesh",512,512,32,this.scene,false);
-            //waterMesh.position.y = 1;
+
             var water: WaterMaterial=new WaterMaterial("water",this.scene);
             water.backFaceCulling=true;
             water.bumpTexture=new Texture(this.waterTexture,this.scene);
@@ -3000,7 +3076,11 @@ namespace org.ssatguru.babylonjs.vishva {
 
             water.addToRenderList(this.skybox);
             //water.addToRenderList(this.ground);
-            waterMesh.material=water;
+
+            this.waterMesh=Mesh.CreateGround("waterMesh",1024,1024,32,this.scene,false);
+            //waterMesh.position.y = 1;
+            this.waterMesh.material=water;
+
         }
 
         public addWater() {
@@ -3132,9 +3212,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     //                    }
                     grnd.freezeWorldMatrix();
                     this.ground=grnd;
-                    this.spawnPosition.y = grnd.getHeightAtCoordinates(0,0) + 5;
-                    if (this.avatar != null){
-                        this.avatar.position = this.spawnPosition;
+                    this.spawnPosition.y=grnd.getHeightAtCoordinates(0,0)+5;
+                    if(this.avatar!=null) {
+                        this.avatar.position=this.spawnPosition;
                     }
                 }
 
@@ -3331,7 +3411,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             camera.checkCollisions=this._cameraCollision;
             camera.collisionRadius=this._cameraEllipsoid;
-            
+
 
             Tags.AddTagsTo(camera,"Vishva.camera");
             return camera;
@@ -3395,7 +3475,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.setCharacterController(this.cc);
             this.cc.setCameraElasticity(true);
             //this.cc.setNoFirstPerson(true);
-            
+
             this.cc.start();
 
             //in 3.0 need to set the camera values again
@@ -3405,19 +3485,19 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
         }
-        
-        public disableAV(){
+
+        public disableAV() {
             this.cc.stop();
             (<Mesh>this.avatar).checkCollisions=false;
             this.scene.stopAnimation(this.avatar.skeleton);
         }
-        
-        public enableAV(){
+
+        public enableAV() {
             this.scene.stopAnimation(this.avatar.skeleton);
             this.cc.start();
             (<Mesh>this.avatar).checkCollisions=true;
         }
-        
+
         //TODO persist charactercontroller settings
         private setCharacterController(cc: CharacterController) {
             this.mainCamera.lowerRadiusLimit=1;
@@ -3431,8 +3511,9 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setFallAnim("fall",2,false);
             //cc.setFallAnim(null,2,false);
             cc.setSlideBackAnim("slideBack",1,false);
-            
-            this.cc.setSlopeLimit(45,90);
+            cc.setStepOffset(0.5);
+
+            this.cc.setSlopeLimit(30,60);
         }
 
         /**

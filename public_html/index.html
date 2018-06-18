@@ -35,7 +35,7 @@
         <!--<script src="lib/babylon.inspector.bundle-3.1.1-12.12.2017.js"></script>-->
 
         <!-- BABYLONJS MATERIALS -->
-        <!--<script src="lib/babylon.waterMaterial.min-08-24-2017.js"></script>-->
+        <script src="lib/3.2/babylon.waterMaterial.min.js"></script>
 
         <!-- BABYLONJS LOADER -->
         <script src="lib/3.2/babylon.glTFFileLoader.min.js"></script>
@@ -46,6 +46,7 @@
 
         <!-- BABYLONJS Pointer Events Polyfill -->
         <script src="lib/pep.0.4.1.min.js"></script>
+        
 
         <!-- BABYLONJS DynamicTerrain -->
         <script src="lib/babylon.dynamicTerrain.min.js"></script>
@@ -259,6 +260,10 @@
                         <td><div id="fogCol"></div></td>
                     </tr>
                     <tr>
+                        <td>ambient color</td>
+                        <td><div id="ambCol"></div></td>
+                    </tr>
+                    <tr>
                         <td>toggle snow</td>
                         <td><Button id="envSnow">snow</button></td>
                     </tr>
@@ -273,11 +278,14 @@
                     </tr>
                     <tr>
                         <td>sky</td>
-                        <td><Button id="skyButton">Select Sky</button></td>
+                        <td><Button id="skyButton">Change Sky</button></td>
                     </tr>
                     <tr>
-                        <td>ambient color</td>
-                        <td><div id="ambCol"></div></td>
+                        <td>sea</td>
+                        <td><Button id="envSea">Add Sea</button>
+                            <Button id="envSeaEdit">Edit Sea</button>
+                            <Button id="envSeaDel">Del Sea</button>
+                        </td>
                     </tr>
                     <tr>
                         <td>terrain</td>
@@ -690,15 +698,17 @@
                                             <td>
                                                 <img id="matTextImg" src="" height="128" width="128" style="cursor:pointer;" alt="tga images cannot be displayed" >
                                                 <button id="matCreateText" style="display:none">create texture</button>
+                                                <button id="matRemText" style="display:none">remove texture</button>
                                             </td>
                                         </tr>
-
                                     </table>
+                                    <br>
+                                    <button id="matClone"> clone and use </button>
+                                    <button id="matReplace">replace</button>
                                 </td>
                             </tr>
                         </table>
-                        <br>
-                        <button id="matClone"> clone and use </button>
+                       
                     </div>
 
                     <h3 class="mesh">Lights</h3>
@@ -806,7 +816,9 @@
                                 <td><input type="checkbox" id="animLoop"></td>
                             </tr>
                         </table>
-                        <button id="playAnim">play</button><button id="stopAnim">stop</button>
+                        <button id="playAnim">play</button>
+                        <button id="stopAnim">stop</button>
+                        <button id="delAnim">delete</button>
                         <br>
                         <br>
                         create/modify an animation range
@@ -946,11 +958,12 @@
                         <td id="textType">type</td>
                     </tr>
                     <tr>
-                        <td>image
+                        <td>image</td>
+                        <td >
+                            <img id="textImg" src="" height="256" width="256" alt="no images" >
                             <br>
                             <button id="changeTexture" >change</button>
                         </td>
-                        <td ><img id="textImg" src="" height="256" width="256" alt="no images" ></td>
                     </tr>
                     <tr>
                         <td>
@@ -1062,6 +1075,7 @@
 
         <script type="text/javascript">
                             $(function(){
+                                BABYLON.OBJFileLoader.OPTIMIZE_WITH_UV = true;
 
                                 //change all buttons to jquery button
                                 $("button").button();

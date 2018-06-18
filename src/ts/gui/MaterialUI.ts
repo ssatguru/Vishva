@@ -21,6 +21,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _matTextImg: HTMLImageElement;
         private _matClone: HTMLElement;
         private _matCreateText: HTMLElement;
+        private _matRemText: HTMLElement;
 
         public _textureUI: TextureUI;
         private _textID: string;
@@ -53,7 +54,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._vishva.setMaterialBFC(this._matIDs.value,this._matBF.checked);
             }
             this._matClone=<HTMLSelectElement>document.getElementById("matClone");
-            this._matClone.onclick=()=>{
+            this._matClone.onclick=() => {
                 this._vishva.cloneMaterial(this._matID.innerText);
                 this.update();
             }
@@ -85,8 +86,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
                 if(this._textID==null) {
                     this._matCreateText.setAttribute("style","display:block");
+                    this._matRemText.setAttribute("style","display:none");
                 } else {
                     this._matCreateText.setAttribute("style","display:none");
+                    this._matRemText.setAttribute("style","display:block");
                 }
             }
 
@@ -105,6 +108,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matCreateText=document.getElementById("matCreateText");
             this._matCreateText.onclick=() => {
                 this._matCreateText.setAttribute("style","display:none");
+                this._matRemText.setAttribute("style","display:block");
                 this._textID=this._vishva.createText();
                 this._textName="";
                 this._vishva.setMatTexture(this._matID.innerText,this._matTextType.value,this._textID);
@@ -114,6 +118,16 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._textureUI.setParms(this._textID,this._textName,this._matTextType.value,this._matID.innerText,this._matTextImg);
                 this._textureUI.open();
 
+            }
+
+            this._matRemText=document.getElementById("matRemText");
+            this._matRemText.onclick=() => {
+                this._matCreateText.setAttribute("style","display:block");
+                this._matRemText.setAttribute("style","display:none");
+                this._vishva.removeMatTexture(this._matID.innerText,this._matTextType.value);
+                this._textID=null;
+                this._textName=this._vishva.NO_TEXTURE;
+                this._matTextImg.src=this._textName;
             }
 
             this.update();
@@ -126,11 +140,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
             let mn: Array<string>=this._vishva.getMatNames();
-            if(mn!=null){
+            if(mn!=null) {
                 this._matCount.innerText=Number(mn.length).toString();
                 GuiUtils.PopulateSelect(this._matIDs,mn);
                 this._updateMatDetails();
-               
+
             }
         }
 
@@ -138,11 +152,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matID.innerText=this._matIDs.value;
             this._matName.innerText=this._vishva.getMaterialName(this._matIDs.value);
             this._matType.innerText=this._vishva.getMaterialType(this._matIDs.value);
-            let b:boolean|string =this._vishva.getMaterialBFC(this._matIDs.value);
-            if (typeof(b)== 'string' ){
+            let b: boolean|string=this._vishva.getMaterialBFC(this._matIDs.value);
+            if(typeof (b)=='string') {
                 DialogMgr.showAlertDiag(b);
-            }else  this._matBF.checked=b;
-            
+            } else this._matBF.checked=b;
+
             this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value,this._matColType.value));
             let dtls: Array<string>=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
             this._textID=dtls[0];
@@ -155,10 +169,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
             if(this._textID==null) {
                 this._matCreateText.setAttribute("style","display:block");
+                this._matRemText.setAttribute("style","display:none");
             } else {
                 this._matCreateText.setAttribute("style","display:none");
+                this._matRemText.setAttribute("style","display:block");
             }
-            if(this._textureUI!=null&&this._textureUI.isOpen()){
+            if(this._textureUI!=null&&this._textureUI.isOpen()) {
                 this._textureUI.setParms(this._textID,this._textName,this._matTextType.value,this._matID.innerText,this._matTextImg);
                 this._textureUI.close();
                 this._textureUI.open();

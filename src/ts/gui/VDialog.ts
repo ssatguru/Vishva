@@ -9,7 +9,7 @@ namespace org.ssatguru.babylonjs.vishva.gui{
         private _diag:JQuery;
         public jpo:JQueryPositionOptions;
         
-        constructor(id: string|HTMLDivElement,title:string,jpo:JQueryPositionOptions,width?:string|number,height?:string|number,minWidth=0){
+        constructor(id: string|HTMLDivElement,title:string,jpo:JQueryPositionOptions,width?:string|number,height?:string|number,minWidth=0,modal=false){
             if (width==null  || width=="") width="auto";
             if (height==null || height=="") height="auto";
             
@@ -26,7 +26,8 @@ namespace org.ssatguru.babylonjs.vishva.gui{
                 position: jpo,
                 height: height,
                 closeText: "",
-                closeOnEscape: false
+                closeOnEscape: false,
+                modal:modal
             };
             this._diag.dialog(dos);
             if (minWidth!=0){

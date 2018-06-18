@@ -21,6 +21,9 @@ declare namespace org.ssatguru.babylonjs.component {
         private maxSlopeLimit;
         sl: number;
         sl2: number;
+        private _stepOffset;
+        private _vMoveTot;
+        private _vMovStartPos;
         private walk;
         private walkBack;
         private idle;
@@ -53,6 +56,7 @@ declare namespace org.ssatguru.babylonjs.component {
         setAvatar(avatar: Mesh): void;
         setAvatarSkeleton(skeleton: Skeleton): void;
         setSlopeLimit(minSlopeLimit: number, maxSlopeLimit: number): void;
+        setStepOffset(stepOffset: number): void;
         setWalkSpeed(n: number): void;
         setRunSpeed(n: number): void;
         setBackSpeed(n: number): void;
@@ -97,6 +101,9 @@ declare namespace org.ssatguru.babylonjs.component {
         private started;
         start(): void;
         stop(): void;
+        private _stopAnim;
+        pauseAnim(): void;
+        resumeAnim(): void;
         private prevAnim;
         private avStartPos;
         private grounded;
@@ -128,6 +135,7 @@ declare namespace org.ssatguru.babylonjs.component {
         ray: Ray;
         rayDir: Vector3;
         cameraSkin: number;
+        skip: number;
         private snapCamera();
         move: boolean;
         anyMovement(): boolean;

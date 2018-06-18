@@ -89,18 +89,27 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._animLoop=<HTMLInputElement>document.getElementById("animLoop");
             document.getElementById("playAnim").onclick=(e) => {
                 if(this._skel==null) return true;
-                var animName: string=this._animSelect.value;
-                var rate: string=this._animRate.value;
+                let animName: string=this._animSelect.value;
+                let rate: string=this._animRate.value;
                 if(animName!=null) {
                     this._vishva.playAnimation(animName,rate,this._animLoop.checked);
                 }
                 return true;
             };
-            document.getElementById("stopAnim").onclick=(e) => {
+             document.getElementById("stopAnim").onclick=(e) => {
                 if(this._skel==null) return true;
                 this._vishva.stopAnimation();
                 return true;
             };
+            document.getElementById("delAnim").onclick=(e) => {
+                if(this._skel==null) return true;
+                let animName: string=this._animSelect.value;
+                this._vishva.delAnimRange(animName);
+                this._refreshAnimSelect();
+                return true;
+            };
+           
+            
         }
 
         //        private createAnimDiag() {
@@ -150,6 +159,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(range!=null) {
                 var animOpt: HTMLOptionElement;
                 for(let ar of range) {
+                    //if a range is deleted using skeleton.deleteAnimationRange , it shows up as null !!
+                    if (ar==null ) continue;
                     animOpt=document.createElement("option");
                     animOpt.value=ar.name;
                     animOpt.innerText=ar.name;

@@ -26,7 +26,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         constructor(vishva: Vishva) {
             this._vishva=vishva;
 
-            this._textureDiag=new VDialog("textureDiag","Texture",DialogMgr.centerBottom);
+            this._textureDiag=new VDialog("textureDiag","Texture",DialogMgr.centerBottom,"auto","auto",0,true);
 
             this._textureImg=<HTMLImageElement>document.getElementById("textImg");
             this._textIDEle=document.getElementById("textID");

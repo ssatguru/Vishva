@@ -54,24 +54,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             console.log("updateGround");
             let _grnd_old: GroundMesh=<GroundMesh>this._vishva.ground;
 
-            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind,true);
-            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind,true);
-            //            console.log(this._grndHM.getValue());
-            //            _grnd_old.applyDisplacementMap(
-            //                this._grndHM.getValue(),
-            //                this._grndminH.getValue(),
-            //                this._grndmaxH.getValue(),
-            //                () => {console.log("ground updated");},
-            //                this._grndUVOffset.getValue(),
-            //                this._grndUVScale.getValue()
-            //            );
-            //
-            //            _grnd_old.freezeWorldMatrix();
-            //            _grnd_old.checkCollisions=true;
-            //            let x=this._vishva.avatar.position.x;
-            //            let z=this._vishva.avatar.position.z;
-            //
-            //            this._vishva.avatar.position.y=_grnd_old.getHeightAtCoordinates(x,z)+5;
             let v: Vector3=this._grndFC.getValue();
             let color: Color3=new Color3(v.x,v.y,v.z);
             MeshBuilder.CreateGroundFromHeightMap(this._grndID.getValue(),this._grndHM.getValue(),{

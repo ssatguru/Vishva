@@ -101,6 +101,14 @@ var org;
                                 _this._vishva.stopAnimation();
                                 return true;
                             };
+                            document.getElementById("delAnim").onclick = function (e) {
+                                if (_this._skel == null)
+                                    return true;
+                                var animName = _this._animSelect.value;
+                                _this._vishva.delAnimRange(animName);
+                                _this._refreshAnimSelect();
+                                return true;
+                            };
                         }
                         //        private createAnimDiag() {
                         //            this.initAnimUI();
@@ -149,6 +157,9 @@ var org;
                                 var animOpt;
                                 for (var _i = 0, range_1 = range; _i < range_1.length; _i++) {
                                     var ar = range_1[_i];
+                                    //if a range is deleted using skeleton.deleteAnimationRange , it shows up as null !!
+                                    if (ar == null)
+                                        continue;
                                     animOpt = document.createElement("option");
                                     animOpt.value = ar.name;
                                     animOpt.innerText = ar.name;
@@ -283,8 +294,9 @@ var org;
                 var gui;
                 (function (gui) {
                     var VDialog = (function () {
-                        function VDialog(id, title, jpo, width, height, minWidth) {
+                        function VDialog(id, title, jpo, width, height, minWidth, modal) {
                             if (minWidth === void 0) { minWidth = 0; }
+                            if (modal === void 0) { modal = false; }
                             if (width == null || width == "")
                                 width = "auto";
                             if (height == null || height == "")
@@ -302,7 +314,8 @@ var org;
                                 position: jpo,
                                 height: height,
                                 closeText: "",
-                                closeOnEscape: false
+                                closeOnEscape: false,
+                                modal: modal
                             };
                             this._diag.dialog(dos);
                             if (minWidth != 0) {
@@ -461,6 +474,12 @@ var org;
                             skyButton.onclick = function (e) {
                                 _this._addInternalAssetUI.toggleAssetDiag("skyboxes");
                                 return true;
+                            };
+                            var envSea = document.getElementById("envSea");
+                            envSea.onclick = function (e) {
+                                if (_this._vishva.waterMesh == null || _this._vishva.waterMesh.isDisposed()) {
+                                    _this._vishva.createWater();
+                                }
                             };
                             var trnButton = document.getElementById("trnButton");
                             trnButton.onclick = function (e) {
@@ -898,24 +917,6 @@ var org;
                             var _this = this;
                             console.log("updateGround");
                             var _grnd_old = this._vishva.ground;
-                            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.PositionKind,true);
-                            //            _grnd_old.markVerticesDataAsUpdatable(BABYLON.VertexBuffer.NormalKind,true);
-                            //            console.log(this._grndHM.getValue());
-                            //            _grnd_old.applyDisplacementMap(
-                            //                this._grndHM.getValue(),
-                            //                this._grndminH.getValue(),
-                            //                this._grndmaxH.getValue(),
-                            //                () => {console.log("ground updated");},
-                            //                this._grndUVOffset.getValue(),
-                            //                this._grndUVScale.getValue()
-                            //            );
-                            //
-                            //            _grnd_old.freezeWorldMatrix();
-                            //            _grnd_old.checkCollisions=true;
-                            //            let x=this._vishva.avatar.position.x;
-                            //            let z=this._vishva.avatar.position.z;
-                            //
-                            //            this._vishva.avatar.position.y=_grnd_old.getHeightAtCoordinates(x,z)+5;
                             var v = this._grndFC.getValue();
                             var color = new Color3(v.x, v.y, v.z);
                             MeshBuilder.CreateGroundFromHeightMap(this._grndID.getValue(), this._grndHM.getValue(), {
@@ -1907,9 +1908,11 @@ var org;
                                 }
                                 if (_this._textID == null) {
                                     _this._matCreateText.setAttribute("style", "display:block");
+                                    _this._matRemText.setAttribute("style", "display:none");
                                 }
                                 else {
                                     _this._matCreateText.setAttribute("style", "display:none");
+                                    _this._matRemText.setAttribute("style", "display:block");
                                 }
                             };
                             this._matTextImg = document.getElementById("matTextImg");
@@ -1926,6 +1929,7 @@ var org;
                             this._matCreateText = document.getElementById("matCreateText");
                             this._matCreateText.onclick = function () {
                                 _this._matCreateText.setAttribute("style", "display:none");
+                                _this._matRemText.setAttribute("style", "display:block");
                                 _this._textID = _this._vishva.createText();
                                 _this._textName = "";
                                 _this._vishva.setMatTexture(_this._matID.innerText, _this._matTextType.value, _this._textID);
@@ -1934,6 +1938,15 @@ var org;
                                 }
                                 _this._textureUI.setParms(_this._textID, _this._textName, _this._matTextType.value, _this._matID.innerText, _this._matTextImg);
                                 _this._textureUI.open();
+                            };
+                            this._matRemText = document.getElementById("matRemText");
+                            this._matRemText.onclick = function () {
+                                _this._matCreateText.setAttribute("style", "display:block");
+                                _this._matRemText.setAttribute("style", "display:none");
+                                _this._vishva.removeMatTexture(_this._matID.innerText, _this._matTextType.value);
+                                _this._textID = null;
+                                _this._textName = _this._vishva.NO_TEXTURE;
+                                _this._matTextImg.src = _this._textName;
                             };
                             this.update();
                         }
@@ -1971,9 +1984,11 @@ var org;
                             }
                             if (this._textID == null) {
                                 this._matCreateText.setAttribute("style", "display:block");
+                                this._matRemText.setAttribute("style", "display:none");
                             }
                             else {
                                 this._matCreateText.setAttribute("style", "display:none");
+                                this._matRemText.setAttribute("style", "display:block");
                             }
                             if (this._textureUI != null && this._textureUI.isOpen()) {
                                 this._textureUI.setParms(this._textID, this._textName, this._matTextType.value, this._matID.innerText, this._matTextImg);
@@ -2650,7 +2665,7 @@ var org;
                         function TextureUI(vishva) {
                             var _this = this;
                             this._vishva = vishva;
-                            this._textureDiag = new gui.VDialog("textureDiag", "Texture", gui.DialogMgr.centerBottom);
+                            this._textureDiag = new gui.VDialog("textureDiag", "Texture", gui.DialogMgr.centerBottom, "auto", "auto", 0, true);
                             this._textureImg = document.getElementById("textImg");
                             this._textIDEle = document.getElementById("textID");
                             this._textType = document.getElementById("textType");
@@ -4158,7 +4173,7 @@ var org;
                         //spawnPosition:Vector3=new Vector3(-360,620,225);
                         this.spawnPosition = new Vector3(0, 0.2, 0);
                         this._animBlend = 0.1;
-                        this._avEllipsoid = new Vector3(0.1, 1, 0.1);
+                        this._avEllipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
                         this._avEllipsoidOffset = new Vector3(0, 1, 0);
                         this.NO_TEXTURE = "vishva/internal/textures/no-texture.jpg";
                         this.TGA_IMAGE = "vishva/internal/textures/tga-image.jpg";
@@ -4257,7 +4272,7 @@ var org;
                         //lets make night black
                         this.scene.clearColor = new Color4(0, 0, 0, 1);
                         //set ambient to white in case user wants to bypass light conditions for some objects
-                        this.scene.ambientColor = new Color3(1, 1, 1);
+                        this.scene.ambientColor = new Color3(0, 0, 0);
                         this.scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
                         window.addEventListener("resize", function (event) { return _this.onWindowResize(event); });
                         window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); }, false);
@@ -5267,6 +5282,7 @@ var org;
                             meshes.splice(i, 1);
                         }
                         mesh.dispose();
+                        mesh == null;
                     };
                     Vishva.prototype.mergeMeshes_old = function () {
                         if (this.meshesPicked != null) {
@@ -5520,6 +5536,9 @@ var org;
                         var text = new Texture("", this.scene);
                         return text.uid;
                     };
+                    /**
+                     * returns an array containing 2 elements - texture id and texture name
+                     */
                     Vishva.prototype.getMatTexture = function (matId, type) {
                         var sm = this.scene.getMaterialByID(matId);
                         if (sm == null)
@@ -5590,6 +5609,32 @@ var org;
                             else if (type == "bump") {
                                 sm.bumpTexture = bt;
                             }
+                        }
+                    };
+                    Vishva.prototype.removeMatTexture = function (matId, type) {
+                        var sm = this.scene.getMaterialByID(matId);
+                        if (sm == null)
+                            return;
+                        if (type == "diffuse") {
+                            sm.diffuseTexture = null;
+                        }
+                        else if (type == "ambient") {
+                            sm.ambientTexture = null;
+                        }
+                        else if (type == "opacity") {
+                            sm.opacityTexture = null;
+                        }
+                        else if (type == "reflection") {
+                            sm.reflectionTexture = null;
+                        }
+                        else if (type == "emissive") {
+                            sm.emissiveTexture = null;
+                        }
+                        else if (type == "specular") {
+                            sm.specularTexture = null;
+                        }
+                        else if (type == "bump") {
+                            sm.bumpTexture = null;
                         }
                     };
                     Vishva.prototype.setTextURL = function (textID, textName) {
@@ -6177,6 +6222,10 @@ var org;
                         this.meshPicked.skeleton.deleteAnimationRange(name, false);
                         this.meshPicked.skeleton.createAnimationRange(name, start, end);
                     };
+                    Vishva.prototype.delAnimRange = function (name) {
+                        //remove the range
+                        this.meshPicked.skeleton.deleteAnimationRange(name, false);
+                    };
                     Vishva.prototype.getAnimationRanges = function () {
                         var skel = this.meshPicked.skeleton;
                         if (skel !== null && skel !== undefined) {
@@ -6747,6 +6796,8 @@ var org;
                     };
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
+                        var _this = this;
+                        console.log("onMeshLoaded");
                         var boundingRadius = this.getBoundingRadius(meshes);
                         for (var _i = 0, skeletons_1 = skeletons; _i < skeletons_1.length; _i++) {
                             var skeleton = skeletons_1[_i];
@@ -6755,7 +6806,6 @@ var org;
                         for (var _a = 0, meshes_6 = meshes; _a < meshes_6.length; _a++) {
                             var mesh = meshes_6[_a];
                             mesh.isPickable = true;
-                            //mesh.checkCollisions=true;
                             //gltb file
                             //                if (mesh.parent!=null){
                             //                    if (mesh.parent.id=="root"){
@@ -6772,7 +6822,6 @@ var org;
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             //TODO think
                             //mesh.receiveShadows = true;
-                            //
                             //no need to rename 3.1 version seems to preserve the texture img urls
                             //this._renameTextures(mesh);
                             this.scene.stopAnimation(mesh);
@@ -6782,7 +6831,27 @@ var org;
                             }
                         }
                         //select and animate the last mesh loaded
+                        //            if(meshes.length>0) {
+                        //                let lastMesh: AbstractMesh=meshes[meshes.length-1];
+                        //                if(!this.isMeshSelected) {
+                        //                    this.selectForEdit(lastMesh);
+                        //                } else {
+                        //                    this.switchEditControl(lastMesh);
+                        //                }
+                        //                this.animateMesh(lastMesh);
+                        //            }
+                        //            
+                        //some loader like the obj loader are not done loading the material when this onSuccess is called.
+                        //to make any material changes call it after this method is done using the setTimeout trick
+                        window.setTimeout(function () { _this._postLoad(meshes); }, 0);
+                    };
+                    Vishva.prototype._postLoad = function (meshes) {
+                        //select and animate the last mesh loaded
                         if (meshes.length > 0) {
+                            for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
+                                var mesh = meshes_7[_i];
+                                this._makeMatIdUnique(mesh);
+                            }
                             var lastMesh = meshes[meshes.length - 1];
                             if (!this.isMeshSelected) {
                                 this.selectForEdit(lastMesh);
@@ -6793,13 +6862,36 @@ var org;
                             this.animateMesh(lastMesh);
                         }
                     };
-                    Vishva.prototype._renameTextures = function (mesh) {
+                    Vishva.prototype._makeMatIdUnique = function (msh) {
+                        var mesh = msh;
+                        console.log("_makeMatIdUnique " + mesh.name);
+                        console.log(mesh.toString());
                         if (mesh.material != null) {
                             if (mesh.material instanceof BABYLON.MultiMaterial) {
                                 var mm = mesh.material;
                                 var mats = mm.subMaterials;
                                 for (var _i = 0, mats_2 = mats; _i < mats_2.length; _i++) {
                                     var mat = mats_2[_i];
+                                    console.log("old mat id " + mat.id);
+                                    mat.id = new Number(Date.now()).toString();
+                                    console.log("new mat id " + mat.id);
+                                }
+                            }
+                            else {
+                                console.log("old mat id " + mesh.material.id);
+                                mesh.material.id = new Number(Date.now()).toString();
+                                ;
+                                console.log("new mat id " + mesh.material.id);
+                            }
+                        }
+                    };
+                    Vishva.prototype._renameTextures = function (mesh) {
+                        if (mesh.material != null) {
+                            if (mesh.material instanceof BABYLON.MultiMaterial) {
+                                var mm = mesh.material;
+                                var mats = mm.subMaterials;
+                                for (var _i = 0, mats_3 = mats; _i < mats_3.length; _i++) {
+                                    var mat = mats_3[_i];
                                     //TODO remove this
                                     //mesh.material.backFaceCulling=false;
                                     //mesh.material.alpha=1;
@@ -6845,8 +6937,8 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
-                            var mesh = meshes_7[_i];
+                        for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
+                            var mesh = meshes_8[_i];
                             if (mesh.parent != null)
                                 console.log("parent " + mesh.parent.name);
                             var bi = mesh.getBoundingInfo();
@@ -6885,8 +6977,6 @@ var org;
                     };
                     Vishva.prototype.createWater = function () {
                         console.log("creating water");
-                        var waterMesh = Mesh.CreateGround("waterMesh", 512, 512, 32, this.scene, false);
-                        //waterMesh.position.y = 1;
                         var water = new WaterMaterial("water", this.scene);
                         water.backFaceCulling = true;
                         water.bumpTexture = new Texture(this.waterTexture, this.scene);
@@ -6901,7 +6991,9 @@ var org;
                         water.waveLength = 0.1;
                         water.addToRenderList(this.skybox);
                         //water.addToRenderList(this.ground);
-                        waterMesh.material = water;
+                        this.waterMesh = Mesh.CreateGround("waterMesh", 1024, 1024, 32, this.scene, false);
+                        //waterMesh.position.y = 1;
+                        this.waterMesh.material = water;
                     };
                     Vishva.prototype.addWater = function () {
                         if (!this.isMeshSelected) {
@@ -7277,7 +7369,8 @@ var org;
                         cc.setFallAnim("fall", 2, false);
                         //cc.setFallAnim(null,2,false);
                         cc.setSlideBackAnim("slideBack", 1, false);
-                        this.cc.setSlopeLimit(45, 90);
+                        cc.setStepOffset(0.5);
+                        this.cc.setSlopeLimit(30, 60);
                     };
                     /**
                      * workaround for bugs in blender exporter
@@ -7661,8 +7754,8 @@ var org;
                         var sna;
                         var meshes = scene.meshes;
                         var meshId;
-                        for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
-                            var mesh = meshes_8[_i];
+                        for (var _i = 0, meshes_9 = meshes; _i < meshes_9.length; _i++) {
+                            var mesh = meshes_9[_i];
                             meshId = null;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {

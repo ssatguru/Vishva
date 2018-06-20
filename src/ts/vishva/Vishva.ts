@@ -2782,7 +2782,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         /**
          * remove all materials not referenced by any mesh
-         * 
+         * TODO do we really want to do this?. Materila might be needed later on.
          */
         private cleanupMats() {
             var meshes: AbstractMesh[]=this.scene.meshes;
@@ -2821,6 +2821,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         /**
          * remove all skeletons not referenced by any mesh
+         *  TODO do we really want to do this?. Skeleton might be needed later on.
          * 
          */
         private cleanupSkels() {
@@ -2903,27 +2904,18 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
 
-            //select and animate the last mesh loaded
-//            if(meshes.length>0) {
-//                let lastMesh: AbstractMesh=meshes[meshes.length-1];
-//                if(!this.isMeshSelected) {
-//                    this.selectForEdit(lastMesh);
-//                } else {
-//                    this.switchEditControl(lastMesh);
-//                }
-//                this.animateMesh(lastMesh);
-//            }
-//            
+            
+            //TODO remove - obj laoder was fixed  
             //some loader like the obj loader are not done loading the material when this onSuccess is called.
             //to make any material changes call it after this method is done using the setTimeout trick
-            window.setTimeout(() => {this._postLoad(meshes);},0);
-
+            // window.setTimeout(() => {this._postLoad(meshes);},1000);
+            
+            this._postLoad(meshes);
         }
         
         private _postLoad(meshes: AbstractMesh[]){
             //select and animate the last mesh loaded
             if(meshes.length>0) {
-                
                 for (let mesh of meshes){
                     this._makeMatIdUnique(mesh);
                 }
@@ -2938,26 +2930,38 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-
+        /*
+         * if we load the same mesh more than once than 
+         * these meshes end up with the same material id.
+         * 
+         */
         private _makeMatIdUnique(msh: AbstractMesh) {
             let mesh: Mesh=<Mesh>msh;
-            console.log("_makeMatIdUnique "+mesh.name);
-            console.log(mesh.toString());
             if(mesh.material!=null) {
                 if(mesh.material instanceof BABYLON.MultiMaterial) {
                     var mm: MultiMaterial=<MultiMaterial>mesh.material;
                     var mats: Material[]=mm.subMaterials;
                     for(let mat of mats) {
-                        console.log("old mat id "+mat.id);
-                        mat.id=(<number>new Number(Date.now())).toString();
-                        console.log("new mat id "+mat.id);
+                        mat.id=this.uid();
                     }
                 } else {
-                    console.log("old mat id "+mesh.material.id);
-                    mesh.material.id=(<number>new Number(Date.now())).toString();;
-                    console.log("new mat id "+mesh.material.id);
+                    mesh.material.id=this.uid();;
                 }
             }
+        }
+
+        private prevUid:number=0;
+        private uidPlus=0;
+        private uid():string{
+            let newUid:number=Date.now();
+            let ups="";
+            if (newUid==this.prevUid){
+                ups=(new Number(this.uidPlus)).toString()
+                this.uidPlus++;
+            }else{
+                this.prevUid=newUid;
+            }
+            return (new Number(newUid)).toString()+ups;
         }
 
         private _renameTextures(mesh: AbstractMesh) {
@@ -3503,12 +3507,12 @@ namespace org.ssatguru.babylonjs.vishva {
             this.mainCamera.lowerRadiusLimit=1;
             this.mainCamera.upperRadiusLimit=100;
             cc.setCameraTarget(new BABYLON.Vector3(0,1.5,0));
-            cc.setIdleAnim("idle",0.1,true);
+            cc.setIdleAnim("idle",1,true);
             cc.setTurnLeftAnim("turnLeft",0.5,true);
             cc.setTurnRightAnim("turnRight",0.5,true);
             cc.setWalkBackAnim("walkBack",0.5,true);
-            cc.setJumpAnim("jump",4,false);
-            cc.setFallAnim("fall",2,false);
+            cc.setJumpAnim("jump",.75,false);
+            cc.setFallAnim("fall",1,false);
             //cc.setFallAnim(null,2,false);
             cc.setSlideBackAnim("slideBack",1,false);
             cc.setStepOffset(0.5);

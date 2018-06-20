@@ -4248,6 +4248,8 @@ var org;
                         this.didPhysTest = false;
                         this.skelViewerArr = [];
                         this.debugVisible = false;
+                        this.prevUid = 0;
+                        this.uidPlus = 0;
                         Vishva.vishva = this;
                         this.editEnabled = false;
                         this.frames = 0;
@@ -6716,7 +6718,7 @@ var org;
                     };
                     /**
                      * remove all materials not referenced by any mesh
-                     *
+                     * TODO do we really want to do this?. Materila might be needed later on.
                      */
                     Vishva.prototype.cleanupMats = function () {
                         var meshes = this.scene.meshes;
@@ -6756,6 +6758,7 @@ var org;
                     };
                     /**
                      * remove all skeletons not referenced by any mesh
+                     *  TODO do we really want to do this?. Skeleton might be needed later on.
                      *
                      */
                     Vishva.prototype.cleanupSkels = function () {
@@ -6796,7 +6799,6 @@ var org;
                     };
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
-                        var _this = this;
                         console.log("onMeshLoaded");
                         var boundingRadius = this.getBoundingRadius(meshes);
                         for (var _i = 0, skeletons_1 = skeletons; _i < skeletons_1.length; _i++) {
@@ -6830,20 +6832,11 @@ var org;
                                 this.fixAnimationRanges(mesh.skeleton);
                             }
                         }
-                        //select and animate the last mesh loaded
-                        //            if(meshes.length>0) {
-                        //                let lastMesh: AbstractMesh=meshes[meshes.length-1];
-                        //                if(!this.isMeshSelected) {
-                        //                    this.selectForEdit(lastMesh);
-                        //                } else {
-                        //                    this.switchEditControl(lastMesh);
-                        //                }
-                        //                this.animateMesh(lastMesh);
-                        //            }
-                        //            
+                        //TODO remove - obj laoder was fixed  
                         //some loader like the obj loader are not done loading the material when this onSuccess is called.
                         //to make any material changes call it after this method is done using the setTimeout trick
-                        window.setTimeout(function () { _this._postLoad(meshes); }, 0);
+                        // window.setTimeout(() => {this._postLoad(meshes);},1000);
+                        this._postLoad(meshes);
                     };
                     Vishva.prototype._postLoad = function (meshes) {
                         //select and animate the last mesh loaded
@@ -6862,28 +6855,39 @@ var org;
                             this.animateMesh(lastMesh);
                         }
                     };
+                    /*
+                     * if we load the same mesh more than once than
+                     * these meshes end up with the same material id.
+                     *
+                     */
                     Vishva.prototype._makeMatIdUnique = function (msh) {
                         var mesh = msh;
-                        console.log("_makeMatIdUnique " + mesh.name);
-                        console.log(mesh.toString());
                         if (mesh.material != null) {
                             if (mesh.material instanceof BABYLON.MultiMaterial) {
                                 var mm = mesh.material;
                                 var mats = mm.subMaterials;
                                 for (var _i = 0, mats_2 = mats; _i < mats_2.length; _i++) {
                                     var mat = mats_2[_i];
-                                    console.log("old mat id " + mat.id);
-                                    mat.id = new Number(Date.now()).toString();
-                                    console.log("new mat id " + mat.id);
+                                    mat.id = this.uid();
                                 }
                             }
                             else {
-                                console.log("old mat id " + mesh.material.id);
-                                mesh.material.id = new Number(Date.now()).toString();
+                                mesh.material.id = this.uid();
                                 ;
-                                console.log("new mat id " + mesh.material.id);
                             }
                         }
+                    };
+                    Vishva.prototype.uid = function () {
+                        var newUid = Date.now();
+                        var ups = "";
+                        if (newUid == this.prevUid) {
+                            ups = (new Number(this.uidPlus)).toString();
+                            this.uidPlus++;
+                        }
+                        else {
+                            this.prevUid = newUid;
+                        }
+                        return (new Number(newUid)).toString() + ups;
                     };
                     Vishva.prototype._renameTextures = function (mesh) {
                         if (mesh.material != null) {
@@ -7361,12 +7365,12 @@ var org;
                         this.mainCamera.lowerRadiusLimit = 1;
                         this.mainCamera.upperRadiusLimit = 100;
                         cc.setCameraTarget(new BABYLON.Vector3(0, 1.5, 0));
-                        cc.setIdleAnim("idle", 0.1, true);
+                        cc.setIdleAnim("idle", 1, true);
                         cc.setTurnLeftAnim("turnLeft", 0.5, true);
                         cc.setTurnRightAnim("turnRight", 0.5, true);
                         cc.setWalkBackAnim("walkBack", 0.5, true);
-                        cc.setJumpAnim("jump", 4, false);
-                        cc.setFallAnim("fall", 2, false);
+                        cc.setJumpAnim("jump", .75, false);
+                        cc.setFallAnim("fall", 1, false);
                         //cc.setFallAnim(null,2,false);
                         cc.setSlideBackAnim("slideBack", 1, false);
                         cc.setStepOffset(0.5);

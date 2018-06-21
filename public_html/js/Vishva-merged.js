@@ -101,11 +101,19 @@ var org;
                                 _this._vishva.stopAnimation();
                                 return true;
                             };
+                            document.getElementById("remAnim").onclick = function (e) {
+                                if (_this._skel == null)
+                                    return true;
+                                var animName = _this._animSelect.value;
+                                _this._vishva.delAnimRange(animName, false);
+                                _this._refreshAnimSelect();
+                                return true;
+                            };
                             document.getElementById("delAnim").onclick = function (e) {
                                 if (_this._skel == null)
                                     return true;
                                 var animName = _this._animSelect.value;
-                                _this._vishva.delAnimRange(animName);
+                                _this._vishva.delAnimRange(animName, true);
                                 _this._refreshAnimSelect();
                                 return true;
                             };
@@ -6224,9 +6232,9 @@ var org;
                         this.meshPicked.skeleton.deleteAnimationRange(name, false);
                         this.meshPicked.skeleton.createAnimationRange(name, start, end);
                     };
-                    Vishva.prototype.delAnimRange = function (name) {
-                        //remove the range
-                        this.meshPicked.skeleton.deleteAnimationRange(name, false);
+                    Vishva.prototype.delAnimRange = function (name, del) {
+                        //delete or remove the range
+                        this.meshPicked.skeleton.deleteAnimationRange(name, del);
                     };
                     Vishva.prototype.getAnimationRanges = function () {
                         var skel = this.meshPicked.skeleton;
@@ -8232,13 +8240,12 @@ var org;
                         var prop = _this.properties;
                         var skel = mesh.skeleton;
                         if (skel != null) {
-                            var getAnimationRanges = skel["getAnimationRanges"];
-                            var ranges = getAnimationRanges.call(skel);
-                            var animNames = new Array(ranges.length);
+                            var ranges = skel.getAnimationRanges();
+                            var animNames = new Array();
                             var i = 0;
-                            for (var index160 = 0; index160 < ranges.length; index160++) {
-                                var range = ranges[index160];
-                                {
+                            for (var _i = 0, ranges_2 = ranges; _i < ranges_2.length; _i++) {
+                                var range = ranges_2[_i];
+                                if (range != null) {
                                     animNames[i] = range.name;
                                     i++;
                                 }

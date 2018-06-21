@@ -101,14 +101,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._vishva.stopAnimation();
                 return true;
             };
-            document.getElementById("delAnim").onclick=(e) => {
+            document.getElementById("remAnim").onclick=(e) => {
                 if(this._skel==null) return true;
                 let animName: string=this._animSelect.value;
-                this._vishva.delAnimRange(animName);
+                this._vishva.delAnimRange(animName,false);
                 this._refreshAnimSelect();
                 return true;
             };
-           
+           document.getElementById("delAnim").onclick=(e) => {
+                if(this._skel==null) return true;
+                let animName: string=this._animSelect.value;
+                this._vishva.delAnimRange(animName,true);
+                this._refreshAnimSelect();
+                return true;
+            };
             
         }
 

@@ -2263,9 +2263,9 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.skeleton.deleteAnimationRange(name,false);
             this.meshPicked.skeleton.createAnimationRange(name,start,end);
         }
-        public delAnimRange(name: string) {
-            //remove the range
-            this.meshPicked.skeleton.deleteAnimationRange(name,false);
+        public delAnimRange(name: string, del:boolean) {
+            //delete or remove the range
+            this.meshPicked.skeleton.deleteAnimationRange(name,del);
         }
 
         public getAnimationRanges(): AnimationRange[] {

@@ -225,17 +225,33 @@ var org;
             (function (vishva) {
                 var gui;
                 (function (gui) {
+                    /**
+                     * adds a two input box and a color dialog box inside the element whose id is passed
+                     */
                     var ColorPickerDiag = (function () {
                         function ColorPickerDiag(title, diagSelector, initialColor, jpo, f) {
                             var _this = this;
+                            //input box to show or input the color hex value
+                            this.inner0 = "<input class='colorInputValue' title='enter color in hex #hhhhhh'  type='text' style='width:100%;height:32px;border-width:1px;border-style:solid;' ></input>";
+                            //input bos to show the color
                             this.inner1 = "<input class='colorInput' type='text' style='width:100%;height:32px;border-width:1px;border-style:solid;cursor: pointer' readonly></input>";
+                            //the div which would be used to create a dialog box cotaining the color picker
                             this.inner2 = "<div class='colorDiag' style='align-content: center'><div  class='colorPicker cp-fancy'></div></div>";
                             this.hexColor = initialColor;
+                            //concat inner0,inner1 and inner2 togather and insert as html in the element passed
                             var colorEle = document.getElementById(diagSelector);
-                            colorEle.innerHTML = this.inner1.concat(this.inner2);
+                            colorEle.innerHTML = this.inner0.concat(this.inner1).concat(this.inner2);
+                            this.colorInputValue = colorEle.getElementsByClassName("colorInputValue")[0];
+                            this.colorInputValue.value = this.hexColor;
+                            this.colorInputValue.onchange = function () {
+                                console.log("blur = changing color value");
+                                _this.hexColor = _this.colorInputValue.value;
+                                _this.colorInput.style.backgroundColor = _this.hexColor;
+                                _this.cp.setHex(_this.hexColor);
+                                f(_this.hexColor, null, null);
+                            };
                             this.colorInput = colorEle.getElementsByClassName("colorInput")[0];
                             this.colorInput.style.backgroundColor = this.hexColor;
-                            this.colorInput.value = this.hexColor;
                             this.colorInput.onclick = function () {
                                 _this.diag.dialog("open");
                                 _this.cp.setHex(_this.hexColor);
@@ -245,7 +261,7 @@ var org;
                             this.cp = new ColorPicker(colorPicker, function (hex, hsv, rgb) {
                                 _this.hexColor = hex;
                                 _this.colorInput.style.backgroundColor = hex;
-                                _this.colorInput.value = hex;
+                                _this.colorInputValue.value = hex;
                                 f(hex, hsv, rgb);
                             });
                             var dos = {
@@ -270,7 +286,7 @@ var org;
                             this.hexColor = hex;
                             this.cp.setHex(hex);
                             this.colorInput.style.backgroundColor = hex;
-                            this.colorInput.value = hex;
+                            this.colorInputValue.value = hex;
                         };
                         ColorPickerDiag.prototype.getColor = function () {
                             return this.hexColor;

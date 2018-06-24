@@ -604,6 +604,10 @@ namespace org.ssatguru.babylonjs.vishva {
         fogDensity: number=0;
 
         private meshPicked: AbstractMesh;
+        
+        public getMeshPicked():AbstractMesh{
+            return this.meshPicked;
+        }
 
         //list of meshes selected in addition to the currently picked mesh
         //doesnot include the currently picked mesh (the one with edit control)
@@ -2866,7 +2870,6 @@ namespace org.ssatguru.babylonjs.vishva {
 
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
-            console.log("onMeshLoaded");
             var boundingRadius: number=this.getBoundingRadius(meshes);
 
             for(let skeleton of skeletons) {

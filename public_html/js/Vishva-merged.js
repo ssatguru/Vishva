@@ -243,6 +243,7 @@ var org;
                             colorEle.innerHTML = this.inner0.concat(this.inner1).concat(this.inner2);
                             this.colorInputValue = colorEle.getElementsByClassName("colorInputValue")[0];
                             this.colorInputValue.value = this.hexColor;
+                            //TODO - check for valid value, allow hsv and rgb too
                             this.colorInputValue.onchange = function () {
                                 console.log("blur = changing color value");
                                 _this.hexColor = _this.colorInputValue.value;
@@ -1868,6 +1869,113 @@ var org;
         var babylonjs;
         (function (babylonjs) {
             var vishva;
+            (function (vishva) {
+                var gui;
+                (function (gui) {
+                    var Material = BABYLON.Material;
+                    /*
+                     * provides a user interface which list all materials in the scene
+                     */
+                    var MaterialListUI = (function () {
+                        function MaterialListUI(scene, matHdlr) {
+                            var _this = this;
+                            this._scene = scene;
+                            this._updateTreeData();
+                            this._materialsDiag = new gui.VTreeDialog(null, "Materials in Scene", gui.DialogMgr.center, this.treeData);
+                            this._materialsDiag.addTreeListener(function (f, p, l) {
+                                if (!l)
+                                    return;
+                                var i = f.indexOf(",");
+                                f = f.substring(0, i);
+                                var mat;
+                                Material;
+                                if (p.indexOf("MultiMaterial") == 0) {
+                                    mat = _this._getMutliMaterialById(f);
+                                }
+                                else {
+                                    mat = _this._scene.getMaterialByID(f);
+                                }
+                                matHdlr(mat);
+                            });
+                            this._materialsDiag.addRefreshHandler(function () {
+                                _this._materialsDiag.close();
+                                _this._updateTreeData();
+                                _this._materialsDiag.refresh(_this.treeData);
+                                _this._materialsDiag.open();
+                                return false;
+                            });
+                        }
+                        MaterialListUI.prototype._getMutliMaterialById = function (id) {
+                            var mms = this._scene.multiMaterials;
+                            var _multiMaterial = null;
+                            for (var _i = 0, mms_1 = mms; _i < mms_1.length; _i++) {
+                                var mm = mms_1[_i];
+                                if (mm.id == id) {
+                                    _multiMaterial = mm;
+                                    break;
+                                }
+                            }
+                            return _multiMaterial;
+                        };
+                        MaterialListUI.prototype.toggle = function () {
+                            if (!this._materialsDiag.isOpen()) {
+                                this._materialsDiag.open();
+                            }
+                            else {
+                                this._materialsDiag.close();
+                            }
+                        };
+                        MaterialListUI.prototype._updateTreeData = function () {
+                            this.treeData = new Array();
+                            var mats = this._scene.materials;
+                            for (var _i = 0, mats_1 = mats; _i < mats_1.length; _i++) {
+                                var mat = mats_1[_i];
+                                this.treeData.push(mat.id + ", " + mat.name);
+                            }
+                            var multiMats = this._scene.multiMaterials;
+                            var obj = {};
+                            obj["d"] = "MultiMaterial";
+                            var mmIds = new Array();
+                            for (var _a = 0, multiMats_1 = multiMats; _a < multiMats_1.length; _a++) {
+                                var multiMat = multiMats_1[_a];
+                                mmIds.push(multiMat.id + "," + multiMat.name);
+                            }
+                            obj["f"] = mmIds;
+                            this.treeData.push(obj);
+                        };
+                        //recursively adds children to the array
+                        MaterialListUI.prototype._addChildren = function (children, treeData) {
+                            for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
+                                var child = children_2[_i];
+                                if (child instanceof BABYLON.MultiMaterial) {
+                                    var childs = child.subMaterials;
+                                    var obj = {};
+                                    obj["d"] = child.id + ", " + child.name;
+                                    obj["f"] = new Array();
+                                    treeData.push(obj);
+                                    this._addChildren(childs, obj["f"]);
+                                }
+                                else {
+                                    treeData.push(child.id + ", " + child.name);
+                                }
+                            }
+                        };
+                        return MaterialListUI;
+                    }());
+                    gui.MaterialListUI = MaterialListUI;
+                })(gui = vishva.gui || (vishva.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var Material = BABYLON.Material;
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
             (function (vishva_11) {
                 var gui;
                 (function (gui) {
@@ -1904,6 +2012,18 @@ var org;
                             this._matClone.onclick = function () {
                                 _this._vishva.cloneMaterial(_this._matID.innerText);
                                 _this.update();
+                            };
+                            this._matReplace = document.getElementById("matReplace");
+                            this._matReplace.onclick = function () {
+                                if (_this._materialListUI == null) {
+                                    _this._materialListUI = new gui.MaterialListUI(_this._vishva.scene, function (mat) {
+                                        _this._vishva.getMeshPicked().material = mat;
+                                        _this.update();
+                                    });
+                                }
+                                _this._materialListUI.toggle();
+                                _this.update();
+                                return false;
                             };
                             //material color
                             this._matColType = document.getElementById("matColType");
@@ -4625,6 +4745,9 @@ var org;
                         this.key.rot = false;
                         this.key.scale = false;
                     };
+                    Vishva.prototype.getMeshPicked = function () {
+                        return this.meshPicked;
+                    };
                     Vishva.prototype.pickObject = function (evt, pickResult) {
                         // prevent curosr from changing to a edit caret in Chrome
                         evt.preventDefault();
@@ -5201,8 +5324,8 @@ var org;
                         }
                         var m;
                         var i = 0;
-                        for (var _i = 0, children_2 = children; _i < children_2.length; _i++) {
-                            var child = children_2[_i];
+                        for (var _i = 0, children_3 = children; _i < children_3.length; _i++) {
+                            var child = children_3[_i];
                             try {
                                 m = child.getWorldMatrix();
                                 if (child.rotationQuaternion == null)
@@ -6690,15 +6813,15 @@ var org;
                         var mats = this.scene.materials;
                         this.renameWorldMaterials(mats);
                         var mms = this.scene.multiMaterials;
-                        for (var _i = 0, mms_1 = mms; _i < mms_1.length; _i++) {
-                            var mm = mms_1[_i];
+                        for (var _i = 0, mms_2 = mms; _i < mms_2.length; _i++) {
+                            var mm = mms_2[_i];
                             this.renameWorldMaterials(mm.subMaterials);
                         }
                     };
                     Vishva.prototype.renameWorldMaterials = function (mats) {
                         var sm;
-                        for (var _i = 0, mats_1 = mats; _i < mats_1.length; _i++) {
-                            var mat = mats_1[_i];
+                        for (var _i = 0, mats_2 = mats; _i < mats_2.length; _i++) {
+                            var mat = mats_2[_i];
                             if (mat != null && mat instanceof BABYLON.StandardMaterial) {
                                 sm = mat;
                                 this.rename(sm.diffuseTexture);
@@ -6823,7 +6946,6 @@ var org;
                     };
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
-                        console.log("onMeshLoaded");
                         var boundingRadius = this.getBoundingRadius(meshes);
                         for (var _i = 0, skeletons_1 = skeletons; _i < skeletons_1.length; _i++) {
                             var skeleton = skeletons_1[_i];
@@ -6890,8 +7012,8 @@ var org;
                             if (mesh.material instanceof BABYLON.MultiMaterial) {
                                 var mm = mesh.material;
                                 var mats = mm.subMaterials;
-                                for (var _i = 0, mats_2 = mats; _i < mats_2.length; _i++) {
-                                    var mat = mats_2[_i];
+                                for (var _i = 0, mats_3 = mats; _i < mats_3.length; _i++) {
+                                    var mat = mats_3[_i];
                                     mat.id = this.uid();
                                 }
                             }
@@ -6918,8 +7040,8 @@ var org;
                             if (mesh.material instanceof BABYLON.MultiMaterial) {
                                 var mm = mesh.material;
                                 var mats = mm.subMaterials;
-                                for (var _i = 0, mats_3 = mats; _i < mats_3.length; _i++) {
-                                    var mat = mats_3[_i];
+                                for (var _i = 0, mats_4 = mats; _i < mats_4.length; _i++) {
+                                    var mat = mats_4[_i];
                                     //TODO remove this
                                     //mesh.material.backFaceCulling=false;
                                     //mesh.material.alpha=1;

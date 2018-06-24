@@ -29,6 +29,7 @@ namespace org.ssatguru.babylonjs.vishva.gui{
             this.colorInputValue = <HTMLInputElement>colorEle.getElementsByClassName("colorInputValue")[0];
             this.colorInputValue.value=this.hexColor;
             
+            //TODO - check for valid value, allow hsv and rgb too
             this.colorInputValue.onchange =()=>{
                 console.log("blur = changing color value");
                 this.hexColor = this.colorInputValue.value;

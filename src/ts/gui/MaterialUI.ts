@@ -1,3 +1,5 @@
+import Material=BABYLON.Material;
+
 namespace org.ssatguru.babylonjs.vishva.gui {
     /**
      * Provides UI to manage a mesh material
@@ -20,10 +22,12 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _matTextType: HTMLSelectElement;
         private _matTextImg: HTMLImageElement;
         private _matClone: HTMLElement;
+        private _matReplace: HTMLElement;
         private _matCreateText: HTMLElement;
         private _matRemText: HTMLElement;
 
         public _textureUI: TextureUI;
+        private _materialListUI:MaterialListUI;
         private _textID: string;
         private _textName: string;
 
@@ -57,6 +61,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matClone.onclick=() => {
                 this._vishva.cloneMaterial(this._matID.innerText);
                 this.update();
+            }
+            
+            this._matReplace=<HTMLSelectElement>document.getElementById("matReplace");
+            this._matReplace.onclick=() => {
+                if(this._materialListUI==null) {
+                    this._materialListUI=new MaterialListUI(this._vishva.scene,(mat:Material)=>{
+                        this._vishva.getMeshPicked().material=mat;
+                        this.update();
+                    });
+                }
+                this._materialListUI.toggle();
+                this.update();
+                return false;
             }
 
             //material color

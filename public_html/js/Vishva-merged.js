@@ -322,10 +322,14 @@ var org;
                         function VDialog(id, title, jpo, width, height, minWidth, modal) {
                             if (minWidth === void 0) { minWidth = 0; }
                             if (modal === void 0) { modal = false; }
+                            var _this = this;
+                            this._height = 0;
+                            this._minimized = false;
                             if (width == null || width == "")
                                 width = "auto";
                             if (height == null || height == "")
                                 height = "auto";
+                            this._height = height;
                             if (id instanceof HTMLDivElement) {
                                 this._diag = $(id);
                             }
@@ -340,7 +344,8 @@ var org;
                                 height: height,
                                 closeText: "",
                                 closeOnEscape: false,
-                                modal: modal
+                                modal: modal,
+                                dialogClass: 'satguru'
                             };
                             this._diag.dialog(dos);
                             if (minWidth != 0) {
@@ -351,6 +356,18 @@ var org;
                             }
                             this.jpo = jpo;
                             gui.DialogMgr.dialogs.push(this);
+                            //$(".satguru").children(".ui-dialog-titlebar").children(".ui-dialog-title").before("<span id='iconhelp' class='ui-icon ui-icon-circle-minus'></span>");
+                            //$(".satguru .ui-dialog-titlebar .ui-dialog-title").before("<span id='iconhelp' class='ui-icon ui-icon-circle-minus'></span>");
+                            //this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title").before("<span id='iconhelp' class='ui-icon ui-icon-circle-minus'></span>");
+                            //this._diag.siblings(".ui-dialog-titlebar").children(".ui-dialog-title").before("<span id='minimize' class='ui-icon ui-icon-circle-minus'></span>");
+                            var minimizer = $("<span id='vdMinimizer' class='ui-icon ui-icon-circle-minus'></span>");
+                            this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title").before(minimizer);
+                            minimizer.click(function () {
+                                if (_this._minimized)
+                                    _this.maximize();
+                                else
+                                    _this.minimize();
+                            });
                         }
                         VDialog.prototype.onClose = function (f) {
                             this._diag.on("dialogclose", f);
@@ -362,10 +379,22 @@ var org;
                             this._diag.dialog("option", "resizable", b);
                         };
                         VDialog.prototype.open = function () {
+                            this._minimized = false;
                             this._diag.dialog("open");
                         };
                         VDialog.prototype.close = function () {
+                            this._minimized = true;
                             this._diag.dialog("close");
+                        };
+                        VDialog.prototype.minimize = function () {
+                            this._minimized = true;
+                            this._diag.dialog("option", "height", 0);
+                            this._diag.hide();
+                        };
+                        VDialog.prototype.maximize = function () {
+                            this._minimized = false;
+                            this._diag.dialog("option", "height", this._height);
+                            this._diag.show();
                         };
                         VDialog.prototype.isOpen = function () {
                             return this._diag.dialog("isOpen");
@@ -3289,6 +3318,7 @@ var org;
                             window.addEventListener("resize", function (evt) { return _this.onWindowResize(evt); });
                         }
                         VishvaGUI.prototype.onWindowResize = function (evt) {
+                            //move all JQuerUI Dialogs
                             for (var _i = 0, _a = this.dialogs; _i < _a.length; _i++) {
                                 var jq = _a[_i];
                                 var jpo = jq["jpo"];
@@ -3303,14 +3333,15 @@ var org;
                                     }
                                 }
                             }
+                            //do the same for all VDialogs
                             for (var _b = 0, _c = gui.DialogMgr.dialogs; _b < _c.length; _b++) {
                                 var diag = _c[_b];
                                 diag.position();
                                 if (diag.isOpen()) {
-                                    this.resizing = true;
-                                    diag.close();
-                                    diag.open();
-                                    this.resizing = false;
+                                    //                    this.resizing=true;
+                                    //                    diag.close();
+                                    //                    diag.open();
+                                    //                    this.resizing=false;
                                 }
                             }
                         };

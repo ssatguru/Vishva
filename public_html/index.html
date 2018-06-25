@@ -46,7 +46,7 @@
 
         <!-- BABYLONJS Pointer Events Polyfill -->
         <script src="lib/pep.0.4.1.min.js"></script>
-        
+
 
         <!-- BABYLONJS DynamicTerrain -->
         <script src="lib/babylon.dynamicTerrain.min.js"></script>
@@ -97,7 +97,18 @@
                 filter: FlipH;
             }
             /* to display mutliple icons on same line */
-            .ui-icon.inline { display:inline-block; }​
+            .ui-icon.inline { display:inline-block; }
+            
+            /*
+            mimimizer icon on each of the VDialogs
+            */
+            #vdMinimizer{
+                cursor: pointer;
+                float: left;
+                margin-right:10px;
+                /* margin-top: 3px;*/
+            }
+
 
             .navMenu {
                 position: absolute;
@@ -708,7 +719,7 @@
                                 </td>
                             </tr>
                         </table>
-                       
+
                     </div>
 
                     <h3 class="mesh">Lights</h3>

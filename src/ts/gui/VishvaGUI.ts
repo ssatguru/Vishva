@@ -61,6 +61,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          */
         resizing: boolean=false;
         private onWindowResize(evt: Event) {
+            
+            //move all JQuerUI Dialogs
             for(let jq of this.dialogs) {
                 let jpo: JQueryPositionOptions=<JQueryPositionOptions>jq["jpo"];
                 if(jpo!=null) {
@@ -74,14 +76,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     }
                 }
             }
-
+            
+            //do the same for all VDialogs
             for(let diag of DialogMgr.dialogs) {
                 diag.position();
                 if(diag.isOpen()) {
-                    this.resizing=true;
-                    diag.close();
-                    diag.open();
-                    this.resizing=false;
+//                    this.resizing=true;
+//                    diag.close();
+//                    diag.open();
+//                    this.resizing=false;
                 }
             }
         }

@@ -11,8 +11,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _height: number|string=0;
         private _minimized: boolean=false;
 
-        constructor(id: string|HTMLDivElement,title: string,jpo: JQueryPositionOptions,width?: string|number,height?: string|number,minWidth=0,modal=false) {
-            if(width==null||width=="") width="auto";
+        constructor(id: string|HTMLDivElement,title: string,jpo: JQueryPositionOptions,width: string|number=0,height?: string|number,minWidth=0,modal=false) {
+            //if(width==null||width=="") width="auto";
             if(height==null||height=="") height="auto";
             this._height=height;
 
@@ -30,14 +30,14 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 height: height,
                 closeText: "",
                 closeOnEscape: false,
-                modal: modal,
-                dialogClass: 'satguru'
+                modal: modal
             };
             this._diag.dialog(dos);
             if(minWidth!=0) {
                 this._diag.dialog("option","minWidth",minWidth);
-            } else {
-                this._diag.dialog("option","width",width);
+            } 
+            if (width!=0) {
+               this._diag.dialog("option","width",width);
             }
             this.jpo=jpo;
             DialogMgr.dialogs.push(this);
@@ -48,12 +48,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //this._diag.siblings(".ui-dialog-titlebar").children(".ui-dialog-title").before("<span id='minimize' class='ui-icon ui-icon-circle-minus'></span>");
             
             let minimizer: JQuery=$("<span id='vdMinimizer' class='ui-icon ui-icon-circle-minus'></span>");
-            this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title").before(minimizer);
+            let titleBar:JQuery=this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title");
+            titleBar.before(minimizer);
             minimizer.click(() => {
                 if(this._minimized) this.maximize();
                 else this.minimize();
             }
             );
+            titleBar.dblclick(() => {this.close()});
+            
         }
 
         public onClose(f: (e: Event,ui: object) => void) {

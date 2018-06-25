@@ -15,7 +15,8 @@ namespace org.ssatguru.babylonjs.vishva.gui{
         
         colorInputValue:HTMLInputElement;
         colorInput:HTMLInputElement;
-        diag:JQuery;
+        //diag:JQuery;
+        vDiag:VDialog ;
         cp: ColorPicker; 
         hexColor:string;
         
@@ -43,11 +44,12 @@ namespace org.ssatguru.babylonjs.vishva.gui{
             
             
             this.colorInput.onclick =()=>{
-                this.diag.dialog("open");
+                //this.diag.dialog("open");
+                this.vDiag.open();
                 this.cp.setHex(this.hexColor);
             }
             
-            let colorDiag:HTMLElement = <HTMLElement>colorEle.getElementsByClassName("colorDiag")[0];
+            let colorDiag:HTMLDivElement = <HTMLDivElement>colorEle.getElementsByClassName("colorDiag")[0];
             let colorPicker:HTMLElement = <HTMLElement> colorDiag.getElementsByClassName("colorPicker")[0];
             
             this.cp = new ColorPicker(colorPicker, (hex: any, hsv: any, rgb: RGB)=>{
@@ -57,25 +59,11 @@ namespace org.ssatguru.babylonjs.vishva.gui{
                 f(hex,hsv,rgb);
             });
             
-            
-            var dos: DialogOptions = {
-                autoOpen: false,
-                resizable: false,
-                position: jpo,
-                //minWidth: 350,
-                height: "auto",
-                closeText: "",
-                closeOnEscape: false,
-                title:title
-            };
-            
-            this.diag = $(colorDiag);
-            this.diag.dialog(dos);
-            this.diag["jpo"] = jpo;
+            this.vDiag = new VDialog(colorDiag,title,jpo);
         }
         
         public open(hex:string){
-            this.diag.dialog("open");
+            this.vDiag.open();
             this.setColor(hex);
         }
         

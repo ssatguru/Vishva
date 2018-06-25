@@ -254,7 +254,8 @@ var org;
                             this.colorInput = colorEle.getElementsByClassName("colorInput")[0];
                             this.colorInput.style.backgroundColor = this.hexColor;
                             this.colorInput.onclick = function () {
-                                _this.diag.dialog("open");
+                                //this.diag.dialog("open");
+                                _this.vDiag.open();
                                 _this.cp.setHex(_this.hexColor);
                             };
                             var colorDiag = colorEle.getElementsByClassName("colorDiag")[0];
@@ -265,22 +266,10 @@ var org;
                                 _this.colorInputValue.value = hex;
                                 f(hex, hsv, rgb);
                             });
-                            var dos = {
-                                autoOpen: false,
-                                resizable: false,
-                                position: jpo,
-                                //minWidth: 350,
-                                height: "auto",
-                                closeText: "",
-                                closeOnEscape: false,
-                                title: title
-                            };
-                            this.diag = $(colorDiag);
-                            this.diag.dialog(dos);
-                            this.diag["jpo"] = jpo;
+                            this.vDiag = new gui.VDialog(colorDiag, title, jpo);
                         }
                         ColorPickerDiag.prototype.open = function (hex) {
-                            this.diag.dialog("open");
+                            this.vDiag.open();
                             this.setColor(hex);
                         };
                         ColorPickerDiag.prototype.setColor = function (hex) {
@@ -320,13 +309,13 @@ var org;
                 (function (gui) {
                     var VDialog = (function () {
                         function VDialog(id, title, jpo, width, height, minWidth, modal) {
+                            if (width === void 0) { width = 0; }
                             if (minWidth === void 0) { minWidth = 0; }
                             if (modal === void 0) { modal = false; }
                             var _this = this;
                             this._height = 0;
                             this._minimized = false;
-                            if (width == null || width == "")
-                                width = "auto";
+                            //if(width==null||width=="") width="auto";
                             if (height == null || height == "")
                                 height = "auto";
                             this._height = height;
@@ -344,14 +333,13 @@ var org;
                                 height: height,
                                 closeText: "",
                                 closeOnEscape: false,
-                                modal: modal,
-                                dialogClass: 'satguru'
+                                modal: modal
                             };
                             this._diag.dialog(dos);
                             if (minWidth != 0) {
                                 this._diag.dialog("option", "minWidth", minWidth);
                             }
-                            else {
+                            if (width != 0) {
                                 this._diag.dialog("option", "width", width);
                             }
                             this.jpo = jpo;
@@ -361,13 +349,15 @@ var org;
                             //this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title").before("<span id='iconhelp' class='ui-icon ui-icon-circle-minus'></span>");
                             //this._diag.siblings(".ui-dialog-titlebar").children(".ui-dialog-title").before("<span id='minimize' class='ui-icon ui-icon-circle-minus'></span>");
                             var minimizer = $("<span id='vdMinimizer' class='ui-icon ui-icon-circle-minus'></span>");
-                            this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title").before(minimizer);
+                            var titleBar = this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title");
+                            titleBar.before(minimizer);
                             minimizer.click(function () {
                                 if (_this._minimized)
                                     _this.maximize();
                                 else
                                     _this.minimize();
                             });
+                            titleBar.dblclick(function () { _this.close(); });
                         }
                         VDialog.prototype.onClose = function (f) {
                             this._diag.on("dialogclose", f);
@@ -1498,12 +1488,13 @@ var org;
                             this._propsDiag = $("#propsDiag");
                             var dos = {
                                 autoOpen: false,
+                                //if resizable is set then height doesnot adjust automatically
                                 resizable: false,
                                 position: gui.DialogMgr.leftCenter,
                                 minWidth: 420,
-                                width: 420,
-                                // height: "auto",
-                                height: 650,
+                                //width: 420,
+                                height: "auto",
+                                //height: 650,
                                 closeOnEscape: false,
                                 //a) on open set the values of the fields in the active panel.
                                 //   also if we switched from another mesh vishav will close open

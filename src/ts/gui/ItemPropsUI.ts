@@ -52,12 +52,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._propsDiag=$("#propsDiag");
             var dos: DialogOptions={
                 autoOpen: false,
+                //if resizable is set then height doesnot adjust automatically
                 resizable: false,
                 position: DialogMgr.leftCenter,
                 minWidth: 420,
-                width: 420,
-                // height: "auto",
-                height: 650,
+                //width: 420,
+                 height: "auto",
+                //height: 650,
                 closeOnEscape: false,
                 //a) on open set the values of the fields in the active panel.
                 //   also if we switched from another mesh vishav will close open

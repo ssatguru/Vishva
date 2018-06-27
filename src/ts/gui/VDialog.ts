@@ -51,8 +51,15 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let titleBar:JQuery=this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title");
             titleBar.before(minimizer);
             minimizer.click(() => {
-                if(this._minimized) this.maximize();
-                else this.minimize();
+                if(this._minimized) {
+                     minimizer.removeClass("ui-icon-circle-plus");
+                     minimizer.addClass("ui-icon-circle-minus");
+                     this.maximize();
+                }else{
+                     minimizer.removeClass("ui-icon-circle-minus");
+                     minimizer.addClass("ui-icon-circle-plus");
+                     this.minimize();
+                }
             }
             );
             titleBar.dblclick(() => {this.close()});
@@ -84,6 +91,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         public minimize() {
             this._minimized=true;
+            this._diag.dialog("option","position",null)
             this._diag.dialog("option","height",0)
             this._diag.hide();
             

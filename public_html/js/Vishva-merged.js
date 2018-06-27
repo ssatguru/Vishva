@@ -352,10 +352,16 @@ var org;
                             var titleBar = this._diag.parent().children(".ui-dialog-titlebar").children(".ui-dialog-title");
                             titleBar.before(minimizer);
                             minimizer.click(function () {
-                                if (_this._minimized)
+                                if (_this._minimized) {
+                                    minimizer.removeClass("ui-icon-circle-plus");
+                                    minimizer.addClass("ui-icon-circle-minus");
                                     _this.maximize();
-                                else
+                                }
+                                else {
+                                    minimizer.removeClass("ui-icon-circle-minus");
+                                    minimizer.addClass("ui-icon-circle-plus");
                                     _this.minimize();
+                                }
                             });
                             titleBar.dblclick(function () { _this.close(); });
                         }
@@ -378,6 +384,7 @@ var org;
                         };
                         VDialog.prototype.minimize = function () {
                             this._minimized = true;
+                            this._diag.dialog("option", "position", null);
                             this._diag.dialog("option", "height", 0);
                             this._diag.hide();
                         };

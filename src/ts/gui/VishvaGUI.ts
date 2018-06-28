@@ -94,7 +94,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private _addInternalAssetUI: InternalAssetsUI;
         private _addAssetTDiag: VTreeDialog;
-        private _items: ItemsUI;
+        private _items: ItemListUI;
         private _environment: EnvironmentUI;
         private _settingDiag: SettingsUI;
         private _itemProps: ItemPropsUI;
@@ -196,7 +196,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let navItems: HTMLElement=document.getElementById("navItems");
             navItems.onclick=(e) => {
                 if(this._items==null) {
-                    this._items=new ItemsUI(this._vishva);
+                    this._items=new ItemListUI(this._vishva);
                 }
                 this._items.toggle();
                 return false;

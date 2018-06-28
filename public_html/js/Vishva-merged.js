@@ -315,6 +315,7 @@ var org;
                             var _this = this;
                             this._height = 0;
                             this._minimized = false;
+                            this._fixingDragIssue = false;
                             //if(width==null||width=="") width="auto";
                             if (height == null || height == "")
                                 height = "auto";
@@ -333,7 +334,34 @@ var org;
                                 height: height,
                                 closeText: "",
                                 closeOnEscape: false,
-                                modal: modal
+                                modal: modal,
+                                open: function (e, ui) {
+                                    if (!_this._fixingDragIssue) {
+                                        if (_this._onOpen != null)
+                                            _this._onOpen();
+                                    }
+                                    else {
+                                        _this._fixingDragIssue = false;
+                                    }
+                                },
+                                close: function () {
+                                    if (!_this._fixingDragIssue) {
+                                        if (_this._onClose != null)
+                                            _this._onClose();
+                                    }
+                                    else {
+                                        _this._fixingDragIssue = false;
+                                    }
+                                },
+                                //after drag the dialog box doesnot resize
+                                //force resize by closing and opening
+                                dragStop: function (e, ui) {
+                                    _this._fixingDragIssue = true;
+                                    _this._diag.dialog("close");
+                                    _this._diag.dialog("open");
+                                    if (_this._minimized)
+                                        _this.minimize();
+                                }
                             };
                             this._diag.dialog(dos);
                             if (minWidth != 0) {
@@ -366,7 +394,10 @@ var org;
                             titleBar.dblclick(function () { _this.close(); });
                         }
                         VDialog.prototype.onClose = function (f) {
-                            this._diag.on("dialogclose", f);
+                            this._onClose = f;
+                        };
+                        VDialog.prototype.onOpen = function (f) {
+                            this._onOpen = f;
                         };
                         VDialog.prototype.setModal = function (b) {
                             this._diag.dialog("option", "modal", b);
@@ -375,11 +406,13 @@ var org;
                             this._diag.dialog("option", "resizable", b);
                         };
                         VDialog.prototype.open = function () {
-                            this._minimized = false;
+                            //this._minimized=false;
                             this._diag.dialog("open");
+                            if (this._minimized)
+                                this.minimize();
                         };
                         VDialog.prototype.close = function () {
-                            this._minimized = true;
+                            //this._minimized=true;
                             this._diag.dialog("close");
                         };
                         VDialog.prototype.minimize = function () {
@@ -1459,6 +1492,106 @@ var org;
             (function (vishva_8) {
                 var gui;
                 (function (gui) {
+                    /*
+                     * provides a user interface which list all meshes in the scene
+                     */
+                    var ItemListUI = (function () {
+                        function ItemListUI(vishva) {
+                            var _this = this;
+                            this._vishva = vishva;
+                            this._updateTreeData();
+                            this._itemsDiag = new gui.VTreeDialog(this._vishva, "Items in Scene", gui.DialogMgr.leftCenter, this.treeData);
+                            this._itemsDiag.addTreeListener(function (f, p, l) {
+                                var i = f.indexOf(",");
+                                f = f.substring(0, i);
+                                _this._vishva.selectMesh(f);
+                            });
+                            this._itemsDiag.addRefreshHandler(function () {
+                                _this._itemsDiag.close();
+                                _this._updateTreeData();
+                                _this._itemsDiag.refresh(_this.treeData);
+                                _this._itemsDiag.open();
+                                return false;
+                            });
+                        }
+                        ItemListUI.prototype.toggle = function () {
+                            if (!this._itemsDiag.isOpen()) {
+                                this._itemsDiag.open();
+                            }
+                            else {
+                                this._itemsDiag.close();
+                            }
+                        };
+                        ItemListUI.prototype._updateTreeData = function () {
+                            this.treeData = new Array();
+                            var items = this._vishva.getMeshList();
+                            this._updateMeshChildMap(items);
+                            var childs;
+                            for (var _i = 0, items_3 = items; _i < items_3.length; _i++) {
+                                var item = items_3[_i];
+                                if (item.parent == null) {
+                                    childs = this.meshChildMap[item.uniqueId];
+                                    if (childs != null) {
+                                        var obj = {};
+                                        obj["d"] = Number(item.uniqueId).toString() + ", " + item.name;
+                                        obj["f"] = new Array();
+                                        this.treeData.push(obj);
+                                        this._addChildren(childs, obj["f"]);
+                                    }
+                                    else {
+                                        this.treeData.push(Number(item.uniqueId).toString() + ", " + item.name);
+                                    }
+                                }
+                            }
+                        };
+                        ItemListUI.prototype._addChildren = function (children, treeData) {
+                            for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
+                                var child = children_1[_i];
+                                var childs = this.meshChildMap[child.uniqueId];
+                                if (childs != null) {
+                                    var obj = {};
+                                    obj["d"] = Number(child.parent.uniqueId).toString() + ", " + child.parent.name;
+                                    obj["f"] = new Array();
+                                    treeData.push(obj);
+                                    this._addChildren(childs, obj["f"]);
+                                }
+                                else {
+                                    treeData.push(Number(child.uniqueId).toString() + ", " + child.name);
+                                }
+                            }
+                        };
+                        ItemListUI.prototype._updateMeshChildMap = function (meshes) {
+                            this.meshChildMap = {};
+                            for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
+                                var mesh = meshes_2[_i];
+                                if (mesh.parent != null) {
+                                    var childs = this.meshChildMap[mesh.parent.uniqueId];
+                                    if (childs == null) {
+                                        childs = new Array();
+                                        this.meshChildMap[mesh.parent.uniqueId] = childs;
+                                    }
+                                    childs.push(mesh);
+                                }
+                            }
+                        };
+                        return ItemListUI;
+                    }());
+                    gui.ItemListUI = ItemListUI;
+                })(gui = vishva_8.gui || (vishva_8.gui = {}));
+            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
+        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
+    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
+})(org || (org = {}));
+var org;
+(function (org) {
+    var ssatguru;
+    (function (ssatguru) {
+        var babylonjs;
+        (function (babylonjs) {
+            var vishva;
+            (function (vishva_9) {
+                var gui;
+                (function (gui) {
                     /**
                      * Provides UI to manage an Item(mesh) properties
                      */
@@ -1466,7 +1599,8 @@ var org;
                         function ItemPropsUI(vishva, vishvaGUI) {
                             var _this = this;
                             //private _snaUI:SnaUI;
-                            this._propsDiag = null;
+                            //private _propsDiag: JQuery=null;
+                            this._propsVDiag = null;
                             this._propsAcc = null;
                             this._fixingDragIssue = false;
                             this._activePanel = -1;
@@ -1490,63 +1624,105 @@ var org;
                                     _this.refreshPanel(_this.getPanelIndex(ui.newHeader));
                                 }
                             });
-                            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
-                            //property dialog box
-                            this._propsDiag = $("#propsDiag");
-                            var dos = {
-                                autoOpen: false,
-                                //if resizable is set then height doesnot adjust automatically
-                                resizable: false,
-                                position: gui.DialogMgr.leftCenter,
-                                minWidth: 420,
-                                //width: 420,
-                                height: "auto",
-                                //height: 650,
-                                closeOnEscape: false,
-                                //a) on open set the values of the fields in the active panel.
-                                //   also if we switched from another mesh vishav will close open
-                                //   by calling refreshPropsDiag().
-                                //b) donot bother refreshing values if we are just restarting
-                                //   dialog for height and width re-sizing after drag.
-                                open: function (e, ui) {
-                                    if (!_this._fixingDragIssue) {
-                                        // refresh the active tab
-                                        _this._activePanel = propsAcc.accordion("option", "active");
-                                        _this.refreshPanel(_this._activePanel);
-                                        _this.refreshingPropsDiag = false;
+                            this._propsVDiag = new gui.VDialog("propsDiag", "mesh properties", gui.DialogMgr.leftCenter, 0, "auto", 420);
+                            this._propsVDiag.onOpen(function () {
+                                _this._activePanel = propsAcc.accordion("option", "active");
+                                _this.refreshPanel(_this._activePanel);
+                                _this.refreshingPropsDiag = false;
+                            });
+                            this._propsVDiag.onClose(function () {
+                                if (_this._vishvaGUI.resizing)
+                                    return;
+                                if (!_this.refreshingPropsDiag) {
+                                    if ((_this._generalUI._snaUI != null) && _this._generalUI._snaUI.isOpen()) {
+                                        _this._generalUI._snaUI.close();
                                     }
-                                    else {
-                                        _this._fixingDragIssue = false;
+                                    if ((_this._materialUI != null) && (_this._materialUI._textureUI != null) && _this._materialUI._textureUI.isOpen()) {
+                                        _this._materialUI._textureUI.close();
                                     }
-                                },
-                                closeText: "",
-                                close: function () {
-                                    if (_this._vishvaGUI.resizing)
-                                        return;
-                                    if (!_this._fixingDragIssue && !_this.refreshingPropsDiag) {
-                                        if ((_this._generalUI._snaUI != null) && _this._generalUI._snaUI.isOpen()) {
-                                            _this._generalUI._snaUI.close();
-                                        }
-                                        if ((_this._materialUI != null) && (_this._materialUI._textureUI != null) && _this._materialUI._textureUI.isOpen()) {
-                                            _this._materialUI._textureUI.close();
-                                        }
-                                        if (_this._vishva.isGroundPicked()) {
-                                            _this._vishva.unSelectGrnd();
-                                        }
+                                    if (_this._vishva.isGroundPicked()) {
+                                        _this._vishva.unSelectGrnd();
                                     }
-                                },
-                                //after drag the dialog box doesnot resize
-                                //force resize by closing and opening
-                                dragStop: function (e, ui) {
-                                    _this._fixingDragIssue = true;
-                                    _this._propsDiag.dialog("close");
-                                    _this._propsDiag.dialog("open");
                                 }
-                            };
-                            this._propsDiag.dialog(dos);
-                            this._propsDiag["jpo"] = gui.DialogMgr.leftCenter;
-                            this._vishvaGUI.dialogs.push(this._propsDiag);
+                            });
                         }
+                        //        constructor_old(vishva: Vishva,vishvaGUI: VishvaGUI) {
+                        //            this._vishva=vishva;
+                        //            this._vishvaGUI=vishvaGUI;
+                        //
+                        //
+                        //            this._propsAcc=document.getElementById("propsAcc");
+                        //            let propsAcc: JQuery=$(this._propsAcc);
+                        //
+                        //            propsAcc.accordion({
+                        //                animate: 100,
+                        //                heightStyle: "content",
+                        //                collapsible: true,
+                        //                activate: () => {
+                        //                    this._activePanel=propsAcc.accordion("option","active");
+                        //                },
+                        //                beforeActivate: (e,ui) => {
+                        //                    this.refreshPanel(this.getPanelIndex(ui.newHeader));
+                        //
+                        //                }
+                        //            });
+                        //
+                        //            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
+                        //
+                        //            //property dialog box
+                        //            this._propsDiag=$("#propsDiag");
+                        //            var dos: DialogOptions={
+                        //                autoOpen: false,
+                        //                //if resizable is set then height doesnot adjust automatically
+                        //                resizable: false,
+                        //                position: DialogMgr.leftCenter,
+                        //                minWidth: 420,
+                        //                //width: 420,
+                        //                height: "auto",
+                        //                //height: 650,
+                        //                closeOnEscape: false,
+                        //                //a) on open set the values of the fields in the active panel.
+                        //                //   also if we switched from another mesh vishav will close open
+                        //                //   by calling refreshPropsDiag().
+                        //                //b) donot bother refreshing values if we are just restarting
+                        //                //   dialog for height and width re-sizing after drag.
+                        //                open: (e,ui) => {
+                        //                    if(!this._fixingDragIssue) {
+                        //                        // refresh the active tab
+                        //                        this._activePanel=propsAcc.accordion("option","active");
+                        //                        this.refreshPanel(this._activePanel);
+                        //                        this.refreshingPropsDiag=false;
+                        //                    } else {
+                        //                        this._fixingDragIssue=false;
+                        //                    }
+                        //                },
+                        //                closeText: "",
+                        //                close: () => {
+                        //                    if(this._vishvaGUI.resizing) return;
+                        //                    if(!this._fixingDragIssue&&!this.refreshingPropsDiag) {
+                        //                        if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
+                        //                            this._generalUI._snaUI.close();
+                        //                        }
+                        //                        if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
+                        //                            this._materialUI._textureUI.close();
+                        //                        }
+                        //                        if(this._vishva.isGroundPicked()) {
+                        //                            this._vishva.unSelectGrnd();
+                        //                        }
+                        //                    }
+                        //                },
+                        //                //after drag the dialog box doesnot resize
+                        //                //force resize by closing and opening
+                        //                dragStop: (e,ui) => {
+                        //                    this._fixingDragIssue=true;
+                        //                    this._propsDiag.dialog("close");
+                        //                    this._propsDiag.dialog("open");
+                        //                }
+                        //            };
+                        //            this._propsDiag.dialog(dos);
+                        //            this._propsDiag["jpo"]=DialogMgr.leftCenter;
+                        //            this._vishvaGUI.dialogs.push(this._propsDiag);
+                        //        }
                         ItemPropsUI.prototype.open = function () {
                             var es;
                             //if ground selected show only ground related tabs or those common to both mesh and ground
@@ -1557,12 +1733,12 @@ var org;
                                 for (var i = 0; i < es.length; i++) {
                                     es.item(i).style.display = "none";
                                 }
-                                //                es=document.getElementsByClassName("grnd");
-                                //                
-                                //                for(let i=0;i<es.length;i++) {
-                                //                    if(es.item(i).tagName=="H3")
-                                //                        (<HTMLElement>es.item(i)).style.display="block";
-                                //                    //TODO : if panel is active then open div too
+                                //                es=document.getElementsByCla                ssName("grnd");
+                                //                                
+                                //                for(let i=0;i<e                s.length;i++) {
+                                //                    if(es.item(i)                .tagName=="H3")
+                                //                        (<HTMLElement>es.item(i)).style.d                isplay="block";
+                                //                    //TODO : if panel is active th                en open div too
                                 //                }
                                 //display all ground related tabs
                                 es = this._propsAcc.getElementsByTagName("h3");
@@ -1582,10 +1758,10 @@ var org;
                                 for (var i = 0; i < es.length; i++) {
                                     es.item(i).style.display = "none";
                                 }
-                                //                es=document.getElementsByClassName("mesh");
-                                //                for(let i=0;i<es.length;i++) {
-                                //                    if(es.item(i).tagName=="H3")
-                                //                        (<HTMLElement>es.item(i)).style.display="block";
+                                //                es=document.getElementsByCla                ssName("mesh");
+                                //                for(let i=0;i<e                s.length;i++) {
+                                //                    if(es.item(i)                .tagName=="H3")
+                                //                        (<HTMLElement>es.item(i)).style.d                isplay="block";
                                 //                }
                                 //display all mesh related tabs
                                 es = this._propsAcc.getElementsByTagName("h3");
@@ -1598,18 +1774,21 @@ var org;
                                     }
                                 }
                             }
-                            this._propsDiag.dialog("open");
+                            //this._propsDiag.dialog("open");
+                            this._propsVDiag.open();
                         };
                         ItemPropsUI.prototype.isOpen = function () {
-                            return this._propsDiag.dialog("isOpen");
+                            //return this._propsDiag.dialog("isOpen");
+                            return this._propsVDiag.isOpen();
                         };
                         ItemPropsUI.prototype.close = function () {
-                            this._propsDiag.dialog("close");
+                            //this._propsDiag.dialog("close");
+                            this._propsVDiag.close();
                         };
                         ItemPropsUI.prototype.refreshPropsDiag = function () {
-                            if ((this._propsDiag === undefined) || (this._propsDiag === null))
+                            if ((this._propsVDiag === undefined) || (this._propsVDiag === null))
                                 return;
-                            if (this._propsDiag.dialog("isOpen") === true) {
+                            if (this._propsVDiag.isOpen()) {
                                 this.refreshingPropsDiag = true;
                                 this.close();
                                 this.open();
@@ -1681,106 +1860,6 @@ var org;
                         return ItemPropsUI;
                     }());
                     gui.ItemPropsUI = ItemPropsUI;
-                })(gui = vishva_8.gui || (vishva_8.gui = {}));
-            })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
-        })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
-    })(ssatguru = org.ssatguru || (org.ssatguru = {}));
-})(org || (org = {}));
-var org;
-(function (org) {
-    var ssatguru;
-    (function (ssatguru) {
-        var babylonjs;
-        (function (babylonjs) {
-            var vishva;
-            (function (vishva_9) {
-                var gui;
-                (function (gui) {
-                    /*
-                     * provides a user interface which list all meshes in the scene
-                     */
-                    var ItemsUI = (function () {
-                        function ItemsUI(vishva) {
-                            var _this = this;
-                            this._vishva = vishva;
-                            this._updateTreeData();
-                            this._itemsDiag = new gui.VTreeDialog(this._vishva, "Items in Scene", gui.DialogMgr.leftCenter, this.treeData);
-                            this._itemsDiag.addTreeListener(function (f, p, l) {
-                                var i = f.indexOf(",");
-                                f = f.substring(0, i);
-                                _this._vishva.selectMesh(f);
-                            });
-                            this._itemsDiag.addRefreshHandler(function () {
-                                _this._itemsDiag.close();
-                                _this._updateTreeData();
-                                _this._itemsDiag.refresh(_this.treeData);
-                                _this._itemsDiag.open();
-                                return false;
-                            });
-                        }
-                        ItemsUI.prototype.toggle = function () {
-                            if (!this._itemsDiag.isOpen()) {
-                                this._itemsDiag.open();
-                            }
-                            else {
-                                this._itemsDiag.close();
-                            }
-                        };
-                        ItemsUI.prototype._updateTreeData = function () {
-                            this.treeData = new Array();
-                            var items = this._vishva.getMeshList();
-                            this._updateMeshChildMap(items);
-                            var childs;
-                            for (var _i = 0, items_3 = items; _i < items_3.length; _i++) {
-                                var item = items_3[_i];
-                                if (item.parent == null) {
-                                    childs = this.meshChildMap[item.uniqueId];
-                                    if (childs != null) {
-                                        var obj = {};
-                                        obj["d"] = Number(item.uniqueId).toString() + ", " + item.name;
-                                        obj["f"] = new Array();
-                                        this.treeData.push(obj);
-                                        this._addChildren(childs, obj["f"]);
-                                    }
-                                    else {
-                                        this.treeData.push(Number(item.uniqueId).toString() + ", " + item.name);
-                                    }
-                                }
-                            }
-                        };
-                        ItemsUI.prototype._addChildren = function (children, treeData) {
-                            for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
-                                var child = children_1[_i];
-                                var childs = this.meshChildMap[child.uniqueId];
-                                if (childs != null) {
-                                    var obj = {};
-                                    obj["d"] = Number(child.parent.uniqueId).toString() + ", " + child.parent.name;
-                                    obj["f"] = new Array();
-                                    treeData.push(obj);
-                                    this._addChildren(childs, obj["f"]);
-                                }
-                                else {
-                                    treeData.push(Number(child.uniqueId).toString() + ", " + child.name);
-                                }
-                            }
-                        };
-                        ItemsUI.prototype._updateMeshChildMap = function (meshes) {
-                            this.meshChildMap = {};
-                            for (var _i = 0, meshes_2 = meshes; _i < meshes_2.length; _i++) {
-                                var mesh = meshes_2[_i];
-                                if (mesh.parent != null) {
-                                    var childs = this.meshChildMap[mesh.parent.uniqueId];
-                                    if (childs == null) {
-                                        childs = new Array();
-                                        this.meshChildMap[mesh.parent.uniqueId] = childs;
-                                    }
-                                    childs.push(mesh);
-                                }
-                            }
-                        };
-                        return ItemsUI;
-                    }());
-                    gui.ItemsUI = ItemsUI;
                 })(gui = vishva_9.gui || (vishva_9.gui = {}));
             })(vishva = babylonjs.vishva || (babylonjs.vishva = {}));
         })(babylonjs = ssatguru.babylonjs || (ssatguru.babylonjs = {}));
@@ -3435,7 +3514,7 @@ var org;
                             var navItems = document.getElementById("navItems");
                             navItems.onclick = function (e) {
                                 if (_this._items == null) {
-                                    _this._items = new gui.ItemsUI(_this._vishva);
+                                    _this._items = new gui.ItemListUI(_this._vishva);
                                 }
                                 _this._items.toggle();
                                 return false;

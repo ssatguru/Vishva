@@ -10,6 +10,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public jpo: JQueryPositionOptions;
         private _height: number|string=0;
         private _minimized: boolean=false;
+        private _fixingDragIssue:boolean=false;
+        private _onOpen:() => void;
+        private _onClose:() => void;
 
         constructor(id: string|HTMLDivElement,title: string,jpo: JQueryPositionOptions,width: string|number=0,height?: string|number,minWidth=0,modal=false) {
             //if(width==null||width=="") width="auto";
@@ -30,7 +33,29 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 height: height,
                 closeText: "",
                 closeOnEscape: false,
-                modal: modal
+                modal: modal,
+                open: (e,ui) => {
+                    if(!this._fixingDragIssue) {
+                        if(this._onOpen!=null) this._onOpen();
+                    } else {
+                        this._fixingDragIssue=false;
+                    }
+                },
+                close: () => {
+                    if(!this._fixingDragIssue) {
+                        if(this._onClose!=null) this._onClose();
+                    } else {
+                        this._fixingDragIssue=false;
+                    }
+                },
+                //after drag the dialog box doesnot resize
+                //force resize by closing and opening
+                dragStop: (e,ui) => {
+                    this._fixingDragIssue=true;
+                    this._diag.dialog("close");
+                    this._diag.dialog("open");
+                    if(this._minimized) this.minimize();
+                }
             };
             this._diag.dialog(dos);
             if(minWidth!=0) {
@@ -66,10 +91,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             
         }
 
-        public onClose(f: (e: Event,ui: object) => void) {
-            this._diag.on("dialogclose",f);
+        public onClose(f: () => void) {
+            this._onClose=f;
         }
-
+        
+        public onOpen(f: () => void) {
+            this._onOpen=f;
+        }
         public setModal(b: boolean) {
             this._diag.dialog("option","modal",b);
         }
@@ -80,12 +108,13 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
 
         public open() {
-            this._minimized=false;
+            //this._minimized=false;
             this._diag.dialog("open");
+            if(this._minimized) this.minimize();
         }
 
         public close() {
-            this._minimized=true;
+            //this._minimized=true;
             this._diag.dialog("close");
         }
 

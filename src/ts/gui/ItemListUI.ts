@@ -3,7 +3,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
     /*
      * provides a user interface which list all meshes in the scene
      */
-    export class ItemsUI {
+    export class ItemListUI {
 
         private _vishva: Vishva;
         private _itemsDiag: VTreeDialog;

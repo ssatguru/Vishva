@@ -9,22 +9,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vishvaGUI: VishvaGUI;
         //private _snaUI:SnaUI;
 
-        private _propsDiag: JQuery=null;
+        //private _propsDiag: JQuery=null;
+        private _propsVDiag: VDialog=null;
         private _propsAcc: HTMLElement=null;
         private _fixingDragIssue: boolean=false;
         private _activePanel: number=-1;
-        
+
         //panels;
         private _generalUI: GeneralUI;
         private _lightUI: LightUI;
         private _animationUI: AnimationUI;
         private _physicsUI: PhysicsUI;
         private _materialUI: MaterialUI;
-        private _grndSPSUI:GrndSPSUI;
-        private _grndDimUI:GrndDimUI;
+        private _grndSPSUI: GrndSPSUI;
+        private _grndDimUI: GrndDimUI;
 
-
-        
         constructor(vishva: Vishva,vishvaGUI: VishvaGUI) {
             this._vishva=vishva;
             this._vishvaGUI=vishvaGUI;
@@ -46,90 +45,135 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 }
             });
 
-            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
-
-            //property dialog box
-            this._propsDiag=$("#propsDiag");
-            var dos: DialogOptions={
-                autoOpen: false,
-                //if resizable is set then height doesnot adjust automatically
-                resizable: false,
-                position: DialogMgr.leftCenter,
-                minWidth: 420,
-                //width: 420,
-                 height: "auto",
-                //height: 650,
-                closeOnEscape: false,
-                //a) on open set the values of the fields in the active panel.
-                //   also if we switched from another mesh vishav will close open
-                //   by calling refreshPropsDiag().
-                //b) donot bother refreshing values if we are just restarting
-                //   dialog for height and width re-sizing after drag.
-                open: (e,ui) => {
-                    if(!this._fixingDragIssue) {
-                        // refresh the active tab
-                        this._activePanel=propsAcc.accordion("option","active");
-                        this.refreshPanel(this._activePanel);
-                        this.refreshingPropsDiag=false;
-                    } else {
-                        this._fixingDragIssue=false;
+            this._propsVDiag=new VDialog("propsDiag","mesh properties",DialogMgr.leftCenter,0,"auto",420);
+            this._propsVDiag.onOpen(() => {
+                this._activePanel=propsAcc.accordion("option","active");
+                this.refreshPanel(this._activePanel);
+                this.refreshingPropsDiag=false;
+            });
+            this._propsVDiag.onClose(() => {
+                if(this._vishvaGUI.resizing) return;
+                if(!this.refreshingPropsDiag) {
+                    if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
+                        this._generalUI._snaUI.close();
                     }
-                },
-                closeText: "",
-                close: () => {
-                    if(this._vishvaGUI.resizing) return;
-                    if(!this._fixingDragIssue&&!this.refreshingPropsDiag) {
-                        if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
-                            this._generalUI._snaUI.close();
-                        }
-                        if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
-                            this._materialUI._textureUI.close();
-                        }
-                        if(this._vishva.isGroundPicked()) {
-                            this._vishva.unSelectGrnd();
-                        }
+                    if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
+                        this._materialUI._textureUI.close();
                     }
-                },
-                //after drag the dialog box doesnot resize
-                //force resize by closing and opening
-                dragStop: (e,ui) => {
-                    this._fixingDragIssue=true;
-                    this._propsDiag.dialog("close");
-                    this._propsDiag.dialog("open");
+                    if(this._vishva.isGroundPicked()) {
+                        this._vishva.unSelectGrnd();
+                    }
                 }
-            };
-            this._propsDiag.dialog(dos);
-            this._propsDiag["jpo"]=DialogMgr.leftCenter;
-            this._vishvaGUI.dialogs.push(this._propsDiag);
+            });
+
+            
         }
+
+//        constructor_old(vishva: Vishva,vishvaGUI: VishvaGUI) {
+//            this._vishva=vishva;
+//            this._vishvaGUI=vishvaGUI;
+//
+//
+//            this._propsAcc=document.getElementById("propsAcc");
+//            let propsAcc: JQuery=$(this._propsAcc);
+//
+//            propsAcc.accordion({
+//                animate: 100,
+//                heightStyle: "content",
+//                collapsible: true,
+//                activate: () => {
+//                    this._activePanel=propsAcc.accordion("option","active");
+//                },
+//                beforeActivate: (e,ui) => {
+//                    this.refreshPanel(this.getPanelIndex(ui.newHeader));
+//
+//                }
+//            });
+//
+//            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
+//
+//            //property dialog box
+//            this._propsDiag=$("#propsDiag");
+//            var dos: DialogOptions={
+//                autoOpen: false,
+//                //if resizable is set then height doesnot adjust automatically
+//                resizable: false,
+//                position: DialogMgr.leftCenter,
+//                minWidth: 420,
+//                //width: 420,
+//                height: "auto",
+//                //height: 650,
+//                closeOnEscape: false,
+//                //a) on open set the values of the fields in the active panel.
+//                //   also if we switched from another mesh vishav will close open
+//                //   by calling refreshPropsDiag().
+//                //b) donot bother refreshing values if we are just restarting
+//                //   dialog for height and width re-sizing after drag.
+//                open: (e,ui) => {
+//                    if(!this._fixingDragIssue) {
+//                        // refresh the active tab
+//                        this._activePanel=propsAcc.accordion("option","active");
+//                        this.refreshPanel(this._activePanel);
+//                        this.refreshingPropsDiag=false;
+//                    } else {
+//                        this._fixingDragIssue=false;
+//                    }
+//                },
+//                closeText: "",
+//                close: () => {
+//                    if(this._vishvaGUI.resizing) return;
+//                    if(!this._fixingDragIssue&&!this.refreshingPropsDiag) {
+//                        if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
+//                            this._generalUI._snaUI.close();
+//                        }
+//                        if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
+//                            this._materialUI._textureUI.close();
+//                        }
+//                        if(this._vishva.isGroundPicked()) {
+//                            this._vishva.unSelectGrnd();
+//                        }
+//                    }
+//                },
+//                //after drag the dialog box doesnot resize
+//                //force resize by closing and opening
+//                dragStop: (e,ui) => {
+//                    this._fixingDragIssue=true;
+//                    this._propsDiag.dialog("close");
+//                    this._propsDiag.dialog("open");
+//                }
+//            };
+//            this._propsDiag.dialog(dos);
+//            this._propsDiag["jpo"]=DialogMgr.leftCenter;
+//            this._vishvaGUI.dialogs.push(this._propsDiag);
+//        }
 
         public open() {
             let es: NodeListOf<Element>
-            
+
             //if ground selected show only ground related tabs or those common to both mesh and ground
             //those common to both mesh and ground will not have a "grnd" or "mesh" class
             if(this._vishva.isGroundPicked()) {
-                
+
                 //hide all non ground related tabs
                 es=this._propsAcc.getElementsByClassName("mesh");
                 for(let i=0;i<es.length;i++) {
                     (<HTMLElement>es.item(i)).style.display="none";
                 }
-//                es=document.getElementsByClassName("grnd");
-//                
-//                for(let i=0;i<es.length;i++) {
-//                    if(es.item(i).tagName=="H3")
-//                        (<HTMLElement>es.item(i)).style.display="block";
-//                    //TODO : if panel is active then open div too
-//                }
-                
+                //                es=document.getElementsByCla                ssName("grnd");
+                //                                
+                //                for(let i=0;i<e                s.length;i++) {
+                //                    if(es.item(i)                .tagName=="H3")
+                //                        (<HTMLElement>es.item(i)).style.d                isplay="block";
+                //                    //TODO : if panel is active th                en open div too
+                //                }
+
                 //display all ground related tabs
                 es=this._propsAcc.getElementsByTagName("h3");
                 console.log("in grnd - h3 found "+es.length);
                 for(let i=0;i<es.length;i++) {
-                     if(es.item(i).className.indexOf("grnd")>=0){
+                    if(es.item(i).className.indexOf("grnd")>=0) {
                         (<HTMLElement>es.item(i)).style.display="block";
-                        if (this._activePanel==i) {
+                        if(this._activePanel==i) {
                             (<HTMLElement>es.item(i).nextElementSibling).style.display="block";
                         }
                     }
@@ -140,32 +184,35 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 for(let i=0;i<es.length;i++) {
                     (<HTMLElement>es.item(i)).style.display="none";
                 }
-//                es=document.getElementsByClassName("mesh");
-//                for(let i=0;i<es.length;i++) {
-//                    if(es.item(i).tagName=="H3")
-//                        (<HTMLElement>es.item(i)).style.display="block";
-//                }
-                
+                //                es=document.getElementsByCla                ssName("mesh");
+                //                for(let i=0;i<e                s.length;i++) {
+                //                    if(es.item(i)                .tagName=="H3")
+                //                        (<HTMLElement>es.item(i)).style.d                isplay="block";
+                //                }
+
                 //display all mesh related tabs
                 es=this._propsAcc.getElementsByTagName("h3");
                 for(let i=0;i<es.length;i++) {
-                    if(es.item(i).className.indexOf("mesh")>=0){
+                    if(es.item(i).className.indexOf("mesh")>=0) {
                         (<HTMLElement>es.item(i)).style.display="block";
-                        if (this._activePanel==i) {
+                        if(this._activePanel==i) {
                             (<HTMLElement>es.item(i).nextElementSibling).style.display="block";
                         }
                     }
                 }
             }
-            this._propsDiag.dialog("open");
+            //this._propsDiag.dialog("open");
+            this._propsVDiag.open();
         }
-        
+
         public isOpen(): boolean {
-            return this._propsDiag.dialog("isOpen");
+            //return this._propsDiag.dialog("isOpen");
+            return this._propsVDiag.isOpen();
         }
-        
+
         public close() {
-            this._propsDiag.dialog("close");
+            //this._propsDiag.dialog("close");
+            this._propsVDiag.close();
         }
 
         /*
@@ -174,8 +221,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
          */
         refreshingPropsDiag: boolean=false;
         public refreshPropsDiag() {
-            if((this._propsDiag===undefined)||(this._propsDiag===null)) return;
-            if(this._propsDiag.dialog("isOpen")===true) {
+            if((this._propsVDiag===undefined)||(this._propsVDiag===null)) return;
+            if(this._propsVDiag.isOpen()) {
                 this.refreshingPropsDiag=true;
                 this.close();
                 this.open();
@@ -196,7 +243,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(ui.text()=="Ground SPS") return propertyPanel.GrndSPS;
         }
 
-        
+
         private refreshPanel(panelIndex: number) {
             if(panelIndex===propertyPanel.General) {
                 if(this._generalUI==null) this._generalUI=new GeneralUI(this._vishva,this._vishvaGUI);

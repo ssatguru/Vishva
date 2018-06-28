@@ -1,2 +1,2 @@
-var defaultWorld = "demo1";
+var defaultWorld = "empty";
 var noEditWorlds = ["demo3"];

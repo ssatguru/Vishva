@@ -439,6 +439,10 @@ var org;
                         };
                         VDialog.prototype.position = function () {
                             this._diag.dialog("option", "position", this.jpo);
+                            //            let pos = this._diag.dialog("option","position");
+                            //            pos["within"]="#vCanvas";
+                            //            console.log(pos);
+                            //            this._diag.dialog("option","position",pos);
                         };
                         VDialog.prototype.setButtons = function (dbos) {
                             this._diag.dialog("option", "buttons", dbos);
@@ -479,27 +483,42 @@ var org;
                         DialogMgr.center = {
                             at: "center center",
                             my: "center center",
-                            of: window
+                            //of: window
+                            of: "#vCanvas",
+                            within: "#vCanvas",
+                            collision: "fit"
                         };
                         DialogMgr.centerBottom = {
                             at: "center bottom",
                             my: "center bottom",
-                            of: window
+                            //of: window
+                            within: "#vCanvas",
+                            of: "#vCanvas",
+                            collision: "fit"
                         };
                         DialogMgr.leftCenter = {
                             at: "left center",
                             my: "left center",
-                            of: window
+                            //of: window
+                            of: "#vCanvas",
+                            within: "#vCanvas",
+                            collision: "fit"
                         };
                         DialogMgr.rightCenter = {
                             at: "right center",
                             my: "right center",
-                            of: window
+                            //of: window
+                            of: "#vCanvas",
+                            within: "#vCanvas",
+                            collision: "fit"
                         };
                         DialogMgr.rightTop = {
                             at: "right top",
                             my: "right top",
-                            of: window
+                            //of: window
+                            of: "#vCanvas",
+                            within: "#vCanvas",
+                            collision: "fit"
                         };
                         DialogMgr._alertDiv = document.getElementById("alertDiv");
                         return DialogMgr;
@@ -4788,18 +4807,6 @@ var org;
                             this.resetKeys();
                             return;
                         }
-                        //switch to first person?
-                        if (this.isFocusOnAv) {
-                            //this is now done in character controller               
-                            //                if(this.mainCamera.radius<=0.75) {
-                            //                    this.mainCamera.radius=0.75;
-                            //                    this.avatar.visibility=0;
-                            //                    this.mainCamera.checkCollisions=false;
-                            //                } else {
-                            //                    this.avatar.visibility=1;
-                            //                    this.mainCamera.checkCollisions=this.cameraCollision;
-                            //                }
-                        }
                         if (this.isMeshSelected) {
                             if (this.key.focus) {
                                 //this.key.focus = false;
@@ -4823,14 +4830,8 @@ var org;
                             }
                         }
                         if (this.isFocusOnAv) {
-                            //this.sunDR.position.copyFromFloats(this.avatar.position.x, 32, this.avatar.position.y);
-                            if (this.editControl == null) {
-                                //this.moveAVandCamera();
-                            }
-                            else {
-                                if (!this.editControl.isEditing()) {
-                                    //this.moveAVandCamera();
-                                }
+                            if (this.key.esc) {
+                                this.setFocusOnNothing();
                             }
                         }
                         else if (this.key.up || this.key.down || this.key.esc) {
@@ -6169,6 +6170,17 @@ var org;
                             this.isFocusOnAv = false;
                         }
                         this.focusOnMesh(this.meshPicked, 25);
+                    };
+                    /*
+                     * if user presses esc when focus on av then take camera off av
+                     * camera can be moved anywhere now
+                     */
+                    Vishva.prototype.setFocusOnNothing = function () {
+                        if (this.isFocusOnAv) {
+                            this.cc.stop();
+                            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                            this.isFocusOnAv = false;
+                        }
                     };
                     Vishva.prototype.setSpace = function (space) {
                         console.log("setSPace parm " + space);
@@ -7623,8 +7635,8 @@ var org;
                         cc.setTurnLeftAnim("turnLeft", 0.5, true);
                         cc.setTurnRightAnim("turnRight", 0.5, true);
                         cc.setWalkBackAnim("walkBack", 0.5, true);
-                        cc.setJumpAnim("jump", .75, false);
-                        cc.setFallAnim("fall", 1, false);
+                        cc.setJumpAnim("jumpRun", .5, true);
+                        cc.setFallAnim(null, 1, false);
                         //cc.setFallAnim(null,2,false);
                         cc.setSlideBackAnim("slideBack", 1, false);
                         cc.setStepOffset(0.5);

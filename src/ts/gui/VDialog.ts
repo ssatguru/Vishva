@@ -147,6 +147,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         public position() {
             this._diag.dialog("option","position",this.jpo);
+//            let pos = this._diag.dialog("option","position");
+//            pos["within"]="#vCanvas";
+//            console.log(pos);
+//            this._diag.dialog("option","position",pos);
         }
 
         public setButtons(dbos: DialogButtonOptions) {

@@ -530,18 +530,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 return;
             }
 
-            //switch to first person?
-            if(this.isFocusOnAv) {
-                //this is now done in character controller               
-                //                if(this.mainCamera.radius<=0.75) {
-                //                    this.mainCamera.radius=0.75;
-                //                    this.avatar.visibility=0;
-                //                    this.mainCamera.checkCollisions=false;
-                //                } else {
-                //                    this.avatar.visibility=1;
-                //                    this.mainCamera.checkCollisions=this.cameraCollision;
-                //                }
-            }
+            
             if(this.isMeshSelected) {
                 if(this.key.focus) {
                     //this.key.focus = false;
@@ -565,15 +554,10 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
             if(this.isFocusOnAv) {
-                //this.sunDR.position.copyFromFloats(this.avatar.position.x, 32, this.avatar.position.y);
-                if(this.editControl==null) {
-                    //this.moveAVandCamera();
-
-                } else {
-                    if(!this.editControl.isEditing()) {
-                        //this.moveAVandCamera();
-                    }
+                if (this.key.esc){
+                    this.setFocusOnNothing();
                 }
+
             } else if(this.key.up||this.key.down||this.key.esc) {
                 if(this.editControl==null) {
                     this.switchFocusToAV();
@@ -1946,7 +1930,17 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.focusOnMesh(this.meshPicked,25);
         }
-
+        /*
+         * if user presses esc when focus on av then take camera off av
+         * camera can be moved anywhere now
+         */
+        public setFocusOnNothing() {
+            if(this.isFocusOnAv) {
+                this.cc.stop();
+                this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+                this.isFocusOnAv=false;
+            }
+        }
 
 
         public setSpace(space: string): string {
@@ -3514,8 +3508,8 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setTurnLeftAnim("turnLeft",0.5,true);
             cc.setTurnRightAnim("turnRight",0.5,true);
             cc.setWalkBackAnim("walkBack",0.5,true);
-            cc.setJumpAnim("jump",.75,false);
-            cc.setFallAnim("fall",1,false);
+            cc.setJumpAnim("jumpRun",.5,true);
+            cc.setFallAnim(null,1,false);
             //cc.setFallAnim(null,2,false);
             cc.setSlideBackAnim("slideBack",1,false);
             cc.setStepOffset(0.5);

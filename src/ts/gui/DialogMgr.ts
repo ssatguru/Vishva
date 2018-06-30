@@ -9,30 +9,45 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public static center: JQueryPositionOptions={
             at: "center center",
             my: "center center",
-            of: window
+            //of: window
+            of:"#vCanvas",
+            within:"#vCanvas",
+            collision:"fit"
         };
         
         public static centerBottom: JQueryPositionOptions={
             at: "center bottom",
             my: "center bottom",
-            of: window
+            //of: window
+            within:"#vCanvas",
+            of:"#vCanvas",
+            collision:"fit"
         };
 
         public static leftCenter: JQueryPositionOptions={
             at: "left center",
             my: "left center",
-            of: window
+            //of: window
+             of:"#vCanvas",
+             within:"#vCanvas",
+             collision:"fit"
         };
 
         public static rightCenter: JQueryPositionOptions={
             at: "right center",
             my: "right center",
-            of: window
+            //of: window
+             of:"#vCanvas",
+             within:"#vCanvas",
+             collision:"fit"
         };
         public static rightTop: JQueryPositionOptions={
             at: "right top",
             my: "right top",
-            of: window
+            //of: window
+             of:"#vCanvas",
+             within:"#vCanvas",
+             collision:"fit"
         };
         
         private static _alertDialog: VDialog;

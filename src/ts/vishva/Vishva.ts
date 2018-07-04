@@ -91,7 +91,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         //skyboxes: Array<string>;
 
-        vishvaFiles: Array<any>;
+        public static vishvaFiles: Array<any>;
 
         skyboxTextures: string="vishva/internal/textures/skybox-default/default";
 
@@ -207,7 +207,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public static vishva: Vishva;
 
 
-        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,vishvaFiles: Array<any>,canvasId: string) {
+        public constructor(sceneFile: string,scenePath: string,editEnabled: boolean,canvasId: string) {
 
 
 
@@ -224,7 +224,6 @@ namespace org.ssatguru.babylonjs.vishva {
             this.loadingStatus=document.getElementById("loadingStatus");
 
             this.editEnabled=editEnabled;
-            this.vishvaFiles=vishvaFiles;
             this.key=new Key();
 
             this.canvas=<HTMLCanvasElement>document.getElementById(canvasId);
@@ -3509,7 +3508,7 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setTurnRightAnim("turnRight",0.5,true);
             cc.setWalkBackAnim("walkBack",0.5,true);
             cc.setJumpAnim("jumpRun",.5,true);
-            cc.setFallAnim(null,1,false);
+            cc.setFallAnim("fall",2,false);
             //cc.setFallAnim(null,2,false);
             cc.setSlideBackAnim("slideBack",1,false);
             cc.setStepOffset(0.5);

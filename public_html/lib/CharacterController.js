@@ -320,7 +320,6 @@ var org;
                         }
                         this.avatar.moveWithCollisions(disp);
                         if (jumpDist < 0) {
-                            anim = this.fall;
                             if ((this.avatar.position.y > this.avStartPos.y) || ((this.avatar.position.y === this.avStartPos.y) && (disp.length() > 0.001))) {
                                 this.endJump();
                             }
@@ -413,7 +412,8 @@ var org;
                                 this.avatar.moveWithCollisions(this.moveVector);
                                 if (this.avatar.position.y > this.avStartPos.y) {
                                     var actDisp = this.avatar.position.subtract(this.avStartPos);
-                                    if (this.verticalSlope(actDisp) >= this.sl2) {
+                                    var _sl = this.verticalSlope(actDisp);
+                                    if (_sl >= this.sl2) {
                                         if (this._stepOffset > 0) {
                                             if (this._vMoveTot == 0) {
                                                 this._vMovStartPos.copyFrom(this.avStartPos);
@@ -432,12 +432,12 @@ var org;
                                     }
                                     else {
                                         this._vMoveTot = 0;
-                                        if (this.verticalSlope(actDisp) <= this.sl) {
-                                            this.endFreeFall();
-                                        }
-                                        else {
+                                        if (_sl > this.sl) {
                                             this.fallFrameCount = 0;
                                             this.inFreeFall = false;
+                                        }
+                                        else {
+                                            this.endFreeFall();
                                         }
                                     }
                                 }
@@ -544,17 +544,12 @@ var org;
                     };
                     CharacterController.prototype.snapCamera = function () {
                         var _this = this;
-                        if (this.skip < 120) {
-                            this.skip++;
-                            return;
-                        }
-                        this.skip = 0;
                         this.camera.position.subtractToRef(this.camera.target, this.rayDir);
                         this.ray.origin = this.camera.target;
                         this.ray.length = this.rayDir.length();
                         this.ray.direction = this.rayDir.normalize();
                         var pi = this.scene.pickWithRay(this.ray, function (mesh) {
-                            if (mesh == _this.avatar || !mesh.isPickable || !mesh.checkCollisions)
+                            if (mesh == _this.avatar || !mesh.checkCollisions)
                                 return false;
                             else
                                 return true;

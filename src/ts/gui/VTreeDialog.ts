@@ -8,7 +8,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vishva: Vishva;
         private _tree: VTree;
         private _treeDiag: VDialog;
-        private _refreshBtn: HTMLElement;
+        private _refreshHandler:()=>void;
         //private _diagHtml: string='search <div></div> <input type="text">'
         private _diagHtml: string='<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
         +'<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
@@ -41,7 +41,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let fb: HTMLButtonElement=btns.item(0);
             let e: HTMLButtonElement=btns.item(1);
             let c: HTMLButtonElement=btns.item(2);
-            this._refreshBtn=btns.item(3);
+            let r: HTMLButtonElement=btns.item(3);
             
            
             fi.onChange=() => {
@@ -57,14 +57,18 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             c.onclick=() => {
                 this._tree.collapseAll();
             }
+            r.onclick=()=>{
+                this._refreshHandler();
+            }
+            
         }
 
         public addTreeListener(treeListener: (leaf: string,path: string,isLeaf: boolean) => void=null) {
             this._tree.addClickListener(treeListener);
         }
 
-        public addRefreshHandler(refreshHandler: () => {}) {
-            this._refreshBtn.onclick=refreshHandler;
+        public addRefreshHandler(refreshHandler: () => void) {
+            this._refreshHandler=refreshHandler;
         }
 
         public toggle() {

@@ -33,7 +33,7 @@ function printDir(path,tab){
 }
 
 //fs.unlinkSync(fn);
-fs.writeFileSync(fn,"vishvaFiles=[" +"\n");
+fs.writeFileSync(fn,"org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[" +"\n");
 let stream = fs.createWriteStream(fn, {flags:'a'});
 let path = ".";
 printDir(path,_tab);

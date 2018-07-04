@@ -53,6 +53,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public refresh(treeData: Array<string|object>,filter?: string) {
             this._treeEle.removeChild(this._vtree);
             this._treeData=treeData;
+            if (filter!=null)
             this._filter=filter;
             this._create();
         }

@@ -57,7 +57,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             let chgTexture: HTMLButtonElement=<HTMLButtonElement>document.getElementById("changeTexture");
             chgTexture.onclick=() => {
                 if(this._textListDiag==null) {
-                    this._textListDiag=new VTreeDialog(this._vishva,"select texture",DialogMgr.center,this._vishva.vishvaFiles,"\.jpg$|\.png$|\.tga$|\.bmp$",true);
+                    this._textListDiag=new VTreeDialog(this._vishva,"select texture",DialogMgr.center,Vishva.vishvaFiles,"\.jpg$|\.png$|\.tga$|\.bmp$",true);
                     this._textListDiag.addTreeListener((f,p,l) => {
                         if (!l) return;
                         let imgsrc: string="vishva/"+p+f;

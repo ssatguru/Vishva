@@ -999,7 +999,7 @@ var org;
                             this._vishva = vishva;
                             var grnd = vishva.ground;
                             this._grndID = new gui.VInputText("grndID", grnd.name);
-                            this._grndHM = new gui.VFileInput("grndHM", null, "Height Map Image", gui.DialogMgr.centerBottom, this._vishva.vishvaFiles, "\.bmp$|\.png$|\.tga$\.jpg$", true);
+                            this._grndHM = new gui.VFileInput("grndHM", null, "Height Map Image", gui.DialogMgr.centerBottom, vishva_4.Vishva.vishvaFiles, "\.bmp$|\.png$|\.tga$\.jpg$", true);
                             this._grndW = new gui.VInputNumber("grndW", grnd._width);
                             this._grndL = new gui.VInputNumber("grndL", grnd._height);
                             this._grndS = new gui.VInputNumber("grndS", grnd.subdivisions);
@@ -2890,7 +2890,7 @@ var org;
                             fib.innerText = "Choose File";
                             fib.onclick = function (e) {
                                 if (_this._sndAssetTDiag == null) {
-                                    _this._sndAssetTDiag = new gui.VTreeDialog(_this._vishva, fit.title, gui.DialogMgr.centerBottom, _this._vishva.vishvaFiles, fit.filter, fit.openAll);
+                                    _this._sndAssetTDiag = new gui.VTreeDialog(_this._vishva, fit.title, gui.DialogMgr.centerBottom, vishva_14.Vishva.vishvaFiles, fit.filter, fit.openAll);
                                 }
                                 _this._sndAssetTDiag.addTreeListener(function (f, p, l) {
                                     if (l) {
@@ -2962,7 +2962,7 @@ var org;
                             var chgTexture = document.getElementById("changeTexture");
                             chgTexture.onclick = function () {
                                 if (_this._textListDiag == null) {
-                                    _this._textListDiag = new gui.VTreeDialog(_this._vishva, "select texture", gui.DialogMgr.center, _this._vishva.vishvaFiles, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
+                                    _this._textListDiag = new gui.VTreeDialog(_this._vishva, "select texture", gui.DialogMgr.center, vishva_15.Vishva.vishvaFiles, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
                                     _this._textListDiag.addTreeListener(function (f, p, l) {
                                         if (!l)
                                             return;
@@ -3501,7 +3501,7 @@ var org;
                             var navAdd = document.getElementById("navAdd");
                             navAdd.onclick = function (e) {
                                 if (_this._addAssetTDiag == null) {
-                                    _this._addAssetTDiag = new gui.VTreeDialog(_this._vishva, "Assets", gui.DialogMgr.leftCenter, _this._vishva.vishvaFiles, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
+                                    _this._addAssetTDiag = new gui.VTreeDialog(_this._vishva, "Assets", gui.DialogMgr.leftCenter, vishva_16.Vishva.vishvaFiles, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                                     _this._addAssetTDiag.addTreeListener(function (f, p, l) {
                                         if (l) {
                                             if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
@@ -3509,13 +3509,18 @@ var org;
                                             }
                                         }
                                     });
+                                    _this._addAssetTDiag.addRefreshHandler(function () {
+                                        $.getScript("vishva/vishvaFiles.js", function () {
+                                            _this._addAssetTDiag.refresh(vishva_16.Vishva.vishvaFiles);
+                                        });
+                                    });
                                 }
                                 _this._addAssetTDiag.toggle();
                             };
                             var navPrim = document.getElementById("navPrim");
                             navPrim.onclick = function () {
                                 if (_this._addInternalAssetUI == null) {
-                                    _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, _this._vishva.vishvaFiles);
+                                    _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, vishva_16.Vishva.vishvaFiles);
                                 }
                                 _this._addInternalAssetUI.toggleAssetDiag("primitives");
                             };
@@ -3542,7 +3547,7 @@ var org;
                             navEnv.onclick = function (e) {
                                 if (_this._environment == null) {
                                     if (_this._addInternalAssetUI == null) {
-                                        _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, _this._vishva.vishvaFiles);
+                                        _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, vishva_16.Vishva.vishvaFiles);
                                     }
                                     _this._environment = new gui.EnvironmentUI(_this._vishva, _this._addInternalAssetUI, _this);
                                 }
@@ -3829,7 +3834,8 @@ var org;
                         VTree.prototype.refresh = function (treeData, filter) {
                             this._treeEle.removeChild(this._vtree);
                             this._treeData = treeData;
-                            this._filter = filter;
+                            if (filter != null)
+                                this._filter = filter;
                             this._create();
                         };
                         VTree.prototype.filter = function (filter) {
@@ -4113,7 +4119,7 @@ var org;
                             var fb = btns.item(0);
                             var e = btns.item(1);
                             var c = btns.item(2);
-                            this._refreshBtn = btns.item(3);
+                            var r = btns.item(3);
                             fi.onChange = function () {
                                 _this._tree.filter(fi.getValue().trim());
                             };
@@ -4126,13 +4132,16 @@ var org;
                             c.onclick = function () {
                                 _this._tree.collapseAll();
                             };
+                            r.onclick = function () {
+                                _this._refreshHandler();
+                            };
                         }
                         VTreeDialog.prototype.addTreeListener = function (treeListener) {
                             if (treeListener === void 0) { treeListener = null; }
                             this._tree.addClickListener(treeListener);
                         };
                         VTreeDialog.prototype.addRefreshHandler = function (refreshHandler) {
-                            this._refreshBtn.onclick = refreshHandler;
+                            this._refreshHandler = refreshHandler;
                         };
                         VTreeDialog.prototype.toggle = function () {
                             if (this._treeDiag.isOpen()) {
@@ -4418,7 +4427,7 @@ var org;
                  * @author satguru
                  */
                 var Vishva = (function () {
-                    function Vishva(sceneFile, scenePath, editEnabled, vishvaFiles, canvasId) {
+                    function Vishva(sceneFile, scenePath, editEnabled, canvasId) {
                         var _this = this;
                         this.actuator = "none";
                         this.snapTransOn = false;
@@ -4533,7 +4542,6 @@ var org;
                         this.loadingMsg.style.visibility = "visible";
                         this.loadingStatus = document.getElementById("loadingStatus");
                         this.editEnabled = editEnabled;
-                        this.vishvaFiles = vishvaFiles;
                         this.key = new Key();
                         this.canvas = document.getElementById(canvasId);
                         //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
@@ -7636,7 +7644,7 @@ var org;
                         cc.setTurnRightAnim("turnRight", 0.5, true);
                         cc.setWalkBackAnim("walkBack", 0.5, true);
                         cc.setJumpAnim("jumpRun", .5, true);
-                        cc.setFallAnim(null, 1, false);
+                        cc.setFallAnim("fall", 2, false);
                         //cc.setFallAnim(null,2,false);
                         cc.setSlideBackAnim("slideBack", 1, false);
                         cc.setStepOffset(0.5);

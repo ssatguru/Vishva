@@ -425,7 +425,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             fib.innerText="Choose File";
             fib.onclick=(e) => {
                 if(this._sndAssetTDiag==null) {
-                    this._sndAssetTDiag=new VTreeDialog(this._vishva,fit.title,DialogMgr.centerBottom,this._vishva.vishvaFiles,fit.filter,fit.openAll);
+                    this._sndAssetTDiag=new VTreeDialog(this._vishva,fit.title,DialogMgr.centerBottom,Vishva.vishvaFiles,fit.filter,fit.openAll);
                 }
                 this._sndAssetTDiag.addTreeListener((f,p,l) => {
                     if(l) {

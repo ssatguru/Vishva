@@ -895,12 +895,12 @@
                                             <td id="spsStep"></td>
                                         </tr>
                                         <tr>
-                                            <td>lower corner</td>
-                                            <td id="sprdMin"></td>
+                                            <td>corner 1</td>
+                                            <td id="sprdCon1"></td>
                                         </tr>
                                         <tr>
-                                            <td>upper corner</td>
-                                            <td id="sprdMax"></td>
+                                            <td>corner 2</td>
+                                            <td id="sprdCon2"></td>
                                         </tr>
                                         <tr>
                                             <td colspan="2"><b>Generic Range</b></td>
@@ -1089,6 +1089,9 @@
         
         <script type="text/javascript">
                             $(function(){
+                                
+                                //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
+                                BABYLON.Texture.UseSerializedUrlIfAny = true;
 
                                 //change all buttons to jquery button
                                 $("button").button();

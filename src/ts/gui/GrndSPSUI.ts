@@ -14,8 +14,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _spsMesh:HTMLElement;
         private _spsSeed: VInputNumber;
         private spsStep: VInputNumber;
-        private sprdMin: VInputVector2;
-        private sprdMax: VInputVector2;
+        private sprdCon1: VInputVector2;
+        private sprdCon2: VInputVector2;
         private posMin: VInputVector3;
         private posMax: VInputVector3;
         private sclMin: VInputVector3;
@@ -59,8 +59,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._spsMesh=document.getElementById("spsMesh");
             this._spsSeed=new VInputNumber("spsSeed");
             this.spsStep=new VInputNumber("spsStep");
-            this.sprdMin=new VInputVector2("sprdMin");
-            this.sprdMax=new VInputVector2("sprdMax");
+            this.sprdCon1=new VInputVector2("sprdCon1");
+            this.sprdCon2=new VInputVector2("sprdCon2");
             this.posMin=new VInputVector3("posMin");
             this.posMax=new VInputVector3("posMax");
             this.sclMin=new VInputVector3("sclMin");
@@ -98,8 +98,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._spsMesh.innerText=this._grndSPS.mesh.name +"("+this._grndSPS.mesh.id+")";
             this._spsSeed.setValue(sdo.seed);
             this.spsStep.setValue(sdo.step);
-            this.sprdMin.setValue(sdo.sprdMin);
-            this.sprdMax.setValue(sdo.sprdMax);
+            this.sprdCon1.setValue(sdo.sprdCon1);
+            this.sprdCon2.setValue(sdo.sprdCon2);
             this.posMin.setValue(sdo.posMin);
             this.posMax.setValue(sdo.posMax);
             this.sclMin.setValue(sdo.sclMin);
@@ -113,21 +113,21 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private _updateSpreadParms(): boolean {
-            let smax:Vector2=this.sprdMax.getValue();
-            let smin:Vector2=this.sprdMin.getValue();
-            if (smax.x<=smin.x){
-                DialogMgr.showAlertDiag("upper cormer x cannot be less than or equal to lower corner x");
+            let smax:Vector2=this.sprdCon2.getValue();
+            let smin:Vector2=this.sprdCon1.getValue();
+            if (smax.x==smin.x){
+                DialogMgr.showAlertDiag("corners x co-ordinates cannot be the same");
                 return false;
             }
-            if (smax.y<=smin.y){
-                DialogMgr.showAlertDiag("upper cormer y cannot be less than or equal to lower corner y");
+            if (smax.y==smin.y){
+                DialogMgr.showAlertDiag("corners y co-ordinates cannot be the same");
                 return false;
             }
             let sdo: SpreadDtls=this._grndSPS.getSpreadDtls();
             sdo.seed=this._spsSeed.getValue();
             sdo.step=this.spsStep.getValue();
-            sdo.sprdMin=this.sprdMin.getValue();
-            sdo.sprdMax=this.sprdMax.getValue();
+            sdo.sprdCon1=this.sprdCon1.getValue();
+            sdo.sprdCon2=this.sprdCon2.getValue();
             sdo.posMin=this.posMin.getValue();
             sdo.posMax=this.posMax.getValue();
             sdo.sclMin=this.sclMin.getValue();

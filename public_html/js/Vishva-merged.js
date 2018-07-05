@@ -1125,8 +1125,8 @@ var org;
                             this._spsMesh = document.getElementById("spsMesh");
                             this._spsSeed = new gui.VInputNumber("spsSeed");
                             this.spsStep = new gui.VInputNumber("spsStep");
-                            this.sprdMin = new gui.VInputVector2("sprdMin");
-                            this.sprdMax = new gui.VInputVector2("sprdMax");
+                            this.sprdCon1 = new gui.VInputVector2("sprdCon1");
+                            this.sprdCon2 = new gui.VInputVector2("sprdCon2");
                             this.posMin = new gui.VInputVector3("posMin");
                             this.posMax = new gui.VInputVector3("posMax");
                             this.sclMin = new gui.VInputVector3("sclMin");
@@ -1164,8 +1164,8 @@ var org;
                             this._spsMesh.innerText = this._grndSPS.mesh.name + "(" + this._grndSPS.mesh.id + ")";
                             this._spsSeed.setValue(sdo.seed);
                             this.spsStep.setValue(sdo.step);
-                            this.sprdMin.setValue(sdo.sprdMin);
-                            this.sprdMax.setValue(sdo.sprdMax);
+                            this.sprdCon1.setValue(sdo.sprdCon1);
+                            this.sprdCon2.setValue(sdo.sprdCon2);
                             this.posMin.setValue(sdo.posMin);
                             this.posMax.setValue(sdo.posMax);
                             this.sclMin.setValue(sdo.sclMin);
@@ -1178,21 +1178,21 @@ var org;
                             return true;
                         };
                         GrndSPSUI.prototype._updateSpreadParms = function () {
-                            var smax = this.sprdMax.getValue();
-                            var smin = this.sprdMin.getValue();
-                            if (smax.x <= smin.x) {
-                                gui.DialogMgr.showAlertDiag("upper cormer x cannot be less than or equal to lower corner x");
+                            var smax = this.sprdCon2.getValue();
+                            var smin = this.sprdCon1.getValue();
+                            if (smax.x == smin.x) {
+                                gui.DialogMgr.showAlertDiag("corners x co-ordinates cannot be the same");
                                 return false;
                             }
-                            if (smax.y <= smin.y) {
-                                gui.DialogMgr.showAlertDiag("upper cormer y cannot be less than or equal to lower corner y");
+                            if (smax.y == smin.y) {
+                                gui.DialogMgr.showAlertDiag("corners y co-ordinates cannot be the same");
                                 return false;
                             }
                             var sdo = this._grndSPS.getSpreadDtls();
                             sdo.seed = this._spsSeed.getValue();
                             sdo.step = this.spsStep.getValue();
-                            sdo.sprdMin = this.sprdMin.getValue();
-                            sdo.sprdMax = this.sprdMax.getValue();
+                            sdo.sprdCon1 = this.sprdCon1.getValue();
+                            sdo.sprdCon2 = this.sprdCon2.getValue();
                             sdo.posMin = this.posMin.getValue();
                             sdo.posMax = this.posMax.getValue();
                             sdo.sclMin = this.sclMin.getValue();
@@ -4277,6 +4277,9 @@ var org;
                         this.sx = 0;
                         this.sz = 0;
                         this.sCount = 0;
+                        //upper left corner and bottom right corner of the rectangle selected
+                        this._sprdTLC = new Vector2(0, 0);
+                        this._sprdBRC = new Vector2(0, 0);
                         this.name = name;
                         this._vishva = vishva;
                         this.mesh = mesh;
@@ -4317,15 +4320,23 @@ var org;
                         this._rand = new Random(this._spreadDtls.seed);
                         if (!sd.step)
                             sd.step = m.getBoundingInfo().boundingSphere.radius;
-                        if (!sd.sprdMin) {
-                            sd.sprdMin = new Vector2(gm._minX + sd.step, gm._minZ + sd.step);
+                        if (!sd.sprdCon1) {
+                            sd.sprdCon1 = new Vector2(gm._minX + sd.step, gm._minZ + sd.step);
                         }
-                        if (!sd.sprdMax) {
-                            sd.sprdMax = new Vector2(gm._maxX - sd.step, gm._maxZ - sd.step);
+                        if (!sd.sprdCon2) {
+                            sd.sprdCon2 = new Vector2(gm._maxX - sd.step, gm._maxZ - sd.step);
                         }
-                        this.sCount = (((sd.sprdMax.x - sd.sprdMin.x) / sd.step) + 1) * (((sd.sprdMax.y - sd.sprdMin.y) / sd.step) + 1);
-                        this.sx = sd.sprdMin.x;
-                        this.sz = sd.sprdMax.y;
+                        this._sprdTLC.x = Math.min(sd.sprdCon1.x, sd.sprdCon2.x);
+                        this._sprdTLC.y = Math.max(sd.sprdCon1.y, sd.sprdCon2.y);
+                        this._sprdBRC.x = Math.max(sd.sprdCon1.x, sd.sprdCon2.x);
+                        this._sprdBRC.y = Math.min(sd.sprdCon1.y, sd.sprdCon2.y);
+                        this.sCount = (((this._sprdBRC.x - this._sprdTLC.x) / sd.step) + 1) * (((this._sprdTLC.y - this._sprdBRC.y) / sd.step) + 1);
+                        //we will start from top left corner and work down, row wise, to bottom right corner
+                        // s--------->
+                        //  --------->
+                        //  --------->e 
+                        this.sx = this._sprdTLC.x;
+                        this.sz = this._sprdTLC.y;
                         if (!sd.posRange)
                             sd.posRange = 0.5;
                         if (!sd.sclRange)
@@ -4358,6 +4369,7 @@ var org;
                             sd.rotMin = new Vector3(n, n, n);
                         }
                     };
+                    /* called per particle */
                     GroundSPS.prototype._spread = function (part) {
                         //position
                         part.position.x = this.sx + this._rand.generate(this._spreadDtls.posMin.x, this._spreadDtls.posMax.x);
@@ -4373,10 +4385,31 @@ var org;
                         part.rotation.y = this._rand.generate(this._spreadDtls.rotMin.y, this._spreadDtls.rotMax.y);
                         part.rotation.z = this._rand.generate(this._spreadDtls.rotMin.z, this._spreadDtls.rotMax.z);
                         this.sx = this.sx + this._spreadDtls.step;
-                        if (this.sx > this._spreadDtls.sprdMax.x) {
-                            this.sx = this._spreadDtls.sprdMin.x;
+                        if (this.sx > this._sprdBRC.x) {
+                            this.sx = this._sprdTLC.x;
                             this.sz = this.sz - this._spreadDtls.step;
                         }
+                        //            if(this._spreadDtls.sprdCon2.x>this._spreadDtls.sprdCon1.x) {
+                        //                this.sx=this.sx+this._spreadDtls.step;
+                        //                if(this.sx>this._spreadDtls.sprdCon2.x) {
+                        //                    this.sx=this._spreadDtls.sprdCon1.x;
+                        //                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
+                        //                        this.sz=this.sz-this._spreadDtls.step;
+                        //                    } else {
+                        //                        this.sz=this.sz+this._spreadDtls.step;
+                        //                    }
+                        //                }
+                        //            } else {
+                        //                this.sx=this.sx-this._spreadDtls.step;
+                        //                if(this.sx<this._spreadDtls.sprdCon2.x) {
+                        //                    this.sx=this._spreadDtls.sprdCon1.x;
+                        //                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
+                        //                        this.sz=this.sz-this._spreadDtls.step;
+                        //                    } else {
+                        //                        this.sz=this.sz+this._spreadDtls.step;
+                        //                    }
+                        //                }
+                        //            }
                     };
                     return GroundSPS;
                 }());

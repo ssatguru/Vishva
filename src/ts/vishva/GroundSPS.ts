@@ -27,6 +27,10 @@ namespace org.ssatguru.babylonjs.vishva {
         private sCount: number=0;
 
         private _rand: Random;
+        
+        //upper left corner and bottom right corner of the rectangle selected
+        private _sprdTLC:Vector2=new Vector2(0,0);
+        private _sprdBRC:Vector2=new Vector2(0,0);
 
         constructor(name: string,vishva: Vishva,mesh: Mesh,groundMesh: GroundMesh,spreadDtls: SpreadDtls) {
             this.name=name;
@@ -34,7 +38,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.mesh=mesh;
             this._groundMesh=groundMesh;
             this._spreadDtls=spreadDtls;
-            
+
             this._sps=new SolidParticleSystem(name,this._vishva.scene,{updatable: false,isPickable: false});
             //generate default spread details based on mesh bounding box size
             this._updateSpreadParms(this.mesh,this._groundMesh,this._spreadDtls);
@@ -76,17 +80,26 @@ namespace org.ssatguru.babylonjs.vishva {
             if(!sd.step)
                 sd.step=m.getBoundingInfo().boundingSphere.radius;
 
-            if(!sd.sprdMin) {
-                sd.sprdMin=new Vector2(gm._minX+sd.step,gm._minZ+sd.step);
+            if(!sd.sprdCon1) {
+                sd.sprdCon1=new Vector2(gm._minX+sd.step,gm._minZ+sd.step);
             }
-            if(!sd.sprdMax) {
-                sd.sprdMax=new Vector2(gm._maxX-sd.step,gm._maxZ-sd.step);
+            if(!sd.sprdCon2) {
+                sd.sprdCon2=new Vector2(gm._maxX-sd.step,gm._maxZ-sd.step);
             }
+            
+            this._sprdTLC.x=Math.min(sd.sprdCon1.x , sd.sprdCon2.x );
+            this._sprdTLC.y=Math.max(sd.sprdCon1.y , sd.sprdCon2.y );
+            this._sprdBRC.x=Math.max(sd.sprdCon1.x , sd.sprdCon2.x );
+            this._sprdBRC.y=Math.min(sd.sprdCon1.y , sd.sprdCon2.y );
 
-            this.sCount=(((sd.sprdMax.x-sd.sprdMin.x)/sd.step)+1)*(((sd.sprdMax.y-sd.sprdMin.y)/sd.step)+1);
-
-            this.sx=sd.sprdMin.x;
-            this.sz=sd.sprdMax.y;
+            this.sCount=(((this._sprdBRC.x-this._sprdTLC.x)/sd.step)+1)*(((this._sprdTLC.y-this._sprdBRC.y)/sd.step)+1);
+            
+            //we will start from top left corner and work down, row wise, to bottom right corner
+            // s--------->
+            //  --------->
+            //  --------->e 
+            this.sx=this._sprdTLC.x;
+            this.sz=this._sprdTLC.y;
 
             if(!sd.posRange) sd.posRange=0.5;
             if(!sd.sclRange) sd.sclRange=0.5;
@@ -120,6 +133,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         }
 
+        /* called per particle */
         private _spread(part: SolidParticle) {
             //position
             part.position.x=this.sx+this._rand.generate(this._spreadDtls.posMin.x,this._spreadDtls.posMax.x);
@@ -139,10 +153,34 @@ namespace org.ssatguru.babylonjs.vishva {
 
 
             this.sx=this.sx+this._spreadDtls.step;
-            if(this.sx>this._spreadDtls.sprdMax.x) {
-                this.sx=this._spreadDtls.sprdMin.x;
+            if(this.sx>this._sprdBRC.x) {
+                this.sx=this._sprdTLC.x;
                 this.sz=this.sz-this._spreadDtls.step;
             }
+
+//            if(this._spreadDtls.sprdCon2.x>this._spreadDtls.sprdCon1.x) {
+//                this.sx=this.sx+this._spreadDtls.step;
+//                if(this.sx>this._spreadDtls.sprdCon2.x) {
+//                    this.sx=this._spreadDtls.sprdCon1.x;
+//                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
+//                        this.sz=this.sz-this._spreadDtls.step;
+//                    } else {
+//                        this.sz=this.sz+this._spreadDtls.step;
+//                    }
+//                }
+//            } else {
+//                this.sx=this.sx-this._spreadDtls.step;
+//                if(this.sx<this._spreadDtls.sprdCon2.x) {
+//                    this.sx=this._spreadDtls.sprdCon1.x;
+//                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
+//                        this.sz=this.sz-this._spreadDtls.step;
+//                    } else {
+//                        this.sz=this.sz+this._spreadDtls.step;
+//                    }
+//                }
+//            }
+
+
         }
     }
 
@@ -157,8 +195,8 @@ namespace org.ssatguru.babylonjs.vishva {
     export interface SpreadDtls {
         seed?: number;
         step?: number;
-        sprdMin?: Vector2;
-        sprdMax?: Vector2;
+        sprdCon1?: Vector2;
+        sprdCon2?: Vector2;
         posRange?: number;
         sclRange?: number;
         rotRange?: number;

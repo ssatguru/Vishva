@@ -1,4 +1,4 @@
-vishvaFiles=[
+org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
   {"d":"assets",
    "f":[
     {"d":"characters",
@@ -10,6 +10,25 @@ vishvaFiles=[
         "Joan2.babylon",
         "Joan_texture_image.jpg"
       ]},
+      {"d":"quaternius",
+       "f":[
+        "Animated Human2a.babylon",
+        "Animated Human3.babylon",
+        "Animated Human3.log",
+        "Animated Human4.babylon",
+        "Animated Human4.log",
+        "Animated_Human2a_Human_Mesh_DIFFUSE.jpg",
+        "Animated_Human3_Human_Mesh_DIFFUSE.jpg",
+        "Animated_Human4_Human_Mesh_DIFFUSE.jpg",
+        "ClothedDarkSkin.png",
+        "ClothedDarkSkin1.png",
+        "ClothedDarkSkin2.png",
+        "ClothedLightSkin.png",
+        "ClothedLightSkin1.png",
+        "ClothedLightSkin2.png",
+        "NakedDarkSkin.png",
+        "NakedLightSkin.png"
+      ]},
       {"d":"skeleton",
        "f":[
         "skeleton.babylon",
@@ -19,7 +38,6 @@ vishvaFiles=[
        "f":[
         "Vincent.babylon",
         "Vincent.jpg",
-        "Vincent_old.babylon",
         "Vincent_texture_image.jpg"
       ]}
     ]},
@@ -31,6 +49,7 @@ vishvaFiles=[
       "forest-ambient.ogg",
       "hello.mp3",
       "nature-ambiance.ogg",
+      "old_door-2.ogg",
       "old_door.ogg",
       "soft-forest-music.ogg",
       "tractor.wav",
@@ -70,6 +89,8 @@ vishvaFiles=[
         "huts.jpg",
         "hut_texture.jpg"
       ]},
+      "TallWall.mtl",
+      "TallWall.obj",
       {"d":"tipi",
        "f":[
         "tipi.babylon",
@@ -153,6 +174,21 @@ vishvaFiles=[
         "Tree.tga",
         "tree2.babylon",
         "tree2.jpg"
+      ]},
+      {"d":"trees3",
+       "f":[
+        "trees-2.babylon",
+        "trees_bark_001_col.jpg",
+        "trees_bark_001_nor.jpg",
+        "trees_bark_002_col.jpg",
+        "trees_bark_002_nor.jpg",
+        "trees_leaves_003_col.png",
+        "trees_leaves_004_col.png",
+        "trees_log_001_col.png",
+        "trees_log_001_nor.jpg",
+        "trees_vines_001_col.png",
+        "tree_stumps_col.jpg",
+        "tree_stumps_nor.jpg"
       ]}
     ]},
     {"d":"vehicles",
@@ -299,7 +335,6 @@ vishvaFiles=[
     {"d":"avatar",
      "f":[
       "starterAvatars.babylon",
-      "starterAvatars.babylon.old",
       "Vincent_texture_image.jpg"
     ]},
     {"d":"textures",
@@ -309,12 +344,11 @@ vishvaFiles=[
       "earth.jpg",
       "flare.png",
       "ground-1.jpg",
-      "ground-normal-0.png",
       "ground-normal.jpg",
       "ground-normal.png",
       "ground.jpg",
+      "ground_heightMap-1.png",
       "ground_heightMap.png",
-      "ground_heightMap1.png",
       "ground_heightMap_bkup.png",
       "no-texture.jpg",
       "raindrop-1.png",
@@ -331,6 +365,7 @@ vishvaFiles=[
       ]},
       "tga-image.jpg",
       "water.jpg",
+      "waterbump.png",
       "wood.jpg",
       "worldHeightMap.jpg"
     ]}
@@ -340,10 +375,9 @@ vishvaFiles=[
   "vishvaFiles.js",
   {"d":"worlds",
    "f":[
-    "babylon.d.ts",
     "demo-terrain-fixed.js",
     "demo.js",
-    "demo1.js",
+    "demo1.json",
     "demo_backup.js",
     "greenery.js",
     "groundSPS.js",

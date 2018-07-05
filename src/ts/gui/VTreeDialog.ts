@@ -9,17 +9,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _tree: VTree;
         private _treeDiag: VDialog;
         private _refreshHandler:()=>void;
-        //private _diagHtml: string='search <div></div> <input type="text">'
+        
         private _diagHtml: string='<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
-        +'<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
+        +'<button ><span class="ui-icon ui-icon-search" title="filter"></span></button>'
         +'</div>'
         +'<hr>'
         +'<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
         +'</div>'
         +'<hr>'
-        +'<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-plus" title="expand all"></span></span></button>'
-        +'<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-minus" title="collapse all"></span></span></button>'
-        +'<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-refresh" title="refresh"></span></span></button>'
+        +'<button><span class="ui-icon ui-icon-plus" title="expand all"></span></button>'
+        +'<button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>'
+        +'<button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>'
 
         constructor(vishva: Vishva,diagTitle: string,pos: JQueryPositionOptions,treeData: Array<string|object>,filter?: string,openAll?: boolean) {
             this._vishva=vishva;
@@ -47,7 +47,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             fi.onChange=() => {
                 this._tree.filter(fi.getValue().trim());
             }
-            
             fb.onclick=() => {
                 this._tree.filter(fi.getValue().trim());
             }
@@ -60,6 +59,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             r.onclick=()=>{
                 this._refreshHandler();
             }
+            $(fb).button();
+            $(e).button();
+            $(c).button();
+            $(r).button();
             
         }
 

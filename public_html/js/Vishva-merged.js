@@ -4093,17 +4093,16 @@ var org;
                     var VTreeDialog = (function () {
                         function VTreeDialog(vishva, diagTitle, pos, treeData, filter, openAll) {
                             var _this = this;
-                            //private _diagHtml: string='search <div></div> <input type="text">'
                             this._diagHtml = '<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
-                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-search" title="filter"></span></span></button>'
+                                + '<button ><span class="ui-icon ui-icon-search" title="filter"></span></button>'
                                 + '</div>'
                                 + '<hr>'
                                 + '<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
                                 + '</div>'
                                 + '<hr>'
-                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-plus" title="expand all"></span></span></button>'
-                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-minus" title="collapse all"></span></span></button>'
-                                + '<button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text"><span class="ui-icon ui-icon-refresh" title="refresh"></span></span></button>';
+                                + '<button><span class="ui-icon ui-icon-plus" title="expand all"></span></button>'
+                                + '<button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>'
+                                + '<button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>';
                             this._vishva = vishva;
                             var diagDiv = document.createElement("div");
                             diagDiv.innerHTML = this._diagHtml;
@@ -4135,6 +4134,10 @@ var org;
                             r.onclick = function () {
                                 _this._refreshHandler();
                             };
+                            $(fb).button();
+                            $(e).button();
+                            $(c).button();
+                            $(r).button();
                         }
                         VTreeDialog.prototype.addTreeListener = function (treeListener) {
                             if (treeListener === void 0) { treeListener = null; }

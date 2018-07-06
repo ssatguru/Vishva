@@ -3329,37 +3329,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.snowing=!this.snowing;
         }
-
-        /**
-         * create a snow particle system
-         */
-        private createSnowPart(): ParticleSystem {
-            let part=new ParticleSystem("snow",1000,this.scene);
-            part.particleTexture=new BABYLON.Texture(this.snowTexture,this.scene);
-            //part.emitter = new Vector3(0, 10, 0);
-            part.emitter=new Mesh("snowEmitter",this.scene,this.mainCamera);
-
-            //part.maxEmitBox = new Vector3(100, 10, 100);
-            //part.minEmitBox = new Vector3(-100, 10, -100);
-
-            part.maxEmitBox=new Vector3(10,10,10);
-            part.minEmitBox=new Vector3(-10,10,-10);
-
-            part.emitRate=1000;
-            part.updateSpeed=0.005;
-            part.minLifeTime=1;
-            part.maxLifeTime=5;
-            part.minSize=0.1;
-            part.maxSize=0.5;
-            part.color1=new BABYLON.Color4(1,1,1,1);
-            part.color2=new BABYLON.Color4(1,1,1,1);
-            part.colorDead=new BABYLON.Color4(0,0,0,0);
-            //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-            part.gravity=new BABYLON.Vector3(0,-9.81,0);
-            return part;
-
-        }
-
+        
         public toggleRain() {
             if(this.rainPart===null) {
                 this.rainPart=this.createRainPart();
@@ -3379,10 +3349,39 @@ namespace org.ssatguru.babylonjs.vishva {
         /**
          * create a snow particle system
          */
+        private createSnowPart(): ParticleSystem {
+            let part=new ParticleSystem("snow",4000,this.scene);
+            part.particleTexture=new BABYLON.Texture(this.snowTexture,this.scene);
+            part.emitter=new Mesh("snowEmitter",this.scene,this.mainCamera);
+
+            part.maxEmitBox = new Vector3(100, 40, 100);
+            part.minEmitBox = new Vector3(-100, 40, -100);
+
+            part.emitRate=1000;
+            part.updateSpeed=0.005;
+            part.minLifeTime=1;
+            part.maxLifeTime=5;
+            part.minSize=0.1;
+            part.maxSize=0.5;
+            part.color1=new BABYLON.Color4(1,1,1,1);
+            part.color2=new BABYLON.Color4(1,1,1,1);
+            part.colorDead=new BABYLON.Color4(0,0,0,0);
+            //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
+            part.gravity=new BABYLON.Vector3(0,-9.81,0);
+            return part;
+
+        }
+
+        
+
+        /**
+         * create a rain particle system
+         */
         private createRainPart(): ParticleSystem {
             let part=new ParticleSystem("rain",4000,this.scene);
             part.particleTexture=new BABYLON.Texture(this.rainTexture,this.scene);
-            part.emitter=new Vector3(0,40,0);
+            part.emitter=new Mesh("rainEmitter",this.scene,this.mainCamera);
+            //part.emitter=new Vector3(0,40,0);
             part.maxEmitBox=new Vector3(100,40,100);
             part.minEmitBox=new Vector3(-100,40,-100);
             part.emitRate=1000;

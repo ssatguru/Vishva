@@ -3501,6 +3501,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private setCharacterController(cc: CharacterController) {
             this.mainCamera.lowerRadiusLimit=1;
             this.mainCamera.upperRadiusLimit=100;
+            
             cc.setCameraTarget(new BABYLON.Vector3(0,1.5,0));
             cc.setIdleAnim("idle",1,true);
             cc.setTurnLeftAnim("turnLeft",0.5,true);
@@ -3508,11 +3509,22 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setWalkBackAnim("walkBack",0.5,true);
             cc.setJumpAnim("jumpRun",.5,true);
             cc.setFallAnim("fall",2,false);
-            //cc.setFallAnim(null,2,false);
             cc.setSlideBackAnim("slideBack",1,false);
+            
+            
+            cc.setTurnRightKey("E");
+            cc.setTurnLeftKey("Q");
+            cc.setStrafeRightKey("D");
+            cc.setStrafeLeftKey("A");
+            
+            cc.setTurnRightCode(0);
+            cc.setTurnLeftCode(0);
+            cc.setStrafeRightCode(39);
+            cc.setStrafeLeftCode(37);
+            
+            
             cc.setStepOffset(0.5);
-
-            this.cc.setSlopeLimit(30,60);
+            cc.setSlopeLimit(30,60);
         }
 
         /**

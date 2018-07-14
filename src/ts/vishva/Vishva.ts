@@ -2643,6 +2643,12 @@ namespace org.ssatguru.babylonjs.vishva {
             vishvaSerialzed.settings.autoEditMenu=this.autoEditMenu;
             vishvaSerialzed.guiSettings=this.vishvaGUI.getSettings();
             vishvaSerialzed.misc.activeCameraTarget=this.mainCamera.target;
+            
+            //we donot serialize the sps. 
+            //the sps mesh's doNotSerialize property is set to true when the sps is created
+            //serializing the sps bloats up the file
+            //instead we just serialize the sps properties and recreate the sps when the file
+            //is loaded in future
             if(this.GroundSPSs!=null) {
                 vishvaSerialzed.groundSPSserializeds=new Array();
                 for(let gSPS of this.GroundSPSs) {

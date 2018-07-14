@@ -91,7 +91,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //material texture
             this._matTextType=<HTMLSelectElement>document.getElementById("matTextType");
             this._matTextType.onchange=() => {
-                console.log("type onchange");
                 let dtls: Array<string>=this._vishva.getMatTexture(this._matID.innerText,this._matTextType.value);
                 this._textID=dtls[0];
                 this._textName=dtls[1];

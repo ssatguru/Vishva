@@ -1,5 +1,6 @@
 namespace org.ssatguru.babylonjs.vishva.gui {
     import AbstractMesh=BABYLON.AbstractMesh;
+    
     /**
      * Provides a UI to add items from Internal Assets to the world
      */
@@ -9,9 +10,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _assetDiagMap: Object={};
         private _vishvaFiles: Array<string|object>;
 
-        constructor(vishva: Vishva,vishvaFiles: Array<string|object>) {
+        constructor(vishva: Vishva) {
             this._vishva=vishva;
-            this._vishvaFiles=vishvaFiles;
+            this._vishvaFiles=Vishva.vishvaFiles;
         }
 
         public toggleAssetDiag(assetType: string) {
@@ -88,8 +89,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._vishva.setSky(i.id);
             } else if(i.className==="primitives") {
                 this._vishva.addPrim(i.id);
-            } else if(i.className==="water") {
-                this._vishva.createWater();
+            } else if(i.className==="particles") {
+                //this._vishva.createWater();
+                this._vishva.createParticles(i.id);
+                console.log("particles clicked " + i.id);
             } else {
                 this._vishva.loadAsset(i.className,i.id);
             }

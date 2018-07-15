@@ -529,7 +529,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 return;
             }
 
-            
+
             if(this.isMeshSelected) {
                 if(this.key.focus) {
                     //this.key.focus = false;
@@ -553,7 +553,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
             if(this.isFocusOnAv) {
-                if (this.key.esc){
+                if(this.key.esc) {
                     this.setFocusOnNothing();
                 }
 
@@ -587,8 +587,8 @@ namespace org.ssatguru.babylonjs.vishva {
         fogDensity: number=0;
 
         private meshPicked: AbstractMesh;
-        
-        public getMeshPicked():AbstractMesh{
+
+        public getMeshPicked(): AbstractMesh {
             return this.meshPicked;
         }
 
@@ -1575,7 +1575,7 @@ namespace org.ssatguru.babylonjs.vishva {
             return text.uid;
 
         }
-        
+
         /**
          * returns an array containing 2 elements - texture id and texture name
          */
@@ -2260,7 +2260,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this.meshPicked.skeleton.deleteAnimationRange(name,false);
             this.meshPicked.skeleton.createAnimationRange(name,start,end);
         }
-        public delAnimRange(name: string, del:boolean) {
+        public delAnimRange(name: string,del: boolean) {
             //delete or remove the range
             this.meshPicked.skeleton.deleteAnimationRange(name,del);
         }
@@ -2643,7 +2643,7 @@ namespace org.ssatguru.babylonjs.vishva {
             vishvaSerialzed.settings.autoEditMenu=this.autoEditMenu;
             vishvaSerialzed.guiSettings=this.vishvaGUI.getSettings();
             vishvaSerialzed.misc.activeCameraTarget=this.mainCamera.target;
-            
+
             //we donot serialize the sps. 
             //the sps mesh's doNotSerialize property is set to true when the sps is created
             //serializing the sps bloats up the file
@@ -2898,7 +2898,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
                 //no need to rename 3.1 version seems to preserve the texture img urls
                 //this._renameTextures(mesh);
-                
+
                 this.scene.stopAnimation(mesh);
                 if(mesh.skeleton!=null) {
                     this.scene.stopAnimation(mesh.skeleton);
@@ -2906,22 +2906,22 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
 
-            
+
             //TODO remove - obj laoder was fixed  
             //some loader like the obj loader are not done loading the material when this onSuccess is called.
             //to make any material changes call it after this method is done using the setTimeout trick
             // window.setTimeout(() => {this._postLoad(meshes);},1000);
-            
+
             this._postLoad(meshes);
         }
-        
-        private _postLoad(meshes: AbstractMesh[]){
+
+        private _postLoad(meshes: AbstractMesh[]) {
             //select and animate the last mesh loaded
             if(meshes.length>0) {
-                for (let mesh of meshes){
+                for(let mesh of meshes) {
                     this._makeMatIdUnique(mesh);
                 }
-                
+
                 let lastMesh: AbstractMesh=meshes[meshes.length-1];
                 if(!this.isMeshSelected) {
                     this.selectForEdit(lastMesh);
@@ -2952,15 +2952,15 @@ namespace org.ssatguru.babylonjs.vishva {
             }
         }
 
-        private prevUid:number=0;
+        private prevUid: number=0;
         private uidPlus=0;
-        private uid():string{
-            let newUid:number=Date.now();
+        private uid(): string {
+            let newUid: number=Date.now();
             let ups="";
-            if (newUid==this.prevUid){
+            if(newUid==this.prevUid) {
                 ups=(new Number(this.uidPlus)).toString()
                 this.uidPlus++;
-            }else{
+            } else {
                 this.prevUid=newUid;
             }
             return (new Number(newUid)).toString()+ups;
@@ -3335,7 +3335,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.snowing=!this.snowing;
         }
-        
+
         public toggleRain() {
             if(this.rainPart===null) {
                 this.rainPart=this.createRainPart();
@@ -3360,8 +3360,8 @@ namespace org.ssatguru.babylonjs.vishva {
             part.particleTexture=new BABYLON.Texture(this.snowTexture,this.scene);
             part.emitter=new Mesh("snowEmitter",this.scene,this.mainCamera);
 
-            part.maxEmitBox = new Vector3(100, 40, 100);
-            part.minEmitBox = new Vector3(-100, 40, -100);
+            part.maxEmitBox=new Vector3(100,40,100);
+            part.minEmitBox=new Vector3(-100,40,-100);
 
             part.emitRate=1000;
             part.updateSpeed=0.005;
@@ -3378,7 +3378,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         }
 
-        
+
 
         /**
          * create a rain particle system
@@ -3403,8 +3403,114 @@ namespace org.ssatguru.babylonjs.vishva {
             part.gravity=new BABYLON.Vector3(0,-9.81,0);
 
             return part;
-
         }
+
+        public createParticles(partId: string) {
+
+            if(this.meshPicked==null) {
+                return "no mesh selected";
+            }
+            let part: ParticleSystem=null;
+            if(partId=="fire") {
+                part=this._createFirePart()
+            } else if(partId=="smoke") {
+                part=this._createSmokePart()
+            }
+            if(part!=null) {
+                part.emitter=this.meshPicked;
+                part.start();
+            }
+        }
+
+        private _createFirePart(): ParticleSystem {
+
+            // Create a particle system
+            let fireSystem=new BABYLON.ParticleSystem("particles",2000,this.scene);
+
+            //Texture of each particle
+            fireSystem.particleTexture=new BABYLON.Texture("vishva/internal/assets/particles/fire/flare.png",this.scene);
+
+            // Where the particles come from
+            fireSystem.emitter=this.meshPicked; // the starting object, the emitter
+            fireSystem.minEmitBox=new BABYLON.Vector3(-0.5,1,-0.5); // Starting all from
+            fireSystem.maxEmitBox=new BABYLON.Vector3(0.5,1,0.5); // To...
+
+            // Colors of all particles
+            fireSystem.color1=new BABYLON.Color4(1,0.5,0,1.0);
+            fireSystem.color2=new BABYLON.Color4(1,0.5,0,1.0);
+            fireSystem.colorDead=new BABYLON.Color4(0,0,0,0.0);
+
+            // Size of each particle (random between...
+            fireSystem.minSize=0.3;
+            fireSystem.maxSize=1;
+
+            // Life time of each particle (random between...
+            fireSystem.minLifeTime=0.2;
+            fireSystem.maxLifeTime=0.4;
+
+            // Emission rate
+            fireSystem.emitRate=600;
+
+            // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+            fireSystem.blendMode=BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+
+            // Set the gravity of all particles
+            fireSystem.gravity=new BABYLON.Vector3(0,0,0);
+
+            // Direction of each particle after it has been emitted
+            fireSystem.direction1=new BABYLON.Vector3(0,4,0);
+            fireSystem.direction2=new BABYLON.Vector3(0,4,0);
+
+            // Angular speed, in radians
+            fireSystem.minAngularSpeed=0;
+            fireSystem.maxAngularSpeed=Math.PI;
+
+            // Speed
+            fireSystem.minEmitPower=1;
+            fireSystem.maxEmitPower=3;
+            fireSystem.updateSpeed=0.007;
+
+
+            return fireSystem;
+        }
+
+        private _createSmokePart(): ParticleSystem {
+            var smokeSystem=new BABYLON.ParticleSystem("particles",1000,this.scene);
+            smokeSystem.particleTexture=new BABYLON.Texture("vishva/internal/assets/particles/smoke/flare.png",this.scene);
+
+            smokeSystem.minEmitBox=new BABYLON.Vector3(-0.5,1,-0.5); // Starting all from
+            smokeSystem.maxEmitBox=new BABYLON.Vector3(0.5,1,0.5); // To...
+
+            smokeSystem.color1=new BABYLON.Color4(0.02,0.02,0.02,.02);
+            smokeSystem.color2=new BABYLON.Color4(0.02,0.02,0.02,.02);
+            smokeSystem.colorDead=new BABYLON.Color4(0,0,0,0.0);
+
+            smokeSystem.minSize=1;
+            smokeSystem.maxSize=3;
+
+            smokeSystem.minLifeTime=0.3;
+            smokeSystem.maxLifeTime=1.5;
+
+            smokeSystem.emitRate=350;
+
+            // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+            smokeSystem.blendMode=BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+
+            smokeSystem.gravity=new BABYLON.Vector3(0,0,0);
+
+            smokeSystem.direction1=new BABYLON.Vector3(-1.5,8,-1.5);
+            smokeSystem.direction2=new BABYLON.Vector3(1.5,8,1.5);
+
+            smokeSystem.minAngularSpeed=0;
+            smokeSystem.maxAngularSpeed=Math.PI;
+
+            smokeSystem.minEmitPower=0.5;
+            smokeSystem.maxEmitPower=1.5;
+            smokeSystem.updateSpeed=0.005;
+
+            return smokeSystem;
+        }
+
         private createCamera(scene: Scene,canvas: HTMLCanvasElement): ArcRotateCamera {
             //lets create a camera located way high so that it doesnotcollide with any terrain
             var camera: ArcRotateCamera=new ArcRotateCamera("v.c-camera",1,1.4,4,new Vector3(0,1000,0),scene);
@@ -3507,7 +3613,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private setCharacterController(cc: CharacterController) {
             this.mainCamera.lowerRadiusLimit=1;
             this.mainCamera.upperRadiusLimit=100;
-            
+
             cc.setCameraTarget(new BABYLON.Vector3(0,1.5,0));
             cc.setIdleAnim("idle",1,true);
             cc.setTurnLeftAnim("turnLeft",0.5,true);
@@ -3516,19 +3622,19 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setJumpAnim("jumpRun",.5,true);
             cc.setFallAnim("fall",2,false);
             cc.setSlideBackAnim("slideBack",1,false);
-            
-            
+
+
             cc.setTurnRightKey("E");
             cc.setTurnLeftKey("Q");
             cc.setStrafeRightKey("D");
             cc.setStrafeLeftKey("A");
-            
+
             cc.setTurnRightCode(0);
             cc.setTurnLeftCode(0);
             cc.setStrafeRightCode(39);
             cc.setStrafeLeftCode(37);
-            
-            
+
+
             cc.setStepOffset(0.5);
             cc.setSlopeLimit(30,60);
         }

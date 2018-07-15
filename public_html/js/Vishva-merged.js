@@ -823,7 +823,7 @@ var org;
                             var swAv = document.getElementById("swAv");
                             var swGnd = document.getElementById("swGnd");
                             var sNa = document.getElementById("sNa");
-                            //            var addWater: HTMLElement = document.getElementById("addWater");
+                            var addParticles = document.getElementById("addParticles");
                             undo.onclick = function (e) {
                                 _this._vishva.undo();
                                 return false;
@@ -935,6 +935,13 @@ var org;
                             //                }
                             //                return true;
                             //            };
+                            addParticles.onclick = function (e) {
+                                if (_this._addInternalAssetUI == null) {
+                                    _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva);
+                                }
+                                _this._addInternalAssetUI.toggleAssetDiag("particles");
+                                return true;
+                            };
                         }
                         GeneralUI.prototype.update = function () {
                             this._genName.value = this._vishva.getName();
@@ -1404,10 +1411,10 @@ var org;
                      * Provides a UI to add items from Internal Assets to the world
                      */
                     var InternalAssetsUI = (function () {
-                        function InternalAssetsUI(vishva, vishvaFiles) {
+                        function InternalAssetsUI(vishva) {
                             this._assetDiagMap = {};
                             this._vishva = vishva;
-                            this._vishvaFiles = vishvaFiles;
+                            this._vishvaFiles = vishva_7.Vishva.vishvaFiles;
                         }
                         InternalAssetsUI.prototype.toggleAssetDiag = function (assetType) {
                             var assetDialog = this._assetDiagMap[assetType];
@@ -1485,8 +1492,10 @@ var org;
                             else if (i.className === "primitives") {
                                 this._vishva.addPrim(i.id);
                             }
-                            else if (i.className === "water") {
-                                this._vishva.createWater();
+                            else if (i.className === "particles") {
+                                //this._vishva.createWater();
+                                this._vishva.createParticles(i.id);
+                                console.log("particles clicked " + i.id);
                             }
                             else {
                                 this._vishva.loadAsset(i.className, i.id);
@@ -2164,7 +2173,6 @@ var org;
                             //material texture
                             this._matTextType = document.getElementById("matTextType");
                             this._matTextType.onchange = function () {
-                                console.log("type onchange");
                                 var dtls = _this._vishva.getMatTexture(_this._matID.innerText, _this._matTextType.value);
                                 _this._textID = dtls[0];
                                 _this._textName = dtls[1];
@@ -3520,7 +3528,7 @@ var org;
                             var navPrim = document.getElementById("navPrim");
                             navPrim.onclick = function () {
                                 if (_this._addInternalAssetUI == null) {
-                                    _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, vishva_16.Vishva.vishvaFiles);
+                                    _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva);
                                 }
                                 _this._addInternalAssetUI.toggleAssetDiag("primitives");
                             };
@@ -3547,7 +3555,7 @@ var org;
                             navEnv.onclick = function (e) {
                                 if (_this._environment == null) {
                                     if (_this._addInternalAssetUI == null) {
-                                        _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva, vishva_16.Vishva.vishvaFiles);
+                                        _this._addInternalAssetUI = new gui.InternalAssetsUI(_this._vishva);
                                     }
                                     _this._environment = new gui.EnvironmentUI(_this._vishva, _this._addInternalAssetUI, _this);
                                 }
@@ -6898,6 +6906,11 @@ var org;
                         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
                         vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
                         vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
+                        //we donot serialize the sps. 
+                        //the sps mesh's doNotSerialize property is set to true when the sps is created
+                        //serializing the sps bloats up the file
+                        //instead we just serialize the sps properties and recreate the sps when the file
+                        //is loaded in future
                         if (this.GroundSPSs != null) {
                             vishvaSerialzed.groundSPSserializeds = new Array();
                             for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
@@ -7589,6 +7602,84 @@ var org;
                         //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
                         part.gravity = new BABYLON.Vector3(0, -9.81, 0);
                         return part;
+                    };
+                    Vishva.prototype.createParticles = function (partId) {
+                        if (this.meshPicked == null) {
+                            return "no mesh selected";
+                        }
+                        var part = null;
+                        if (partId == "fire") {
+                            part = this._createFirePart();
+                        }
+                        else if (partId == "smoke") {
+                            part = this._createSmokePart();
+                        }
+                        if (part != null) {
+                            part.emitter = this.meshPicked;
+                            part.start();
+                        }
+                    };
+                    Vishva.prototype._createFirePart = function () {
+                        // Create a particle system
+                        var fireSystem = new BABYLON.ParticleSystem("particles", 2000, this.scene);
+                        //Texture of each particle
+                        fireSystem.particleTexture = new BABYLON.Texture("vishva/internal/assets/particles/fire/flare.png", this.scene);
+                        // Where the particles come from
+                        fireSystem.emitter = this.meshPicked; // the starting object, the emitter
+                        fireSystem.minEmitBox = new BABYLON.Vector3(-0.5, 1, -0.5); // Starting all from
+                        fireSystem.maxEmitBox = new BABYLON.Vector3(0.5, 1, 0.5); // To...
+                        // Colors of all particles
+                        fireSystem.color1 = new BABYLON.Color4(1, 0.5, 0, 1.0);
+                        fireSystem.color2 = new BABYLON.Color4(1, 0.5, 0, 1.0);
+                        fireSystem.colorDead = new BABYLON.Color4(0, 0, 0, 0.0);
+                        // Size of each particle (random between...
+                        fireSystem.minSize = 0.3;
+                        fireSystem.maxSize = 1;
+                        // Life time of each particle (random between...
+                        fireSystem.minLifeTime = 0.2;
+                        fireSystem.maxLifeTime = 0.4;
+                        // Emission rate
+                        fireSystem.emitRate = 600;
+                        // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+                        fireSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+                        // Set the gravity of all particles
+                        fireSystem.gravity = new BABYLON.Vector3(0, 0, 0);
+                        // Direction of each particle after it has been emitted
+                        fireSystem.direction1 = new BABYLON.Vector3(0, 4, 0);
+                        fireSystem.direction2 = new BABYLON.Vector3(0, 4, 0);
+                        // Angular speed, in radians
+                        fireSystem.minAngularSpeed = 0;
+                        fireSystem.maxAngularSpeed = Math.PI;
+                        // Speed
+                        fireSystem.minEmitPower = 1;
+                        fireSystem.maxEmitPower = 3;
+                        fireSystem.updateSpeed = 0.007;
+                        return fireSystem;
+                    };
+                    Vishva.prototype._createSmokePart = function () {
+                        var smokeSystem = new BABYLON.ParticleSystem("particles", 1000, this.scene);
+                        smokeSystem.particleTexture = new BABYLON.Texture("vishva/internal/assets/particles/smoke/flare.png", this.scene);
+                        smokeSystem.minEmitBox = new BABYLON.Vector3(-0.5, 1, -0.5); // Starting all from
+                        smokeSystem.maxEmitBox = new BABYLON.Vector3(0.5, 1, 0.5); // To...
+                        smokeSystem.color1 = new BABYLON.Color4(0.02, 0.02, 0.02, .02);
+                        smokeSystem.color2 = new BABYLON.Color4(0.02, 0.02, 0.02, .02);
+                        smokeSystem.colorDead = new BABYLON.Color4(0, 0, 0, 0.0);
+                        smokeSystem.minSize = 1;
+                        smokeSystem.maxSize = 3;
+                        smokeSystem.minLifeTime = 0.3;
+                        smokeSystem.maxLifeTime = 1.5;
+                        smokeSystem.emitRate = 350;
+                        // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+                        smokeSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+                        smokeSystem.gravity = new BABYLON.Vector3(0, 0, 0);
+                        smokeSystem.direction1 = new BABYLON.Vector3(-1.5, 8, -1.5);
+                        smokeSystem.direction2 = new BABYLON.Vector3(1.5, 8, 1.5);
+                        smokeSystem.minAngularSpeed = 0;
+                        smokeSystem.maxAngularSpeed = Math.PI;
+                        smokeSystem.minEmitPower = 0.5;
+                        smokeSystem.maxEmitPower = 1.5;
+                        smokeSystem.updateSpeed = 0.005;
+                        return smokeSystem;
                     };
                     Vishva.prototype.createCamera = function (scene, canvas) {
                         //lets create a camera located way high so that it doesnotcollide with any terrain

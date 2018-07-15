@@ -182,7 +182,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var navPrim: HTMLElement=document.getElementById("navPrim");
             navPrim.onclick=() => {
                 if(this._addInternalAssetUI==null) {
-                    this._addInternalAssetUI=new InternalAssetsUI(this._vishva,Vishva.vishvaFiles);
+                    this._addInternalAssetUI=new InternalAssetsUI(this._vishva);
                 }
                 this._addInternalAssetUI.toggleAssetDiag("primitives");
             }
@@ -211,7 +211,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             navEnv.onclick=(e) => {
                 if(this._environment==null) {
                     if(this._addInternalAssetUI==null) {
-                        this._addInternalAssetUI=new InternalAssetsUI(this._vishva,Vishva.vishvaFiles);
+                        this._addInternalAssetUI=new InternalAssetsUI(this._vishva);
                     }
                     this._environment=new EnvironmentUI(this._vishva,this._addInternalAssetUI,this);
                 }

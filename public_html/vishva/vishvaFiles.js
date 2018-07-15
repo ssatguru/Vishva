@@ -207,6 +207,19 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
    "f":[
     {"d":"assets",
      "f":[
+      {"d":"particles",
+       "f":[
+        {"d":"fire",
+         "f":[
+          "fire.jpg",
+          "flare.png"
+        ]},
+        {"d":"smoke",
+         "f":[
+          "flare.png",
+          "smoke.jpg"
+        ]}
+      ]},
       {"d":"primitives",
        "f":[
         {"d":"box",

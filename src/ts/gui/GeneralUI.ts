@@ -9,6 +9,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _vishva: Vishva;
         private _vishvaGUI: VishvaGUI;
         public _snaUI: SnaUI;
+        private _addInternalAssetUI: InternalAssetsUI;
 
         private _genName: HTMLInputElement;
         private _genSpace: HTMLSelectElement;
@@ -44,7 +45,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _genColl: HTMLInputElement;
         private _genVisi: HTMLInputElement;
 
-        constructor(vishva: Vishva, vishvaGUI:VishvaGUI) {
+        constructor(vishva: Vishva,vishvaGUI: VishvaGUI) {
             this._vishva=vishva;
             this._vishvaGUI=vishvaGUI;
 
@@ -196,7 +197,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._genVisi.onchange=() => {
                 this._vishva.makeVisibile(this._genVisi.checked);
             }
-            
+
             var undo: HTMLElement=document.getElementById("undo");
             var redo: HTMLElement=document.getElementById("redo");
 
@@ -217,7 +218,8 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             var swGnd: HTMLElement=document.getElementById("swGnd");
 
             var sNa: HTMLElement=document.getElementById("sNa");
-            //            var addWater: HTMLElement = document.getElementById("addWater");
+            var addParticles: HTMLButtonElement=<HTMLButtonElement>document.getElementById("addParticles");
+
 
             undo.onclick=(e) => {
                 this._vishva.undo();
@@ -335,10 +337,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             //                }
             //                return true;
             //            };
+            
+            addParticles.onclick=(e) => {
+                if(this._addInternalAssetUI==null) {
+                    this._addInternalAssetUI=new InternalAssetsUI(this._vishva);
+                }
+                this._addInternalAssetUI.toggleAssetDiag("particles");
+                return true;
+            };
+
         }
 
         public update() {
-            
+
             this._genName.value=this._vishva.getName();
 
             this._genSpace.value=this._vishva.getSpace();
@@ -379,7 +390,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._downloadDialog.dialog();
             this._downloadDialog.dialog("close");
         }
-        
+
         private _toString(d: number): string {
             return (<number>new Number(d)).toFixed(2).toString();
         }

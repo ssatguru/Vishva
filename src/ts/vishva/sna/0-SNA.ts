@@ -13,6 +13,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Vector3=BABYLON.Vector3;
     import Vector2=BABYLON.Vector2;
     import FileInputType=org.ssatguru.babylonjs.vishva.gui.FileInputType;
+    import Range = org.ssatguru.babylonjs.vishva.gui.Range;
 
     export interface SNAConfig {}
 
@@ -281,7 +282,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * Vectors/Quaternions are stored as plain objects with x,y,z or w properties
          * We need to convert them back to Vector/Quaternions objects
          * 
-         * FileINputType are stored as objects too
+         * FileInputType are stored as objects too
          * 
          */
         private unMarshalProps(obj: Object) {
@@ -309,6 +310,9 @@ namespace org.ssatguru.babylonjs.vishva {
                             let fit:FileInputType=new FileInputType(o["tile"],o["filter"],o["openAll"]);
                             fit.value=o["value"];
                             obj[pName] = fit;
+                        }else if (o["type"]==="Range"){
+                            let volume: Range = new Range(o["min"], o["max"],o["value"],o["step"]);
+                            obj[pName] = volume;
                         }
                     }
                 }

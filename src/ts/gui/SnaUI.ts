@@ -280,11 +280,6 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             if(node!=null) {
                 parmDiv.removeChild(node);
             }
-            //TODO REMOVE
-            //            if(actuator.getName()==="Sound") {
-            //                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
-            //                prop.soundFile.values=this._vishva.getSoundFiles();
-            //            }
             var tbl: HTMLTableElement=this.formCreate(actuator.getProperties());
             parmDiv.appendChild(tbl);
             var dbo: DialogButtonOptions={};

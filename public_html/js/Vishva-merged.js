@@ -2744,11 +2744,6 @@ var org;
                             if (node != null) {
                                 parmDiv.removeChild(node);
                             }
-                            //TODO REMOVE
-                            //            if(actuator.getName()==="Sound") {
-                            //                var prop: ActSoundProp=<ActSoundProp>actuator.getProperties();
-                            //                prop.soundFile.values=this._vishva.getSoundFiles();
-                            //            }
                             var tbl = this.formCreate(actuator.getProperties());
                             parmDiv.appendChild(tbl);
                             var dbo = {};
@@ -7981,6 +7976,7 @@ var org;
                 var Vector3 = BABYLON.Vector3;
                 var Vector2 = BABYLON.Vector2;
                 var FileInputType = org.ssatguru.babylonjs.vishva.gui.FileInputType;
+                var Range = org.ssatguru.babylonjs.vishva.gui.Range;
                 var SNAManager = (function () {
                     function SNAManager() {
                         this.sensorList = [];
@@ -8237,7 +8233,7 @@ var org;
                      * Vectors/Quaternions are stored as plain objects with x,y,z or w properties
                      * We need to convert them back to Vector/Quaternions objects
                      *
-                     * FileINputType are stored as objects too
+                     * FileInputType are stored as objects too
                      *
                      */
                     SNAManager.prototype.unMarshalProps = function (obj) {
@@ -8272,6 +8268,10 @@ var org;
                                         var fit = new FileInputType(o["tile"], o["filter"], o["openAll"]);
                                         fit.value = o["value"];
                                         obj[pName] = fit;
+                                    }
+                                    else if (o["type"] === "Range") {
+                                        var volume = new Range(o["min"], o["max"], o["value"], o["step"]);
+                                        obj[pName] = volume;
                                     }
                                 }
                             }

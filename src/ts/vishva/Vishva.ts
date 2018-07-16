@@ -1322,6 +1322,11 @@ namespace org.ssatguru.babylonjs.vishva {
             if(i>=0) {
                 meshes.splice(i,1);
             }
+            
+            //check if this mesh is an SPS mesh.
+            //if yes then delete the sps
+            this.deleteSPS(mesh);
+            
             mesh.dispose();
             mesh==null;
         }
@@ -2541,6 +2546,23 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.GroundSPSs.push(gs);
         }
+        
+        /**
+         * delete the sps if its underlying mesh is being deleted
+         */
+        public deleteSPS(mesh:AbstractMesh){
+            let i:number=0;
+            for(let gSps of this.GroundSPSs) {
+                console.log(gSps);
+                if(gSps.spsMesh==mesh){
+                    console.log("removing sps");
+                    this.GroundSPSs.splice(i,1);
+                    gSps.sps.dispose();
+                }
+                i++;
+            }
+            
+        }
         public getGrndSPSList(): Array<{id: string,desc: string}> {
             let sl: Array<{id: string,desc: string}>=new Array();
             if(this.GroundSPSs==null) return sl;
@@ -2652,6 +2674,8 @@ namespace org.ssatguru.babylonjs.vishva {
             if(this.GroundSPSs!=null) {
                 vishvaSerialzed.groundSPSserializeds=new Array();
                 for(let gSPS of this.GroundSPSs) {
+                    console.log("saving");
+                    console.log(gSPS);
                     vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
                 }
             }

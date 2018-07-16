@@ -4288,15 +4288,15 @@ var org;
                         this.mesh = mesh;
                         this._groundMesh = groundMesh;
                         this._spreadDtls = spreadDtls;
-                        this._sps = new SolidParticleSystem(name, this._vishva.scene, { updatable: false, isPickable: false });
+                        this.sps = new SolidParticleSystem(name, this._vishva.scene, { updatable: false, isPickable: false });
                         //generate default spread details based on mesh bounding box size
                         this._updateSpreadParms(this.mesh, this._groundMesh, this._spreadDtls);
                     }
                     GroundSPS.prototype.generate = function () {
                         var _this = this;
                         this._updateSpreadParms(this.mesh, this._groundMesh, this._spreadDtls);
-                        this._sps.addShape(this.mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
-                        this.spsMesh = this._sps.buildMesh();
+                        this.sps.addShape(this.mesh, this.sCount, { positionFunction: function (p, i, s) { _this._spread(p); } });
+                        this.spsMesh = this.sps.buildMesh();
                         this.spsMesh.material = this.mesh.material;
                         this.spsMesh.doNotSerialize = true;
                         this.id = this.spsMesh.id;
@@ -4392,27 +4392,6 @@ var org;
                             this.sx = this._sprdTLC.x;
                             this.sz = this.sz - this._spreadDtls.step;
                         }
-                        //            if(this._spreadDtls.sprdCon2.x>this._spreadDtls.sprdCon1.x) {
-                        //                this.sx=this.sx+this._spreadDtls.step;
-                        //                if(this.sx>this._spreadDtls.sprdCon2.x) {
-                        //                    this.sx=this._spreadDtls.sprdCon1.x;
-                        //                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
-                        //                        this.sz=this.sz-this._spreadDtls.step;
-                        //                    } else {
-                        //                        this.sz=this.sz+this._spreadDtls.step;
-                        //                    }
-                        //                }
-                        //            } else {
-                        //                this.sx=this.sx-this._spreadDtls.step;
-                        //                if(this.sx<this._spreadDtls.sprdCon2.x) {
-                        //                    this.sx=this._spreadDtls.sprdCon1.x;
-                        //                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
-                        //                        this.sz=this.sz-this._spreadDtls.step;
-                        //                    } else {
-                        //                        this.sz=this.sz+this._spreadDtls.step;
-                        //                    }
-                        //                }
-                        //            }
                     };
                     return GroundSPS;
                 }());
@@ -5586,6 +5565,9 @@ var org;
                         if (i >= 0) {
                             meshes.splice(i, 1);
                         }
+                        //check if this mesh is an SPS mesh.
+                        //if yes then delete the sps
+                        this.deleteSPS(mesh);
                         mesh.dispose();
                         mesh == null;
                     };
@@ -6806,6 +6788,22 @@ var org;
                         }
                         this.GroundSPSs.push(gs);
                     };
+                    /**
+                     * delete the sps if its underlying mesh is being deleted
+                     */
+                    Vishva.prototype.deleteSPS = function (mesh) {
+                        var i = 0;
+                        for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
+                            var gSps = _a[_i];
+                            console.log(gSps);
+                            if (gSps.spsMesh == mesh) {
+                                console.log("removing sps");
+                                this.GroundSPSs.splice(i, 1);
+                                gSps.sps.dispose();
+                            }
+                            i++;
+                        }
+                    };
                     Vishva.prototype.getGrndSPSList = function () {
                         var sl = new Array();
                         if (this.GroundSPSs == null)
@@ -6910,6 +6908,8 @@ var org;
                             vishvaSerialzed.groundSPSserializeds = new Array();
                             for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
                                 var gSPS = _a[_i];
+                                console.log("saving");
+                                console.log(gSPS);
                                 vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
                             }
                         }

@@ -19,7 +19,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private _groundMesh: GroundMesh;
 
         private _spreadDtls: SpreadDtls;
-        private _sps: SolidParticleSystem;
+        public sps: SolidParticleSystem;
         public spsMesh: Mesh;
 
         private sx: number=0;
@@ -39,15 +39,15 @@ namespace org.ssatguru.babylonjs.vishva {
             this._groundMesh=groundMesh;
             this._spreadDtls=spreadDtls;
 
-            this._sps=new SolidParticleSystem(name,this._vishva.scene,{updatable: false,isPickable: false});
+            this.sps=new SolidParticleSystem(name,this._vishva.scene,{updatable: false,isPickable: false});
             //generate default spread details based on mesh bounding box size
             this._updateSpreadParms(this.mesh,this._groundMesh,this._spreadDtls);
         }
 
         public generate() {
             this._updateSpreadParms(this.mesh,this._groundMesh,this._spreadDtls);
-            this._sps.addShape(this.mesh,this.sCount,{positionFunction: (p,i,s) => {this._spread(p);}});
-            this.spsMesh=this._sps.buildMesh();
+            this.sps.addShape(this.mesh,this.sCount,{positionFunction: (p,i,s) => {this._spread(p);}});
+            this.spsMesh=this.sps.buildMesh();
             this.spsMesh.material=this.mesh.material;
             this.spsMesh.doNotSerialize=true;
             this.id=this.spsMesh.id;
@@ -157,30 +157,6 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.sx=this._sprdTLC.x;
                 this.sz=this.sz-this._spreadDtls.step;
             }
-
-//            if(this._spreadDtls.sprdCon2.x>this._spreadDtls.sprdCon1.x) {
-//                this.sx=this.sx+this._spreadDtls.step;
-//                if(this.sx>this._spreadDtls.sprdCon2.x) {
-//                    this.sx=this._spreadDtls.sprdCon1.x;
-//                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
-//                        this.sz=this.sz-this._spreadDtls.step;
-//                    } else {
-//                        this.sz=this.sz+this._spreadDtls.step;
-//                    }
-//                }
-//            } else {
-//                this.sx=this.sx-this._spreadDtls.step;
-//                if(this.sx<this._spreadDtls.sprdCon2.x) {
-//                    this.sx=this._spreadDtls.sprdCon1.x;
-//                    if(this._spreadDtls.sprdCon2.y>this._spreadDtls.sprdCon1.y) {
-//                        this.sz=this.sz-this._spreadDtls.step;
-//                    } else {
-//                        this.sz=this.sz+this._spreadDtls.step;
-//                    }
-//                }
-//            }
-
-
         }
     }
 

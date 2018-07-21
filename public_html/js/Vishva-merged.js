@@ -4466,10 +4466,13 @@ var org;
                         this.ow = 0.01;
                         this.spaceWorld = false;
                         this.skyboxTextures = "vishva/internal/textures/skybox-default/default";
+                        //avatar stuff
                         this.avatarFolder = "vishva/internal/avatar/";
                         this.avatarFile = "starterAvatars.babylon";
                         //spawnPosition:Vector3=new Vector3(-360,620,225);
                         this.spawnPosition = new Vector3(0, 0.2, 0);
+                        //spawnPosition: Vector3=new Vector3(0,12,0);
+                        this._avDisabled = false;
                         this._animBlend = 0.1;
                         this._avEllipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
                         this._avEllipsoidOffset = new Vector3(0, 1, 0);
@@ -4855,17 +4858,19 @@ var org;
                                 this.setScaleOn();
                             }
                         }
-                        if (this.isFocusOnAv) {
-                            if (this.key.esc) {
-                                this.setFocusOnNothing();
+                        if (!this._avDisabled) {
+                            if (this.isFocusOnAv) {
+                                if (this.key.esc) {
+                                    this.setFocusOnNothing();
+                                }
                             }
-                        }
-                        else if (this.key.up || this.key.down || this.key.esc) {
-                            if (this.editControl == null) {
-                                this.switchFocusToAV();
-                            }
-                            else if (!this.editControl.isEditing()) {
-                                this.switchFocusToAV();
+                            else if (this.key.up || this.key.down || this.key.esc) {
+                                if (this.editControl == null) {
+                                    this.switchFocusToAV();
+                                }
+                                else if (!this.editControl.isEditing()) {
+                                    this.switchFocusToAV();
+                                }
                             }
                         }
                         if (this.key.esc) {
@@ -7748,11 +7753,13 @@ var org;
                         this.cc.stop();
                         this.avatar.checkCollisions = false;
                         this.scene.stopAnimation(this.avatar.skeleton);
+                        this._avDisabled = true;
                     };
                     Vishva.prototype.enableAV = function () {
                         this.scene.stopAnimation(this.avatar.skeleton);
                         this.cc.start();
                         this.avatar.checkCollisions = true;
+                        this._avDisabled = false;
                     };
                     //TODO persist charactercontroller settings
                     Vishva.prototype.setCharacterController = function (cc) {
@@ -8714,7 +8721,14 @@ var org;
                 }(vishva.ActProperties));
                 vishva.AvAnimatorProp = AvAnimatorProp;
                 /**
-                 * this actuator will play animation on the Avatar
+                 * this actuator will play animation on the Avatar.
+                 * On receiving a signal this will "capture" the AV
+                 * To "release" the av send a disable signal.
+                 * One will have to send an enable signal eventually to make it
+                 * effective one more time.
+                 * One way to handle this would be to set the signal id and the signalEnable
+                 * to the same signal.
+                 * This way the same signal would enable and start it
                  */
                 var ActuatorAvAnimator = (function (_super) {
                     __extends(ActuatorAvAnimator, _super);
@@ -8735,16 +8749,13 @@ var org;
                         var avMesh = scene.getMeshesByTags("Vishva.avatar")[0];
                         var skel = avMesh.skeleton;
                         if (skel != null) {
-                            var getAnimationRanges = skel["getAnimationRanges"];
-                            var ranges = getAnimationRanges.call(skel);
+                            var ranges = skel.getAnimationRanges();
                             var animNames = new Array(ranges.length);
                             var i = 0;
-                            for (var index160 = 0; index160 < ranges.length; index160++) {
-                                var range = ranges[index160];
-                                {
-                                    animNames[i] = range.name;
-                                    i++;
-                                }
+                            for (var _i = 0, ranges_3 = ranges; _i < ranges_3.length; _i++) {
+                                var range = ranges_3[_i];
+                                animNames[i] = range.name;
+                                i++;
                             }
                             prop.animationRange.values = animNames;
                         }

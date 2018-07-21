@@ -515,6 +515,9 @@ namespace org.ssatguru.babylonjs.vishva {
         public abstract getName(): any;
         public abstract onPropertiesChange(): any;
         public abstract cleanUp(): any;
+        /*
+         * called when actuator recieves a disable signal or is being disposed
+         */
         public abstract stop(): any;
         public abstract actuate(): any;
         public abstract isReady(): any;

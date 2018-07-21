@@ -95,6 +95,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
         skyboxTextures: string="vishva/internal/textures/skybox-default/default";
 
+        //avatar stuff
         avatarFolder: string="vishva/internal/avatar/";
         avatarFile: string="starterAvatars.babylon";
         avatar: Mesh;
@@ -102,8 +103,7 @@ namespace org.ssatguru.babylonjs.vishva {
         spawnPosition: Vector3=new Vector3(0,0.2,0);
         //spawnPosition: Vector3=new Vector3(0,12,0);
 
-
-        //avatar stuff
+        private _avDisabled: boolean=false;
         avatarSkeleton: Skeleton;
         _animBlend=0.1;
         private _avEllipsoid: Vector3=new BABYLON.Vector3(0.5,1,0.5);
@@ -552,21 +552,26 @@ namespace org.ssatguru.babylonjs.vishva {
                     this.setScaleOn();
                 }
             }
-            if(this.isFocusOnAv) {
-                if(this.key.esc) {
-                    this.setFocusOnNothing();
-                }
 
-            } else if(this.key.up||this.key.down||this.key.esc) {
-                if(this.editControl==null) {
-                    this.switchFocusToAV();
-                } else if(!this.editControl.isEditing()) {
-                    this.switchFocusToAV();
+            if(!this._avDisabled){
+                if(this.isFocusOnAv) {
+                    if(this.key.esc) {
+                        this.setFocusOnNothing();
+                    }
+
+                } else if(this.key.up||this.key.down||this.key.esc) {
+                    if(this.editControl==null) {
+                        this.switchFocusToAV();
+                    } else if(!this.editControl.isEditing()) {
+                        this.switchFocusToAV();
+                    }
                 }
             }
+
             if(this.key.esc) {
                 this.multiUnSelectAll();
             }
+
             this.resetKeys();
         }
         private resetKeys() {
@@ -609,6 +614,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private pickObject(evt: PointerEvent,pickResult: PickingInfo) {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
+            
             if(!(evt.button==2&&(this.key.alt||this.key.ctl))) return;
             //if(evt.button!==2) return;
             if(pickResult.hit) {
@@ -1322,11 +1328,11 @@ namespace org.ssatguru.babylonjs.vishva {
             if(i>=0) {
                 meshes.splice(i,1);
             }
-            
+
             //check if this mesh is an SPS mesh.
             //if yes then delete the sps
             this.deleteSPS(mesh);
-            
+
             mesh.dispose();
             mesh==null;
         }
@@ -2546,22 +2552,22 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.GroundSPSs.push(gs);
         }
-        
+
         /**
          * delete the sps if its underlying mesh is being deleted
          */
-        public deleteSPS(mesh:AbstractMesh){
-            let i:number=0;
+        public deleteSPS(mesh: AbstractMesh) {
+            let i: number=0;
             for(let gSps of this.GroundSPSs) {
                 console.log(gSps);
-                if(gSps.spsMesh==mesh){
+                if(gSps.spsMesh==mesh) {
                     console.log("removing sps");
                     this.GroundSPSs.splice(i,1);
                     gSps.sps.dispose();
                 }
                 i++;
             }
-            
+
         }
         public getGrndSPSList(): Array<{id: string,desc: string}> {
             let sl: Array<{id: string,desc: string}>=new Array();
@@ -3625,12 +3631,14 @@ namespace org.ssatguru.babylonjs.vishva {
             this.cc.stop();
             (<Mesh>this.avatar).checkCollisions=false;
             this.scene.stopAnimation(this.avatar.skeleton);
+            this._avDisabled=true;
         }
 
         public enableAV() {
             this.scene.stopAnimation(this.avatar.skeleton);
             this.cc.start();
             (<Mesh>this.avatar).checkCollisions=true;
+            this._avDisabled=false;
         }
 
         //TODO persist charactercontroller settings

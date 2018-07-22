@@ -2937,7 +2937,7 @@ var org;
                         function TextureUI(vishva) {
                             var _this = this;
                             this._vishva = vishva;
-                            this._textureDiag = new gui.VDialog("textureDiag", "Texture", gui.DialogMgr.centerBottom, "auto", "auto", 0, true);
+                            this._textureDiag = new gui.VDialog("textureDiag", "Texture", gui.DialogMgr.centerBottom, "auto", "auto", 0, false);
                             this._textureImg = document.getElementById("textImg");
                             this._textIDEle = document.getElementById("textID");
                             this._textType = document.getElementById("textType");
@@ -5969,6 +5969,8 @@ var org;
                     Vishva.prototype.setTextRot = function (textID, rot) {
                         var text = this.getTextureByID(textID);
                         text.wAng = rot * Math.PI / 180;
+                        //text.uAng=rot*Math.PI/180;
+                        //text.vAng=rot*Math.PI/180;
                     };
                     Vishva.prototype.getTextRot = function (textID) {
                         var text = this.getTextureByID(textID);
@@ -6797,6 +6799,8 @@ var org;
                      * delete the sps if its underlying mesh is being deleted
                      */
                     Vishva.prototype.deleteSPS = function (mesh) {
+                        if (this.GroundSPSs == null)
+                            return;
                         var i = 0;
                         for (var _i = 0, _a = this.GroundSPSs; _i < _a.length; _i++) {
                             var gSps = _a[_i];
@@ -8147,7 +8151,9 @@ var org;
                         }
                         else {
                             var actuators = keyValue;
-                            actuators.push(actuator);
+                            if (actuators.indexOf(actuator) == -1) {
+                                actuators.push(actuator);
+                            }
                         }
                     };
                     SNAManager.prototype.unSubscribe = function (actuator, signalId) {
@@ -8447,6 +8453,8 @@ var org;
                         if (i >= 0)
                             return false;
                         if (signal == this.signalDisable) {
+                            if (this.disabled)
+                                return false;
                             this.disabled = true;
                             this.queued = 0;
                             this.stopped = true;

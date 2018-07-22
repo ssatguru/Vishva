@@ -1714,6 +1714,8 @@ namespace org.ssatguru.babylonjs.vishva {
         public setTextRot(textID: string,rot: number) {
             let text: Texture=<Texture>this.getTextureByID(textID);
             text.wAng=rot*Math.PI/180;
+            //text.uAng=rot*Math.PI/180;
+            //text.vAng=rot*Math.PI/180;
         }
         public getTextRot(textID: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
@@ -2557,6 +2559,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * delete the sps if its underlying mesh is being deleted
          */
         public deleteSPS(mesh: AbstractMesh) {
+            if (this.GroundSPSs==null) return;
             let i: number=0;
             for(let gSps of this.GroundSPSs) {
                 console.log(gSps);

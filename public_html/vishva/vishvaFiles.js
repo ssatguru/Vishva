@@ -37,7 +37,10 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
       {"d":"Vincent",
        "f":[
         "Vincent.babylon",
+        "Vincent.blend",
+        "vincent.blend1",
         "Vincent.jpg",
+        "vincent.log",
         "Vincent_texture_image.jpg"
       ]}
     ]},

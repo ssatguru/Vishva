@@ -194,7 +194,9 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.sig2actMap[signalId]=actuators;
             } else {
                 var actuators: Array<Actuator>=<Array<Actuator>>keyValue;
-                actuators.push(actuator);
+                if (actuators.indexOf(actuator)==-1){
+                    actuators.push(actuator);
+                }
             }
         }
 
@@ -553,6 +555,7 @@ namespace org.ssatguru.babylonjs.vishva {
             var i: number=SNAManager.getSNAManager().snaDisabledList.indexOf(this.mesh);
             if(i>=0) return false;
             if(signal==this.signalDisable) {
+                if (this.disabled) return false;
                 this.disabled=true;
                 this.queued=0;
                 this.stopped=true;

@@ -14,7 +14,9 @@ namespace org.ssatguru.babylonjs.vishva.gui {
 
         private _matHScale: HTMLInputElement;
         private _matVScale: HTMLInputElement;
-        private _matRot: HTMLInputElement;
+        private _matURot: HTMLInputElement;
+        private _matVRot: HTMLInputElement;
+        private _matWRot: HTMLInputElement;
         private _matHO: HTMLInputElement;
         private _matVO: HTMLInputElement;
 
@@ -40,10 +42,20 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._matVScale.onchange=() => {
                 this._vishva.setTextVScale(this._textID,Number(this._matVScale.value));
             }
-            this._matRot=<HTMLInputElement>document.getElementById("matRot");
-            this._matRot.oninput=() => {
-                this._vishva.setTextRot(this._textID,Number(this._matRot.value));
+            
+            this._matURot=<HTMLInputElement>document.getElementById("matURot");
+            this._matURot.oninput=() => {
+                this._vishva.setTextRot(this._textID,Number(this._matURot.value),"u");
             }
+            this._matVRot=<HTMLInputElement>document.getElementById("matVRot");
+            this._matVRot.oninput=() => {
+                this._vishva.setTextRot(this._textID,Number(this._matVRot.value),"v");
+            }
+            this._matWRot=<HTMLInputElement>document.getElementById("matWRot");
+            this._matWRot.oninput=() => {
+                this._vishva.setTextRot(this._textID,Number(this._matWRot.value),"w");
+            }
+            
             this._matHO=<HTMLInputElement>document.getElementById("matHO");
             this._matHO.oninput=() => {
                 this._vishva.setTextHO(this._textID,Number(this._matHO.value));
@@ -83,7 +95,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         public update() {
             this._matHScale.value=this._vishva.getTextHScale(this._textID);
             this._matVScale.value=this._vishva.getTextVScale(this._textID);
-            this._matRot.value=this._vishva.getTextRot(this._textID);
+            this._matWRot.value=this._vishva.getTextRot(this._textID);
             this._matHO.value=this._vishva.getTextHO(this._textID);
             this._matVO.value=this._vishva.getTextVO(this._textID);
         }

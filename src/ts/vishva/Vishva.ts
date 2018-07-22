@@ -553,7 +553,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
             }
 
-            if(!this._avDisabled){
+            if(!this._avDisabled) {
                 if(this.isFocusOnAv) {
                     if(this.key.esc) {
                         this.setFocusOnNothing();
@@ -614,7 +614,7 @@ namespace org.ssatguru.babylonjs.vishva {
         private pickObject(evt: PointerEvent,pickResult: PickingInfo) {
             // prevent curosr from changing to a edit caret in Chrome
             evt.preventDefault();
-            
+
             if(!(evt.button==2&&(this.key.alt||this.key.ctl))) return;
             //if(evt.button!==2) return;
             if(pickResult.hit) {
@@ -1711,11 +1711,16 @@ namespace org.ssatguru.babylonjs.vishva {
             let text: Texture=<Texture>this.getTextureByID(textID);
             return Number(text.vOffset).toString();
         }
-        public setTextRot(textID: string,rot: number) {
+        public setTextRot(textID: string,rot: number,type: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
-            text.wAng=rot*Math.PI/180;
-            //text.uAng=rot*Math.PI/180;
-            //text.vAng=rot*Math.PI/180;
+            rot=rot*Math.PI/180;
+            if(type=="u") {
+                text.uAng=rot;
+            } else if(type=="v") {
+                text.vAng=rot;
+            } else if(type=="w") {
+                text.wAng=rot;
+            }
         }
         public getTextRot(textID: string) {
             let text: Texture=<Texture>this.getTextureByID(textID);
@@ -2559,7 +2564,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * delete the sps if its underlying mesh is being deleted
          */
         public deleteSPS(mesh: AbstractMesh) {
-            if (this.GroundSPSs==null) return;
+            if(this.GroundSPSs==null) return;
             let i: number=0;
             for(let gSps of this.GroundSPSs) {
                 console.log(gSps);

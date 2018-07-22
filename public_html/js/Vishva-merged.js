@@ -2950,9 +2950,17 @@ var org;
                             this._matVScale.onchange = function () {
                                 _this._vishva.setTextVScale(_this._textID, Number(_this._matVScale.value));
                             };
-                            this._matRot = document.getElementById("matRot");
-                            this._matRot.oninput = function () {
-                                _this._vishva.setTextRot(_this._textID, Number(_this._matRot.value));
+                            this._matURot = document.getElementById("matURot");
+                            this._matURot.oninput = function () {
+                                _this._vishva.setTextRot(_this._textID, Number(_this._matURot.value), "u");
+                            };
+                            this._matVRot = document.getElementById("matVRot");
+                            this._matVRot.oninput = function () {
+                                _this._vishva.setTextRot(_this._textID, Number(_this._matVRot.value), "v");
+                            };
+                            this._matWRot = document.getElementById("matWRot");
+                            this._matWRot.oninput = function () {
+                                _this._vishva.setTextRot(_this._textID, Number(_this._matWRot.value), "w");
                             };
                             this._matHO = document.getElementById("matHO");
                             this._matHO.oninput = function () {
@@ -2987,7 +2995,7 @@ var org;
                         TextureUI.prototype.update = function () {
                             this._matHScale.value = this._vishva.getTextHScale(this._textID);
                             this._matVScale.value = this._vishva.getTextVScale(this._textID);
-                            this._matRot.value = this._vishva.getTextRot(this._textID);
+                            this._matWRot.value = this._vishva.getTextRot(this._textID);
                             this._matHO.value = this._vishva.getTextHO(this._textID);
                             this._matVO.value = this._vishva.getTextVO(this._textID);
                         };
@@ -5966,11 +5974,18 @@ var org;
                         var text = this.getTextureByID(textID);
                         return Number(text.vOffset).toString();
                     };
-                    Vishva.prototype.setTextRot = function (textID, rot) {
+                    Vishva.prototype.setTextRot = function (textID, rot, type) {
                         var text = this.getTextureByID(textID);
-                        text.wAng = rot * Math.PI / 180;
-                        //text.uAng=rot*Math.PI/180;
-                        //text.vAng=rot*Math.PI/180;
+                        rot = rot * Math.PI / 180;
+                        if (type == "u") {
+                            text.uAng = rot;
+                        }
+                        else if (type == "v") {
+                            text.vAng = rot;
+                        }
+                        else if (type == "w") {
+                            text.wAng = rot;
+                        }
                     };
                     Vishva.prototype.getTextRot = function (textID) {
                         var text = this.getTextureByID(textID);

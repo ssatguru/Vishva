@@ -397,8 +397,10 @@ namespace org.ssatguru.babylonjs.vishva {
                     //sat TODO remove comment
                     //mesh.receiveShadows = true;
                     (this.shadowGenerator.getShadowMap().renderList).push(mesh);
-
                 }
+//                }else{
+//                    (<Mesh>mesh).addLODLevel(55,null);
+//                }
             }
 
             for(let camera of scene.cameras) {
@@ -441,7 +443,10 @@ namespace org.ssatguru.babylonjs.vishva {
                     for(let gSPSs of this.vishvaSerialized.groundSPSserializeds) {
                         let mesh: Mesh=<Mesh>this.scene.getMeshByID(gSPSs.meshID);
                         if(mesh!=null) {
-                            let groundMesh: GroundMesh=<GroundMesh>this.scene.getMeshByID(gSPSs.groundMeshID);
+                            //TODO when ground is changed update each sps grdounMeshID
+                            //for now let's assume just one groundmesh and use that
+                            //let groundMesh: GroundMesh=<GroundMesh>this.scene.getMeshByID(gSPSs.groundMeshID);
+                            let groundMesh: GroundMesh=<GroundMesh>this.ground;
                             let gSPS=new GroundSPS(gSPSs.name,this,mesh,groundMesh,gSPSs.spreadDtls);
                             try {
                                 gSPS.generate();
@@ -508,6 +513,7 @@ namespace org.ssatguru.babylonjs.vishva {
             }
             this.engine.hideLoadingUI();
             this.loadingMsg.style.visibility="hidden";
+
             this.engine.runRenderLoop(() => this.scene.render());
         }
 
@@ -3626,7 +3632,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //this.cc.setNoFirstPerson(true);
 
             this.cc.start();
-
+            
             //in 3.0 need to set the camera values again
             //            this.mainCamera.radius=4;
             //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;

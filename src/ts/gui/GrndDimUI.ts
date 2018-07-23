@@ -75,6 +75,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                     this._vishva.switchEditControl(grnd);
                     this._adjustHts(grnd,_grnd_old);
                     _grnd_old.dispose();
+                    //TODO regenerate all the sps
                 }
 
             },this._vishva.scene);

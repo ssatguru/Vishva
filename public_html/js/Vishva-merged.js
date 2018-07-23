@@ -1048,6 +1048,7 @@ var org;
                                     _this._vishva.switchEditControl(grnd);
                                     _this._adjustHts(grnd, _grnd_old);
                                     _grnd_old.dispose();
+                                    //TODO regenerate all the sps
                                 }
                             }, this._vishva.scene);
                         };
@@ -4724,6 +4725,9 @@ var org;
                                 //mesh.receiveShadows = true;
                                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             }
+                            //                }else{
+                            //                    (<Mesh>mesh).addLODLevel(55,null);
+                            //                }
                         }
                         for (var _k = 0, _l = scene.cameras; _k < _l.length; _k++) {
                             var camera = _l[_k];
@@ -4763,7 +4767,10 @@ var org;
                                     var gSPSs = _o[_m];
                                     var mesh = this.scene.getMeshByID(gSPSs.meshID);
                                     if (mesh != null) {
-                                        var groundMesh = this.scene.getMeshByID(gSPSs.groundMeshID);
+                                        //TODO when ground is changed update each sps grdounMeshID
+                                        //for now let's assume just one groundmesh and use that
+                                        //let groundMesh: GroundMesh=<GroundMesh>this.scene.getMeshByID(gSPSs.groundMeshID);
+                                        var groundMesh = this.ground;
                                         var gSPS = new GroundSPS(gSPSs.name, this, mesh, groundMesh, gSPSs.spreadDtls);
                                         try {
                                             gSPS.generate();

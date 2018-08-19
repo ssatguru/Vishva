@@ -660,6 +660,7 @@ var org;
             (function (vishva_3) {
                 var gui;
                 (function (gui) {
+                    var Vector3 = BABYLON.Vector3;
                     /**
                      * Provides UI for the Genral tab of mesh properties
                      */
@@ -718,44 +719,21 @@ var org;
                             this._genOperFocus.onclick = function () {
                                 _this._vishva.setFocusOnMesh();
                             };
-                            //Translation
-                            this._genLocX = document.getElementById("loc.x");
-                            this._genLocX.onchange = function () {
-                                _this._vishva.setLocation(Number(_this._genLocX.value), Number(_this._genLocY.value), Number(_this._genLocZ.value));
+                            this._genLoc = new gui.VInputVector3("loc");
+                            this._genLoc.onChange = function (v3) {
+                                _this._vishva.setLocation(v3.x, v3.y, v3.z);
                             };
-                            this._genLocY = document.getElementById("loc.y");
-                            this._genLocY.onchange = function () {
-                                _this._vishva.setLocation(Number(_this._genLocX.value), Number(_this._genLocY.value), Number(_this._genLocZ.value));
+                            this._genRot = new gui.VInputVector3("rot");
+                            this._genRot.onChange = function (v3) {
+                                _this._vishva.setRotation(v3.x, v3.y, v3.z);
                             };
-                            this._genLocZ = document.getElementById("loc.z");
-                            this._genLocZ.onchange = function () {
-                                _this._vishva.setLocation(Number(_this._genLocX.value), Number(_this._genLocY.value), Number(_this._genLocZ.value));
+                            this._genScale = new gui.VInputVector3("scale");
+                            this._genScale.onChange = function (v3) {
+                                _this._vishva.setScale(v3.x, v3.y, v3.z);
                             };
-                            //Rotation
-                            this._genRotX = document.getElementById("rot.x");
-                            this._genRotX.onchange = function () {
-                                _this._vishva.setRotation(Number(_this._genRotX.value), Number(_this._genRotY.value), Number(_this._genRotZ.value));
-                            };
-                            this._genRotY = document.getElementById("rot.y");
-                            this._genRotY.onchange = function () {
-                                _this._vishva.setRotation(Number(_this._genRotX.value), Number(_this._genRotY.value), Number(_this._genRotZ.value));
-                            };
-                            this._genRotZ = document.getElementById("rot.z");
-                            this._genRotZ.onchange = function () {
-                                _this._vishva.setRotation(Number(_this._genRotX.value), Number(_this._genRotY.value), Number(_this._genRotZ.value));
-                            };
-                            //Scale
-                            this._genScaleX = document.getElementById("scl.x");
-                            this._genScaleX.onchange = function () {
-                                _this._vishva.setScale(Number(_this._genScaleX.value), Number(_this._genScaleY.value), Number(_this._genScaleZ.value));
-                            };
-                            this._genScaleY = document.getElementById("scl.y");
-                            this._genScaleY.onchange = function () {
-                                _this._vishva.setScale(Number(_this._genScaleX.value), Number(_this._genScaleY.value), Number(_this._genScaleZ.value));
-                            };
-                            this._genScaleZ = document.getElementById("scl.z");
-                            this._genScaleZ.onchange = function () {
-                                _this._vishva.setScale(Number(_this._genScaleX.value), Number(_this._genScaleY.value), Number(_this._genScaleZ.value));
+                            //Size
+                            this._genSize = new gui.VInputVector3("size", Vector3.Zero(), true);
+                            this._genSize.onChange = function (v3) {
                             };
                             //Snap CheckBox
                             this._genSnapTrans = document.getElementById("snapTrans");
@@ -783,17 +761,17 @@ var org;
                                 }
                             };
                             //Snap Values
-                            this._genSnapTransValue = document.getElementById("snapTransValue");
-                            this._genSnapTransValue.onchange = function () {
-                                _this._vishva.setSnapTransValue(Number(_this._genSnapTransValue.value));
+                            this._genSnapTransValue = new gui.VInputNumber("snapTransValue");
+                            this._genSnapTransValue.onChange = function (n) {
+                                _this._vishva.setSnapTransValue(n);
                             };
-                            this._genSnapRotValue = document.getElementById("snapRotValue");
-                            this._genSnapRotValue.onchange = function () {
-                                _this._vishva.setSnapRotValue(Number(_this._genSnapRotValue.value));
+                            this._genSnapRotValue = new gui.VInputNumber("snapRotValue");
+                            this._genSnapRotValue.onChange = function (n) {
+                                _this._vishva.setSnapRotValue(n);
                             };
-                            this._genSnapScaleValue = document.getElementById("snapScaleValue");
-                            this._genSnapScaleValue.onchange = function () {
-                                _this._vishva.setSnapScaleValue(Number(_this._genSnapScaleValue.value));
+                            this._genSnapScaleValue = new gui.VInputNumber("snapScaleValue");
+                            this._genSnapScaleValue.onChange = function (n) {
+                                _this._vishva.setSnapScaleValue(n);
                             };
                             //
                             this._genDisable = document.getElementById("genDisable");
@@ -952,18 +930,10 @@ var org;
                             this._genVisi.checked = this._vishva.isVisible();
                         };
                         GeneralUI.prototype._updateTransform = function () {
-                            var loc = this._vishva.getLocation();
-                            var rot = this._vishva.getRotation();
-                            var scl = this._vishva.getScale();
-                            document.getElementById("loc.x").value = this._toString(loc.x);
-                            document.getElementById("loc.y").value = this._toString(loc.y);
-                            document.getElementById("loc.z").value = this._toString(loc.z);
-                            document.getElementById("rot.x").value = this._toString(rot.x);
-                            document.getElementById("rot.y").value = this._toString(rot.y);
-                            document.getElementById("rot.z").value = this._toString(rot.z);
-                            document.getElementById("scl.x").value = this._toString(scl.x);
-                            document.getElementById("scl.y").value = this._toString(scl.y);
-                            document.getElementById("scl.z").value = this._toString(scl.z);
+                            this._genLoc.setValue(this._vishva.getLocation());
+                            this._genRot.setValue(this._vishva.getRotation());
+                            this._genScale.setValue(this._vishva.getScale());
+                            this._genSize.setValue(this._vishva.getSize());
                         };
                         GeneralUI.prototype._createDownloadDiag = function () {
                             this._downloadLink = document.getElementById("downloadAssetLink");
@@ -3111,8 +3081,9 @@ var org;
                      * provides a ui to input a vector3 value
                      */
                     var VInputNumber = (function () {
-                        function VInputNumber(eID, value) {
+                        function VInputNumber(eID, value, readOnly) {
                             if (value === void 0) { value = 0; }
+                            if (readOnly === void 0) { readOnly = false; }
                             var _this = this;
                             var e;
                             if (eID instanceof HTMLElement) {
@@ -3126,6 +3097,8 @@ var org;
                             this._inE.value = Number(value).toString();
                             this._inE.size = 2;
                             this._inE.style.display = "inline-block";
+                            if (readOnly)
+                                this._inE.readOnly = true;
                             this._inE.onkeypress = function (e) {
                                 e.stopPropagation();
                             };
@@ -3289,7 +3262,8 @@ var org;
                      * provides a ui to input a vector2 value
                      */
                     var VInputVector2 = (function () {
-                        function VInputVector2(v3eID, v) {
+                        function VInputVector2(v3eID, v, readOnly) {
+                            if (readOnly === void 0) { readOnly = false; }
                             var _this = this;
                             if (v) {
                                 this._v = v.clone();
@@ -3297,11 +3271,11 @@ var org;
                             else {
                                 this._v = new Vector2(0, 0);
                             }
-                            this._x = new gui.VInputNumber(v3eID, this._v.x);
+                            this._x = new gui.VInputNumber(v3eID, this._v.x, readOnly);
                             this._x.onChange = function (n) {
                                 _this._v.x = n;
                             };
-                            this._y = new gui.VInputNumber(v3eID, this._v.y);
+                            this._y = new gui.VInputNumber(v3eID, this._v.y, readOnly);
                             this._y.onChange = function (n) {
                                 _this._v.y = n;
                             };
@@ -3338,7 +3312,8 @@ var org;
                      * provides a ui to input a vector3 value
                      */
                     var VInputVector3 = (function () {
-                        function VInputVector3(v3eID, v) {
+                        function VInputVector3(v3eID, v, readOnly) {
+                            if (readOnly === void 0) { readOnly = false; }
                             var _this = this;
                             if (v) {
                                 this._v = v.clone();
@@ -3346,19 +3321,27 @@ var org;
                             else {
                                 this._v = new Vector3(0, 0, 0);
                             }
-                            this._x = new gui.VInputNumber(v3eID, this._v.x);
+                            this._x = new gui.VInputNumber(v3eID, this._v.x, readOnly);
                             this._x.onChange = function (n) {
                                 _this._v.x = n;
+                                _this.doOnChange();
                             };
-                            this._y = new gui.VInputNumber(v3eID, this._v.y);
+                            this._y = new gui.VInputNumber(v3eID, this._v.y, readOnly);
                             this._y.onChange = function (n) {
                                 _this._v.y = n;
+                                _this.doOnChange();
                             };
-                            this._z = new gui.VInputNumber(v3eID, this._v.z);
+                            this._z = new gui.VInputNumber(v3eID, this._v.z, readOnly);
                             this._z.onChange = function (n) {
                                 _this._v.z = n;
+                                _this.doOnChange();
                             };
                         }
+                        VInputVector3.prototype.doOnChange = function () {
+                            if (this.onChange != null) {
+                                this.onChange(this.getValue());
+                            }
+                        };
                         VInputVector3.prototype.getValue = function () {
                             return this._v;
                         };
@@ -4436,6 +4419,7 @@ var org;
                 var Mesh = BABYLON.Mesh;
                 var MeshBuilder = BABYLON.MeshBuilder;
                 var ParticleSystem = BABYLON.ParticleSystem;
+                var PBRMetallicRoughnessMaterial = BABYLON.PBRMetallicRoughnessMaterial;
                 var PhysicsImpostor = BABYLON.PhysicsImpostor;
                 var Quaternion = BABYLON.Quaternion;
                 var Scene = BABYLON.Scene;
@@ -5177,25 +5161,24 @@ var org;
                         if (chr === "F")
                             this.key.focus = true;
                     };
-                    // private primMaterial: PBRMetallicRoughnessMaterial;
                     Vishva.prototype.createPrimMaterial = function () {
                         this.primMaterial = new StandardMaterial("primMat", this.scene);
                         this.primMaterial.diffuseTexture = new Texture(this.primTexture, this.scene);
                         this.primMaterial.diffuseColor = new Color3(1, 1, 1);
                         this.primMaterial.specularColor = new Color3(0, 0, 0);
                     };
-                    //        private createPrimMaterial(){
-                    //            this.primMaterial = new PBRMetallicRoughnessMaterial("primMat",this.scene);
-                    //            this.primMaterial.baseTexture = new Texture(this.primTexture, this.scene);
-                    //            this.primMaterial.baseColor = new Color3(1, 1, 1);
-                    //            this.primMaterial.roughness = 0.5;
-                    //            this.primMaterial.metallic =0.5;
-                    //            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
-                    //            
-                    //        }
+                    Vishva.prototype.createPrimPBRMaterial = function () {
+                        this.primPBRMaterial = new PBRMetallicRoughnessMaterial("primMat", this.scene);
+                        this.primPBRMaterial.baseTexture = new Texture(this.primTexture, this.scene);
+                        this.primPBRMaterial.baseColor = new Color3(1, 1, 1);
+                        this.primPBRMaterial.roughness = 0.5;
+                        this.primPBRMaterial.metallic = 0.5;
+                        this.primPBRMaterial.environmentTexture = this.skybox.material.reflectionTexture;
+                    };
                     Vishva.prototype.setPrimProperties = function (mesh) {
                         if (this.primMaterial == null)
                             this.createPrimMaterial();
+                        //if(this.primPBRMaterial==null) this.createPrimPBRMaterial();
                         var r = mesh.getBoundingInfo().boundingSphere.radiusWorld;
                         var placementLocal = new Vector3(0, r, -(r + 2));
                         var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
@@ -5208,6 +5191,7 @@ var org;
                         mesh.id = new Number(Date.now()).toString();
                         mesh.name = mesh.id;
                         mesh.material = this.primMaterial.clone("m" + mesh.name);
+                        //mesh.material=this.primPBRMaterial.clone("m"+mesh.name);
                     };
                     Vishva.prototype.addPrim = function (primType) {
                         var mesh = null;
@@ -6450,6 +6434,12 @@ var org;
                     };
                     Vishva.prototype.getScale = function () {
                         return this.meshPicked.scaling;
+                    };
+                    //TODO scaling doesnot effect the bounding box size
+                    Vishva.prototype.getSize = function () {
+                        var max = this.meshPicked.getBoundingInfo().boundingBox.maximum;
+                        var min = this.meshPicked.getBoundingInfo().boundingBox.minimum;
+                        return max.subtract(min);
                     };
                     Vishva.prototype.bakeTransforms = function () {
                         var savePos = this.meshPicked.position.clone();

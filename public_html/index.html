@@ -98,7 +98,7 @@
             }
             /* to display mutliple icons on same line */
             .ui-icon.inline { display:inline-block; }
-            
+
             /*
             mimimizer icon on each of the VDialogs
             */
@@ -259,6 +259,10 @@
                         <td><div id="light"></div></td>
                     </tr>
                     <tr>
+                        <td>light color</td>
+                        <td><div id="lightColor"></div></td>
+                    </tr>
+                    <tr>
                         <td>shade</td>
                         <td><div id="shade"></div></td>
                     </tr>
@@ -417,35 +421,34 @@
                                     <table>
                                         <tr>
                                             <td></td>
-                                            <td>x</td>
-                                            <td>y</td>
-                                            <td>z</td>
+                                            <td></td>
                                             <td>snap</td>
                                             <td></td>
                                         </tr>
+
                                         <tr>
                                             <td>position</td>
-                                            <td><input type="text" size="2" id="loc.x" ></td>
-                                            <td><input type="text" size="2" id="loc.y" ></td>
-                                            <td><input type="text" size="2" id="loc.z" ></td>                                            
-                                            <td><input type="text" size="2" id="snapTransValue"></td>
+                                            <td><div id="loc"></div></td>
+                                            <td><div id="snapTransValue"></div></td>
                                             <td><input type="checkbox" id="snapTrans"></td>
                                         </tr>
                                         <tr>
                                             <td>rotation</td>
-                                            <td><input type="text" size="2" id="rot.x" ></td>
-                                            <td><input type="text" size="2" id="rot.y" ></td>
-                                            <td><input type="text" size="2" id="rot.z" ></td>
-                                            <td><input type="text" size="2" id="snapRotValue"></td>
+                                            <td><div id="rot"></div></td>
+                                            <td><div id="snapRotValue"></div></td>
                                             <td><input type="checkbox" id="snapRot"></td>
                                         </tr>
                                         <tr>
                                             <td>scaling</td>
-                                            <td><input type="text" size="2" id="scl.x" ></td>
-                                            <td><input type="text" size="2" id="scl.y" ></td>
-                                            <td><input type="text" size="2" id="scl.z" ></td>
-                                            <td><input type="text" size="2" id="snapScaleValue"></td>
-                                            <td><input type="checkbox" id="snapScale"></td>                                            
+                                            <td><div id="scale"></div></td>
+                                            <td><div id="snapScaleValue"></div></td>
+                                            <td><input type="checkbox" id="snapScale"></td>  
+                                        </tr>
+                                        <tr>
+                                            <td>size</td>
+                                            <td><div id="size"></div></td>
+                                            <td></td>
+                                            <td></td>
                                         </tr>
                                     </table>
                                     <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
@@ -1077,15 +1080,15 @@
         <!--<script type="text/javascript" src="lib/CharacterController.min.js"></script>-->
         <script type="text/javascript" src="lib/CharacterController.js"></script>
         <script type="text/javascript" src="vishva/config.js"></script>
-        
+
         <!--<script type="text/javascript" src="js/Vishva-merged.min.js"></script>-->
         <script type="text/javascript" src="js/Vishva-merged.js"></script>
         <!-- should be loaded after vishva - sets Vishva static/global variables-->
         <script type="text/javascript" src="vishva/vishvaFiles.js"></script>
-        
+
         <script type="text/javascript">
                             $(function(){
-                                
+
                                 //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
                                 BABYLON.Texture.UseSerializedUrlIfAny = true;
 

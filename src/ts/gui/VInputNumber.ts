@@ -7,7 +7,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _inE: HTMLInputElement;
         public onChange:(n:number)=>void;
 
-        constructor(eID: string|HTMLElement,value=0) {
+        constructor(eID: string|HTMLElement,value=0,readOnly=false) {
             let e: HTMLElement;
             if(eID instanceof HTMLElement) {
                 e=eID;
@@ -19,6 +19,7 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             this._inE.value=Number(value).toString();
             this._inE.size=2;
             this._inE.style.display="inline-block";
+            if (readOnly) this._inE.readOnly=true;
             this._inE.onkeypress=(e)=>{
                 e.stopPropagation()
             }

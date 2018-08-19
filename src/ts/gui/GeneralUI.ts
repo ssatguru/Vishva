@@ -22,24 +22,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _genOperScale: HTMLElement;
         private _genOperFocus: HTMLElement;
 
-        private _genLocX: HTMLInputElement;
-        private _genLocY: HTMLInputElement;
-        private _genLocZ: HTMLInputElement;
-        private _genRotX: HTMLInputElement;
-        private _genRotY: HTMLInputElement;
-        private _genRotZ: HTMLInputElement;
-        private _genScaleX: HTMLInputElement;
-        private _genScaleY: HTMLInputElement;
-        private _genScaleZ: HTMLInputElement;
-
+       
+        private _genLoc:VInputVector3;
+        private _genRot:VInputVector3;
+        private _genSize:VInputVector3;
+        private _genScale:VInputVector3;
 
         private _genSnapTrans: HTMLInputElement;
         private _genSnapRot: HTMLInputElement;
         private _genSnapScale: HTMLInputElement;
 
-        private _genSnapTransValue: HTMLInputElement;
-        private _genSnapRotValue: HTMLInputElement;
-        private _genSnapScaleValue: HTMLInputElement;
+        private _genSnapTransValue: VInputNumber;
+        private _genSnapRotValue: VInputNumber;
+        private _genSnapScaleValue: VInputNumber;
 
         private _genDisable: HTMLInputElement;
         private _genColl: HTMLInputElement;
@@ -104,44 +99,28 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 this._vishva.setFocusOnMesh();
             }
 
-            //Translation
-            this._genLocX=<HTMLInputElement>document.getElementById("loc.x");
-            this._genLocX.onchange=() => {
-                this._vishva.setLocation(Number(this._genLocX.value),Number(this._genLocY.value),Number(this._genLocZ.value));
+           
+            this._genLoc=new VInputVector3("loc");
+            this._genLoc.onChange=(v3)=>{
+                this._vishva.setLocation(v3.x,v3.y,v3.z);
+                
             }
-            this._genLocY=<HTMLInputElement>document.getElementById("loc.y");
-            this._genLocY.onchange=() => {
-                this._vishva.setLocation(Number(this._genLocX.value),Number(this._genLocY.value),Number(this._genLocZ.value));
+            
+            this._genRot=new VInputVector3("rot");
+            this._genRot.onChange=(v3)=>{
+                this._vishva.setRotation(v3.x,v3.y,v3.z);
+                
             }
-            this._genLocZ=<HTMLInputElement>document.getElementById("loc.z");
-            this._genLocZ.onchange=() => {
-                this._vishva.setLocation(Number(this._genLocX.value),Number(this._genLocY.value),Number(this._genLocZ.value));
+            
+            this._genScale=new VInputVector3("scale");
+            this._genScale.onChange=(v3)=>{
+                this._vishva.setScale(v3.x,v3.y,v3.z);
+                
             }
-            //Rotation
-            this._genRotX=<HTMLInputElement>document.getElementById("rot.x");
-            this._genRotX.onchange=() => {
-                this._vishva.setRotation(Number(this._genRotX.value),Number(this._genRotY.value),Number(this._genRotZ.value));
-            }
-            this._genRotY=<HTMLInputElement>document.getElementById("rot.y");
-            this._genRotY.onchange=() => {
-                this._vishva.setRotation(Number(this._genRotX.value),Number(this._genRotY.value),Number(this._genRotZ.value));
-            }
-            this._genRotZ=<HTMLInputElement>document.getElementById("rot.z");
-            this._genRotZ.onchange=() => {
-                this._vishva.setRotation(Number(this._genRotX.value),Number(this._genRotY.value),Number(this._genRotZ.value));
-            }
-            //Scale
-            this._genScaleX=<HTMLInputElement>document.getElementById("scl.x");
-            this._genScaleX.onchange=() => {
-                this._vishva.setScale(Number(this._genScaleX.value),Number(this._genScaleY.value),Number(this._genScaleZ.value));
-            }
-            this._genScaleY=<HTMLInputElement>document.getElementById("scl.y");
-            this._genScaleY.onchange=() => {
-                this._vishva.setScale(Number(this._genScaleX.value),Number(this._genScaleY.value),Number(this._genScaleZ.value));
-            }
-            this._genScaleZ=<HTMLInputElement>document.getElementById("scl.z");
-            this._genScaleZ.onchange=() => {
-                this._vishva.setScale(Number(this._genScaleX.value),Number(this._genScaleY.value),Number(this._genScaleZ.value));
+            
+             //Size
+            this._genSize=new VInputVector3("size",Vector3.Zero(),true);
+            this._genSize.onChange=(v3)=>{
             }
 
             //Snap CheckBox
@@ -171,17 +150,17 @@ namespace org.ssatguru.babylonjs.vishva.gui {
             }
 
             //Snap Values
-            this._genSnapTransValue=<HTMLInputElement>document.getElementById("snapTransValue");
-            this._genSnapTransValue.onchange=() => {
-                this._vishva.setSnapTransValue(Number(this._genSnapTransValue.value));
+            this._genSnapTransValue=new VInputNumber("snapTransValue");
+            this._genSnapTransValue.onChange=(n) => {
+                this._vishva.setSnapTransValue(n);
             }
-            this._genSnapRotValue=<HTMLInputElement>document.getElementById("snapRotValue");
-            this._genSnapRotValue.onchange=() => {
-                this._vishva.setSnapRotValue(Number(this._genSnapRotValue.value));
+            this._genSnapRotValue=new VInputNumber("snapRotValue");
+            this._genSnapRotValue.onChange=(n) => {
+                this._vishva.setSnapRotValue(n);
             }
-            this._genSnapScaleValue=<HTMLInputElement>document.getElementById("snapScaleValue");
-            this._genSnapScaleValue.onchange=() => {
-                this._vishva.setSnapScaleValue(Number(this._genSnapScaleValue.value));
+            this._genSnapScaleValue=new VInputNumber("snapScaleValue");
+            this._genSnapScaleValue.onChange=(n) => {
+                this._vishva.setSnapScaleValue(n);
             }
 
             //
@@ -363,23 +342,10 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         }
 
         private _updateTransform() {
-
-            var loc: Vector3=this._vishva.getLocation();
-            var rot: Vector3=this._vishva.getRotation();
-            var scl: Vector3=this._vishva.getScale();
-
-            (<HTMLInputElement>document.getElementById("loc.x")).value=this._toString(loc.x);
-            (<HTMLInputElement>document.getElementById("loc.y")).value=this._toString(loc.y);
-            (<HTMLInputElement>document.getElementById("loc.z")).value=this._toString(loc.z);
-
-            (<HTMLInputElement>document.getElementById("rot.x")).value=this._toString(rot.x);
-            (<HTMLInputElement>document.getElementById("rot.y")).value=this._toString(rot.y);
-            (<HTMLInputElement>document.getElementById("rot.z")).value=this._toString(rot.z);
-
-            (<HTMLInputElement>document.getElementById("scl.x")).value=this._toString(scl.x);
-            (<HTMLInputElement>document.getElementById("scl.y")).value=this._toString(scl.y);
-            (<HTMLInputElement>document.getElementById("scl.z")).value=this._toString(scl.z);
-
+            this._genLoc.setValue(this._vishva.getLocation());
+            this._genRot.setValue(this._vishva.getRotation());
+            this._genScale.setValue(this._vishva.getScale());
+            this._genSize.setValue(this._vishva.getSize());
         }
 
         _downloadDialog: JQuery;

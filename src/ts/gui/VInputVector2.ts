@@ -9,19 +9,19 @@ namespace org.ssatguru.babylonjs.vishva.gui {
         private _x:VInputNumber;
         private _y:VInputNumber;
         
-        constructor (v3eID :string,v?:Vector2){
+        constructor (v3eID :string,v?:Vector2,readOnly=false){
             if (v){
                 this._v=v.clone();
             }else{
                 this._v=new Vector2(0,0);
             }
             
-            this._x=new VInputNumber(v3eID,this._v.x);
+            this._x=new VInputNumber(v3eID,this._v.x,readOnly);
             this._x.onChange=(n)=>{
                 this._v.x=n;
             }
             
-            this._y=new VInputNumber(v3eID,this._v.y);
+            this._y=new VInputNumber(v3eID,this._v.y,readOnly);
             this._y.onChange=(n)=>{
                 this._v.y=n;
             }

@@ -398,9 +398,9 @@ namespace org.ssatguru.babylonjs.vishva {
                     //mesh.receiveShadows = true;
                     (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                 }
-//                }else{
-//                    (<Mesh>mesh).addLODLevel(55,null);
-//                }
+                //                }else{
+                //                    (<Mesh>mesh).addLODLevel(55,null);
+                //                }
             }
 
             for(let camera of scene.cameras) {
@@ -904,7 +904,7 @@ namespace org.ssatguru.babylonjs.vishva {
          * material for primitives
          */
         private primMaterial: StandardMaterial;
-        // private primMaterial: PBRMetallicRoughnessMaterial;
+        private primPBRMaterial: PBRMetallicRoughnessMaterial;
 
         private createPrimMaterial() {
             this.primMaterial=new StandardMaterial("primMat",this.scene);
@@ -913,18 +913,19 @@ namespace org.ssatguru.babylonjs.vishva {
             this.primMaterial.specularColor=new Color3(0,0,0);
         }
 
-        //        private createPrimMaterial(){
-        //            this.primMaterial = new PBRMetallicRoughnessMaterial("primMat",this.scene);
-        //            this.primMaterial.baseTexture = new Texture(this.primTexture, this.scene);
-        //            this.primMaterial.baseColor = new Color3(1, 1, 1);
-        //            this.primMaterial.roughness = 0.5;
-        //            this.primMaterial.metallic =0.5;
-        //            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
-        //            
-        //        }
+        private createPrimPBRMaterial() {
+            this.primPBRMaterial=new PBRMetallicRoughnessMaterial("primMat",this.scene);
+            this.primPBRMaterial.baseTexture=new Texture(this.primTexture,this.scene);
+            this.primPBRMaterial.baseColor=new Color3(1,1,1);
+            this.primPBRMaterial.roughness=0.5;
+            this.primPBRMaterial.metallic=0.5;
+            this.primPBRMaterial.environmentTexture=(<StandardMaterial>this.skybox.material).reflectionTexture;
+
+        }
 
         private setPrimProperties(mesh: Mesh) {
             if(this.primMaterial==null) this.createPrimMaterial();
+            //if(this.primPBRMaterial==null) this.createPrimPBRMaterial();
             var r: number=mesh.getBoundingInfo().boundingSphere.radiusWorld;
             var placementLocal: Vector3=new Vector3(0,r,-(r+2));
             var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
@@ -938,6 +939,7 @@ namespace org.ssatguru.babylonjs.vishva {
             mesh.id=(<number>new Number(Date.now())).toString();
             mesh.name=mesh.id;
             mesh.material=this.primMaterial.clone("m"+mesh.name);
+            //mesh.material=this.primPBRMaterial.clone("m"+mesh.name);
         }
 
         public addPrim(primType: string) {
@@ -2189,6 +2191,13 @@ namespace org.ssatguru.babylonjs.vishva {
 
         public getScale(): Vector3 {
             return this.meshPicked.scaling;
+        }
+        
+        //TODO scaling doesnot effect the bounding box size
+        public getSize(): Vector3 {
+            let max=this.meshPicked.getBoundingInfo().boundingBox.maximum;
+            let min=this.meshPicked.getBoundingInfo().boundingBox.minimum;
+            return max.subtract(min);
         }
 
         public bakeTransforms() {
@@ -3632,7 +3641,7 @@ namespace org.ssatguru.babylonjs.vishva {
             //this.cc.setNoFirstPerson(true);
 
             this.cc.start();
-            
+
             //in 3.0 need to set the camera values again
             //            this.mainCamera.radius=4;
             //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;

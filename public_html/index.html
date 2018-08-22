@@ -428,25 +428,25 @@
 
                                         <tr>
                                             <td>position</td>
-                                            <td><div id="loc"></div></td>
-                                            <td><div id="snapTransValue"></div></td>
+                                            <td id="loc"></td>
+                                            <td id="snapTransValue"></td>
                                             <td><input type="checkbox" id="snapTrans"></td>
                                         </tr>
                                         <tr>
                                             <td>rotation</td>
-                                            <td><div id="rot"></div></td>
-                                            <td><div id="snapRotValue"></div></td>
+                                            <td id="rot"></td>
+                                            <td id="snapRotValue"></td>
                                             <td><input type="checkbox" id="snapRot"></td>
                                         </tr>
                                         <tr>
                                             <td>scaling</td>
-                                            <td><div id="scale"></div></td>
-                                            <td><div id="snapScaleValue"></div></td>
+                                            <td id="scale"></td>
+                                            <td id="snapScaleValue"></td>
                                             <td><input type="checkbox" id="snapScale"></td>  
                                         </tr>
                                         <tr>
                                             <td>size</td>
-                                            <td><div id="size"></div></td>
+                                            <td id="size"></td>
                                             <td></td>
                                             <td></td>
                                         </tr>
@@ -631,10 +631,14 @@
                             </tr>
                             <tr>
                                 <td>
-                                    materials   
+                                    material   
                                 </td>
                                 <td>
                                     <select id="matIDs"></Select>
+                                    <br>
+                                    <br>
+                                    <button id="matClone"> clone and use </button>
+                                    <button id="matReplace">change</button>
                                 </td>
                             </tr>
                             <tr>
@@ -711,8 +715,7 @@
                                         </tr>
                                     </table>
                                     <br>
-                                    <button id="matClone"> clone and use </button>
-                                    <button id="matReplace">replace</button>
+                                    
                                 </td>
                             </tr>
                         </table>

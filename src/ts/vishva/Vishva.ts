@@ -2197,7 +2197,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public getSize(): Vector3 {
             let max=this.meshPicked.getBoundingInfo().boundingBox.maximum;
             let min=this.meshPicked.getBoundingInfo().boundingBox.minimum;
-            return max.subtract(min);
+            return max.subtract(min).multiplyInPlace(this.meshPicked.scaling);
         }
 
         public bakeTransforms() {

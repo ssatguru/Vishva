@@ -112,9 +112,11 @@ namespace org.ssatguru.babylonjs.vishva.gui {
                 
             }
             
+            //scale and size are related - changes in one will effect other
             this._genScale=new VInputVector3("scale");
             this._genScale.onChange=(v3)=>{
                 this._vishva.setScale(v3.x,v3.y,v3.z);
+                this._genSize.setValue(this._vishva.getSize());
                 
             }
             

@@ -727,9 +727,11 @@ var org;
                             this._genRot.onChange = function (v3) {
                                 _this._vishva.setRotation(v3.x, v3.y, v3.z);
                             };
+                            //scale and size are related - changes in one will effect other
                             this._genScale = new gui.VInputVector3("scale");
                             this._genScale.onChange = function (v3) {
                                 _this._vishva.setScale(v3.x, v3.y, v3.z);
+                                _this._genSize.setValue(_this._vishva.getSize());
                             };
                             //Size
                             this._genSize = new gui.VInputVector3("size", Vector3.Zero(), true);
@@ -6439,7 +6441,7 @@ var org;
                     Vishva.prototype.getSize = function () {
                         var max = this.meshPicked.getBoundingInfo().boundingBox.maximum;
                         var min = this.meshPicked.getBoundingInfo().boundingBox.minimum;
-                        return max.subtract(min);
+                        return max.subtract(min).multiplyInPlace(this.meshPicked.scaling);
                     };
                     Vishva.prototype.bakeTransforms = function () {
                         var savePos = this.meshPicked.position.clone();

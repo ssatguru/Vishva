@@ -7140,12 +7140,21 @@ var org;
                         SceneLoader.ImportMesh("", "vishva/" + path, file, this.scene, function (meshes, particleSystems, skeletons) { return _this.onMeshLoaded(meshes, particleSystems, skeletons); });
                     };
                     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
+                    /*
+                     * if multiple meshes and more than one are parentless then create a empty mesh and add all the parentless meshes to
+                     * it as childs.
+                     * if just one mesh or just on root mesh then just add them to scene
+                     */
                     Vishva.prototype.onMeshLoaded = function (meshes, particleSystems, skeletons) {
                         var boundingRadius = this.getBoundingRadius(meshes);
                         for (var _i = 0, skeletons_1 = skeletons; _i < skeletons_1.length; _i++) {
                             var skeleton = skeletons_1[_i];
                             this.scene.stopAnimation(skeleton);
                         }
+                        if (meshes.length > 1) {
+                        }
+                        var _rootMeshesCount = 0;
+                        var rootMesh = null;
                         for (var _a = 0, meshes_6 = meshes; _a < meshes_6.length; _a++) {
                             var mesh = meshes_6[_a];
                             mesh.isPickable = true;
@@ -7158,9 +7167,8 @@ var org;
                             //                }
                             //                
                             if (mesh.parent == null) {
-                                var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
-                                var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                                mesh.position.addInPlace(placementGlobal);
+                                _rootMeshesCount++;
+                                rootMesh = mesh;
                             }
                             (this.shadowGenerator.getShadowMap().renderList).push(mesh);
                             //TODO think
@@ -7173,6 +7181,25 @@ var org;
                                 this.fixAnimationRanges(mesh.skeleton);
                             }
                         }
+                        if (_rootMeshesCount > 1) {
+                            var rootMesh_1 = new Mesh("root-" + this.uid(), this.scene);
+                            var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
+                            var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                            rootMesh_1.position.addInPlace(placementGlobal);
+                            for (var _b = 0, meshes_7 = meshes; _b < meshes_7.length; _b++) {
+                                var mesh = meshes_7[_b];
+                                if (mesh.parent == null) {
+                                    mesh.parent = rootMesh_1;
+                                }
+                            }
+                        }
+                        else {
+                            if (rootMesh != null) {
+                                var placementLocal = new Vector3(0, 0, -(boundingRadius + 2));
+                                var placementGlobal = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                                rootMesh.position.addInPlace(placementGlobal);
+                            }
+                        }
                         //TODO remove - obj laoder was fixed  
                         //some loader like the obj loader are not done loading the material when this onSuccess is called.
                         //to make any material changes call it after this method is done using the setTimeout trick
@@ -7182,8 +7209,8 @@ var org;
                     Vishva.prototype._postLoad = function (meshes) {
                         //select and animate the last mesh loaded
                         if (meshes.length > 0) {
-                            for (var _i = 0, meshes_7 = meshes; _i < meshes_7.length; _i++) {
-                                var mesh = meshes_7[_i];
+                            for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
+                                var mesh = meshes_8[_i];
                                 this._makeMatIdUnique(mesh);
                             }
                             var lastMesh = meshes[meshes.length - 1];
@@ -7282,8 +7309,8 @@ var org;
                      */
                     Vishva.prototype.getBoundingRadius = function (meshes) {
                         var maxRadius = 0;
-                        for (var _i = 0, meshes_8 = meshes; _i < meshes_8.length; _i++) {
-                            var mesh = meshes_8[_i];
+                        for (var _i = 0, meshes_9 = meshes; _i < meshes_9.length; _i++) {
+                            var mesh = meshes_9[_i];
                             if (mesh.parent != null)
                                 console.log("parent " + mesh.parent.name);
                             var bi = mesh.getBoundingInfo();
@@ -8187,8 +8214,8 @@ var org;
                         var sna;
                         var meshes = scene.meshes;
                         var meshId;
-                        for (var _i = 0, meshes_9 = meshes; _i < meshes_9.length; _i++) {
-                            var mesh = meshes_9[_i];
+                        for (var _i = 0, meshes_10 = meshes; _i < meshes_10.length; _i++) {
+                            var mesh = meshes_10[_i];
                             meshId = null;
                             var actuators = mesh["actuators"];
                             if (actuators != null) {

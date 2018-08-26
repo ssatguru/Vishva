@@ -2192,7 +2192,7 @@ namespace org.ssatguru.babylonjs.vishva {
         public getScale(): Vector3 {
             return this.meshPicked.scaling;
         }
-        
+
         //TODO scaling doesnot effect the bounding box size
         public getSize(): Vector3 {
             let max=this.meshPicked.getBoundingInfo().boundingBox.maximum;
@@ -2921,13 +2921,24 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
+        
+        /*
+         * if multiple meshes and more than one are parentless then create a empty mesh and add all the parentless meshes to 
+         * it as childs.
+         * if just one mesh or just on root mesh then just add them to scene
+         */
         private onMeshLoaded(meshes: AbstractMesh[],particleSystems: ParticleSystem[],skeletons: Skeleton[]) {
             var boundingRadius: number=this.getBoundingRadius(meshes);
 
             for(let skeleton of skeletons) {
                 this.scene.stopAnimation(skeleton);
             }
+            if(meshes.length>1) {
 
+            }
+
+            let _rootMeshesCount: number=0;
+            let rootMesh: Mesh=null;
             for(let mesh of meshes) {
                 mesh.isPickable=true;
                 //gltb file
@@ -2939,9 +2950,8 @@ namespace org.ssatguru.babylonjs.vishva {
                 //                }
                 //                
                 if(mesh.parent==null) {
-                    var placementLocal: Vector3=new Vector3(0,0,-(boundingRadius+2));
-                    var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
-                    mesh.position.addInPlace(placementGlobal);
+                    _rootMeshesCount++;
+                    rootMesh=<Mesh>mesh;
                 }
 
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
@@ -2956,6 +2966,24 @@ namespace org.ssatguru.babylonjs.vishva {
                 if(mesh.skeleton!=null) {
                     this.scene.stopAnimation(mesh.skeleton);
                     this.fixAnimationRanges(mesh.skeleton);
+                }
+            }
+
+            if(_rootMeshesCount>1) {
+                let rootMesh: Mesh=new Mesh("root-"+this.uid(),this.scene);
+                var placementLocal: Vector3=new Vector3(0,0,-(boundingRadius+2));
+                var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
+                rootMesh.position.addInPlace(placementGlobal);
+                for(let mesh of meshes) {
+                    if(mesh.parent==null) {
+                        mesh.parent=rootMesh;
+                    }
+                }
+            } else {
+                if(rootMesh!=null) {
+                    var placementLocal: Vector3=new Vector3(0,0,-(boundingRadius+2));
+                    var placementGlobal: Vector3=Vector3.TransformCoordinates(placementLocal,this.avatar.getWorldMatrix());
+                    rootMesh.position.addInPlace(placementGlobal);
                 }
             }
 

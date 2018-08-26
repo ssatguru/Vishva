@@ -6,6 +6,7 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
       {"d":"Joan",
        "f":[
         "Joan.babylon",
+        "Joan.blend",
         "Joan.jpg",
         "Joan2.babylon",
         "Joan_texture_image.jpg"
@@ -38,9 +39,8 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
        "f":[
         "Vincent.babylon",
         "Vincent.blend",
-        "vincent.blend1",
+        "Vincent.fbx",
         "Vincent.jpg",
-        "vincent.log",
         "Vincent_texture_image.jpg"
       ]}
     ]},
@@ -351,6 +351,8 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
     {"d":"avatar",
      "f":[
       "starterAvatars.babylon",
+      "Vincent.blend",
+      "Vincent.jpg",
       "Vincent_texture_image.jpg"
     ]},
     {"d":"textures",
@@ -400,6 +402,7 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
     "junk.js",
     "myworld4.js",
     "myworld5.js",
+    "public_html - Shortcut.lnk",
     "spsDemo.js",
     "test-ava.js"
   ]}

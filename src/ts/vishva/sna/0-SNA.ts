@@ -560,6 +560,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 this.queued=0;
                 this.stopped=true;
                 this.stop();
+                this.actuating=false;
                 return false;
             }
             if(signal==this.signalEnable) {

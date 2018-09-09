@@ -3706,16 +3706,16 @@ namespace org.ssatguru.babylonjs.vishva {
             cc.setFallAnim("fall",2,false);
             cc.setSlideBackAnim("slideBack",1,false);
 
-
-            cc.setTurnRightKey("E");
-            cc.setTurnLeftKey("Q");
-            cc.setStrafeRightKey("D");
-            cc.setStrafeLeftKey("A");
-
-            cc.setTurnRightCode(0);
-            cc.setTurnLeftCode(0);
-            cc.setStrafeRightCode(39);
-            cc.setStrafeLeftCode(37);
+            cc.setTurnRightKey("D");
+            cc.setTurnLeftKey("A");
+            cc.setStrafeRightKey("E");
+            cc.setStrafeLeftKey("Q");
+            
+            //arrow keys
+            cc.setTurnRightCode(39);
+            cc.setTurnLeftCode(37);
+            cc.setStrafeRightCode(0);
+            cc.setStrafeLeftCode(0);
 
 
             cc.setStepOffset(0.5);

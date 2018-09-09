@@ -7818,14 +7818,15 @@ var org;
                         cc.setJumpAnim("jumpRun", .5, true);
                         cc.setFallAnim("fall", 2, false);
                         cc.setSlideBackAnim("slideBack", 1, false);
-                        cc.setTurnRightKey("E");
-                        cc.setTurnLeftKey("Q");
-                        cc.setStrafeRightKey("D");
-                        cc.setStrafeLeftKey("A");
-                        cc.setTurnRightCode(0);
-                        cc.setTurnLeftCode(0);
-                        cc.setStrafeRightCode(39);
-                        cc.setStrafeLeftCode(37);
+                        cc.setTurnRightKey("D");
+                        cc.setTurnLeftKey("A");
+                        cc.setStrafeRightKey("E");
+                        cc.setStrafeLeftKey("Q");
+                        //arrow keys
+                        cc.setTurnRightCode(39);
+                        cc.setTurnLeftCode(37);
+                        cc.setStrafeRightCode(0);
+                        cc.setStrafeLeftCode(0);
                         cc.setStepOffset(0.5);
                         cc.setSlopeLimit(30, 60);
                     };
@@ -8500,6 +8501,7 @@ var org;
                             this.queued = 0;
                             this.stopped = true;
                             this.stop();
+                            this.actuating = false;
                             return false;
                         }
                         if (signal == this.signalEnable) {
@@ -8793,6 +8795,7 @@ var org;
                         _this._sr = new Vector3(0, 0, 0);
                         _this._sct = new Vector3(0, 0, 0);
                         _this._scp = new Vector3(0, 0, 0);
+                        _this._inControl = false;
                         var prop = _this.properties;
                         var scene = _this.mesh.getScene();
                         var avMesh = scene.getMeshesByTags("Vishva.avatar")[0];
@@ -8815,6 +8818,9 @@ var org;
                     }
                     ActuatorAvAnimator.prototype.actuate = function () {
                         var _this = this;
+                        if (this._inControl)
+                            return;
+                        this._inControl = true;
                         var prop = this.properties;
                         this.avMesh = vishva.SNAManager.getSNAManager().getAV();
                         var skel = this.avMesh.skeleton;
@@ -8849,6 +8855,8 @@ var org;
                         }
                     };
                     ActuatorAvAnimator.prototype.stop = function () {
+                        if (!this._inControl)
+                            return;
                         var prop = this.properties;
                         //anim would be null if user deletes the actuator without it ever being actuated
                         if (this.anim != null)
@@ -8862,6 +8870,7 @@ var org;
                             camera.setTarget(this._sct.clone());
                         }
                         vishva.SNAManager.getSNAManager().enableAV();
+                        this._inControl = false;
                     };
                     ActuatorAvAnimator.prototype.isReady = function () {
                         return true;

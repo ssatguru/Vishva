@@ -46,6 +46,7 @@ namespace org.ssatguru.babylonjs.vishva {
             this._sr=new Vector3(0,0,0);
             this._sct=new Vector3(0,0,0);
             this._scp=new Vector3(0,0,0);
+            this._inControl=false;
 
             var prop: AvAnimatorProp=<AvAnimatorProp>this.properties;
             var scene: Scene=this.mesh.getScene();
@@ -72,7 +73,12 @@ namespace org.ssatguru.babylonjs.vishva {
         //save camera target and postion
         private _sct: Vector3;
         private _scp: Vector3;
+        //check if this actuator is already in control of the avatar
+        private _inControl:boolean;
         public actuate() {
+            if(this._inControl) return;
+            
+            this._inControl=true;
             let prop: AvAnimatorProp=<AvAnimatorProp>this.properties;
             this.avMesh=SNAManager.getSNAManager().getAV();
             let skel: Skeleton=this.avMesh.skeleton;
@@ -109,6 +115,7 @@ namespace org.ssatguru.babylonjs.vishva {
         }
 
         public stop() {
+            if(!this._inControl) return;
             let prop: AvAnimatorProp=<AvAnimatorProp>this.properties;
             //anim would be null if user deletes the actuator without it ever being actuated
             if(this.anim!=null) this.anim.stop();
@@ -121,6 +128,7 @@ namespace org.ssatguru.babylonjs.vishva {
                 camera.setTarget(this._sct.clone());
             }
             SNAManager.getSNAManager().enableAV();
+            this._inControl=false;
         }
 
         public isReady(): boolean {

@@ -14,6 +14,7 @@ namespace org.ssatguru.babylonjs.vishva {
     import Vector2=BABYLON.Vector2;
     import FileInputType=org.ssatguru.babylonjs.vishva.gui.FileInputType;
     import Range = org.ssatguru.babylonjs.vishva.gui.Range;
+    import SelectType = org.ssatguru.babylonjs.vishva.gui.SelectType;
 
     export interface SNAConfig {}
 
@@ -315,6 +316,11 @@ namespace org.ssatguru.babylonjs.vishva {
                         }else if (o["type"]==="Range"){
                             let volume: Range = new Range(o["min"], o["max"],o["value"],o["step"]);
                             obj[pName] = volume;
+                        }else if (o["type"]==="SelectType"){
+                            let st:SelectType = new SelectType();
+                            st.values=o["values"];
+                            st.value=o["value"];
+                            obj[pName]=st;
                         }
                     }
                 }

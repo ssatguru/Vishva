@@ -2718,6 +2718,7 @@ namespace org.ssatguru.babylonjs.vishva {
 
             var sceneObj: Object=<Object>SceneSerializer.Serialize(this.scene);
             //this.changeSoundUrl(sceneObj);
+            this.removeSounds(sceneObj);
 
             //sceneObj["VishvaSNA"] = snaObj;
             sceneObj["VishvaSerialized"]=vishvaSerialzed;
@@ -2834,6 +2835,17 @@ namespace org.ssatguru.babylonjs.vishva {
                 }
                 //sceneObj["sounds"] = soundList;
             }
+        }
+        /**
+         * there seems to be some issue with sounds attached to mesh "instances"
+         * they donot deserialze properly
+         */
+        private  removeSounds(sceneObj: Object){
+            var sounds=sceneObj["sounds"];
+            if(sounds!=null) {
+                sceneObj["sounds"]=[];
+            }
+            
         }
 
         /**

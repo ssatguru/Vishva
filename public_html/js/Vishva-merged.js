@@ -6943,6 +6943,7 @@ var org;
                         vishvaSerialzed.snas = vishva.SNAManager.getSNAManager().serializeSnAs(this.scene);
                         var sceneObj = SceneSerializer.Serialize(this.scene);
                         //this.changeSoundUrl(sceneObj);
+                        this.removeSounds(sceneObj);
                         //sceneObj["VishvaSNA"] = snaObj;
                         sceneObj["VishvaSerialized"] = vishvaSerialzed;
                         var sceneString = JSON.stringify(sceneObj);
@@ -7056,6 +7057,16 @@ var org;
                                 sound["url"] = this.SOUND_ASSET_LOCATION + sound["url"];
                             }
                             //sceneObj["sounds"] = soundList;
+                        }
+                    };
+                    /**
+                     * there seems to be some issue with sounds attached to mesh "instances"
+                     * they donot deserialze properly
+                     */
+                    Vishva.prototype.removeSounds = function (sceneObj) {
+                        var sounds = sceneObj["sounds"];
+                        if (sounds != null) {
+                            sceneObj["sounds"] = [];
                         }
                     };
                     /**

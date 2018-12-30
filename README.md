@@ -10,7 +10,7 @@ For demo see [https://ssatguru.github.io/Vishva.ts/public_html/](https://ssatgur
 
 For intro see [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html)
 
-For details see [wiki at https://github.com/ssatguru/Vishva/wiki](https://github.com/ssatguru/Vishva/wiki)
+For details see [wiki at https://github.com/ssatguru/Vishva.ts/wiki](https://github.com/ssatguru/Vishva.ts/wiki)
 
 Written in TypeScript.
 

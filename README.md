@@ -6,7 +6,7 @@ Vishva - A hindi word for "World"
 
 A simple live scene editor for [BabylonJS](http://www.babylonjs.com/), a 3D HTML Webgl framework.
 
-For demo see [https://ssatguru.github.io/Vishva.ts/public_html/](https://ssatguru.github.io/Vishva.ts/public_html/)
+For demo see [https://ssatguru.github.io/VishvaWorld-LogCabin//](https://ssatguru.github.io/VishvaWorld-LogCabin/)
 
 For intro see [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html)
 

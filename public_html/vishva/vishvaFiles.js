@@ -1,4 +1,4 @@
-org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
+var vishvaFiles=[
   {"d":"assets",
    "f":[
     {"d":"characters",
@@ -406,4 +406,4 @@ org.ssatguru.babylonjs.vishva.Vishva.vishvaFiles=[
     "spsDemo.js",
     "test-ava.js"
   ]}
-]
+];

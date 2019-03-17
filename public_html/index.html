@@ -13,44 +13,13 @@
 
         <title>Vishva</title>
 
-        <script src="lib/jquery-darkness-flat/jquery-2.2.0.min.js"></script>
-        <script src="lib/jquery-darkness-flat/jquery-ui.min.js"></script>
-        <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet">
+      
+        <link href="lib/jquery-darkness-flat/jquery-ui.min.css" rel="stylesheet"> -->
+        <script src="lib/jquery-darkness-flat/jquery-2.2.0.min.js" ></script>
+        <script src="lib/jquery-darkness-flat/jquery-ui.min.js" ></script>
+        <!-- <script src="lib/cannon.js"></script> -->
 
-        <script src="lib/cannon.js"></script>
-
-        <!-- BABYLONJS -->
-        <script src="lib/3.2/earcut.min.js"></script> 
-        <script src="lib/3.2/babylon.js"></script> 
-        <!--<script src="lib/babylon-3.1.1-12.13.2017.js"></script>--> 
-        <!-- stable -->
-        <!--<script src="https://cdn.babylonjs.com/babylon.js"></script>-->
-        <!-- the latest -->
-        <!-- ellipsoid are centered in the latest BABYLON -->
-        <!--<script src="https://preview.babylonjs.com/babylon.js"></script>-->
-
-
-        <!-- BABYLONJS INSPECTOR-->
-        <script src="lib/3.2/babylon.inspector.bundle.js"></script>
-        <!--<script src="lib/babylon.inspector.bundle-3.1.1-12.12.2017.js"></script>-->
-
-        <!-- BABYLONJS MATERIALS -->
-        <script src="lib/3.2/babylon.waterMaterial.min.js"></script>
-
-        <!-- BABYLONJS LOADER -->
-        <script src="lib/3.2/babylon.glTFFileLoader.min.js"></script>
-        <!--<script src="lib/babylon.glTFFileLoader3.1-preview.min.js"></script>-->
-
-        <script src="lib/3.3/babylon.objFileLoader.min-06-19-2018.js"></script>
-        <!--<script src="lib/babylon.objFileLoader3.0-stable.min.js"></script>-->
-
-        <!-- BABYLONJS Pointer Events Polyfill -->
-        <script src="lib/pep.0.4.1.min.js"></script>
-
-
-        <!-- BABYLONJS DynamicTerrain -->
-        <script src="lib/babylon.dynamicTerrain.min.js"></script>
-
+        
         <style>
             html, body {
                 width: 100%;
@@ -120,16 +89,17 @@
 
             /*input {margin: 1px;}*/
             table {
-                border-radius: 10px;
-                background: red;
+                border-collapse: separate;
+                background:rgb(34, 32, 32);
             }
 
             table, th, td {
-                border: 1px solid black;
+                border: 1px solid white;
                 padding: 5px;
                 padding-left: 15px;
                 padding-right: 15px;
-                border-collapse: collapse;
+                border-radius: 5px;
+                -moz-border-radius: 5px;
             }
 
             table table, table table td {
@@ -249,7 +219,7 @@
         <div id="gui-items-2"  >
 
             <div id="envDiv" title="Environment" class="noselect">
-                <table style="width: 100%; text-align: center;">
+                <table style="width: 100%; text-align: left;">
                     <tr>
                         <td>sun (west-east)</td>
                         <td><div id="sunPos"></div></td>
@@ -293,18 +263,18 @@
                     </tr>
                     <tr>
                         <td>sky</td>
-                        <td><Button id="skyButton">Change Sky</button></td>
+                        <td><Button id="skyButton">change sky</button></td>
                     </tr>
                     <tr>
                         <td>sea</td>
-                        <td><Button id="envSea">Add Sea</button>
-                            <Button id="envSeaEdit">Edit Sea</button>
-                            <Button id="envSeaDel">Del Sea</button>
+                        <td><Button id="envSea">add</button>
+                            <Button id="envSeaEdit">edit</button>
+                            <Button id="envSeaDel">remove</button>
                         </td>
                     </tr>
                     <tr>
                         <td>terrain</td>
-                        <td><Button id="trnButton">Edit Terrain</button></td>
+                        <td><Button id="trnButton">edit terrain</button></td>
                     </tr>
                 </table>
             </div>
@@ -791,14 +761,14 @@
                                 </td>
                             </tr>
                         </table>
-                        <script>
+                        <!-- <script>
                             function showOpt(){
                                 var cls = "."+$("#lightType").val();
                                 $(".opt").hide();
                                 $(cls).show();
                             }
                             showOpt();
-                        </script>
+                        </script> -->
                     </div>
 
                     <h3 class="mesh">Animations</h3>
@@ -816,7 +786,7 @@
                                 <td>range</td>
                                 <td><select id="animList"></select>
                                     <label id="animFrom"></label>
-                                    <label id="animTo"></lable
+                                    <label id="animTo"></lable>
                             </tr>
                             <tr>
                                 <td>rate</td>
@@ -1072,65 +1042,45 @@
 
         </div>
 
+        
+
+
         <!-- VISHVA -->
         <!-- problem with the colorpicker minified version. --> 
         <!-- see https://github.com/DavidDurman/FlexiColorPicker/issues/40 -->
         <script src="lib/colorpicker.uglified.js"></script>
         <link href="lib/colorpicker.themes.css" rel="stylesheet">
         <script type="text/javascript" src="lib/perlin.js"></script>
-        <script type="text/javascript" src="lib/EditControl.min.js"></script>
-        <!--<script type="text/javascript" src="lib/EditControl.js"></script>-->
-        <!--<script type="text/javascript" src="lib/CharacterController.min.js"></script>-->
-        <script type="text/javascript" src="lib/CharacterController.js"></script>
         <script type="text/javascript" src="vishva/config.js"></script>
-
-        <!--<script type="text/javascript" src="js/Vishva-merged.min.js"></script>-->
-        <script type="text/javascript" src="js/Vishva-merged.js"></script>
-        <!-- should be loaded after vishva - sets Vishva static/global variables-->
         <script type="text/javascript" src="vishva/vishvaFiles.js"></script>
+        <script type="text/javascript" src="bin/main.js"></script>
+        
+       
+        <!-- BABYLONJS -->
 
-        <script type="text/javascript">
-                            $(function(){
+        <!-- BABYLONJS INSPECTOR-->
+        <!-- <script src="lib/3.2/babylon.inspector.bundle.js"></script> -->
+        <!--<script src="lib/babylon.inspector.bundle-3.1.1-12.12.2017.js"></script>-->
 
-                                //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
-                                BABYLON.Texture.UseSerializedUrlIfAny = true;
+        <!-- BABYLONJS MATERIALS -->
+        <!-- <script src="lib/3.2/babylon.waterMaterial.min.js"></script> -->
 
-                                //change all buttons to jquery button
-                                $("button").button();
-                                $("button").click(function(e){
-                                    $(this).blur();
-                                });
+        <!-- BABYLONJS LOADER -->
+        <!-- <script src="lib/3.2/babylon.glTFFileLoader.min.js"></script> -->
+        <!--<script src="lib/babylon.glTFFileLoader3.1-preview.min.js"></script>-->
 
-                                //$('input').addClass("ui-corner-all");
+        <!-- <script src="lib/3.3/babylon.objFileLoader.min-06-19-2018.js"></script> -->
+        <!--<script src="lib/babylon.objFileLoader3.0-stable.min.js"></script>-->
 
-                                var HREFsearch = org.ssatguru.babylonjs.util.HREFsearch;
-                                var search = new HREFsearch();
+        <!-- BABYLONJS Pointer Events Polyfill -->
+        <!-- <script src="lib/pep.0.4.1.min.js"></script> -->
 
-                                var scene = search.getParm("world");
-                                var scenePath = "vishva/worlds/";
-                                var editEnabled = true;
 
-                                if(!scene){
-                                    if(typeof (defaultWorld)!=="undefined"){
-                                        scene = defaultWorld;
-                                    }else{
-                                        scene = "empty";
-                                    }
-                                }
+        <!-- BABYLONJS DynamicTerrain -->
+        <script src="lib/babylon.dynamicTerrain.min.js"></script>
 
-                                if(typeof (noEditWorlds)!=="undefined"){
-                                    var l = noEditWorlds.length;
-                                    for(i = 0;i<l;i++){
-                                        if(noEditWorlds[i]==scene){
-                                            editEnabled = false;
-                                        }
-                                    }
-                                }
-
-                                var Vishva = org.ssatguru.babylonjs.vishva.Vishva;
-                                new Vishva(scene,scenePath,editEnabled,"vCanvas");
-                            });
-        </script>
+        
+         
     </body>
 
 </html>

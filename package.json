@@ -7,12 +7,31 @@
   ],
   "author": "satguru p srivastava",
   "contributors": [],
-  "dependencies": {},
+  "dependencies": {
+    "babylonjs": "^3.3.0",
+    "babylonjs-charactercontroller": "^0.2.0",
+    "babylonjs-editcontrol": "^3.2.1",
+    "babylonjs-inspector": "^3.3.0",
+    "babylonjs-loaders": "^3.3.0",
+    "babylonjs-materials": "^3.3.0",
+    "cannon": "^0.6.2",
+    "jquery": "^3.3.1",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-dist": "^1.12.1",
+    "pepjs": "^0.4.3"
+  },
   "devDependencies": {
-    "uglify-js": "^2.8.22"
+    "@types/jquery": "^3.3.29",
+    "@types/jqueryui": "^1.12.7",
+    "terser-webpack-plugin": "^1.2.3",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.3.3333",
+    "uglify-js": "^2.8.22",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
   },
   "scripts": {
-    "compile": "tsc -p src/ts",
+    "compile": "tsc",
     "min": "uglifyjs public_html/js/Vishva-merged.js -o public_html/js/Vishva-merged.min.js -mc --warn",
     "cp": "uglifyjs public_html/lib/colorpicker.js -o public_html/lib/colorpicker.uglified.js -mc",
     "build": "npm run compile && npm run min"

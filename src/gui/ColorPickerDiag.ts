@@ -1,5 +1,6 @@
 import {VDialog} from "./VDialog";
 import JQueryPositionOptions=JQueryUI.JQueryPositionOptions;
+import {ColorPicker} from "./colorpicker/colorpicker";
 
 /**
  * adds a two input box and a color dialog box inside the element whose id is passed
@@ -80,13 +81,13 @@ export class ColorPickerDiag {
 
 }
 
-declare class ColorPicker {
-    public constructor(e: HTMLElement,f: (p1: string,hsv: string,p3: RGB) => void);
+// declare class ColorPicker {
+//     public constructor(e: HTMLElement,f: (p1: string,hsv: string,p3: RGB) => void);
 
-    public setRgb(rgb: RGB);
+//     public setRgb(rgb: RGB);
 
-    public setHex(hex: string);
-}
+//     public setHex(hex: string);
+// }
 
 class RGB {
     r: number;

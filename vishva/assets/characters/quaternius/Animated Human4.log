@@ -1,0 +1,84 @@
+Exporter version: 5.6.3, Blender version: 2.79 (sub 0)
+========= Conversion from Blender to Babylon.js =========
+	Scene settings used :
+		export scope        :  ALL
+		inline textures     :  false
+		Positions Precision :  4
+		Normals Precision   :  3
+		UVs Precision       :  3
+		Vert Color Precision:  3
+		Mat Weight Precision:  2
+		texture directory   :  C:\projects-babylonjs\Vishva-Worlds\low-poly-qauternius\vishva\assets\characters\quaternius\
+	Python World class constructor completed
+	WARNING: No active camera has been assigned, or is not in a currently selected Blender layer
+	processing begun of skeleton:  Human Armature, id:  0
+		processing begun of bone:  Hips, index:  0
+		processing begun of bone:  Spine, index:  1
+		processing begun of bone:  Spine1, index:  2
+		processing begun of bone:  Spine2, index:  3
+		processing begun of bone:  Neck, index:  4
+		processing begun of bone:  Head, index:  5
+		processing begun of bone:  HeadTop_End, index:  6
+		processing begun of bone:  LeftShoulder, index:  7
+		processing begun of bone:  LeftArm, index:  8
+		processing begun of bone:  LeftForeArm, index:  9
+		processing begun of bone:  LeftHand, index:  10
+		processing begun of bone:  LeftHandThumb1, index:  11
+		processing begun of bone:  LeftHandThumb2, index:  12
+		processing begun of bone:  LeftHandThumb3, index:  13
+		processing begun of bone:  LeftHandThumb4, index:  14
+		processing begun of bone:  LeftHandIndex1, index:  15
+		processing begun of bone:  LeftHandIndex2, index:  16
+		processing begun of bone:  LeftHandIndex3, index:  17
+		processing begun of bone:  LeftHandIndex4, index:  18
+		processing begun of bone:  RightShoulder, index:  19
+		processing begun of bone:  RightArm, index:  20
+		processing begun of bone:  RightForeArm, index:  21
+		processing begun of bone:  RightHand, index:  22
+		processing begun of bone:  RightHandThumb1, index:  23
+		processing begun of bone:  RightHandThumb2, index:  24
+		processing begun of bone:  RightHandThumb3, index:  25
+		processing begun of bone:  RightHandThumb4, index:  26
+		processing begun of bone:  RightHandIndex1, index:  27
+		processing begun of bone:  RightHandIndex2, index:  28
+		processing begun of bone:  RightHandIndex3, index:  29
+		processing begun of bone:  RightHandIndex4, index:  30
+		processing begun of bone:  LeftUpLeg, index:  31
+		processing begun of bone:  LeftLeg, index:  32
+		processing begun of bone:  LeftFoot, index:  33
+		processing begun of bone:  LeftToeBase, index:  34
+		processing begun of bone:  LeftToe_End, index:  35
+		processing begun of bone:  RightUpLeg, index:  36
+		processing begun of bone:  RightLeg, index:  37
+		processing begun of bone:  RightFoot, index:  38
+		processing begun of bone:  RightToeBase, index:  39
+		processing begun of bone:  RightToe_End, index:  40
+		processing action Death:  in[0 - 84], out[0 - 84]
+		processing action fall:  in[0 - 18], out[90 - 108]
+		processing action idle:  in[0 - 240], out[120 - 360]
+		processing action Jump:  in[0 - 24], out[370 - 394]
+		processing action jump:  in[0 - 6], out[400 - 406]
+		processing action Punch:  in[0 - 24], out[420 - 444]
+		processing action run:  in[0 - 15], out[450 - 465]
+		processing action walk:  in[0 - 24], out[470 - 494]
+		processing action Working:  in[0 - 154], out[500 - 654]
+		processing action z:  in[0 - 1], out[660 - 661]
+	processing begun of mesh:  Human_Mesh
+		processing begun of baked material:  Human_Mesh
+			Cycles baking texture, type: DIFFUSE, mapped using: UVMap
+		num positions      :  3685
+		num normals        :  3685
+		num uvs            :  7370
+		num uvs2           :  0
+		num colors         :  0
+		num indices        :  4734
+		Skeleton stats:  
+			Total Influencers:  7140
+			Avg # of influencers per vertex:  1.9376
+			Highest # of influencers observed:  5, num vertices with this:  44
+			exported as 5 influencers
+			num skeletonWeights and skeletonIndices:  29480
+========= Writing of scene file started =========
+========= Writing of scene file completed =========
+========= end of processing =========
+elapsed time:  0 min, 8.106 secs

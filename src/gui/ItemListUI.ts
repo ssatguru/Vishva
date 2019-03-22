@@ -70,7 +70,7 @@ export class ItemListUI {
             let childs: Array<AbstractMesh> = this.meshChildMap[child.uniqueId];
             if (childs != null) {
                 let obj: object = {};
-                obj["d"] = Number(child.parent.uniqueId).toString() + ", " + child.parent.name;
+                obj["d"] = Number(child.uniqueId).toString() + ", " + child.name;
                 obj["f"] = new Array<string | object>();
                 treeData.push(obj);
                 this._addChildren(childs, obj["f"]);
@@ -80,6 +80,10 @@ export class ItemListUI {
         }
     }
 
+    /**
+     * given a mesh find all its children
+     * for each mesh an array of child mesh
+     */
     meshChildMap: any;
     private _updateMeshChildMap(meshes: Array<AbstractMesh>) {
         this.meshChildMap = {};

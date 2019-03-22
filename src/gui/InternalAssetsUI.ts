@@ -73,7 +73,7 @@ export class InternalAssetsUI {
             let img: HTMLImageElement = document.createElement("img");
             img.id = item["d"];
             let name: string = item["d"];
-            img.src = "vishva/internal/assets/" + assetType + "/" + name + "/" + name + ".jpg";
+            img.src = this._vishva.vHome+ "/internal/assets/" + assetType + "/" + name + "/" + name + ".jpg";
             img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
             img.className = assetType;
             img.onclick = f;

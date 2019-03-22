@@ -72,6 +72,8 @@ import { VishvaGUI } from "./gui/VishvaGUI";
  * @author satguru
  */
 export class Vishva {
+    vHome:string ="/vishva/"
+
     actuator: string = "none";
 
     scene: Scene;
@@ -107,10 +109,10 @@ export class Vishva {
 
     public static vishvaFiles: Array<any>;
 
-    skyboxTextures: string = "vishva/internal/textures/skybox-default/default";
+    skyboxTextures: string = this.vHome + "/internal/textures/skybox-default/default";
 
     //avatar stuff
-    avatarFolder: string = "vishva/internal/avatar/";
+    avatarFolder: string = this.vHome + "/internal/avatar/";
     avatarFile: string = "starterAvatars.babylon";
     avatar: Mesh;
     //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -123,22 +125,22 @@ export class Vishva {
     private _avEllipsoid: Vector3 = new BABYLON.Vector3(0.5, 1, 0.5);
     private _avEllipsoidOffset: Vector3 = new Vector3(0, 1, 0);
 
-    NO_TEXTURE: string = "vishva/internal/textures/no-texture.jpg"
-    TGA_IMAGE: string = "vishva/internal/textures/tga-image.jpg"
+    NO_TEXTURE: string = this.vHome + "/internal/textures/no-texture.jpg"
+    TGA_IMAGE: string = this.vHome + "/internal/textures/tga-image.jpg"
 
-    groundTexture: string = "vishva/internal/textures/ground.jpg";
-    groundBumpTexture: string = "vishva/internal/textures/ground-normal.jpg";
-    groundHeightMap: string = "vishva/internal/textures/ground_heightMap.png";
+    groundTexture: string = this.vHome + "/internal/textures/ground.jpg";
+    groundBumpTexture: string = this.vHome + "/internal/textures/ground-normal.jpg";
+    groundHeightMap: string = this.vHome + "/internal/textures/ground_heightMap.png";
 
-    terrainTexture: string = "vishva/internal/textures/earth.jpg";
-    terrainHeightMap: string = "vishva/internal/textures/worldHeightMap.jpg";
+    terrainTexture: string = this.vHome + "/internal/textures/earth.jpg";
+    terrainHeightMap: string = this.vHome + "/internal/textures/worldHeightMap.jpg";
 
-    primTexture: string = "vishva/internal/textures/Birch.jpg";
+    primTexture: string = this.vHome + "/internal/textures/Birch.jpg";
 
-    waterTexture: string = "vishva/internal/textures/waterbump.png";
+    waterTexture: string = this.vHome + "/internal/textures/waterbump.png";
 
-    snowTexture: string = "vishva/internal/textures/flare.png";
-    rainTexture: string = "vishva/internal/textures/raindrop-1.png";
+    snowTexture: string = this.vHome + "/internal/textures/flare.png";
+    rainTexture: string = this.vHome + "/internal/textures/raindrop-1.png";
 
     snowPart: ParticleSystem = null;
     snowing: boolean = false;
@@ -146,7 +148,7 @@ export class Vishva {
     rainPart: ParticleSystem = null;
     raining: boolean = false;
 
-    SOUND_ASSET_LOCATION: string = "vishva/assets/sounds/";
+    SOUND_ASSET_LOCATION: string = this.vHome + "/assets/sounds/";
 
     //each asset has a name and a url
     //the url is used by loadmesh but ignored by scene loader function
@@ -2513,7 +2515,7 @@ export class Vishva {
     public setSky(sky: any) {
         var mat: StandardMaterial = <StandardMaterial>this.skybox.material;
         mat.reflectionTexture.dispose();
-        var skyFile: string = "vishva/internal/assets/skyboxes/" + sky + "/" + sky;
+        var skyFile: string = this.vHome + "/internal/assets/skyboxes/" + sky + "/" + sky;
         mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
         mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         //            if (this.primMaterial !=null)
@@ -2927,7 +2929,7 @@ export class Vishva {
     //older, used by old GUI file loader dislog
     public loadAssetFile(file: File) {
         var sceneFolderName: string = file.name.split(".")[0];
-        SceneLoader.ImportMesh("", "vishva/assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
+        SceneLoader.ImportMesh("", this.vHome + "/assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
     }
 
     filePath: string;
@@ -2939,7 +2941,7 @@ export class Vishva {
         this.file = file;
         let fileName: string = file.split(".")[0];
         SceneLoader.ImportMesh("", 
-        "vishva/assets/" + assetType + "/" + fileName + "/", 
+        this.vHome + "/assets/" + assetType + "/" + fileName + "/", 
         file, 
         this.scene, 
         (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
@@ -2949,7 +2951,7 @@ export class Vishva {
         this.filePath = path;
         this.file = file;
         SceneLoader.ImportMesh("", 
-        "vishva/" + path, 
+        this.vHome + "/" + path, 
         file, 
         this.scene, 
         (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
@@ -3117,8 +3119,8 @@ export class Vishva {
         if (bt == null) return;
         var textureName: string = bt.name;
         console.log("renaming " + textureName);
-        if (textureName.indexOf("vishva/") !== 0 && textureName.indexOf("../") !== 0) {
-            //bt.name="vishva/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
+        if (textureName.indexOf(this.vHome + "/") !== 0 && textureName.indexOf("../") !== 0) {
+            //bt.name=this.vHome + "/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
             bt.name = (<Texture>bt).url;
         }
     }
@@ -3544,7 +3546,7 @@ export class Vishva {
         let fireSystem = new BABYLON.ParticleSystem("particles", 2000, this.scene);
 
         //Texture of each particle
-        fireSystem.particleTexture = new BABYLON.Texture("vishva/internal/assets/particles/fire/flare.png", this.scene);
+        fireSystem.particleTexture = new BABYLON.Texture(this.vHome + "/internal/assets/particles/fire/flare.png", this.scene);
 
         // Where the particles come from
         fireSystem.emitter = this.meshPicked; // the starting object, the emitter
@@ -3592,7 +3594,7 @@ export class Vishva {
 
     private _createSmokePart(): ParticleSystem {
         var smokeSystem = new BABYLON.ParticleSystem("particles", 1000, this.scene);
-        smokeSystem.particleTexture = new BABYLON.Texture("vishva/internal/assets/particles/smoke/flare.png", this.scene);
+        smokeSystem.particleTexture = new BABYLON.Texture(this.vHome + "/internal/assets/particles/smoke/flare.png", this.scene);
 
         smokeSystem.minEmitBox = new BABYLON.Vector3(-0.5, 1, -0.5); // Starting all from
         smokeSystem.maxEmitBox = new BABYLON.Vector3(0.5, 1, 0.5); // To...

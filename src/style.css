@@ -1,0 +1,159 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 80%;
+    /*font-family: "Courier New", "Trebuchet MS", sans-serif;
+    font-family: "Courier New Bold";*/
+    background: #000000;
+    color: #ffffff;
+}
+
+
+/* #sNaDiag */
+/* required as jquery dialog size does not re-adjust to content after it has been dragged */
+/* unfortunately messes up the dialog box for add items */
+/*
+.ui-dialog {
+              height:auto !important;
+              width: auto !important;
+              
+ }
+*/
+
+/* remove button outlines */
+/* the button outline on dialog box close button on top-right are not done properly */
+.ui-button:focus { outline:none !important }
+.ui-button {
+    font-weight: lighter;
+}
+/* reduce the overlay for modal dialogs */
+.ui-widget-overlay {
+    opacity: 0.2;
+}
+
+/* to flip some jquery icons - like undo redo */
+.flip {
+    -moz-transform: scaleX(-1);
+    -o-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    filter: FlipH;
+}
+/* to display mutliple icons on same line */
+.ui-icon.inline { display:inline-block; }
+
+/*
+mimimizer icon on each of the VDialogs
+*/
+#vdMinimizer{
+    cursor: pointer;
+    float: left;
+    margin-right:10px;
+    /* margin-top: 3px;*/
+}
+
+
+.navMenu {
+    position: absolute;
+}
+
+.ui-menu {
+    width: 200px;
+}
+
+/*input {margin: 1px;}*/
+table {
+    border-collapse: seperate;
+    background:rgb(34, 32, 32);
+    color: #ffffff;
+}
+
+table, th, td {
+    border: 1px solid white;
+    padding: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+}
+
+table table, table table td {
+    padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    margin: 2px;
+    /*                padding-top: 1px;
+                    padding-bottom: 1px;
+                    border-collapse: collapse;*/
+}
+
+#vCanvas {
+    min-height: 700px;
+    min-width: 500px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#gui-items-1 {
+    visibility: hidden;
+    /*position: absolute;*/
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height:100%;
+}
+
+#gui-items-2 {
+    visibility: hidden;
+    /*position: absolute;*/
+    position: fixed;
+    display:none;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height:100%;
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    -o-user-select:none;
+    user-select: none; /* Non-prefixed version, currently
+                          supported by Chrome and Opera */
+}
+
+/* for tree */
+ul {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+
+}
+li {
+    padding-left: 1em;
+}
+
+.vt-icon {
+    cursor:pointer;
+}
+.txt:hover { 
+    background-color: gray;
+    color:white;
+    cursor:pointer;
+}
+.txt:active { 
+    background-color: white;
+    color:black;
+}
+.show{display:block;}
+.hide{display:none;}

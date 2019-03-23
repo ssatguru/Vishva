@@ -15,6 +15,7 @@
     "babylonjs-loaders": "^3.3.0",
     "babylonjs-materials": "^3.3.0",
     "cannon": "^0.6.2",
+    "file-loader": "^3.0.1",
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1",
     "jquery-ui-dist": "^1.12.1",

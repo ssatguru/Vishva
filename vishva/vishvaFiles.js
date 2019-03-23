@@ -68,6 +68,7 @@ vishvaFiles=[
     ]},
     {"d":"structures",
      "f":[
+      "Box.gltf",
       {"d":"coffin",
        "f":[
         "coffin.babylon",
@@ -401,6 +402,7 @@ vishvaFiles=[
   "vishvaFiles.js",
   {"d":"worlds",
    "f":[
+    "demo-abs.js",
     "demo-terrain-fixed.js",
     "demo.js",
     "demo1.json",

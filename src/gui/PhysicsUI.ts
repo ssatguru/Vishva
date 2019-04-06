@@ -14,18 +14,18 @@ export class PhysicsUI {
     private _phyRes: HTMLInputElement;
     private _phyFricVal: HTMLOutputElement;
     private _phyFric: HTMLInputElement;
+    private _phyDBD: HTMLInputElement;
 
     constructor(vishva: Vishva) {
         this._vishva = vishva;
 
         this._phyEna = <HTMLInputElement>document.getElementById("phyEna");
-
         this._phyType = <HTMLSelectElement>document.getElementById("phyType");
-
         this._phyMass = <HTMLInputElement>document.getElementById("phyMass");
-
         this._phyRes = <HTMLInputElement>document.getElementById("phyRes");
         this._phyResVal = <HTMLOutputElement>document.getElementById("phyResVal");
+        this._phyDBD = <HTMLInputElement>document.getElementById("phyDBD");
+
         this._phyResVal.value = "0.0";
         this._phyRes.oninput = () => {
             this._phyResVal.value = this._formatValue(this._phyRes.value);
@@ -97,6 +97,7 @@ export class PhysicsUI {
             phyParms.mass = parseFloat(this._phyMass.value);
             phyParms.restitution = parseFloat(this._phyRes.value);
             phyParms.friction = parseFloat(this._phyFric.value);
+            phyParms.disableBidirectionalTransformation = this._phyDBD.checked;
         } else {
             phyParms = null;
         }
@@ -111,7 +112,7 @@ export class PhysicsUI {
         phyParms.mass = parseFloat(this._phyMass.value);
         phyParms.restitution = parseFloat(this._phyRes.value);
         phyParms.friction = parseFloat(this._phyFric.value);
-
+        phyParms.disableBidirectionalTransformation = this._phyDBD.checked;
         this._vishva.testPhysics(phyParms);
     }
 

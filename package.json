@@ -32,12 +32,11 @@
     "typescript": "^3.3.3333",
     "uglify-js": "^2.8.22",
     "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
+    "webpack-cli": "^3.3.0",
+    "webpack-dev-server": "^3.2.1"
   },
   "scripts": {
-    "compile": "tsc",
-    "min": "uglifyjs public_html/js/Vishva-merged.js -o public_html/js/Vishva-merged.min.js -mc --warn",
-    "cp": "uglifyjs public_html/lib/colorpicker.js -o public_html/lib/colorpicker.uglified.js -mc",
-    "build": "npm run compile && npm run min"
+    "dev": "webpack-dev-server",
+    "build": "webpack --mode production --open"
   }
 }

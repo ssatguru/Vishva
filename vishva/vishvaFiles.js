@@ -6,49 +6,25 @@ vishvaFiles=[
       "fish.glb",
       {"d":"Joan",
        "f":[
-        "Joan-abc.fbx",
         "Joan.babylon",
         "Joan.blend",
-        "Joan.blend1",
-        "Joan.fbx",
         "Joan.jpg",
-        "Joan2.babylon",
-        "Joan2.blend",
-        "Joan2.blend1",
-        "Joan2.fbx",
-        "Joan_texture_image.jpg",
-        "Joan_texture_image.png"
+        "Joan.log",
+        "Joan_texture_image.jpg"
       ]},
-      {"d":"quaternius",
-       "f":[
-        "Animated Human2a.babylon",
-        "Animated Human3.babylon",
-        "Animated Human3.log",
-        "Animated Human4.babylon",
-        "Animated Human4.log",
-        "Animated_Human2a_Human_Mesh_DIFFUSE.jpg",
-        "Animated_Human3_Human_Mesh_DIFFUSE.jpg",
-        "Animated_Human4_Human_Mesh_DIFFUSE.jpg",
-        "ClothedDarkSkin.png",
-        "ClothedDarkSkin1.png",
-        "ClothedDarkSkin2.png",
-        "ClothedLightSkin.png",
-        "ClothedLightSkin1.png",
-        "ClothedLightSkin2.png",
-        "NakedDarkSkin.png",
-        "NakedLightSkin.png"
-      ]},
+      "Male_Casual.babylon",
+      "Male_Casual2.babylon",
       {"d":"skeleton",
        "f":[
         "skeleton.babylon",
         "texture.png"
       ]},
+      "Tie.png",
       {"d":"Vincent",
        "f":[
         "Vincent.babylon",
         "Vincent.blend",
-        "Vincent.fbx",
-        "Vincent.jpg",
+        "Vincent.log",
         "Vincent_texture_image.jpg"
       ]}
     ]},
@@ -69,11 +45,18 @@ vishvaFiles=[
     {"d":"structures",
      "f":[
       "Box.gltf",
+      "Box0.bin",
       {"d":"coffin",
        "f":[
         "coffin.babylon",
         "coffin.jpg",
         "diffuse.tga"
+      ]},
+      {"d":"factory",
+       "f":[
+        "factory.babylon",
+        "factory_tex.bmp",
+        "factory_tex.jpg"
       ]},
       {"d":"farm_barn_01",
        "f":[

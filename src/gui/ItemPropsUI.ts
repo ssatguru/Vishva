@@ -55,7 +55,7 @@ export class ItemPropsUI {
             }
         });
 
-        this._propsVDiag = new VDialog("propsDiag", "mesh properties", DialogMgr.leftCenter, 0, "auto", 420);
+        this._propsVDiag = new VDialog("propsDiag", "mesh properties", DialogMgr.leftCenter, 0, "auto", 480);
         this._propsVDiag.onOpen(() => {
             this._activePanel = propsAcc.accordion("option", "active");
             this.refreshPanel(this._activePanel);

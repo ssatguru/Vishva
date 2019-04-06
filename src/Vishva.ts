@@ -1,4 +1,4 @@
-declare var vishvaFiles:Array<any>;
+declare var vishvaFiles: Array<any>;
 import { EditControl } from "babylonjs-editcontrol";
 import { CharacterController } from "babylonjs-charactercontroller";
 import {
@@ -66,13 +66,15 @@ import { ActMoverParm } from "./sna/ActuatorMover";
 import { VishvaSerialized } from "./VishvaSerialized";
 import { VishvaGUI } from "./gui/VishvaGUI";
 
+import { AvManager } from "./avatar/avatar";
+
 
 
 /**
  * @author satguru
  */
 export class Vishva {
-    vHome:string ="/vishva/"
+    vHome: string = "/vishva/"
 
     actuator: string = "none";
 
@@ -111,19 +113,26 @@ export class Vishva {
 
     skyboxTextures: string = this.vHome + "/internal/textures/skybox-default/default";
 
-    //avatar stuff
-    avatarFolder: string = this.vHome + "/internal/avatar/";
-    avatarFile: string = "starterAvatars.babylon";
-    avatar: Mesh;
-    //spawnPosition:Vector3=new Vector3(-360,620,225);
-    spawnPosition: Vector3 = new Vector3(0, 0.2, 0);
-    //spawnPosition: Vector3=new Vector3(0,12,0);
-
+    /**
+     * avatar stuff 
+     */
+    private avManager:AvManager;
+    private cc: CharacterController;
+    public avatar: Mesh;
+    private avatarSkeleton: Skeleton;
     private _avDisabled: boolean = false;
-    avatarSkeleton: Skeleton;
-    _animBlend = 0.1;
+    
+    private avatarFolder: string = this.vHome + "/internal/avatar/";
+    private avatarFile: string = "starterAvatars.babylon";
+    //spawnPosition:Vector3=new Vector3(-360,620,225);
+    private spawnPosition: Vector3 = new Vector3(0, 0.2, 0);
+    //spawnPosition: Vector3=new Vector3(0,12,0);
+    
+    
+    private _animBlend: number = 0.1;
     private _avEllipsoid: Vector3 = new BABYLON.Vector3(0.5, 1, 0.5);
     private _avEllipsoidOffset: Vector3 = new Vector3(0, 1, 0);
+    
 
     NO_TEXTURE: string = this.vHome + "/internal/textures/no-texture.jpg"
     TGA_IMAGE: string = this.vHome + "/internal/textures/tga-image.jpg"
@@ -227,7 +236,7 @@ export class Vishva {
 
         console.log(vishvaFiles);
         Vishva.vishvaFiles = vishvaFiles;
-        
+
         Vishva.vishva = this;
         this.editEnabled = false;
         this.frames = 0;
@@ -267,7 +276,7 @@ export class Vishva {
 
         this.scenePath = scenePath;
         if (sceneFile == "empty") {
-            this.onSceneLoaded(this.scene);
+            this.setScenePhase1(this.scene);
         } else {
             this.loadingStatus.innerHTML = "downloading world";
             this.loadSceneFile(scenePath, sceneFile + ".js", this.scene);
@@ -308,7 +317,7 @@ export class Vishva {
         SceneLoader.ShowLoadingScreen = false;
         this.loadingStatus.innerHTML = "loading scene";
         //SceneLoader.Append(this.scenePath, sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
-        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
+        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.setScenePhase1(scene) });
     }
 
     private onTaskFailure(obj: any) {
@@ -329,7 +338,14 @@ export class Vishva {
         //            sl.shadowMaxZ = 2500;
     }
 
-    private onSceneLoaded(scene: Scene) {
+    /**
+     * sets the loaded scene
+     * checks if the scene is a standard vishva scene - by checking if it has standard vishva assets
+     * if not then it creates those standard vishva assets - avatar, sky, camera, terrain
+     * 
+     * @param scene 
+     */
+    private setScenePhase1(scene: Scene) {
         this.loadingStatus.innerHTML = "checking assets";
         var avFound: boolean = false;
         var skelFound: boolean = false;
@@ -497,24 +513,48 @@ export class Vishva {
         if (this.editEnabled) {
             this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(evt, pickResult) };
         }
+
+        this.avManager = new AvManager(this.avatarFolder,
+            this.avatarFile,
+            this._avEllipsoid,
+            this._avEllipsoidOffset,
+            this.scene,
+            this.shadowGenerator,
+            this.spawnPosition,
+            this.mainCamera
+        );
+
         if (!avFound) {
             console.log("no vishva av found. creating av");
             //remember loadAvatar is async. process
-            this.createAvatar();
+            this.avManager.createAvatar((avatar: Mesh) => {
+                this.avatar = avatar;
+                this.avatarSkeleton = this.avatar.skeleton;
+                this.setScenePhase2();
+            });
         } else {
-            this.avatarSkeleton.enableBlending(this._animBlend);
-            this.cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
-            //TODO remove below. The character controller should be set using deserialization
-            this.setCharacterController(this.cc);
-            this.cc.start();
+            this.setScenePhase2();
         }
+    }
+
+
+    private setScenePhase2() {
+
+        this.avatarSkeleton.enableBlending(this._animBlend);
+        this.cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
+        //TODO remove below. The character controller should be set using deserialization
+        this.avManager.setCharacterController(this.cc);
+
+        this.cc.setCameraElasticity(true);
+        this.cc.start();
+
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
 
         this.render();
     }
 
-    cc: CharacterController;
+    
 
     private render() {
         this.scene.registerBeforeRender(() => { return this.process() });
@@ -1085,7 +1125,10 @@ export class Vishva {
             return "no mesh selected";
         }
         this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
+        this.meshPicked.showBoundingBox=true;
     }
+
+
 
     public disableIt(yes: boolean) {
         this.meshPicked.setEnabled(!yes);
@@ -1176,6 +1219,15 @@ export class Vishva {
                 }
             }
         }
+    }
+
+    public toggleBoundingBox() {
+        if (!this.isMeshSelected) {
+            return "no mesh selected";
+        }
+        console.log("bbox "+this.meshPicked.showBoundingBox)
+        this.meshPicked.showBoundingBox=!this.meshPicked.showBoundingBox;
+        
     }
 
 
@@ -1473,6 +1525,12 @@ export class Vishva {
     public getMeshPickedPhyParms() {
         return this.meshPickedPhyParms;
     }
+
+    /**
+     * Note: these parms will be applied by restorePhyParms()
+     * when the mesh is deselected.
+     * @param parms 
+     */
     public setMeshPickedPhyParms(parms: PhysicsParm) {
         this.meshPickedPhyParms = parms;
     }
@@ -1488,10 +1546,15 @@ export class Vishva {
             this.meshPickedPhyParms.mass = this.meshPicked.physicsImpostor.getParam("mass");
             this.meshPickedPhyParms.friction = this.meshPicked.physicsImpostor.getParam("friction");
             this.meshPickedPhyParms.restitution = this.meshPicked.physicsImpostor.getParam("restitution");
+            this.meshPickedPhyParms.disableBidirectionalTransformation = this.meshPicked.physicsImpostor.getParam("disableBidirectionalTransformation");
             this.meshPicked.physicsImpostor.dispose();
             this.meshPicked.physicsImpostor = null;
         }
     }
+
+    /**
+     * this will be called when the mesh is deselected
+     */
 
     private restorePhyParms() {
         //reset any physics test which might have been done
@@ -1501,6 +1564,7 @@ export class Vishva {
             this.meshPicked.physicsImpostor.setParam("mass", this.meshPickedPhyParms.mass);
             this.meshPicked.physicsImpostor.setParam("friction", this.meshPickedPhyParms.friction);
             this.meshPicked.physicsImpostor.setParam("restitution", this.meshPickedPhyParms.restitution);
+            this.meshPicked.physicsImpostor.setParam("disableBidirectionalTransformation", this.meshPickedPhyParms.disableBidirectionalTransformation);
             this.meshPickedPhyParms = null;
         }
     }
@@ -2033,7 +2097,7 @@ export class Vishva {
                 this.editControl.setTransSnap(false);
             } else {
                 this.editControl.setTransSnap(true);
-                this.editControl.setTransSnapValue(this.snapTransValue);
+                //this.editControl.setTransSnapValue(this.snapTransValue);
             }
         }
         return;
@@ -2057,7 +2121,7 @@ export class Vishva {
                 this.editControl.setRotSnap(false);
             } else {
                 this.editControl.setRotSnap(true);
-                this.editControl.setRotSnapValue(this.snapRotValue);
+                //this.editControl.setRotSnapValue(this.snapRotValue);
             }
         }
         return;
@@ -2069,6 +2133,8 @@ export class Vishva {
     public setSnapRotValue(val: number) {
         if (isNaN(val)) return;
         let inrad: number = val * Math.PI / 180;
+        console.log("setting ro snap to " + inrad);
+        this.snapRotValue = inrad;
         this.editControl.setRotSnapValue(inrad);
     }
 
@@ -2089,7 +2155,7 @@ export class Vishva {
                 this.editControl.setScaleSnap(false);
             } else {
                 this.editControl.setScaleSnap(true);
-                this.editControl.setScaleSnapValue(this.snapScaleValue);
+                //this.editControl.setScaleSnapValue(this.snapScaleValue);
             }
         }
         return;
@@ -2485,14 +2551,23 @@ export class Vishva {
         return (1 - this.sun.groundColor.r);
     }
 
-    public setFog(d: any) {
-        this.scene.fogDensity = <number>d;
+    /**
+     * change the fog slowly at first and then fast towards the end,
+     * in other words exponentially.
+     * @param d 
+     */
+    public setFog(d: number) {
+        if (d!=0){
+            d=0.00005*Math.pow(1.08,d);
+        }
+        this.scene.fogDensity = d;
         //this.scene.fogStart = 10220*(1 - d/0.1);
     }
 
     public getFog(): number {
         //return (10220 - this.scene.fogStart )*0.1/10220;
-        return this.scene.fogDensity;
+        //return this.scene.fogDensity;
+        return Math.log(this.scene.fogDensity/0.00005)/Math.log(1.08);
     }
 
     public setFogColor(fogColor: string) {
@@ -2940,21 +3015,21 @@ export class Vishva {
         this.filePath = assetType;
         this.file = file;
         let fileName: string = file.split(".")[0];
-        SceneLoader.ImportMesh("", 
-        this.vHome + "/assets/" + assetType + "/" + fileName + "/", 
-        file, 
-        this.scene, 
-        (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
+        SceneLoader.ImportMesh("",
+            this.vHome + "/assets/" + assetType + "/" + fileName + "/",
+            file,
+            this.scene,
+            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
     }
 
     public loadAsset2(path: string, file: string) {
         this.filePath = path;
         this.file = file;
-        SceneLoader.ImportMesh("", 
-        this.vHome + "/" + path, 
-        file, 
-        this.scene, 
-        (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
+        SceneLoader.ImportMesh("",
+            this.vHome + "/" + path,
+            file,
+            this.scene,
+            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
     }
 
     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
@@ -3002,7 +3077,7 @@ export class Vishva {
             this.scene.stopAnimation(mesh);
             if (mesh.skeleton != null) {
                 this.scene.stopAnimation(mesh.skeleton);
-                this.fixAnimationRanges(mesh.skeleton);
+                this.avManager.fixAnimationRanges(mesh.skeleton);
             }
         }
 
@@ -3174,7 +3249,7 @@ export class Vishva {
         this.avatar = null;
         //TODO Charcter Controller check implication
         // this.prevAnim = null; 
-        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.onSceneLoaded(scene) });
+        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.setScenePhase1(scene) });
     }
 
     shadowGenerator: ShadowGenerator;
@@ -3223,62 +3298,7 @@ export class Vishva {
         this.meshPicked.material = water;
     }
 
-    public switchAvatar(): string {
-        if (!this.isMeshSelected) {
-            return "no mesh selected";
-        }
-        if (this.isAvatar(<Mesh>this.meshPicked)) {
-            this.cc.stop();
-            //old avatar
-            SNAManager.getSNAManager().enableSnAs(this.avatar);
-            this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
-            this.avatar.isPickable = true;
-            Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
-            if (this.avatarSkeleton != null) {
-                Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
-                this.avatarSkeleton.name = "";
-            }
 
-            //new avatar
-            this.avatar = <Mesh>this.meshPicked;
-            this.avatarSkeleton = this.avatar.skeleton;
-            Tags.AddTagsTo(this.avatar, "Vishva.avatar");
-            if (this.avatarSkeleton != null) {
-                Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
-                this.avatarSkeleton.name = "Vishva.skeleton";
-                this.avatarSkeleton.enableBlending(this._animBlend);
-            }
-            this.cc.setAvatar(this.avatar);
-            this.cc.setAvatarSkeleton(this.avatarSkeleton);
-
-            this.avatar.checkCollisions = true;
-            this.avatar.ellipsoid = this._avEllipsoid
-            this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-            this.avatar.isPickable = false;
-            this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
-            this.avatar.rotationQuaternion = null;
-            this.saveAVcameraPos = this.mainCamera.position;
-            this.isFocusOnAv = true;
-            this.removeEditControl();
-            SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
-
-            //make character control to use the new avatar
-            this.cc.setAvatar(this.avatar);
-            this.cc.setAvatarSkeleton(this.avatarSkeleton);
-            //this.cc.setAnims(this.anims);
-            this.cc.start();
-        } else {
-            return "cannot use this as avatar";
-        }
-        return null;
-    }
-
-    private isAvatar(mesh: Mesh): boolean {
-        if (mesh.skeleton == null) {
-            return false;
-        }
-        return true;
-    }
 
 
 
@@ -3646,77 +3666,64 @@ export class Vishva {
         return camera;
     }
 
-    private createAvatar() {
-        SceneLoader.ImportMesh("", 
-        this.avatarFolder, 
-        this.avatarFile, 
-        this.scene, 
-        (meshes, particleSystems, skeletons) => { return this.onAvatarLoaded(meshes, particleSystems, skeletons) });
+    
+
+
+    public switchAvatar(): string {
+        if (!this.isMeshSelected) {
+            return "no mesh selected";
+        }
+        if (this.isAvatar(<Mesh>this.meshPicked)) {
+            this.cc.stop();
+            //old avatar
+            SNAManager.getSNAManager().enableSnAs(this.avatar);
+            this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
+            this.avatar.isPickable = true;
+            Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
+            if (this.avatarSkeleton != null) {
+                Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
+                this.avatarSkeleton.name = "";
+            }
+
+            //new avatar
+            this.avatar = <Mesh>this.meshPicked;
+            this.avatarSkeleton = this.avatar.skeleton;
+            Tags.AddTagsTo(this.avatar, "Vishva.avatar");
+            if (this.avatarSkeleton != null) {
+                Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
+                this.avatarSkeleton.name = "Vishva.skeleton";
+                this.avatarSkeleton.enableBlending(this._animBlend);
+            }
+            this.cc.setAvatar(this.avatar);
+            this.cc.setAvatarSkeleton(this.avatarSkeleton);
+
+            this.avatar.checkCollisions = true;
+            this.avatar.ellipsoid = this._avEllipsoid
+            this.avatar.ellipsoidOffset = this._avEllipsoidOffset
+            this.avatar.isPickable = false;
+            this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
+            this.avatar.rotationQuaternion = null;
+            this.saveAVcameraPos = this.mainCamera.position;
+            this.isFocusOnAv = true;
+            this.removeEditControl();
+            SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
+
+            //make character control to use the new avatar
+            this.cc.setAvatar(this.avatar);
+            this.cc.setAvatarSkeleton(this.avatarSkeleton);
+            //this.cc.setAnims(this.anims);
+            this.cc.start();
+        } else {
+            return "cannot use this as avatar";
+        }
+        return null;
     }
 
-    private onAvatarLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[]) {
-        this.avatar = <Mesh>meshes[0];
-
-        (this.shadowGenerator.getShadowMap().renderList).push(this.avatar);
-        //(this.avShadowGenerator.getShadowMap().renderList).push(this.avatar);
-        //TODO
-        //this.avatar.receiveShadows = true;
-
-        //dispose of all OTHER meshes
-        let l: number = meshes.length;
-        for (let i = 1; i < l; i++) {
-            meshes[i].checkCollisions = false;
-            meshes[i].dispose();
+    private isAvatar(mesh: Mesh): boolean {
+        if (mesh.skeleton == null) {
+            return false;
         }
-
-
-        this.avatarSkeleton = skeletons[0];
-        //dispose of all OTHER skeletons
-        l = skeletons.length;
-        for (let i = 1; i < l; i++) {
-            skeletons[i].dispose();
-        }
-
-        this.fixAnimationRanges(this.avatarSkeleton);
-        this.avatar.skeleton = this.avatarSkeleton;
-        this.avatarSkeleton.enableBlending(this._animBlend);
-        //this.avatar.rotation.y = Math.PI;
-        //this.avatar.position = new Vector3(0, 20, 0);
-        this.avatar.position = this.spawnPosition;
-
-        this.avatar.checkCollisions = true;
-        this.avatar.ellipsoid = this._avEllipsoid
-        this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
-        this.avatar.isPickable = false;
-        Tags.AddTagsTo(this.avatar, "Vishva.avatar");
-        Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
-        this.avatarSkeleton.name = "Vishva.skeleton";
-
-        this.mainCamera.alpha = -this.avatar.rotation.y - 4.69;
-        //this.mainCamera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
-
-        var sm: StandardMaterial = <StandardMaterial>this.avatar.material;
-        if (sm.diffuseTexture != null) {
-            var textureName: string = sm.diffuseTexture.name;
-            sm.diffuseTexture.name = this.avatarFolder + textureName;
-            sm.backFaceCulling = true;
-            sm.ambientColor = new Color3(0, 0, 0);
-        }
-
-        this.cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
-
-        this.setCharacterController(this.cc);
-        this.cc.setCameraElasticity(true);
-        //this.cc.setNoFirstPerson(true);
-
-        this.cc.start();
-
-        //in 3.0 need to set the camera values again
-        //            this.mainCamera.radius=4;
-        //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;
-        //            this.mainCamera.beta = 1.4;
-
-
+        return true;
     }
 
     public disableAV() {
@@ -3733,63 +3740,7 @@ export class Vishva {
         this._avDisabled = false;
     }
 
-    //TODO persist charactercontroller settings
-    private setCharacterController(cc: CharacterController) {
-        this.mainCamera.lowerRadiusLimit = 1;
-        this.mainCamera.upperRadiusLimit = 100;
-
-        cc.setCameraTarget(new BABYLON.Vector3(0, 1.5, 0));
-        cc.setIdleAnim("idle", 1, true);
-        cc.setTurnLeftAnim("turnLeft", 0.5, true);
-        cc.setTurnRightAnim("turnRight", 0.5, true);
-        cc.setWalkBackAnim("walkBack", 0.5, true);
-        cc.setRunJumpAnim("jumpRun", .5, true);
-        cc.setFallAnim("fall", 2, false);
-        cc.setSlideBackAnim("slideBack", 1, false);
-
-        cc.setTurnRightKey("D");
-        cc.setTurnLeftKey("A");
-        cc.setStrafeRightKey("E");
-        cc.setStrafeLeftKey("Q");
-
-        //arrow keys
-        cc.setTurnRightCode(39);
-        cc.setTurnLeftCode(37);
-        cc.setStrafeRightCode(0);
-        cc.setStrafeLeftCode(0);
-
-
-        cc.setStepOffset(0.5);
-        cc.setSlopeLimit(30, 60);
-    }
-
-    /**
-     * workaround for bugs in blender exporter 
-     * 4.4.3 animation ranges are off by 1 
-     * 4.4.4 issue with actions with just 2 frames -> from = to
-     * looks like this was fixed in exporter 5.3
-     * 5.3.0 aniamtion ranges again off by 1
-     * TODO this should be moved to load asset function. Wrong to assume that all asset have been created using blender exporter
-     * 
-     * @param skel
-     */
-    private fixAnimationRanges(skel: Skeleton) {
-        var ranges: AnimationRange[] = skel.getAnimationRanges();
-
-        for (let range of ranges) {
-            //                fix for 4.4.4
-            //                if (range.from === range.to) {
-            //                    console.log("animation issue found in " + range.name + " from " + range.from);
-            //                    range.to++;
-            //                }
-
-            //fix for 5.3
-            range.from++;
-
-        }
-
-    }
-
+      
     private setCameraSettings(camera: ArcRotateCamera) {
         camera.lowerRadiusLimit = 0.25;
 
@@ -3902,6 +3853,7 @@ export class PhysicsParm {
     public mass: number;
     public restitution: number;
     public friction: number;
+    public disableBidirectionalTransformation:any;
 }
 
 export class LightParm {

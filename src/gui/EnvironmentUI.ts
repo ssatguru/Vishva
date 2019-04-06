@@ -32,7 +32,7 @@ export class EnvironmentUI {
         sunPos.slider(this._sliderOptions(0, 180, this._vishva.getSunPos()));
         light.slider(this._sliderOptions(0, 100, 100 * this._vishva.getLight()));
         shade.slider(this._sliderOptions(0, 100, 100 * this._vishva.getShade()));
-        fog.slider(this._sliderOptions(0, 100, 100 * this._vishva.getFog()));
+        fog.slider(this._sliderOptions(0, 100, this._vishva.getFog()));
 
         let fogColDiag: ColorPickerDiag = new ColorPickerDiag("fog color", "fogCol", this._vishva.getFogColor(), DialogMgr.centerBottom, (hex, hsv, rgb) => {
             this._vishva.setFogColor(hex);
@@ -110,14 +110,13 @@ export class EnvironmentUI {
         } else if (slider === "sunPos") {
             this._vishva.setSunPos(ui.value);
         } else {
-            var v: number = ui.value / 100;
+            var v: number = ui.value ;
             if (slider === "light") {
-                this._vishva.setLight(v);
+                this._vishva.setLight(v/100);
             } else if (slider === "shade") {
-                this._vishva.setShade(v);
+                this._vishva.setShade(v/100);
             } else if (slider === "fog") {
-                console.log(v);
-                this._vishva.setFog(v / 100);
+                this._vishva.setFog(v);
             }
         }
         return true;

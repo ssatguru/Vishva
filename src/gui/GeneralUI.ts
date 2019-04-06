@@ -46,6 +46,7 @@ export class GeneralUI {
     private _genDisable: HTMLInputElement;
     private _genColl: HTMLInputElement;
     private _genVisi: HTMLInputElement;
+    private _genBBox: HTMLInputElement;
 
     constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
         this._vishva = vishva;
@@ -165,6 +166,7 @@ export class GeneralUI {
         }
         this._genSnapRotValue = new VInputNumber("snapRotValue");
         this._genSnapRotValue.onChange = (n) => {
+            console.log("snaprot " + n);
             this._vishva.setSnapRotValue(n);
         }
         this._genSnapScaleValue = new VInputNumber("snapScaleValue");
@@ -184,6 +186,11 @@ export class GeneralUI {
         this._genVisi = <HTMLInputElement>document.getElementById("genVisi");
         this._genVisi.onchange = () => {
             this._vishva.makeVisibile(this._genVisi.checked);
+        }
+
+        this._genBBox = <HTMLInputElement>document.getElementById("genBBox");
+        this._genBBox.onchange = () => {
+            this._vishva.toggleBoundingBox();
         }
 
         var undo: HTMLElement = document.getElementById("undo");

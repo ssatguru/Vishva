@@ -7,7 +7,7 @@ module.exports = {
     entry: ['./src/index.ts',"./src/index.html"],
     devtool: 'source-map',
     devServer: {
-        contentBase: './dist'
+        contentBase: './'
     },
     module: {
         rules: [

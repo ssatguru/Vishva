@@ -66,7 +66,7 @@ mimimizer icon on each of the VDialogs
 
 /*input {margin: 1px;}*/
 table {
-    border-collapse: seperate;
+    border-collapse: collapse;
     background:rgb(34, 32, 32);
     color: #ffffff;
 }

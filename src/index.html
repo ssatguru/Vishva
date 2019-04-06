@@ -226,10 +226,10 @@
                                 <td>
                                     <table>
                                         <tr>
-                                            <td></td>
-                                            <td></td>
+                                            <td>transform</td>
+                                            <td>x,y,z</td>
                                             <td>snap</td>
-                                            <td></td>
+                                            <td>on/off</td>
                                         </tr>
 
                                         <tr>
@@ -266,6 +266,7 @@
                                     <input type="checkbox" id="genDisable">disable
                                     <input type="checkbox" id="genColl">collision
                                     <input type="checkbox" id="genVisi">visible
+                                    <input type="checkbox" id="genBBox">bounding box
                                 </td>
                             </tr>
                             <tr>
@@ -406,6 +407,12 @@
                                 <td>friction : <output for="phyFric" id="phyFricVal"></output> </td>
                                 <td>
                                     <input type="range" id="phyFric" min="0.0" max="1.0" step="0.1" value="0.0">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>disableBidirectionalTransformation</td>
+                                <td>
+                                    <input type="checkbox" id="phyDBD" >
 
                                 </td>
                             </tr>

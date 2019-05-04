@@ -1,6 +1,7 @@
 declare var vishvaFiles: Array<any>;
 import { EditControl } from "babylonjs-editcontrol";
 import { CharacterController } from "babylonjs-charactercontroller";
+import {CameraController} from "./CameraController";
 import {
     AbstractMesh,
     Animation,
@@ -577,6 +578,7 @@ export class Vishva {
     isFocusOnAv: boolean = true;
 
     cameraAnimating: boolean = false;
+    cameraController:CameraController;
 
     private process() {
         this.sunDR.position.x = this.avatar.position.x + 100;
@@ -619,13 +621,21 @@ export class Vishva {
         if (!this._avDisabled) {
             if (this.isFocusOnAv) {
                 if (this.key.esc) {
+                    console.log("camera time");
                     this.setFocusOnNothing();
+                    if (this.cameraController == null){
+                        this.cameraController = new CameraController(this.scene,this.canvas);
+                    }
+                    this.cameraController.start();
                 }
 
-            } else if (this.key.up || this.key.down || this.key.esc) {
+            } //else if (this.key.up || this.key.down || this.key.esc) {
+                else if (this.key.esc) {
                 if (this.editControl == null) {
+                    if (this.cameraController != null) this.cameraController.stop();
                     this.switchFocusToAV();
                 } else if (!this.editControl.isEditing()) {
+                    if (this.cameraController != null) this.cameraController.stop();
                     this.switchFocusToAV();
                 }
             }
@@ -2050,7 +2060,6 @@ export class Vishva {
 
 
     public setSpace(space: string): string {
-        console.log("setSPace parm " + space);
         if (this.snapperOn) {
             return "Cannot switch space when snapper is on"
         }

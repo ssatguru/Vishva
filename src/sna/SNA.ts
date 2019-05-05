@@ -381,7 +381,7 @@ export class SNAManager {
     }
 
     public getCamera() {
-        return Vishva.vishva.mainCamera;
+        return Vishva.vishva.arcCamera;
     }
 }
 

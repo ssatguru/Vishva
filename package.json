@@ -10,7 +10,7 @@
   "dependencies": {
     "babylonjs": "^3.3.0",
     "babylonjs-charactercontroller": "^0.2.0",
-    "babylonjs-editcontrol": "^3.2.1",
+    "babylonjs-editcontrol": "^3.2.2",
     "babylonjs-inspector": "^3.3.0",
     "babylonjs-loaders": "^3.3.0",
     "babylonjs-materials": "^3.3.0",

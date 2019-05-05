@@ -396,8 +396,10 @@ vishvaFiles=[
     "junk.js",
     "junk2.js",
     "junk3.js",
+    "keith-modular-house.js",
     "myworld4.js",
     "myworld5.js",
+    "phy.js",
     "public_html - Shortcut.lnk",
     "spsDemo.js",
     "test-ava.js"

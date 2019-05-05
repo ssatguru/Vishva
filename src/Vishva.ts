@@ -1,7 +1,7 @@
 declare var vishvaFiles: Array<any>;
 import { EditControl } from "babylonjs-editcontrol";
 import { CharacterController } from "babylonjs-charactercontroller";
-import {CameraController} from "./CameraController";
+import { UniCamController } from "./CameraController";
 import {
     AbstractMesh,
     Animation,
@@ -47,7 +47,8 @@ import {
     Texture,
     Vector3,
     WaterMaterial,
-    IParticleSystem
+    IParticleSystem,
+    TargetCamera
 } from "babylonjs";
 
 import { GroundSPS } from "./GroundSPS";
@@ -117,23 +118,23 @@ export class Vishva {
     /**
      * avatar stuff 
      */
-    private avManager:AvManager;
+    private avManager: AvManager;
     private cc: CharacterController;
     public avatar: Mesh;
     private avatarSkeleton: Skeleton;
     private _avDisabled: boolean = false;
-    
+
     private avatarFolder: string = this.vHome + "/internal/avatar/";
     private avatarFile: string = "starterAvatars.babylon";
     //spawnPosition:Vector3=new Vector3(-360,620,225);
     private spawnPosition: Vector3 = new Vector3(0, 0.2, 0);
     //spawnPosition: Vector3=new Vector3(0,12,0);
-    
-    
+
+
     private _animBlend: number = 0.1;
     private _avEllipsoid: Vector3 = new BABYLON.Vector3(0.5, 1, 0.5);
     private _avEllipsoidOffset: Vector3 = new Vector3(0, 1, 0);
-    
+
 
     NO_TEXTURE: string = this.vHome + "/internal/textures/no-texture.jpg"
     TGA_IMAGE: string = this.vHome + "/internal/textures/tga-image.jpg"
@@ -196,7 +197,7 @@ export class Vishva {
 
 
 
-    mainCamera: ArcRotateCamera;
+    arcCamera: ArcRotateCamera;
     private _cameraCollision: boolean = true;
     //private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
     private _cameraEllipsoid: Vector3 = new Vector3(1, 1, 1);
@@ -440,24 +441,24 @@ export class Vishva {
         for (let camera of scene.cameras) {
             if (Tags.MatchesQuery(camera, "Vishva.camera")) {
                 cameraFound = true;
-                this.mainCamera = <ArcRotateCamera>camera;
-                this.setCameraSettings(this.mainCamera);
-                this.mainCamera.attachControl(this.canvas, true);
+                this.arcCamera = <ArcRotateCamera>camera;
+                this.setCameraSettings(this.arcCamera);
+                this.arcCamera.attachControl(this.canvas, true);
                 //this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
             }
         }
 
         if (!cameraFound) {
             console.log("no vishva camera found. creating camera");
-            this.mainCamera = this.createCamera(this.scene, this.canvas);
-            this.scene.activeCamera = this.mainCamera;
+            this.arcCamera = this.createCamera(this.scene, this.canvas);
+            this.scene.activeCamera = this.arcCamera;
         }
 
 
         //TODO
-        this.mainCamera.checkCollisions = this._cameraCollision;
+        this.arcCamera.checkCollisions = this._cameraCollision;
         //this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
-        this.mainCamera.collisionRadius = this._cameraEllipsoid;
+        this.arcCamera.collisionRadius = this._cameraEllipsoid;
 
         if (!groundFound) {
             console.log("no vishva ground found. creating ground");
@@ -522,7 +523,7 @@ export class Vishva {
             this.scene,
             this.shadowGenerator,
             this.spawnPosition,
-            this.mainCamera
+            this.arcCamera
         );
 
         if (!avFound) {
@@ -542,7 +543,7 @@ export class Vishva {
     private setScenePhase2() {
 
         this.avatarSkeleton.enableBlending(this._animBlend);
-        this.cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
+        this.cc = new CharacterController(this.avatar, this.arcCamera, this.scene);
         //TODO remove below. The character controller should be set using deserialization
         this.avManager.setCharacterController(this.cc);
 
@@ -555,7 +556,7 @@ export class Vishva {
         this.render();
     }
 
-    
+
 
     private render() {
         this.scene.registerBeforeRender(() => { return this.process() });
@@ -578,7 +579,7 @@ export class Vishva {
     isFocusOnAv: boolean = true;
 
     cameraAnimating: boolean = false;
-    cameraController:CameraController;
+    uniCamController: UniCamController;
 
     private process() {
         this.sunDR.position.x = this.avatar.position.x + 100;
@@ -603,6 +604,11 @@ export class Vishva {
             if (this.key.esc) {
                 this.key.esc = false;
                 this.removeEditControl();
+                this.setFocusOnNothing();
+                if (this.uniCamController == null) {
+                    this.uniCamController = new UniCamController(this.scene, this.canvas);
+                }
+                this.uniCamController.start();
             }
             if (this.key.trans) {
                 //this.key.trans = false;
@@ -621,21 +627,18 @@ export class Vishva {
         if (!this._avDisabled) {
             if (this.isFocusOnAv) {
                 if (this.key.esc) {
-                    console.log("camera time");
                     this.setFocusOnNothing();
-                    if (this.cameraController == null){
-                        this.cameraController = new CameraController(this.scene,this.canvas);
+                    if (this.uniCamController == null) {
+                        this.uniCamController = new UniCamController(this.scene, this.canvas);
                     }
-                    this.cameraController.start();
+                    this.uniCamController.start();
                 }
 
             } //else if (this.key.up || this.key.down || this.key.esc) {
-                else if (this.key.esc) {
+            else if (this.key.esc) {
                 if (this.editControl == null) {
-                    if (this.cameraController != null) this.cameraController.stop();
                     this.switchFocusToAV();
                 } else if (!this.editControl.isEditing()) {
-                    if (this.cameraController != null) this.cameraController.stop();
                     this.switchFocusToAV();
                 }
             }
@@ -726,7 +729,8 @@ export class Vishva {
         SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshPicked);
         this.savePhyParms();
         this.switchToQuats(this.meshPicked);
-        this.editControl = new EditControl(<Mesh>this.meshPicked, this.mainCamera, this.canvas, 0.75);
+        //this.editControl = new EditControl(<Mesh>this.meshPicked, this.arcCamera, this.canvas, 0.75);
+        this.editControl = new EditControl(<Mesh>this.meshPicked, this.scene.activeCamera, this.canvas, 0.75);
         this.editControl.addActionEndListener((actionType: number) => {
             this.vishvaGUI.handleTransChange();
         })
@@ -860,71 +864,175 @@ export class Vishva {
 
     }
 
-    private switchFocusToAV() {
-        this.mainCamera.detachControl(this.canvas);
+
+    private switchFocusToAV_old() {
+        this.arcCamera.detachControl(this.canvas);
 
         this.frames = 25;
         this.f = this.frames;
 
-        this.delta = this.saveAVcameraPos.subtract(this.mainCamera.position).scale(1 / this.frames);
+        this.deltaP = this.saveAVcameraPos.subtract(this.arcCamera.position).scale(1 / this.frames);
 
         var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-        this.delta2 = avTarget.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+        this.deltaT = avTarget.subtract((<Vector3>this.arcCamera.target)).scale(1 / this.frames);
+
+        this.cameraAnimating = true;
+        this.scene.registerBeforeRender(this.animFunc);
+    }
+    private switchFocusToAV() {
+        let camera: TargetCamera = <TargetCamera> this.scene.activeCamera;
+
+        this.frames = 25;
+        this.f = this.frames;
+             
+        this.deltaP = this.saveAVcameraPos.subtract(camera.position).scale(1 / this.frames);
+        
+
+        this.start = camera.getFrontPosition(1);
+        this.end = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+        this.deltaT = this.end.subtract(this.start).scale(1 / this.frames);
+
+        camera.setTarget(this.start);
+
+        // this.arcCamera.target = camera.getFrontPosition(1)
+        // //this.arcCamera.target = this.end;
+        // this.arcCamera.setPosition(camera.position.clone());
+
+        // this.uniCamController.stop();
+        // this.scene.activeCamera=this.arcCamera;
 
         this.cameraAnimating = true;
         this.scene.registerBeforeRender(this.animFunc);
     }
 
-    private focusOnMesh(mesh: AbstractMesh, frames: number) {
-        this.mainCamera.detachControl(this.canvas);
-        this.frames = frames;
-        this.f = frames;
-        //this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
-        this.delta2 = mesh.getAbsolutePivotPoint().subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
-        this.cameraAnimating = true;
-        this.scene.registerBeforeRender(this.animFunc2);
-    }
-
     animFunc: () => void = () => { return this.animateCamera() };
-
-    animFunc2: () => void = () => { return this.justReFocus() };
-
-    frames: number;
-
-    f: number;
-
-    delta: Vector3;
-
-    delta2: Vector3;
-
     private animateCamera() {
-        var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-        var targetDiff = avTarget.subtract((<Vector3>this.mainCamera.target)).length();
-        if (targetDiff > 0.01)
-            this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
+        let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
 
-        var posDiff = this.saveAVcameraPos.subtract(this.mainCamera.position).length();
-        if (posDiff > 0.01)
-            this.mainCamera.setPosition(this.mainCamera.position.add(this.delta));
+        this.start.addInPlace(this.deltaT);
+        camera.setTarget(this.start);
+        camera.position.addInPlace(this.deltaP);
 
         this.f--;
         if (this.f < 0) {
             this.isFocusOnAv = true;
             this.cameraAnimating = false;
             this.scene.unregisterBeforeRender(this.animFunc);
-            this.mainCamera.attachControl(this.canvas);
+
+            this.arcCamera.target=this.end;
+            this.arcCamera.setPosition(this.saveAVcameraPos);
+
+            this.uniCamController.stop();
+
+            this.arcCamera.attachControl(this.canvas);
             this.cc.start();
         }
     }
+    //TODO remove below
+    // private animateCamera_old2() {
+    //     this.arcCamera.setTarget((<Vector3>this.arcCamera.target).add(this.deltaT));
+    //     this.arcCamera.setPosition(this.arcCamera.position.add(this.deltaP));
 
+    //     this.f--;
+    //     if (this.f < 0) {
+    //         this.isFocusOnAv = true;
+    //         this.cameraAnimating = false;
+    //         this.scene.unregisterBeforeRender(this.animFunc);
+    //         this.arcCamera.attachControl(this.canvas);
+    //         this.cc.start();
+    //     }
+    // }
+
+    // private animateCamera_old() {
+    //     var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
+    //     var targetDiff = avTarget.subtract((<Vector3>this.arcCamera.target)).length();
+    //     if (targetDiff > 0.01)
+    //         this.arcCamera.setTarget((<Vector3>this.arcCamera.target).add(this.deltaT));
+
+    //     var posDiff = this.saveAVcameraPos.subtract(this.arcCamera.position).length();
+    //     if (posDiff > 0.01)
+    //         this.arcCamera.setPosition(this.arcCamera.position.add(this.deltaP));
+
+    //     this.f--;
+    //     if (this.f < 0) {
+    //         this.isFocusOnAv = true;
+    //         this.cameraAnimating = false;
+    //         this.scene.unregisterBeforeRender(this.animFunc);
+    //         this.arcCamera.attachControl(this.canvas);
+    //         this.cc.start();
+    //     }
+    // }
+
+    private focusOnMesh(mesh: AbstractMesh, frames: number) {
+        let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
+        this.scene.activeCamera.detachControl(this.canvas);
+        this.frames = frames;
+        this.f = frames;
+        this.start = camera.getFrontPosition(1);
+        if (camera instanceof ArcRotateCamera) {
+            camera.target = camera.getFrontPosition(1)
+        } else
+            camera.setTarget(camera.getFrontPosition(1));
+        this.deltaT = mesh.getAbsolutePivotPoint().subtract(this.start).scale(1 / this.frames);
+        this.cameraAnimating = true;
+        this.scene.registerBeforeRender(this.animFunc2);
+    }
+
+    //TODO remove below
+    // private focusOnMesh_old(mesh: AbstractMesh, frames: number) {
+    //     this.arcCamera.detachControl(this.canvas);
+    //     this.frames = frames;
+    //     this.f = frames;
+    //     //this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
+    //     this.deltaT = mesh.getAbsolutePivotPoint().subtract((<Vector3>this.arcCamera.target)).scale(1 / this.frames);
+    //     this.cameraAnimating = true;
+    //     this.scene.registerBeforeRender(this.animFunc2);
+    // }
+
+    animFunc2: () => void = () => { return this.justReFocus() };
     private justReFocus() {
-        this.mainCamera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
+        let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
+        //camera.setTarget((<Vector3>this.mainCamera.target).add(this.delta2));
+        //this.drawLine(this.start,this.delta2);
+
+        if (camera instanceof ArcRotateCamera) {
+            camera.setTarget(camera.getTarget().add(this.deltaT));
+        } else {
+            this.start.addInPlace(this.deltaT);
+            camera.setTarget(this.start);
+        }
         this.f--;
         if (this.f < 0) {
             this.cameraAnimating = false;
             this.scene.unregisterBeforeRender(this.animFunc2);
-            this.mainCamera.attachControl(this.canvas);
+            if (camera instanceof ArcRotateCamera) {
+                camera.attachControl(this.canvas);
+            } else {
+                if (this.editControl != null){
+                    this.editControl.switchCamera(this.arcCamera);
+                }
+                this.arcCamera.setPosition(camera.position);
+                this.arcCamera.setTarget(this.start);
+                this.scene.activeCamera = this.arcCamera;
+                this.arcCamera.attachControl(this.canvas);
+                this.uniCamController.stop();
+            }
+
         }
+    }
+
+    frames: number;
+    f: number;
+    //position delta
+    deltaP: Vector3;
+    //target delata
+    deltaT: Vector3;
+    start: Vector3 = Vector3.Zero();
+    end: Vector3 = Vector3.Zero();
+
+    
+    private drawLine(from: Vector3, to: Vector3) {
+        MeshBuilder.CreateLines("", { points: [from, from.add(to)] }, this.scene);
     }
 
     private onWindowResize(event: Event) {
@@ -1135,7 +1243,7 @@ export class Vishva {
             return "no mesh selected";
         }
         this.meshPicked.setEnabled(!this.meshPicked.isEnabled());
-        this.meshPicked.showBoundingBox=true;
+        this.meshPicked.showBoundingBox = true;
     }
 
 
@@ -1235,9 +1343,9 @@ export class Vishva {
         if (!this.isMeshSelected) {
             return "no mesh selected";
         }
-        console.log("bbox "+this.meshPicked.showBoundingBox)
-        this.meshPicked.showBoundingBox=!this.meshPicked.showBoundingBox;
-        
+        console.log("bbox " + this.meshPicked.showBoundingBox)
+        this.meshPicked.showBoundingBox = !this.meshPicked.showBoundingBox;
+
     }
 
 
@@ -2041,9 +2149,10 @@ export class Vishva {
     public setFocusOnMesh() {
         if (this.isFocusOnAv) {
             this.cc.stop();
-            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+            this.saveAVcameraPos.copyFrom(this.arcCamera.position);
             this.isFocusOnAv = false;
         }
+        // if (this.cameraController != null) this.cameraController.stop();
         this.focusOnMesh(this.meshPicked, 25);
     }
     /*
@@ -2053,7 +2162,7 @@ export class Vishva {
     public setFocusOnNothing() {
         if (this.isFocusOnAv) {
             this.cc.stop();
-            this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+            this.saveAVcameraPos.copyFrom(this.arcCamera.position);
             this.isFocusOnAv = false;
         }
     }
@@ -2566,8 +2675,8 @@ export class Vishva {
      * @param d 
      */
     public setFog(d: number) {
-        if (d!=0){
-            d=0.00005*Math.pow(1.08,d);
+        if (d != 0) {
+            d = 0.00005 * Math.pow(1.08, d);
         }
         this.scene.fogDensity = d;
         //this.scene.fogStart = 10220*(1 - d/0.1);
@@ -2576,7 +2685,7 @@ export class Vishva {
     public getFog(): number {
         //return (10220 - this.scene.fogStart )*0.1/10220;
         //return this.scene.fogDensity;
-        return Math.log(this.scene.fogDensity/0.00005)/Math.log(1.08);
+        return Math.log(this.scene.fogDensity / 0.00005) / Math.log(1.08);
     }
 
     public setFogColor(fogColor: string) {
@@ -2589,11 +2698,11 @@ export class Vishva {
 
     public setFov(dO: any) {
         var d: number = <number>dO;
-        this.mainCamera.fov = (d * 3.14 / 180);
+        this.arcCamera.fov = (d * 3.14 / 180);
     }
 
     public getFov(): number {
-        return this.mainCamera.fov * 180 / 3.14;
+        return this.arcCamera.fov * 180 / 3.14;
     }
 
     public setSky(sky: any) {
@@ -2794,7 +2903,7 @@ export class Vishva {
         vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
         vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
-        vishvaSerialzed.misc.activeCameraTarget = this.mainCamera.target;
+        vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
 
         //we donot serialize the sps. 
         //the sps mesh's doNotSerialize property is set to true when the sps is created
@@ -3505,7 +3614,7 @@ export class Vishva {
     private createSnowPart(): ParticleSystem {
         let part = new ParticleSystem("snow", 4000, this.scene);
         part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
-        part.emitter = new Mesh("snowEmitter", this.scene, this.mainCamera);
+        part.emitter = new Mesh("snowEmitter", this.scene, this.arcCamera);
 
         part.maxEmitBox = new Vector3(100, 40, 100);
         part.minEmitBox = new Vector3(-100, 40, -100);
@@ -3533,7 +3642,7 @@ export class Vishva {
     private createRainPart(): ParticleSystem {
         let part = new ParticleSystem("rain", 4000, this.scene);
         part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
-        part.emitter = new Mesh("rainEmitter", this.scene, this.mainCamera);
+        part.emitter = new Mesh("rainEmitter", this.scene, this.arcCamera);
         //part.emitter=new Vector3(0,40,0);
         part.maxEmitBox = new Vector3(100, 40, 100);
         part.minEmitBox = new Vector3(-100, 40, -100);
@@ -3675,7 +3784,7 @@ export class Vishva {
         return camera;
     }
 
-    
+
 
 
     public switchAvatar(): string {
@@ -3712,7 +3821,7 @@ export class Vishva {
             this.avatar.isPickable = false;
             this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
             this.avatar.rotationQuaternion = null;
-            this.saveAVcameraPos = this.mainCamera.position;
+            this.saveAVcameraPos = this.arcCamera.position;
             this.isFocusOnAv = true;
             this.removeEditControl();
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
@@ -3735,6 +3844,9 @@ export class Vishva {
         return true;
     }
 
+    /**
+     * called by AvAnimator actuator via sna manger
+     */
     public disableAV() {
         this.cc.stop();
         (<Mesh>this.avatar).checkCollisions = false;
@@ -3749,7 +3861,7 @@ export class Vishva {
         this._avDisabled = false;
     }
 
-      
+
     private setCameraSettings(camera: ArcRotateCamera) {
         camera.lowerRadiusLimit = 0.25;
 
@@ -3784,7 +3896,7 @@ export class Vishva {
 
     public enableCameraCollision(yesNo: boolean) {
         this._cameraCollision = yesNo;
-        this.mainCamera.checkCollisions = yesNo;
+        this.arcCamera.checkCollisions = yesNo;
         this.cc.cameraCollisionChanged();
     }
 
@@ -3862,7 +3974,7 @@ export class PhysicsParm {
     public mass: number;
     public restitution: number;
     public friction: number;
-    public disableBidirectionalTransformation:any;
+    public disableBidirectionalTransformation: any;
 }
 
 export class LightParm {

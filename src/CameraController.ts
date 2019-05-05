@@ -1,25 +1,31 @@
 import { Scene,  Camera,ArcRotateCamera, UniversalCamera, TargetCamera, Vector3} from "babylonjs";
 
-export class CameraController{
+export class UniCamController{
     camera:UniversalCamera;
-    saveCamera:ArcRotateCamera;
-    saveTarget:Vector3;
     canvas:HTMLCanvasElement;
+    active:boolean;
 
     scene:Scene;
 
     constructor(scene:Scene,canvas:HTMLCanvasElement){
         this.scene=scene;
         this.canvas=canvas;
+        this.active=false;
     }
 
     public start(){
-        this.saveCamera = <ArcRotateCamera> this.scene.activeCamera;
-        this.saveTarget=this.saveCamera.getTarget();
-        this.saveCamera.detachControl(this.canvas);
-        this.camera = new UniversalCamera("",this.saveCamera.getFrontPosition(-1),this.scene);
-        this.camera.setTarget(this.saveCamera.getTarget());
+        this.active=true;
+
+        let oldCam:TargetCamera = <TargetCamera> this.scene.activeCamera;
+        oldCam.detachControl(this.canvas);
+
+        //this.camera = new UniversalCamera("",oldCam.getFrontPosition(-1),this.scene);
+        this.camera = new UniversalCamera("",oldCam.position,this.scene);
+        this.camera.setTarget(oldCam.getTarget());
+
+        this.camera.speed=this.camera.speed/8;
         this.camera.attachControl(this.canvas);
+        
         //left arrow, "a"
         this.camera.keysLeft=[37,65];
         //right arrow,"d"
@@ -33,12 +39,10 @@ export class CameraController{
     }
 
     public stop(){
+        if (!this.active) return;
         this.camera.detachControl(this.canvas);
-        this.saveCamera.attachControl(this.canvas);
-        this.scene.activeCamera=this.saveCamera;
-        this.saveCamera.setTarget(this.saveTarget);
-        this.saveCamera.setPosition(this.camera.position.clone());
         this.camera.dispose();
+        this.active=false;
     }
 
    

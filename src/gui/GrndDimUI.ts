@@ -101,7 +101,7 @@ export class GrndDimUI {
             mesh.position.y = grnd.getHeightAtCoordinates(x, z) + dy;
         }
 
-        let cam = this._vishva.mainCamera;
+        let cam = this._vishva.arcCamera;
         let x = cam.position.x;
         let y = cam.position.y;
         let z = cam.position.z;

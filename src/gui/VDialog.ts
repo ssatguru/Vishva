@@ -156,5 +156,9 @@ export class VDialog {
     public setButtons(dbos: DialogButtonOptions) {
         this._diag.dialog("option", "buttons", dbos);
     }
+
+    public setTitle(title:string){
+        this._diag.dialog( "option", "title", title );
+    }
 }
 

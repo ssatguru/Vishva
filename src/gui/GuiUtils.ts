@@ -15,6 +15,13 @@ export class GuiUtils {
             optEle.innerText = option;
             selectEle.appendChild(optEle);
         }
+    }
 
+    public static  createDiv(id?:string):HTMLDivElement{
+        let uiRoot:HTMLElement = document.getElementById("gui-items-2");
+        let div:HTMLDivElement= document.createElement("div");
+        if (id!=null) div.id=id;
+        uiRoot.appendChild(div);
+        return div;
     }
 }

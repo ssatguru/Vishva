@@ -22,6 +22,7 @@ import "pepjs";
 import "./sna/ActuatorAnimator";
 import "./sna/ActuatorAvAnimator";
 import "./sna/ActuatorCloaker";
+import "./sna/ActuatorDialog";
 import "./sna/ActuatorDisabler";
 import "./sna/ActuatorEnabler";
 import "./sna/ActuatorLight";

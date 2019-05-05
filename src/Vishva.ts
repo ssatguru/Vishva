@@ -236,7 +236,6 @@ export class Vishva {
 
     public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string) {
 
-        console.log(vishvaFiles);
         Vishva.vishvaFiles = vishvaFiles;
 
         Vishva.vishva = this;

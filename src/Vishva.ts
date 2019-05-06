@@ -69,6 +69,7 @@ import { VishvaSerialized } from "./VishvaSerialized";
 import { VishvaGUI } from "./gui/VishvaGUI";
 
 import { AvManager } from "./avatar/avatar";
+import { DialogMgr } from "./gui/DialogMgr";
 
 
 
@@ -232,6 +233,7 @@ export class Vishva {
     private enablePhysics: boolean = true;
 
     public static vishva: Vishva;
+    static version: string="0.2.0";
 
 
     public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string) {
@@ -309,6 +311,8 @@ export class Vishva {
         var foo: Object = <Object>JSON.parse(tfat.text);
 
         this.vishvaSerialized = foo["VishvaSerialized"];
+        console.log("babylon version : " + this.vishvaSerialized.bVer);
+        console.log("vishva version : " + this.vishvaSerialized.vVer);
         //this.snas = <SNAserialized[]>foo["VishvaSNA"];
         this.snas = this.vishvaSerialized.snas;
         this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
@@ -602,12 +606,14 @@ export class Vishva {
             }
             if (this.key.esc) {
                 this.key.esc = false;
+                //this.animateMesh(this.meshPicked);
                 this.removeEditControl();
                 this.setFocusOnNothing();
                 if (this.uniCamController == null) {
                     this.uniCamController = new UniCamController(this.scene, this.canvas);
                 }
                 this.uniCamController.start();
+                
             }
             if (this.key.trans) {
                 //this.key.trans = false;
@@ -626,6 +632,7 @@ export class Vishva {
         if (!this._avDisabled) {
             if (this.isFocusOnAv) {
                 if (this.key.esc) {
+                    this.animateMesh(this.avatar,1.1);
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
                         this.uniCamController = new UniCamController(this.scene, this.canvas);
@@ -1491,8 +1498,9 @@ export class Vishva {
         return clone;
     }
     //play a small scaling animation when cloning or instancing a mesh.
-    private animateMesh(mesh: AbstractMesh): void {
-        let startScale: Vector3 = mesh.scaling.clone().scaleInPlace(1.5); //new Vector3(1.5, 1.5, 1.5);
+    private animateMesh(mesh: AbstractMesh,scale?:number): void {
+        if (scale==null) scale=1.5;
+        let startScale: Vector3 = mesh.scaling.clone().scaleInPlace(scale); //new Vector3(1.5, 1.5, 1.5);
         let endScale: Vector3 = mesh.scaling.clone();
         Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
     }
@@ -2697,7 +2705,8 @@ export class Vishva {
 
     public setFov(dO: any) {
         var d: number = <number>dO;
-        this.arcCamera.fov = (d * 3.14 / 180);
+        this.scene.activeCamera.fov=(d * 3.14 / 180);
+        //this.arcCamera.fov = (d * 3.14 / 180);
     }
 
     public getFov(): number {
@@ -2887,7 +2896,12 @@ export class Vishva {
     public saveWorld(): string {
 
         if (this.editControl != null) {
-            alert("cannot save during edit");
+            DialogMgr.showAlertDiag("cannot save during edit");
+            return null;
+        }
+
+        if (!this.isFocusOnAv){
+            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to swicth focus to avatar and try again");
             return null;
         }
 
@@ -2899,6 +2913,8 @@ export class Vishva {
         this.renameWorldTextures();
         //TODO add support for CharacterController serialization.
         let vishvaSerialzed = new VishvaSerialized();
+        vishvaSerialzed.bVer=Engine.Version;
+        vishvaSerialzed.vVer=Vishva.version;
         vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
         vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
@@ -2938,6 +2954,7 @@ export class Vishva {
         return URL.createObjectURL(file);
     }
 
+    
     private removeInstancesFromShadow() {
         var meshes: AbstractMesh[] = this.scene.meshes;
         for (let mesh of meshes) {

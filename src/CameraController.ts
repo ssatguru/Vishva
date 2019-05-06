@@ -21,7 +21,7 @@ export class UniCamController{
 
         //this.camera = new UniversalCamera("",oldCam.getFrontPosition(-1),this.scene);
         this.camera = new UniversalCamera("",oldCam.position,this.scene);
-        this.camera.setTarget(oldCam.getTarget());
+        this.camera.setTarget(oldCam.getTarget());//.subtractFromFloats(0,0.5,0));
 
         this.camera.speed=this.camera.speed/8;
         this.camera.attachControl(this.canvas);

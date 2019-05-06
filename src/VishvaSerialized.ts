@@ -10,6 +10,10 @@ import { GroundSPSserialized } from "./GroundSPS";
 import { SNAserialized } from "./sna/SNA";
 
 export class VishvaSerialized {
+    //babylon version
+    public bVer:string;
+    //vishva version
+    public vVer:string;
     public snas: SNAserialized[];
     public settings: SettingsSerialized;
     public guiSettings: Object;

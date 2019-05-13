@@ -34,6 +34,7 @@ export class UniCamController{
         this.camera.keysUp=[38,87];
         //down arrow,"s"
         this.camera.keysDown=[40,83];
+    
         this.scene.activeCamera=this.camera;
 
     }

@@ -29,7 +29,7 @@ export class SNAManager {
     actuatorMap: any = {};
     sensorMap: any = {};
     snaDisabledList: Array<AbstractMesh> = new Array();
-    sig2actMap: Object = <Object>new Object();
+    sig2saMap: Object = <Object>new Object();
 
     static sm: SNAManager;
 
@@ -91,10 +91,10 @@ export class SNAManager {
 
     public emitSignal(signalId: string) {
         if (signalId.trim() === "") return;
-        let actuators: Actuator[] = <Actuator[]>this.sig2actMap[signalId];
-        if (actuators == null) return;
-        for (let actuator of actuators) {
-            actuator.start(signalId);
+        let sas: SensorActuator[] = <SensorActuator[]>this.sig2saMap[signalId];
+        if (sas == null) return;
+        for (let sa of sas) {
+            sa.start(signalId);
         }
     }
 
@@ -189,24 +189,24 @@ export class SNAManager {
         }
     }
 
-    public subscribe(actuator: Actuator, signalId: string) {
-        var keyValue: any = this.sig2actMap[signalId];
+    public subscribe(actuator: SensorActuator, signalId: string) {
+        var keyValue: any = this.sig2saMap[signalId];
         if (keyValue == null) {
-            var actuators: Array<Actuator> = new Array<Actuator>();
+            var actuators: Array<SensorActuator> = new Array<SensorActuator>();
             actuators.push(actuator);
-            this.sig2actMap[signalId] = actuators;
+            this.sig2saMap[signalId] = actuators;
         } else {
-            var actuators: Array<Actuator> = <Array<Actuator>>keyValue;
+            var actuators: Array<SensorActuator> = <Array<SensorActuator>>keyValue;
             if (actuators.indexOf(actuator) == -1) {
                 actuators.push(actuator);
             }
         }
     }
 
-    public unSubscribe(actuator: Actuator, signalId: string) {
-        var keyValue: any = this.sig2actMap[signalId];
+    public unSubscribe(actuator: SensorActuator, signalId: string) {
+        var keyValue: any = this.sig2saMap[signalId];
         if (keyValue != null) {
-            var actuators: Array<Actuator> = <Array<Actuator>>keyValue;
+            var actuators: Array<SensorActuator> = <Array<SensorActuator>>keyValue;
             var i: number = actuators.indexOf(actuator);
             if (i !== -1) {
                 actuators.splice(i, 1);
@@ -396,6 +396,7 @@ export class SNAserialized {
 }
 
 export interface SensorActuator {
+    start(signal: string): boolean;
     getName(): string;
     getType(): string;
     getProperties(): SNAproperties;
@@ -424,7 +425,6 @@ export interface Sensor extends SensorActuator {
 }
 
 export interface Actuator extends SensorActuator {
-    start(signal: string): boolean;
     stop();
     actuate();
     isReady(): boolean;
@@ -439,18 +439,39 @@ export abstract class SensorAbstract implements Sensor {
 
     properties: SNAproperties;
     mesh: Mesh;
+    signalId: string;
+    signalEnable: string;
+    signalDisable: string;
+    disabled: boolean = false;
+
     //action: Action;
     actions: Action[] = new Array();
 
     public constructor(mesh: Mesh, properties: SNAproperties) {
         this.properties = properties;
         this.mesh = mesh;
+        this.handlePropertiesChange();
         var sensors: Array<Sensor> = <Array<Sensor>>this.mesh["sensors"];
         if (sensors == null) {
             sensors = new Array<Sensor>();
             mesh["sensors"] = sensors;
         }
         sensors.push(this);
+    }
+
+    public start(signal:string):boolean{
+        if (signal == this.signalDisable) {
+            console.log("disable signaled");
+            this.disabled = true;
+            this.unRegisterAll();
+        }
+        if (signal == this.signalEnable) {
+            console.log("enable signaled");
+            this.disabled = false;
+            this.reRegisterAll();
+        }
+
+        return true;
     }
 
     public dispose() {
@@ -493,7 +514,35 @@ export abstract class SensorAbstract implements Sensor {
     public handlePropertiesChange() {
         //remove all actions which might have been added by previous property
         this.removeActions();
+
+        if (this.properties.signalEnable != null && this.properties.signalEnable != "") {
+            if (this.signalEnable == null) {
+                this.signalEnable = this.properties.signalEnable;
+                SNAManager.getSNAManager().subscribe(this, this.signalEnable);
+                this.disabled = true;
+            } else if (this.signalEnable !== this.properties.signalEnable) {
+                SNAManager.getSNAManager().unSubscribe(this, this.signalEnable);
+                this.signalEnable = this.properties.signalEnable;
+                SNAManager.getSNAManager().subscribe(this, this.signalEnable);
+                this.disabled = true;
+            }
+        }
+        if (this.properties.signalDisable != null && this.properties.signalDisable != "") {
+            if (this.signalDisable == null) {
+                this.signalDisable = this.properties.signalDisable;
+                SNAManager.getSNAManager().subscribe(this, this.signalDisable);
+                this.disabled = true;
+            } else if (this.signalDisable !== this.properties.signalDisable) {
+                SNAManager.getSNAManager().unSubscribe(this, this.signalDisable);
+                this.signalDisable = this.properties.signalDisable;
+                SNAManager.getSNAManager().subscribe(this, this.signalDisable);
+                this.disabled = true;
+            }
+        }
         this.onPropertiesChange();
+        if (this.disabled){
+            this.unRegisterAll();
+        }
     }
 
     public getType(): string {
@@ -512,6 +561,7 @@ export abstract class SensorAbstract implements Sensor {
         let i: number;
         for (let action of this.actions) {
             i = actions.indexOf(action);
+            this.mesh.actionManager.unregisterAction(action);
             actions.splice(i, 1);
         }
         if (actions.length === 0) {
@@ -519,6 +569,27 @@ export abstract class SensorAbstract implements Sensor {
             this.mesh.actionManager = null;
         }
     }
+
+    /*
+    * Unregister all actions when this sensor is disabled
+    */
+    private unRegisterAll(){
+        if (!this.mesh.actionManager) return;
+        for (let action of this.actions) {
+            this.mesh.actionManager.unregisterAction(action);
+        }
+    }
+
+    /*
+    * re-register all actions when this sensor is enabled
+    */
+    private reRegisterAll(){
+        if (!this.mesh.actionManager) return;
+        for (let action of this.actions) {
+            this.mesh.actionManager.registerAction(action);
+        }
+    }
+
 }
 
 export abstract class ActuatorAbstract implements Actuator {
@@ -646,20 +717,24 @@ export abstract class ActuatorAbstract implements Actuator {
             if (this.signalEnable == null) {
                 this.signalEnable = this.properties.signalEnable;
                 SNAManager.getSNAManager().subscribe(this, this.signalEnable);
+                this.disabled = true;
             } else if (this.signalEnable !== this.properties.signalEnable) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalEnable);
                 this.signalEnable = this.properties.signalEnable;
                 SNAManager.getSNAManager().subscribe(this, this.signalEnable);
+                this.disabled = true;
             }
         }
         if (this.properties.signalDisable != null && this.properties.signalDisable != "") {
             if (this.signalDisable == null) {
                 this.signalDisable = this.properties.signalDisable;
                 SNAManager.getSNAManager().subscribe(this, this.signalDisable);
+                this.disabled = true;
             } else if (this.signalDisable !== this.properties.signalDisable) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalDisable);
                 this.signalDisable = this.properties.signalDisable;
                 SNAManager.getSNAManager().subscribe(this, this.signalDisable);
+                this.disabled = true;
             }
         }
 

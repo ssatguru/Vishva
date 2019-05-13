@@ -130,7 +130,11 @@ export class VDialog {
         this._minimized = false;
         this._diag.dialog("option", "height", this._height)
         this._diag.show();
+    }
 
+    public setSize(w:number,h:number){
+        this._diag.dialog("option", "width", w);
+        this._diag.dialog("option", "height", h);
     }
 
     public isOpen(): boolean {

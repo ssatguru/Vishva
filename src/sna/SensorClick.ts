@@ -26,7 +26,6 @@ export class SensorClick extends SensorAbstract {
         } else {
             super(mesh,new SenClickProp());
         }
-        this.onPropertiesChange();
     }
 
 

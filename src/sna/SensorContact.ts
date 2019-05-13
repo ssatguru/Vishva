@@ -23,7 +23,6 @@ export class SensorContact extends SensorAbstract {
         } else {
             super(mesh,new SenContactProp());
         }
-        this.onPropertiesChange();
     }
 
     public getName(): string {

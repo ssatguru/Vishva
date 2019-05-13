@@ -24,7 +24,6 @@ export class SensorTimer extends SensorAbstract {
         } else {
             super(mesh, new SenTimerProp());
         }
-        this.onPropertiesChange();
     }
 
     public getName(): string {

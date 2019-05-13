@@ -48,7 +48,8 @@ import {
     Vector3,
     WaterMaterial,
     IParticleSystem,
-    TargetCamera
+    TargetCamera,
+    ImageProcessingConfigurationDefines
 } from "babylonjs";
 
 import { GroundSPS } from "./GroundSPS";
@@ -343,6 +344,11 @@ export class Vishva {
         //            sl.shadowMaxZ = 2500;
     }
 
+    debug:boolean=true;
+    private logDebug(msg:string){
+        if (this.debug) console.log(msg);
+    }
+
     /**
      * sets the loaded scene
      * checks if the scene is a standard vishva scene - by checking if it has standard vishva assets
@@ -358,10 +364,10 @@ export class Vishva {
         var groundFound: boolean = false;
         var skyFound: boolean = false;
         var cameraFound: boolean = false;
-
+        
         for (let mesh of scene.meshes) {
             //sat TODO
-            mesh.receiveShadows = false;
+            //mesh.receiveShadows = false;
             if (Tags.HasTags(mesh)) {
                 if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
                     avFound = true;
@@ -387,6 +393,7 @@ export class Vishva {
                 this.avatarSkeleton = skeleton;
             }
         }
+
         if (!skelFound) {
             console.error("ALARM: No Skeleton found");
         }
@@ -544,18 +551,14 @@ export class Vishva {
 
 
     private setScenePhase2() {
-
         this.avatarSkeleton.enableBlending(this._animBlend);
         this.cc = new CharacterController(this.avatar, this.arcCamera, this.scene);
         //TODO remove below. The character controller should be set using deserialization
         this.avManager.setCharacterController(this.cc);
-
         this.cc.setCameraElasticity(true);
         this.cc.start();
-
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
-
         this.render();
     }
 

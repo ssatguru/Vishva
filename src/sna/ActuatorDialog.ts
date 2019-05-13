@@ -9,12 +9,16 @@ import Matrix=BABYLON.Matrix;
 import { GuiUtils } from "../gui/GuiUtils";
 import { VDialog } from "../gui/VDialog";
 import {DialogMgr} from "../gui/DialogMgr";
+import { WindowsMotionController } from "babylonjs";
 
 export class ActDialogParm extends ActProperties {
     msg: string="";
     title:string="";
 }
 
+/**
+ * shows a dialog box on being actuated.
+ */
 export class ActuatorDialog extends ActuatorAbstract {
     
     div:HTMLDivElement;
@@ -30,9 +34,7 @@ export class ActuatorDialog extends ActuatorAbstract {
 
 
     public actuate() {
-        var props: ActDialogParm=<ActDialogParm>this.properties;
-        console.log("actuating");
-        console.log(this.dialog.isOpen());
+        this.dialog.setSize(window.innerWidth/2, window.innerHeight/2);
         this.dialog.open();
         this.onActuateEnd();
     }
@@ -54,8 +56,9 @@ export class ActuatorDialog extends ActuatorAbstract {
     public onPropertiesChange() {
         var props: ActDialogParm=<ActDialogParm>this.properties;
         if (this.dialog==null){
+            
             this.div=GuiUtils.createDiv();
-            this.dialog = new VDialog(this.div,props.title,DialogMgr.center,"50%", "200", 350,true);
+            this.dialog = new VDialog(this.div,props.title,DialogMgr.center,window.innerWidth/2, window.innerHeight/2, 350,true);
         }
 
         this.dialog.setTitle(props.title);

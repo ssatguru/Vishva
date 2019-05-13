@@ -76,6 +76,7 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
     private _scp: Vector3;
     //check if this actuator is already in control of the avatar
     private _inControl: boolean;
+    
     public actuate() {
         if(this._inControl) return;
 

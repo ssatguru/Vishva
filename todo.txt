@@ -1,4 +1,7 @@
 bugs
+05/05/2019
+in free camera mode after using edit control we have to clikc in the screen for WASD keys to take effect
+
 05/09/2017 r
 - remove children removes attached light too.
 - able to slide dialog box below the screen, 

@@ -78,8 +78,9 @@ import { DialogMgr } from "./gui/DialogMgr";
  * @author satguru
  */
 export class Vishva {
-    vHome: string = "/vishva/"
+    public static vHome2: string = "/vishva/"
 
+    vHome: string = "/vishva/"
     actuator: string = "none";
 
     scene: Scene;
@@ -164,25 +165,20 @@ export class Vishva {
     SOUND_ASSET_LOCATION: string = this.vHome + "/assets/sounds/";
 
     //each asset has a name and a url
-    //the url is used by loadmesh but ignored by scene loader function
+    //sceneloader gets the location of the asset as below
+    //if scene name specifed then
+    //location = (home url if scene url is relative) + (url of the scene file) + (asset name)
+    //thus assets should be located relative to the scene file
+    //else
+    //location = (home url if asset url is relative) + (asset url)
+    //no scene file means the data is being supplied inline as  "data:"
     //
-    //scene loader gets the location of the asset as below
-    //
-    //location = (home url) + (root url specified in the scene loader functions) + (asset name)
-    //
-    //Unfortunately the root url is also suppose to be the root url of the scene file.
-    //if scene file name is passed as parm to the scene loader functions then root url should point to the scene file location
-    //
-    //Which means the scene root url and resource root url should be the same.
-    //Thus it might be good idea to load scene file directly and then just pass data to scene loader functions
-    //this way we can use different base url for scene file and resources
-    //Read the file using load asset , parse the file data and pass it to the scene loader fucntion as data
-    //So if "data:" is used then root url can point to the base url for resources.
+    //Thus it might be good idea to load scene file directly and then just pass data to sceneloader functions
+    //This way we can use different base url for scene file and assets
+    //Thus read the file using assetmanager as a text file , parse the file data and pass it to the sceneloader fucntion as data
     //
     //sound is different. 
     //location of sound file = home url + sound url
-    //
-
     //we can use below too but then while passing data to scene loader use empty string as root url
     RELATIVE_ASSET_LOCATION: string = "";
 
@@ -3148,6 +3144,12 @@ export class Vishva {
 
     file: string;
 
+    /**
+     * used to load internal/curated assets
+     * 
+     * @param assetType 
+     * @param file 
+     */
     public loadAsset(assetType: string, file: string) {
         this.filePath = assetType;
         this.file = file;
@@ -3158,6 +3160,13 @@ export class Vishva {
             this.scene,
             (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
     }
+
+    /**
+     * used to load user assets
+     * 
+     * @param path 
+     * @param file 
+     */
 
     public loadAsset2(path: string, file: string) {
         this.filePath = path;

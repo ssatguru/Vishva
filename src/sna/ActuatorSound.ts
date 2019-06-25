@@ -4,6 +4,7 @@ import { SNAManager } from "./SNA";
 import Mesh = BABYLON.Mesh;
 import Sound = BABYLON.Sound;
 import { FileInputType, SelectType, Range } from "../gui/VishvaGUI";
+import {Vishva} from "../Vishva";
 
 export class ActSoundProp extends ActProperties {
 
@@ -70,13 +71,12 @@ export class ActuatorSound extends ActuatorAbstract {
         }
         //if the first time or if the soundfile changed then setup
         if (this.sound == null || _props.soundFile.value !== this.sound.name) {
-            _props.soundFile.value= "../" + _props.soundFile.value;
             if (this.sound != null) {
                 this.stop();
                 this.sound.dispose();
             }
             this.actuating = true;
-            this.sound = new Sound(_props.soundFile.value, _props.soundFile.value, this.mesh.getScene(),
+            this.sound = new Sound(Vishva.vHome2+_props.soundFile.value, Vishva.vHome2 + _props.soundFile.value, this.mesh.getScene(),
                 () => {
                     this.actuating = false;
                     if (_props.autoStart || this.queued > 0) {

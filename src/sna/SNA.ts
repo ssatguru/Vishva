@@ -91,6 +91,14 @@ export class SNAManager {
 
     public emitSignal(signalId: string) {
         if (signalId.trim() === "") return;
+        let signals:string[] = signalId.split(",");
+        for (let signal of signals){
+            this.emitSignalEach(signal);
+        }
+    }
+    
+    public emitSignalEach(signalId: string) {
+        if (signalId.trim() === "") return;
         let sas: SensorActuator[] = <SensorActuator[]>this.sig2saMap[signalId];
         if (sas == null) return;
         for (let sa of sas) {
@@ -190,6 +198,13 @@ export class SNAManager {
     }
 
     public subscribe(actuator: SensorActuator, signalId: string) {
+        let signals:string[] = signalId.split(",");
+        for (let signal of signals){
+            this.subscribeEach(actuator,signal);
+        }
+    }
+
+    public subscribeEach(actuator: SensorActuator, signalId: string) {
         var keyValue: any = this.sig2saMap[signalId];
         if (keyValue == null) {
             var actuators: Array<SensorActuator> = new Array<SensorActuator>();
@@ -204,6 +219,13 @@ export class SNAManager {
     }
 
     public unSubscribe(actuator: SensorActuator, signalId: string) {
+        let signals:string[] = signalId.split(",");
+        for (let signal of signals){
+            this.unSubscribeEach(actuator,signal);
+        }
+    }
+
+    public unSubscribeEach(actuator: SensorActuator, signalId: string) {
         var keyValue: any = this.sig2saMap[signalId];
         if (keyValue != null) {
             var actuators: Array<SensorActuator> = <Array<SensorActuator>>keyValue;

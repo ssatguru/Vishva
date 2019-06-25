@@ -33,6 +33,7 @@ export class ActuatorAnimator extends ActuatorAbstract {
                 }
             }
             prop.animationRange.values = animNames;
+            skel.enableBlending(0.05);
         } else {
             prop.animationRange.values = [""];
         }

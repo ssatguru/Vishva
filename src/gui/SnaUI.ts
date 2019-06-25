@@ -414,40 +414,39 @@ export class SnaUI {
         }
 
     }
-    private _sndAssetTDiag: VTreeDialog;
+    private _assetTDiag: VTreeDialog;
     private _createFileInput(fit: FileInputType): HTMLElement {
-        let fib: HTMLButtonElement = document.createElement("button");
         let fibL: HTMLLabelElement = document.createElement("label");
         if (fit.value == null) {
             fibL.textContent = "No file chosen";
         } else {
             fibL.textContent = fit.value;
         }
+
+        let fib: HTMLButtonElement = document.createElement("button");
         fib.innerText = "Choose File";
+        
         fib.onclick = (e) => {
-            if (this._sndAssetTDiag == null) {
-                this._sndAssetTDiag = new VTreeDialog(this._vishva, fit.title, DialogMgr.centerBottom, Vishva.vishvaFiles, fit.filter, fit.openAll);
+            if (this._assetTDiag == null) {
+                this._assetTDiag = new VTreeDialog(this._vishva, fit.title, DialogMgr.centerBottom, Vishva.vishvaFiles, fit.filter, fit.openAll);
             }
-            this._sndAssetTDiag.addTreeListener((f, p, l) => {
+            this._assetTDiag.addTreeListener((f, p, l) => {
                 if (l) {
                     if (fit.filter.indexOf(f.substring(f.length - 4)) >= 0) {
                         fibL.textContent = p + f
-                        //TODO set this value only if "save button clicked
-                        fit.value = "vishva/" + fibL.textContent;
+                        fit.value = fibL.textContent;
 
                     }
                 }
             })
 
 
-            this._sndAssetTDiag.toggle();
+            this._assetTDiag.toggle();
         }
         let div: HTMLDivElement = document.createElement("div");
         div.appendChild(fibL);
         div.appendChild(document.createElement("br"));
         div.appendChild(fib);
-
-
         return div;
     }
 }

@@ -1,11 +1,7 @@
 import {ActProperties} from "./SNA";
 import {ActuatorAbstract} from "./SNA";
 import {SNAManager} from "./SNA";
-import Animatable=BABYLON.Animatable;
-import Animation=BABYLON.Animation;
-import Mesh=BABYLON.Mesh;
-import Vector3=BABYLON.Vector3;
-import Matrix=BABYLON.Matrix;
+import {Mesh} from "babylonjs";
 import { GuiUtils } from "../gui/GuiUtils";
 import { VDialog } from "../gui/VDialog";
 import {DialogMgr} from "../gui/DialogMgr";

@@ -1,26 +1,18 @@
-import {ActProperties} from "./SNA";
-import {ActuatorAbstract} from "./SNA";
-import {SNAManager} from "./SNA";
-import AnimationRange=BABYLON.AnimationRange;
-import Animatable=BABYLON.Animatable;
-import AbstractMesh=BABYLON.AbstractMesh;
-import ArcRotateCamera=BABYLON.ArcRotateCamera;
-import Mesh=BABYLON.Mesh;
-import Skeleton=BABYLON.Skeleton;
-import Scene=BABYLON.Scene;
-import Tags=BABYLON.Tags;
-import Vector3=BABYLON.Vector3;
+import { ActProperties } from "./SNA";
+import { ActuatorAbstract } from "./SNA";
+import { SNAManager } from "./SNA";
+import { AnimationRange, Animatable, ArcRotateCamera, Mesh, Skeleton, Scene, Vector3 } from "babylonjs";
 import { SelectType } from "../gui/VishvaGUI";
 
 export class AvAnimatorProp extends ActProperties {
-    changeTrans: boolean=true;
-    position: Vector3=new Vector3(0,0,0);
-    rotation: Vector3=new Vector3(0,0,0);
-    makeChild: boolean=true;
-    focusOnAV: boolean=true;
-    focusPosition: Vector3=new Vector3(0,0,0);
-    animationRange: SelectType=new SelectType();
-    rate: number=1;
+    changeTrans: boolean = true;
+    position: Vector3 = new Vector3(0, 0, 0);
+    rotation: Vector3 = new Vector3(0, 0, 0);
+    makeChild: boolean = true;
+    focusOnAV: boolean = true;
+    focusPosition: Vector3 = new Vector3(0, 0, 0);
+    animationRange: SelectType = new SelectType();
+    rate: number = 1;
 }
 
 /**
@@ -35,35 +27,35 @@ export class AvAnimatorProp extends ActProperties {
  */
 export class ActuatorAvAnimator extends ActuatorAbstract {
 
-    public constructor(mesh: Mesh,parms: AvAnimatorProp) {
+    public constructor(mesh: Mesh, parms: AvAnimatorProp) {
 
-        if(parms!=null) {
-            super(mesh,parms);
+        if (parms != null) {
+            super(mesh, parms);
         } else {
-            super(mesh,new AvAnimatorProp());
+            super(mesh, new AvAnimatorProp());
         }
 
-        this._sp=new Vector3(0,0,0);
-        this._sr=new Vector3(0,0,0);
-        this._sct=new Vector3(0,0,0);
-        this._scp=new Vector3(0,0,0);
-        this._inControl=false;
+        this._sp = new Vector3(0, 0, 0);
+        this._sr = new Vector3(0, 0, 0);
+        this._sct = new Vector3(0, 0, 0);
+        this._scp = new Vector3(0, 0, 0);
+        this._inControl = false;
 
-        var prop: AvAnimatorProp=<AvAnimatorProp>this.properties;
-        var scene: Scene=this.mesh.getScene();
-        let avMesh=scene.getMeshesByTags("Vishva.avatar")[0];
-        var skel: Skeleton=avMesh.skeleton;
-        if(skel!=null) {
-            var ranges: AnimationRange[]=skel.getAnimationRanges();
-            var animNames: string[]=new Array(ranges.length);
-            var i: number=0;
-            for(let range of ranges) {
-                animNames[i]=range.name;
+        var prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
+        var scene: Scene = this.mesh.getScene();
+        let avMesh = scene.getMeshesByTags("Vishva.avatar")[0];
+        var skel: Skeleton = avMesh.skeleton;
+        if (skel != null) {
+            var ranges: AnimationRange[] = skel.getAnimationRanges();
+            var animNames: string[] = new Array(ranges.length);
+            var i: number = 0;
+            for (let range of ranges) {
+                animNames[i] = range.name;
                 i++;
             }
-            prop.animationRange.values=animNames;
+            prop.animationRange.values = animNames;
         } else {
-            prop.animationRange.values=[""];
+            prop.animationRange.values = [""];
         }
     }
     private anim: Animatable;
@@ -76,61 +68,61 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
     private _scp: Vector3;
     //check if this actuator is already in control of the avatar
     private _inControl: boolean;
-    
-    public actuate() {
-        if(this._inControl) return;
 
-        this._inControl=true;
-        let prop: AvAnimatorProp=<AvAnimatorProp>this.properties;
-        this.avMesh=SNAManager.getSNAManager().getAV();
-        let skel: Skeleton=this.avMesh.skeleton;
-        if(skel!=null) {
+    public actuate() {
+        if (this._inControl) return;
+
+        this._inControl = true;
+        let prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
+        this.avMesh = SNAManager.getSNAManager().getAV();
+        let skel: Skeleton = this.avMesh.skeleton;
+        if (skel != null) {
             SNAManager.getSNAManager().disableAV();
 
             this._sp.copyFrom(this.avMesh.position);
             this._sr.copyFrom(this.avMesh.rotation);
 
-            if(prop.makeChild) {
-                this.avMesh.parent=this.mesh;
-                if(prop.changeTrans) {
+            if (prop.makeChild) {
+                this.avMesh.parent = this.mesh;
+                if (prop.changeTrans) {
                     this.avMesh.position.copyFrom(prop.position);
                     this.avMesh.rotation.copyFrom(prop.rotation);
                 } else {
                     this.avMesh.position.subtractInPlace(this.mesh.position);
                 }
             } else {
-                if(prop.changeTrans) {
-                    this.mesh.position.addToRef(prop.position,this.avMesh.position);
+                if (prop.changeTrans) {
+                    this.mesh.position.addToRef(prop.position, this.avMesh.position);
                     this.avMesh.rotation.copyFrom(prop.rotation);
                 }
             }
-            if(prop.focusOnAV) {
-                let camera: ArcRotateCamera=SNAManager.getSNAManager().getCamera();
+            if (prop.focusOnAV) {
+                let camera: ArcRotateCamera = SNAManager.getSNAManager().getCamera();
                 this._scp.copyFrom(camera.position);
                 this._sct.copyFrom(camera.target);
                 camera.setTarget(this.avMesh);
                 //camera.target.copyFrom(this.avMesh.position);
             }
 
-            this.anim=skel.beginAnimation(prop.animationRange.value,prop.loop,prop.rate,() => {return this.onActuateEnd()});
+            this.anim = skel.beginAnimation(prop.animationRange.value, prop.loop, prop.rate, () => { return this.onActuateEnd() });
         }
     }
 
     public stop() {
-        if(!this._inControl) return;
-        let prop: AvAnimatorProp=<AvAnimatorProp>this.properties;
+        if (!this._inControl) return;
+        let prop: AvAnimatorProp = <AvAnimatorProp>this.properties;
         //anim would be null if user deletes the actuator without it ever being actuated
-        if(this.anim!=null) this.anim.stop();
-        this.avMesh.parent=null;
+        if (this.anim != null) this.anim.stop();
+        this.avMesh.parent = null;
         this.avMesh.position.copyFrom(this._sp);
         this.avMesh.rotation.copyFrom(this._sr);
-        if(prop.focusOnAV) {
-            let camera: ArcRotateCamera=SNAManager.getSNAManager().getCamera();
+        if (prop.focusOnAV) {
+            let camera: ArcRotateCamera = SNAManager.getSNAManager().getCamera();
             camera.setPosition(this._scp.clone());
             camera.setTarget(this._sct.clone());
         }
         SNAManager.getSNAManager().enableAV();
-        this._inControl=false;
+        this._inControl = false;
     }
 
     public isReady(): boolean {
@@ -142,16 +134,16 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
     }
 
     public onPropertiesChange() {
-        if(this.properties.autoStart) {
+        if (this.properties.autoStart) {
             this.start(this.properties.signalId);
         }
     }
 
     public cleanUp() {
-        this.properties.loop=false;
+        this.properties.loop = false;
     }
 }
 
 
 
-SNAManager.getSNAManager().addActuator("AvAnimator",ActuatorAvAnimator);
+SNAManager.getSNAManager().addActuator("AvAnimator", ActuatorAvAnimator);

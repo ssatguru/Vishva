@@ -1,6 +1,8 @@
-import Scene = BABYLON.Scene;
-import Material = BABYLON.Material;
-import MultiMaterial = BABYLON.MultiMaterial;
+import {
+    Scene,
+    Material,
+    MultiMaterial
+} from "babylonjs";
 import { VTreeDialog } from "./VTreeDialog";
 import { DialogMgr } from "./DialogMgr";
 /*
@@ -82,7 +84,7 @@ export class MaterialListUI {
     //recursively adds children to the array
     private _addChildren(children: Array<Material>, treeData: Array<string | object>) {
         for (let child of children) {
-            if (child instanceof BABYLON.MultiMaterial) {
+            if (child instanceof MultiMaterial) {
                 let childs: Array<Material> = child.subMaterials;
                 let obj: object = {};
                 obj["d"] = child.id + ", " + child.name;

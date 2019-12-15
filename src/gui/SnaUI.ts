@@ -1,9 +1,9 @@
 
 import DialogOptions = JQueryUI.DialogOptions;
 import DialogButtonOptions = JQueryUI.DialogButtonOptions;
-import Vector3 = BABYLON.Vector3;
+import { Vector3 } from "babylonjs";
 import { Vishva } from "../Vishva";
-import { VishvaGUI, SelectType, FileInputType,Range } from "./VishvaGUI";
+import { VishvaGUI, SelectType, FileInputType, Range } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
 import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
 import { VTreeDialog } from "./VTreeDialog";
@@ -425,7 +425,7 @@ export class SnaUI {
 
         let fib: HTMLButtonElement = document.createElement("button");
         fib.innerText = "Choose File";
-        
+
         fib.onclick = (e) => {
             if (this._assetTDiag == null) {
                 this._assetTDiag = new VTreeDialog(this._vishva, fit.title, DialogMgr.centerBottom, Vishva.vishvaFiles, fit.filter, fit.openAll);

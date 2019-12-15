@@ -1,8 +1,7 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import Mesh = BABYLON.Mesh;
-import Node = BABYLON.Node;
+import { Mesh, Node } from "babylonjs";
 
 export class ActEnablerProp extends ActProperties {
 }

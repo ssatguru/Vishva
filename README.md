@@ -56,3 +56,16 @@ For a demo  see [https://ssatguru.github.io/Vishva.ts/public_html/](https://ssat
 * [Mixamo](https://www.mixamo.com/)
 * [SecondLife Internal Animations and Skeleton](http://wiki.secondlife.com/wiki/Internal_Animations)
 
+## Notes
+To run
+
+PROD RUN
+run "http-server" from root folder (not dist folder)
+then goto
+http://localhost:8080/dist/index.html?world=rpg2
+
+
+DEV RUN
+run "npm run dev" from root folder
+then goto
+http://localhost:8080/?world=empty

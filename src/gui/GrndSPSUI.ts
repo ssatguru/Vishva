@@ -1,4 +1,4 @@
-import Vector2 = BABYLON.Vector2;
+import { Vector2 } from "babylonjs";
 import { Vishva } from "../Vishva";
 import { GroundSPS, SpreadDtls } from "../GroundSPS";
 import { VInputNumber } from "./VInputNumber";

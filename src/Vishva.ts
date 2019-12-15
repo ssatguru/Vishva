@@ -16,7 +16,7 @@ import {
     CubeTexture,
     CSG,
     DirectionalLight,
-    DynamicTerrain,
+    //DynamicTerrain,
     Engine,
     GroundMesh,
     HemisphericLight,
@@ -39,21 +39,29 @@ import {
     SceneSerializer,
     ShadowGenerator,
     Skeleton,
+    SkeletonViewer,
     SolidParticleSystem,
     SolidParticle,
     StandardMaterial,
     Tags,
     TextFileAssetTask,
     Texture,
+    Tools,
     Vector3,
-    WaterMaterial,
+    //WaterMaterial,
     IParticleSystem,
     TargetCamera,
-    ImageProcessingConfigurationDefines
+    ImageProcessingConfigurationDefines,
+    SpotLight,
+    PointLight,
+    VertexBuffer,
+    PBRMaterial
 } from "babylonjs";
+import WaterMaterial = BABYLON.WaterMaterial;
+import DynamicTerrain = BABYLON.DynamicTerrain;
 
 import { GroundSPS } from "./GroundSPS";
-import SkeletonViewer = BABYLON.Debug.SkeletonViewer;
+//import SkeletonViewer = BABYLON.Debug.SkeletonViewer;
 import { SpreadDtls } from "./GroundSPS";
 import { SNAserialized } from "./sna/SNA";
 import { SNAManager } from "./sna/SNA";
@@ -78,9 +86,11 @@ import { DialogMgr } from "./gui/DialogMgr";
  * @author satguru
  */
 export class Vishva {
+
+    //used by ActuatorSound.ts
     public static vHome2: string = "/vishva/"
 
-    vHome: string = "/vishva/"
+    vHome: string = "/vishva"
     actuator: string = "none";
 
     scene: Scene;
@@ -135,7 +145,7 @@ export class Vishva {
 
 
     private _animBlend: number = 0.1;
-    private _avEllipsoid: Vector3 = new BABYLON.Vector3(0.5, 1, 0.5);
+    private _avEllipsoid: Vector3 = new Vector3(0.5, 1, 0.5);
     private _avEllipsoidOffset: Vector3 = new Vector3(0, 1, 0);
 
 
@@ -230,10 +240,11 @@ export class Vishva {
     private enablePhysics: boolean = true;
 
     public static vishva: Vishva;
-    static version: string="0.2.0";
+    static version: string = "0.2.0";
 
 
     public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string) {
+        Tools.LogLevels = Tools.AllLogLevel;
 
         Vishva.vishvaFiles = vishvaFiles;
 
@@ -255,6 +266,7 @@ export class Vishva {
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
         //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
         this.engine = new Engine(this.canvas, true);
+
 
         this.scene = new Scene(this.engine);
         this.scene.enablePhysics(null);
@@ -319,7 +331,12 @@ export class Vishva {
         SceneLoader.ShowLoadingScreen = false;
         this.loadingStatus.innerHTML = "loading scene";
         //SceneLoader.Append(this.scenePath, sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
+        console.log("will parse scene now");
+
+        //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
+        //console.log(SceneLoader.loggingLevel);
         SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.setScenePhase1(scene) });
+
     }
 
     private onTaskFailure(obj: any) {
@@ -340,8 +357,8 @@ export class Vishva {
         //            sl.shadowMaxZ = 2500;
     }
 
-    debug:boolean=true;
-    private logDebug(msg:string){
+    debug: boolean = true;
+    private logDebug(msg: string) {
         if (this.debug) console.log(msg);
     }
 
@@ -353,6 +370,7 @@ export class Vishva {
      * @param scene 
      */
     private setScenePhase1(scene: Scene) {
+        console.log("setScenePhase1()");
         this.loadingStatus.innerHTML = "checking assets";
         var avFound: boolean = false;
         var skelFound: boolean = false;
@@ -360,8 +378,10 @@ export class Vishva {
         var groundFound: boolean = false;
         var skyFound: boolean = false;
         var cameraFound: boolean = false;
-        
+
+        console.log(" checking mesh " + scene.meshes.length);
         for (let mesh of scene.meshes) {
+
             //sat TODO
             //mesh.receiveShadows = false;
             if (Tags.HasTags(mesh)) {
@@ -590,7 +610,7 @@ export class Vishva {
 
         if (this.cameraAnimating) return;
 
-        //sometime (like when gui dialogs is on and user is typing into it) we donot want to interpret keys
+        //sometime (example - when gui dialogs is on and user is typing into it) we donot want to interpret keys
         //except ofcourse the esc key
         if (this.keysDisabled && !this.key.esc) {
             this.resetKeys();
@@ -607,12 +627,14 @@ export class Vishva {
                 this.key.esc = false;
                 //this.animateMesh(this.meshPicked);
                 this.removeEditControl();
-                this.setFocusOnNothing();
-                if (this.uniCamController == null) {
-                    this.uniCamController = new UniCamController(this.scene, this.canvas);
+                if (!this.isFocusOnAv) {
+                    this.setFocusOnNothing();
+                    if (this.uniCamController == null) {
+                        this.uniCamController = new UniCamController(this.scene, this.canvas);
+                    }
+                    this.uniCamController.start();
                 }
-                this.uniCamController.start();
-                
+
             }
             if (this.key.trans) {
                 //this.key.trans = false;
@@ -631,7 +653,7 @@ export class Vishva {
         if (!this._avDisabled) {
             if (this.isFocusOnAv) {
                 if (this.key.esc) {
-                    this.animateMesh(this.avatar,1.1);
+                    //this.animateMesh(this.avatar, 1.1);
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
                         this.uniCamController = new UniCamController(this.scene, this.canvas);
@@ -885,13 +907,13 @@ export class Vishva {
         this.scene.registerBeforeRender(this.animFunc);
     }
     private switchFocusToAV() {
-        let camera: TargetCamera = <TargetCamera> this.scene.activeCamera;
+        let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
 
         this.frames = 25;
         this.f = this.frames;
-             
+
         this.deltaP = this.saveAVcameraPos.subtract(camera.position).scale(1 / this.frames);
-        
+
 
         this.start = camera.getFrontPosition(1);
         this.end = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
@@ -924,7 +946,7 @@ export class Vishva {
             this.cameraAnimating = false;
             this.scene.unregisterBeforeRender(this.animFunc);
 
-            this.arcCamera.target=this.end;
+            this.arcCamera.target = this.end;
             this.arcCamera.setPosition(this.saveAVcameraPos);
 
             this.uniCamController.stop();
@@ -1013,7 +1035,7 @@ export class Vishva {
             if (camera instanceof ArcRotateCamera) {
                 camera.attachControl(this.canvas);
             } else {
-                if (this.editControl != null){
+                if (this.editControl != null) {
                     this.editControl.switchCamera(this.arcCamera);
                 }
                 this.arcCamera.setPosition(camera.position);
@@ -1035,7 +1057,7 @@ export class Vishva {
     start: Vector3 = Vector3.Zero();
     end: Vector3 = Vector3.Zero();
 
-    
+
     private drawLine(from: Vector3, to: Vector3) {
         MeshBuilder.CreateLines("", { points: [from, from.add(to)] }, this.scene);
     }
@@ -1208,8 +1230,8 @@ export class Vishva {
         //            }
         var name: string = (<number>new Number(Date.now())).toString();
         var inst: InstancedMesh;
-        if ((this.meshPicked != null && this.meshPicked instanceof BABYLON.InstancedMesh)) {
-            inst = (<InstancedMesh>this.meshPicked).clone(name, null, true);
+        if ((this.meshPicked != null && this.meshPicked instanceof InstancedMesh)) {
+            inst = <InstancedMesh>(<InstancedMesh>this.meshPicked).clone(name, null, true);
             inst.scaling.copyFrom(this.meshPicked.scaling);
         } else {
             inst = (<Mesh>this.meshPicked).createInstance(name);
@@ -1456,7 +1478,7 @@ export class Vishva {
                             continue;
                         }
                     }
-                    if (!(mesh != null && mesh instanceof BABYLON.InstancedMesh)) {
+                    if (!(mesh != null && mesh instanceof InstancedMesh)) {
                         clone = this.clonetheMesh(mesh);
                         clonedMeshesPicked.push(clone);
                     }
@@ -1497,8 +1519,8 @@ export class Vishva {
         return clone;
     }
     //play a small scaling animation when cloning or instancing a mesh.
-    private animateMesh(mesh: AbstractMesh,scale?:number): void {
-        if (scale==null) scale=1.5;
+    private animateMesh(mesh: AbstractMesh, scale?: number): void {
+        if (scale == null) scale = 1.5;
         let startScale: Vector3 = mesh.scaling.clone().scaleInPlace(scale); //new Vector3(1.5, 1.5, 1.5);
         let endScale: Vector3 = mesh.scaling.clone();
         Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
@@ -1541,7 +1563,7 @@ export class Vishva {
     public mergeMeshes_old() {
         if (this.meshesPicked != null) {
             for (let mesh of this.meshesPicked) {
-                if (mesh instanceof BABYLON.InstancedMesh) {
+                if (mesh instanceof InstancedMesh) {
                     return "some of your meshes are instance meshes. cannot merge those";
                 }
             }
@@ -1564,7 +1586,7 @@ export class Vishva {
     public mergeMeshes() {
         if (this.meshesPicked != null) {
             for (let mesh of this.meshesPicked) {
-                if (mesh instanceof BABYLON.InstancedMesh) {
+                if (mesh instanceof InstancedMesh) {
                     return "some of your meshes are instance meshes. cannot merge those";
                 }
                 //TODO what happens when meshes have different material
@@ -1745,7 +1767,7 @@ export class Vishva {
     public getMatNames(): Array<string> {
         let mn: Array<string> = new Array();
         if (this.isMeshSelected) {
-            if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+            if (this.meshPicked.material instanceof MultiMaterial) {
                 let mm: MultiMaterial = this.meshPicked.material;
                 for (let m of mm.subMaterials) {
                     mn.push(m.id);
@@ -1786,7 +1808,7 @@ export class Vishva {
     public cloneMaterial(id: string) {
         let mat: Material = this.scene.getMaterialByID(id);
         if (mat == null) return null;
-        if (this.meshPicked.material instanceof BABYLON.MultiMaterial) {
+        if (this.meshPicked.material instanceof MultiMaterial) {
             let mm: MultiMaterial = this.meshPicked.material;
             this.meshPicked.material = mm.clone(mat.name + "Clone", true);
         } else {
@@ -1966,7 +1988,7 @@ export class Vishva {
         let sm: StandardMaterial = <StandardMaterial>this.scene.getMaterialByID(matId);
         if (sm == null) return null;
 
-        if (!(sm instanceof BABYLON.StandardMaterial)) {
+        if (!(sm instanceof StandardMaterial)) {
             return "#000000";;
         }
 
@@ -1992,8 +2014,12 @@ export class Vishva {
     public getMeshList(): Array<AbstractMesh> {
         let meshList: Array<AbstractMesh> = new Array();
         for (let mesh of this.scene.meshes) {
-            if (mesh != this.ground && mesh != this.avatar && mesh != this.skybox && mesh.name != "EditControl")
-                meshList.push(mesh);
+            if (mesh != this.ground && mesh != this.avatar && mesh != this.skybox) {
+
+                if (this.editControl == null) meshList.push(mesh);
+                else if (this.editControl.getRoot() != mesh) meshList.push(mesh);
+
+            }
         }
         return meshList;
     }
@@ -2049,18 +2075,18 @@ export class Vishva {
         lightParm.radius = light.radius;
         lightParm.intensity = light.intensity;
 
-        if (light instanceof BABYLON.SpotLight) {
+        if (light instanceof SpotLight) {
             lightParm.type = "Spot"
             lightParm.angle = light.angle;
             lightParm.exponent = light.exponent;
         }
-        if (light instanceof BABYLON.PointLight) {
+        if (light instanceof PointLight) {
             lightParm.type = "Point"
         }
-        if (light instanceof BABYLON.DirectionalLight) {
+        if (light instanceof DirectionalLight) {
             lightParm.type = "Dir"
         }
-        if (light instanceof BABYLON.HemisphericLight) {
+        if (light instanceof HemisphericLight) {
             lightParm.type = "Hemi";
             lightParm.direction = light.direction;
             lightParm.gndClr = light.groundColor;
@@ -2073,14 +2099,14 @@ export class Vishva {
         let light: Light = null;
         let name: string = this.meshPicked.name + "-light";
         if (lightParm.type === "Spot") {
-            light = new BABYLON.SpotLight(name, Vector3.Zero(), new Vector3(0, -1, 0), lightParm.angle * Math.PI / 180, lightParm.exponent, this.scene);
+            light = new SpotLight(name, Vector3.Zero(), new Vector3(0, -1, 0), lightParm.angle * Math.PI / 180, lightParm.exponent, this.scene);
         } else if (lightParm.type === "Point") {
-            light = new BABYLON.PointLight(name, Vector3.Zero(), this.scene);
+            light = new PointLight(name, Vector3.Zero(), this.scene);
         } else if (lightParm.type === "Dir") {
-            light = new BABYLON.DirectionalLight(name, new Vector3(0, -1, 0), this.scene);
+            light = new DirectionalLight(name, new Vector3(0, -1, 0), this.scene);
         } else if (lightParm.type === "Hemi") {
-            light = new BABYLON.HemisphericLight(name, lightParm.direction, this.scene);
-            (<BABYLON.HemisphericLight>light).groundColor = lightParm.gndClr;
+            light = new HemisphericLight(name, lightParm.direction, this.scene);
+            (<HemisphericLight>light).groundColor = lightParm.gndClr;
         }
         if (light !== null) {
             light.diffuse = lightParm.diffuse;
@@ -2157,6 +2183,7 @@ export class Vishva {
             this.cc.stop();
             this.saveAVcameraPos.copyFrom(this.arcCamera.position);
             this.isFocusOnAv = false;
+            this.avatar.visibility = 0.5;
         }
         // if (this.cameraController != null) this.cameraController.stop();
         this.focusOnMesh(this.meshPicked, 25);
@@ -2170,6 +2197,7 @@ export class Vishva {
             this.cc.stop();
             this.saveAVcameraPos.copyFrom(this.arcCamera.position);
             this.isFocusOnAv = false;
+            this.avatar.visibility = 0.5;
         }
     }
 
@@ -2408,11 +2436,15 @@ export class Vishva {
     }
 
     public bakeTransforms() {
-        let savePos: Vector3 = this.meshPicked.position.clone();
-        this.meshPicked.position.copyFromFloats(0, 0, 0);
-        (<Mesh>this.meshPicked).bakeCurrentTransformIntoVertices();
-        this.meshPicked.position = savePos;
-        this.meshPicked.computeWorldMatrix(true);
+        this._bakeTransforms(<Mesh>this.meshPicked);
+    }
+
+    public _bakeTransforms(mesh: Mesh) {
+        let savePos: Vector3 = mesh.position.clone();
+        mesh.position.copyFromFloats(0, 0, 0);
+        mesh.bakeCurrentTransformIntoVertices();
+        mesh.position = savePos;
+        mesh.computeWorldMatrix(true);
     }
 
     // ANIMATIONS
@@ -2704,7 +2736,7 @@ export class Vishva {
 
     public setFov(dO: any) {
         var d: number = <number>dO;
-        this.scene.activeCamera.fov=(d * 3.14 / 180);
+        this.scene.activeCamera.fov = (d * 3.14 / 180);
         //this.arcCamera.fov = (d * 3.14 / 180);
     }
 
@@ -2899,7 +2931,7 @@ export class Vishva {
             return null;
         }
 
-        if (!this.isFocusOnAv){
+        if (!this.isFocusOnAv) {
             DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to swicth focus to avatar and try again");
             return null;
         }
@@ -2908,12 +2940,12 @@ export class Vishva {
         this.renameMeshIds();
         this.cleanupSkels();
         this.resetSkels(this.scene);
-        this.cleanupMats();
-        this.renameWorldTextures();
+        //this.cleanupMats();
+        //this.renameWorldTextures();
         //TODO add support for CharacterController serialization.
         let vishvaSerialzed = new VishvaSerialized();
-        vishvaSerialzed.bVer=Engine.Version;
-        vishvaSerialzed.vVer=Vishva.version;
+        vishvaSerialzed.bVer = Engine.Version;
+        vishvaSerialzed.vVer = Vishva.version;
         vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
         vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
@@ -2947,17 +2979,19 @@ export class Vishva {
         //sceneObj["VishvaSNA"] = snaObj;
         sceneObj["VishvaSerialized"] = vishvaSerialzed;
 
+
+
         var sceneString: string = JSON.stringify(sceneObj);
         var file: File = new File([sceneString], "WorldFile.babylon");
         this.addInstancesToShadow();
         return URL.createObjectURL(file);
     }
 
-    
+
     private removeInstancesFromShadow() {
         var meshes: AbstractMesh[] = this.scene.meshes;
         for (let mesh of meshes) {
-            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+            if (mesh != null && mesh instanceof InstancedMesh) {
                 var shadowMeshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
                 var i: number = shadowMeshes.indexOf(mesh);
                 if (i >= 0) {
@@ -2969,7 +3003,7 @@ export class Vishva {
 
     private addInstancesToShadow() {
         for (let mesh of this.scene.meshes) {
-            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+            if (mesh != null && mesh instanceof InstancedMesh) {
                 //TODO think
                 //mesh.receiveShadows = true;
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
@@ -3020,7 +3054,7 @@ export class Vishva {
     private renameWorldMaterials(mats: Material[]) {
         var sm: StandardMaterial;
         for (let mat of mats) {
-            if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+            if (mat != null && mat instanceof StandardMaterial) {
                 sm = <StandardMaterial>mat;
                 this.rename(sm.diffuseTexture);
                 this.rename(sm.reflectionTexture);
@@ -3035,6 +3069,7 @@ export class Vishva {
 
     public rename(bt: BaseTexture) {
         if (bt == null) return;
+        console.log("renaming " + bt.name);
         //bt.name=this.RELATIVE_ASSET_LOCATION+bt.name;
         bt.name = this.RELATIVE_ASSET_LOCATION + (<Texture>bt).url;
     }
@@ -3083,7 +3118,7 @@ export class Vishva {
         var mms: Array<MultiMaterial> = new Array<MultiMaterial>();
         for (let mesh of meshes) {
             if (mesh.material != null) {
-                if (mesh.material != null && mesh.material instanceof BABYLON.MultiMaterial) {
+                if (mesh.material != null && mesh.material instanceof MultiMaterial) {
                     var mm: MultiMaterial = <MultiMaterial>mesh.material;
                     mms.push(mm);
                     var ms: Material[] = mm.subMaterials;
@@ -3151,11 +3186,12 @@ export class Vishva {
      * @param file 
      */
     public loadAsset(assetType: string, file: string) {
+        console.log("loading curated");
         this.filePath = assetType;
         this.file = file;
         let fileName: string = file.split(".")[0];
         SceneLoader.ImportMesh("",
-            this.vHome + "/assets/" + assetType + "/" + fileName + "/",
+            this.vHome + "/curated/assets/" + assetType + "/" + fileName + "/",
             file,
             this.scene,
             (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons) });
@@ -3191,22 +3227,18 @@ export class Vishva {
         for (let skeleton of skeletons) {
             this.scene.stopAnimation(skeleton);
         }
-        if (meshes.length > 1) {
 
-        }
+
+        //this._fixGLB(meshes);
 
         let _rootMeshesCount: number = 0;
         let rootMesh: Mesh = null;
         for (let mesh of meshes) {
+
             mesh.isPickable = true;
-            //gltb file
-            //                if (mesh.parent!=null){
-            //                    if (mesh.parent.id=="root"){
-            //                        console.log("removing parent of " + mesh.id);
-            //                        (<Mesh>mesh.parent).removeChild(mesh)
-            //                    }
-            //                }
-            //                
+
+
+
             if (mesh.parent == null) {
                 _rootMeshesCount++;
                 rootMesh = <Mesh>mesh;
@@ -3225,10 +3257,16 @@ export class Vishva {
                 this.scene.stopAnimation(mesh.skeleton);
                 this.avManager.fixAnimationRanges(mesh.skeleton);
             }
-        }
 
+
+        }
+        /*
+        if multiple meshes then create a empty root mesh, place it in front of the avatar
+        and add all other meshes as children to this.
+        else if just one mesh add that in front of avatar
+        */
         if (_rootMeshesCount > 1) {
-            let rootMesh: Mesh = new Mesh("root-" + this.uid(), this.scene);
+            rootMesh = new Mesh("root-" + this.uid(), this.scene);
             var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
             var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
             rootMesh.position.addInPlace(placementGlobal);
@@ -3246,16 +3284,70 @@ export class Vishva {
         }
 
 
-        //TODO remove - obj laoder was fixed  
-        //some loader like the obj loader are not done loading the material when this onSuccess is called.
-        //to make any material changes call it after this method is done using the setTimeout trick
+
+        // TODO remove 
+        // obj laoder was fixed  
+        // some loader like the obj loader are not done loading the material when this onSuccess is called.
+        // to make any material changes call it after this method is done using the setTimeout trick
         // window.setTimeout(() => {this._postLoad(meshes);},1000);
 
-        this._postLoad(meshes);
+        //this._postLoad(meshes);
+
+        if (!this.isMeshSelected) {
+            this.selectForEdit(rootMesh);
+        } else {
+            this.switchEditControl(rootMesh);
+        }
+        this.animateMesh(rootMesh);
     }
 
+    private _fixGLB(meshes: AbstractMesh[]) {
+        for (let mesh of meshes) {
+            console.log(mesh.name);
+            if (mesh.name === "__root__") {
+                console.log("found glb");
+                let childs: AbstractMesh[] = mesh.getChildMeshes();
+                for (let child of childs) {
+                    mesh.removeChild(child);
+                    this._reverseAxis(<Mesh>child);
+                }
+                mesh.dispose();
+            }
+        }
+    }
+
+    /**
+     * interchange the y & z axis to change fro RHS to LHS
+     * @param mesh 
+     */
+
+    private _reverseAxis(mesh: Mesh) {
+        let positions = mesh.getVerticesData(VertexBuffer.PositionKind);
+        let numberOfVertices = positions.length / 3;
+        let z: number;
+        for (var i = 0; i < numberOfVertices; i++) {
+            z = positions[i * 3 + 2];
+            positions[i * 3 + 2] = positions[i * 3 + 1];
+            positions[i * 3 + 1] = z;
+            //positions[i * 3 + 2] = -positions[i * 3 + 2];
+        }
+        mesh.updateVerticesData(VertexBuffer.PositionKind, positions);
+        //this._bakeTransforms(mesh);
+
+        let normals = mesh.getVerticesData(VertexBuffer.NormalKind);
+        let numberOfNormals = normals.length / 3;
+        for (var i = 0; i < numberOfNormals; i++) {
+            z = normals[i * 3 + 2];
+            normals[i * 3 + 2] = normals[i * 3 + 1];
+            normals[i * 3 + 1] = z;
+            //positions[i * 3 + 2] = -positions[i * 3 + 2];
+        }
+        mesh.updateVerticesData(VertexBuffer.NormalKind, normals);
+
+    }
+
+    //select and animate the last mesh loaded
     private _postLoad(meshes: AbstractMesh[]) {
-        //select and animate the last mesh loaded
         if (meshes.length > 0) {
             for (let mesh of meshes) {
                 this._makeMatIdUnique(mesh);
@@ -3279,7 +3371,7 @@ export class Vishva {
     private _makeMatIdUnique(msh: AbstractMesh) {
         let mesh: Mesh = <Mesh>msh;
         if (mesh.material != null) {
-            if (mesh.material instanceof BABYLON.MultiMaterial) {
+            if (mesh.material instanceof MultiMaterial) {
                 var mm: MultiMaterial = <MultiMaterial>mesh.material;
                 var mats: Material[] = mm.subMaterials;
                 for (let mat of mats) {
@@ -3307,14 +3399,16 @@ export class Vishva {
 
     private _renameTextures(mesh: AbstractMesh) {
         if (mesh.material != null) {
-            if (mesh.material instanceof BABYLON.MultiMaterial) {
+            console.log("found material");
+            console.log(mesh.material);
+            if (mesh.material instanceof MultiMaterial) {
                 var mm: MultiMaterial = <MultiMaterial>mesh.material;
                 var mats: Material[] = mm.subMaterials;
                 for (let mat of mats) {
                     //TODO remove this
                     //mesh.material.backFaceCulling=false;
                     //mesh.material.alpha=1;
-                    if (mat != null && mat instanceof BABYLON.StandardMaterial) {
+                    if (mat != null && mat instanceof StandardMaterial) {
                         this.renameAssetTextures(<StandardMaterial>mat);
                     }
                 }
@@ -3322,8 +3416,17 @@ export class Vishva {
                 //TODO remove this
                 //mesh.material.backFaceCulling=false;
                 //mesh.material.alpha=1;
-                var sm: StandardMaterial = <StandardMaterial>mesh.material;
-                this.renameAssetTextures(sm);
+                if (mesh.material instanceof StandardMaterial) {
+                    var sm: StandardMaterial = <StandardMaterial>mesh.material;
+                    this.renameAssetTextures(sm);
+                } else {
+                    console.log("non standard material");
+                    if (mesh.material instanceof PBRMaterial) {
+                        console.log("PBR material");
+                        var mat: PBRMaterial = <PBRMaterial>mesh.material;
+                        console.log(mat.albedoTexture);
+                    }
+                }
             }
         }
     }
@@ -3340,10 +3443,10 @@ export class Vishva {
         if (bt == null) return;
         var textureName: string = bt.name;
         console.log("renaming " + textureName);
-        if (textureName.indexOf(this.vHome + "/") !== 0 && textureName.indexOf("../") !== 0) {
-            //bt.name=this.vHome + "/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
-            bt.name = (<Texture>bt).url;
-        }
+        // if (textureName.indexOf(this.vHome + "/") !== 0 && textureName.indexOf("../") !== 0) {
+        //     //bt.name=this.vHome + "/assets/"+this.filePath+"/"+this.file.split(".")[0]+"/"+textureName;
+        //     bt.name = (<Texture>bt).url;
+        // }
     }
 
     /**
@@ -3405,9 +3508,9 @@ export class Vishva {
     public createWater() {
         console.log("creating water");
 
-        var water: WaterMaterial = new WaterMaterial("water", this.scene);
+        var water: WaterMaterial = new WaterMaterial("water", <any>this.scene);
         water.backFaceCulling = true;
-        water.bumpTexture = new Texture(this.waterTexture, this.scene);
+        water.bumpTexture = <any>new Texture(this.waterTexture, this.scene);
         //repoint the path, so that we can reload this if it is saved in scene 
         water.bumpTexture.name = this.RELATIVE_ASSET_LOCATION + water.bumpTexture.name;
 
@@ -3424,7 +3527,7 @@ export class Vishva {
 
         this.waterMesh = Mesh.CreateGround("waterMesh", 1024, 1024, 32, this.scene, false);
         //waterMesh.position.y = 1;
-        this.waterMesh.material = water;
+        this.waterMesh.material = <any>water;
 
     }
 
@@ -3432,8 +3535,8 @@ export class Vishva {
         if (!this.isMeshSelected) {
             return "no mesh selected";
         }
-        var water: WaterMaterial = new WaterMaterial("water", this.scene);
-        water.bumpTexture = new Texture(this.waterTexture, this.scene);
+        var water: WaterMaterial = new WaterMaterial("water", <any>this.scene);
+        water.bumpTexture = <any>new Texture(this.waterTexture, this.scene);
         water.windForce = 0.1;
         water.waveHeight = 0.1;
         //water.waterColor = new Color3(0.1, 0.1, 0.6);
@@ -3441,7 +3544,7 @@ export class Vishva {
         water.bumpHeight = 0;
         water.waveLength = 0;
         water.addToRenderList(this.skybox);
-        this.meshPicked.material = water;
+        this.meshPicked.material = <any>water;
     }
 
 
@@ -3468,7 +3571,7 @@ export class Vishva {
         grnd.freezeWorldMatrix();
         grnd.receiveShadows = true;
         if (this.enablePhysics) {
-            grnd.physicsImpostor = new BABYLON.PhysicsImpostor(grnd, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
+            grnd.physicsImpostor = new PhysicsImpostor(grnd, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.1 }, this.scene);
         }
         this.ground = grnd;
         return grnd;
@@ -3538,7 +3641,7 @@ export class Vishva {
             mapNormals: normal,
             terrainSub: 120
         };
-        let terrain: DynamicTerrain = new BABYLON.DynamicTerrain("t", parms, this.scene);
+        let terrain: DynamicTerrain = new DynamicTerrain("t", parms, <any>this.scene);
 
         let mat: StandardMaterial = new StandardMaterial("tm", this.scene);
         //mat.diffuseTexture=new Texture(this.terrainTexture, this.scene);
@@ -3552,13 +3655,13 @@ export class Vishva {
         mat.specularColor = Color3.Black();
         mat.diffuseColor = new Color3(0.9, 0.6, 0.4);
 
-        terrain.mesh.material = mat;
+        terrain.mesh.material = <any>mat;
 
         // compute the UVs to stretch the image on the whole map
         terrain.createUVMap();
         terrain.update(true);
         terrain.mesh.checkCollisions = true;
-        this.ground = terrain.mesh;
+        this.ground = <any>terrain.mesh;
         Tags.AddTagsTo(this.ground, "Vishva.ground Vishva.internal");
     }
 
@@ -3578,7 +3681,7 @@ export class Vishva {
         //            DynamicTerrain.CreateMapFromHeightMapToRef(this.terrainHeightMap,
         //                dmOptions,mapData,this.scene);
         DynamicTerrain.CreateMapFromHeightMapToRef(this.groundHeightMap,
-            dmOptions, mapData, this.scene);
+            dmOptions, mapData, <any>this.scene);
     }
 
     private createSkyBox(scene: Scene): Mesh {
@@ -3641,7 +3744,7 @@ export class Vishva {
      */
     private createSnowPart(): ParticleSystem {
         let part = new ParticleSystem("snow", 4000, this.scene);
-        part.particleTexture = new BABYLON.Texture(this.snowTexture, this.scene);
+        part.particleTexture = new Texture(this.snowTexture, this.scene);
         part.emitter = new Mesh("snowEmitter", this.scene, this.arcCamera);
 
         part.maxEmitBox = new Vector3(100, 40, 100);
@@ -3653,11 +3756,11 @@ export class Vishva {
         part.maxLifeTime = 5;
         part.minSize = 0.1;
         part.maxSize = 0.5;
-        part.color1 = new BABYLON.Color4(1, 1, 1, 1);
-        part.color2 = new BABYLON.Color4(1, 1, 1, 1);
-        part.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+        part.color1 = new Color4(1, 1, 1, 1);
+        part.color2 = new Color4(1, 1, 1, 1);
+        part.colorDead = new Color4(0, 0, 0, 0);
         //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-        part.gravity = new BABYLON.Vector3(0, -9.81, 0);
+        part.gravity = new Vector3(0, -9.81, 0);
         return part;
 
     }
@@ -3669,7 +3772,7 @@ export class Vishva {
      */
     private createRainPart(): ParticleSystem {
         let part = new ParticleSystem("rain", 4000, this.scene);
-        part.particleTexture = new BABYLON.Texture(this.rainTexture, this.scene);
+        part.particleTexture = new Texture(this.rainTexture, this.scene);
         part.emitter = new Mesh("rainEmitter", this.scene, this.arcCamera);
         //part.emitter=new Vector3(0,40,0);
         part.maxEmitBox = new Vector3(100, 40, 100);
@@ -3680,11 +3783,11 @@ export class Vishva {
         part.maxLifeTime = 10;
         part.minSize = 0.1;
         part.maxSize = 0.8;
-        part.color1 = new BABYLON.Color4(1, 1, 1, 0.5);
-        part.color2 = new BABYLON.Color4(0, 0, 1, 1);
-        part.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+        part.color1 = new Color4(1, 1, 1, 0.5);
+        part.color2 = new Color4(0, 0, 1, 1);
+        part.colorDead = new Color4(0, 0, 0, 0);
         //part.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-        part.gravity = new BABYLON.Vector3(0, -9.81, 0);
+        part.gravity = new Vector3(0, -9.81, 0);
 
         return part;
     }
@@ -3709,20 +3812,20 @@ export class Vishva {
     private _createFirePart(): ParticleSystem {
 
         // Create a particle system
-        let fireSystem = new BABYLON.ParticleSystem("particles", 2000, this.scene);
+        let fireSystem = new ParticleSystem("particles", 2000, this.scene);
 
         //Texture of each particle
-        fireSystem.particleTexture = new BABYLON.Texture(this.vHome + "/internal/assets/particles/fire/flare.png", this.scene);
+        fireSystem.particleTexture = new Texture(this.vHome + "/internal/assets/particles/fire/flare.png", this.scene);
 
         // Where the particles come from
         fireSystem.emitter = this.meshPicked; // the starting object, the emitter
-        fireSystem.minEmitBox = new BABYLON.Vector3(-0.5, 1, -0.5); // Starting all from
-        fireSystem.maxEmitBox = new BABYLON.Vector3(0.5, 1, 0.5); // To...
+        fireSystem.minEmitBox = new Vector3(-0.5, 1, -0.5); // Starting all from
+        fireSystem.maxEmitBox = new Vector3(0.5, 1, 0.5); // To...
 
         // Colors of all particles
-        fireSystem.color1 = new BABYLON.Color4(1, 0.5, 0, 1.0);
-        fireSystem.color2 = new BABYLON.Color4(1, 0.5, 0, 1.0);
-        fireSystem.colorDead = new BABYLON.Color4(0, 0, 0, 0.0);
+        fireSystem.color1 = new Color4(1, 0.5, 0, 1.0);
+        fireSystem.color2 = new Color4(1, 0.5, 0, 1.0);
+        fireSystem.colorDead = new Color4(0, 0, 0, 0.0);
 
         // Size of each particle (random between...
         fireSystem.minSize = 0.3;
@@ -3736,14 +3839,14 @@ export class Vishva {
         fireSystem.emitRate = 600;
 
         // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
-        fireSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+        fireSystem.blendMode = ParticleSystem.BLENDMODE_ONEONE;
 
         // Set the gravity of all particles
-        fireSystem.gravity = new BABYLON.Vector3(0, 0, 0);
+        fireSystem.gravity = new Vector3(0, 0, 0);
 
         // Direction of each particle after it has been emitted
-        fireSystem.direction1 = new BABYLON.Vector3(0, 4, 0);
-        fireSystem.direction2 = new BABYLON.Vector3(0, 4, 0);
+        fireSystem.direction1 = new Vector3(0, 4, 0);
+        fireSystem.direction2 = new Vector3(0, 4, 0);
 
         // Angular speed, in radians
         fireSystem.minAngularSpeed = 0;
@@ -3759,15 +3862,15 @@ export class Vishva {
     }
 
     private _createSmokePart(): ParticleSystem {
-        var smokeSystem = new BABYLON.ParticleSystem("particles", 1000, this.scene);
-        smokeSystem.particleTexture = new BABYLON.Texture(this.vHome + "/internal/assets/particles/smoke/flare.png", this.scene);
+        var smokeSystem = new ParticleSystem("particles", 1000, this.scene);
+        smokeSystem.particleTexture = new Texture(this.vHome + "/internal/assets/particles/smoke/flare.png", this.scene);
 
-        smokeSystem.minEmitBox = new BABYLON.Vector3(-0.5, 1, -0.5); // Starting all from
-        smokeSystem.maxEmitBox = new BABYLON.Vector3(0.5, 1, 0.5); // To...
+        smokeSystem.minEmitBox = new Vector3(-0.5, 1, -0.5); // Starting all from
+        smokeSystem.maxEmitBox = new Vector3(0.5, 1, 0.5); // To...
 
-        smokeSystem.color1 = new BABYLON.Color4(0.02, 0.02, 0.02, .02);
-        smokeSystem.color2 = new BABYLON.Color4(0.02, 0.02, 0.02, .02);
-        smokeSystem.colorDead = new BABYLON.Color4(0, 0, 0, 0.0);
+        smokeSystem.color1 = new Color4(0.02, 0.02, 0.02, .02);
+        smokeSystem.color2 = new Color4(0.02, 0.02, 0.02, .02);
+        smokeSystem.colorDead = new Color4(0, 0, 0, 0.0);
 
         smokeSystem.minSize = 1;
         smokeSystem.maxSize = 3;
@@ -3778,12 +3881,12 @@ export class Vishva {
         smokeSystem.emitRate = 350;
 
         // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
-        smokeSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+        smokeSystem.blendMode = ParticleSystem.BLENDMODE_ONEONE;
 
-        smokeSystem.gravity = new BABYLON.Vector3(0, 0, 0);
+        smokeSystem.gravity = new Vector3(0, 0, 0);
 
-        smokeSystem.direction1 = new BABYLON.Vector3(-1.5, 8, -1.5);
-        smokeSystem.direction2 = new BABYLON.Vector3(1.5, 8, 1.5);
+        smokeSystem.direction1 = new Vector3(-1.5, 8, -1.5);
+        smokeSystem.direction2 = new Vector3(1.5, 8, 1.5);
 
         smokeSystem.minAngularSpeed = 0;
         smokeSystem.maxAngularSpeed = Math.PI;

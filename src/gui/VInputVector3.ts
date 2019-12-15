@@ -1,5 +1,5 @@
 
-import Vector3 = BABYLON.Vector3;
+import {Vector3}  from "babylonjs";
 import { VInputNumber } from "./VInputNumber";
 /**
  * provides a ui to input a vector3 value

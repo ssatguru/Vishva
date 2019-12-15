@@ -1,9 +1,7 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import AnimationRange = BABYLON.AnimationRange;
-import Mesh = BABYLON.Mesh;
-import Skeleton = BABYLON.Skeleton;
+import {AnimationRange,Mesh,Skeleton} from "babylonjs";
 import { SelectType } from "../gui/VishvaGUI";
 
 export class AnimatorProp extends ActProperties {

@@ -1,10 +1,12 @@
-import Vector2 = BABYLON.Vector2;
-import Vector3 = BABYLON.Vector3;
-import Color3 = BABYLON.Color3;
-import GroundMesh = BABYLON.GroundMesh;
-import MeshBuilder = BABYLON.MeshBuilder;
-import Tags = BABYLON.Tags;
-import AbstractMesh = BABYLON.AbstractMesh;
+import {
+    Vector2,
+    Vector3,
+    Color3,
+    GroundMesh,
+    MeshBuilder,
+    Tags,
+    AbstractMesh
+} from "babylonjs";
 import { Vishva } from "../Vishva";
 import { VInputText } from "./VInputText";
 import { VInputNumber } from "./VInputNumber";

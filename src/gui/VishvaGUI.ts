@@ -10,6 +10,7 @@ import { SettingsUI } from "./SettingsUI";
 import { ItemPropsUI } from "./ItemPropsUI";
 
 
+
 export class VishvaGUI {
 
     private _vishva: Vishva;
@@ -21,10 +22,11 @@ export class VishvaGUI {
     public static SMALL_ICON_SIZE: string = "width:64px;height:64px;";
 
     private menuBarOn: boolean = true;
-
+    private _vishvaFiles: Array<string | object>;
 
     public constructor(vishva: Vishva) {
         this._vishva = vishva;
+        this._vishvaFiles = Vishva.vishvaFiles;
 
         this._setSettings();
 
@@ -41,6 +43,7 @@ export class VishvaGUI {
         $("input").on("focus", () => { this._vishva.disableKeys(); });
         $("input").on("blur", () => { this._vishva.enableKeys(); });
 
+        this._buildCuratedAssetsMenu();
 
         //main navigation menu 
         this.createNavMenu();
@@ -49,6 +52,7 @@ export class VishvaGUI {
 
         window.addEventListener("resize", (evt) => { return this.onWindowResize(evt) });
     }
+
 
     /**
      * this array will be used store all dialogs whose position needs to be
@@ -94,6 +98,66 @@ export class VishvaGUI {
             }
         }
     }
+
+    /**
+     * get all directories under a path
+     * 
+     * @param path 
+     * @param files 
+     */
+    private _getDirs(path: string[], files: Array<string | object>): Array<string> {
+        let contents: Array<string | object> = this._getFiles(path, files);
+        let dirs: Array<string> = [];
+        for (let content of contents) {
+            if (content instanceof Object) {
+                dirs.push(content["d"])
+            }
+        }
+        return dirs;
+
+    }
+
+    /**
+     * get the content of a path
+     * @param path  - an array of dir name, where each subsequent dir is a child of the previous. Thus ['a','b'] = 'a\b'
+     * @param files 
+     */
+    private _getFiles(path: string[], files: Array<string | object>): Array<string | object> {
+        for (let file of files) {
+            if (file instanceof Object) {
+                if (file["d"] == path[0]) {
+                    if (path.length > 1) {
+                        path.splice(0, 1);
+                        return this._getFiles(path, file["f"]);
+                    } else
+                        return file["f"];
+                }
+            }
+        }
+        return files;
+    }
+
+
+    private _buildCuratedAssetsMenu() {
+        let dirs: Array<string> = this._getDirs(["curated","assets"], this._vishvaFiles);
+        let addMenu: HTMLElement = document.getElementById("AddMenu");
+        for (let dir of dirs) {
+            let button: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
+            button.id = dir;
+            button.style.display = "block";
+            button.innerHTML = dir;
+            addMenu.appendChild(button);
+            //convert to jquery bitton
+            $(button).button();
+            $(button).click((e) => {
+                if (this._addInternalAssetUI == null) {
+                    this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
+                }
+                this._addInternalAssetUI.toggleAssetDiag("curated",e.target.id);
+            });
+        }
+    }
+
     /**
      * Main Navigation Menu Section
      */
@@ -105,9 +169,12 @@ export class VishvaGUI {
     private _settingDiag: SettingsUI;
     private _itemProps: ItemPropsUI;
 
+    private firstTime: boolean = true;
+    private addMenuOn: boolean = false;
+
     private createNavMenu() {
 
-        //button to show navigation menu
+        //button to show navigation menu - hamburger button
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
         showNavMenu.style.visibility = "visible";
 
@@ -116,7 +183,7 @@ export class VishvaGUI {
         let navMenuBar: JQuery = $("#navMenubar");
         let jpo: JQueryPositionOptions = {
             my: "left center",
-            at: "right center",
+            at: "right+4 center",
             of: showNavMenu
         };
         navMenuBar.position(jpo);
@@ -131,38 +198,43 @@ export class VishvaGUI {
             return true;
         };
 
-        //              add menu sliding setup
-        //            var slideDown: any=JSON.parse("{\            "direction\":\"up\"}");
-        //            var navAdd: HTMLElement=document.ge            tElementById("navAdd");
-        //            var addMenu            : JQuery=$("#AddMenu");
-        //                        addMenu.menu();
-        //                        addMenu.hide(null);
-        //                        navAdd.onclick=(e) => {
-        //                            if(this.firstTime) {
-        //                    var jpo:             JQueryPositionOptions={
-        //                                    my: "left top",
-        //                                    at: "left bottom",
-        //                                    of: navAdd
-        //                    };
-        //                    addMen            u.menu().position(jpo);
-        //                                this.firstTime=fal            se;
-        //                }
-        //                            if(this.addMenuOn) {
-        //                    addMenu.menu().hide(            "slide",slideDown,100);
-        //                            } else {
-        //                    addMenu.show(            "slide",slideDown,10            0);
-        //                }
-        //                this.add            MenuOn=!this.addMenuOn;
-        //                $(document)            .one("click",(jqe) => {
-        //                                if(this.addMenuOn) {
-        //                        addMenu.menu().hide(            "slide",slideDown,100);
-        //                                    this.addMenuOn=false;
-        //                    }
-        //                                return true            ;
-        //                });
-        //                            e.cancelBubble=true;
-        //                            return true;
-        //                        };
+        //add menu sliding setup
+
+        var slideDown: any = JSON.parse("{\"direction\":\"up\"}");
+        var navAdd0: HTMLElement = document.getElementById("navCAssets");
+        navAdd0.style.visibility = "visible";
+        document.getElementById("AddMenu").style.visibility = "visible";
+        var addMenu: JQuery = $("#AddMenu");
+        addMenu.hide(null);
+        navAdd0.onclick = (e) => {
+            if (this.firstTime) {
+                var jpo: JQueryPositionOptions = {
+                    my: "left top",
+                    at: "left bottom+4",
+                    of: navAdd0
+                };
+                addMenu.position(jpo);
+                this.firstTime = false;
+            }
+            if (this.addMenuOn) {
+                // addMenu.menu().hide("slide", slideDown, 100);
+                addMenu.hide("slide", slideDown, 100);
+            } else {
+                // addMenu.menu().show("slide", slideDown, 100);
+                addMenu.show("slide", slideDown, 100);
+            }
+            this.addMenuOn = !this.addMenuOn;
+            $(document).one("click", (jqe) => {
+                if (this.addMenuOn) {
+                    // addMenu.menu().hide("slide", slideDown, 100);
+                    addMenu.hide("slide", slideDown, 100);
+                    this.addMenuOn = false;
+                }
+                return true;
+            });
+            e.cancelBubble = true;
+            return true;
+        };
 
 
         var navAdd: HTMLElement = document.getElementById("navAdd");
@@ -190,7 +262,7 @@ export class VishvaGUI {
             if (this._addInternalAssetUI == null) {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
-            this._addInternalAssetUI.toggleAssetDiag("primitives");
+            this._addInternalAssetUI.toggleAssetDiag("internal","primitives");
         }
 
 

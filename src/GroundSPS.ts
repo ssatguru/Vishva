@@ -1,11 +1,11 @@
 import { Vishva } from "./Vishva";
 
-import Mesh = BABYLON.Mesh;
-import GroundMesh = BABYLON.GroundMesh;
-import Vector2 = BABYLON.Vector2;
-import Vector3 = BABYLON.Vector3;
-import SolidParticle = BABYLON.SolidParticle;
-import SolidParticleSystem = BABYLON.SolidParticleSystem;
+import { Mesh, GroundMesh, Vector2, Vector3, SolidParticle, SolidParticleSystem } from "babylonjs";
+//import GroundMesh = BABYLON.GroundMesh;
+// import Vector2 = BABYLON.Vector2;
+// import Vector3 = BABYLON.Vector3;
+// import SolidParticle = BABYLON.SolidParticle;
+// import SolidParticleSystem = BABYLON.SolidParticleSystem;
 import { Random } from "./util/Random";
 
 /**

@@ -1,4 +1,4 @@
-import Material = BABYLON.Material;
+import {Material} from "babylonjs";
 import { Vishva } from "../Vishva";
 import { ColorPickerDiag } from "./ColorPickerDiag";
 import { DialogMgr } from "./DialogMgr";

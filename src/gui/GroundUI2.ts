@@ -1,7 +1,4 @@
 import DialogOptions = JQueryUI.DialogOptions;
-import Skeleton = BABYLON.Skeleton;
-import AnimationRange = BABYLON.AnimationRange;
-import Vector3 = BABYLON.Vector3;
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";

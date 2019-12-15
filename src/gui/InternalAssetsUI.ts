@@ -4,6 +4,7 @@ import { Vishva } from "../Vishva";
 import { VDialog } from "./VDialog";
 import { DialogMgr } from "./DialogMgr";
 import { VishvaGUI } from "./VishvaGUI";
+import { InternalTexture } from "babylonjs";
 
 /**
  * Provides a UI to add items from Internal Assets to the world
@@ -19,10 +20,10 @@ export class InternalAssetsUI {
         this._vishvaFiles = Vishva.vishvaFiles;
     }
 
-    public toggleAssetDiag(assetType: string) {
+    public toggleAssetDiag(dir: string, assetType: string) {
         let assetDialog: VDialog = this._assetDiagMap[assetType]
         if (assetDialog == null) {
-            assetDialog = this._createAssetDiag(assetType);
+            assetDialog = this._createAssetDiag(dir, assetType);
             this._assetDiagMap[assetType] = assetDialog;
         }
         if (assetDialog.isOpen()) {
@@ -32,14 +33,14 @@ export class InternalAssetsUI {
         }
     }
 
-    private _createAssetDiag(assetType: string): VDialog {
+    private _createAssetDiag(dir: string, assetType: string): VDialog {
         let div: HTMLDivElement = document.createElement("div");
         div.id = assetType + "Div";
         div.setAttribute("title", assetType);
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetType + "Tbl";
-        let items: Array<string | object> = this._getFiles(["internal", "assets", assetType], this._vishvaFiles);
-        this._updateAssetTable(table, assetType, items);
+        let items: Array<string | object> = this._getFiles([dir, "assets", assetType], this._vishvaFiles);
+        this._updateAssetTable(dir, table, assetType, items);
         div.appendChild(table);
         document.body.appendChild(div);
 
@@ -63,17 +64,25 @@ export class InternalAssetsUI {
     }
 
 
-    private _updateAssetTable(tbl: HTMLTableElement, assetType: string, items: Array<string | object>) {
+    private _updateAssetTable(dir, tbl: HTMLTableElement, assetType: string, items: Array<string | object>) {
         if (tbl.rows.length > 0) {
             return;
         }
         var f: (p1: MouseEvent) => any = (e) => { return this._onAssetImgClick(e) };
         var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
         for (let item of items) {
+            if (!(item instanceof Object)) continue;
             let img: HTMLImageElement = document.createElement("img");
-            img.id = item["d"];
             let name: string = item["d"];
-            img.src = this._vishva.vHome+ "/internal/assets/" + assetType + "/" + name + "/" + name + ".jpg";
+            let files: Array<string | object> = item["f"];
+            for (let file of files) {
+                if (!(file instanceof Object)) {
+                    if (file.search(name) > -1) {
+                        img.id = file;
+                    }
+                }
+            }
+            img.src = this._vishva.vHome + "/" + dir + "/assets/" + assetType + "/" + name + "/thumbnail.png";
             img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
             img.className = assetType;
             img.onclick = f;
@@ -82,6 +91,7 @@ export class InternalAssetsUI {
         }
         var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
         for (let item of items) {
+            if (!(item instanceof Object)) continue;
             let cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
             cell.innerText = item["d"];
         }
@@ -90,12 +100,12 @@ export class InternalAssetsUI {
     private _onAssetImgClick(e: Event): any {
         var i: HTMLImageElement = <HTMLImageElement>e.target;
         if (i.className === "skyboxes") {
-            this._vishva.setSky(i.id);
+            this._vishva.setSky(i.id.split("_")[0]);
         } else if (i.className === "primitives") {
-            this._vishva.addPrim(i.id);
+            this._vishva.addPrim(i.id.split(".")[0]);
         } else if (i.className === "particles") {
             //this._vishva.createWater();
-            this._vishva.createParticles(i.id);
+            this._vishva.createParticles(i.id.split(".")[0]);
             console.log("particles clicked " + i.id);
         } else {
             this._vishva.loadAsset(i.className, i.id);

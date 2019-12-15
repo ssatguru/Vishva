@@ -2,17 +2,27 @@
  * Sensors and Actuators
  */
 import { Vishva } from "../Vishva";
-
-import AbstractMesh = BABYLON.AbstractMesh;
-import Action = BABYLON.Action;
-import ActionEvent = BABYLON.ActionEvent;
-import Mesh = BABYLON.Mesh;
-import Quaternion = BABYLON.Quaternion;
-import Scene = BABYLON.Scene;
-import Tags = BABYLON.Tags;
-import Vector3 = BABYLON.Vector3;
-import Vector2 = BABYLON.Vector2;
-import { FileInputType, SelectType,Range } from "../gui/VishvaGUI";
+import {
+    AbstractMesh,
+    Action,
+    ActionEvent,
+    Mesh,
+    Quaternion,
+    Scene,
+    Tags,
+    Vector3,
+    Vector2
+} from "babylonjs";
+// import AbstractMesh = BABYLON.AbstractMesh;
+// import Action = BABYLON.Action;
+// import ActionEvent = BABYLON.ActionEvent;
+// import Mesh = BABYLON.Mesh;
+// import Quaternion = BABYLON.Quaternion;
+// import Scene = BABYLON.Scene;
+// import Tags = BABYLON.Tags;
+// import Vector3 = BABYLON.Vector3;
+// import Vector2 = BABYLON.Vector2;
+import { FileInputType, SelectType, Range } from "../gui/VishvaGUI";
 
 //import FileInputType=org.ssatguru.babylonjs.vishva.gui.FileInputType;
 //import Range = org.ssatguru.babylonjs.vishva.gui.Range;
@@ -91,12 +101,12 @@ export class SNAManager {
 
     public emitSignal(signalId: string) {
         if (signalId.trim() === "") return;
-        let signals:string[] = signalId.split(",");
-        for (let signal of signals){
+        let signals: string[] = signalId.split(",");
+        for (let signal of signals) {
             this.emitSignalEach(signal);
         }
     }
-    
+
     public emitSignalEach(signalId: string) {
         if (signalId.trim() === "") return;
         let sas: SensorActuator[] = <SensorActuator[]>this.sig2saMap[signalId];
@@ -198,9 +208,9 @@ export class SNAManager {
     }
 
     public subscribe(actuator: SensorActuator, signalId: string) {
-        let signals:string[] = signalId.split(",");
-        for (let signal of signals){
-            this.subscribeEach(actuator,signal);
+        let signals: string[] = signalId.split(",");
+        for (let signal of signals) {
+            this.subscribeEach(actuator, signal);
         }
     }
 
@@ -219,9 +229,9 @@ export class SNAManager {
     }
 
     public unSubscribe(actuator: SensorActuator, signalId: string) {
-        let signals:string[] = signalId.split(",");
-        for (let signal of signals){
-            this.unSubscribeEach(actuator,signal);
+        let signals: string[] = signalId.split(",");
+        for (let signal of signals) {
+            this.unSubscribeEach(actuator, signal);
         }
     }
 
@@ -481,7 +491,7 @@ export abstract class SensorAbstract implements Sensor {
         sensors.push(this);
     }
 
-    public start(signal:string):boolean{
+    public start(signal: string): boolean {
         if (signal == this.signalDisable) {
             console.log("disable signaled");
             this.disabled = true;
@@ -562,7 +572,7 @@ export abstract class SensorAbstract implements Sensor {
             }
         }
         this.onPropertiesChange();
-        if (this.disabled){
+        if (this.disabled) {
             this.unRegisterAll();
         }
     }
@@ -579,7 +589,7 @@ export abstract class SensorAbstract implements Sensor {
     */
     public removeActions() {
         if (!this.mesh.actionManager) return;
-        var actions: Action[] = this.mesh.actionManager.actions;
+        var actions: Action[] = <Action[]>this.mesh.actionManager.actions;
         let i: number;
         for (let action of this.actions) {
             i = actions.indexOf(action);
@@ -595,7 +605,7 @@ export abstract class SensorAbstract implements Sensor {
     /*
     * Unregister all actions when this sensor is disabled
     */
-    private unRegisterAll(){
+    private unRegisterAll() {
         if (!this.mesh.actionManager) return;
         for (let action of this.actions) {
             this.mesh.actionManager.unregisterAction(action);
@@ -605,7 +615,7 @@ export abstract class SensorAbstract implements Sensor {
     /*
     * re-register all actions when this sensor is enabled
     */
-    private reRegisterAll(){
+    private reRegisterAll() {
         if (!this.mesh.actionManager) return;
         for (let action of this.actions) {
             this.mesh.actionManager.registerAction(action);

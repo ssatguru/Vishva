@@ -1,13 +1,9 @@
 import { SNAproperties } from "./SNA";
 import { SensorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import AbstractMesh = BABYLON.AbstractMesh;
-import Action = BABYLON.Action;
-import ActionManager = BABYLON.ActionManager;
-import ExecuteCodeAction = BABYLON.ExecuteCodeAction;
-import Mesh = BABYLON.Mesh;
-import Scene = BABYLON.Scene;
-import Tags = BABYLON.Tags;
+import {Mesh} from "babylonjs";
+
+
 
 export class SenTimerProp extends SNAproperties {
     interval: number = 1000;

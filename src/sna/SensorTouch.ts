@@ -1,10 +1,12 @@
-import {SNAproperties} from "./SNA";
-import {SensorAbstract} from "./SNA";
-import {SNAManager} from "./SNA";
-import Action=BABYLON.Action;
-import ActionManager=BABYLON.ActionManager;
-import ExecuteCodeAction=BABYLON.ExecuteCodeAction;
-import Mesh=BABYLON.Mesh;
+import { SNAproperties } from "./SNA";
+import { SensorAbstract } from "./SNA";
+import { SNAManager } from "./SNA";
+import {
+    Action,
+    ActionManager,
+    ExecuteCodeAction,
+    Mesh
+} from "babylonjs";
 
 export class SenTouchProp extends SNAproperties {
 }
@@ -12,19 +14,19 @@ export class SenTouchProp extends SNAproperties {
 export class SensorTouch extends SensorAbstract {
     properties: SNAproperties;
 
-    public constructor(mesh: Mesh,prop: SNAproperties) {
-        if(prop!=null) {
-            super(mesh,prop);
+    public constructor(mesh: Mesh, prop: SNAproperties) {
+        if (prop != null) {
+            super(mesh, prop);
         } else {
-            super(mesh,new SenTouchProp());
+            super(mesh, new SenTouchProp());
         }
-        if(this.mesh.actionManager==null) {
-            this.mesh.actionManager=new ActionManager(this.mesh.getScene());
+        if (this.mesh.actionManager == null) {
+            this.mesh.actionManager = new ActionManager(this.mesh.getScene());
         }
 
-        let action: Action=new ExecuteCodeAction(ActionManager.OnPickUpTrigger,(e) => {
-            let pe: PointerEvent=e.sourceEvent;
-            if(pe.button===0) this.emitSignal(e);
+        let action: Action = new ExecuteCodeAction(ActionManager.OnPickUpTrigger, (e) => {
+            let pe: PointerEvent = e.sourceEvent;
+            if (pe.button === 0) this.emitSignal(e);
         }
         );
         this.mesh.actionManager.registerAction(action);
@@ -40,7 +42,7 @@ export class SensorTouch extends SensorAbstract {
     }
 
     public setProperties(properties: SNAproperties) {
-        this.properties=properties;
+        this.properties = properties;
     }
 
 
@@ -53,4 +55,4 @@ export class SensorTouch extends SensorAbstract {
     }
 }
 
-SNAManager.getSNAManager().addSensor("Touch",SensorTouch);
+SNAManager.getSNAManager().addSensor("Touch", SensorTouch);

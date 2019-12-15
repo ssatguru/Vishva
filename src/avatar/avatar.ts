@@ -1,21 +1,21 @@
-import {AnimationRange,SceneLoader,AbstractMesh,IParticleSystem,Mesh,Skeleton, Scene,ShadowGenerator,StandardMaterial,Tags,Vector3, Camera, ArcRotateCamera, Color3} from "babylonjs";
-import {CharacterController} from "babylonjs-charactercontroller";
+import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3 } from "babylonjs";
+import { CharacterController } from "babylonjs-charactercontroller";
 
-export class AvManager{
+export class AvManager {
 
 
-    constructor (private avatarFolder:string, 
+    constructor(private avatarFolder: string,
         private avatarFile: string,
         private _avEllipsoid: Vector3,
         private _avEllipsoidOffset: Vector3,
-        private scene:Scene, 
-        private shadowGenerator:ShadowGenerator,
+        private scene: Scene,
+        private shadowGenerator: ShadowGenerator,
         private spawnPosition: Vector3,
-        private mainCamera:ArcRotateCamera){
+        private mainCamera: ArcRotateCamera) {
     }
-    onCreated:(avatar:Mesh)=>void;
+    onCreated: (avatar: Mesh) => void;
 
-    public createAvatar( onCreated:(avatar:Mesh)=>void) {
+    public createAvatar(onCreated: (avatar: Mesh) => void) {
         this.onCreated = onCreated;
         SceneLoader.ImportMesh("",
             this.avatarFolder,
@@ -32,7 +32,7 @@ export class AvManager{
         //(this.avShadowGenerator.getShadowMap().renderList).push(this.avatar);
         //TODO
         //this.avatar.receiveShadows = true;
-        
+
         //dispose of all OTHER meshes
         let l: number = meshes.length;
         for (let i = 1; i < l; i++) {
@@ -70,8 +70,8 @@ export class AvManager{
             sm.ambientColor = new Color3(0, 0, 0);
         }
 
-  
-       
+
+
         //in 3.0 need to set the camera values again
         //            this.mainCamera.radius=4;
         //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;
@@ -81,9 +81,9 @@ export class AvManager{
 
     }
 
-    
 
-    
+
+
 
     /**
      * workaround for bugs in blender exporter 
@@ -117,9 +117,9 @@ export class AvManager{
         this.mainCamera.lowerRadiusLimit = 1;
         this.mainCamera.upperRadiusLimit = 100;
 
-        cc.setCameraTarget(new BABYLON.Vector3(0, 1.5, 0));
+        cc.setCameraTarget(new Vector3(0, 1.5, 0));
         cc.setIdleAnim("idle", 1, true);
-        cc.setIdleJumpAnim("idleJump",0.5,true);
+        cc.setIdleJumpAnim("idleJump", 0.5, true);
         cc.setTurnLeftAnim("turnLeft", 0.5, true);
         cc.setTurnRightAnim("turnRight", 0.5, true);
         cc.setWalkBackAnim("walkBack", 0.5, true);

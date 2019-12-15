@@ -1,5 +1,5 @@
 
-import AbstractMesh = BABYLON.AbstractMesh;
+import {AbstractMesh} from "babylonjs";
 import { Vishva } from "../Vishva";
 import { VTreeDialog } from "./VTreeDialog";
 import { DialogMgr } from "./DialogMgr";

@@ -1,5 +1,4 @@
 import { DialogMgr } from "./DialogMgr";
-
 import { VTreeDialog } from "./VTreeDialog";
 
 /**

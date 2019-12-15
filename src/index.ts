@@ -2,10 +2,12 @@ import { Vishva } from "./Vishva";
 
 import "./style.css";
 import "jquery-ui-themes/themes/dark-hive/jquery-ui.min.css";
+//import "./jquery-ui-1.12.1.custom/jquery-ui.theme.min.css";
 
 import "jquery-ui/ui/widgets/accordion";
 import "jquery-ui/ui/widgets/button";
 import "jquery-ui/ui/widgets/dialog";
+import "jquery-ui/ui/widgets/menu";
 import "jquery-ui/ui/widgets/slider";
 import "jquery-ui/ui/widgets/tabs";
 import "jquery-ui/ui/widgets/tooltip";
@@ -43,7 +45,10 @@ function main() {
 
 
     //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
-    BABYLON.Texture.UseSerializedUrlIfAny = true;
+    //in 4.0.3 setting this to true broke babylon file exported rom GLB  
+    //doesn't seem to make a difference in 4.1
+    //BABYLON.Texture.UseSerializedUrlIfAny = true;
+    
 
     let cls = "." + $("#lightType").val();
     $(".opt").hide();
@@ -51,6 +56,7 @@ function main() {
 
     //change all buttons to jquery button
     $("button").button();
+    //after click loose focus
     $("button").click(function (e) {
         $(this).blur();
     });

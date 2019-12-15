@@ -1,5 +1,5 @@
 
-import Vector3 = BABYLON.Vector3;
+import {Vector3} from "babylonjs";
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
@@ -337,7 +337,7 @@ export class GeneralUI {
             if (this._addInternalAssetUI == null) {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
-            this._addInternalAssetUI.toggleAssetDiag("particles");
+            this._addInternalAssetUI.toggleAssetDiag("internal","particles");
             return true;
         };
 

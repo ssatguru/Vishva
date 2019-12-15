@@ -53,7 +53,7 @@ export class EnvironmentUI {
 
         var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
         skyButton.onclick = (e) => {
-            this._addInternalAssetUI.toggleAssetDiag("skyboxes");
+            this._addInternalAssetUI.toggleAssetDiag("internal","skyboxes");
             return true;
         };
 

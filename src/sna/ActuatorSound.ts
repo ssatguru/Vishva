@@ -1,10 +1,9 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import Mesh = BABYLON.Mesh;
-import Sound = BABYLON.Sound;
+import { Mesh, Sound } from "babylonjs";
 import { FileInputType, SelectType, Range } from "../gui/VishvaGUI";
-import {Vishva} from "../Vishva";
+import { Vishva } from "../Vishva";
 
 export class ActSoundProp extends ActProperties {
 
@@ -57,7 +56,7 @@ export class ActuatorSound extends ActuatorAbstract {
     public onPropertiesChange() {
         var _props: ActSoundProp = <ActSoundProp>this.properties;
         if (_props.soundFile.value == null) return;
-       
+
         let _sndOptions: Object;
         if (_props.distanceModel == null) {
             _sndOptions = {};
@@ -76,7 +75,7 @@ export class ActuatorSound extends ActuatorAbstract {
                 this.sound.dispose();
             }
             this.actuating = true;
-            this.sound = new Sound(Vishva.vHome2+_props.soundFile.value, Vishva.vHome2 + _props.soundFile.value, this.mesh.getScene(),
+            this.sound = new Sound(Vishva.vHome2 + _props.soundFile.value, Vishva.vHome2 + _props.soundFile.value, this.mesh.getScene(),
                 () => {
                     this.actuating = false;
                     if (_props.autoStart || this.queued > 0) {

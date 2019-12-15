@@ -1,5 +1,10 @@
 # Vishva 
 
+## NOTE
+All new development is happening in the "modularize" branch. 
+
+"master" branch is no longer being maintained. 
+
 ## about
 
 Vishva - A hindi word for "World"

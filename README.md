@@ -1,4 +1,4 @@
-# Vishva 
+# Vishva
 
 ## about
 
@@ -24,46 +24,48 @@ For those interested, the old java version is still available at [https://github
 
 ## to run
 
-* download project
+- download project
 
-* cd to "public_html" folder. Open "index.html" in browser. If you are using firefox browser then you can open it directly from disk. For others you will have to serve the file via. some http server due to cross origin requests restrictions. See [here for some helpful information](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally)
+- cd to "public_html" folder. Open "index.html" in browser. If you are using firefox browser then you can open it directly from disk. For others you will have to serve the file via. some http server due to cross origin requests restrictions. See [here for some helpful information](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally)
 
-* for more help see [wiki](https://github.com/ssatguru/Vishva/wiki)
+- for more help see [wiki](https://github.com/ssatguru/Vishva/wiki)
 
 ## to build
+
 make sure you have typescript installed locally or globally  
 run  
 a) "npm install"  
-    this will install any dependencies.  
+ this will install any dependencies.
 
-b) "npm run build"   
+b) "npm run build"  
 This will  
-compile the src and output javascript to  src/js,  
-minify the javascript and output the minified javascript to public_html/js/Vishva-merged.min.js.  
-
+compile the src and output javascript to src/js,  
+minify the javascript and output the minified javascript to public_html/js/Vishva-merged.min.js.
 
 ## demo
-For a demo  see [https://ssatguru.github.io/Vishva.ts/public_html/](https://ssatguru.github.io/Vishva.ts/public_html/)
+
+For a demo see [https://ssatguru.github.io/Vishva.ts/public_html/](https://ssatguru.github.io/Vishva.ts/public_html/)
 
 ## built using
-* [BabylonJS](http://www.babylonjs.com/)
-* [JQuery UI](https://jqueryui.com/)
-* [FlexiColorPicker](https://github.com/DavidDurman/FlexiColorPicker)
+
+- [BabylonJS](http://www.babylonjs.com/)
+- [JQuery UI](https://jqueryui.com/)
 
 ## 3d assets, animations
-* [Eat Sheep , Blend Swap](http://www.blendswap.com/blends/view/25065)
-* [Yo Frankie, Blender Institutte](https://apricot.blender.org/download/)
-* [Mixamo](https://www.mixamo.com/)
-* [SecondLife Internal Animations and Skeleton](http://wiki.secondlife.com/wiki/Internal_Animations)
+
+- [Eat Sheep , Blend Swap](http://www.blendswap.com/blends/view/25065)
+- [Yo Frankie, Blender Institutte](https://apricot.blender.org/download/)
+- [Mixamo](https://www.mixamo.com/)
+- [SecondLife Internal Animations and Skeleton](http://wiki.secondlife.com/wiki/Internal_Animations)
 
 ## Notes
+
 To run
 
 PROD RUN
 run "http-server" from root folder (not dist folder)
 then goto
 http://localhost:8080/dist/index.html?world=rpg2
-
 
 DEV RUN
 run "npm run dev" from root folder

@@ -1,4 +1,6 @@
-declare var vishvaFiles: Array<any>;
+declare var userAssets: Array<any>;
+declare var internalAssets: Array<any>;
+
 import { EditControl } from "babylonjs-editcontrol";
 import { CharacterController } from "babylonjs-charactercontroller";
 import { UniCamController } from "./CameraController";
@@ -92,6 +94,8 @@ export class Vishva {
     public static worldName: string;
 
     public static vHome: string = "/vishva"
+    public static userAssets: Array<any>;
+    public static internalAssets: Array<any>;
 
     actuator: string = "none";
 
@@ -126,7 +130,7 @@ export class Vishva {
 
     //skyboxes: Array<string>;
 
-    public static vishvaFiles: Array<any>;
+
 
     /**
      * avatar stuff 
@@ -256,7 +260,8 @@ export class Vishva {
 
         Tools.LogLevels = Tools.AllLogLevel;
 
-        Vishva.vishvaFiles = vishvaFiles;
+        Vishva.userAssets = userAssets;
+        Vishva.internalAssets = internalAssets;
 
         Vishva.vishva = this;
         Vishva.worldName = sceneFile;
@@ -3033,7 +3038,7 @@ export class Vishva {
     public setSky_old(sky: any) {
         var mat: StandardMaterial = <StandardMaterial>this.skybox.material;
         mat.reflectionTexture.dispose();
-        var skyFile: string = "assets/internal/skyboxes/" + sky + "/" + sky;
+        var skyFile: string = Vishva.vHome + "/assets/internal/skyboxes/" + sky + "/" + sky;
         mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
         mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         //            if (this.primMaterial !=null)
@@ -3042,15 +3047,26 @@ export class Vishva {
 
     public setSky(sky: any) {
         if (this.skybox == null) {
-            var skyFile: string = "assets/curated/skyboxes/" + sky + "/" + sky;
-            this.skybox = this.createSkyBox(this.scene, skyFile);
+            if (sky === "none") {
+                return;
+            } else {
+                let skyFile: string = Vishva.vHome + "/assets/curated/skyboxes/" + sky + "/" + sky;
+                this.skybox = this.createSkyBox(this.scene, skyFile);
+            }
         } else {
-            var mat: StandardMaterial = <StandardMaterial>this.skybox.material;
-            mat.reflectionTexture.dispose();
-            var skyFile: string = "assets/curated/skyboxes/" + sky + "/" + sky;
-            mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
-            mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+            if (sky === "none") {
+                this._deleteSkyBox();
+                return;
+            } else {
+                let mat: StandardMaterial = <StandardMaterial>this.skybox.material;
+                mat.reflectionTexture.dispose();
+                let skyFile: string = "assets/curated/skyboxes/" + sky + "/" + sky;
+                mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
+                mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+            }
         }
+
+        //TODO PBR stuff
         //            if (this.primMaterial !=null)
         //            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
     }
@@ -3511,7 +3527,7 @@ export class Vishva {
         this.filePath = path;
         this.file = file;
         SceneLoader.ImportMesh("",
-            Vishva.vHome + "/" + path,
+            Vishva.vHome + "/assets/" + path,
             file,
             this.scene,
             (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file) });
@@ -4154,6 +4170,13 @@ export class Vishva {
         return skybox;
     }
 
+    private _deleteSkyBox() {
+        if (this.skybox == null) return;
+        this.skybox.material.dispose();
+        this.skybox.dispose();
+        this.skybox = null;
+        this.scene.clearColor = this.skyColor;
+    }
 
 
 

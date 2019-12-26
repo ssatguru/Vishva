@@ -38,7 +38,7 @@ export class GrndDimUI {
         let grnd: GroundMesh = <GroundMesh>vishva.ground;
 
         this._grndID = new VInputText("grndID", grnd.name);
-        this._grndHM = new VFileInput("grndHM", null, "Height Map Image", DialogMgr.centerBottom, Vishva.vishvaFiles, "\.bmp$|\.png$|\.tga$\.jpg$", true)
+        this._grndHM = new VFileInput("grndHM", null, "Height Map Image", DialogMgr.centerBottom, Vishva.userAssets, "\.bmp$|\.png$|\.tga$\.jpg$", true)
         this._grndW = new VInputNumber("grndW", grnd._width);
         this._grndL = new VInputNumber("grndL", grnd._height);
         this._grndS = new VInputNumber("grndS", grnd.subdivisions);

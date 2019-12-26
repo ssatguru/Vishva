@@ -26,7 +26,7 @@ export class VishvaGUI {
 
     public constructor(vishva: Vishva) {
         this._vishva = vishva;
-        this._vishvaFiles = Vishva.vishvaFiles;
+        this._vishvaFiles = Vishva.userAssets;
 
         this._setSettings();
 
@@ -139,7 +139,7 @@ export class VishvaGUI {
 
 
     private _buildCuratedAssetsMenu() {
-        let dirs: Array<string> = this._getDirs(["assets", "curated"], this._vishvaFiles);
+        let dirs: Array<string> = this._getDirs(["curated"], this._vishvaFiles);
         let addMenu: HTMLElement = document.getElementById("AddMenu");
         for (let dir of dirs) {
             let button: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
@@ -240,7 +240,7 @@ export class VishvaGUI {
         var navAdd: HTMLElement = document.getElementById("navAdd");
         navAdd.onclick = (e) => {
             if (this._addAssetTDiag == null) {
-                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", DialogMgr.leftCenter, Vishva.vishvaFiles, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
+                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", DialogMgr.leftCenter, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                 this._addAssetTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
@@ -250,7 +250,7 @@ export class VishvaGUI {
                 })
                 this._addAssetTDiag.addRefreshHandler(() => {
                     $.getScript("vishva/vishvaFiles.js", () => {
-                        this._addAssetTDiag.refresh(Vishva.vishvaFiles);
+                        this._addAssetTDiag.refresh(Vishva.userAssets);
                     })
                 })
             }
@@ -319,7 +319,7 @@ export class VishvaGUI {
         let helpDiag: VDialog = null;
         helpLink.onclick = (e) => {
             if (helpDiag == null) {
-                helpDiag = new VDialog("helpDiv", "Help", DialogMgr.center, "", "", 500);
+                helpDiag = new VDialog("helpDiv", "Help", DialogMgr.center, "50%", "", 640);
             }
             helpDiag.toggle();
             return true;

@@ -153,6 +153,15 @@ li {
   padding-left: 1em;
 }
 
+#helpDiv ul {
+  list-style-type: square;
+  margin-left: 20px;
+}
+
+#helpDiv li {
+  padding-bottom: 5px;
+}
+
 .vt-icon {
   cursor: pointer;
 }

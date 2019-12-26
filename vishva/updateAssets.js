@@ -1,6 +1,19 @@
+/**
+Takes three args
+
+varName - variable name to use in the output file
+path - the path to be scanned for file
+fn - name of the output file
+
+*/
 let fs = require('fs');
-let _tab = "  "
-let fn="vishvaFiles.js";
+
+let varName = process.argv[2]
+let path = process.argv[3];
+let fn = process.argv[4];
+
+let _tab = "  ";
+
 function printDir(path,tab){
     let items = fs.readdirSync(path);
     let last=items.length-1;
@@ -33,9 +46,8 @@ function printDir(path,tab){
 }
 
 //fs.unlinkSync(fn);
-fs.writeFileSync(fn,"vishvaFiles=[" +"\n");
+fs.writeFileSync(fn,varName+"=[" +"\n");
 let stream = fs.createWriteStream(fn, {flags:'a'});
-let path = ".";
 printDir(path,_tab);
 stream.write("]");
 stream.end();

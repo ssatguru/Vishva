@@ -428,7 +428,7 @@ export class SnaUI {
 
         fib.onclick = (e) => {
             if (this._assetTDiag == null) {
-                this._assetTDiag = new VTreeDialog(this._vishva, fit.title, DialogMgr.centerBottom, Vishva.vishvaFiles, fit.filter, fit.openAll);
+                this._assetTDiag = new VTreeDialog(this._vishva, fit.title, DialogMgr.centerBottom, Vishva.userAssets, fit.filter, fit.openAll);
             }
             this._assetTDiag.addTreeListener((f, p, l) => {
                 if (l) {

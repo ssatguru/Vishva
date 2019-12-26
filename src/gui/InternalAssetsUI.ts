@@ -13,12 +13,20 @@ export class InternalAssetsUI {
 
     private _vishva: Vishva;
     private _assetDiagMap: Object = {};
-    private _vishvaFiles: Array<string | object>;
+    //private _vishvaFiles: Array<string | object>;
 
     constructor(vishva: Vishva) {
         this._vishva = vishva;
-        this._vishvaFiles = Vishva.vishvaFiles;
+        //this._vishvaFiles = Vishva.userAssets;
     }
+
+    /**
+     * 
+     * @param dir -  internal, curated
+     * @param assetType - 
+     *  for internal - primitives, particles (maybe), avatar (maybe)
+     *  for curated - folders under curated folder
+     */
 
     public toggleAssetDiag(dir: string, assetType: string) {
         let assetDialog: VDialog = this._assetDiagMap[assetType]
@@ -42,7 +50,13 @@ export class InternalAssetsUI {
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetType + "Tbl";
 
-        let items: Array<string | object> = this._getFiles(["assets", dir, assetType], this._vishvaFiles);
+        let fileList: Array<string | object>;
+        if (dir == "internal") {
+            fileList = Vishva.internalAssets;
+        } else {
+            fileList = Vishva.userAssets;
+        }
+        let items: Array<string | object> = this._getFiles([dir, assetType], fileList);
         this._updateAssetTable(dir, table, assetType, items);
         div.appendChild(table);
         document.body.appendChild(div);

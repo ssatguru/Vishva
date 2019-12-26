@@ -1,5 +1,5 @@
 
-import {Vector3} from "babylonjs";
+import { Vector3 } from "babylonjs";
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
@@ -23,6 +23,7 @@ export class GeneralUI {
 
     private _transRefresh: HTMLElement;
     private _transBake: HTMLElement;
+    private _gridSnap: HTMLElement;
 
     private _genOperTrans: HTMLElement;
     private _genOperRot: HTMLElement;
@@ -35,13 +36,13 @@ export class GeneralUI {
     private _genSize: VInputVector3;
     private _genScale: VInputVector3;
 
-    private _genSnapTrans: HTMLInputElement;
-    private _genSnapRot: HTMLInputElement;
-    private _genSnapScale: HTMLInputElement;
-
     private _genSnapTransValue: VInputNumber;
     private _genSnapRotValue: VInputNumber;
     private _genSnapScaleValue: VInputNumber;
+
+    private _genSnapTrans: HTMLInputElement;
+    private _genSnapRot: HTMLInputElement;
+    private _genSnapScale: HTMLInputElement;
 
     private _genDisable: HTMLInputElement;
     private _genColl: HTMLInputElement;
@@ -80,6 +81,14 @@ export class GeneralUI {
             this._transBake = document.getElementById("transBake");
             this._transBake.onclick = () => {
                 this._vishva.bakeTransforms();
+                this._updateTransform();
+                return false;
+            }
+        }
+        if (this._gridSnap === undefined) {
+            this._gridSnap = document.getElementById("gridSnap");
+            this._gridSnap.onclick = () => {
+                this._vishva.snapToGrid();
                 this._updateTransform();
                 return false;
             }
@@ -133,6 +142,20 @@ export class GeneralUI {
         this._genSize.onChange = (v3) => {
         }
 
+        //Snap Values
+        this._genSnapTransValue = new VInputNumber("snapTransValue", this._vishva.snapTransValue);
+        this._genSnapTransValue.onChange = (n) => {
+            this._vishva.setSnapTransValue(n);
+        }
+        this._genSnapRotValue = new VInputNumber("snapRotValue", this._vishva.snapRotValue * 180 / Math.PI);
+        this._genSnapRotValue.onChange = (n) => {
+            this._vishva.setSnapRotValue(n);
+        }
+        this._genSnapScaleValue = new VInputNumber("snapScaleValue", this._vishva.snapScaleValue);
+        this._genSnapScaleValue.onChange = (n) => {
+            this._vishva.setSnapScaleValue(n);
+        }
+
         //Snap CheckBox
         this._genSnapTrans = <HTMLInputElement>document.getElementById("snapTrans");
         this._genSnapTrans.onchange = () => {
@@ -157,21 +180,6 @@ export class GeneralUI {
                 DialogMgr.showAlertDiag(err);
                 this._genSnapScale.checked = false;
             }
-        }
-
-        //Snap Values
-        this._genSnapTransValue = new VInputNumber("snapTransValue");
-        this._genSnapTransValue.onChange = (n) => {
-            this._vishva.setSnapTransValue(n);
-        }
-        this._genSnapRotValue = new VInputNumber("snapRotValue");
-        this._genSnapRotValue.onChange = (n) => {
-            console.log("snaprot " + n);
-            this._vishva.setSnapRotValue(n);
-        }
-        this._genSnapScaleValue = new VInputNumber("snapScaleValue");
-        this._genSnapScaleValue.onChange = (n) => {
-            this._vishva.setSnapScaleValue(n);
         }
 
         //
@@ -337,7 +345,7 @@ export class GeneralUI {
             if (this._addInternalAssetUI == null) {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
-            this._addInternalAssetUI.toggleAssetDiag("internal","particles");
+            this._addInternalAssetUI.toggleAssetDiag("internal", "particles");
             return true;
         };
 

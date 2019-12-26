@@ -111,11 +111,16 @@ export class VDialog {
         //this._minimized=false;
         this._diag.dialog("open");
         if (this._minimized) this.minimize();
+
     }
 
     public close() {
         //this._minimized=true;
         this._diag.dialog("close");
+    }
+
+    public hideTitileBar() {
+        this._diag.dialog('widget').find(".ui-dialog-titlebar").hide();
     }
 
     public minimize() {
@@ -132,11 +137,18 @@ export class VDialog {
         this._diag.show();
     }
 
-    public setSize(w:number,h:number){
+    public setSize(w: number, h: number) {
         this._diag.dialog("option", "width", w);
         this._diag.dialog("option", "height", h);
     }
 
+    public setShowEffect(option: {}) {
+        this._diag.dialog("option", "show", option);
+    }
+
+    public setHideEffect(option: {}) {
+        this._diag.dialog("option", "hide", option);
+    }
     public isOpen(): boolean {
         return this._diag.dialog("isOpen");
     }
@@ -161,8 +173,8 @@ export class VDialog {
         this._diag.dialog("option", "buttons", dbos);
     }
 
-    public setTitle(title:string){
-        this._diag.dialog( "option", "title", title );
+    public setTitle(title: string) {
+        this._diag.dialog("option", "title", title);
     }
 }
 

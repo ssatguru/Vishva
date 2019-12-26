@@ -76,7 +76,7 @@ export class TextureUI {
                 this._textListDiag = new VTreeDialog(this._vishva, "select texture", DialogMgr.center, Vishva.vishvaFiles, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
                 this._textListDiag.addTreeListener((f, p, l) => {
                     if (!l) return;
-                    let imgsrc: string = this._vishva.vHome + p + f;
+                    let imgsrc: string = Vishva.vHome + "/" + p + f;
                     this._vishva.setTextURL(this._textID, imgsrc);
                     this._textName = imgsrc;
                     this._textImgSrc.innerText = imgsrc;

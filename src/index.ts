@@ -11,6 +11,9 @@ import "jquery-ui/ui/widgets/menu";
 import "jquery-ui/ui/widgets/slider";
 import "jquery-ui/ui/widgets/tabs";
 import "jquery-ui/ui/widgets/tooltip";
+import "jquery-ui/ui/effects/effect-blind";
+import "jquery-ui/ui/effects/effect-explode";
+import "jquery-ui/ui/effects/effect-scale";
 
 import "jquery-ui/ui/effects/effect-slide.js";
 
@@ -18,6 +21,10 @@ import "babylonjs-inspector";
 import "babylonjs-loaders";
 import "babylonjs-materials";
 import "pepjs";
+
+//import "oimo";
+//import "cannon";
+
 //import "./misc/perlin";
 // import "./misc/babylon.dynamicTerrain.min";
 
@@ -45,10 +52,10 @@ function main() {
 
 
     //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
-    //in 4.0.3 setting this to true broke babylon file exported rom GLB  
+    //in 4.0.3 setting this to true broke babylon file exported from GLB  
     //doesn't seem to make a difference in 4.1
     //BABYLON.Texture.UseSerializedUrlIfAny = true;
-    
+
 
     let cls = "." + $("#lightType").val();
     $(".opt").hide();

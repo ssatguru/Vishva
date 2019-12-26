@@ -6,6 +6,7 @@ import { VDialog } from "./VDialog";
 import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ColorPickerDiag } from "./ColorPickerDiag";
 import { DialogMgr } from "./DialogMgr";
+import { Color4 } from "babylonjs";
 
 /**
  * provides a ui to manage the environment in the world
@@ -52,10 +53,17 @@ export class EnvironmentUI {
         };
 
         var skyButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("skyButton");
+
         skyButton.onclick = (e) => {
-            this._addInternalAssetUI.toggleAssetDiag("internal","skyboxes");
+            this._addInternalAssetUI.toggleAssetDiag("curated", "skyboxes");
             return true;
         };
+
+        let skyColDiag: ColorPickerDiag = new ColorPickerDiag("sky color", "skyCol", this._vishva.skyColor.toHexString().substr(0, 7), DialogMgr.centerBottom, (hex, hsv, rgb) => {
+            this._vishva.skyColor = Color4.FromHexString(hex + "ff");
+            this._vishva.scene.clearColor = this._vishva.skyColor;
+        });
+
 
         let envSea: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envSea");
         envSea.onclick = (e) => {
@@ -110,11 +118,11 @@ export class EnvironmentUI {
         } else if (slider === "sunPos") {
             this._vishva.setSunPos(ui.value);
         } else {
-            var v: number = ui.value ;
+            var v: number = ui.value;
             if (slider === "light") {
-                this._vishva.setLight(v/100);
+                this._vishva.setLight(v / 100);
             } else if (slider === "shade") {
-                this._vishva.setShade(v/100);
+                this._vishva.setShade(v / 100);
             } else if (slider === "fog") {
                 this._vishva.setFog(v);
             }

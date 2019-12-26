@@ -1,4 +1,4 @@
-import {Material} from "babylonjs";
+import { Material, AbstractMesh } from "babylonjs";
 import { Vishva } from "../Vishva";
 import { ColorPickerDiag } from "./ColorPickerDiag";
 import { DialogMgr } from "./DialogMgr";
@@ -71,9 +71,11 @@ export class MaterialUI {
 
         this._matReplace = <HTMLSelectElement>document.getElementById("matReplace");
         this._matReplace.onclick = () => {
+            if (!(this._vishva.meshSelected instanceof AbstractMesh)) return false;
+            let mesh: AbstractMesh = this._vishva.meshSelected;
             if (this._materialListUI == null) {
                 this._materialListUI = new MaterialListUI(this._vishva.scene, (mat: Material) => {
-                    this._vishva.getMeshPicked().material = mat;
+                    mesh.material = mat;
                     this.update();
                 });
             }

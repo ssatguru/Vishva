@@ -1,6 +1,7 @@
 import { Vishva, PhysicsParm } from "../Vishva";
 
 import { DialogMgr } from "./DialogMgr";
+import { AbstractMesh } from "babylonjs";
 
 /**
  * Provides UI for Physics tab in mesh properties dialog
@@ -117,7 +118,9 @@ export class PhysicsUI {
     }
 
     private _resetPhysics() {
-        this._vishva.resetPhysics();
+        if (this._vishva.meshSelected instanceof AbstractMesh){
+            this._vishva.resetPhysics(this._vishva.meshSelected);
+        }
         /* End of Mesh Properties              */
 
     }

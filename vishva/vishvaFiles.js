@@ -3,101 +3,19 @@ vishvaFiles=[
    "f":[
     {"d":"characters",
      "f":[
+      "Female_Casual.babylon",
+      "Female_Casual_sat.babylon",
+      "Female_walk.glb",
       "fish.glb",
       "insect.glb",
       "Male_Casual.babylon",
+      "Male_Casual0.babylon",
       "Male_Casual2.babylon",
-      "Tie.png"
+      "Tie.png",
+      "Viking_Male.babylon",
+      "Zebra.babylon"
     ]},
-    {"d":"sounds",
-     "f":[
-      "amb_birdtree_flyaway_01.wav",
-      "birdsFlap.ogg",
-      "door.mp3",
-      "forest-ambient.ogg",
-      "Forest_Ambience.ogg",
-      "Forest_Ambience2.ogg",
-      "hello.mp3",
-      "nature-ambiance.ogg",
-      "npc_skeleton_conscious_01_lp.wav",
-      "old_door-2.ogg",
-      "old_door.ogg",
-      "soft-forest-music.ogg",
-      "tractor.wav",
-      "wind.ogg"
-    ]},
-    {"d":"structures",
-     "f":[
-      "Box.gltf",
-      "Box0.bin",
-      "TallWall.mtl",
-      "TallWall.obj"
-    ]},
-    {"d":"terrains",
-     "f":[
-      "Heightmap.png",
-      {"d":"hill1",
-       "f":[
-        "hill1_diffuse.jpg",
-        "hill1_heightMap.png"
-      ]}
-    ]},
-    {"d":"textures",
-     "f":[
-      "ground.jpg"
-    ]},
-    {"d":"vegetations",
-     "f":[
-      {"d":"grass",
-       "f":[
-        "grass.babylon",
-        "gs.tga"
-      ]},
-      {"d":"grass2",
-       "f":[
-        "g1.tga",
-        "g3.tga",
-        "g4.tga",
-        "g5.tga",
-        "g6.tga",
-        "grass2.babylon"
-      ]},
-      {"d":"grass3",
-       "f":[
-        "g1.tga",
-        "grass3.babylon"
-      ]},
-      {"d":"shrub-1",
-       "f":[
-        "s1.tga",
-        "shrub-1.babylon"
-      ]},
-      {"d":"shrub-9",
-       "f":[
-        "s1.tga",
-        "shrub-9.babylon"
-      ]},
-      {"d":"trees3",
-       "f":[
-        "trees-2.babylon",
-        "trees_bark_001_col.jpg",
-        "trees_bark_001_nor.jpg",
-        "trees_bark_002_col.jpg",
-        "trees_bark_002_nor.jpg",
-        "trees_leaves_003_col.png",
-        "trees_leaves_004_col.png",
-        "trees_log_001_col.png",
-        "trees_log_001_nor.jpg",
-        "trees_vines_001_col.png",
-        "tree_stumps_col.jpg",
-        "tree_stumps_nor.jpg"
-      ]}
-    ]}
-  ]},
-  "config.js",
-  {"d":"curated",
-   "f":[
-    {"d":"assets",
+    {"d":"curated",
      "f":[
       {"d":"characters",
        "f":[
@@ -109,6 +27,18 @@ vishvaFiles=[
           "Joan_texture_image.jpg",
           "thumbnail.png"
         ]},
+        {"d":"Quaternius1",
+         "f":[
+          "Quaternius.blend",
+          "Quaternius1.babylon",
+          "Quaternius2.babylon",
+          "Quaternius2.babylon.manifest",
+          "Quaternius2.blend",
+          "Quaternius2.blend1",
+          "Quaternius2.glb",
+          "Quaternius2.log",
+          "thumbnail.png"
+        ]},
         {"d":"skeleton",
          "f":[
           "skeleton.babylon",
@@ -116,10 +46,109 @@ vishvaFiles=[
         ]},
         {"d":"Vincent",
          "f":[
+          "thumbnail.png",
           "Vincent.babylon",
           "Vincent.blend",
+          "Vincent.glb",
           "Vincent.log",
           "Vincent_texture_image.jpg"
+        ]}
+      ]},
+      {"d":"skyboxes",
+       "f":[
+        {"d":"0-none",
+         "f":[
+          "thumbnail.png"
+        ]},
+        {"d":"city",
+         "f":[
+          "city_nx.jpg",
+          "city_ny.jpg",
+          "city_nz.jpg",
+          "city_px.jpg",
+          "city_py.jpg",
+          "city_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"desert",
+         "f":[
+          "desert_nx.jpg",
+          "desert_ny.jpg",
+          "desert_nz.jpg",
+          "desert_px.jpg",
+          "desert_py.jpg",
+          "desert_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"dusk",
+         "f":[
+          "dusk_nx.jpg",
+          "dusk_ny.jpg",
+          "dusk_nz.jpg",
+          "dusk_px.jpg",
+          "dusk_py.jpg",
+          "dusk_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"hilly",
+         "f":[
+          "hilly_nx.jpg",
+          "hilly_ny.jpg",
+          "hilly_nz.jpg",
+          "hilly_px.jpg",
+          "hilly_py.jpg",
+          "hilly_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"hot",
+         "f":[
+          "hot_nx.jpg",
+          "hot_ny.jpg",
+          "hot_nz.jpg",
+          "hot_px.jpg",
+          "hot_py.jpg",
+          "hot_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"moon",
+         "f":[
+          "moon_nx.jpg",
+          "moon_ny.jpg",
+          "moon_nz.jpg",
+          "moon_px.jpg",
+          "moon_py.jpg",
+          "moon_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"rain",
+         "f":[
+          "rain_nx.jpg",
+          "rain_ny.jpg",
+          "rain_nz.jpg",
+          "rain_px.jpg",
+          "rain_py.jpg",
+          "rain_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"snow1",
+         "f":[
+          "snow1_nx.jpg",
+          "snow1_ny.jpg",
+          "snow1_nz.jpg",
+          "snow1_px.jpg",
+          "snow1_py.jpg",
+          "snow1_pz.jpg",
+          "thumbnail.png"
+        ]},
+        {"d":"TropicalSunnyDay",
+         "f":[
+          "thumbnail.png",
+          "TropicalSunnyDay_nx.jpg",
+          "TropicalSunnyDay_ny.jpg",
+          "TropicalSunnyDay_nz.jpg",
+          "TropicalSunnyDay_px.jpg",
+          "TropicalSunnyDay_py.jpg",
+          "TropicalSunnyDay_pz.jpg"
         ]}
       ]},
       {"d":"structures",
@@ -219,23 +248,37 @@ vishvaFiles=[
           "thumbnail.png"
         ]}
       ]}
-    ]}
-  ]},
-  {"d":"internal",
-   "f":[
-    {"d":"assets",
+    ]},
+    {"d":"html",
      "f":[
+      "introScreen.html"
+    ]},
+    {"d":"internal",
+     "f":[
+      {"d":"avatar",
+       "f":[
+        "starterAvatars.babylon",
+        "Vincent_texture_image.jpg"
+      ]},
       {"d":"particles",
        "f":[
         {"d":"fire",
          "f":[
           "flare.png",
-          "thumnail.png"
+          "thumbnail.png"
+        ]},
+        {"d":"rain",
+         "f":[
+          "raindrop-1.png",
+          "raindrop-2.png"
         ]},
         {"d":"smoke",
          "f":[
           "flare.png",
-          "thumnail.png"
+          "thumbnail.png"
+        ]},
+        {"d":"snow",
+         "f":[
         ]}
       ]},
       {"d":"primitives",
@@ -276,148 +319,199 @@ vishvaFiles=[
           "thumbnail.png",
           "torus.jpg"
         ]}
-      ]},
-      {"d":"skyboxes",
-       "f":[
-        {"d":"city",
-         "f":[
-          "city_nx.jpg",
-          "city_ny.jpg",
-          "city_nz.jpg",
-          "city_px.jpg",
-          "city_py.jpg",
-          "city_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"desert",
-         "f":[
-          "desert_nx.jpg",
-          "desert_ny.jpg",
-          "desert_nz.jpg",
-          "desert_px.jpg",
-          "desert_py.jpg",
-          "desert_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"dusk",
-         "f":[
-          "dusk_nx.jpg",
-          "dusk_ny.jpg",
-          "dusk_nz.jpg",
-          "dusk_px.jpg",
-          "dusk_py.jpg",
-          "dusk_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"hilly",
-         "f":[
-          "hilly_nx.jpg",
-          "hilly_ny.jpg",
-          "hilly_nz.jpg",
-          "hilly_px.jpg",
-          "hilly_py.jpg",
-          "hilly_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"hot",
-         "f":[
-          "hot_nx.jpg",
-          "hot_ny.jpg",
-          "hot_nz.jpg",
-          "hot_px.jpg",
-          "hot_py.jpg",
-          "hot_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"moon",
-         "f":[
-          "moon_nx.jpg",
-          "moon_ny.jpg",
-          "moon_nz.jpg",
-          "moon_px.jpg",
-          "moon_py.jpg",
-          "moon_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"rain",
-         "f":[
-          "rain_nx.jpg",
-          "rain_ny.jpg",
-          "rain_nz.jpg",
-          "rain_px.jpg",
-          "rain_py.jpg",
-          "rain_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"snow1",
-         "f":[
-          "snow1_nx.jpg",
-          "snow1_ny.jpg",
-          "snow1_nz.jpg",
-          "snow1_px.jpg",
-          "snow1_py.jpg",
-          "snow1_pz.jpg",
-          "thumbnail.png"
-        ]},
-        {"d":"TropicalSunnyDay",
-         "f":[
-          "thumbnail.png",
-          "TropicalSunnyDay_nx.jpg",
-          "TropicalSunnyDay_ny.jpg",
-          "TropicalSunnyDay_nz.jpg",
-          "TropicalSunnyDay_px.jpg",
-          "TropicalSunnyDay_py.jpg",
-          "TropicalSunnyDay_pz.jpg"
-        ]}
       ]}
     ]},
-    {"d":"avatar",
+    {"d":"qauternius-modular-dungeon",
      "f":[
-      "starterAvatars.babylon",
-      "Vincent.blend",
-      "Vincent.jpg",
-      "Vincent_texture_image.jpg"
+      "Barrel.mtl",
+      "Barrel.obj",
+      "Bars.mtl",
+      "Bars.obj",
+      "Bones.mtl",
+      "Bones.obj",
+      "Bones2.mtl",
+      "Bones2.obj",
+      "Book2.mtl",
+      "Book2.obj",
+      "Book3.mtl",
+      "Book3.obj",
+      "Book_Open.mtl",
+      "Book_Open.obj",
+      "Candelabrum.mtl",
+      "Candelabrum.obj",
+      "Candelabrum_tall.mtl",
+      "Candelabrum_tall.obj",
+      "Candle.mtl",
+      "Candle.obj",
+      "Carpet.mtl",
+      "Carpet.obj",
+      "Chest.mtl",
+      "Chest.obj",
+      "Chest_gold.mtl",
+      "Chest_gold.obj",
+      "Column.mtl",
+      "Column.obj",
+      "Column_Broken.mtl",
+      "Column_Broken.obj",
+      "Column_Broken2.mtl",
+      "Column_Broken2.obj",
+      "Entrance.mtl",
+      "Entrance.obj",
+      "Entrance2.mtl",
+      "Entrance2.obj",
+      "ModularColumn_bottom.mtl",
+      "ModularColumn_bottom.obj",
+      "ModularColumn_middle.mtl",
+      "ModularColumn_middle.obj",
+      "ModularColumn_top.mtl",
+      "ModularColumn_top.obj",
+      "ModularFloor.mtl",
+      "ModularFloor.obj",
+      "ModularStoneWall.mtl",
+      "ModularStoneWall.obj",
+      "ModularStoneWall_top.mtl",
+      "ModularStoneWall_top.obj",
+      "Potion.mtl",
+      "Potion.obj",
+      "Potion2.mtl",
+      "Potion2.obj",
+      "Potion3.mtl",
+      "Potion3.obj",
+      "Potion4.mtl",
+      "Potion4.obj",
+      "Potion5.mtl",
+      "Potion5.obj",
+      "Potion6.mtl",
+      "Potion6.obj",
+      "Rock1.mtl",
+      "Rock1.obj",
+      "Rock2.mtl",
+      "Rock2.obj",
+      "Rock3.mtl",
+      "Rock3.obj",
+      "Rock4.mtl",
+      "Rock4.obj",
+      "Rock5.mtl",
+      "Rock5.obj",
+      "Stairs.mtl",
+      "Stairs.obj",
+      "Torch.mtl",
+      "Torch.obj",
+      "Torch_wall.mtl",
+      "Torch_wall.obj",
+      "WallRocks.mtl",
+      "WallRocks.obj",
+      "Window.mtl",
+      "Window.obj"
+    ]},
+    {"d":"sounds",
+     "f":[
+      "amb_birdtree_flyaway_01.wav",
+      "birdsFlap.ogg",
+      "door.mp3",
+      "forest-ambient.ogg",
+      "Forest_Ambience.ogg",
+      "Forest_Ambience2.ogg",
+      "hello.mp3",
+      "laugh.mp3",
+      "nature-ambiance.ogg",
+      "npc_skeleton_conscious_01_lp.wav",
+      "old city theme.ogg",
+      "old_door-2.ogg",
+      "old_door.ogg",
+      "soft-forest-music.ogg",
+      "tractor.wav",
+      "wind.ogg"
+    ]},
+    {"d":"structures",
+     "f":[
+      "bench.babylon",
+      "Box.gltf",
+      "Box0.bin",
+      "TallWall.mtl",
+      "TallWall.obj"
+    ]},
+    {"d":"terrains",
+     "f":[
+      "Heightmap.png",
+      {"d":"hill1",
+       "f":[
+        "hill1_diffuse.jpg",
+        "hill1_heightMap.png"
+      ]}
     ]},
     {"d":"textures",
      "f":[
-      "basswood.jpg",
       "Birch.jpg",
-      "earth.jpg",
-      "flare.png",
-      "ground-1.jpg",
+      "dried-ground.jpg",
+      "grass.jpg",
       "ground-normal.jpg",
       "ground-normal.png",
       "ground.jpg",
       "ground_heightMap-1.png",
       "ground_heightMap.png",
-      "ground_heightMap_bkup.png",
       "no-texture.jpg",
-      "raindrop-1.png",
-      "raindrop-2.png",
-      {"d":"skybox-default",
-       "f":[
-        "default.jpg",
-        "default_nx.jpg",
-        "default_ny.jpg",
-        "default_nz.jpg",
-        "default_px.jpg",
-        "default_py.jpg",
-        "default_pz.jpg"
-      ]},
+      "skull.jpg",
       "tga-image.jpg",
       "water.jpg",
       "waterbump.png",
-      "wood.jpg",
-      "worldHeightMap.jpg"
+      "wood.jpg"
+    ]},
+    {"d":"vegetations",
+     "f":[
+      {"d":"grass",
+       "f":[
+        "grass.babylon",
+        "gs.tga"
+      ]},
+      {"d":"grass2",
+       "f":[
+        "g1.tga",
+        "g3.tga",
+        "g4.tga",
+        "g5.tga",
+        "g6.tga",
+        "grass2.babylon"
+      ]},
+      {"d":"grass3",
+       "f":[
+        "g1.tga",
+        "grass3.babylon"
+      ]},
+      {"d":"shrub-1",
+       "f":[
+        "s1.tga",
+        "shrub-1.babylon"
+      ]},
+      {"d":"shrub-9",
+       "f":[
+        "s1.tga",
+        "shrub-9.babylon"
+      ]},
+      {"d":"trees3",
+       "f":[
+        "trees-2.babylon",
+        "trees_bark_001_col.jpg",
+        "trees_bark_001_nor.jpg",
+        "trees_bark_002_col.jpg",
+        "trees_bark_002_nor.jpg",
+        "trees_leaves_003_col.png",
+        "trees_leaves_004_col.png",
+        "trees_log_001_col.png",
+        "trees_log_001_nor.jpg",
+        "trees_vines_001_col.png",
+        "tree_stumps_col.jpg",
+        "tree_stumps_nor.jpg"
+      ]}
     ]}
   ]},
+  "config.js",
   "u.bat",
   "updateAssets.js",
   "vishvaFiles.js",
   {"d":"worlds",
    "f":[
-    "china.js",
-    "rpg.js",
-    "spsDemo.js"
+    "dungeon.js",
+    "dungeon2.js"
   ]}
 ]

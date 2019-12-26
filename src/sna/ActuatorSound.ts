@@ -75,7 +75,7 @@ export class ActuatorSound extends ActuatorAbstract {
                 this.sound.dispose();
             }
             this.actuating = true;
-            this.sound = new Sound(Vishva.vHome2 + _props.soundFile.value, Vishva.vHome2 + _props.soundFile.value, this.mesh.getScene(),
+            this.sound = new Sound(Vishva.vHome + _props.soundFile.value, Vishva.vHome + _props.soundFile.value, this.mesh.getScene(),
                 () => {
                     this.actuating = false;
                     if (_props.autoStart || this.queued > 0) {

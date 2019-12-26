@@ -139,7 +139,7 @@ export class VishvaGUI {
 
 
     private _buildCuratedAssetsMenu() {
-        let dirs: Array<string> = this._getDirs(["curated","assets"], this._vishvaFiles);
+        let dirs: Array<string> = this._getDirs(["assets", "curated"], this._vishvaFiles);
         let addMenu: HTMLElement = document.getElementById("AddMenu");
         for (let dir of dirs) {
             let button: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
@@ -153,7 +153,7 @@ export class VishvaGUI {
                 if (this._addInternalAssetUI == null) {
                     this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
                 }
-                this._addInternalAssetUI.toggleAssetDiag("curated",e.target.id);
+                this._addInternalAssetUI.toggleAssetDiag("curated", e.target.id);
             });
         }
     }
@@ -262,7 +262,7 @@ export class VishvaGUI {
             if (this._addInternalAssetUI == null) {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
-            this._addInternalAssetUI.toggleAssetDiag("internal","primitives");
+            this._addInternalAssetUI.toggleAssetDiag("internal", "primitives");
         }
 
 
@@ -272,6 +272,7 @@ export class VishvaGUI {
             if (downloadURL == null) return true;
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
+            this._downloadLink.download = Vishva.worldName + ".js";
             this._downloadDialog.dialog("open");
             return false;
         };

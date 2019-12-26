@@ -34,12 +34,15 @@ export class InternalAssetsUI {
     }
 
     private _createAssetDiag(dir: string, assetType: string): VDialog {
+        console.log("dir " + dir + " assetType " + assetType);
+
         let div: HTMLDivElement = document.createElement("div");
         div.id = assetType + "Div";
         div.setAttribute("title", assetType);
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetType + "Tbl";
-        let items: Array<string | object> = this._getFiles([dir, "assets", assetType], this._vishvaFiles);
+
+        let items: Array<string | object> = this._getFiles(["assets", dir, assetType], this._vishvaFiles);
         this._updateAssetTable(dir, table, assetType, items);
         div.appendChild(table);
         document.body.appendChild(div);
@@ -68,21 +71,33 @@ export class InternalAssetsUI {
         if (tbl.rows.length > 0) {
             return;
         }
+
         var f: (p1: MouseEvent) => any = (e) => { return this._onAssetImgClick(e) };
         var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
         for (let item of items) {
             if (!(item instanceof Object)) continue;
             let img: HTMLImageElement = document.createElement("img");
             let name: string = item["d"];
-            let files: Array<string | object> = item["f"];
-            for (let file of files) {
-                if (!(file instanceof Object)) {
-                    if (file.search(name) > -1) {
-                        img.id = file;
+
+            if ("skyboxes primitives particles".search(assetType) > -1) {
+                img.id = name;
+            } else {
+                let files: Array<string | object> = item["f"];
+                for (let file of files) {
+                    if (!(file instanceof Object)) {
+                        if (file.search(name) > -1 && this._isAsset(file)) {
+                            img.id = file;
+                            break;
+                        }
                     }
                 }
             }
-            img.src = this._vishva.vHome + "/" + dir + "/assets/" + assetType + "/" + name + "/thumbnail.png";
+
+            if (dir == "internal") {
+                img.src = "assets/" + dir + "/" + assetType + "/" + name + "/thumbnail.png";
+            } else {
+                img.src = Vishva.vHome + "/assets/" + dir + "/" + assetType + "/" + name + "/thumbnail.png";
+            }
             img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
             img.className = assetType;
             img.onclick = f;
@@ -96,20 +111,26 @@ export class InternalAssetsUI {
             cell.innerText = item["d"];
         }
     }
+    private _isAsset(fileName: String): boolean {
+        let ft = fileName.split(".")[1];
+        if (ft != null) {
+            if ("babylon glb gltf obj".search(ft) > -1) return true;
+        }
+        return false;
+    }
 
     private _onAssetImgClick(e: Event): any {
         var i: HTMLImageElement = <HTMLImageElement>e.target;
         if (i.className === "skyboxes") {
-            this._vishva.setSky(i.id.split("_")[0]);
+            this._vishva.setSky(i.id);
         } else if (i.className === "primitives") {
-            this._vishva.addPrim(i.id.split(".")[0]);
+            this._vishva.addPrim(i.id);
         } else if (i.className === "particles") {
-            //this._vishva.createWater();
-            this._vishva.createParticles(i.id.split(".")[0]);
-            console.log("particles clicked " + i.id);
+            this._vishva.createParticles(i.id);
         } else {
             this._vishva.loadAsset(i.className, i.id);
         }
         return true;
+        //this._vishva.createWater();
     }
 }

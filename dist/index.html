@@ -13,6 +13,8 @@
 
         <title>Vishva</title>
 
+        <!-- <script type="text/javascript" src="https://cdn.babylonjs.com/cannon.js"></script> -->
+        <script type="text/javascript" src="https://cdn.babylonjs.com/Oimo.js"></script>
         <script type="text/javascript" src="/vishva/config.js"></script>
         <script type="text/javascript" src="/vishva/vishvaFiles.js"></script>
         <script type="text/javascript" src="main.js"></script>
@@ -116,8 +118,16 @@
                     </tr>
                     <tr>
                         <td>sky</td>
-                        <td><Button id="skyButton">change sky</button></td>
+                        <td>
+                            <Button id="skyButton">sky</button>
+                        </td>
                     </tr>
+                    <tr>
+                            <td>sky color</td>
+                            <td>
+                                <div id="skyCol">color</div>
+                            </td>
+                        </tr>
                     <tr>
                         <td>sea</td>
                         <td><Button id="envSea">add</button>
@@ -246,7 +256,7 @@
                                             <td>transform</td>
                                             <td>x,y,z</td>
                                             <td>snap</td>
-                                            <td>on/off</td>
+                                            <td>on</td>
                                         </tr>
 
                                         <tr>
@@ -276,6 +286,7 @@
                                     </table>
                                     <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
                                     <button id="transBake">bake</button>
+                                    <button id="gridSnap">grid snap</button>
                                 </td>
                             </tr>
                             <tr>

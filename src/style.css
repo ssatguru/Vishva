@@ -5,9 +5,11 @@ body {
   padding: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 80%;
-  /*font-family: "Courier New", "Trebuchet MS", sans-serif;
-    font-family: "Courier New Bold";*/
+  font-size: 85%;
+  font-weight: lighter;
+  /* font-family: "Lucida Console", Monaco, monospace; */
+  /* font-family: "Courier New", "Trebuchet MS", sans-serif; */
+  /* font-family: "Courier New Bold"; */
   background: #000000;
   color: #ffffff;
 }
@@ -74,12 +76,12 @@ mimimizer icon on each of the VDialogs
 
 /*input {margin: 1px;}*/
 table {
-  border-collapse: collapse;
-  background: rgb(34, 32, 32);
-  color: #ffffff;
+  /* border-collapse: collapse; */
+  width: 100%;
+  border-radius: 5px;
 }
 
-table,
+/* table,
 th,
 td {
   border: 1px solid white;
@@ -88,6 +90,16 @@ td {
   padding-right: 15px;
   border-radius: 5px;
   -moz-border-radius: 5px;
+} */
+
+td {
+  padding: 5px;
+  /* background: rgb(34, 32, 32);
+  
+  color: #ffffff; */
+
+  text-align: center;
+  /* border-bottom: 1px solid white; */
 }
 
 table table,
@@ -96,9 +108,16 @@ table table td {
   padding-left: 4px;
   padding-right: 4px;
   margin: 2px;
+  text-align: left;
   /*                padding-top: 1px;
                     padding-bottom: 1px;
                     border-collapse: collapse;*/
+}
+
+input[type="text"] {
+  min-width: 50px;
+  width: auto;
+  display: inline-block;
 }
 
 #vCanvas {

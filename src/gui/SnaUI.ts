@@ -8,6 +8,7 @@ import { DialogMgr } from "./DialogMgr";
 import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
 import { VTreeDialog } from "./VTreeDialog";
 import { VInputVector3 } from "./VInputVector3";
+import { VButton } from "./VButton";
 /**
  * Provides a UI to manage sensors and actuators
  */
@@ -159,12 +160,17 @@ export class SnaUI {
             cell = <HTMLTableCellElement>row.insertCell();
             cell.innerHTML = sensAct[i].getProperties().signalId;
             cell = <HTMLTableCellElement>row.insertCell();
-            var editBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
-            editBut.innerHTML = "edit";
-            var jq: JQuery = <JQuery>(<any>$(editBut));
-            jq.button();
-            var d: number = i;
-            editBut.id = d.toString();
+
+            // TODO remove, replaced by VButton
+            // var editBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
+            // editBut.innerHTML = "edit";
+            // editBut.id = d.toString();
+            // var jq: JQuery = <JQuery>(<any>$(editBut));
+            // jq.button();
+
+            let d: number = i;
+            let editBut: HTMLButtonElement = VButton.create(d.toString(), "edit");
+
             editBut["sa"] = sensAct[i];
             cell.appendChild(editBut);
             editBut.onclick = (e) => {
@@ -178,11 +184,16 @@ export class SnaUI {
                 return true;
             };
             cell = <HTMLTableCellElement>row.insertCell();
-            var delBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
-            delBut.innerHTML = "del";
-            var jq2: JQuery = <JQuery>(<any>$(delBut));
-            jq2.button();
-            delBut.id = d.toString();
+
+            // TODO remove, replaced by VButton
+            // var delBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
+            // delBut.id = d.toString();
+            // delBut.innerHTML = "del";
+            // var jq2: JQuery = <JQuery>(<any>$(delBut));
+            // jq2.button();
+
+            let delBut: HTMLButtonElement = VButton.create(d.toString(), "del");
+
             delBut["row"] = row;
             delBut["sa"] = sensAct[i];
             cell.appendChild(delBut);

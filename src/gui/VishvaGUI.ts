@@ -8,6 +8,8 @@ import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ItemListUI } from "./ItemListUI";
 import { SettingsUI } from "./SettingsUI";
 import { ItemPropsUI } from "./ItemPropsUI";
+import { VButton } from "./VButton";
+
 
 
 
@@ -142,19 +144,24 @@ export class VishvaGUI {
         let dirs: Array<string> = this._getDirs(["curated"], this._vishvaFiles);
         let addMenu: HTMLElement = document.getElementById("AddMenu");
         for (let dir of dirs) {
-            let button: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
-            button.id = dir;
-            button.style.display = "block";
-            button.innerHTML = dir;
+            let button: HTMLButtonElement = VButton.create(dir, dir);
+
+            //TODO remove. replaced by VButton
+            //button.id = dir;
+            //button.style.display = "block";
+            //button.innerHTML = dir;
+            // //convert to jquery bitton
+            // //$(button).button();
+            // //$(button).click((e) => {
+
             addMenu.appendChild(button);
-            //convert to jquery bitton
-            $(button).button();
-            $(button).click((e) => {
+            button.onclick = (e) => {
                 if (this._addInternalAssetUI == null) {
                     this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
                 }
-                this._addInternalAssetUI.toggleAssetDiag("curated", e.target.id);
-            });
+                this._addInternalAssetUI.toggleAssetDiag("curated", (<HTMLElement>e.target).id);
+
+            };
         }
     }
 

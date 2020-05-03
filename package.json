@@ -1,5 +1,5 @@
 {
-  "name": "Vishva",
+  "name": "vishva",
   "version": "1.0.0",
   "keywords": [
     "babylonjs",
@@ -9,7 +9,7 @@
   "contributors": [],
   "dependencies": {
     "babylonjs": "^4.1.0-beta.18",
-    "babylonjs-charactercontroller": "^0.2.0",
+    "babylonjs-charactercontroller": "^0.4.2",
     "babylonjs-editcontrol": "^3.2.4",
     "babylonjs-inspector": "^4.1.0-beta.18",
     "babylonjs-loaders": "^4.1.0-beta.18",
@@ -38,7 +38,7 @@
     "webpack-dev-server": "^3.10.1"
   },
   "scripts": {
-    "dev": "webpack-dev-server",
-    "build": "webpack --mode production --open"
+    "dev": "webpack-dev-server --open",
+    "build": "webpack --mode production "
   }
 }

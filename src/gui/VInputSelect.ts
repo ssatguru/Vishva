@@ -6,6 +6,7 @@ export class VInputSelect {
     constructor(eId: string, options: Array<{ id: string, desc: string }>) {
         let e: HTMLElement = document.getElementById(eId);
         this._s = document.createElement("select");
+        this._s.className = "w3-select";
         this._s.onchange = () => {
             if (this.onSelect != null) {
                 this.onSelect(this._s.value);

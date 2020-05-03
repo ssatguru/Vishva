@@ -70,6 +70,7 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
     private _inControl: boolean;
 
     public actuate() {
+        console.log("actuating!!");
         if (this._inControl) return;
 
         this._inControl = true;
@@ -100,11 +101,12 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
                 let camera: ArcRotateCamera = SNAManager.getSNAManager().getCamera();
                 this._scp.copyFrom(camera.position);
                 this._sct.copyFrom(camera.target);
+                //camera.setTarget(this.avMesh.absolutePosition);
                 camera.setTarget(this.avMesh);
                 //camera.target.copyFrom(this.avMesh.position);
             }
 
-            this.anim = skel.beginAnimation(prop.animationRange.value, prop.loop, prop.rate, () => { return this.onActuateEnd() });
+            this.anim = skel.beginAnimation(prop.animationRange.value, prop.loop, prop.rate);
         }
     }
 
@@ -123,6 +125,7 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
         }
         SNAManager.getSNAManager().enableAV();
         this._inControl = false;
+        this.onActuateEnd()
     }
 
     public isReady(): boolean {

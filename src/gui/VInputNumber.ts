@@ -48,7 +48,7 @@ export class VInputNumber {
         else return n;
     }
     public setValue(n: number) {
-        this._inE.value = Number(n).toString();
+        this._inE.value = Number(n).toFixed(2);
     }
 
 }

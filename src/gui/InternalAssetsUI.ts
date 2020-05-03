@@ -7,7 +7,7 @@ import { VishvaGUI } from "./VishvaGUI";
 import { InternalTexture } from "babylonjs";
 
 /**
- * Provides a UI to add items from Internal Assets to the world
+ * Provides a UI to add items from Internal and Currated Assets to the world
  */
 export class InternalAssetsUI {
 
@@ -21,18 +21,19 @@ export class InternalAssetsUI {
     }
 
     /**
-     * 
-     * @param dir -  internal, curated
-     * @param assetType - 
-     *  for internal - primitives, particles (maybe), avatar (maybe)
-     *  for curated - folders under curated folder
+     * turns the asset disalog on or off
+     * if first time and the asset dialog is not present then it creates one
+     * @param topFolder -  internal, curated
+     * @param assetCat - asset category
+     *   for internal - one of primitives, particles (maybe), avatar (maybe)
+     *   for curated - a folder under curated folder
      */
 
-    public toggleAssetDiag(dir: string, assetType: string) {
-        let assetDialog: VDialog = this._assetDiagMap[assetType]
+    public toggleAssetDiag(topFolder: string, assetCat: string) {
+        let assetDialog: VDialog = this._assetDiagMap[assetCat]
         if (assetDialog == null) {
-            assetDialog = this._createAssetDiag(dir, assetType);
-            this._assetDiagMap[assetType] = assetDialog;
+            assetDialog = this._createAssetDiag(topFolder, assetCat);
+            this._assetDiagMap[assetCat] = assetDialog;
         }
         if (assetDialog.isOpen()) {
             assetDialog.close();
@@ -41,47 +42,51 @@ export class InternalAssetsUI {
         }
     }
 
-    private _createAssetDiag(dir: string, assetType: string): VDialog {
-        console.log("dir " + dir + " assetType " + assetType);
+    /**
+     * creates a dialog containing a table of asset pictures 
+     * @param topFolder 
+     * @param assetCat 
+     */
+    private _createAssetDiag(topFolder: string, assetCat: string): VDialog {
+        console.log("dir " + topFolder + " assetType " + assetCat);
 
-        let div: HTMLDivElement = document.createElement("div");
-        div.id = assetType + "Div";
-        div.setAttribute("title", assetType);
-        let table: HTMLTableElement = document.createElement("table");
-        table.id = assetType + "Tbl";
-
+        //get the list of items in the internal or curated folder
         let fileList: Array<string | object>;
-        if (dir == "internal") {
+        if (topFolder == "internal") {
             fileList = Vishva.internalAssets;
         } else {
             fileList = Vishva.userAssets;
         }
-        let items: Array<string | object> = this._getFiles([dir, assetType], fileList);
-        this._updateAssetTable(dir, table, assetType, items);
+        let items: Array<string | object> = this._getFiles([topFolder, assetCat], fileList);
+
+        //create a table to display the asset pictures
+        let table: HTMLTableElement = document.createElement("table");
+        table.id = assetCat + "Tbl";
+
+        //populate that table
+        this._updateAssetTable(topFolder, table, assetCat, items);
+
+        //add the table to a dialog box.
+        let div: HTMLDivElement = document.createElement("div");
+        div.id = assetCat + "Div";
+        div.setAttribute("title", assetCat);
         div.appendChild(table);
         document.body.appendChild(div);
 
-        let assetDiag: VDialog = new VDialog(div.id, assetType, DialogMgr.centerBottom, "95%", "auto");
+        let assetDiag: VDialog = new VDialog(div.id, assetCat, DialogMgr.centerBottom, "95%", "auto");
         return assetDiag;
     }
 
-    private _getFiles(path: string[], files: Array<string | object>): Array<string | object> {
-        for (let file of files) {
-            if (file instanceof Object) {
-                if (file["d"] == path[0]) {
-                    if (path.length > 1) {
-                        path.splice(0, 1);
-                        return this._getFiles(path, file["f"]);
-                    } else
-                        return file["f"];
-                }
-            }
-        }
-        return files;
-    }
 
-
-    private _updateAssetTable(dir, tbl: HTMLTableElement, assetType: string, items: Array<string | object>) {
+    /**
+     * creates a table of one row with the row containing picture of each asset in the asset category 
+     * 
+     * @param topFolder 
+     * @param tbl 
+     * @param assetCat 
+     * @param items 
+     */
+    private _updateAssetTable(topFolder: string, tbl: HTMLTableElement, assetCat: string, items: Array<string | object>) {
         if (tbl.rows.length > 0) {
             return;
         }
@@ -90,10 +95,12 @@ export class InternalAssetsUI {
         var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
         for (let item of items) {
             if (!(item instanceof Object)) continue;
+
             let img: HTMLImageElement = document.createElement("img");
             let name: string = item["d"];
 
-            if ("skyboxes primitives particles".search(assetType) > -1) {
+            //check if special type of categories
+            if ("skyboxes primitives particles".search(assetCat) > -1) {
                 img.id = name;
             } else {
                 let files: Array<string | object> = item["f"];
@@ -106,14 +113,14 @@ export class InternalAssetsUI {
                     }
                 }
             }
-
-            if (dir == "internal") {
-                img.src = "assets/" + dir + "/" + assetType + "/" + name + "/thumbnail.png";
+            let imgURL = "assets/" + topFolder + "/" + assetCat + "/" + name + "/thumbnail.png";
+            if (topFolder == "internal") {
+                img.src = Vishva.vBinHome + imgURL;
             } else {
-                img.src = Vishva.vHome + "/assets/" + dir + "/" + assetType + "/" + name + "/thumbnail.png";
+                img.src = Vishva.vHome + "/" + imgURL;
             }
-            img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
-            img.className = assetType;
+            img.setAttribute("style", VishvaGUI.LARGE_ICON_SIZE + "cursor:pointer;");
+            img.className = assetCat;
             img.onclick = f;
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.appendChild(img);
@@ -146,5 +153,25 @@ export class InternalAssetsUI {
         }
         return true;
         //this._vishva.createWater();
+    }
+
+    /**
+     * returns a list of items (files/folders) under a folder
+     * @param path list of all parent folders and the folder itself
+     * @param fileList all the files in vishva
+     */
+    private _getFiles(path: string[], fileList: Array<string | object>): Array<string | object> {
+        for (let file of fileList) {
+            if (file instanceof Object) {
+                if (file["d"] == path[0]) {
+                    if (path.length > 1) {
+                        path.splice(0, 1);
+                        return this._getFiles(path, file["f"]);
+                    } else
+                        return file["f"];
+                }
+            }
+        }
+        return null;
     }
 }

@@ -59,13 +59,13 @@ import {
     PointLight,
     VertexBuffer,
     PBRMaterial,
-    TransformNode
+    TransformNode,
+    StereoscopicArcRotateCamera
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
 
 import { GroundSPS } from "./GroundSPS";
-//import SkeletonViewer = BABYLON.Debug.SkeletonViewer;
 import { SpreadDtls } from "./GroundSPS";
 import { SNAserialized } from "./sna/SNA";
 import { SNAManager } from "./sna/SNA";
@@ -93,7 +93,13 @@ export class Vishva {
 
     public static worldName: string;
 
-    public static vHome: string = "/vishva"
+    //location of all vishva user assets and worlds
+    public static vHome: string = "/vishva";
+
+    //location of all vishva binary files and internal assets
+    //normally "/bin/" folder. will keep it relative
+    public static vBinHome: string = "";
+
     public static userAssets: Array<any>;
     public static internalAssets: Array<any>;
 
@@ -154,26 +160,26 @@ export class Vishva {
     // Note the usage of relative url for internal assets
     // "assets/.." and not "/assets"
     // This is becuase internal assets would be stored in the distribution itself
-    private avatarFolder: string = "assets/internal/avatar/";
+    private avatarFolder: string = Vishva.vBinHome + "assets/internal/avatar/";
     private avatarFile: string = "starterAvatars.babylon";
 
 
-    NO_TEXTURE: string = "assets/internal/textures/no-texture.jpg"
-    TGA_IMAGE: string = "assets/internal/textures/tga-image.jpg"
+    NO_TEXTURE: string = Vishva.vBinHome + "assets/internal/textures/no-texture.jpg"
+    TGA_IMAGE: string = Vishva.vBinHome + "assets/internal/textures/tga-image.jpg"
 
-    groundTexture: string = "assets/internal/textures/ground.jpg";
-    groundBumpTexture: string = "assets/internal/textures/ground-normal.jpg";
-    groundHeightMap: string = "assets/internal/textures/ground_heightMap.png";
+    groundTexture: string = Vishva.vBinHome + "assets/internal/textures/ground.jpg";
+    groundBumpTexture: string = Vishva.vBinHome + "assets/internal/textures/ground-normal.jpg";
+    groundHeightMap: string = Vishva.vBinHome + "assets/internal/textures/ground_heightMap.png";
 
-    terrainTexture: string = "assets/internal/textures/earth.jpg";
-    terrainHeightMap: string = "assets/internal/textures/worldHeightMap.jpg";
+    terrainTexture: string = Vishva.vBinHome + "assets/internal/textures/earth.jpg";
+    terrainHeightMap: string = Vishva.vBinHome + "assets/internal/textures/worldHeightMap.jpg";
 
-    primTexture: string = "assets/internal/textures/Birch.jpg";
+    primTexture: string = Vishva.vBinHome + "assets/internal/textures/Birch.jpg";
 
-    waterTexture: string = "assets/internal/textures/waterbump.png";
+    waterTexture: string = Vishva.vBinHome + "assets/internal/textures/waterbump.png";
 
-    snowTexture: string = "assets/internal/textures/flare.png";
-    rainTexture: string = "assets/internal/textures/raindrop-1.png";
+    snowTexture: string = Vishva.vBinHome + "assets/internal/textures/flare.png";
+    rainTexture: string = Vishva.vBinHome + "assets/internal/textures/raindrop-1.png";
 
     snowPart: ParticleSystem = null;
     snowing: boolean = false;
@@ -257,7 +263,6 @@ export class Vishva {
 
         //BABYLON.OBJFileLoader.INVERT_Y = true;
 
-
         Tools.LogLevels = Tools.AllLogLevel;
 
         Vishva.userAssets = userAssets;
@@ -302,6 +307,15 @@ export class Vishva {
         window.addEventListener("resize", (event) => { return this.onWindowResize(event) });
         window.addEventListener("keydown", (e) => { return this.onKeyDown(e) }, false);
         window.addEventListener("keyup", (e) => { return this.onKeyUp(e) }, false);
+        window.onfocus = () => {
+            console.log("gaining focus");
+            this.key.esc = false;
+            this.key.shift = false;
+            this.key.ctl = false
+            this.key.alt = false;
+        };
+
+
 
         //fix shadow and skinning issue
         //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
@@ -431,7 +445,7 @@ export class Vishva {
         }
 
         if (!skelFound) {
-            console.error("ALARM: No Skeleton found");
+            console.log("No Skeleton found");
         }
 
         for (let light of scene.lights) {
@@ -720,6 +734,8 @@ export class Vishva {
         this.key.redo = false;
     }
 
+
+
     //how far away from the center can the avatar go
     //fog will start at the limitStart and will become dense at LimitEnd
     private moveLimitStart = 114;
@@ -730,7 +746,8 @@ export class Vishva {
     fogDensity: number = 0;
 
     private isMeshSelected: boolean = false;
-    //private meshSelected: AbstractMesh;
+    //NOTE: sometime isMeshSelected is false and meshSelected != null
+    //see removeEditControl()
     public meshSelected: TransformNode;
     public getMeshSelected(): TransformNode {
         return this.meshSelected;
@@ -1361,7 +1378,7 @@ export class Vishva {
      */
     private _instanceTransNode(tn: TransformNode, ptn: TransformNode): TransformNode {
         console.log(tn);
-        let _name: string = (<number>new Number(Date.now())).toString();
+        let _name: string = this.uid();
         let _tnInst: TransformNode;
         // we cannot create an instance from the instance ,
         // we can only clone it
@@ -1726,7 +1743,7 @@ export class Vishva {
 
     public clonetheMesh(mesh: TransformNode): TransformNode {
 
-        var name: string = (<number>new Number(Date.now())).toString();
+        var name: string = this.uid();
         //TODO should clone the children too.
         //TODO to do that make sure the children are also not selected
         //let clone: AbstractMesh=mesh.clone(name,null,true);
@@ -1857,7 +1874,7 @@ export class Vishva {
     public csgOperation(op: string): string {
 
         if (this.meshesPicked != null) {
-            if ((this.meshSelected! instanceof AbstractMesh) || (this.meshesPicked[0]! instanceof AbstractMesh)) {
+            if (!(this.meshSelected instanceof AbstractMesh && this.meshesPicked[0] instanceof AbstractMesh)) {
                 return "a selection is not a mesh, is just a transformnode";
             }
             if (this.meshesPicked.length > 2) {
@@ -3060,7 +3077,7 @@ export class Vishva {
             } else {
                 let mat: StandardMaterial = <StandardMaterial>this.skybox.material;
                 mat.reflectionTexture.dispose();
-                let skyFile: string = "assets/curated/skyboxes/" + sky + "/" + sky;
+                let skyFile: string = Vishva.vHome + "/assets/curated/skyboxes/" + sky + "/" + sky;
                 mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
                 mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
             }
@@ -3592,7 +3609,7 @@ export class Vishva {
         */
         if (_rootMeshesCount > 1) {
 
-            rootMesh = new TransformNode("root-" + this.uid(), this.scene, true);
+            rootMesh = new TransformNode(file, this.scene, true);
 
             //cannot instance mesh without geometry
             //so create a small mesh
@@ -3792,7 +3809,11 @@ export class Vishva {
     private _postLoad(meshes: AbstractMesh[]) {
         if (meshes.length > 0) {
             for (let mesh of meshes) {
-                this._makeMatIdUnique(mesh);
+
+                this._processMaterial(mesh, m => this._makeMatIdUnique(m));
+
+                //TODO one time. remove afterwards
+                this._processMaterial(mesh, m => this._removeSpecular(m));
             }
 
             let lastMesh: AbstractMesh = meshes[meshes.length - 1];
@@ -3810,17 +3831,26 @@ export class Vishva {
      * these meshes end up with the same material id.
      * 
      */
-    private _makeMatIdUnique(msh: AbstractMesh) {
-        let mesh: Mesh = <Mesh>msh;
+    private _makeMatIdUnique(mat: Material) {
+        mat.id = mat.id + "-" + this.uid();;
+    }
+
+    private _removeSpecular(m: Material) {
+        if (m instanceof StandardMaterial) {
+            m.specularColor = Color3.Black();
+        }
+    }
+
+    private _processMaterial(mesh: AbstractMesh, f: (mat: Material) => void) {
         if (mesh.material != null) {
             if (mesh.material instanceof MultiMaterial) {
                 var mm: MultiMaterial = <MultiMaterial>mesh.material;
                 var mats: Material[] = mm.subMaterials;
                 for (let mat of mats) {
-                    mat.id = mat.id + "-" + this.uid();
+                    f(mat);
                 }
             } else {
-                mesh.material.id = mesh.material.id + "-" + this.uid();;
+                f(mesh.material);
             }
         }
     }
@@ -3839,41 +3869,9 @@ export class Vishva {
         return (new Number(newUid)).toString() + ups;
     }
 
-    private _renameTextures(mesh: AbstractMesh) {
-        if (mesh.material != null) {
-            console.log("found material");
-            console.log(mesh.material);
-            if (mesh.material instanceof MultiMaterial) {
-                var mm: MultiMaterial = <MultiMaterial>mesh.material;
-                var mats: Material[] = mm.subMaterials;
-                for (let mat of mats) {
-                    //TODO remove this
-                    //mesh.material.backFaceCulling=false;
-                    //mesh.material.alpha=1;
-                    if (mat != null && mat instanceof StandardMaterial) {
-                        this.renameAssetTextures(<StandardMaterial>mat);
-                    }
-                }
-            } else {
-                //TODO remove this
-                //mesh.material.backFaceCulling=false;
-                //mesh.material.alpha=1;
-                if (mesh.material instanceof StandardMaterial) {
-                    var sm: StandardMaterial = <StandardMaterial>mesh.material;
-                    this.renameAssetTextures(sm);
-                } else {
-                    console.log("non standard material");
-                    if (mesh.material instanceof PBRMaterial) {
-                        console.log("PBR material");
-                        var mat: PBRMaterial = <PBRMaterial>mesh.material;
-                        console.log(mat.albedoTexture);
-                    }
-                }
-            }
-        }
-    }
 
-    private renameAssetTextures(sm: StandardMaterial) {
+    private _renameAssetTextures(sm: Material) {
+        if (!(sm instanceof StandardMaterial)) return;
         this.renameAssetTexture(sm.diffuseTexture);
         this.renameAssetTexture(sm.reflectionTexture);
         this.renameAssetTexture(sm.opacityTexture);
@@ -4266,9 +4264,7 @@ export class Vishva {
     }
 
     public createParticles(partId: string) {
-        console.log(partId);
         if (!(this.meshSelected instanceof AbstractMesh)) return false;
-        console.log(partId);
         if (this.meshSelected == null) {
             return "no mesh selected";
         }
@@ -4286,13 +4282,31 @@ export class Vishva {
         }
     }
 
+    public removeParticles(partId: string) {
+        if (!(this.meshSelected instanceof AbstractMesh)) return false;
+        if (this.meshSelected == null) {
+            return "no mesh selected";
+        }
+        let pss: ParticleSystem[] = <ParticleSystem[]>this.scene.particleSystems;
+
+        for (let ps of pss) {
+            if (ps.emitter == this.meshSelected) {
+                if (partId === ps.name || partId === "") {
+                    ps.stop();
+                    ps.dispose();
+                }
+            }
+        }
+
+    }
+
     private _createFirePart(): ParticleSystem {
 
         // Create a particle system
-        let fireSystem = new ParticleSystem("particles", 2000, this.scene);
+        let fireSystem = new ParticleSystem("fire", 2000, this.scene);
 
         //Texture of each particle
-        fireSystem.particleTexture = new Texture("assets/internal/particles/fire/flare.png", this.scene);
+        fireSystem.particleTexture = new Texture(Vishva.vBinHome + "assets/internal/particles/fire/flare.png", this.scene);
 
         // Where the particles come from
         // fireSystem.emitter = this.meshSelected; // the starting object, the emitter
@@ -4339,8 +4353,8 @@ export class Vishva {
     }
 
     private _createSmokePart(): ParticleSystem {
-        var smokeSystem = new ParticleSystem("particles", 1000, this.scene);
-        smokeSystem.particleTexture = new Texture("assets/internal/particles/smoke/flare.png", this.scene);
+        var smokeSystem = new ParticleSystem("smoke", 1000, this.scene);
+        smokeSystem.particleTexture = new Texture(Vishva.vBinHome + "assets/internal/particles/smoke/flare.png", this.scene);
 
         smokeSystem.minEmitBox = new Vector3(-0.5, 1, -0.5); // Starting all from
         smokeSystem.maxEmitBox = new Vector3(0.5, 1, 0.5); // To...
@@ -4378,6 +4392,7 @@ export class Vishva {
     private createCamera(scene: Scene, canvas: HTMLCanvasElement): ArcRotateCamera {
         //lets create a camera located way high so that it doesnotcollide with any terrain
         var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 1000, 0), scene);
+        //var camera: StereoscopicArcRotateCamera = new StereoscopicArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 1000, 0), 0.005, true, scene);
         this.setCameraSettings(camera);
         camera.attachControl(canvas, true);
         if ((this.avatar !== null) && (this.avatar !== undefined)) {
@@ -4393,9 +4408,56 @@ export class Vishva {
     }
 
 
-
-
     public switchAvatar(): string {
+        if (!this.isMeshSelected) {
+            return "no mesh selected";
+        }
+
+        this.cc.stop();
+        //old avatar
+        SNAManager.getSNAManager().enableSnAs(this.avatar);
+        this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
+        this.avatar.isPickable = true;
+        Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
+        if (this.avatarSkeleton != null) {
+            Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
+            this.avatarSkeleton.name = "";
+        }
+
+        //new avatar
+        this.avatar = <Mesh>this.meshSelected;
+        this.avatarSkeleton = this.avatar.skeleton;
+        Tags.AddTagsTo(this.avatar, "Vishva.avatar");
+        if (this.avatarSkeleton != null) {
+            Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
+            this.avatarSkeleton.name = "Vishva.skeleton";
+            this.avatarSkeleton.enableBlending(this._animBlend);
+        }
+        this.cc.setAvatar(this.avatar);
+        this.cc.setAvatarSkeleton(this.avatarSkeleton);
+
+        this.avatar.checkCollisions = true;
+        this.avatar.ellipsoid = this._avEllipsoid
+        this.avatar.ellipsoidOffset = this._avEllipsoidOffset
+        this.avatar.isPickable = false;
+        this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
+        this.avatar.rotationQuaternion = null;
+        this.saveAVcameraPos.copyFrom(this.arcCamera.position);
+        this.isFocusOnAv = true;
+        this.removeEditControl();
+        SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
+
+        //make character control to use the new avatar
+        this.cc.setAvatar(this.avatar);
+        this.cc.setAvatarSkeleton(this.avatarSkeleton);
+        //this.cc.setAnims(this.anims);
+        this.cc.start();
+
+        return null;
+    }
+
+
+    public switchAvatar_old(): string {
         if (!this.isMeshSelected) {
             return "no mesh selected";
         }

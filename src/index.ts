@@ -1,8 +1,14 @@
 import { Vishva } from "./Vishva";
 
-import "./style.css";
-import "jquery-ui-themes/themes/dark-hive/jquery-ui.min.css";
+import "./w3.css";
+//import "jquery-ui-themes/themes/eggplant/jquery-ui.min.css";
+//import "jquery-ui-themes/themes/dark-hive/jquery-ui.min.css";
 //import "./jquery-ui-1.12.1.custom/jquery-ui.theme.min.css";
+
+// import "./jquery/dark-hive/jquery-ui.css";
+import "./jquery/eggplant/jquery-ui.css";
+
+import "./style.css";
 
 import "jquery-ui/ui/widgets/accordion";
 import "jquery-ui/ui/widgets/button";
@@ -41,6 +47,7 @@ import "./sna/SensorContact";
 import "./sna/SensorTimer";
 
 import { HREFsearch } from "./util/HREFsearch";
+import { VButton } from "./gui/VButton";
 
 
 declare var defaultWorld: any;
@@ -62,13 +69,25 @@ function main() {
     $(cls).show();
 
     //change all buttons to jquery button
-    $("button").button();
+    // $("button").button();
+
+    let btns = document.getElementsByTagName("button");
+    for (let i = 0; i < btns.length; i++) {
+        // btns[i].classList.add("w3-btn");
+        // btns[i].classList.add("w3-win8-mauve");
+        // btns[i].classList.add("w3-card");
+        // btns[i].classList.add("w3-round");
+        VButton.styleIt(btns[i]);
+    }
+    //button color 61,53,68 and 48,38,58 (darker)
+
+
     //after click loose focus
     $("button").click(function (e) {
         $(this).blur();
     });
 
-    $('input').addClass("ui-corner-all");
+    //$('input').addClass("ui-corner-all");
 
 
     var search: HREFsearch = new HREFsearch();

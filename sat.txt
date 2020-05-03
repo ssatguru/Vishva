@@ -1,0 +1,24 @@
+
+start http-server from root
+pick up bin/index.html
+this picks up config file from absolute location /vishva
+
+the idea is to run distributable from one folder and the world from another folder
+
+
+
+vishva needs 
+
+a) internal assets
+these are stored in the build/bin folder.
+same place as the index.html file
+These are picked up using relative location "assets/..."
+
+b) user assets
+these are stored in the "vishva" folder.
+These are thus picked up using absolute location "/vishva/.."
+
+See index.html and Vishva.ts vBinHome variable.
+
+webpack-dev-server is setup to serve build and static content from  root "./"
+webpack will copy all src/assets folder to bin folder.

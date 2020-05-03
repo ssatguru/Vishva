@@ -201,27 +201,28 @@ export class GeneralUI {
             this._vishva.toggleBoundingBox();
         }
 
-        var undo: HTMLElement = document.getElementById("undo");
-        var redo: HTMLElement = document.getElementById("redo");
+        let undo: HTMLElement = document.getElementById("undo");
+        let redo: HTMLElement = document.getElementById("redo");
 
 
-        var parentMesh: HTMLElement = document.getElementById("parentMesh");
-        var removeParent: HTMLElement = document.getElementById("removeParent");
-        var removeChildren: HTMLElement = document.getElementById("removeChildren");
+        let parentMesh: HTMLElement = document.getElementById("parentMesh");
+        let removeParent: HTMLElement = document.getElementById("removeParent");
+        let removeChildren: HTMLElement = document.getElementById("removeChildren");
 
-        var cloneMesh: HTMLElement = document.getElementById("cloneMesh");
-        var instMesh: HTMLElement = document.getElementById("instMesh");
-        var mergeMesh: HTMLElement = document.getElementById("mergeMesh");
-        var subMesh: HTMLElement = document.getElementById("subMesh");
-        var interMesh: HTMLElement = document.getElementById("interMesh");
-        var downAsset: HTMLElement = document.getElementById("downMesh");
-        var delMesh: HTMLElement = document.getElementById("delMesh");
+        let cloneMesh: HTMLElement = document.getElementById("cloneMesh");
+        let instMesh: HTMLElement = document.getElementById("instMesh");
+        let mergeMesh: HTMLElement = document.getElementById("mergeMesh");
+        let subMesh: HTMLElement = document.getElementById("subMesh");
+        let interMesh: HTMLElement = document.getElementById("interMesh");
+        let downAsset: HTMLElement = document.getElementById("downMesh");
+        let delMesh: HTMLElement = document.getElementById("delMesh");
 
-        var swAv: HTMLElement = document.getElementById("swAv");
-        var swGnd: HTMLElement = document.getElementById("swGnd");
+        let swAv: HTMLElement = document.getElementById("swAv");
+        let swGnd: HTMLElement = document.getElementById("swGnd");
 
-        var sNa: HTMLElement = document.getElementById("sNa");
-        var addParticles: HTMLButtonElement = <HTMLButtonElement>document.getElementById("addParticles");
+        let sNa: HTMLElement = document.getElementById("sNa");
+        let addParticles: HTMLButtonElement = <HTMLButtonElement>document.getElementById("addParticles");
+        let remParticles: HTMLButtonElement = <HTMLButtonElement>document.getElementById("remParticles");
 
 
         undo.onclick = (e) => {
@@ -234,21 +235,21 @@ export class GeneralUI {
         };
 
         parentMesh.onclick = (e) => {
-            var err: string = this._vishva.makeParent();
+            let err: string = this._vishva.makeParent();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return false;
         };
         removeParent.onclick = (e) => {
-            var err: string = this._vishva.removeParent();
+            let err: string = this._vishva.removeParent();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return false;
         };
         removeChildren.onclick = (e) => {
-            var err: string = this._vishva.removeChildren();
+            let err: string = this._vishva.removeChildren();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
@@ -256,21 +257,21 @@ export class GeneralUI {
         };
 
         cloneMesh.onclick = (e) => {
-            var err: string = this._vishva.clone_mesh();
+            let err: string = this._vishva.clone_mesh();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return false;
         };
         instMesh.onclick = (e) => {
-            var err: string = this._vishva.instance_mesh();
+            let err: string = this._vishva.instance_mesh();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return false;
         };
         mergeMesh.onclick = (e) => {
-            var err: string = this._vishva.mergeMeshes();
+            let err: string = this._vishva.mergeMeshes();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
@@ -278,21 +279,21 @@ export class GeneralUI {
         };
 
         subMesh.onclick = (e) => {
-            var err: string = this._vishva.csgOperation("subtract");
+            let err: string = this._vishva.csgOperation("subtract");
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return false;
         };
         interMesh.onclick = (e) => {
-            var err: string = this._vishva.csgOperation("intersect");
+            let err: string = this._vishva.csgOperation("intersect");
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return false;
         };
         downAsset.onclick = (e) => {
-            var downloadURL: string = this._vishva.saveAsset();
+            let downloadURL: string = this._vishva.saveAsset();
             if (downloadURL == null) {
                 DialogMgr.showAlertDiag("No Mesh Selected");
                 return true;
@@ -303,7 +304,7 @@ export class GeneralUI {
             return false;
         };
         delMesh.onclick = (e) => {
-            var err: string = this._vishva.delete_mesh();
+            let err: string = this._vishva.delete_mesh();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
@@ -311,14 +312,14 @@ export class GeneralUI {
         };
 
         swAv.onclick = (e) => {
-            var err: string = this._vishva.switchAvatar();
+            let err: string = this._vishva.switchAvatar();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
             return true;
         };
         swGnd.onclick = (e) => {
-            var err: string = this._vishva.switchGround();
+            let err: string = this._vishva.switchGround();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
@@ -334,7 +335,7 @@ export class GeneralUI {
         };
 
         //            addWater.onclick = (e) => {
-        //                var err: string = this.vishva.addWater()
+        //                let err: string = this.vishva.addWater()
         //                 if (err != null) {
         //                    DialogMgr.showAlertDiag(err);
         //                }
@@ -346,6 +347,13 @@ export class GeneralUI {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
             this._addInternalAssetUI.toggleAssetDiag("internal", "particles");
+            return true;
+        };
+
+        remParticles.onclick = (e) => {
+            //TODO we are removing all particles now
+            //should give an option to select which one
+            this._vishva.removeParticles("");
             return true;
         };
 

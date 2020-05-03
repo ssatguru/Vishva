@@ -239,7 +239,8 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <div style="float:left;clear:left">
+                                    <!-- <div style="float:left;clear:left"> -->
+                                    <div>
                                         <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
                                         <button id="operRot" ><span class="ui-icon ui-icon-arrowrefresh-1-e" title="rotate"></span>  </button>
                                         <button id="operScale" ><span class="ui-icon ui-icon-arrow-4-diag" title="scale"></span>  </button>
@@ -338,6 +339,7 @@
                             <tr>
                                 <td>
                                     <button id="addParticles" >add particles</button>
+                                    <button id="remParticles" >remove particles</button>
                                 </td>
                             </tr>
                         </table>
@@ -453,28 +455,12 @@
 
                     <h3 >Material</h3>
                     <div id="Material">
-                        <table>
+                        <table >
                             <tr>
-                                <td>
-                                    transparency :  <output for="matVis" id="matVisVal"></output> 
+                                <td style="text-align: right;">
+                                    material :   
                                 </td>
-                                <td>
-                                    <input type="range" id="matVis" min="0.0" max="1.0" step="0.01" value="1.00">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    material count
-                                </td>
-                                <td>
-                                    <label id="matCount"></label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    material   
-                                </td>
-                                <td>
+                                <td style="text-align: left;">
                                     <select id="matIDs"></Select>
                                     <br>
                                     <br>
@@ -483,8 +469,25 @@
                                 </td>
                             </tr>
                             <tr>
+                                <td style="text-align: right;">
+                                    transparency  <output for="matVis" id="matVisVal"></output> :  
+                                </td>
+                                <td style="text-align: left;">
+                                    <input type="range" id="matVis" min="0.0" max="1.0" step="0.01" value="1.00">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right;">
+                                    material count :
+                                </td>
+                                <td style="text-align: left;">
+                                    <label id="matCount"></label>
+                                </td>
+                            </tr>
+                           
+                            <tr>
                                 <td colspan="2">
-                                    <table>
+                                    <table style="border: 1px solid white;">
                                         <tr>
                                             <td>
                                                 id
@@ -910,7 +913,7 @@
                     </li>
                     <li>To select multiple item 
                         <ul>
-                            <li> press"CTL" key and mouse LEFT click the item - this will pick root of item,
+                            <li> press"CTL" key and mouse LEFT click the item - this will pick its root and all its childrens,
                             <li> press"CTL" key and mouse RIGHT click the item - this will pick just item,
                         </ul>
                     </li>

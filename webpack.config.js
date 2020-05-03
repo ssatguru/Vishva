@@ -7,52 +7,56 @@ module.exports = {
   mode: "development",
   entry: ["./src/index.ts", "./src/index.html"],
   devtool: "source-map",
-  devServer: {
-    contentBase: "./"
-  },
+  //don't need devServer options. These are default option.s
+  // devServer: {
+  //   contentBase: "./",
+  //   publicPath: "./",
+  // },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: "ts-loader",
-        exclude: /node_modules/
+        exclude: /node_modules/,
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        use: ["style-loader", "css-loader"],
       },
       {
         test: /\.(jpe?g|png|svg|gif)$/,
-        use: "file-loader"
+        use: "file-loader",
       },
       {
         test: /\.html/,
-        use: "file-loader?name=[name].[ext]"
-      }
-    ]
+        use: "file-loader?name=[name].[ext]",
+      },
+    ],
   },
+
   plugins: [
     new webpack.ProvidePlugin({
       $: "jquery",
-      jQuery: "jquery"
+      jQuery: "jquery",
     }),
+    //copy the assets folder from src to the build folder
     new CopyWebpackPlugin([
       {
-        from: "./assets/internal/**/*",
-        to: "./"
-      }
-    ])
+        context: "src/",
+        from: "assets/**/*",
+      },
+    ]),
   ],
   //   externals: {
   //     oimo: "OIMO", //or true
   //     cannon: "CANNON" //or true
   //   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js"]
+    extensions: [".tsx", ".ts", ".js"],
   },
   output: {
-    path: path.resolve(__dirname, "dist")
-  }
+    path: path.resolve(__dirname, "bin"),
+  },
   // optimization: {
   //     minimizer: [
   //         new TerserPlugin({

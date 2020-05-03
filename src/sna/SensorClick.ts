@@ -65,6 +65,8 @@ export class SensorClick extends SensorAbstract {
             actType = ActionManager.OnCenterPickTrigger
         }
 
+        //TODO make sure we are not doing CTL/SHIFT/ALt too
+
         let action: Action = new ExecuteCodeAction(actType, (e) => {
             this.emitSignal(e);
         }

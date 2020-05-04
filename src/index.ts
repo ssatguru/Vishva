@@ -48,6 +48,7 @@ import "./sna/SensorTimer";
 
 import { HREFsearch } from "./util/HREFsearch";
 import { VButton } from "./gui/VButton";
+import { VInputSelect } from "./gui/VInputSelect";
 
 
 declare var defaultWorld: any;
@@ -81,6 +82,21 @@ function main() {
     }
     //button color 61,53,68 and 48,38,58 (darker)
 
+    let slcs = document.getElementsByTagName("select");
+    for (let i = 0; i < slcs.length; i++) {
+        VInputSelect.styleIt(slcs[i]);
+    }
+    let inps = document.querySelectorAll("input[type=text]");
+    console.log("inps " + inps.length);
+    for (let i = 0; i < inps.length; i++) {
+        inps[i].className = "w3-input";
+        (<HTMLElement>inps[i]).style.width = "auto";
+    }
+    let chks = document.querySelectorAll("input[type=checkbox]");
+    console.log("chks " + chks.length);
+    for (let i = 0; i < chks.length; i++) {
+        chks[i].className = "w3-check";
+    }
 
     //after click loose focus
     $("button").click(function (e) {

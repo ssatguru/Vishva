@@ -37,5 +37,11 @@ export class VInputSelect {
         return this._s.value;
     }
 
+    public static styleIt(se: HTMLSelectElement) {
+        se.className = "w3-select";
+        se.style.width = "auto";
+
+    }
+
 
 }

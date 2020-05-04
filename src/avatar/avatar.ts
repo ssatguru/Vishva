@@ -132,13 +132,6 @@ export class AvManager {
         cc.setStrafeRightKey("E");
         cc.setStrafeLeftKey("Q");
 
-        //arrow keys
-        // cc.setTurnRightCode(39);
-        // cc.setTurnLeftCode(37);
-        // cc.setStrafeRightCode(0);
-        // cc.setStrafeLeftCode(0);
-
-
         cc.setStepOffset(0.5);
         cc.setSlopeLimit(30, 60);
     }

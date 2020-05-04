@@ -33,6 +33,10 @@ export class InternalAssetsUI {
         let assetDialog: VDialog = this._assetDiagMap[assetCat]
         if (assetDialog == null) {
             assetDialog = this._createAssetDiag(topFolder, assetCat);
+            if (assetDialog == null) {
+                DialogMgr.showAlertDiag("no assets found for this");
+                return;
+            }
             this._assetDiagMap[assetCat] = assetDialog;
         }
         if (assetDialog.isOpen()) {
@@ -58,6 +62,9 @@ export class InternalAssetsUI {
             fileList = Vishva.userAssets;
         }
         let items: Array<string | object> = this._getFiles([topFolder, assetCat], fileList);
+        if (items == null) {
+            return null;
+        }
 
         //create a table to display the asset pictures
         let table: HTMLTableElement = document.createElement("table");

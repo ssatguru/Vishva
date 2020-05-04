@@ -7,7 +7,7 @@ import "./w3.css";
 
 // import "./jquery/dark-hive/jquery-ui.css";
 import "./jquery/eggplant/jquery-ui.css";
-
+import "./w3-theme-eggplant.css";
 import "./style.css";
 
 import "jquery-ui/ui/widgets/accordion";

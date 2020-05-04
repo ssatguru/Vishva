@@ -94,7 +94,7 @@ export class Vishva {
     public static worldName: string;
 
     //location of all vishva user assets and worlds
-    public static vHome: string = "/vishva";
+    public static vHome: string = "../vishva";
 
     //location of all vishva binary files and internal assets
     //normally "/bin/" folder. will keep it relative

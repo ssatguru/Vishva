@@ -1,7 +1,4 @@
 nbproject
 node_modules
 *.bat
-vishva/assets
-vishva/worlds
-vishva/userAssets.js
-
+ig_*.*

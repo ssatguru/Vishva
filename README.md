@@ -16,8 +16,8 @@ run
 - npm install  
   this will install any dependencies.
 
-- npm run test
-  this will build in memory, start a webpack-dev-server and open browser at http://localhost:8080
+- npm run test  
+  this will build in memory, start a webpack-dev-server and open browser at http://localhost:8080  
   if you make any changes to source and save , this will automatically reload your project in the browser.
 
 - npm run build  

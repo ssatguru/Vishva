@@ -2,11 +2,12 @@ import { Vishva } from "../Vishva";
 import SliderOptions = JQueryUI.SliderOptions;
 import SliderUIParams = JQueryUI.SliderUIParams;
 import { VishvaGUI } from "./VishvaGUI";
-import { VDialog } from "./VDialog";
+import { VDialog } from "./components/VDialog";
 import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ColorPickerDiag } from "./ColorPickerDiag";
 import { DialogMgr } from "./DialogMgr";
 import { Color4 } from "babylonjs";
+import { envElement } from "./EnvironmentML";
 
 /**
  * provides a ui to manage the environment in the world
@@ -20,9 +21,13 @@ export class EnvironmentUI {
      * Create Environment Dialog
      */
     constructor(vishva: Vishva, addInternalAssetUI: InternalAssetsUI, vishvaGUI: VishvaGUI) {
+        console.log("creating env ui");
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
         this._addInternalAssetUI = addInternalAssetUI;
+
+        document.body.appendChild(envElement);
+
 
         let sunPos: JQuery = $("#sunPos");
         let light: JQuery = $("#light");

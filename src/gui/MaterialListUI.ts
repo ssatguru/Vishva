@@ -3,7 +3,7 @@ import {
     Material,
     MultiMaterial
 } from "babylonjs";
-import { VTreeDialog } from "./VTreeDialog";
+import { VTreeDialog } from "./components/VTreeDialog";
 import { DialogMgr } from "./DialogMgr";
 /*
  * provides a user interface which list all materials in the scene

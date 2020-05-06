@@ -1,7 +1,7 @@
 
 import { AbstractMesh, TransformNode, Mesh } from "babylonjs";
 import { Vishva } from "../Vishva";
-import { VTreeDialog } from "./VTreeDialog";
+import { VTreeDialog } from "./components/VTreeDialog";
 import { DialogMgr } from "./DialogMgr";
 import { Node } from "babylonjs";
 /*

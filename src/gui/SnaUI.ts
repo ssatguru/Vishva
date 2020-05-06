@@ -6,9 +6,9 @@ import { Vishva } from "../Vishva";
 import { VishvaGUI, SelectType, FileInputType, Range } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
 import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
-import { VTreeDialog } from "./VTreeDialog";
-import { VInputVector3 } from "./VInputVector3";
-import { VButton } from "./VButton";
+import { VTreeDialog } from "./components/VTreeDialog";
+import { VInputVector3 } from "./components/VInputVector3";
+import { VButton } from "./components/VButton";
 /**
  * Provides a UI to manage sensors and actuators
  */

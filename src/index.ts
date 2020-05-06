@@ -47,8 +47,8 @@ import "./sna/SensorContact";
 import "./sna/SensorTimer";
 
 import { HREFsearch } from "./util/HREFsearch";
-import { VButton } from "./gui/VButton";
-import { VInputSelect } from "./gui/VInputSelect";
+import { VButton } from "./gui/components/VButton";
+import { VInputSelect } from "./gui/components/VInputSelect";
 
 
 declare var defaultWorld: any;
@@ -109,7 +109,7 @@ function main() {
     var search: HREFsearch = new HREFsearch();
 
     var scene = search.getParm("world");
-    var scenePath = "/vishva/worlds/";
+    var scenePath = "../vishva/worlds/";
     var editEnabled = true;
 
 

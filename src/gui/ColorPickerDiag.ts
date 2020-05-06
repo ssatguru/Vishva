@@ -1,4 +1,4 @@
-import { VDialog } from "./VDialog";
+import { VDialog } from "./components/VDialog";
 import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { ColorPicker } from "./colorpicker/colorpicker";
 

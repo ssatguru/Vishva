@@ -2,13 +2,14 @@ import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { Vishva } from "../Vishva";
 import { DialogMgr } from "./DialogMgr";
 import { EnvironmentUI } from "./EnvironmentUI";
-import { VDialog } from "./VDialog";
-import { VTreeDialog } from "./VTreeDialog";
+import { VDialog } from "./components/VDialog";
+import { VTreeDialog } from "./components/VTreeDialog";
 import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ItemListUI } from "./ItemListUI";
 import { SettingsUI } from "./SettingsUI";
-import { ItemPropsUI } from "./ItemPropsUI";
-import { VButton } from "./VButton";
+import { PropsPanelUI } from "./propspanel/PropsPanelUI";
+import { VButton } from "./components/VButton";
+import { hlpElement } from "./HelpML";
 
 
 
@@ -174,7 +175,7 @@ export class VishvaGUI {
     private _items: ItemListUI;
     private _environment: EnvironmentUI;
     private _settingDiag: SettingsUI;
-    private _itemProps: ItemPropsUI;
+    private _itemProps: PropsPanelUI;
 
     private firstTime: boolean = true;
     private addMenuOn: boolean = false;
@@ -326,7 +327,7 @@ export class VishvaGUI {
         let helpDiag: VDialog = null;
         helpLink.onclick = (e) => {
             if (helpDiag == null) {
-                helpDiag = new VDialog("helpDiv", "Help", DialogMgr.center, "50%", "", 640);
+                helpDiag = new VDialog(hlpElement, "Help", DialogMgr.center, "50%", "", 640);
             }
             helpDiag.toggle();
             return true;
@@ -349,7 +350,7 @@ export class VishvaGUI {
             return;
         }
         if (this._itemProps == null) {
-            this._itemProps = new ItemPropsUI(this._vishva, this);
+            this._itemProps = new PropsPanelUI(this._vishva, this);
         }
         this._itemProps.open();
         return true;

@@ -1,6 +1,6 @@
 
-import {VDialog} from "./VDialog";
-import JQueryPositionOptions=JQueryUI.JQueryPositionOptions;
+import { VDialog } from "./components/VDialog";
+import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 
 export class DialogMgr {
 
@@ -51,15 +51,16 @@ export class DialogMgr {
     };
 
     private static _alertDialog: VDialog;
-    private static _alertDiv: HTMLElement;
+    private static _alertDiv: HTMLDivElement;
 
     public static createAlertDiag() {
         if (this._alertDialog == null) {
-            this._alertDialog = new VDialog("alertDiv", "Info", this.center, "", "", 200);
-            this._alertDiv = document.getElementById("alertDiv");
+            this._alertDiv = document.createElement("div");
+            this._alertDiv.style.textAlign = "center";
+            this._alertDialog = new VDialog(this._alertDiv, "Info", this.center, "", "", 200);
         }
     }
-    
+
     public static showAlertDiag(msg: string) {
         this._alertDiv.innerHTML = "<h3>" + msg + "</h3>";
         this._alertDialog.open();

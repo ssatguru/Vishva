@@ -2,9 +2,9 @@ import DialogOptions = JQueryUI.DialogOptions;
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
-import { GeneralUI } from "./GeneralUI";
-import { LightUI } from "./LightUI";
-import { MaterialUI } from "./MaterialUI";
+import { GeneralUI } from "./propspanel/GeneralUI";
+import { LightUI } from "./propspanel/LightUI";
+import { MaterialUI } from "./propspanel/MaterialUI";
 /**
  * Provides UI to manage an Item(mesh) properties
  */

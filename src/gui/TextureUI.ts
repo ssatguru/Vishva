@@ -1,7 +1,8 @@
 import { Vishva } from "../Vishva";
-import { VDialog } from "./VDialog";
+import { VDialog } from "./components/VDialog";
 import { DialogMgr } from "./DialogMgr";
-import { VTreeDialog } from "./VTreeDialog";
+import { VTreeDialog } from "./components/VTreeDialog";
+import { txtrElement } from "./TextureML";
 
 /**
  * Provides a UI to manage texture of a material
@@ -31,6 +32,8 @@ export class TextureUI {
 
     constructor(vishva: Vishva) {
         this._vishva = vishva;
+
+        document.body.appendChild(txtrElement);
 
         this._textureDiag = new VDialog("textureDiag", "Texture", DialogMgr.centerBottom, "auto", "auto", 0, false);
 

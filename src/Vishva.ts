@@ -308,7 +308,6 @@ export class Vishva {
         window.addEventListener("keydown", (e) => { return this.onKeyDown(e) }, false);
         window.addEventListener("keyup", (e) => { return this.onKeyUp(e) }, false);
         window.onfocus = () => {
-            console.log("gaining focus");
             this.key.esc = false;
             this.key.shift = false;
             this.key.ctl = false
@@ -3266,7 +3265,7 @@ export class Vishva {
         }
 
         if (!this.isFocusOnAv) {
-            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to swicth focus to avatar and try again");
+            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to switch focus to avatar and try again");
             return null;
         }
 

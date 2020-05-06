@@ -1,7 +1,7 @@
 
 import AbstractMesh = BABYLON.AbstractMesh;
 import { Vishva } from "../Vishva";
-import { VDialog } from "./VDialog";
+import { VDialog } from "./components/VDialog";
 import { DialogMgr } from "./DialogMgr";
 import { VishvaGUI } from "./VishvaGUI";
 import { InternalTexture } from "babylonjs";

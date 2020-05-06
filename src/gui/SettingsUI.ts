@@ -2,8 +2,9 @@
 import DialogButtonOptions = JQueryUI.DialogButtonOptions;
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
-import { VDialog } from "./VDialog";
+import { VDialog } from "./components/VDialog";
 import { DialogMgr } from "./DialogMgr";
+import { settingHTML } from "./SettingsML";
 /**
  * provide ui to manage world/user settings/preferences
  */
@@ -22,8 +23,13 @@ export class SettingsUI {
 
     //TODO pass property dialog instead of VishvaGUI
     constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
+        console.log("creating settings dialog");
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
+
+        let div = document.createElement("div");
+        document.body.appendChild(div);
+        div.innerHTML = settingHTML;
 
         this._settingDiag = new VDialog("settingDiag", "Settings", DialogMgr.rightCenter, "", "", 350);
         this._camCol = $("#camCol");

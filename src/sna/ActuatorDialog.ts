@@ -3,7 +3,7 @@ import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
 import { Mesh } from "babylonjs";
 import { GuiUtils } from "../gui/GuiUtils";
-import { VDialog } from "../gui/VDialog";
+import { VDialog } from "../gui/components/VDialog";
 import { DialogMgr } from "../gui/DialogMgr";
 import { WindowsMotionController } from "babylonjs";
 import DialogButtonOptions = JQueryUI.DialogButtonOptions;
@@ -94,7 +94,7 @@ export class ActuatorDialog extends ActuatorAbstract {
         if (props.htmlFile && props.htmlFile.value != null) {
             console.log("doing ajax");
             $.ajax({
-                url: Vishva.vHome + "/assets/"+props.htmlFile.value,
+                url: Vishva.vHome + "/assets/" + props.htmlFile.value,
                 success: (data) => {
                     this.div.innerHTML = data;
                 },

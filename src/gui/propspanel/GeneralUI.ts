@@ -19,7 +19,9 @@ export class GeneralUI {
     public _snaUI: SnaUI;
     private _addInternalAssetUI: InternalAssetsUI;
 
+    private _genID: HTMLInputElement;
     private _genName: HTMLInputElement;
+
     private _genSpace: HTMLSelectElement;
 
     private _transRefresh: HTMLElement;
@@ -54,11 +56,12 @@ export class GeneralUI {
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
 
-
+        //id
+        this._genID = <HTMLInputElement>document.getElementById("genID");
         //name
         this._genName = <HTMLInputElement>document.getElementById("genName");
         //overide the width imposed in the begining
-        this._genName.style.width = "80%";
+        //this._genName.style.width = "80%";
         this._genName.onchange = () => {
             this._vishva.setName(this._genName.value);
         }
@@ -340,6 +343,8 @@ export class GeneralUI {
     }
 
     public update() {
+
+        this._genID.value = Number(this._vishva.meshSelected.uniqueId).toString();
 
         this._genName.value = this._vishva.getName();
 

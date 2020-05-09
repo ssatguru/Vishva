@@ -1269,7 +1269,7 @@ export class Vishva {
         //sat TODO remove comment
         //mesh.receiveShadows = true;
         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
-        mesh.id = (<number>new Number(Date.now())).toString();
+        mesh.id = this.uid(mesh.name);//(<number>new Number(Date.now())).toString();
         mesh.name = mesh.id;
         mesh.material = this.primMaterial.clone("m" + mesh.name);
         //mesh.material=this.primPBRMaterial.clone("m"+mesh.name);
@@ -1295,7 +1295,7 @@ export class Vishva {
     }
 
     private addPlane(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreatePlane("", 1.0, this.scene);
+        let mesh: Mesh = Mesh.CreatePlane("plane", 1.0, this.scene);
         this.setPrimProperties(mesh);
         mesh.material.backFaceCulling = false;
         return mesh;
@@ -1303,38 +1303,38 @@ export class Vishva {
     }
 
     private addBox(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateBox("", 1, this.scene);
+        let mesh: Mesh = Mesh.CreateBox("box", 1, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addSphere(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateSphere("", 10, 1, this.scene);
+        let mesh: Mesh = Mesh.CreateSphere("sphere", 10, 1, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addDisc(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateDisc("", 0.5, 20, this.scene);
+        let mesh: Mesh = Mesh.CreateDisc("disc", 0.5, 20, this.scene);
         this.setPrimProperties(mesh);
         mesh.material.backFaceCulling = false;
         return mesh;
     }
 
     private addCylinder(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateCylinder("", 1, 1, 1, 20, 1, this.scene);
+        let mesh: Mesh = Mesh.CreateCylinder("cyl", 1, 1, 1, 20, 1, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addCone(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateCylinder("", 1, 0, 1, 20, 1, this.scene);
+        let mesh: Mesh = Mesh.CreateCylinder("cone", 1, 0, 1, 20, 1, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addTorus(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateTorus("", 1, 0.25, 20, this.scene);
+        let mesh: Mesh = Mesh.CreateTorus("torus", 1, 0.25, 20, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
@@ -1373,7 +1373,7 @@ export class Vishva {
      */
     private _instanceTransNode(tn: TransformNode, ptn: TransformNode): TransformNode {
         console.log(tn);
-        let _name: string = this.uid();
+        let _name: string = this.uid(tn.name);
         let _tnInst: TransformNode;
         // we cannot create an instance from the instance ,
         // we can only clone it
@@ -1738,7 +1738,7 @@ export class Vishva {
 
     public clonetheMesh(mesh: TransformNode): TransformNode {
 
-        var name: string = this.uid();
+        var name: string = this.uid(mesh.name);
         //TODO should clone the children too.
         //TODO to do that make sure the children are also not selected
         //let clone: AbstractMesh=mesh.clone(name,null,true);
@@ -3827,7 +3827,7 @@ export class Vishva {
      * 
      */
     private _makeMatIdUnique(mat: Material) {
-        mat.id = mat.id + "-" + this.uid();;
+        mat.id = this.uid(mat.id);;
     }
 
     private _removeSpecular(m: Material) {
@@ -3850,9 +3850,15 @@ export class Vishva {
         }
     }
 
+    /**
+     * newids = oldsIds + "@" + some new unique number
+     * To ensure IDs donot keep becoming large the previous old unique number
+     * added after "@" is replaced with the new one
+     * 
+     */
     private prevUid: number = 0;
     private uidPlus = 0;
-    private uid(): string {
+    private uid(oldId?: string): string {
         let newUid: number = Date.now();
         let ups = "";
         if (newUid == this.prevUid) {
@@ -3861,7 +3867,9 @@ export class Vishva {
         } else {
             this.prevUid = newUid;
         }
-        return (new Number(newUid)).toString() + ups;
+        let newId: string = oldId.split("@")[0] + "@" + (Number(newUid)).toString() + ups;
+        oldId.split("@")[0]
+        return newId;
     }
 
 

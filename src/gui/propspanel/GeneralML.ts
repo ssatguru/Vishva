@@ -4,8 +4,10 @@ let genHTML = `
 <table >
         <tr>
         <td>
+                <label for="genID">id</label>
+                <input type="text" id="genID" style="width:10%" readonly>
                 <label for="genName">name</label>
-                <input type="text" id="genName">
+                <input type="text" id="genName" style="width:50%">
         </td>
         </tr>
         <tr>

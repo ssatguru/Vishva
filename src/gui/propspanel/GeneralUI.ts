@@ -7,6 +7,7 @@ import { SnaUI } from "../SnaUI";
 import { InternalAssetsUI } from "../InternalAssetsUI";
 import { VInputVector3 } from "../components/VInputVector3";
 import { VInputNumber } from "../components/VInputNumber";
+import { ParentChildUI } from "./ParentChildUI";
 
 /**
  * Provides UI for the Genral tab of mesh properties
@@ -207,10 +208,8 @@ export class GeneralUI {
         let undo: HTMLElement = document.getElementById("undo");
         let redo: HTMLElement = document.getElementById("redo");
 
+        new ParentChildUI(this._vishva, this._vishvaGUI);
 
-        let parentMesh: HTMLElement = document.getElementById("parentMesh");
-        let removeParent: HTMLElement = document.getElementById("removeParent");
-        let removeChildren: HTMLElement = document.getElementById("removeChildren");
 
         let cloneMesh: HTMLElement = document.getElementById("cloneMesh");
         let instMesh: HTMLElement = document.getElementById("instMesh");
@@ -234,28 +233,6 @@ export class GeneralUI {
         };
         redo.onclick = (e) => {
             this._vishva.redo();
-            return false;
-        };
-
-        parentMesh.onclick = (e) => {
-            let err: string = this._vishva.makeParent();
-            if (err != null) {
-                DialogMgr.showAlertDiag(err);
-            }
-            return false;
-        };
-        removeParent.onclick = (e) => {
-            let err: string = this._vishva.removeParent();
-            if (err != null) {
-                DialogMgr.showAlertDiag(err);
-            }
-            return false;
-        };
-        removeChildren.onclick = (e) => {
-            let err: string = this._vishva.removeChildren();
-            if (err != null) {
-                DialogMgr.showAlertDiag(err);
-            }
             return false;
         };
 

@@ -6,19 +6,6 @@ const ppHTML = `
         <h3 class="mesh">General</h3>
         <div id="gen" class="mesh"></div>
 
-        <h3 class="mesh">Parent Child</h3>
-        <div id="parChild" class="mesh">
-        <table >
-                <tr>
-                <td>
-                        <button id="parentMesh">parent</button>
-                        <button id="removeParent">remove parent</button>
-                        <button id="removeChildren">remove children</button>
-                </td>
-                </tr>
-        </table>
-        </div>
-
         <h3 class="grnd">Ground Dimensions</h3>
         <div id="grndDiv" class="grnd"></div>
 

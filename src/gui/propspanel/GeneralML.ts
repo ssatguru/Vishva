@@ -88,6 +88,14 @@ let genHTML = `
         </tr>
         <tr>
         <td>
+                <button id="parentMesh">parent</button>
+                <button id="removeParent">remove parent</button>
+                <button id="removeChildren">remove children</button>
+                <button id="showTree">show</button>
+        </td>
+        </tr>
+        <tr>
+        <td>
                 <button id="mergeMesh"><span class="ui-icon  ui-icon-link" title="merge meshes"></span> </button>
                 <button id="subMesh"><span class="ui-icon  ui-icon-scissors" title="subtract a mesh from another"></span> </button>
                 <button id="interMesh">intersect</button>

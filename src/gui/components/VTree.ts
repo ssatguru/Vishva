@@ -14,9 +14,9 @@ export class VTree {
     private _openIcon: string = "vt-icon ui-icon ui-icon-minus";
     private _leafIcon: string = "vt-icon ui-icon ui-icon-blank";
 
-    //        private _closeIcon: string="ui-icon ui-icon-folder-collapsed";
-    //        private _openIcon: string="ui-icon ui-icon-folder-open";
-    //        private _leafIcon: string="ui-icon ui-icon-document";
+    // private _closeIcon: string = "ui-icon ui-icon-folder-collapsed";
+    // private _openIcon: string = "ui-icon ui-icon-folder-open";
+    // private _leafIcon: string = "ui-icon ui-icon-document";
 
     constructor(treeEle: string | HTMLDivElement, treeData: Array<string | object>, filter?: string, open = false) {
         if (treeEle instanceof HTMLDivElement) {
@@ -72,6 +72,20 @@ export class VTree {
             if (t.indexOf(filter) >= 0) {
                 (<HTMLElement>lis.item(i)).style.display = "block";
                 this._openParent(lis.item(i));
+            }
+        }
+    }
+
+    public search(search: string) {
+        console.log("searching for ", search);
+        this._showAll();
+        let lis: NodeListOf<Element> = this._vtree.querySelectorAll(".treeFile, .treeFolderOpen");
+        for (let i = 0; i < lis.length; i++) {
+            let t: string = lis.item(i).childNodes[1].textContent;
+            if (t.indexOf(search) >= 0) {
+                console.log("a hit", t);
+                this._highLight(<HTMLElement>lis.item(i).childNodes[1]);
+                lis.item(i).scrollIntoView();
             }
         }
     }
@@ -189,7 +203,23 @@ export class VTree {
         this._treeEle.appendChild(this._vtree);
 
     }
-
+    /**
+     * <ul>
+     *      <li> file class
+     *          <span> icon
+     *          <span> text
+     *      <li> folder class
+     *          <span> icon
+     *          <span> text
+     *          <ul>  show/hide class
+     *              <li>...
+     *          </ul>
+     *      ...
+     * </ul>
+     * 
+     * @param pUL 
+     * @param nodes 
+     */
     private _buildUL(pUL: HTMLUListElement, nodes: Array<string | Object>) {
         let li: HTMLLIElement;
         let span: HTMLSpanElement;
@@ -317,6 +347,17 @@ export class VTree {
                 this._clickListener(node, path, isLeaf);
             }
         }
+    }
+
+    private _highLight(ele: HTMLElement) {
+        if (this.prevEle != null) {
+            this.prevEle.style.backgroundColor = "transparent";
+            this.prevEle.style.color = "white";
+        }
+        this.prevEle = ele;
+        ele.style.backgroundColor = "white";
+        ele.style.color = "black";
+
     }
 
 }

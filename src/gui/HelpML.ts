@@ -40,7 +40,7 @@ let hlpHTML = `
 </div>        
 `;
 
-console.log("creating help div");
+
 let hlpElement = document.createElement("div");
 hlpElement.innerHTML = hlpHTML;
 VButton.styleThem(hlpElement.getElementsByTagName("button"));

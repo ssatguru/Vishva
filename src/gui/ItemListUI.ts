@@ -37,10 +37,30 @@ export class ItemListUI {
 
     public toggle() {
         if (!this._itemsDiag.isOpen()) {
-            this._itemsDiag.open();
+            this.open();
         } else {
             this._itemsDiag.close();
         }
+    }
+
+    public open() {
+        this._itemsDiag.open();
+        if (this._vishva.anyMeshSelected()) {
+            this.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
+        }
+
+    }
+
+    public isOPen(): boolean {
+        return this._itemsDiag.isOpen();
+    }
+
+    public filter(filter: string) {
+        this._itemsDiag.filter(filter);
+    }
+
+    public search(filter: string) {
+        this._itemsDiag.search(filter);
     }
 
     treeData: Array<string | object>;

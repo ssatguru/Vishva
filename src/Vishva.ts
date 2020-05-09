@@ -334,8 +334,8 @@ export class Vishva {
     private loadSceneFile(scenePath: string, sceneFile: string, scene: Scene) {
         var am: AssetsManager = new AssetsManager(scene);
         var task: TextFileAssetTask = am.addTextFileTask("sceneLoader", scenePath + sceneFile);
-        task.onSuccess = (obj) => { return this.onTaskSuccess(obj) };
-        task.onError = (obj) => { return this.onTaskFailure(obj) };
+        task.onSuccess = (obj) => { return this.onSceneLoaded(obj) };
+        task.onError = (obj) => { alert("scene load failed"); };
         am.load();
     }
 
@@ -349,7 +349,7 @@ export class Vishva {
         else return null;
     }
 
-    private onTaskSuccess(obj: any) {
+    private onSceneLoaded(obj: any) {
         var tfat: TextFileAssetTask = <TextFileAssetTask>obj;
         var foo: Object = <Object>JSON.parse(tfat.text);
 
@@ -365,7 +365,6 @@ export class Vishva {
         SceneLoader.ShowLoadingScreen = false;
         this.loadingStatus.innerHTML = "loading scene";
         //SceneLoader.Append(this.scenePath, sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
-        console.log("will parse scene now");
 
         //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
         //console.log(SceneLoader.loggingLevel);
@@ -373,9 +372,6 @@ export class Vishva {
 
     }
 
-    private onTaskFailure(obj: any) {
-        alert("scene load failed");
-    }
 
     private setShadowProperty(sl: IShadowLight, shadowGenerator: ShadowGenerator) {
         //            shadowGenerator.useBlurVarianceShadowMap = true;
@@ -3209,7 +3205,7 @@ export class Vishva {
         if (this.debugVisible) {
             this.scene.debugLayer.hide();
         } else {
-            this.scene.debugLayer.show({ showExplorer: true, overlay: true });
+            this.scene.debugLayer.show({ showExplorer: true, embedMode: true });
         }
         this.debugVisible = !this.debugVisible;
 

@@ -102,6 +102,12 @@ export class VTreeDialog {
     public refresh(treeData: Array<string | object>) {
         this._tree.refresh(treeData);
     }
+    public filter(filter: string) {
+        this._tree.filter(filter);
+    }
+    public search(filter: string) {
+        this._tree.search(filter);
+    }
 
 
 }

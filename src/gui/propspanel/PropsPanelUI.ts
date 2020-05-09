@@ -263,7 +263,7 @@ export class PropsPanelUI {
 
     private getPanelIndex(ui: JQuery): number {
         if (ui.text() == "General") return propertyPanel.General;
-        if (ui.text() == "Parent Child") return propertyPanel.ParentChild;
+        // if (ui.text() == "Parent Child") return propertyPanel.ParentChild;
         if (ui.text() == "Ground Dimensions") return propertyPanel.GrndDim;
         if (ui.text() == "Physics") return propertyPanel.Physics;
         if (ui.text() == "Material") return propertyPanel.Material;
@@ -276,9 +276,6 @@ export class PropsPanelUI {
     private refreshPanel(panelIndex: number) {
         if (panelIndex === propertyPanel.General) {
             if (this._generalUI == null) this._generalUI = new GeneralUI(this._vishva, this._vishvaGUI);
-            this._generalUI.update();
-        } else if (panelIndex === propertyPanel.ParentChild) {
-            if (this._parentChildUI == null) this._parentChildUI = new ParentChildUI(this._vishva, this._vishvaGUI);
             this._generalUI.update();
         } else if (panelIndex === propertyPanel.Lights) {
             if (this._lightUI == null) this._lightUI = new LightUI(this._vishva);
@@ -308,7 +305,6 @@ export class PropsPanelUI {
 }
 const enum propertyPanel {
     General,
-    ParentChild,
     GrndDim,
     Physics,
     Material,

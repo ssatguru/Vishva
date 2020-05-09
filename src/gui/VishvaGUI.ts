@@ -10,6 +10,7 @@ import { SettingsUI } from "./SettingsUI";
 import { PropsPanelUI } from "./propspanel/PropsPanelUI";
 import { VButton } from "./components/VButton";
 import { hlpElement } from "./HelpML";
+import { navElement } from "./NavBarML";
 
 
 
@@ -30,6 +31,8 @@ export class VishvaGUI {
     public constructor(vishva: Vishva) {
         this._vishva = vishva;
         this._vishvaFiles = Vishva.userAssets;
+
+        document.body.append(navElement);
 
         this._setSettings();
 
@@ -173,6 +176,12 @@ export class VishvaGUI {
     private _addInternalAssetUI: InternalAssetsUI;
     private _addAssetTDiag: VTreeDialog;
     private _items: ItemListUI;
+    public getItemList(): ItemListUI {
+        if (this._items == null) {
+            this._items = new ItemListUI(this._vishva);
+        }
+        return this._items;
+    }
     private _environment: EnvironmentUI;
     private _settingDiag: SettingsUI;
     private _itemProps: PropsPanelUI;
@@ -181,7 +190,6 @@ export class VishvaGUI {
     private addMenuOn: boolean = false;
 
     private createNavMenu() {
-
         //button to show navigation menu - hamburger button
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
         showNavMenu.style.visibility = "visible";
@@ -287,10 +295,7 @@ export class VishvaGUI {
 
         let navItems: HTMLElement = document.getElementById("navItems");
         navItems.onclick = (e) => {
-            if (this._items == null) {
-                this._items = new ItemListUI(this._vishva);
-            }
-            this._items.toggle();
+            this.getItemList().toggle();
             return false;
         }
 
@@ -353,7 +358,7 @@ export class VishvaGUI {
             this._itemProps = new PropsPanelUI(this._vishva, this);
         }
         this._itemProps.open();
-        return true;
+        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
     }
 
     /*
@@ -370,6 +375,7 @@ export class VishvaGUI {
      */
     public refreshPropsDiag() {
         if (this._itemProps != null) this._itemProps.refreshPropsDiag();
+        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
     }
 
     //called when user has changed transforms using editcontrol

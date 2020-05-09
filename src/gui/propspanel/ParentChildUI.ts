@@ -24,6 +24,7 @@ export class ParentChildUI {
         let parentMesh: HTMLElement = document.getElementById("parentMesh");
         let removeParent: HTMLElement = document.getElementById("removeParent");
         let removeChildren: HTMLElement = document.getElementById("removeChildren");
+        let showTree: HTMLElement = document.getElementById("showTree");
 
         parentMesh.onclick = (e) => {
             let err: string = this._vishva.makeParent();
@@ -46,6 +47,12 @@ export class ParentChildUI {
             }
             return false;
         };
+        showTree.onclick = (e) => {
+            let il = this._vishvaGUI.getItemList();
+            il.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
+            il.open();
+        }
+
 
 
     }

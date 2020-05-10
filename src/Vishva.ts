@@ -245,8 +245,6 @@ export class Vishva {
 
     loadingMsg: HTMLElement;
 
-    loadingStatus: HTMLElement;
-
     showBoundingBox: boolean = false;
 
 
@@ -279,8 +277,7 @@ export class Vishva {
             return;
         }
         this.loadingMsg = document.getElementById("loadingMsg");
-        this.loadingMsg.style.visibility = "visible";
-        this.loadingStatus = document.getElementById("loadingStatus");
+        this.loadingMsg.style.visibility = "hidden";
 
         this.editEnabled = editEnabled;
         this.key = new Key();
@@ -324,7 +321,6 @@ export class Vishva {
         if (sceneFile == "empty") {
             this.setScenePhase1(this.scene);
         } else {
-            this.loadingStatus.innerHTML = "downloading world";
             this.loadSceneFile(scenePath, sceneFile + ".js", this.scene);
         }
     }
@@ -363,7 +359,6 @@ export class Vishva {
 
         var sceneData: string = "data:" + tfat.text;
         SceneLoader.ShowLoadingScreen = false;
-        this.loadingStatus.innerHTML = "loading scene";
         //SceneLoader.Append(this.scenePath, sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
 
         //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
@@ -401,7 +396,6 @@ export class Vishva {
      */
     private setScenePhase1(scene: Scene) {
         console.log("setScenePhase1()");
-        this.loadingStatus.innerHTML = "checking assets";
         var avFound: boolean = false;
         var skelFound: boolean = false;
         var sunFound: boolean = false;
@@ -624,7 +618,6 @@ export class Vishva {
             this.vishvaGUI = null;
         }
         this.engine.hideLoadingUI();
-        this.loadingMsg.style.visibility = "hidden";
 
         this.engine.runRenderLoop(() => this.scene.render());
     }

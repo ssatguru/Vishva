@@ -11,6 +11,7 @@ import { PropsPanelUI } from "./propspanel/PropsPanelUI";
 import { VButton } from "./components/VButton";
 import { hlpElement } from "./HelpML";
 import { navElement } from "./NavBarML";
+import { saveElement } from "./VishvaML";
 
 
 
@@ -33,6 +34,7 @@ export class VishvaGUI {
         this._vishvaFiles = Vishva.userAssets;
 
         document.body.append(navElement);
+        document.body.appendChild(saveElement);
 
         this._setSettings();
 

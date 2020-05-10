@@ -1,7 +1,7 @@
 var path = require("path");
 const TerserPlugin = require("terser-webpack-plugin");
 var webpack = require("webpack");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   mode: "development",
@@ -40,11 +40,9 @@ module.exports = {
       jQuery: "jquery",
     }),
     //copy the assets folder from src to the build folder
-    new CopyWebpackPlugin([
-      {
-        context: "src/",
-        from: "assets/**/*",
-      },
+    new CopyPlugin([
+      { context: "src/", from: "assets/**/*" },
+      { context: "src/", from: "lib/**/*" },
     ]),
   ],
   //   externals: {

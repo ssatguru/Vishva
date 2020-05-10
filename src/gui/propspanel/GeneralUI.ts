@@ -8,6 +8,7 @@ import { InternalAssetsUI } from "../InternalAssetsUI";
 import { VInputVector3 } from "../components/VInputVector3";
 import { VInputNumber } from "../components/VInputNumber";
 import { ParentChildUI } from "./ParentChildUI";
+import { saveElement } from "../VishvaML";
 
 /**
  * Provides UI for the Genral tab of mesh properties

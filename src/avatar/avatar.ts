@@ -127,6 +127,8 @@ export class AvManager {
         cc.setFallAnim("fall", 2, false);
         cc.setSlideBackAnim("slideBack", 1, false);
 
+        cc.setTurnSpeed(10);
+
         cc.setTurnRightKey("D");
         cc.setTurnLeftKey("A");
         cc.setStrafeRightKey("E");

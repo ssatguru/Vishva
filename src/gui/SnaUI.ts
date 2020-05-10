@@ -9,6 +9,7 @@ import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
 import { VTreeDialog } from "./components/VTreeDialog";
 import { VInputVector3 } from "./components/VInputVector3";
 import { VButton } from "./components/VButton";
+import { snaElement } from "./snaML";
 /**
  * Provides a UI to manage sensors and actuators
  */
@@ -32,6 +33,7 @@ export class SnaUI {
     constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
+        document.body.appendChild(snaElement);
     }
 
     //        public         open(){

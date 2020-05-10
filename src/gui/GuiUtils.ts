@@ -17,11 +17,11 @@ export class GuiUtils {
         }
     }
 
-    public static  createDiv(id?:string):HTMLDivElement{
-        let uiRoot:HTMLElement = document.getElementById("gui-items-2");
-        let div:HTMLDivElement= document.createElement("div");
-        if (id!=null) div.id=id;
-        uiRoot.appendChild(div);
+    public static createDiv(id?: string): HTMLDivElement {
+        let div: HTMLDivElement = document.createElement("div");
+        div.style.visibility = "hidden";
+        if (id != null) div.id = id;
+        document.body.appendChild(div);
         return div;
     }
 }

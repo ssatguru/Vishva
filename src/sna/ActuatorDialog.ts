@@ -1,7 +1,7 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import { Mesh } from "babylonjs";
+import { Mesh, Engine } from "babylonjs";
 import { GuiUtils } from "../gui/GuiUtils";
 import { VDialog } from "../gui/components/VDialog";
 import { DialogMgr } from "../gui/DialogMgr";
@@ -105,7 +105,7 @@ export class ActuatorDialog extends ActuatorAbstract {
 
 
         this.dialog.onClose(() => {
-            BABYLON.Engine.audioEngine.unlock();
+            //Engine.audioEngine.unlock();
             this.onActuateEnd();
         })
 

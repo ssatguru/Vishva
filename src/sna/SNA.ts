@@ -11,7 +11,8 @@ import {
     Scene,
     Tags,
     Vector3,
-    Vector2
+    Vector2,
+    TransformNode
 } from "babylonjs";
 // import AbstractMesh = BABYLON.AbstractMesh;
 // import Action = BABYLON.Action;
@@ -38,7 +39,7 @@ export class SNAManager {
     actuatorList: string[] = [];
     actuatorMap: any = {};
     sensorMap: any = {};
-    snaDisabledList: Array<AbstractMesh> = new Array();
+    snaDisabledList: Array<TransformNode> = new Array();
     sig2saMap: Object = <Object>new Object();
 
     static sm: SNAManager;
@@ -157,9 +158,11 @@ export class SNAManager {
      * 
      * @param mesh
      */
-    public disableSnAs(mesh: Mesh) {
+    public disableSnAs(mesh: TransformNode) {
+        console.log("disabling sna for ", mesh.name);
         this.snaDisabledList.push(mesh);
         var actuators: Array<ActuatorAbstract> = <Array<ActuatorAbstract>>mesh["actuators"];
+        console.log("acts found ", actuators != null ? "yes" : "no");
         if (actuators != null) {
             for (let actuator of actuators) {
                 if (actuator.actuating) actuator.stop();
@@ -167,7 +170,8 @@ export class SNAManager {
         }
     }
 
-    public enableSnAs(mesh: AbstractMesh) {
+    public enableSnAs(mesh: TransformNode) {
+        console.log("enabling sna for ", mesh.name);
         var i: number = this.snaDisabledList.indexOf(mesh);
         if (i !== -1) {
             this.snaDisabledList.splice(i, 1);
@@ -252,7 +256,7 @@ export class SNAManager {
     public serializeSnAs(scene: Scene): Object {
         var snas: Array<SNAserialized> = new Array<SNAserialized>();
         var sna: SNAserialized;
-        var meshes: AbstractMesh[] = scene.meshes;
+        var meshes: Array<TransformNode | AbstractMesh> = scene.transformNodes.concat(scene.meshes);
         var meshId: string;
         for (let mesh of meshes) {
             meshId = null;
@@ -287,10 +291,11 @@ export class SNAManager {
     }
 
     public unMarshal(snas: SNAserialized[], scene: Scene) {
-        let renames: AbstractMesh[] = [];
+        let renames: TransformNode[] = [];
         if (snas == null) return;
         for (let sna of snas) {
-            var mesh: AbstractMesh = scene.getMeshesByTags(sna.meshId)[0];
+            //var mesh: AbstractMesh = scene.getMeshesByTags(sna.meshId)[0];
+            var mesh: TransformNode = this._getTransformNodeByTags(sna.meshId, scene);
             //if null then we might be dealing with a instance mesh
             //search by name
             if (mesh == null) {
@@ -313,6 +318,14 @@ export class SNAManager {
         for (let mesh of renames) {
             mesh.name = mesh.name.split(".Vishva.uid.")[0];
         }
+    }
+
+    private _getTransformNodeByTags(tag: string, scene: Scene): TransformNode {
+        let tns: Array<TransformNode | AbstractMesh> = scene.transformNodes.concat(scene.meshes);
+        for (let tn of tns) {
+            if (Tags.MatchesQuery(tn, tag)) return tn;
+        }
+        return null;
     }
 
     /**
@@ -374,7 +387,7 @@ export class SNAManager {
      * 
      * TODO:check if we can use this method for all meshes rather than just InstancedMesh
      */
-    private getMeshVishvaUid(mesh: AbstractMesh): string {
+    private getMeshVishvaUid(mesh: TransformNode): string {
 
         if (!(mesh instanceof BABYLON.InstancedMesh) && (Tags.HasTags(mesh))) {
             var tags: string[] = (<string>Tags.GetTags(mesh, true)).split(" ");

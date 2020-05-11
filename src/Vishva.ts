@@ -395,7 +395,7 @@ export class Vishva {
      * @param scene 
      */
     private setScenePhase1(scene: Scene) {
-        console.log("setScenePhase1()");
+
         var avFound: boolean = false;
         var skelFound: boolean = false;
         var sunFound: boolean = false;
@@ -477,7 +477,8 @@ export class Vishva {
         }
 
         for (let mesh of scene.meshes) {
-            if (mesh != null && mesh instanceof BABYLON.InstancedMesh) {
+            if (mesh != null && mesh instanceof InstancedMesh) {
+                mesh.checkCollisions = mesh.sourceMesh.checkCollisions;
                 //sat TODO remove comment
                 //mesh.receiveShadows = true;
                 (this.shadowGenerator.getShadowMap().renderList).push(mesh);
@@ -740,7 +741,7 @@ export class Vishva {
     public getMeshSelected(): TransformNode {
         return this.meshSelected;
     }
-    //list of meshes selected in addition to the currently picked mesh
+    //list of meshes selected 
     //doesnot include the currently picked mesh (the one with edit control)
     //is set to null when all are deslected
     private meshesPicked: Array<TransformNode> = null;
@@ -770,7 +771,6 @@ export class Vishva {
 
         let pm: TransformNode = pickResult.pickedMesh;
         if (_pickRoot || _pickMultiRoot) pm = this._getRootMesh(pm, pm);
-        console.log(pm.name);
 
         if (_pickHit || _pickRoot) {
             if (!this.isMeshSelected) {
@@ -818,8 +818,8 @@ export class Vishva {
         this.multiUnSelect(mesh);
         this.isMeshSelected = true;
         this.meshSelected = mesh;
+        SNAManager.getSNAManager().disableSnAs(this.meshSelected);
         if (this.meshSelected instanceof AbstractMesh) {
-            SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshSelected);
             this.savePhyParms(this.meshSelected);
         }
         this.switchToQuats(this.meshSelected);
@@ -863,10 +863,9 @@ export class Vishva {
      */
     public switchEditControl(mesh: TransformNode) {
         if (this.switchDisabled) return;
+        SNAManager.getSNAManager().enableSnAs(this.meshSelected);
         if (this.meshSelected instanceof AbstractMesh) {
-            SNAManager.getSNAManager().enableSnAs(this.meshSelected);
             this.restorePhyParms(this.meshSelected);
-            let prevMesh: AbstractMesh = this.meshSelected;
         }
 
         this.meshSelected = mesh;
@@ -995,8 +994,8 @@ export class Vishva {
         //if(this.autoEditMenu) this.vishvaGUI.closePropDiag();
         //close properties dialog if open
         this.vishvaGUI.handeEditControlClose();
+        SNAManager.getSNAManager().enableSnAs(this.meshSelected);
         if (this.meshSelected != null && this.meshSelected instanceof AbstractMesh) {
-            SNAManager.getSNAManager().enableSnAs(this.meshSelected);
             this.restorePhyParms(this.meshSelected);
         }
 
@@ -1365,18 +1364,16 @@ export class Vishva {
      * @param ptn node to which "tn" should be parented 
      */
     private _instanceTransNode(tn: TransformNode, ptn: TransformNode): TransformNode {
-        console.log(tn);
         let _name: string = this.uid(tn.name);
         let _tnInst: TransformNode;
         // we cannot create an instance from the instance ,
         // we can only clone it
         if (tn instanceof Mesh) {
-            console.log("cloning mesh");
             if ((<Mesh>tn).geometry == null) {
-                console.log("no geom");
                 _tnInst = new TransformNode(_name);
             } else {
                 _tnInst = (<Mesh>tn).createInstance(_name);
+                (<InstancedMesh>_tnInst).checkCollisions = (<Mesh>tn).checkCollisions;
             }
             if (ptn == null) {
                 _tnInst.position.copyFrom(tn.absolutePosition);
@@ -1386,7 +1383,6 @@ export class Vishva {
 
         } else {
             if (tn instanceof InstancedMesh) {
-                console.log("cloning instance");
                 //TODO revist
                 // due to a bug The cloning of instanced mesh takes a long time if the instanced mesh has a parent which is also instanced mesh.
                 // As a workaround remove the parent, clone , restore parent.
@@ -1396,18 +1392,17 @@ export class Vishva {
                     tn.parent = null;
                 }
                 _tnInst = tn.clone(_name, null, true);
+                (<InstancedMesh>_tnInst).checkCollisions = (<InstancedMesh>tn).checkCollisions;
                 if (_saveParent != null) {
                     tn.parent = _saveParent;
                 }
             } else {
-                console.log("new TN");
                 _tnInst = new TransformNode(_name);
                 _tnInst.scaling.copyFrom(tn.scaling);
                 _tnInst.position.copyFrom(tn.position);
                 if (tn.rotationQuaternion != null) _tnInst.rotationQuaternion = tn.rotationQuaternion.clone();
                 // if (tn.rotation != null) _tnInst.rotation = tn.rotation.clone();
             }
-            console.log("cloning  done");
             if (ptn == null) {
                 _tnInst.scaling.copyFrom(tn.absoluteScaling);
                 _tnInst.position.copyFrom(tn.absolutePosition);
@@ -1420,14 +1415,12 @@ export class Vishva {
 
         let children = tn.getChildTransformNodes();
         for (let child of children) {
-            console.log("doing child");
             this._instanceTransNode(child, _tnInst);
         }
 
         //TODO think
         //inst.receiveShadows = true;
         //(this.shadowGenerator.getShadowMap().renderList).push(<AbstractMesh>inst);
-
         return _tnInst;
     }
 
@@ -1480,9 +1473,14 @@ export class Vishva {
         }
     }
 
-    public enableCollision(yes: boolean) {
+    public enableCollision(b: boolean) {
         if (this.meshSelected instanceof AbstractMesh) {
-            this.meshSelected.checkCollisions = yes;
+            let source: AbstractMesh = this.meshSelected instanceof InstancedMesh ? this.meshSelected.sourceMesh : this.meshSelected;
+            source.checkCollisions = b;
+            for (let im of (<Mesh>source).instances) {
+                im.checkCollisions = b;
+            }
+
         }
     }
 
@@ -1610,18 +1608,34 @@ export class Vishva {
 
     }
 
+    private _filterOutChilds(tns: Array<TransformNode>): Array<TransformNode> {
+        let tns2: Array<TransformNode> = new Array<TransformNode>();
+        for (let tn of tns) {
+            if (tn.parent == null) tns2.push(tn);
+        }
+        return tns2;
+
+    }
 
     public makeParent(): string {
         if (!this.isMeshSelected) {
             return "no mesh selected";
         }
         if ((this.meshesPicked == null) || (this.meshesPicked.length === 0)) {
-            return "select atleast two mesh. use \'ctl\' and mosue right click to select multiple meshes";
+            return "select atleast two mesh. use \'ctl\' and mouse left click to select multiple meshes";
         }
+
+        //only parent meshes which have no parent
+        let tns: Array<TransformNode> = new Array<TransformNode>();
+        for (let tn of this.meshesPicked) {
+            if (tn.parent == null) tns.push(tn);
+            else this.unHighLight(tn);
+        }
+
         this.meshSelected.computeWorldMatrix(true);
         var invParentMatrix: Matrix = Matrix.Invert(this.meshSelected.getWorldMatrix());
         var m: Matrix;
-        for (let mesh of this.meshesPicked) {
+        for (let mesh of tns) {
             try {
                 mesh.computeWorldMatrix(true);
                 if (mesh === this.meshSelected.parent) {
@@ -3548,7 +3562,7 @@ export class Vishva {
 
 
     private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], file: string) {
-        console.log("loaded file " + file);
+
         var boundingRadius: number = this.getBoundingRadius(meshes);
 
         for (let skeleton of skeletons) {
@@ -3566,8 +3580,6 @@ export class Vishva {
         for (let mesh of meshes) {
 
             mesh.isPickable = true;
-
-
 
             if (mesh.parent == null) {
                 _rootMeshesCount++;

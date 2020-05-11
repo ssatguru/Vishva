@@ -12,6 +12,8 @@ export class ItemListUI {
     private _vishva: Vishva;
     private _itemsDiag: VTreeDialog;
 
+    //see search() for an explanation of this
+    private _donotSearch: boolean = false;
 
     constructor(vishva: Vishva) {
 
@@ -24,6 +26,7 @@ export class ItemListUI {
         this._itemsDiag.addTreeListener((f, p, l) => {
             let i: number = f.indexOf(",");
             f = f.substring(0, i);
+            this._donotSearch = true;
             this._vishva.selectMesh(f);
         });
         this._itemsDiag.addRefreshHandler(() => {
@@ -59,8 +62,23 @@ export class ItemListUI {
         this._itemsDiag.filter(filter);
     }
 
+    /**
+     * This search method finds, higlights and scrolls to the item in the list.
+     * 
+     * Note: This search is not done when an item in the itemlist was selected
+     * Explanation: Normally when the user selects an item in the world
+     * system checks if the item list is open and if open it calls search
+     * to find, higlight and scroll to the item in the list.
+     * Selecting an item in the item list results in also selecting 
+     * an item in the world which results in a call to this search
+     * but now we donot want to highlight or scroll 
+     * to the item as the item is already higlighted and in view.
+     * 
+     * @param filter 
+     */
     public search(filter: string) {
-        this._itemsDiag.search(filter);
+        if (this._donotSearch) this._donotSearch = false;
+        else this._itemsDiag.search(filter);
     }
 
     treeData: Array<string | object>;

@@ -98,7 +98,7 @@ export class Vishva {
 
     //location of all vishva binary files and internal assets
     //normally "/bin/" folder. will keep it relative
-    public static vBinHome: string = "";
+    public static vBinHome: string = "bin/";
 
     public static userAssets: Array<any>;
     public static internalAssets: Array<any>;
@@ -209,8 +209,9 @@ export class Vishva {
 
 
     sun: HemisphericLight;
-
     sunDR: DirectionalLight;
+    _sunAlpha: number = 0;
+    _sunBeta: number = 45;
 
     skybox: Mesh;
     skyColor: Color4 = new Color4(0.5, 0.5, 0.5, 1);
@@ -441,6 +442,7 @@ export class Vishva {
             if (Tags.MatchesQuery(light, "Vishva.sun")) {
                 sunFound = true;
                 this.sun = <HemisphericLight>light;
+                this._setSunAB(this.sun.direction);
             }
         }
 
@@ -455,6 +457,8 @@ export class Vishva {
             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
             this.sunDR.position = new Vector3(0, 1048, 0);
 
+            this._setSunAB(this.sun.direction);
+            //this.setSunPos();
 
             let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
 
@@ -2526,7 +2530,7 @@ export class Vishva {
                 this.editControl.setTransSnap(false);
             } else {
                 this.editControl.setTransSnap(true);
-                //this.editControl.setTransSnapValue(this.snapTransValue);
+                this.editControl.setTransSnapValue(this.snapTransValue);
             }
         }
         return;
@@ -2551,7 +2555,7 @@ export class Vishva {
                 this.editControl.setRotSnap(false);
             } else {
                 this.editControl.setRotSnap(true);
-                //this.editControl.setRotSnapValue(this.snapRotValue);
+                this.editControl.setRotSnapValue(this.snapRotValue);
             }
         }
         return;
@@ -2585,7 +2589,7 @@ export class Vishva {
                 this.editControl.setScaleSnap(false);
             } else {
                 this.editControl.setScaleSnap(true);
-                //this.editControl.setScaleSnapValue(this.snapScaleValue);
+                this.editControl.setScaleSnapValue(this.snapScaleValue);
             }
         }
         return;
@@ -2980,15 +2984,56 @@ export class Vishva {
         sa.dispose();
     }
 
-    public setSunPos(d: number) {
-        var r: number = Math.PI * (180 - d) / 180;
-        var x: number = -Math.cos(r);
-        var y: number = -Math.sin(r);
-        this.sunDR.direction = new Vector3(x, y, 0);
-        this.sun.direction = new Vector3(-x, -y, 0)
+    //setting sun beta
+    public setSunBeta(d: number) {
+        this._sunBeta = d;
+        this.setSunPos();
     }
 
-    public getSunPos(): number {
+    //setting sun alpha
+    public setSunAlpha(d: number) {
+        this._sunAlpha = d;
+        this.setSunPos();
+    }
+
+    private setSunPos() {
+
+        let a: number = Math.PI * this._sunAlpha / 180;
+        let b: number = Math.PI * this._sunBeta / 180;
+
+        let x: number = Math.cos(b) * Math.cos(a);
+        let y: number = Math.sin(b);
+        let z: number = Math.cos(b) * Math.sin(a);
+
+        this.sunDR.direction.x = -x;
+        this.sunDR.direction.y = -y;
+        this.sunDR.direction.z = -z;
+        this.sun.direction.x = x;
+        this.sun.direction.y = y;
+        this.sun.direction.z = z;
+
+    }
+
+    private _setSunAB(v: Vector3) {
+        console.log("v ", v);
+        let a: number = Math.atan(v.z / v.x);
+        let b: number = Math.atan(v.y / Math.sqrt(v.x * v.x + v.z * v.z));
+        this._sunAlpha = a * 180 / Math.PI;
+        this._sunBeta = b * 180 / Math.PI;
+        this._sunAlpha = (this._sunAlpha < 0) ? 0 : this._sunAlpha;
+        this._sunBeta = (this._sunBeta < 0) ? 0 : this._sunBeta;
+        console.log("ab", this._sunAlpha, this._sunBeta);
+    }
+
+    public getSunAlpha(): number {
+        return this._sunAlpha;
+    }
+
+    public getSunBeta(): number {
+        return this._sunBeta;
+    }
+
+    public getSunPos_old(): number {
         var sunDir: Vector3 = this.sunDR.direction;
         var x: number = sunDir.x;
         var y: number = sunDir.y;

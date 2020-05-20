@@ -36,9 +36,6 @@ export class SnaUI {
         document.body.appendChild(snaElement);
     }
 
-    //        public         open(){
-    //            this.sNaDialog.dialog("        open");
-    //        }
 
     public isOpen(): boolean {
         return this.sNaDialog.dialog("isOpen");
@@ -47,6 +44,34 @@ export class SnaUI {
     public close() {
         this.sNaDialog.dialog("close");
     }
+
+    private openTab(btn: HTMLButtonElement, ele: HTMLElement) {
+        let x: HTMLCollectionOf<Element> = ele.getElementsByClassName("vtab");
+        for (let i = 0; i < x.length; i++) {
+            if (x[i].id == btn.value) {
+                (<HTMLElement>x[i]).style.display = "block";
+            } else
+                (<HTMLElement>x[i]).style.display = "none";
+        }
+
+        x = ele.getElementsByClassName("vtablink");
+        for (let i = 0; i < x.length; i++) {
+            if (x[i] == btn) {
+                (<HTMLElement>x[i]).classList.toggle("w3-theme-d2", true)
+            } else
+                (<HTMLElement>x[i]).classList.toggle("w3-theme-d2", false);
+
+        }
+
+    }
+
+    private tabIt(ele: HTMLElement) {
+        let btns: HTMLCollectionOf<HTMLButtonElement> = ele.getElementsByTagName("button");
+        let l = btns.length
+        for (let i = 0; i < l; i++) {
+            btns[i].onclick = (e) => this.openTab(<HTMLButtonElement>e.target, ele);
+        }
+    }
     /*
      * A dialog box to show the list of available sensors 
      * actuators, each in seperate tabs
@@ -54,9 +79,9 @@ export class SnaUI {
     private create_sNaDiag() {
 
         //tabs
-        var sNaDetails: JQuery = $("#sNaDetails");
-        sNaDetails.tabs();
-
+        // var sNaDetails: JQuery = $("#sNaDetails");
+        // sNaDetails.tabs();
+        this.tabIt(document.getElementById("sNaDetails"));
 
         //dialog box
         this.sNaDialog = $("#sNaDiag");
@@ -64,7 +89,7 @@ export class SnaUI {
         dos.autoOpen = false;
         dos.modal = false;
         dos.resizable = false;
-        dos.width = "auto";
+        dos.width = "480px";
         dos.height = "auto";
         dos.title = "Sensors and Actuators";
         dos.closeOnEscape = false;
@@ -128,8 +153,8 @@ export class SnaUI {
             var sensor: string = s.value;
             this._vishva.addSensorbyName(sensor);
             this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
-            this.sNaDialog.dialog("close");
-            this.sNaDialog.dialog("open");
+            // this.sNaDialog.dialog("close");
+            // this.sNaDialog.dialog("open");
             return true;
         };
         var addAct: HTMLElement = document.getElementById("addAct");
@@ -138,8 +163,8 @@ export class SnaUI {
             var actuator: string = a.value;
             this._vishva.addActuaorByName(actuator);
             this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
-            this.sNaDialog.dialog("close");
-            this.sNaDialog.dialog("open");
+            // this.sNaDialog.dialog("close");
+            // this.sNaDialog.dialog("open");
             return true;
         };
 
@@ -162,13 +187,6 @@ export class SnaUI {
             cell = <HTMLTableCellElement>row.insertCell();
             cell.innerHTML = sensAct[i].getProperties().signalId;
             cell = <HTMLTableCellElement>row.insertCell();
-
-            // TODO remove, replaced by VButton
-            // var editBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
-            // editBut.innerHTML = "edit";
-            // editBut.id = d.toString();
-            // var jq: JQuery = <JQuery>(<any>$(editBut));
-            // jq.button();
 
             let d: number = i;
             let editBut: HTMLButtonElement = VButton.create(d.toString(), "edit");

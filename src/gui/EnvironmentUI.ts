@@ -30,12 +30,14 @@ export class EnvironmentUI {
 
 
         let sunPos: JQuery = $("#sunPos");
+        let sunPosNS: JQuery = $("#sunPosNS");
         let light: JQuery = $("#light");
         let shade: JQuery = $("#shade");
         let fog: JQuery = $("#fog");
         let fov: JQuery = $("#fov");
-
-        sunPos.slider(this._sliderOptions(0, 180, this._vishva.getSunPos()));
+        console.log("setting sun slider ", this._vishva.getSunAlpha(), this._vishva.getSunBeta());
+        sunPos.slider(this._sliderOptions(0, 180, this._vishva.getSunAlpha()));
+        sunPosNS.slider(this._sliderOptions(0, 180, this._vishva.getSunBeta()));
         light.slider(this._sliderOptions(0, 100, 100 * this._vishva.getLight()));
         shade.slider(this._sliderOptions(0, 100, 100 * this._vishva.getShade()));
         fog.slider(this._sliderOptions(0, 100, this._vishva.getFog()));
@@ -121,7 +123,9 @@ export class EnvironmentUI {
         if (slider === "fov") {
             this._vishva.setFov(ui.value);
         } else if (slider === "sunPos") {
-            this._vishva.setSunPos(ui.value);
+            this._vishva.setSunAlpha(ui.value);
+        } else if (slider === "sunPosNS") {
+            this._vishva.setSunBeta(ui.value);
         } else {
             var v: number = ui.value;
             if (slider === "light") {

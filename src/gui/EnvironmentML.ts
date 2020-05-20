@@ -8,6 +8,10 @@ const envHTML: string = `
             <td><div id="sunPos"></div></td>
         </tr>
         <tr>
+            <td>sun (north-south)</td>
+            <td><div id="sunPosNS"></div></td>
+        </tr>
+        <tr>
             <td>light</td>
             <td><div id="light"></div></td>
         </tr>

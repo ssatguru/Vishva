@@ -8,10 +8,10 @@ module.exports = {
   entry: ["./src/index.ts", "./src/index.html"],
   devtool: "source-map",
   //don't need devServer options. These are default option.s
-  // devServer: {
-  //   contentBase: "./",
-  //   publicPath: "./",
-  // },
+  devServer: {
+    contentBase: "./",
+    publicPath: "/bin/",
+  },
   module: {
     rules: [
       {
@@ -25,7 +25,13 @@ module.exports = {
       },
       {
         test: /\.(jpe?g|png|svg|gif)$/,
-        use: "file-loader",
+        use: {
+          loader: "file-loader",
+          options: {
+            outputPath: "images",
+            publicPath: "bin/images",
+          },
+        },
       },
       {
         test: /\.html/,

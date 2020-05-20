@@ -20,6 +20,7 @@ let genHTML = `
                 <button id="operFocus" ><span class="ui-icon  ui-icon-zoomin" title="focus"></span>  </button>
                 <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
                 <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
+                <button id="showTree">show</button>
                 </div>
         </td>
         </tr>
@@ -93,7 +94,6 @@ let genHTML = `
                 <button id="parentMesh">parent</button>
                 <button id="removeParent">remove parent</button>
                 <button id="removeChildren">remove children</button>
-                <button id="showTree">show</button>
         </td>
         </tr>
         <tr>

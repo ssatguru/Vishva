@@ -3,36 +3,40 @@ import { VButton } from "./components/VButton";
 const snaHTML: string = `
 <div id="sNaDiag">
   <div id="sNaDetails">
-    <ul>
-      <li><a href="#sensors">Sensors</a></li>
-      <li><a href="#actuators">Actuators</a></li>
-    </ul>
-    <div id="sensors">
-      <button id="addSens">add</button>
-      <select id="sensSel" class="ui-widget-content ui-corner-all"></select>
+
+    <div class="w3-bar ">
+      <button class="w3-bar-item w3-btn vtablink  w3-theme-d2" value="sensors">Sensors</button>
+      <button class="w3-bar-item w3-btn vtablink" value="actuators">Actuators</button>
+    </div>
+
+    <div id="sensors" class="w3-card w3-padding vtab w3-theme-d2">
+      <select id="sensSel" class="w3-select" style="width:75%"></select>
+      <button id="addSens" class="w3-btn w3-theme-l1 w3-round">add</button>
       <p></p>
-      <table id="sensTbl" style="text-align: center;">
+      <table id="sensTbl" style="text-align: left;">
         <tr>
-          <td>name</td>
-          <td>signal</td>
-          <td>edit</td>
-          <td>del</td>
+          <td style="width:30%">NAME</td>
+          <td style="width:30%">SIGNAL</td>
+          <td style="width:20%"></td>
+          <td style="width:20%"></td>
         </tr>
       </table>
     </div>
-    <div id="actuators">
-      <button id="addAct">add</button>
-      <select id="actSel" class="ui-widget-content ui-corner-all"></select>
+
+    <div id="actuators" class="w3-card  w3-padding vtab w3-theme-d2" style="display:none">
+      <select id="actSel" class="w3-select" style="width:75%"></select>
+      <button id="addAct" class="w3-btn w3-theme-l1 w3-round">add</button>
       <p></p>
-      <table id="actTbl" style="text-align: center;">
+      <table id="actTbl" style="text-align: left;">
         <tr>
-          <td>name</td>
-          <td>signal</td>
-          <td>edit</td>
-          <td>del</td>
+          <td style="width:30%">NAME</td>
+          <td style="width:30%">SIGNAL</td>
+          <td style="width:20%"></td>
+          <td style="width:20%"></td>
         </tr>
       </table>
     </div>
+    
   </div>
 </div>
 
@@ -46,14 +50,13 @@ const snaHTML: string = `
   Actuator:<label id="editActDiag.actName">actuator name</label>
   <p>Actuator Properties</p>
   <div id="editActDiag.parms"></div>
-</div>`;
+</div>
+`;
 
 
 let snaElement = document.createElement("div");
 snaElement.innerHTML = snaHTML;
 snaElement.style.visibility = "hidden";
-VButton.styleThem(snaElement.getElementsByTagName("button"));
-var fragment = new DocumentFragment()
-
+//VButton.styleThem(snaElement.getElementsByTagName("button"));
 
 export { snaElement };      

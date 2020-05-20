@@ -149,17 +149,9 @@ export class VishvaGUI {
     private _buildCuratedAssetsMenu() {
         let dirs: Array<string> = this._getDirs(["curated"], this._vishvaFiles);
         let addMenu: HTMLElement = document.getElementById("AddMenu");
+        addMenu.style.zIndex = "10";
         for (let dir of dirs) {
             let button: HTMLButtonElement = VButton.create(dir, dir);
-
-            //TODO remove. replaced by VButton
-            //button.id = dir;
-            //button.style.display = "block";
-            //button.innerHTML = dir;
-            // //convert to jquery bitton
-            // //$(button).button();
-            // //$(button).click((e) => {
-
             addMenu.appendChild(button);
             button.onclick = (e) => {
                 if (this._addInternalAssetUI == null) {

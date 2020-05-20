@@ -1,12 +1,8 @@
 
-import { Vector3 } from "babylonjs";
 import { Vishva } from "../../Vishva";
 import { VishvaGUI } from "../VishvaGUI";
 import { DialogMgr } from "../DialogMgr";
-import { SnaUI } from "../SnaUI";
-import { InternalAssetsUI } from "../InternalAssetsUI";
-import { VInputVector3 } from "../components/VInputVector3";
-import { VInputNumber } from "../components/VInputNumber";
+
 
 /**
  * Provides UI for the Genral tab of mesh properties

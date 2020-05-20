@@ -87,13 +87,11 @@ function main() {
         VInputSelect.styleIt(slcs[i]);
     }
     let inps = document.querySelectorAll("input[type=text]");
-    console.log("inps " + inps.length);
     for (let i = 0; i < inps.length; i++) {
         inps[i].className = "w3-input";
         (<HTMLElement>inps[i]).style.width = "auto";
     }
     let chks = document.querySelectorAll("input[type=checkbox]");
-    console.log("chks " + chks.length);
     for (let i = 0; i < chks.length; i++) {
         chks[i].className = "w3-check";
     }

@@ -107,7 +107,7 @@ function main() {
     var search: HREFsearch = new HREFsearch();
 
     var scene = search.getParm("world");
-    var scenePath = "../vishva/worlds/";
+    var scenePath = "vishva/worlds/";
     var editEnabled = true;
 
 

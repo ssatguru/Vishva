@@ -94,7 +94,7 @@ export class ActuatorDialog extends ActuatorAbstract {
         if (props.htmlFile && props.htmlFile.value != null) {
             console.log("doing ajax");
             $.ajax({
-                url: Vishva.vHome + "/assets/" + props.htmlFile.value,
+                url: Vishva.vHome + "assets/" + props.htmlFile.value,
                 success: (data) => {
                     this.div.innerHTML = data;
                 },

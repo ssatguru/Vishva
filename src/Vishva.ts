@@ -94,7 +94,7 @@ export class Vishva {
     public static worldName: string;
 
     //location of all vishva user assets and worlds
-    public static vHome: string = "../vishva";
+    public static vHome: string = "vishva/";
 
     //location of all vishva binary files and internal assets
     //normally "/bin/" folder. will keep it relative
@@ -187,7 +187,7 @@ export class Vishva {
     rainPart: ParticleSystem = null;
     raining: boolean = false;
 
-    SOUND_ASSET_LOCATION: string = Vishva.vHome + "/assets/sounds/";
+    SOUND_ASSET_LOCATION: string = Vishva.vHome + "assets/sounds/";
 
     //each asset has a name and a url
     //sceneloader gets the location of the asset as below
@@ -3102,7 +3102,7 @@ export class Vishva {
     public setSky_old(sky: any) {
         var mat: StandardMaterial = <StandardMaterial>this.skybox.material;
         mat.reflectionTexture.dispose();
-        var skyFile: string = Vishva.vHome + "/assets/internal/skyboxes/" + sky + "/" + sky;
+        var skyFile: string = Vishva.vHome + "assets/internal/skyboxes/" + sky + "/" + sky;
         mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
         mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
         //            if (this.primMaterial !=null)
@@ -3114,7 +3114,7 @@ export class Vishva {
             if (sky === "none") {
                 return;
             } else {
-                let skyFile: string = Vishva.vHome + "/assets/curated/skyboxes/" + sky + "/" + sky;
+                let skyFile: string = Vishva.vHome + "assets/curated/skyboxes/" + sky + "/" + sky;
                 this.skybox = this.createSkyBox(this.scene, skyFile);
             }
         } else {
@@ -3124,7 +3124,7 @@ export class Vishva {
             } else {
                 let mat: StandardMaterial = <StandardMaterial>this.skybox.material;
                 mat.reflectionTexture.dispose();
-                let skyFile: string = Vishva.vHome + "/assets/curated/skyboxes/" + sky + "/" + sky;
+                let skyFile: string = Vishva.vHome + "assets/curated/skyboxes/" + sky + "/" + sky;
                 mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
                 mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
             }
@@ -3555,7 +3555,7 @@ export class Vishva {
     //older, used by old GUI file loader dislog
     public loadAssetFile(file: File) {
         var sceneFolderName: string = file.name.split(".")[0];
-        SceneLoader.ImportMesh("", Vishva.vHome + "/assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, "") });
+        SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, "") });
     }
 
     filePath: string;
@@ -3574,7 +3574,7 @@ export class Vishva {
         this.file = file;
         let fileName: string = file.split(".")[0];
         SceneLoader.ImportMesh("",
-            Vishva.vHome + "/assets/curated/" + assetType + "/" + fileName + "/",
+            Vishva.vHome + "assets/curated/" + assetType + "/" + fileName + "/",
             file,
             this.scene,
             (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, fileName) });
@@ -3591,7 +3591,7 @@ export class Vishva {
         this.filePath = path;
         this.file = file;
         SceneLoader.ImportMesh("",
-            Vishva.vHome + "/assets/" + path,
+            Vishva.vHome + "assets/" + path,
             file,
             this.scene,
             (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file) });

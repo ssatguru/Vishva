@@ -124,7 +124,7 @@ export class InternalAssetsUI {
             if (topFolder == "internal") {
                 img.src = Vishva.vBinHome + imgURL;
             } else {
-                img.src = Vishva.vHome + "/" + imgURL;
+                img.src = Vishva.vHome + imgURL;
             }
             img.setAttribute("style", VishvaGUI.LARGE_ICON_SIZE + "cursor:pointer;");
             img.className = assetCat;

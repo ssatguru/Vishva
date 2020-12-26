@@ -1791,9 +1791,10 @@ export class Vishva {
             }
             this.meshesPicked = null;
         }
+        this.removeEditControl();
         this.deleteTheMesh(this.meshSelected);
         this.meshSelected = null;
-        this.removeEditControl();
+        
         return null;
     }
 

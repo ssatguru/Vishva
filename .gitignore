@@ -5,3 +5,4 @@ ig_*.*
 userAssets.js
 vishva/assets/**/*
 vishva/worlds/*.*
+*.log

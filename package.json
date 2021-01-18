@@ -9,7 +9,7 @@
   "contributors": [],
   "dependencies": {
     "babylonjs": "^4.1.0",
-    "babylonjs-charactercontroller": "^0.4.2",
+    "babylonjs-charactercontroller": "^0.4.3",
     "babylonjs-editcontrol": "^3.2.5",
     "babylonjs-inspector": "^4.1.0",
     "babylonjs-loaders": "^4.1.0",

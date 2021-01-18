@@ -43,6 +43,7 @@ export class ActuatorDialog extends ActuatorAbstract {
 
 
     public actuate() {
+
         this.dialog.open();
     }
 
@@ -65,6 +66,8 @@ export class ActuatorDialog extends ActuatorAbstract {
         if (this.dialog == null) {
 
             this.div = GuiUtils.createDiv();
+            //this.div.style.visibility = "visible";
+
             this.dialog = new VDialog(this.div, props.title, DialogMgr.center, window.innerWidth * props.width / 100, window.innerHeight * props.height / 100, 350, props.modal);
             this.dialog.hideTitileBar();
 
@@ -88,11 +91,9 @@ export class ActuatorDialog extends ActuatorAbstract {
         });
 
         this.dialog.setTitle(props.title);
-        //this.div.innerHTML = props.msg;
+        this.div.innerHTML = props.msg;
 
-        console.log("loading html file");
         if (props.htmlFile && props.htmlFile.value != null) {
-            console.log("doing ajax");
             $.ajax({
                 url: Vishva.vHome + "assets/" + props.htmlFile.value,
                 success: (data) => {

@@ -19,7 +19,7 @@ export class GuiUtils {
 
     public static createDiv(id?: string): HTMLDivElement {
         let div: HTMLDivElement = document.createElement("div");
-        div.style.visibility = "hidden";
+        //div.style.visibility = "hidden";
         if (id != null) div.id = id;
         document.body.appendChild(div);
         return div;

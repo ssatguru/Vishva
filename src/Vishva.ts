@@ -287,13 +287,13 @@ export class Vishva {
         //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
         //this.engine = new Engine(this.canvas, true);
         this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
         Engine.audioEngine.useCustomUnlockedButton = true;
 
         this.scene = new Scene(this.engine);
         //let pOn = this.scene.enablePhysics();
         //let pOn = this.scene.enablePhysics(new Vector3(0, -9.8, 0));
         let pOn = this.scene.enablePhysics(new Vector3(0, -9.81, 0), new OimoJSPlugin());
-        console.log("physics " + pOn);
         //this.scene.useRightHandedSystem = true;
         //
         //lets make night black
@@ -1794,7 +1794,7 @@ export class Vishva {
         this.removeEditControl();
         this.deleteTheMesh(this.meshSelected);
         this.meshSelected = null;
-        
+
         return null;
     }
 
@@ -3016,14 +3016,12 @@ export class Vishva {
     }
 
     private _setSunAB(v: Vector3) {
-        console.log("v ", v);
         let a: number = Math.atan(v.z / v.x);
         let b: number = Math.atan(v.y / Math.sqrt(v.x * v.x + v.z * v.z));
         this._sunAlpha = a * 180 / Math.PI;
         this._sunBeta = b * 180 / Math.PI;
         this._sunAlpha = (this._sunAlpha < 0) ? 0 : this._sunAlpha;
         this._sunBeta = (this._sunBeta < 0) ? 0 : this._sunBeta;
-        console.log("ab", this._sunAlpha, this._sunBeta);
     }
 
     public getSunAlpha(): number {

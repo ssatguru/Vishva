@@ -136,6 +136,6 @@ export class AvManager {
         cc.setStrafeLeftKey("Q");
 
         cc.setStepOffset(0.5);
-        cc.setSlopeLimit(30, 60);
+        cc.setSlopeLimit(60, 80);
     }
 }

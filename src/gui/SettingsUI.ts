@@ -23,7 +23,6 @@ export class SettingsUI {
 
     //TODO pass property dialog instead of VishvaGUI
     constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
-        console.log("creating settings dialog");
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
 

@@ -103,16 +103,11 @@ function main() {
 
     //$('input').addClass("ui-corner-all");
 
-
     var search: HREFsearch = new HREFsearch();
 
     var scene = search.getParm("world");
     var scenePath = "vishva/worlds/";
     var editEnabled = true;
-
-
-
-    console.log(defaultWorld);
 
     if (!scene) {
         if (typeof (defaultWorld) !== "undefined") {

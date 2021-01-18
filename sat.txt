@@ -19,6 +19,7 @@ these are stored in the "vishva" folder.
 These are thus picked up using absolute location "/vishva/.."
 
 See index.html and Vishva.ts vBinHome variable.
+In index.html note the <base href="../" />
 
 webpack-dev-server is setup to serve build and static content from  root "./"
 webpack will copy all src/assets folder to bin folder.

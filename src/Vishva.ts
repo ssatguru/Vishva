@@ -3554,7 +3554,7 @@ export class Vishva {
     //older, used by old GUI file loader dislog
     public loadAssetFile(file: File) {
         var sceneFolderName: string = file.name.split(".")[0];
-        SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, "") });
+        SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, "", "") });
     }
 
     filePath: string;
@@ -3576,7 +3576,7 @@ export class Vishva {
             Vishva.vHome + "assets/curated/" + assetType + "/" + fileName + "/",
             file,
             this.scene,
-            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, fileName) });
+            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file, "curated") });
     }
 
     /**
@@ -3593,7 +3593,7 @@ export class Vishva {
             Vishva.vHome + "assets/" + path,
             file,
             this.scene,
-            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file) });
+            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file, "user") });
     }
 
     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
@@ -3605,8 +3605,8 @@ export class Vishva {
      */
 
 
-    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], file: string) {
-
+    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], file: string, assetType: string) {
+        console.log("loading meshes " + file);
         var boundingRadius: number = this.getBoundingRadius(meshes);
 
         for (let skeleton of skeletons) {
@@ -3685,7 +3685,7 @@ export class Vishva {
         // to make any material changes call it after this method is done using the setTimeout trick
         // window.setTimeout(() => {this._postLoad(meshes);},1000);
 
-        this._postLoad(meshes);
+        this._postLoad(meshes, assetType);
 
         if (!this.isMeshSelected) {
             this.selectForEdit(rootMesh);
@@ -3721,6 +3721,7 @@ export class Vishva {
 
             s = mesh.scaling;
             s.z = -s.z;
+            mesh.scaling = s.multiplyByFloats(3.0, 3.0, 3.0);
             this._bakeTransforms(<Mesh>mesh);
 
         }
@@ -3850,11 +3851,15 @@ export class Vishva {
     }
 
     //select and animate the last mesh loaded
-    private _postLoad(meshes: AbstractMesh[]) {
+    private _postLoad(meshes: AbstractMesh[], assetType: string) {
         if (meshes.length > 0) {
             for (let mesh of meshes) {
 
-                this._processMaterial(mesh, m => this._makeMatIdUnique(m));
+                if (assetType == "curated") {
+                    this._processMaterial(mesh, m => this._reuseMaterial(m));
+                } else {
+                    this._processMaterial(mesh, m => this._makeMatIdUnique(m));
+                }
 
                 //TODO one time. remove afterwards
                 this._processMaterial(mesh, m => this._removeSpecular(m));
@@ -3871,30 +3876,49 @@ export class Vishva {
     }
 
     /*
+        If a material already exist lets reuse it
+        instead of creating a new material.
+        This is only done for curated assets
+    */
+
+    private _reuseMaterial(mat: Material): Material {
+        let m = this.scene.getLastMaterialByID(mat.id + "@cur");
+        if (m != null) {
+            mat.dispose();
+            return m;
+        } else {
+            mat.id = mat.id + "@cur";
+            return mat;
+        }
+    }
+
+    /*
      * if we load the same mesh more than once than 
      * these meshes end up with the same material id.
      * 
      */
-    private _makeMatIdUnique(mat: Material) {
-        mat.id = this.uid(mat.id);;
+    private _makeMatIdUnique(mat: Material): Material {
+        mat.id = this.uid(mat.id);
+        return mat;
     }
 
     private _removeSpecular(m: Material) {
         if (m instanceof StandardMaterial) {
             m.specularColor = Color3.Black();
         }
+        return m;
     }
 
-    private _processMaterial(mesh: AbstractMesh, f: (mat: Material) => void) {
+    private _processMaterial(mesh: AbstractMesh, f: (mat: Material) => Material) {
         if (mesh.material != null) {
             if (mesh.material instanceof MultiMaterial) {
                 var mm: MultiMaterial = <MultiMaterial>mesh.material;
                 var mats: Material[] = mm.subMaterials;
-                for (let mat of mats) {
-                    f(mat);
+                for (let i = 0; i < mats.length; i++) {
+                    mats[i] = f(mats[i]);
                 }
             } else {
-                f(mesh.material);
+                mesh.material = f(mesh.material);
             }
         }
     }

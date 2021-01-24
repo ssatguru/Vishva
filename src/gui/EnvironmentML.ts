@@ -74,6 +74,7 @@ const envHTML: string = `
 </div>`;
 
 let envElement = document.createElement("div");
+envElement.style.visibility = "hidden";
 envElement.innerHTML = envHTML;
 VButton.styleThem(envElement.getElementsByTagName("button"));
 var fragment = new DocumentFragment()

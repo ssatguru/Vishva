@@ -7,14 +7,14 @@ import { ColorPicker } from "./colorpicker/colorpicker";
  */
 export class ColorPickerDiag {
 
-    // input box to show or input the color hex value
+    // input box to show or enter the color hex value
     // input box to show the color
     // the div which would be used to create a dialog box cotaining the color picker
     ih: string = `
     <div>
         <div class='w3-cell-row' style="width:100%">
-            <input type='text' class='colorInputValue w3-input w3-cell'  style='width:50%' title='enter color in hex #hhhhhh'></input>
-            <input type='text' class='colorInput w3-input w3-cell' style='cursor: pointer;width:50%'  readonly></input>
+            <input type='text' class='colorInputValue w3-input w3-cell'  style='width:25%' title='enter color in hex #hhhhhh'></input>
+            <input type='text' class='colorInput w3-input w3-cell' style='cursor: pointer;width:75%'  readonly></input>
         </div>
         <div class='colorDiag' style='align-content: center'><div  class='colorPicker cp-fancy'></div></div>
     </div>

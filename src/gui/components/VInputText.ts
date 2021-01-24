@@ -1,3 +1,5 @@
+import { UIConst } from "../UIConst";
+
 /**
  * provides a ui to input a vector3 value
  */
@@ -17,6 +19,13 @@ export class VInputText {
         this._inE.type = "text";
 
         this._inE.style.display = "inline-block";
+        this._inE.style.backgroundColor = "#655870";
+        this._inE.style.color = "White"
+        this._inE.style.border = "1px solid black"
+        this._inE.style.outline = "none"
+        this._inE.style.height = UIConst._buttonHeight + "px";
+        this._inE.style.borderRadius = "10px";
+
         this._inE.onkeypress = (e) => {
             e.stopPropagation()
         }

@@ -33,6 +33,7 @@ body {
 .ui-button {
   font-weight: lighter;
 }
+
 /* reduce the overlay for modal dialogs */
 .ui-widget-overlay {
   opacity: 0.3;

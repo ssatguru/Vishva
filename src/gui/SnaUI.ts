@@ -10,6 +10,7 @@ import { VTreeDialog } from "./components/VTreeDialog";
 import { VInputVector3 } from "./components/VInputVector3";
 import { VButton } from "./components/VButton";
 import { snaElement } from "./snaML";
+import { UIConst } from "./UIConst";
 /**
  * Provides a UI to manage sensors and actuators
  */
@@ -89,7 +90,7 @@ export class SnaUI {
         dos.autoOpen = false;
         dos.modal = false;
         dos.resizable = false;
-        dos.width = "480px";
+        dos.width = UIConst._diagWidth + "px";
         dos.height = "auto";
         dos.title = "Sensors and Actuators";
         dos.closeOnEscape = false;

@@ -3256,7 +3256,7 @@ export class Vishva {
         if (this.debugVisible) {
             this.scene.debugLayer.hide();
         } else {
-            this.scene.debugLayer.show({ showExplorer: true, embedMode: true });
+            this.scene.debugLayer.show({ showExplorer: true, embedMode: true, overlay: false, enablePopup: true });
         }
         this.debugVisible = !this.debugVisible;
 
@@ -3878,7 +3878,7 @@ export class Vishva {
     /*
         If a material already exist lets reuse it
         instead of creating a new material.
-        This is only done for curated assets
+        This is only done for  curated assets
     */
 
     private _reuseMaterial(mat: Material): Material {

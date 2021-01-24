@@ -8,6 +8,7 @@ import { ColorPickerDiag } from "./ColorPickerDiag";
 import { DialogMgr } from "./DialogMgr";
 import { Color4 } from "babylonjs";
 import { envElement } from "./EnvironmentML";
+import { UIConst } from "./UIConst";
 
 /**
  * provides a ui to manage the environment in the world
@@ -35,7 +36,7 @@ export class EnvironmentUI {
         let shade: JQuery = $("#shade");
         let fog: JQuery = $("#fog");
         let fov: JQuery = $("#fov");
-        console.log("setting sun slider ", this._vishva.getSunAlpha(), this._vishva.getSunBeta());
+
         sunPos.slider(this._sliderOptions(0, 180, this._vishva.getSunAlpha()));
         sunPosNS.slider(this._sliderOptions(0, 180, this._vishva.getSunBeta()));
         light.slider(this._sliderOptions(0, 100, 100 * this._vishva.getLight()));
@@ -105,7 +106,7 @@ export class EnvironmentUI {
         //                this._vishva.setGroundColor(hex);
         //            });
 
-        this._envDiag = new VDialog("envDiv", "Environment", DialogMgr.rightCenter, "", "", 350);
+        this._envDiag = new VDialog("envDiv", "Environment", DialogMgr.rightBottom, "", "", parseInt(UIConst._diagWidth));
     }
 
     private _sliderOptions(min: number, max: number, value: number): SliderOptions {

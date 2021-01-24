@@ -30,7 +30,7 @@ export class SettingsUI {
         document.body.appendChild(div);
         div.innerHTML = settingHTML;
 
-        this._settingDiag = new VDialog("settingDiag", "Settings", DialogMgr.rightCenter, "", "", 350);
+        this._settingDiag = new VDialog("settingDiag", "Settings", DialogMgr.center, "", "", 350);
         this._camCol = $("#camCol");
         this._autoEditMenu = $("#autoEditMenu");
         this._showToolTips = $("#showToolTips");

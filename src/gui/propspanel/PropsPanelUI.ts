@@ -19,6 +19,7 @@ import { lightElement } from "./LightsML";
 import { animElement } from "./AnimationML";
 import { gdElement } from "./GrndDimML";
 import { gsElement } from "./GrndSPSML";
+import { UIConst } from "../UIConst";
 /**
  * Provides UI to manage an Item(mesh) properties
  */
@@ -73,7 +74,7 @@ export class PropsPanelUI {
             }
         });
 
-        this._propsVDiag = new VDialog("propsDiag", "mesh properties", DialogMgr.leftCenter, 0, "auto", 480);
+        this._propsVDiag = new VDialog("propsDiag", "mesh properties", DialogMgr.rightTop, 0, "auto", parseInt(UIConst._diagWidth));
         this._propsVDiag.onOpen(() => {
             this._activePanel = propsAcc.accordion("option", "active");
             this.refreshPanel(this._activePanel);

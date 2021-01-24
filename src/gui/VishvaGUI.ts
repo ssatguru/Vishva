@@ -149,7 +149,7 @@ export class VishvaGUI {
     private _buildCuratedAssetsMenu() {
         let dirs: Array<string> = this._getDirs(["curated"], this._vishvaFiles);
         let addMenu: HTMLElement = document.getElementById("AddMenu");
-        addMenu.style.zIndex = "10";
+        addMenu.style.zIndex = "inherit";
         for (let dir of dirs) {
             let button: HTMLButtonElement = VButton.create(dir, dir);
             addMenu.appendChild(button);
@@ -250,7 +250,7 @@ export class VishvaGUI {
         var navAdd: HTMLElement = document.getElementById("navAdd");
         navAdd.onclick = (e) => {
             if (this._addAssetTDiag == null) {
-                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", DialogMgr.leftCenter, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
+                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", DialogMgr.leftTop2, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                 this._addAssetTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {

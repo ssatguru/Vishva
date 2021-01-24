@@ -80,7 +80,7 @@ export class InternalAssetsUI {
         div.appendChild(table);
         document.body.appendChild(div);
 
-        let assetDiag: VDialog = new VDialog(div.id, assetCat, DialogMgr.centerBottom, "95%", "auto");
+        let assetDiag: VDialog = new VDialog(div.id, assetCat, DialogMgr.leftBottom, "80%", "auto");
         return assetDiag;
     }
 

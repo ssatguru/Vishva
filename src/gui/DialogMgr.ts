@@ -1,5 +1,6 @@
 
 import { VDialog } from "./components/VDialog";
+import { UIConst } from "./UIConst";
 import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 
 export class DialogMgr {
@@ -7,44 +8,71 @@ export class DialogMgr {
     public static dialogs: Array<VDialog> = new Array();
 
     public static center: JQueryPositionOptions = {
-        at: "center center",
         my: "center center",
-        //of: window
+        at: "center center",
         of: "#vCanvas",
         within: "#vCanvas",
         collision: "fit"
     };
 
     public static centerBottom: JQueryPositionOptions = {
-        at: "center bottom",
         my: "center bottom",
-        //of: window
-        within: "#vCanvas",
+        at: "center bottom",
         of: "#vCanvas",
+        within: "#vCanvas",
+        collision: "fit"
+    };
+
+    public static leftTop1: JQueryPositionOptions = {
+        my: "left top",
+        at: "left top+" + UIConst._buttonHeight,
+        of: "#vCanvas",
+        within: "#vCanvas",
+        collision: "fit"
+    };
+
+    public static leftTop2: JQueryPositionOptions = {
+        my: "left top",
+        at: "left+" + UIConst._diagWidth + " top+" + UIConst._buttonHeight,
+        of: "#vCanvas",
+        within: "#vCanvas",
+        collision: "fit"
+    };
+
+    public static leftBottom: JQueryPositionOptions = {
+        my: "left bottom",
+        at: "left bottom",
+        of: "#vCanvas",
+        within: "#vCanvas",
+        collision: "fit"
+    };
+
+    public static rightBottom: JQueryPositionOptions = {
+        my: "right bottom",
+        at: "right bottom",
+        of: "#vCanvas",
+        within: "#vCanvas",
         collision: "fit"
     };
 
     public static leftCenter: JQueryPositionOptions = {
-        at: "left center",
         my: "left center",
-        //of: window
+        at: "left center",
         of: "#vCanvas",
         within: "#vCanvas",
         collision: "fit"
     };
 
     public static rightCenter: JQueryPositionOptions = {
-        at: "right center",
         my: "right center",
-        //of: window
+        at: "right center",
         of: "#vCanvas",
         within: "#vCanvas",
         collision: "fit"
     };
     public static rightTop: JQueryPositionOptions = {
-        at: "right top",
         my: "right top",
-        //of: window
+        at: "right top",
         of: "#vCanvas",
         within: "#vCanvas",
         collision: "fit"

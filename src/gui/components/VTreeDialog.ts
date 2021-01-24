@@ -5,6 +5,8 @@ import { VDialog } from "./VDialog";
 import { VTree } from "./VTree";
 import { VInputText } from "./VInputText";
 import { VButton } from "./VButton";
+import { UIConst } from "../UIConst";
+
 /**
  * Provides a UI to display a tree
  */
@@ -15,16 +17,16 @@ export class VTreeDialog {
     private _treeDiag: VDialog;
     private _refreshHandler: () => void;
 
-    private _diagHtml_old: string = '<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
-        + '<button ><span class="ui-icon ui-icon-search" title="filter"></span></button>'
-        + '</div>'
-        + '<hr>'
-        + '<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
-        + '</div>'
-        + '<hr>'
-        + '<button><span class="ui-icon ui-icon-plus" title="expand all"></span></button>'
-        + '<button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>'
-        + '<button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>'
+    // private _diagHtml_old: string = '<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
+    //     + '<button ><span class="ui-icon ui-icon-search" title="filter"></span></button>'
+    //     + '</div>'
+    //     + '<hr>'
+    //     + '<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
+    //     + '</div>'
+    //     + '<hr>'
+    //     + '<button><span class="ui-icon ui-icon-plus" title="expand all"></span></button>'
+    //     + '<button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>'
+    //     + '<button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>'
     private _diagHtml: string = `
         <div style="vertical-align:middle;">
             <div>
@@ -43,14 +45,13 @@ export class VTreeDialog {
         this._vishva = vishva;
 
         let diagDiv: HTMLDivElement = document.createElement("div");
-        //diagDiv.style.overflowY = "hidden";
         diagDiv.style.cssText = "overflow-y:hidden;display:block;width:100%;margin:0px:padding:0px";
         diagDiv.innerHTML = this._diagHtml;
         VButton.styleThem(diagDiv.getElementsByTagName("button"));
         document.body.appendChild(diagDiv);
 
         let treeDiv: HTMLDivElement = <HTMLDivElement>diagDiv.lastElementChild;//.getElementsByTagName("div")[1];
-        this._treeDiag = new VDialog(diagDiv, diagTitle, pos, 480);
+        this._treeDiag = new VDialog(diagDiv, diagTitle, pos, parseInt(UIConst._diagWidth));
         this._treeDiag.setResizable(true);
         this._tree = new VTree(treeDiv, treeData, filter, openAll);
         //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});

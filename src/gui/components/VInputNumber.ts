@@ -19,6 +19,10 @@ export class VInputNumber {
         this._inE.value = Number(value).toString();
         this._inE.size = 2;
         this._inE.style.display = "inline-block";
+        this._inE.style.backgroundColor = "#655870";
+        this._inE.style.color = "White"
+        this._inE.style.border = "1px solid black"
+        this._inE.style.outline = "none"
         if (readOnly) this._inE.readOnly = true;
         this._inE.onkeypress = (e) => {
             e.stopPropagation()

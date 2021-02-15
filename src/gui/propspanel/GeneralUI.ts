@@ -312,7 +312,7 @@ export class GeneralUI {
 
         sNa.onclick = (e) => {
             if (this._snaUI == null) {
-                this._snaUI = new SnaUI(this._vishva, this._vishvaGUI);
+                this._snaUI = new SnaUI();
             }
             this._snaUI.show_sNaDiag();
             return true;

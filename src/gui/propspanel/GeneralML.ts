@@ -8,6 +8,7 @@ let genHTML = `
                 <input type="text" id="genID"  class="vinput  w3-input" style="width:10%" readonly>
                 <label for="genName">name</label>
                 <input type="text" id="genName"  class="vinput  w3-input" style="width:50%">
+                <button id="showTree">show</button>
         </div>
         
         
@@ -20,7 +21,7 @@ let genHTML = `
                 <button id="operFocus" ><span class="ui-icon  ui-icon-zoomin" title="focus"></span>  </button>
                 <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
                 <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
-                <button id="showTree">show</button>
+                
                 </div>
         </div>
         

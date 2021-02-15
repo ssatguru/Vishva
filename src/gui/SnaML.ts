@@ -56,7 +56,7 @@ const snaHTML: string = `
 
 let snaElement = document.createElement("div");
 snaElement.innerHTML = snaHTML;
-snaElement.style.visibility = "hidden";
+// snaElement.style.visibility = "hidden";
 //VButton.styleThem(snaElement.getElementsByTagName("button"));
 
 export { snaElement };      

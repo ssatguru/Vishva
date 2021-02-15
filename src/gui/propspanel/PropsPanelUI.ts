@@ -1,4 +1,3 @@
-import DialogOptions = JQueryUI.DialogOptions;
 import { Vishva } from "../../Vishva";
 import { VishvaGUI } from "../VishvaGUI";
 import { GeneralUI } from "./GeneralUI";

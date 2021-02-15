@@ -1,9 +1,7 @@
 
-import DialogOptions = JQueryUI.DialogOptions;
-import DialogButtonOptions = JQueryUI.DialogButtonOptions;
 import { Vector3 } from "babylonjs";
 import { Vishva } from "../Vishva";
-import { VishvaGUI, SelectType, FileInputType, Range } from "./VishvaGUI";
+import { SelectType, FileInputType, Range } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
 import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
 import { VTreeDialog } from "./components/VTreeDialog";
@@ -18,11 +16,9 @@ import { VDiag } from "./components/VDiag";
 export class SnaUI {
 
     private _vishva: Vishva;
-    private _vishvaGUI: VishvaGUI;
     private STATE_IND: string = "state";
 
-    sNaDialog: JQuery;
-
+    sNaDialog: VDiag;
     sensSel: HTMLSelectElement;
 
     actSel: HTMLSelectElement;
@@ -32,19 +28,18 @@ export class SnaUI {
     actTbl: HTMLTableElement;
 
 
-    constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
-        this._vishva = vishva;
-        this._vishvaGUI = vishvaGUI;
+    constructor() {
+        this._vishva = Vishva.vishva;
         Vishva.gui.appendChild(snaElement);
     }
 
 
     public isOpen(): boolean {
-        return this.sNaDialog.dialog("isOpen");
+        return this.sNaDialog.isOpen();
     }
 
     public close() {
-        this.sNaDialog.dialog("close");
+        this.sNaDialog.close();
     }
 
     private openTab(btn: HTMLButtonElement, ele: HTMLElement) {
@@ -81,33 +76,7 @@ export class SnaUI {
     private create_sNaDiag() {
 
         //tabs
-        // var sNaDetails: JQuery = $("#sNaDetails");
-        // sNaDetails.tabs();
         this.tabIt(document.getElementById("sNaDetails"));
-
-        //dialog box
-        this.sNaDialog = $("#sNaDiag");
-        var dos: DialogOptions = {};
-        dos.autoOpen = false;
-        dos.modal = false;
-        dos.resizable = false;
-        dos.width = UIConst._diagWidth.toString() + "px";
-        dos.height = "auto";
-        dos.title = "Sensors and Actuators";
-        dos.closeOnEscape = false;
-        dos.closeText = "";
-        dos.dragStop = (e, ui) => {
-            /* required as jquery dialog's size does not re-adjust to content after it has been dragged 
-             Thus if the size of sensors tab is different from the size of actuators tab  then the content of
-             actuator tab is cutoff if its size is greater
-             so we close and open for it to recalculate the sizes.
-             */
-            this.sNaDialog.dialog("close");
-            this.sNaDialog.dialog("open");
-        }
-        this.sNaDialog.dialog(dos);
-        this.sNaDialog["jpo"] = DialogMgr.center;
-        this._vishvaGUI.dialogs.push(this.sNaDialog);
 
         this.sensSel = <HTMLSelectElement>document.getElementById("sensSel");
         this.actSel = <HTMLSelectElement>document.getElementById("actSel");
@@ -155,8 +124,6 @@ export class SnaUI {
             var sensor: string = s.value;
             this._vishva.addSensorbyName(sensor);
             this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
-            // this.sNaDialog.dialog("close");
-            // this.sNaDialog.dialog("open");
             return true;
         };
         var addAct: HTMLElement = document.getElementById("addAct");
@@ -166,12 +133,11 @@ export class SnaUI {
             var actuator: string = a.value;
             this._vishva.addActuaorByName(actuator);
             this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
-            // this.sNaDialog.dialog("close");
-            // this.sNaDialog.dialog("open");
             return true;
         };
+        let sNaDetails = <HTMLElement>document.getElementById("sNaDetails");
+        this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", UIConst._diagWidthS, false);
 
-        this.sNaDialog.dialog("open");
     }
     /*
      * fill up the sensor and actuator tables
@@ -229,24 +195,32 @@ export class SnaUI {
             };
         }
     }
-    editSensDiag: JQuery;
+    editSensDiag: VDiag;
     private createEditSensDiag() {
-        this.editSensDiag = $("#editSensDiag");
-        var dos: DialogOptions = {};
-        dos.autoOpen = false;
-        dos.modal = true;
-        dos.resizable = false;
-        dos.width = "auto";
-        dos.title = "Edit Sensor";
-        dos.closeText = "";
-        dos.closeOnEscape = false;
-        dos.open = () => {
+        this.editSensDiag = new VDiag(document.getElementById("editSensDiag"), "Edit Sensor", VDiag.center, "auto", "auto", "25em", true);
+        this.editSensDiag.onOpen = () => {
             this._vishva.disableKeys();
         }
-        dos.close = () => {
+        this.editSensDiag.onClose = () => {
             this._vishva.enableKeys();
         }
-        this.editSensDiag.dialog(dos);
+
+        // this.editSensDiag = $("#editSensDiag");
+        // var dos: DialogOptions = {};
+        // dos.autoOpen = false;
+        // dos.modal = true;
+        // dos.resizable = false;
+        // dos.width = "auto";
+        // dos.title = "Edit Sensor";
+        // dos.closeText = "";
+        // dos.closeOnEscape = false;
+        // dos.open = () => {
+        //     this._vishva.disableKeys();
+        // }
+        // dos.close = () => {
+        //     this._vishva.enableKeys();
+        // }
+        // this.editSensDiag.dialog(dos);
     }
     /*
     * show a dialog box to edit sensor properties
@@ -258,8 +232,18 @@ export class SnaUI {
         var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
         sensNameEle.innerHTML = sensor.getName();
 
-        if (this.editSensDiag == null) this.createEditSensDiag();
-        this.editSensDiag.dialog("open");
+        if (this.editSensDiag == null) {
+            this.createEditSensDiag();
+            let dbo = this.editSensDiag.addButton("save");
+            dbo.onclick = (e) => {
+                this.formRead(sensor.getProperties());
+                sensor.handlePropertiesChange()
+                this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
+                this.editSensDiag.close();
+                return true;
+            }
+        } else this.editSensDiag.open();
+        // this.editSensDiag.dialog("open");
 
         var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
         var node: Node = parmDiv.firstChild;
@@ -267,39 +251,41 @@ export class SnaUI {
         var tbl: HTMLTableElement = this.formCreate(sensor.getProperties());
         parmDiv.appendChild(tbl);
 
-        var dbo: DialogButtonOptions = {};
-        dbo.text = "save";
-        dbo.click = (e) => {
-            this.formRead(sensor.getProperties());
-            sensor.handlePropertiesChange()
-            this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
-            this.editSensDiag.dialog("close");
-            return true;
-        };
+        //var dbo: DialogButtonOptions = {};
+        //dbo.text = "save";
 
-        var dbos: DialogButtonOptions[] = [dbo];
-        this.editSensDiag.dialog("option", "buttons", dbos);
+
+        // var dbos: DialogButtonOptions[] = [dbo];
+        // this.editSensDiag.dialog("option", "buttons", dbos);
 
     }
 
-    editActDiag: JQuery;
+    editActDiag: VDiag;
     private createEditActDiag() {
-        this.editActDiag = <JQuery>(<any>$("#editActDiag"));
-        var dos: DialogOptions = {};
-        dos.autoOpen = false;
-        dos.modal = true;
-        dos.resizable = false;
-        dos.width = "auto";
-        dos.title = "Edit Actuator";
-        dos.closeText = "";
-        dos.closeOnEscape = false;
-        dos.open = (e, ui) => {
+        this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.center, "auto", "auto");
+        this.editActDiag.onOpen = () => {
             this._vishva.disableKeys();
         }
-        dos.close = (e, ui) => {
+        this.editActDiag.onClose = () => {
             this._vishva.enableKeys();
         }
-        this.editActDiag.dialog(dos);
+
+        // this.editActDiag = <JQuery>(<any>$("#editActDiag"));
+        // var dos: DialogOptions = {};
+        // dos.autoOpen = false;
+        // dos.modal = true;
+        // dos.resizable = false;
+        // dos.width = "auto";
+        // dos.title = "Edit Actuator";
+        // dos.closeText = "";
+        // dos.closeOnEscape = false;
+        // dos.open = (e, ui) => {
+        //     this._vishva.disableKeys();
+        // }
+        // dos.close = (e, ui) => {
+        //     this._vishva.enableKeys();
+        // }
+        // this.editActDiag.dialog(dos);
     }
 
     /*
@@ -312,8 +298,18 @@ export class SnaUI {
         var actNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editActDiag.actName");
         actNameEle.innerHTML = actuator.getName();
 
-        if (this.editActDiag == null) this.createEditActDiag();
-        this.editActDiag.dialog("open");
+        if (this.editActDiag == null) {
+            this.createEditActDiag();
+            let dbo = this.editActDiag.addButton("save");
+            dbo.onclick = (e) => {
+                this.formRead(actuator.getProperties());
+                actuator.handlePropertiesChange();
+                this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
+                this.editActDiag.close();
+                return true;
+            }
+        } else this.editActDiag.open();
+        // this.editActDiag.dialog("open");
 
         var parmDiv: HTMLElement = document.getElementById("editActDiag.parms");
         var node: Node = parmDiv.firstChild;
@@ -322,18 +318,13 @@ export class SnaUI {
         }
         var tbl: HTMLTableElement = this.formCreate(actuator.getProperties());
         parmDiv.appendChild(tbl);
-        var dbo: DialogButtonOptions = {};
-        dbo.text = "save";
-        dbo.click = (e) => {
-            this.formRead(actuator.getProperties());
-            actuator.handlePropertiesChange();
-            this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
-            this.editActDiag.dialog("close");
-            return true;
-        };
-        var dbos: DialogButtonOptions[] = [dbo];
 
-        this.editActDiag.dialog("option", "buttons", dbos);
+        // var dbo: DialogButtonOptions = {};
+        // dbo.text = "save";
+
+        // var dbos: DialogButtonOptions[] = [dbo];
+
+        // this.editActDiag.dialog("option", "buttons", dbos);
     }
     /*
      * auto generate forms based on properties
@@ -406,11 +397,26 @@ export class SnaUI {
                     inp.type = "checkbox";
                     if (check) inp.setAttribute("checked", "true");
                 }
+                this._stopPropagation(inp);
                 cell.appendChild(inp);
             }
         }
-
         return tbl;
+    }
+
+    private _stopPropagation(inp: HTMLInputElement) {
+        inp.onkeypress = (e) => {
+            e.stopPropagation()
+        }
+        inp.onkeydown = (e) => {
+            e.stopPropagation()
+        }
+        inp.onkeyup = (e) => {
+            e.stopPropagation()
+        }
+        inp.onchange = (e) => {
+            e.preventDefault();
+        }
     }
 
     private formRead(snaP: SNAproperties) {

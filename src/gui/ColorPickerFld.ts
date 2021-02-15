@@ -61,7 +61,7 @@ export class ColorPickerFld {
                     f(hex, hsv, rgb);
                 });
 
-                this.vDiag = new VDiag(colorDiag, title, pos, 0, "auto", "18em");
+                this.vDiag = new VDiag(colorDiag, title, pos, 0, "auto", "19em");
             } else {
                 this.vDiag.toggle();
             }

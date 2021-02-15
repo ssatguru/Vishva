@@ -1,6 +1,7 @@
 import { volumetricLightScatteringPassVertexShader } from "babylonjs/Shaders/volumetricLightScatteringPass.vertex";
 import { Vishva } from "../../Vishva";
 import { DialogMgr } from "../DialogMgr";
+import { UIConst } from "../UIConst";
 import { VButton } from "./VButton";
 
 
@@ -50,7 +51,7 @@ export class VDiag {
         _style: string = ` 
         display:grid;
         grid-template-columns:auto;
-        grid-template-rows:auto max-content;
+        grid-template-rows:min-content auto;
         z-index: 2;
         position: absolute;
         border-style:solid;
@@ -77,7 +78,9 @@ export class VDiag {
                 background-color: white;`;
 
 
+
         public static leftTop: string = "leftTop";
+        public static leftTop1: string = "leftTop1";
         public static leftTop2: string = "leftTop2";
         public static leftCenter: string = "leftCenter";
         public static leftBottom: string = "leftBottom";
@@ -130,6 +133,18 @@ export class VDiag {
                                 this.w.style.bottom = 'auto';
                                 this.w.style.right = 'auto';
                                 break;
+                        case VDiag.leftTop1:
+                                this.w.style.top = UIConst._buttonHeight + "px";
+                                this.w.style.left = "0px";
+                                this.w.style.bottom = 'auto';
+                                this.w.style.right = 'auto';
+                                break;
+                        case VDiag.leftTop2:
+                                this.w.style.top = UIConst._buttonHeight + "px";
+                                this.w.style.left = UIConst._diagWidthS;
+                                this.w.style.bottom = 'auto';
+                                this.w.style.right = 'auto';
+                                break;
                         case VDiag.leftCenter:
                                 this.w.style.top = Math.round((Vishva.gui.offsetHeight - this.w.offsetHeight) / 2) + "px";
                                 this.w.style.left = "0px";
@@ -150,6 +165,8 @@ export class VDiag {
                                 this.w.style.right = "auto";
                                 break;
                         case VDiag.center:
+                                console.log("w: " + this.w.offsetHeight);
+                                console.log("h: " + this.w.offsetHeight);
                                 this.w.style.top = Math.round((Vishva.gui.offsetHeight - this.w.offsetHeight) / 2) + "px";
                                 this.w.style.left = Math.round((Vishva.gui.offsetWidth - this.w.offsetWidth) / 2) + "px";
                                 this.w.style.bottom = 'auto';
@@ -240,7 +257,7 @@ export class VDiag {
         public open() {
                 if (!this.isClosed) return;
                 this.isClosed = false;
-                this.w.style.display = '';
+                this.w.style.display = 'grid';
                 if (this.dirty) {
                         this.dirty = false;
                         this.position(this.pos);
@@ -253,7 +270,7 @@ export class VDiag {
 
         }
 
-        public close() {
+        public close = () => {
                 if (this.isClosed) return;
                 this.isClosed = true;
                 this.w.style.display = 'none';
@@ -276,7 +293,7 @@ export class VDiag {
                 }
         }
 
-        public toggleBody = () => {
+        public toggleBody1 = () => {
                 let s = this.b.getAttribute("style");
                 if (s.indexOf("display:none;") >= 0) {
                         this.b.setAttribute("style", s.replace("display:none;", ""));
@@ -285,6 +302,23 @@ export class VDiag {
                         this.b.setAttribute("style", s + "display:none;");
                 }
 
+        }
+        /**
+         * if the height of the window is explicitly set, disabling the body
+         * leaves a vacant body in the window.
+         * The window height doesnot change on its own and need to be changed
+         * manually
+         */
+        _savHt: string;
+        public toggleBody = () => {
+                if (this.b.style.display == "none") {
+                        this.b.style.display = "grid";
+                        this.w.style.height = this._savHt;
+                } else {
+                        this.b.style.display = "none";
+                        this._savHt = this.w.style.height;
+                        this.w.style.height = "auto";
+                }
         }
 
         public setShowEffect(option: {}) {
@@ -317,6 +351,7 @@ export class VDiag {
                 if (this.f == null) {
                         this.f = document.createElement('div');
                         this.b.appendChild(this.f);
+                        this.b.style.gridTemplateRows = "auto min-content";
                 }
 
                 let button: HTMLButtonElement = VButton.create(txt, txt);
@@ -328,10 +363,10 @@ export class VDiag {
 
         }
         //
-        constructor(id: string | HTMLDivElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false) {
+        constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false) {
 
                 let bc: HTMLElement;
-                if (id instanceof HTMLDivElement) {
+                if (id instanceof HTMLElement) {
                         bc = id;
                 } else {
                         bc = document.getElementById(id);
@@ -352,6 +387,8 @@ export class VDiag {
                 this.w.style.color = Vishva.theme.colors.f;
                 this.w.style.backgroundColor == Vishva.theme.colors.b;
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
+                //bring to front when clicked
+                this.w.onclick = () => this.w.parentNode.appendChild(this.w);
 
 
                 this.wb = <HTMLElement>this.w.getElementsByClassName('bar')[0];
@@ -364,7 +401,7 @@ export class VDiag {
                 this.t.innerText = title;
 
                 let closeButton: HTMLElement = <HTMLElement>this.w.getElementsByClassName('close')[0];
-                closeButton.addEventListener('click', this.closeWindow);
+                closeButton.addEventListener('click', this.close);
 
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];
                 this.b.appendChild(bc);

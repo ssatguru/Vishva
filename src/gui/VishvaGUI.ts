@@ -70,11 +70,7 @@ export class VishvaGUI {
     }
 
 
-    /**
-     * this array will be used store all dialogs whose position needs to be
-     * reset on window resize
-     */
-    public dialogs: Array<JQuery> = new Array<JQuery>();
+
 
     /**
      * resposition all dialogs to their original default postions without this,
@@ -87,32 +83,6 @@ export class VishvaGUI {
      */
     resizing: boolean = false;
     private onWindowResize(evt: Event) {
-
-        //move all JQuerUI Dialogs
-        for (let jq of this.dialogs) {
-            let jpo: JQueryPositionOptions = <JQueryPositionOptions>jq["jpo"];
-            if (jpo != null) {
-                jq.dialog("option", "position", jpo);
-                var open: boolean = <boolean><any>jq.dialog("isOpen");
-                if (open) {
-                    this.resizing = true;
-                    jq.dialog("close");
-                    jq.dialog("open");
-                    this.resizing = false;
-                }
-            }
-        }
-
-        //do the same for all VDialogs
-        for (let diag of DialogMgr.dialogs) {
-            diag.position();
-            if (diag.isOpen()) {
-                //                    this.resizing=true;
-                //                    diag.close();
-                //                    diag.open();
-                //                    this.resizing=false;
-            }
-        }
 
         for (let vdiag of DialogMgr.vdiags) {
             vdiag.reset();
@@ -263,7 +233,7 @@ export class VishvaGUI {
         var navAdd: HTMLElement = document.getElementById("navAdd");
         navAdd.onclick = (e) => {
             if (this._addAssetTDiag == null) {
-                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", VDiag.leftTop, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
+                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", VDiag.leftTop2, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                 this._addAssetTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {

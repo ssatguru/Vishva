@@ -1,12 +1,8 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import { Mesh, Engine } from "babylonjs";
+import { Mesh } from "babylonjs";
 import { GuiUtils } from "../gui/GuiUtils";
-import { VDialog } from "../gui/components/VDialog";
-import { DialogMgr } from "../gui/DialogMgr";
-import { WindowsMotionController } from "babylonjs";
-import DialogButtonOptions = JQueryUI.DialogButtonOptions;
 import { FileInputType } from "../gui/VishvaGUI";
 import { Vishva } from "../Vishva";
 import { VDiag } from "../gui/components/VDiag";
@@ -69,7 +65,7 @@ export class ActuatorDialog extends ActuatorAbstract {
             this.div = GuiUtils.createDiv();
             //this.div.style.visibility = "visible";
 
-            this.dialog = new VDiag(this.div, props.title, VDiag.center, window.innerWidth * props.width / 100, window.innerHeight * props.height / 100, "350px", props.modal);
+            this.dialog = new VDiag(this.div, props.title, VDiag.center, (window.innerWidth * props.width / 100) + "px", (window.innerHeight * props.height / 100) + "px", "350px", props.modal);
 
 
             let button: HTMLButtonElement = this.dialog.addButton("Close");
@@ -110,8 +106,6 @@ export class ActuatorDialog extends ActuatorAbstract {
                 dataType: "text"
             });
         }
-
-
 
         this.dialog.onClose(() => {
             //Engine.audioEngine.unlock();

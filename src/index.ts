@@ -12,14 +12,10 @@ import "./style.css";
 
 import "jquery-ui/ui/widgets/accordion";
 import "jquery-ui/ui/widgets/button";
-import "jquery-ui/ui/widgets/dialog";
 import "jquery-ui/ui/widgets/menu";
 import "jquery-ui/ui/widgets/slider";
 import "jquery-ui/ui/widgets/tabs";
 import "jquery-ui/ui/widgets/tooltip";
-import "jquery-ui/ui/effects/effect-blind";
-import "jquery-ui/ui/effects/effect-explode";
-import "jquery-ui/ui/effects/effect-scale";
 
 import "jquery-ui/ui/effects/effect-slide.js";
 

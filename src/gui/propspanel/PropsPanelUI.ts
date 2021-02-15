@@ -1,10 +1,8 @@
 import DialogOptions = JQueryUI.DialogOptions;
 import { Vishva } from "../../Vishva";
 import { VishvaGUI } from "../VishvaGUI";
-import { VDialog } from "../components/VDialog";
 import { GeneralUI } from "./GeneralUI";
 import { AnimationUI } from "./AnimationUI";
-import { DialogMgr } from "../DialogMgr";
 import { GrndDimUI } from "./GrndDimUI";
 import { GrndSPSUI } from "./GrndSPSUI";
 import { LightUI } from "./LightUI";
@@ -20,6 +18,7 @@ import { animElement } from "./AnimationML";
 import { gdElement } from "./GrndDimML";
 import { gsElement } from "./GrndSPSML";
 import { UIConst } from "../UIConst";
+import { VDiag } from "../components/VDiag";
 /**
  * Provides UI to manage an Item(mesh) properties
  */
@@ -30,7 +29,7 @@ export class PropsPanelUI {
     //private _snaUI:SnaUI;
 
     //private _propsDiag: JQuery=null;
-    private _propsVDiag: VDialog = null;
+    private _propsVDiag: VDiag = null;
     private _propsAcc: HTMLElement = null;
     private _fixingDragIssue: boolean = false;
     private _activePanel: number = -1;
@@ -49,7 +48,8 @@ export class PropsPanelUI {
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
 
-        document.body.appendChild(ppElement);
+        //document.body.appendChild(ppElement);
+        Vishva.gui.appendChild(ppElement);
         this._propsAcc = document.getElementById("propsAcc");
         document.getElementById("gen").appendChild(genElement);
         document.getElementById("Physics").appendChild(phyElement);
@@ -74,7 +74,7 @@ export class PropsPanelUI {
             }
         });
 
-        this._propsVDiag = new VDialog("propsDiag", "mesh properties", DialogMgr.rightTop, 0, "auto", parseInt(UIConst._diagWidth));
+        this._propsVDiag = new VDiag("propsDiag", "mesh properties", VDiag.rightTop, 0, "auto", UIConst._diagWidthS);
         this._propsVDiag.onOpen(() => {
             this._activePanel = propsAcc.accordion("option", "active");
             this.refreshPanel(this._activePanel);

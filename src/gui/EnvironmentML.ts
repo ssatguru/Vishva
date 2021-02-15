@@ -1,76 +1,57 @@
 import { VButton } from "./components/VButton";
 
 const envHTML: string = `
-<div id="envDiv" title="Environment" class="noselect">
-    <table style="width: 100%; text-align: left;">
-        <tr>
-            <td>sun (west-east)</td>
-            <td><div id="sunPos"></div></td>
-        </tr>
-        <tr>
-            <td>sun (north-south)</td>
-            <td><div id="sunPosNS"></div></td>
-        </tr>
-        <tr>
-            <td>light</td>
-            <td><div id="light"></div></td>
-        </tr>
-        <tr>
-            <td>light color</td>
-            <td><div id="lightColor"></div></td>
-        </tr>
-        <tr>
-            <td>shade</td>
-            <td><div id="shade"></div></td>
-        </tr>
-        <tr>
-            <td>fog</td>
-            <td><div id="fog"></div></td>
-        </tr>
-        <tr>
-            <td>fog color</td>
-            <td><div id="fogCol"></div></td>
-        </tr>
-        <tr>
-            <td>ambient color</td>
-            <td><div id="ambCol"></div></td>
-        </tr>
-        <tr>
-            <td>toggle snow</td>
-            <td><Button id="envSnow">snow</button></td>
-        </tr>
-        <tr>
-            <td>toggle rainy</td>
-            <td><Button id="envRain">rain</button></td>
-        </tr>
-        <tr>
-            <td>fov</td>
-            <td><div id="fov"></div></td>
-        </tr>
-        <tr>
-            <td>sky</td>
-            <td>
-                <Button id="skyButton">sky</button>
-            </td>
-        </tr>
-        <tr>
-                <td>sky color</td>
-                <td>
-                    <div id="skyCol">color</div>
-                </td>
-            </tr>
-        <tr>
-            <td>sea</td>
-            <td><Button id="envSea">add</button>
+<div id="envDiv" style="display:grid;grid-template-columns:auto auto;align-items:center;grid-gap:0.75em;padding:1em" class="noselect">
+        
+            <div>sun (west-east)</div>
+            <div><div id="sunPos"></div></div>
+        
+            <div>sun (north-south)</div>
+            <div><div id="sunPosNS"></div></div>
+        
+            <div>light</div>
+            <div><div id="light"></div></div>
+        
+            <div>light color</div>
+            <div><div id="lightColor"></div></div>
+        
+            <div>shade</div>
+            <div><div id="shade"></div></div>
+        
+            <div>fog</div>
+            <div><div id="fog"></div></div>
+        
+            <div>fog color</div>
+            <div><div id="fogCol"></div></div>
+        
+            <div>ambient color</div>
+            <div><div id="ambCol"></div></div>
+        
+            <div>toggle snow</div>
+            <div><Button id="envSnow">snow</button></div>
+        
+            <div>toggle rainy</div>
+            <div><Button id="envRain">rain</button></div>
+        
+            <div>fov</div>
+            <div><div id="fov"></div></div>
+        
+            <div>sky</div>
+            <div><Button id="skyButton">sky</button></div>
+    
+            <div>sky color</div>
+            <div><div id="skyCol">color</div></div>
+        
+            <div>sea</div>
+            <div>
+                <Button id="envSea">add</button>
                 <Button id="envSeaEdit">edit</button>
                 <Button id="envSeaDel">remove</button>
-            </td>
-        </tr>
-        <tr>
-            <td>terrain</td>
-            <td><Button id="trnButton">edit terrain</button></td
-        </tr>
-    </table>
+            </div>
+        
+            <div>terrain</div>
+            <div><Button id="trnButton">edit terrain</button></td
+        
 </div>`;
 
 let envElement = document.createElement("div");

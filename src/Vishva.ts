@@ -83,6 +83,7 @@ import { VishvaGUI } from "./gui/VishvaGUI";
 
 import { AvManager } from "./avatar/avatar";
 import { DialogMgr } from "./gui/DialogMgr";
+import { VTheme, VThemes } from "./gui/components/VTheme";
 
 
 
@@ -110,6 +111,8 @@ export class Vishva {
     engine: Engine;
 
     canvas: HTMLCanvasElement;
+    public static gui: HTMLElement;
+    public static theme: VTheme = VThemes.EggPlant;
 
     editEnabled: boolean;
 
@@ -258,7 +261,7 @@ export class Vishva {
     static version: string = "0.2.0";
 
 
-    public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string) {
+    public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string, guiId: string) {
 
         //BABYLON.OBJFileLoader.INVERT_Y = true;
 
@@ -283,6 +286,7 @@ export class Vishva {
         this.editEnabled = editEnabled;
         this.key = new Key();
 
+        Vishva.gui = <HTMLCanvasElement>document.getElementById(guiId);
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
         //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
         //this.engine = new Engine(this.canvas, true);
@@ -828,7 +832,7 @@ export class Vishva {
         }
         this.switchToQuats(this.meshSelected);
         //this.editControl = new EditControl(<Mesh>this.meshPicked, this.arcCamera, this.canvas, 0.75);
-        this.editControl = new EditControl(this.meshSelected, this.scene.activeCamera, this.canvas, 0.75);
+        this.editControl = new EditControl(this.meshSelected, this.scene.activeCamera, this.canvas, 0.5);
         this.editControl.addActionEndListener((actionType: number) => {
             this.vishvaGUI.handleTransChange();
         })
@@ -3256,6 +3260,8 @@ export class Vishva {
         if (this.debugVisible) {
             this.scene.debugLayer.hide();
         } else {
+            //let win = window.open("", "inpsector", "width=200,height=800");
+            //this.scene.debugLayer.show({ globalRoot: win.document.body, showExplorer: true, embedMode: true, overlay: false, enablePopup: true });
             this.scene.debugLayer.show({ showExplorer: true, embedMode: true, overlay: false, enablePopup: true });
         }
         this.debugVisible = !this.debugVisible;
@@ -3328,7 +3334,7 @@ export class Vishva {
         vishvaSerialzed.vVer = Vishva.version;
         vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
-        vishvaSerialzed.guiSettings = this.vishvaGUI.getSettings();
+        vishvaSerialzed.guiSettings = this.vishvaGUI.guiSettings;
         vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
 
         //we donot serialize the sps. 
@@ -4096,7 +4102,7 @@ export class Vishva {
 
     private _createPlaneGround(scene: Scene): Mesh {
         var groundMaterial: StandardMaterial = new StandardMaterial("groundMat", scene);
-        groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
+        groundMaterial.diffuseColor = new Color3(0.25, 0.45, 0.18);
         groundMaterial.specularColor = new Color3(0, 0, 0);
 
         var grnd: Mesh = Mesh.CreateGround("ground", 256, 256, 1, scene);

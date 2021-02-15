@@ -23,7 +23,7 @@ let matHTML = `
                 material   
         </td>
         <td >
-                <select id="matIDs"></Select>
+                <select id="matIDs" class="w3-select"></Select>
         </td>
         </tr>
         
@@ -65,7 +65,7 @@ let matHTML = `
                         colors
                         </td>
                         <td>
-                        <select id="matColType">
+                        <select id="matColType" class="w3-select">
                                 <option value="diffuse">diffuse</option>
                                 <option value="emissive">emissive</option>
                                 <option value="ambient">ambient</option>
@@ -81,7 +81,7 @@ let matHTML = `
                         textures 
                         </td>
                         <td>
-                        <select id="matTextType">
+                        <select id="matTextType" class="w3-select">
                                 <option value="diffuse">diffuse</option>
                                 <option value="emissive">emissive</option>
                                 <option value="ambient">ambient</option>

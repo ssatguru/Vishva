@@ -9,6 +9,7 @@ import { WindowsMotionController } from "babylonjs";
 import DialogButtonOptions = JQueryUI.DialogButtonOptions;
 import { FileInputType } from "../gui/VishvaGUI";
 import { Vishva } from "../Vishva";
+import { VDiag } from "../gui/components/VDiag";
 
 
 export class ActDialogParm extends ActProperties {
@@ -31,7 +32,7 @@ export class ActDialogParm extends ActProperties {
 export class ActuatorDialog extends ActuatorAbstract {
 
     div: HTMLDivElement;
-    dialog: VDialog;
+    dialog: VDiag;
 
     public constructor(mesh: Mesh, parms: ActProperties) {
         if (parms != null) {
@@ -64,21 +65,28 @@ export class ActuatorDialog extends ActuatorAbstract {
     public onPropertiesChange() {
         var props: ActDialogParm = <ActDialogParm>this.properties;
         if (this.dialog == null) {
-
+            console.log(props);
             this.div = GuiUtils.createDiv();
             //this.div.style.visibility = "visible";
 
-            this.dialog = new VDialog(this.div, props.title, DialogMgr.center, window.innerWidth * props.width / 100, window.innerHeight * props.height / 100, 350, props.modal);
-            this.dialog.hideTitileBar();
+            this.dialog = new VDiag(this.div, props.title, VDiag.center, window.innerWidth * props.width / 100, window.innerHeight * props.height / 100, "350px", props.modal);
 
-            let dboClose: DialogButtonOptions = {};
-            dboClose.text = "Close";
-            dboClose.click = (e) => {
+
+            let button: HTMLButtonElement = this.dialog.addButton("Close");
+
+            button.onclick = (e) => {
                 this.dialog.close();
                 return true;
             }
-            let dbos: DialogButtonOptions[] = [dboClose];
-            this.dialog.setButtons(dbos);
+            this.dialog.close();
+
+        }
+
+        if (props.title.trim() == "") {
+            console.log("hidding title bar");
+            this.dialog.hideTitleBar();
+        } else {
+            this.dialog.showTitleBar();
         }
 
         this.dialog.setShowEffect({

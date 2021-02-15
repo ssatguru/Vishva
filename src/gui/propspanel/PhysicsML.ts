@@ -9,7 +9,7 @@ let phyHTML = `
         <tr>
         <td>type</td>
         <td>
-                <select id="phyType" >
+                <select id="phyType" class = "w3-select">
                 <option value="2" >box</option>
                 <option value="1">sphere</option>
                 <option value="3">plane</option>
@@ -24,7 +24,7 @@ let phyHTML = `
         </tr>
         <tr>
         <td>mass</td>
-        <td><input type="text" id="phyMass" size="3" value="1"></td>
+        <td><input type="text" class = "w3-input" id="phyMass" size="3" value="1"></td>
         </tr>
         <tr>
         <td>restitution (0 to 1) <output for="phyRes" id="phyResVal"></output></td>

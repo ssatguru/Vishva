@@ -1,7 +1,7 @@
 import { VButton } from "./components/VButton";
 
 let txtrHTML = `
-<div id="textureDiag" title="texture details">
+<div id="textureDiag">
 <table>
   <tr>
     <td>texture id</td>

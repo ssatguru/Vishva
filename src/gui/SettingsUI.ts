@@ -2,9 +2,10 @@
 import DialogButtonOptions = JQueryUI.DialogButtonOptions;
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
-import { VDialog } from "./components/VDialog";
 import { DialogMgr } from "./DialogMgr";
 import { settingHTML } from "./SettingsML";
+import { VButton } from "./components/VButton";
+import { VDiag } from "./components/VDiag";
 /**
  * provide ui to manage world/user settings/preferences
  */
@@ -12,7 +13,7 @@ export class SettingsUI {
     private _vishva: Vishva;
     private _vishvaGUI: VishvaGUI;
 
-    private _settingDiag: VDialog;
+    private _settingDiag: VDiag;
     private _camCol: JQuery;
     private _autoEditMenu: JQuery;
     private _showToolTips: JQuery;
@@ -22,32 +23,26 @@ export class SettingsUI {
     private _snapper: JQuery;
 
     //TODO pass property dialog instead of VishvaGUI
-    constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
-        this._vishva = vishva;
+    constructor(vishvaGUI: VishvaGUI) {
+        this._vishva = Vishva.vishva;
         this._vishvaGUI = vishvaGUI;
+        this.enableToolTips = vishvaGUI.guiSettings.enableToolTips;
 
         let div = document.createElement("div");
-        document.body.appendChild(div);
+        Vishva.gui.appendChild(div);
         div.innerHTML = settingHTML;
 
-        this._settingDiag = new VDialog("settingDiag", "Settings", DialogMgr.center, "", "", 350);
-        this._camCol = $("#camCol");
-        this._autoEditMenu = $("#autoEditMenu");
-        this._showToolTips = $("#showToolTips");
-        this._showInvis = $("#showInvis");
-        this._showDisa = $("#showDisa");
-        this._snapper = $("#snapper");
 
-
-        let dboSave: DialogButtonOptions = {};
-        dboSave.text = "save";
-        dboSave.click = (e) => {
+        let dboSave: HTMLButtonElement = VButton.create("save", "save");
+        dboSave.style.marginRight = "1em";
+        dboSave.style.marginTop = "1em";
+        dboSave.onclick = (e) => {
 
             this._vishva.enableCameraCollision(this._camCol.prop("checked"));
 
             this._vishva.enableAutoEditMenu(this._autoEditMenu.prop("checked"));
 
-            this.enableToolTips = this._showToolTips.prop("checked");
+            this._vishvaGUI.guiSettings.enableToolTips = this._showToolTips.prop("checked");
 
 
             if (this._showInvis.prop("checked")) {
@@ -78,17 +73,25 @@ export class SettingsUI {
             return true;
         };
 
-        let dboCancel: DialogButtonOptions = {};
-        dboCancel.text = "Cancel";
-        dboCancel.click = (e) => {
+        let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
+        dboCancel.style.marginTop = "1em";
+        dboCancel.onclick = (e) => {
             this._settingDiag.close();
             return true;
         }
+        div.appendChild(dboSave);
+        div.appendChild(dboCancel);
 
+        this._camCol = $("#camCol");
+        this._autoEditMenu = $("#autoEditMenu");
+        this._showToolTips = $("#showToolTips");
+        this._showInvis = $("#showInvis");
+        this._showDisa = $("#showDisa");
+        this._snapper = $("#snapper");
 
-        let dbos: DialogButtonOptions[] = [dboSave, dboCancel];
+        this._updateSettings();
 
-        this._settingDiag.setButtons(dbos);
+        this._settingDiag = new VDiag(div, "Settings", VDiag.center, "", "", "24em");
     }
 
     private _updateSettings() {

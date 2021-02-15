@@ -8,7 +8,7 @@ let lightHTML = `
         </tr>
         <tr>
         <td>type</td>
-        <td><select id="lightType" oninput="showOpt();">
+        <td><select id="lightType" class="w3-select" oninput="showOpt();">
                 <option value="Spot">spot</option>
                 <option value="Dir">directional</option>
                 <option value="Point">point</option>
@@ -26,19 +26,19 @@ let lightHTML = `
         <tr>
         <td>intensity </td>
         <td>
-                <input type="range" id="lightInten" min="0.0" max="1.0" step="0.1" value="0.0">
+                <input type="range" class="w3-input" id="lightInten" min="0.0" max="1.0" step="0.1" value="0.0">
         </td>
         </tr>
         <tr>
         <td>range</td>
         <td>
-                <input type="text" id="lightRange" size="3" value="1">
+                <input type="text" class="w3-input" id="lightRange" size="3" value="1">
         </td>
         </tr>
         <tr>
         <td>radius</td>
         <td>
-                <input type="text" id="lightRadius" size="3" value="1">
+                <input type="text" class="w3-input" id="lightRadius" size="3" value="1">
         </td>
         </tr>
         <tr class="opt Spot">
@@ -62,9 +62,9 @@ let lightHTML = `
         <tr class="opt Hemi">
         <td>direction (x,y,z)</td>
         <td>
-                <input type="text" id="lightDirX"  size="1" value="1">
-                <input type="text" id="lightDirY" size="1" value="1">
-                <input type="text" id="lightDirZ" size="1" value="1">
+                <input type="text" id="lightDirX" class="w3-input" size="1" value="1">
+                <input type="text" id="lightDirY" class="w3-input" size="1" value="1">
+                <input type="text" id="lightDirZ" class="w3-input" size="1" value="1">
         </td>
         </tr>
 </table>

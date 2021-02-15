@@ -126,5 +126,5 @@ function main() {
         }
     }
 
-    new Vishva(scene, scenePath, editEnabled, "vCanvas");
+    new Vishva(scene, scenePath, editEnabled, "vCanvas", "vGUI");
 }

@@ -4,8 +4,7 @@
  */
 
 import "./colorpicker.themes.css";
-import "./colorpickerLeft.png";
-import "./colorpickerTarget.png";
+
 
 export class ColorPicker {
 
@@ -15,8 +14,8 @@ export class ColorPicker {
     // This HTML snippet is inserted into the innerHTML property of the passed color picker element
     // when the no-hassle call to ColorPicker() is used, i.e. ColorPicker(element,function(hex, hsv, rgb) { ... });
 
-    private _colorpickerHTMLSnippet =  
-    `<div class="picker-wrapper">
+    private _colorpickerHTMLSnippet =
+        `<div class="picker-wrapper">
         <div class="picker"></div>
         <div class="picker-indicator"></div>
     </div>
@@ -73,12 +72,12 @@ export class ColorPicker {
         ]
     );
 
-    private _slideElement:HTMLElement;
-    private _pickerElement:HTMLElement;
-    private _callback:Function;
-    private _h:number;
-    private _s:number;
-    private _v:number;
+    private _slideElement: HTMLElement;
+    private _pickerElement: HTMLElement;
+    private _callback: Function;
+    private _h: number;
+    private _s: number;
+    private _v: number;
 
     /**
      * ColorPicker.
@@ -90,14 +89,14 @@ export class ColorPicker {
      * The provided callback is called whenever the color is changed. It is called with only one parameter. The parameter is the chosen color in RGB HEX format.
      */
 
-    constructor(arg1:HTMLElement, arg2:HTMLElement | Function, arg3?:Function) {
-        if (arguments.length === 3){
+    constructor(arg1: HTMLElement, arg2: HTMLElement | Function, arg3?: Function) {
+        if (arguments.length === 3) {
             this._slideElement = arg1;
-            this._pickerElement = <HTMLElement> arg2;
+            this._pickerElement = <HTMLElement>arg2;
             this._callback = arg3;
-        }else{
+        } else {
             let element = arg1;
-            let callback:Function = <Function>arg2;
+            let callback: Function = <Function>arg2;
 
             element.innerHTML = this._colorpickerHTMLSnippet;
 
@@ -108,11 +107,11 @@ export class ColorPicker {
 
             this._fixIndicators(slideIndicator, pickerIndicator);
 
-            this._callback =  (hex, hsv, rgb, pickerCoordinate, slideCoordinate) => {
+            this._callback = (hex, hsv, rgb, pickerCoordinate, slideCoordinate) => {
                 this._positionIndicators(slideIndicator, pickerIndicator, slideCoordinate, pickerCoordinate);
                 callback(hex, hsv, rgb);
             };
-        } 
+        }
 
         this._h = 0;
         this._s = 1;
@@ -121,13 +120,13 @@ export class ColorPicker {
         // Generate uniq IDs for linearGradients so that we don't have the same IDs within one document.
         // Then reference those gradients in the associated rectangles.
 
-        let uniqID =0;
+        let uniqID = 0;
 
-        if (window["uniqID"] == undefined){
+        if (window["uniqID"] == undefined) {
             window["uniqID"] = 0;
-        }else{
+        } else {
             window["uniqID"]++;
-            uniqID = window["uniqID"] ;
+            uniqID = window["uniqID"];
         }
 
         let slideClone = this._slide.cloneNode(true);
@@ -149,11 +148,11 @@ export class ColorPicker {
         this._slideElement.appendChild(slideClone);
         this._pickerElement.appendChild(pickerClone);
 
-        this._addEventListener(this._slideElement, 'click', this._slideListener( this._slideElement, this._pickerElement));
-        this._addEventListener(this._pickerElement, 'click', this._pickerListener( this._pickerElement));
+        this._addEventListener(this._slideElement, 'click', this._slideListener(this._slideElement, this._pickerElement));
+        this._addEventListener(this._pickerElement, 'click', this._pickerListener(this._pickerElement));
 
-        this._enableDragging(this, this._slideElement, this._slideListener( this._slideElement, this._pickerElement));
-        this._enableDragging(this, this._pickerElement, this._pickerListener( this._pickerElement));
+        this._enableDragging(this, this._slideElement, this._slideListener(this._slideElement, this._pickerElement));
+        this._enableDragging(this, this._pickerElement, this._pickerListener(this._pickerElement));
     };
 
 
@@ -206,8 +205,8 @@ export class ColorPicker {
      * Return click event handler for the slider.
      * Sets picker background color and calls ctx.callback if provided.
      */
-    private _slideListener( slideElement, pickerElement) {
-        return  (evt)=> {
+    private _slideListener(slideElement, pickerElement) {
+        return (evt) => {
             evt = evt || window.event;
             let mouse = this._mousePosition(evt, slideElement, true);
             this._h = mouse.y / slideElement.offsetHeight * 360 + this._hueOffset;
@@ -222,8 +221,8 @@ export class ColorPicker {
      * Return click event handler for the picker.
      * Calls ctx.callback if provided.
      */
-    private _pickerListener( pickerElement) {
-        return  (evt) => {
+    private _pickerListener(pickerElement) {
+        return (evt) => {
             evt = evt || window.event;
             var mouse = this._mousePosition(evt, pickerElement, true),
                 width = pickerElement.offsetWidth,
@@ -268,20 +267,20 @@ export class ColorPicker {
      */
     private _enableDragging(ctx, element, listener) {
 
-        var start = ()=> {
+        var start = () => {
             this._removeEventListener(element, 'mousedown', start);
             this._addEventListener(document.body, 'mouseup', stop);
             this._addEventListener(document.body, 'mousemove', listener);
         };
 
-        var stop =  () => {
+        var stop = () => {
             this._addEventListener(element, 'mousedown', start);
             this._removeEventListener(document.body, 'mouseup', stop);
             this._removeEventListener(document.body, 'mousemove', listener);
         };
 
         this._addEventListener(element, 'mousedown', start);
-        this._addEventListener(element, 'dragstart',  (evt)=> {
+        this._addEventListener(element, 'dragstart', (evt) => {
             evt = evt || window.event;
             if (evt.preventDefault) {
                 evt.preventDefault();
@@ -318,10 +317,10 @@ export class ColorPicker {
         slideIndicator.style.pointerEvents = 'none';
     };
 
-/**
-     * Convert HSV representation to RGB HEX string.
-     * Credits to http://www.raphaeljs.com
-     */
+    /**
+         * Convert HSV representation to RGB HEX string.
+         * Credits to http://www.raphaeljs.com
+         */
     private _hsv2rgb(hsv) {
         var R, G, B, X, C;
         var h = (hsv.h % 360) / 60;
@@ -370,7 +369,7 @@ export class ColorPicker {
         return { h: H, s: S, v: V };
     }
 
-    hsv2rgb = (hsv)=>{
+    hsv2rgb = (hsv) => {
         var rgbHex = this._hsv2rgb(hsv);
         delete rgbHex.hex;
         return rgbHex;
@@ -380,7 +379,7 @@ export class ColorPicker {
     rgb2hsv = (rgb) => this._rgb2hsv(rgb);
     rgb2hex = (rgb) => this._hsv2rgb(this.rgb2hsv(rgb)).hex;
 
-    hex2hsv = (hex) =>  this._rgb2hsv(this.hex2rgb(hex));
+    hex2hsv = (hex) => this._rgb2hsv(this.hex2rgb(hex));
     hex2rgb = (hex) => {
         return { r: parseInt(hex.substr(1, 2), 16), g: parseInt(hex.substr(3, 2), 16), b: parseInt(hex.substr(5, 2), 16) };
     };
@@ -391,7 +390,7 @@ export class ColorPicker {
      * @param {object} rgb Object of the form: { r: <red>, g: <green>, b: <blue> }.
      * @param {string} hex String of the form: #RRGGBB.
      */
-    private _setColor = ( hsv, rgb?, hex?)=> {
+    private _setColor = (hsv, rgb?, hex?) => {
         this._h = hsv.h % 360;
         this._s = hsv.s;
         this._v = hsv.v;
@@ -418,24 +417,24 @@ export class ColorPicker {
      * Sets color of the picker in hsv format.
      * @param {object} hsv Object of the form: { h: <hue>, s: <saturation>, v: <value> }.
      */
-    setHsv =  (hsv) => this._setColor( hsv);
-    
+    setHsv = (hsv) => this._setColor(hsv);
+
 
     /**
      * Sets color of the picker in rgb format.
      * @param {object} rgb Object of the form: { r: <red>, g: <green>, b: <blue> }.
      */
     setRgb = (rgb) => this._setColor(this.rgb2hsv(rgb), rgb);
-    
+
 
     /**
      * Sets color of the picker in hex format.
      * @param {string} hex Hex color format #RRGGBB.
      */
     setHex = (hex) => this._setColor(this.hex2hsv(hex), undefined, hex);
-    
 
-    
+
+
 
 
 }

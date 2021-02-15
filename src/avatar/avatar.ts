@@ -119,7 +119,7 @@ export class AvManager {
 
         cc.setCameraTarget(new Vector3(0, 1.5, 0));
         cc.setIdleAnim("idle", 1, true);
-        cc.setIdleJumpAnim("idleJump", 1, false);
+        cc.setIdleJumpAnim("idleJump", 0.5, false);
         cc.setTurnLeftAnim("turnLeft", 0.5, true);
         cc.setTurnRightAnim("turnRight", 0.5, true);
         cc.setWalkBackAnim("walkBack", 0.5, true);

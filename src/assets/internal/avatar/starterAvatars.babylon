@@ -1,6 +1,6 @@
 {"producer":{"name":"Blender","version":"2.81 (sub 16)","exporter_version":"6.2.3","file":"Quaternius2.babylon"},
 "autoClear":true,"clearColor":[0.0509,0.0509,0.0509],"gravity":[0,-9.81,0],
-"materials":[{"name":"BaseHuman_baked","id":"BaseHuman_baked","customType":"BABYLON.StandardMaterial","backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4,"diffuse":[0.497,0.319,0.165],"specular":[0.5,0.5,0.5],"specularPower":86.8991,"alpha":1,"indexOfRefraction":0.6897},
+"materials":[{"name":"BaseHuman_baked","id":"BaseHuman_baked","customType":"BABYLON.StandardMaterial","backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4,"diffuse":[0.497,0.319,0.165],"specular":[0,0,0],"specularPower":64,"alpha":1,"indexOfRefraction":0.6897},
 {"name":"Eyes","id":"Eyes","customType":"BABYLON.StandardMaterial","backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4,"diffuse":[0.0203,0.0203,0.0203],"specular":[0,0,0],"specularPower":64,"alpha":1,"indexOfRefraction":0.6897},
 {"name":"Hair","id":"Hair","customType":"BABYLON.StandardMaterial","backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4,"diffuse":[0.3506,0.2625,0.0601],"specular":[0,0,0],"specularPower":64,"alpha":1,"indexOfRefraction":0.6897},
 {"name":"Hair2","id":"Hair2","customType":"BABYLON.StandardMaterial","backFaceCulling":true,"checkReadyOnlyOnce":false,"maxSimultaneousLights":4,"diffuse":[0.3515,0.2831,0.1274],"specular":[0,0,0],"specularPower":64,"alpha":1,"indexOfRefraction":0.6897},

@@ -1,10 +1,8 @@
 
-import AbstractMesh = BABYLON.AbstractMesh;
 import { Vishva } from "../Vishva";
-import { VDialog } from "./components/VDialog";
 import { DialogMgr } from "./DialogMgr";
 import { VishvaGUI } from "./VishvaGUI";
-import { InternalTexture } from "babylonjs";
+import { VDiag } from "./components/VDiag";
 
 /**
  * Provides a UI to add items from Internal and Currated Assets to the world
@@ -30,7 +28,7 @@ export class InternalAssetsUI {
      */
 
     public toggleAssetDiag(topFolder: string, assetCat: string) {
-        let assetDialog: VDialog = this._assetDiagMap[assetCat]
+        let assetDialog: VDiag = this._assetDiagMap[assetCat]
         if (assetDialog == null) {
             assetDialog = this._createAssetDiag(topFolder, assetCat);
             if (assetDialog == null) {
@@ -38,11 +36,12 @@ export class InternalAssetsUI {
                 return;
             }
             this._assetDiagMap[assetCat] = assetDialog;
-        }
-        if (assetDialog.isOpen()) {
-            assetDialog.close();
         } else {
-            assetDialog.open();
+            if (assetDialog.isOpen()) {
+                assetDialog.close();
+            } else {
+                assetDialog.open();
+            }
         }
     }
 
@@ -51,7 +50,7 @@ export class InternalAssetsUI {
      * @param topFolder 
      * @param assetCat 
      */
-    private _createAssetDiag(topFolder: string, assetCat: string): VDialog {
+    private _createAssetDiag(topFolder: string, assetCat: string): VDiag {
         console.log("dir " + topFolder + " assetType " + assetCat);
 
         //get the list of items in the internal or curated folder
@@ -70,17 +69,19 @@ export class InternalAssetsUI {
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetCat + "Tbl";
 
+
         //populate that table
         this._updateAssetTable(topFolder, table, assetCat, items);
 
         //add the table to a dialog box.
         let div: HTMLDivElement = document.createElement("div");
         div.id = assetCat + "Div";
-        div.setAttribute("title", assetCat);
         div.appendChild(table);
+        div.style.overflow = "auto";
         document.body.appendChild(div);
 
-        let assetDiag: VDialog = new VDialog(div.id, assetCat, DialogMgr.leftBottom, "80%", "auto");
+
+        let assetDiag: VDiag = new VDiag(div, assetCat, VDiag.leftBottom, "80%", "auto");
         return assetDiag;
     }
 

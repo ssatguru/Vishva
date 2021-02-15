@@ -1,4 +1,5 @@
 
+import { VDiag } from "./components/VDiag";
 import { VDialog } from "./components/VDialog";
 import { UIConst } from "./UIConst";
 import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
@@ -6,6 +7,7 @@ import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 export class DialogMgr {
 
     public static dialogs: Array<VDialog> = new Array();
+    public static vdiags: Array<VDiag> = new Array();
 
     public static center: JQueryPositionOptions = {
         my: "center center",
@@ -25,7 +27,7 @@ export class DialogMgr {
 
     public static leftTop1: JQueryPositionOptions = {
         my: "left top",
-        at: "left top+" + UIConst._buttonHeight,
+        at: "left top+" + UIConst._buttonHeight.toString(),
         of: "#vCanvas",
         within: "#vCanvas",
         collision: "fit"
@@ -33,7 +35,7 @@ export class DialogMgr {
 
     public static leftTop2: JQueryPositionOptions = {
         my: "left top",
-        at: "left+" + UIConst._diagWidth + " top+" + UIConst._buttonHeight,
+        at: "left+" + UIConst._diagWidth.toString() + " top+" + UIConst._buttonHeight.toString(),
         of: "#vCanvas",
         within: "#vCanvas",
         collision: "fit"
@@ -78,19 +80,20 @@ export class DialogMgr {
         collision: "fit"
     };
 
-    private static _alertDialog: VDialog;
+    private static _alertDialog: VDiag;
     private static _alertDiv: HTMLDivElement;
 
     public static createAlertDiag() {
         if (this._alertDialog == null) {
             this._alertDiv = document.createElement("div");
             this._alertDiv.style.textAlign = "center";
-            this._alertDialog = new VDialog(this._alertDiv, "Info", this.center, "", "", 200);
+            this._alertDialog = new VDiag(this._alertDiv, "Info", VDiag.center, "", "", "12em");
         }
     }
 
     public static showAlertDiag(msg: string) {
-        this._alertDiv.innerHTML = "<h3>" + msg + "</h3>";
+        if (this._alertDialog == null) DialogMgr.createAlertDiag();
+        this._alertDiv.innerHTML = msg;
         this._alertDialog.open();
     }
 

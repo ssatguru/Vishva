@@ -1,10 +1,11 @@
 import { Material, AbstractMesh } from "babylonjs";
 import { Vishva } from "../../Vishva";
-import { ColorPickerDiag } from "../ColorPickerDiag";
+import { ColorPickerFld } from "../ColorPickerFld";
 import { DialogMgr } from "../DialogMgr";
 import { TextureUI } from "../TextureUI";
 import { MaterialListUI } from "../MaterialListUI";
 import { GuiUtils } from "../GuiUtils";
+import { VDiag } from "../components/VDiag";
 
 
 /**
@@ -24,7 +25,7 @@ export class MaterialUI {
     private _matType: HTMLElement;
     private _matBF: HTMLInputElement;
     private _matColType: HTMLSelectElement;
-    private _matColDiag: ColorPickerDiag;
+    private _matColDiag: ColorPickerFld;
     private _matTextType: HTMLSelectElement;
     private _matTextImg: HTMLImageElement;
     private _matClone: HTMLElement;
@@ -90,7 +91,7 @@ export class MaterialUI {
             let col: string = this._vishva.getMeshColor(this._matID.innerText, this._matColType.value);
             this._matColDiag.setColor(col);
         }
-        this._matColDiag = new ColorPickerDiag("mesh color", "matCol", this._vishva.getMeshColor(this._matID.innerText, this._matColType.value), DialogMgr.centerBottom, (hex, hsv, rgb) => {
+        this._matColDiag = new ColorPickerFld("mesh color", "matCol", this._vishva.getMeshColor(this._matID.innerText, this._matColType.value), VDiag.centerBottom, (hex, hsv, rgb) => {
             let err: string = this._vishva.setMeshColor(this._matID.innerText, this._matColType.value, hex);
             if (err !== null) DialogMgr.showAlertDiag(err);
 

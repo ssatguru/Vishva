@@ -9,7 +9,6 @@ export class VButton {
 
                 return btn;
 
-
         }
 
         public static styleIt(btn: HTMLButtonElement) {

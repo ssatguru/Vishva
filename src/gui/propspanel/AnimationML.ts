@@ -11,13 +11,13 @@ let animHTML = `
 <table>
         <tr>
         <td>range</td>
-        <td><select id="animList"></select>
+        <td><select id="animList" class="w3-select" ></select>
                 <label id="animFrom"></label>
                 <label id="animTo"></lable>
         </tr>
         <tr>
         <td>rate</td>
-        <td><input id="animRate" type="text" value="1" size="2"></td>
+        <td><input id="animRate" type="text" class="w3-input" value="1" size="2"></td>
         </tr>
         <tr>
         <td>loop</td>
@@ -38,16 +38,16 @@ create/modify an animation range
         <td>to frame</td>
         </tr>
         <tr>
-        <td><input type="text" id="animRangeName"></td>
-        <td><input type="text" id="animRangeStart" size="2" ></td>
-        <td><input type="text" id="animRangeEnd" size="2"></td>    
+        <td><input type="text" class="w3-input" id="animRangeName"></td>
+        <td><input type="text" class="w3-input" id="animRangeStart" size="2" ></td>
+        <td><input type="text" class="w3-input" id="animRangeEnd" size="2"></td>    
         </tr>
 </table>
 <button id="animRangeMake">create</button>
 <br>
 <hr>
 <br>
-skeletons in scene : <select id="animSkelList" class="ui-widget-content ui-corner-all"></select>
+skeletons in scene : <select id="animSkelList" class="ui-widget-content ui-corner-all w3-select"></select>
 <br>
 <br>
 <button id="animSkelChange">switch to</button>

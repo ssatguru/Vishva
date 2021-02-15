@@ -1,8 +1,7 @@
 import { Vishva } from "../Vishva";
-import { VDialog } from "./components/VDialog";
-import { DialogMgr } from "./DialogMgr";
 import { VTreeDialog } from "./components/VTreeDialog";
 import { txtrElement } from "./TextureML";
+import { VDiag } from "./components/VDiag";
 
 /**
  * Provides a UI to manage texture of a material
@@ -10,7 +9,7 @@ import { txtrElement } from "./TextureML";
 export class TextureUI {
 
     private _vishva: Vishva;
-    private _textureDiag: VDialog;
+    private _textureDiag: VDiag;
     private _textureImg: HTMLImageElement;
     private _textIDEle: HTMLElement;
     private _textType: HTMLElement;
@@ -35,7 +34,7 @@ export class TextureUI {
 
         document.body.appendChild(txtrElement);
 
-        this._textureDiag = new VDialog("textureDiag", "Texture", DialogMgr.centerBottom, "auto", "auto", 0, false);
+        this._textureDiag = new VDiag("textureDiag", "Texture", VDiag.centerBottom, "auto", "auto", "0", false);
 
         this._textureImg = <HTMLImageElement>document.getElementById("textImg");
         this._textIDEle = document.getElementById("textID");
@@ -76,7 +75,7 @@ export class TextureUI {
         let chgTexture: HTMLButtonElement = <HTMLButtonElement>document.getElementById("changeTexture");
         chgTexture.onclick = () => {
             if (this._textListDiag == null) {
-                this._textListDiag = new VTreeDialog(this._vishva, "select texture", DialogMgr.center, Vishva.userAssets, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
+                this._textListDiag = new VTreeDialog(this._vishva, "select texture", VDiag.center, Vishva.userAssets, "\.jpg$|\.png$|\.tga$|\.bmp$", true);
                 this._textListDiag.addTreeListener((f, p, l) => {
                     if (!l) return;
                     let imgsrc: string = Vishva.vHome + "assets/" + p + f;

@@ -1,4 +1,5 @@
 import { DialogMgr } from "../DialogMgr";
+import { VDiag } from "./VDiag";
 import { VTreeDialog } from "./VTreeDialog";
 
 /**
@@ -7,7 +8,7 @@ import { VTreeDialog } from "./VTreeDialog";
 export class VFileInput {
 
 
-    constructor(eID: string | HTMLElement, private value = "", title = "", pos = DialogMgr.centerBottom, treeContent: Array<any>, filter = "", openAll = true) {
+    constructor(eID: string | HTMLElement, private value = "", title = "", pos = VDiag.centerBottom, treeContent: Array<any>, filter = "", openAll = true) {
         let e: HTMLElement;
 
         if (eID instanceof HTMLElement) {

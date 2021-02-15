@@ -3,6 +3,7 @@ import {
     Material,
     MultiMaterial
 } from "babylonjs";
+import { VDiag } from "./components/VDiag";
 import { VTreeDialog } from "./components/VTreeDialog";
 import { DialogMgr } from "./DialogMgr";
 /*
@@ -18,7 +19,7 @@ export class MaterialListUI {
     constructor(scene: Scene, matHdlr: (mat: Material) => void) {
         this._scene = scene;
         this._updateTreeData();
-        this._materialsDiag = new VTreeDialog(null, "Materials in Scene", DialogMgr.center, this.treeData);
+        this._materialsDiag = new VTreeDialog(null, "Materials in Scene", VDiag.center, this.treeData);
         this._materialsDiag.addTreeListener((f, p, l) => {
             if (!l) return;
             let i: number = f.indexOf(",");

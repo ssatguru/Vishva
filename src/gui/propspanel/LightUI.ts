@@ -1,6 +1,7 @@
 import { Vishva, LightParm } from "../../Vishva";
 
-import { ColorPickerDiag } from "../ColorPickerDiag";
+import { ColorPickerFld } from "../ColorPickerFld";
+import { VDiag } from "../components/VDiag";
 
 import { DialogMgr } from "../DialogMgr";
 
@@ -11,8 +12,8 @@ export class LightUI {
     private _vishva: Vishva;
     private _lightAtt: HTMLInputElement;
     private _lightType: HTMLSelectElement;
-    private _lightDiff: ColorPickerDiag;
-    private _lightSpec: ColorPickerDiag;
+    private _lightDiff: ColorPickerFld;
+    private _lightSpec: ColorPickerFld;
     private _lightInten: HTMLInputElement;
     private _lightRange: HTMLInputElement;
     private _lightRadius: HTMLInputElement;
@@ -28,11 +29,11 @@ export class LightUI {
 
         this._lightAtt = <HTMLInputElement>document.getElementById("lightAtt");
         this._lightType = <HTMLSelectElement>document.getElementById("lightType");
-        this._lightDiff = new ColorPickerDiag("diffuse light", "lightDiff", "#ffffff", DialogMgr.centerBottom, (hex, hsv, rgb) => {
+        this._lightDiff = new ColorPickerFld("diffuse light", "lightDiff", "#ffffff", VDiag.centerBottom, (hex, hsv, rgb) => {
             this._applyLight();
         });
 
-        this._lightSpec = new ColorPickerDiag("specular light", "lightSpec", "#ffffff", DialogMgr.centerBottom, (hex, hsv, rgb) => {
+        this._lightSpec = new ColorPickerFld("specular light", "lightSpec", "#ffffff", VDiag.centerBottom, (hex, hsv, rgb) => {
             this._applyLight();
         });
         this._lightInten = <HTMLInputElement>document.getElementById("lightInten");

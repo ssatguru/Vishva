@@ -2,7 +2,6 @@ import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { Vishva } from "../Vishva";
 import { DialogMgr } from "./DialogMgr";
 import { EnvironmentUI } from "./EnvironmentUI";
-import { VDialog } from "./components/VDialog";
 import { VTreeDialog } from "./components/VTreeDialog";
 import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ItemListUI } from "./ItemListUI";
@@ -12,9 +11,12 @@ import { VButton } from "./components/VButton";
 import { hlpElement } from "./HelpML";
 import { navElement } from "./NavBarML";
 import { saveElement } from "./VishvaML";
+import { VDiag } from "./components/VDiag";
 
 
-
+export class GuiSettings {
+    enableToolTips: boolean = true;
+}
 
 export class VishvaGUI {
 
@@ -23,24 +25,32 @@ export class VishvaGUI {
     local: boolean = true;
 
     public static LARGE_ICON_SIZE: string = "width:128px;height:128px;";
-
     public static SMALL_ICON_SIZE: string = "width:64px;height:64px;";
+    public guiSettings: GuiSettings;
 
     private menuBarOn: boolean = true;
     private _vishvaFiles: Array<string | object>;
+
 
     public constructor(vishva: Vishva) {
         this._vishva = vishva;
         this._vishvaFiles = Vishva.userAssets;
 
-        document.body.append(navElement);
-        document.body.appendChild(saveElement);
+        //document.body.append(navElement);
+        Vishva.gui.append(navElement);
 
-        this._setSettings();
+        //document.body.appendChild(saveElement);
+        Vishva.gui.append(saveElement);
+
+        //check if vishva got the settings from a scene if loaded
+        this.guiSettings = <GuiSettings>this._vishva.getGuiSettings();
+        if (this.guiSettings == null) {
+            this.guiSettings = new GuiSettings();
+        }
 
         $(document).tooltip({
             open: (event, ui: any) => {
-                if (!this._settingDiag.enableToolTips) {
+                if (!this.guiSettings.enableToolTips) {
                     ui.tooltip.stop().remove();
                 }
             }
@@ -54,9 +64,7 @@ export class VishvaGUI {
         this._buildCuratedAssetsMenu();
 
         //main navigation menu 
-        this.createNavMenu();
-
-        DialogMgr.createAlertDiag();
+        this._createNavMenu();
 
         window.addEventListener("resize", (evt) => { return this.onWindowResize(evt) });
     }
@@ -105,6 +113,11 @@ export class VishvaGUI {
                 //                    this.resizing=false;
             }
         }
+
+        for (let vdiag of DialogMgr.vdiags) {
+            vdiag.reset();
+        }
+
     }
 
     /**
@@ -177,13 +190,13 @@ export class VishvaGUI {
         return this._items;
     }
     private _environment: EnvironmentUI;
-    private _settingDiag: SettingsUI;
+    private _settingsUI: SettingsUI = null;
     private _itemProps: PropsPanelUI;
 
     private firstTime: boolean = true;
     private addMenuOn: boolean = false;
 
-    private createNavMenu() {
+    private _createNavMenu() {
         //button to show navigation menu - hamburger button
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
         showNavMenu.style.visibility = "visible";
@@ -250,7 +263,7 @@ export class VishvaGUI {
         var navAdd: HTMLElement = document.getElementById("navAdd");
         navAdd.onclick = (e) => {
             if (this._addAssetTDiag == null) {
-                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", DialogMgr.leftTop2, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
+                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", VDiag.leftTop, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                 this._addAssetTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
@@ -263,9 +276,9 @@ export class VishvaGUI {
                         this._addAssetTDiag.refresh(Vishva.userAssets);
                     })
                 })
+            } else {
+                this._addAssetTDiag.toggle();
             }
-
-            this._addAssetTDiag.toggle();
         }
         var navPrim: HTMLElement = document.getElementById("navPrim");
         navPrim.onclick = () => {
@@ -273,6 +286,7 @@ export class VishvaGUI {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
             this._addInternalAssetUI.toggleAssetDiag("internal", "primitives");
+
         }
 
 
@@ -289,7 +303,11 @@ export class VishvaGUI {
 
         let navItems: HTMLElement = document.getElementById("navItems");
         navItems.onclick = (e) => {
-            this.getItemList().toggle();
+            if (this._items == null) {
+                this._items = new ItemListUI(this._vishva);
+            } else {
+                this._items.toggle();
+            }
             return false;
         }
 
@@ -300,8 +318,8 @@ export class VishvaGUI {
                     this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
                 }
                 this._environment = new EnvironmentUI(this._vishva, this._addInternalAssetUI, this);
-            }
-            this._environment.toggle();
+            } else
+                this._environment.toggle();
             return false;
         };
 
@@ -318,17 +336,23 @@ export class VishvaGUI {
 
         var navSettings: HTMLElement = document.getElementById("navSettings");
         navSettings.onclick = (e) => {
-            this._settingDiag.toggle();
+            if (this._settingsUI == null) {
+                this._settingsUI = new SettingsUI(this);
+            } else {
+                this._settingsUI.toggle();
+            }
             return false;
         };
 
         let helpLink: HTMLElement = document.getElementById("helpLink");
-        let helpDiag: VDialog = null;
+        //let helpDiag: VDialog = null;
+        let helpDiag: VDiag = null;
         helpLink.onclick = (e) => {
             if (helpDiag == null) {
-                helpDiag = new VDialog(hlpElement, "Help", DialogMgr.center, "50%", "", 640);
-            }
-            helpDiag.toggle();
+                //helpDiag = new VDialog(hlpElement, "Help", DialogMgr.center, "50%", "", 640);
+                helpDiag = new VDiag(hlpElement, "Help", VDiag.center, "50%", "", "640px");
+            } else
+                helpDiag.toggle();
             return true;
         };
 
@@ -377,22 +401,6 @@ export class VishvaGUI {
         if (this._itemProps != null) this._itemProps.refreshGeneralPanel();
     }
 
-
-    public getSettings() {
-        let guiSettings = new GuiSettings();
-        guiSettings.enableToolTips = this._settingDiag.enableToolTips;
-        return guiSettings;
-    }
-
-    private _setSettings() {
-        if (this._settingDiag == null) {
-            this._settingDiag = new SettingsUI(this._vishva, this);
-        }
-        let guiSettings: GuiSettings = <GuiSettings>this._vishva.getGuiSettings();
-        if (guiSettings !== null)
-            this._settingDiag.enableToolTips = guiSettings.enableToolTips;
-    }
-
     _downloadLink: HTMLAnchorElement;
     _downloadDialog: JQuery;
     private _createDownloadDiag() {
@@ -432,9 +440,7 @@ export class VishvaGUI {
 
 }
 
-export class GuiSettings {
-    enableToolTips: boolean;
-}
+
 
 export declare class ColorPicker {
     public constructor(e: HTMLElement, f: (p1: any, p2: any, p3: RGB) => void);

@@ -1,3 +1,5 @@
+import { Vishva } from "../Vishva";
+
 export class GuiUtils {
     /**
      * populates a html select element with options from the passed string array
@@ -21,7 +23,7 @@ export class GuiUtils {
         let div: HTMLDivElement = document.createElement("div");
         //div.style.visibility = "hidden";
         if (id != null) div.id = id;
-        document.body.appendChild(div);
+        Vishva.gui.appendChild(div);
         return div;
     }
 }

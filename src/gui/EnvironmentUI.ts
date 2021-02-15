@@ -2,13 +2,12 @@ import { Vishva } from "../Vishva";
 import SliderOptions = JQueryUI.SliderOptions;
 import SliderUIParams = JQueryUI.SliderUIParams;
 import { VishvaGUI } from "./VishvaGUI";
-import { VDialog } from "./components/VDialog";
 import { InternalAssetsUI } from "./InternalAssetsUI";
-import { ColorPickerDiag } from "./ColorPickerDiag";
-import { DialogMgr } from "./DialogMgr";
+import { ColorPickerFld } from "./ColorPickerFld";
 import { Color4 } from "babylonjs";
 import { envElement } from "./EnvironmentML";
 import { UIConst } from "./UIConst";
+import { VDiag } from "./components/VDiag";
 
 /**
  * provides a ui to manage the environment in the world
@@ -16,19 +15,20 @@ import { UIConst } from "./UIConst";
 export class EnvironmentUI {
     private _vishva: Vishva;
     private _vishvaGUI: VishvaGUI;
-    private _envDiag: VDialog;
+    // private _envDiag: VDialog;
+    private _envDiag: VDiag;
     private _addInternalAssetUI: InternalAssetsUI;
     /*
      * Create Environment Dialog
      */
     constructor(vishva: Vishva, addInternalAssetUI: InternalAssetsUI, vishvaGUI: VishvaGUI) {
-        console.log("creating env ui");
+
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
         this._addInternalAssetUI = addInternalAssetUI;
 
-        document.body.appendChild(envElement);
-
+        //document.body.appendChild(envElement);
+        Vishva.gui.appendChild(envElement);
 
         let sunPos: JQuery = $("#sunPos");
         let sunPosNS: JQuery = $("#sunPosNS");
@@ -43,7 +43,7 @@ export class EnvironmentUI {
         shade.slider(this._sliderOptions(0, 100, 100 * this._vishva.getShade()));
         fog.slider(this._sliderOptions(0, 100, this._vishva.getFog()));
 
-        let fogColDiag: ColorPickerDiag = new ColorPickerDiag("fog color", "fogCol", this._vishva.getFogColor(), DialogMgr.centerBottom, (hex, hsv, rgb) => {
+        let fogColDiag: ColorPickerFld = new ColorPickerFld("fog color", "fogCol", this._vishva.getFogColor(), VDiag.centerBottom, (hex, hsv, rgb) => {
             this._vishva.setFogColor(hex);
         });
 
@@ -67,7 +67,7 @@ export class EnvironmentUI {
             return true;
         };
 
-        let skyColDiag: ColorPickerDiag = new ColorPickerDiag("sky color", "skyCol", this._vishva.skyColor.toHexString().substr(0, 7), DialogMgr.centerBottom, (hex, hsv, rgb) => {
+        let skyColDiag: ColorPickerFld = new ColorPickerFld("sky color", "skyCol", this._vishva.skyColor.toHexString().substr(0, 7), VDiag.centerBottom, (hex, hsv, rgb) => {
             this._vishva.skyColor = Color4.FromHexString(hex + "ff");
             this._vishva.scene.clearColor = this._vishva.skyColor;
         });
@@ -97,7 +97,7 @@ export class EnvironmentUI {
             return true;
         };
 
-        let ambColDiag: ColorPickerDiag = new ColorPickerDiag("ambient color", "ambCol", this._vishva.getAmbientColor(), DialogMgr.centerBottom, (hex, hsv, rgb) => {
+        let ambColDiag: ColorPickerFld = new ColorPickerFld("ambient color", "ambCol", this._vishva.getAmbientColor(), VDiag.centerBottom, (hex, hsv, rgb) => {
             this._vishva.setAmbientColor(hex);
         });
 
@@ -106,7 +106,9 @@ export class EnvironmentUI {
         //                this._vishva.setGroundColor(hex);
         //            });
 
-        this._envDiag = new VDialog("envDiv", "Environment", DialogMgr.rightBottom, "", "", parseInt(UIConst._diagWidth));
+        // this._envDiag = new VDialog("envDiv", "Environment", DialogMgr.rightBottom, "", "", UIConst._diagWidth);
+        this._envDiag = new VDiag("envDiv", "Environment", VDiag.rightBottom, "34em", "", "34em");
+
     }
 
     private _sliderOptions(min: number, max: number, value: number): SliderOptions {

@@ -2,8 +2,7 @@
 import { AbstractMesh } from "babylonjs";
 import { Vishva } from "../Vishva";
 import { VTreeDialog } from "./components/VTreeDialog";
-import { DialogMgr } from "./DialogMgr";
-import { Node } from "babylonjs";
+import { VDiag } from "./components/VDiag";
 /*
  * provides a user interface which list all meshes in the scene
  */
@@ -20,7 +19,7 @@ export class ItemListUI_old {
 
         this._updateTreeData();
 
-        this._itemsDiag = new VTreeDialog(this._vishva, "Items in Scene", DialogMgr.leftCenter, this.treeData);
+        this._itemsDiag = new VTreeDialog(this._vishva, "Items in Scene", VDiag.leftCenter, this.treeData);
         this._itemsDiag.addTreeListener((f, p, l) => {
             let i: number = f.indexOf(",");
             f = f.substring(0, i);

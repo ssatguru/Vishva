@@ -1,3 +1,4 @@
+import { Vishva } from "../Vishva";
 import { VButton } from "./components/VButton";
 
 let navHTML = `
@@ -5,8 +6,8 @@ let navHTML = `
         <button id="showNavMenu">&#9776;</button>
 </div>
 
-<div id="navMenubar" style="display: inline-block; position: absolute; display: block;z-index:inherit">
-        <button id="downWorld"><span class="ui-icon ui-icon ui-icon-arrowthickstop-1-s" title="download scene"></span></button>
+<div id="navMenubar" style="display:grid; grid-auto-columns:min-content; grid-auto-flow:column; grid-gap:4px; position: absolute;z-index:inherit">
+        <button id="downWorld" ><span class="ui-icon ui-icon ui-icon-arrowthickstop-1-s" title="download scene"></span></button>
         <button id="navItems" title="list items">assets in world</button>
         <button id="navAdd" title="add assets">all assets</button>
         <button id="navCAssets">curated assets</button>
@@ -25,7 +26,6 @@ let navHTML = `
 let navElement = document.createElement("div");
 navElement.style.zIndex = "999";
 navElement.innerHTML = navHTML;
-
 VButton.styleThem(navElement.getElementsByTagName("button"));
 
 

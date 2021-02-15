@@ -1,11 +1,11 @@
 
 import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { Vishva } from "../../Vishva";
-import { VDialog } from "./VDialog";
 import { VTree } from "./VTree";
 import { VInputText } from "./VInputText";
 import { VButton } from "./VButton";
 import { UIConst } from "../UIConst";
+import { VDiag } from "./VDiag";
 
 /**
  * Provides a UI to display a tree
@@ -14,7 +14,7 @@ export class VTreeDialog {
 
     private _vishva: Vishva;
     private _tree: VTree;
-    private _treeDiag: VDialog;
+    private _treeDiag: VDiag;
     private _refreshHandler: () => void;
 
     // private _diagHtml_old: string = '<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
@@ -41,7 +41,7 @@ export class VTreeDialog {
         </div>
         `;
 
-    constructor(vishva: Vishva, diagTitle: string, pos: JQueryPositionOptions, treeData: Array<string | object>, filter?: string, openAll?: boolean) {
+    constructor(vishva: Vishva, diagTitle: string, pos: string, treeData: Array<string | object>, filter?: string, openAll?: boolean) {
         this._vishva = vishva;
 
         let diagDiv: HTMLDivElement = document.createElement("div");
@@ -51,8 +51,8 @@ export class VTreeDialog {
         document.body.appendChild(diagDiv);
 
         let treeDiv: HTMLDivElement = <HTMLDivElement>diagDiv.lastElementChild;//.getElementsByTagName("div")[1];
-        this._treeDiag = new VDialog(diagDiv, diagTitle, pos, parseInt(UIConst._diagWidth));
-        this._treeDiag.setResizable(true);
+        this._treeDiag = new VDiag(diagDiv, diagTitle, pos, UIConst._diagWidth);
+        //this._treeDiag.setResizable(true);
         this._tree = new VTree(treeDiv, treeData, filter, openAll);
         //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});
 
@@ -104,7 +104,7 @@ export class VTreeDialog {
     }
 
     public setModal(b: boolean) {
-        this._treeDiag.setModal(b);
+        //this._treeDiag.setModal(b);
     }
 
     public open() {

@@ -11,6 +11,7 @@ import { VInputVector3 } from "./components/VInputVector3";
 import { VButton } from "./components/VButton";
 import { snaElement } from "./snaML";
 import { UIConst } from "./UIConst";
+import { VDiag } from "./components/VDiag";
 /**
  * Provides a UI to manage sensors and actuators
  */
@@ -34,7 +35,7 @@ export class SnaUI {
     constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
-        document.body.appendChild(snaElement);
+        Vishva.gui.appendChild(snaElement);
     }
 
 
@@ -58,9 +59,9 @@ export class SnaUI {
         x = ele.getElementsByClassName("vtablink");
         for (let i = 0; i < x.length; i++) {
             if (x[i] == btn) {
-                (<HTMLElement>x[i]).classList.toggle("w3-theme-d2", true)
+                (<HTMLElement>x[i]).classList.toggle("w3-theme-d4", true)
             } else
-                (<HTMLElement>x[i]).classList.toggle("w3-theme-d2", false);
+                (<HTMLElement>x[i]).classList.toggle("w3-theme-d4", false);
 
         }
 
@@ -90,7 +91,7 @@ export class SnaUI {
         dos.autoOpen = false;
         dos.modal = false;
         dos.resizable = false;
-        dos.width = UIConst._diagWidth + "px";
+        dos.width = UIConst._diagWidth.toString() + "px";
         dos.height = "auto";
         dos.title = "Sensors and Actuators";
         dos.closeOnEscape = false;
@@ -160,6 +161,7 @@ export class SnaUI {
         };
         var addAct: HTMLElement = document.getElementById("addAct");
         addAct.onclick = (e) => {
+            console.log("add button clicked");
             var a: HTMLOptionElement = <HTMLOptionElement>this.actSel.item(this.actSel.selectedIndex);
             var actuator: string = a.value;
             this._vishva.addActuaorByName(actuator);
@@ -460,7 +462,7 @@ export class SnaUI {
 
         fib.onclick = (e) => {
             if (this._assetTDiag == null) {
-                this._assetTDiag = new VTreeDialog(this._vishva, fit.title, DialogMgr.centerBottom, Vishva.userAssets, fit.filter, fit.openAll);
+                this._assetTDiag = new VTreeDialog(this._vishva, fit.title, VDiag.centerBottom, Vishva.userAssets, fit.filter, fit.openAll);
             }
             this._assetTDiag.addTreeListener((f, p, l) => {
                 if (l) {
@@ -471,8 +473,6 @@ export class SnaUI {
                     }
                 }
             })
-
-
             this._assetTDiag.toggle();
         }
         let div: HTMLDivElement = document.createElement("div");

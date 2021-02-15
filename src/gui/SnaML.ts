@@ -5,11 +5,11 @@ const snaHTML: string = `
   <div id="sNaDetails">
 
     <div class="w3-bar ">
-      <button class="w3-bar-item w3-btn vtablink  w3-theme-d2" value="sensors">Sensors</button>
+      <button class="w3-bar-item w3-btn vtablink  w3-theme-d4" value="sensors">Sensors</button>
       <button class="w3-bar-item w3-btn vtablink" value="actuators">Actuators</button>
     </div>
 
-    <div id="sensors" class="w3-card w3-padding vtab w3-theme-d2">
+    <div id="sensors" class="w3-card w3-padding vtab w3-theme-d4">
       <select id="sensSel" class="w3-select" style="width:75%"></select>
       <button id="addSens" class="w3-btn w3-theme-l1 w3-round">add</button>
       <p></p>
@@ -23,7 +23,7 @@ const snaHTML: string = `
       </table>
     </div>
 
-    <div id="actuators" class="w3-card  w3-padding vtab w3-theme-d2" style="display:none">
+    <div id="actuators" class="w3-card  w3-padding vtab w3-theme-d4" style="display:none">
       <select id="actSel" class="w3-select" style="width:75%"></select>
       <button id="addAct" class="w3-btn w3-theme-l1 w3-round">add</button>
       <p></p>

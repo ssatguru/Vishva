@@ -5,6 +5,8 @@ All new development is happening in the "modularize" branch.
 
 "master" branch is no longer being maintained. 
 
+For a demo of latest version see https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin
+
 ## about
 
 Vishva - A hindi word for "World"

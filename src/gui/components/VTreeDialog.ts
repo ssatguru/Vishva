@@ -16,26 +16,14 @@ export class VTreeDialog {
     private _treeDiag: VDiag;
     private _refreshHandler: () => void;
 
-    // private _diagHtml_old: string = '<div style="vertical-align:middle">search <span style="padding-right: 1ch;"></span>'
-    //     + '<button ><span class="ui-icon ui-icon-search" title="filter"></span></button>'
-    //     + '</div>'
-    //     + '<hr>'
-    //     + '<div style="height:400px;width:100%;overflow-y:auto;border-style:solid;border-color:white;display:block">'
-    //     + '</div>'
-    //     + '<hr>'
-    //     + '<button><span class="ui-icon ui-icon-plus" title="expand all"></span></button>'
-    //     + '<button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>'
-    //     + '<button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>'
     private _diagHtml: string = `
         <div>
-            <div>
+            <div style="padding:.25em;">
                 <span style="vertical-align:middle;"></span>
-                <button ><span class="ui-icon ui-icon-search" title="filter"></span></button>
-                <!-- <button><span class="ui-icon ui-icon-plus" title="expand all"></span></button> -->
-                <button title="expand all">&#10133;</span></button>
-                <!-- <button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button> -->
-                <button title="collapse all">&#10134;</span></button>
-                <button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
+                <button title="filter"><span class="material-icons-outlined">search</span></button>
+                <button title="expand"><span class="material-icons-outlined">add</span></button>
+                <button title="collapse"><span class="material-icons-outlined">remove</span></button>
+                <button title="refresh"><span class="material-icons-outlined">refresh</span></button>
             </div>
         </div>
         <div style="height:32em; width:100%; margin-top:1em; margin-bottom:1em; padding-right:1em; overflow:auto;display:block">

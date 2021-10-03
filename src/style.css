@@ -20,17 +20,13 @@ body {
   color: #ffffff;
 }
 
-/* #sNaDiag */
-/* required as jquery dialog size does not re-adjust to content after it has been dragged */
-/* unfortunately messes up the dialog box for add items */
-/*
-.ui-dialog {
-              height:auto !important;
-              width: auto !important;
-              
- }
-*/
+/* ----- google material icons ----- */
+.material-icons-outlined {
+  font-size: 1em;
+  vertical-align: middle;
+}
 
+/* ----- jquery ----- */
 /* remove button outlines */
 /* the button outline on dialog box close button on top-right are not done properly */
 .ui-button:focus {

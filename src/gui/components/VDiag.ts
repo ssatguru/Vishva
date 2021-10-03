@@ -326,8 +326,8 @@ export class VDiag {
         }
         public showTitleBar() {
                 this.wb.setAttribute("style", this._barStyle);
-                this.wb.style.backgroundColor = Vishva.theme.darkColors.b;
-                this.wb.style.color = Vishva.theme.darkColors.f;
+                this.wb.style.backgroundColor = Vishva.theme.colors.b;
+                this.wb.style.color = Vishva.theme.colors.f;
         }
 
         public setTitle(title: string) {
@@ -376,8 +376,10 @@ export class VDiag {
                 this.w.style.height = <string>height;
                 this.w.style.width = <string>width;
                 this.w.style.minWidth = minWidth;
-                this.w.style.color = Vishva.theme.colors.f;
-                this.w.style.backgroundColor == Vishva.theme.colors.b;
+
+                this.w.style.color = Vishva.theme.darkColors.f;
+                this.w.style.backgroundColor == Vishva.theme.darkColors.b;
+
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
 
 
@@ -398,8 +400,8 @@ export class VDiag {
 
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];
                 this.b.appendChild(bc);
-                this.b.style.color = Vishva.theme.colors.f;
-                this.b.style.backgroundColor = Vishva.theme.colors.b;
+                this.b.style.color = Vishva.theme.darkColors.f;
+                this.b.style.backgroundColor = Vishva.theme.darkColors.b;
                 this.b.style.overflow = "auto";
                 this.b.style.height = "inherit";
 

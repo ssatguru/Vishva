@@ -4,25 +4,24 @@ import { VThemes } from "../components/VTheme";
 let genHTML = `
 
         
-        <div>
-                <label for="genID">id</label>
-                <input type="text" id="genID"  class="vinput  w3-input" style="width:10%" readonly>
-                <label for="genName">name</label>
-                <input type="text" id="genName"  class="vinput  w3-input" style="width:50%">
-                <button id="showTree">show</button>
+        <div >
+                <label for="genID" style="vertical-align:middle;">id</label>
+                <input type="text" id="genID"  class="vinput  w3-input" style="width:10%;vertical-align:middle;" readonly>
+                <label for="genName" style="vertical-align:middle;">name</label>
+                <input type="text" id="genName"  class="vinput  w3-input" style="width:50%;vertical-align:middle;">
+                <button id="showTree" style="vertical-align:middle;">show</button>
         </div>
         
         
         <div>
                 <!-- <div style="float:left;clear:left"> -->
                 <div>
-                <button id="operTrans" ><span class="ui-icon ui-icon-arrow-4" title="translate"></span>  </button>
-                <button id="operRot" ><span class="ui-icon ui-icon-arrowrefresh-1-e" title="rotate"></span>  </button>
-                <button id="operScale" ><span class="ui-icon ui-icon-arrow-4-diag" title="scale"></span>  </button>
-                <button id="operFocus" ><span class="ui-icon  ui-icon-zoomin" title="focus"></span>  </button>
-                <button id="undo" ><span class="ui-icon ui-icon-arrowreturnthick-1-w" title="undo"></span>  </button>
-                <button id="redo"><span class="flip ui-icon ui-icon-arrowreturnthick-1-w" title="redo"></span>  </button>
-                
+                        <button id="operTrans" title="translate"><span class="material-icons-outlined">open_with</span></button>
+                        <button id="operRot" title="rotate"><span class="material-icons-outlined">rotate_right</span></button>
+                        <button id="operScale" title="scale"><span class="material-icons-outlined">zoom_out_map</span></button>
+                        <button id="operFocus" title="focus"><span class="material-icons-outlined">center_focus_strong</span></button>
+                        <button id="undo" title="undo"><span class="material-icons-outlined">undo</span></button>
+                        <button id="redo" title="redo"><span class="material-icons-outlined">redo</span></button>
                 </div>
         </div>
         
@@ -64,7 +63,7 @@ let genHTML = `
         
         
         <div>
-                <button id="transRefresh"><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
+                <button id="transRefresh" title="refresh"><span class="material-icons-outlined">refresh</span></button>
                 <button id="transBake">bake</button>
                 <button id="gridSnap">grid snap</button>
                 space 
@@ -84,23 +83,24 @@ let genHTML = `
         
         
         <div>
-                <button id="cloneMesh"><span class="ui-icon ui-icon-copy" title="clone"></span> </button>
-                <button id="instMesh"><span class="flip ui-icon  ui-icon-newwin" title="instance"></span></button>
-                <button id="downMesh"><span class="ui-icon ui-icon-arrowthickstop-1-s" title="download mesh"></span> </button>
-                <button id="delMesh"><span class="ui-icon ui-icon-trash" title="delete"></span> </button>
+                <button id="cloneMesh" title="clone"><span class="material-icons-outlined">file_copy</span></button>
+                <button id="instMesh" title="instance"><span class="material-icons-outlined">content_copy</span></button>
+                <button id="downMesh" title="download mesh"><span class="material-icons-outlined">download</span></button>
+                <button id="delMesh" title="delete"><span class="material-icons-outlined">clear</span></button>
         </div>
         
         
         <div>
-                <button id="parentMesh">parent</button>
-                <button id="removeParent">remove parent</button>
-                <button id="removeChildren">remove children</button>
+                <button id="parentMesh" title="link as parent"><span class="material-icons-outlined">link</span></button>
+                <button id="removeChildren" title="unlink as parent"><span class="material-icons-outlined">link_off</span></button>
+                <button id="removeParent" title="remove parent"><span class="material-icons-outlined">person_remove</span></button>
+                
         </div>
         
         
         <div>
-                <button id="mergeMesh"><span class="ui-icon  ui-icon-link" title="merge meshes"></span> </button>
-                <button id="subMesh"><span class="ui-icon  ui-icon-scissors" title="subtract a mesh from another"></span> </button>
+                <button id="mergeMesh" title="merge meshes"><span class="material-icons-outlined">queue</span></button>
+                <button id="subMesh" title="subtract a mesh from another"><span class="material-icons-outlined">content_cut</span></button>
                 <button id="interMesh">intersect</button>
 
 
@@ -108,16 +108,13 @@ let genHTML = `
         
         
         <div>
-                <button id="swAv"><span class="ui-icon ui-icon-person" title="use as avatar"></span> </button>
-                <button id="swGnd"><span class="ui-icon ui-icon-grip-solid-horizontal" title="use as ground"></span> </button>
+                <button id="swAv" title="use as avatar"><span class="material-icons-outlined">wc</span></button>
+                <button id="swGnd" title="use as ground"><span class="material-icons-outlined">terrain</span></button>
         </div>
         
         
         <div>
-                <button id="sNa" >
-                <span class="ui-icon inline ui-icon-signal-diag" title="add sensors or actuators"></span>
-                <span class="ui-icon inline  ui-icon-gear" title="add sensors or actuators"></span>     
-                </button>
+                <button id="sNa" >sensors and actuators</button>
         </div>
         
         

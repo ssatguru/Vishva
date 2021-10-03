@@ -9,11 +9,12 @@ export class ColorPickerFld {
     // input box to show or enter the color hex value
     // input box to show the color
     // the div which would be used to create a dialog box cotaining the color picker
-    // note width 70%,20% not 80%,30% - to prevent color box wrapping to next line
+    // note width 70%,20% not 70%,30% = 100%- to prevent color box wrapping to next line. firefox is more finicky, had to go from 70,20 to 60,20
+    // 
     ih: string = `
     <div>
         <div class='w3-cell-row' style="width:100%">
-            <input type='text' class='colorInputValue w3-input w3-cell vinput'  style='width:70%;min-width:4em' title='enter color in hex #hhhhhh'></input>
+            <input type='text' class='colorInputValue w3-input w3-cell vinput'  style='width:60%;min-width:4em' title='enter color in hex #hhhhhh'></input>
             <input type='text' class='colorInput w3-input w3-cell vinput' style='cursor: pointer;width:20%'  readonly></input>
         </div>
         <div class='colorDiag' style='justify-self: center'>

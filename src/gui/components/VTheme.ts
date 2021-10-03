@@ -109,8 +109,9 @@ export class VThemes {
         //normal
         public static CurrentTheme: VTheme = new EggPlantTheme(2, 3, 4);
 
-        //public static CurrentTheme: VTheme = new EggPlantTheme(0, 5, 9);
+        //dark
+        //public static CurrentTheme: VTheme = new EggPlantTheme(4, 5, 6);
 
-        //lighter
+        //light
         //public static CurrentTheme: VTheme = new EggPlantTheme(0, 1, 2);
 }

@@ -1,8 +1,7 @@
 
 start http-server from root
-pick up bin/index.html
+goto localhost:8080/bin/index.html
 this picks up config file from absolute location /vishva
-
 the idea is to run distributable from one folder and the world from another folder
 
 

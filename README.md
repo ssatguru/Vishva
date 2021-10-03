@@ -8,6 +8,8 @@ A simple live scene editor for [BabylonJS](http://www.babylonjs.com/), a 3D HTML
 
 For intro see [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html)
 
+For a demo of latest version see [https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin](https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin)
+
 ## to test, build and run
 
 make sure you have typescript installed locally or globally  

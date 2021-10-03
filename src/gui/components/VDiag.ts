@@ -12,7 +12,7 @@ import { VButton } from "./VButton";
 export class VDiag {
 
         ml: string = `
-        <div class="bar" >
+        <div class="bar">
                 <div class="title" style="justify-self:start;">Window Title</div>
 
                 <svg class="vdiag-min" version="1.1"
@@ -44,40 +44,36 @@ export class VDiag {
                         stroke-width="2"/>
                 </svg>
         </div>
-        <div class="bdy" style="padding:1em;display:grid"></div>`;
+        <div class="bdy" style="padding:0em;display:grid"></div>`;
 
 
 
         _style: string = ` 
-        display:grid;
-        grid-template-columns:auto;
-        grid-template-rows:min-content auto;
-        z-index: 2;
-        position: absolute;
-        border-style:solid;
-        border-width:1px;
-    
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;`;
-
-
+                display:grid;
+                grid-template-columns:auto;
+                grid-template-rows:min-content auto;
+                z-index: 2;
+                position: absolute;
+                border-style:solid;
+                border-width:1px;
+        
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;`;
 
         _barStyle: string = `
-                display:grid;
-                grid-template-columns: auto min-content min-content ;
-                padding: 1em;
-                cursor: move;`;
+                        display:grid;
+                        grid-template-columns: auto min-content min-content ;
+                        padding: 0.5em;
+                        cursor: move;`;
 
         _closeStyle: string = `
-                cursor: pointer;
-                justify-self:end;
-                background-color: white;`;
-
-
+                        cursor: pointer;
+                        justify-self:end;
+                        background-color: white;`;
 
         public static leftTop: string = "leftTop";
         public static leftTop1: string = "leftTop1";
@@ -197,9 +193,6 @@ export class VDiag {
                                 this.w.style.bottom = "0px";
                                 this.w.style.right = "0px";
                                 break;
-
-
-
                 }
 
         }
@@ -229,7 +222,6 @@ export class VDiag {
         }
 
         private onMouseDown = (e: MouseEvent) => {
-
                 this.mx = e.clientX;
                 this.my = e.clientY;
 
@@ -387,14 +379,15 @@ export class VDiag {
                 this.w.style.color = Vishva.theme.colors.f;
                 this.w.style.backgroundColor == Vishva.theme.colors.b;
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
-                //bring to front when clicked
-                this.w.onclick = () => this.w.parentNode.appendChild(this.w);
 
 
                 this.wb = <HTMLElement>this.w.getElementsByClassName('bar')[0];
                 this.showTitleBar();
                 this.wb.onmousedown = this.onMouseDown;
                 this.wb.ondblclick = () => this.position(this.pos);
+                //bring to front when clicked
+                this.wb.onclick = () => this.w.parentNode.appendChild(this.w);
+
 
 
                 this.t = <HTMLElement>this.w.getElementsByClassName('title')[0];
@@ -407,6 +400,8 @@ export class VDiag {
                 this.b.appendChild(bc);
                 this.b.style.color = Vishva.theme.colors.f;
                 this.b.style.backgroundColor = Vishva.theme.colors.b;
+                this.b.style.overflow = "auto";
+                this.b.style.height = "inherit";
 
                 let minBut: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
                 minBut.addEventListener('click', this.toggleBody);

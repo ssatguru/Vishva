@@ -9,6 +9,7 @@ import { VInputVector3 } from "../components/VInputVector3";
 import { VInputNumber } from "../components/VInputNumber";
 import { ParentChildUI } from "./ParentChildUI";
 import { saveElement } from "../VishvaML";
+import { VDiag } from "../components/VDiag";
 
 /**
  * Provides UI for the Genral tab of mesh properties
@@ -284,7 +285,7 @@ export class GeneralUI {
             }
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
-            this._downloadDialog.dialog("open");
+            this._downloadDialog.open();
             return false;
         };
         delMesh.onclick = (e) => {
@@ -366,13 +367,12 @@ export class GeneralUI {
         this._genSize.setValue(this._vishva.getSize());
     }
 
-    _downloadDialog: JQuery;
+    _downloadDialog: VDiag;
     _downloadLink: HTMLAnchorElement;
     private _createDownloadDiag() {
         this._downloadLink = <HTMLAnchorElement>document.getElementById("downloadAssetLink");
-        this._downloadDialog = <JQuery>(<any>$("#saveAssetDiv"));
-        this._downloadDialog.dialog();
-        this._downloadDialog.dialog("close");
+        this._downloadDialog = new VDiag("saveAssetDiv", "Download an asset", VDiag.center, "20em");
+        this._downloadDialog.close();
     }
 
     private _toString(d: number): string {

@@ -92,6 +92,7 @@ export class AvManager {
      * looks like this was fixed in exporter 5.3
      * 5.3.0 aniamtion ranges again off by 1
      * TODO this should be moved to load asset function. Wrong to assume that all asset have been created using blender exporter
+     * fixed in 6. grr!!!
      * 
      * @param skel
      */
@@ -123,7 +124,7 @@ export class AvManager {
         cc.setTurnLeftAnim("turnLeft", 0.5, true);
         cc.setTurnRightAnim("turnRight", 0.5, true);
         cc.setWalkBackAnim("walkBack", 0.5, true);
-        cc.setRunJumpAnim("runJump", .5, true);
+        cc.setRunJumpAnim("runJump", .5, false);
         cc.setFallAnim("fall", 2, false);
         cc.setSlideBackAnim("slideBack", 1, false);
 

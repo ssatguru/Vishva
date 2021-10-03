@@ -81,7 +81,7 @@ export class InternalAssetsUI {
         document.body.appendChild(div);
 
 
-        let assetDiag: VDiag = new VDiag(div, assetCat, VDiag.leftBottom, "80%", "auto");
+        let assetDiag: VDiag = new VDiag(div, assetCat, VDiag.leftBottom, "auto", "auto");
         return assetDiag;
     }
 
@@ -127,18 +127,19 @@ export class InternalAssetsUI {
             } else {
                 img.src = Vishva.vHome + imgURL;
             }
-            img.setAttribute("style", VishvaGUI.LARGE_ICON_SIZE + "cursor:pointer;");
+            img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
             img.className = assetCat;
             img.onclick = f;
+            img.title = item["d"];
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.appendChild(img);
         }
-        var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
-        for (let item of items) {
-            if (!(item instanceof Object)) continue;
-            let cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
-            cell.innerText = item["d"];
-        }
+        // var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
+        // for (let item of items) {
+        //     if (!(item instanceof Object)) continue;
+        //     let cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
+        //     cell.innerText = item["d"];
+        // }
     }
     private _isAsset(fileName: String): boolean {
         let ft = fileName.split(".")[1];

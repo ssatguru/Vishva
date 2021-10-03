@@ -61,7 +61,6 @@ export class ActuatorDialog extends ActuatorAbstract {
     public onPropertiesChange() {
         var props: ActDialogParm = <ActDialogParm>this.properties;
         if (this.dialog == null) {
-            console.log(props);
             this.div = GuiUtils.createDiv();
             //this.div.style.visibility = "visible";
 
@@ -79,7 +78,6 @@ export class ActuatorDialog extends ActuatorAbstract {
         }
 
         if (props.title.trim() == "") {
-            console.log("hidding title bar");
             this.dialog.hideTitleBar();
         } else {
             this.dialog.showTitleBar();

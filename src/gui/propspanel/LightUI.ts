@@ -52,9 +52,9 @@ export class LightUI {
             } else this._applyLight();
         };
         this._lightType.onchange = () => this._applyLight();
-        this._lightInten.onchange = () => this._applyLight();
+        this._lightInten.oninput = () => this._applyLight();
         this._lightRange.onchange = () => this._applyLight();
-        this._lightAngle.onchange = () => this._applyLight();
+        this._lightAngle.oninput = () => this._applyLight();
         this._lightExp.onchange = () => this._applyLight();
         this._lightDirX.onchange = () => this._applyLight();
         this._lightDirY.onchange = () => this._applyLight();

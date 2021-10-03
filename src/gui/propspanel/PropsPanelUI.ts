@@ -18,6 +18,7 @@ import { gdElement } from "./GrndDimML";
 import { gsElement } from "./GrndSPSML";
 import { UIConst } from "../UIConst";
 import { VDiag } from "../components/VDiag";
+import { GuiUtils } from "../GuiUtils";
 /**
  * Provides UI to manage an Item(mesh) properties
  */
@@ -58,6 +59,16 @@ export class PropsPanelUI {
         document.getElementById("grndDiv").appendChild(gdElement);
         document.getElementById("grndSPS").appendChild(gsElement);
 
+
+        // stop propagation of all input events.
+        // this is to prevent key inputs propagating to canvas
+        // and modifying nodes there.
+        let inps: HTMLCollectionOf<HTMLInputElement> = ppElement.getElementsByTagName("input");
+        for (let i = 0; i < inps.length; i++) {
+            GuiUtils.stopPropagation(inps.item(i));
+
+        }
+
         let propsAcc: JQuery = $(this._propsAcc);
 
         propsAcc.accordion({
@@ -97,83 +108,7 @@ export class PropsPanelUI {
 
     }
 
-    //        constructor_old(vishva: Vishva,vishvaGUI: VishvaGUI) {
-    //            this._vishva=vishva;
-    //            this._vishvaGUI=vishvaGUI;
-    //
-    //
-    //            this._propsAcc=document.getElementById("propsAcc");
-    //            let propsAcc: JQuery=$(this._propsAcc);
-    //
-    //            propsAcc.accordion({
-    //                animate: 100,
-    //                heightStyle: "content",
-    //                collapsible: true,
-    //                activate: () => {
-    //                    this._activePanel=propsAcc.accordion("option","active");
-    //                },
-    //                beforeActivate: (e,ui) => {
-    //                    this.refreshPanel(this.getPanelIndex(ui.newHeader));
-    //
-    //                }
-    //            });
-    //
-    //            //propsAcc.accordion().children('h3:eq(4), div:eq(4)').hide();
-    //
-    //            //property dialog box
-    //            this._propsDiag=$("#propsDiag");
-    //            var dos: DialogOptions={
-    //                autoOpen: false,
-    //                //if resizable is set then height doesnot adjust automatically
-    //                resizable: false,
-    //                position: DialogMgr.leftCenter,
-    //                minWidth: 420,
-    //                //width: 420,
-    //                height: "auto",
-    //                //height: 650,
-    //                closeOnEscape: false,
-    //                //a) on open set the values of the fields in the active panel.
-    //                //   also if we switched from another mesh vishav will close open
-    //                //   by calling refreshPropsDiag().
-    //                //b) donot bother refreshing values if we are just restarting
-    //                //   dialog for height and width re-sizing after drag.
-    //                open: (e,ui) => {
-    //                    if(!this._fixingDragIssue) {
-    //                        // refresh the active tab
-    //                        this._activePanel=propsAcc.accordion("option","active");
-    //                        this.refreshPanel(this._activePanel);
-    //                        this.refreshingPropsDiag=false;
-    //                    } else {
-    //                        this._fixingDragIssue=false;
-    //                    }
-    //                },
-    //                closeText: "",
-    //                close: () => {
-    //                    if(this._vishvaGUI.resizing) return;
-    //                    if(!this._fixingDragIssue&&!this.refreshingPropsDiag) {
-    //                        if((this._generalUI._snaUI!=null)&&this._generalUI._snaUI.isOpen()) {
-    //                            this._generalUI._snaUI.close();
-    //                        }
-    //                        if((this._materialUI!=null)&&(this._materialUI._textureUI!=null)&&this._materialUI._textureUI.isOpen()) {
-    //                            this._materialUI._textureUI.close();
-    //                        }
-    //                        if(this._vishva.isGroundPicked()) {
-    //                            this._vishva.unSelectGrnd();
-    //                        }
-    //                    }
-    //                },
-    //                //after drag the dialog box doesnot resize
-    //                //force resize by closing and opening
-    //                dragStop: (e,ui) => {
-    //                    this._fixingDragIssue=true;
-    //                    this._propsDiag.dialog("close");
-    //                    this._propsDiag.dialog("open");
-    //                }
-    //            };
-    //            this._propsDiag.dialog(dos);
-    //            this._propsDiag["jpo"]=DialogMgr.leftCenter;
-    //            this._vishvaGUI.dialogs.push(this._propsDiag);
-    //        }
+
 
     public open() {
         let es: HTMLCollectionOf<Element>

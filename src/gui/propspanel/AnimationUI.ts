@@ -43,7 +43,11 @@ export class AnimationUI {
         //clone the selected skeleton and swicth to it
         animSkelClone.onclick = (e) => {
 
-            if (this._vishva.cloneChangeSkeleton(this._animSkelList.selectedOptions[0].value))
+            // if (this._vishva.cloneChangeSkeleton(this._animSkelList.selectedOptions[0].value))
+            //     this.update();
+            // else DialogMgr.showAlertDiag("Error: unable to clone and switch");
+
+            if (this._vishva.linkAnimationsToSkeleton(this._animSkelList.selectedOptions[0].value))
                 this.update();
             else DialogMgr.showAlertDiag("Error: unable to clone and switch");
         }
@@ -53,7 +57,7 @@ export class AnimationUI {
             this._vishva.toggleSkelView();
         }
 
-        //show rest pose
+        //show rest pose 
         animRest.onclick = (e) => {
             this._vishva.animRest();
         }
@@ -79,10 +83,13 @@ export class AnimationUI {
         this._animSelect = <HTMLSelectElement>document.getElementById("animList");
         this._animSelect.onchange = (e) => {
             var animName: string = this._animSelect.value;
+            animRangeName.value = animName;
             if (animName != null) {
                 var range: AnimationRange = this._skel.getAnimationRange(animName);
                 document.getElementById("animFrom").innerText = (<number>new Number(range.from)).toString();
                 document.getElementById("animTo").innerText = (<number>new Number(range.to)).toString();
+                animRangeStart.value = (<number>new Number(range.from)).toString();
+                animRangeEnd.value = (<number>new Number(range.to)).toString();;
             }
             return true;
         };
@@ -121,22 +128,6 @@ export class AnimationUI {
 
     }
 
-    //        private createAnimDiag() {
-    //            this.initAnimUI();
-    //            this.meshAnimDiag = $("#meshAnimDiag");
-    //            var dos: DialogOptions = {};
-    //            dos.autoOpen = false;
-    //            dos.modal = false;
-    //            dos.resizable = false;
-    //            dos.width = "auto";
-    //            dos.height = (<any>"auto");
-    //            dos.closeOnEscape = false;
-    //            dos.closeText = "";
-    //            dos.close = (e, ui) => {
-    //                this.vishva.switchDisabled = false;
-    //            };
-    //            this.meshAnimDiag.dialog(dos);
-    //        }
 
     public update() {
         //this.vishva.switchDisabled = true;
@@ -147,7 +138,7 @@ export class AnimationUI {
         } else {
             skelName = this._skel.name.trim();
             if (skelName === "") skelName = "NO NAME";
-            skelName = skelName + " (" + this._skel.id + ")";
+            skelName = skelName + ", " + this._skel.id + ", " + this._skel.uniqueId;
         }
         document.getElementById("skelName").innerText = skelName;
 
@@ -199,13 +190,13 @@ export class AnimationUI {
             childs[i].remove();
         }
 
-        var skels: Skeleton[] = this._vishva.getSkeltons();
+        var skels: Skeleton[] = this._vishva.scene.skeletons;
         var opt: HTMLOptionElement;
         //NOTE:skel id is not unique
         for (let skel of skels) {
             opt = document.createElement("option");
-            opt.value = skel.id + "-" + skel.name;
-            opt.innerText = skel.name + " (" + skel.id + ")";
+            opt.innerText = skel.name + ", " + skel.id + ", " + skel.uniqueId;
+            opt.value = skel.uniqueId.toString();
             this._animSkelList.appendChild(opt);
         }
     }

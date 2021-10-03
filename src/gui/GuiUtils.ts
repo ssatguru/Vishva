@@ -26,4 +26,19 @@ export class GuiUtils {
         Vishva.gui.appendChild(div);
         return div;
     }
+
+    public static stopPropagation(inp: HTMLInputElement) {
+        inp.onkeypress = (e) => {
+            e.stopPropagation()
+        }
+        inp.onkeydown = (e) => {
+            e.stopPropagation()
+        }
+        inp.onkeyup = (e) => {
+            e.stopPropagation()
+        }
+        inp.onchange = (e) => {
+            e.preventDefault();
+        }
+    }
 }

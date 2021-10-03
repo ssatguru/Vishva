@@ -1,5 +1,4 @@
 
-import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { Vishva } from "../../Vishva";
 import { VTree } from "./VTree";
 import { VInputText } from "./VInputText";
@@ -28,16 +27,18 @@ export class VTreeDialog {
     //     + '<button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>'
     //     + '<button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>'
     private _diagHtml: string = `
-        <div style="vertical-align:middle;">
+        <div>
             <div>
-                <span></span>
+                <span style="vertical-align:middle;"></span>
                 <button ><span class="ui-icon ui-icon-search" title="filter"></span></button>
-                <button><span class="ui-icon ui-icon-plus" title="expand all"></span></button>
-                <button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button>
+                <!-- <button><span class="ui-icon ui-icon-plus" title="expand all"></span></button> -->
+                <button title="expand all">&#10133;</span></button>
+                <!-- <button><span class="ui-icon ui-icon-minus" title="collapse all"></span></button> -->
+                <button title="collapse all">&#10134;</span></button>
                 <button><span class="ui-icon ui-icon-refresh" title="refresh"></span></button>
             </div>
         </div>
-        <div style="height:400px;width:100%;margin:10px:padding:20px;overflow:auto;display:block">
+        <div style="height:32em; width:100%; margin-top:1em; margin-bottom:1em; padding-right:1em; overflow:auto;display:block">
         </div>
         `;
 
@@ -80,10 +81,7 @@ export class VTreeDialog {
         r.onclick = () => {
             this._refreshHandler();
         }
-        // $(fb).button();
-        // $(e).button();
-        // $(c).button();
-        // $(r).button();
+
 
     }
 

@@ -1,7 +1,7 @@
 import { VButton } from "./components/VButton";
 
 let hlpHTML = `
-<div id="helpDiv" class="noselect">
+<div id="helpDiv" class="noselect" style="padding:1em;">
         <h6>Avatar Movement Keys</h6>
         <ul>
           <li>Turn left, right - press "A,D" or "left,right arrow" key or press and drag left mouse key</li>

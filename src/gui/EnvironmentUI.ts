@@ -107,7 +107,7 @@ export class EnvironmentUI {
         //            });
 
         // this._envDiag = new VDialog("envDiv", "Environment", DialogMgr.rightBottom, "", "", UIConst._diagWidth);
-        this._envDiag = new VDiag("envDiv", "Environment", VDiag.rightBottom, "34em", "", "34em");
+        this._envDiag = new VDiag("envDiv", "Environment", VDiag.rightBottom, "24em", "", "24em");
 
     }
 

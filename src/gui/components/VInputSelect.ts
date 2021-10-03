@@ -15,6 +15,7 @@ export class VInputSelect {
         e.appendChild(this._s);
         this.populateSelect(options);
     }
+
     /**
      * populates a html select element with options from the passed string array
      */

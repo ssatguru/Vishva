@@ -1,5 +1,4 @@
 
-import DialogButtonOptions = JQueryUI.DialogButtonOptions;
 import { Vishva } from "../Vishva";
 import { VishvaGUI } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
@@ -34,8 +33,7 @@ export class SettingsUI {
 
 
         let dboSave: HTMLButtonElement = VButton.create("save", "save");
-        dboSave.style.marginRight = "1em";
-        dboSave.style.marginTop = "1em";
+        dboSave.style.margin = "1em";
         dboSave.onclick = (e) => {
 
             this._vishva.enableCameraCollision(this._camCol.prop("checked"));
@@ -74,7 +72,8 @@ export class SettingsUI {
         };
 
         let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
-        dboCancel.style.marginTop = "1em";
+        //dboCancel.style.marginTop = "1em";
+        dboCancel.style.margin = "1em";
         dboCancel.onclick = (e) => {
             this._settingDiag.close();
             return true;

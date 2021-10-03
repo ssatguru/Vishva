@@ -6,9 +6,13 @@ body {
   margin: 0;
   /* overflow: hidden; */
   /* font-size: 85%; */
+  /* font-size: 12px; */
+  font-size: 12px;
+  font-family: "Lucida Grande", sans-serif;
   font-weight: lighter;
   /* font-family: "Comic Sans"; */
   /* font-family: "Lucida Console", Monaco, monospace; */
+  /* font-family: sans-serif; */
   /* font-family: "Courier New", "Trebuchet MS", sans-serif; */
   /* font-family: "Courier New Bold"; */
   /* font-family: "Segoe UI", "Helvetica Neue", "Helvetica", Arial, sans-serif; */
@@ -41,10 +45,23 @@ body {
   opacity: 0.3;
 }
 
+.ui-accordion .ui-accordion-content {
+  padding: 0em;
+  border-top: 0;
+  overflow: hidden;
+}
+
 .ui-widget {
-  font-family: "Segoe UI", "Helvetica Neue", "Helvetica", Arial, sans-serif;
+  /* font-family: "Segoe UI", "Helvetica Neue", "Helvetica", Arial, sans-serif; */
+  font-family: "Lucida Grande", sans-serif;
   font-weight: lighter;
   font-size: 1em;
+}
+
+.ui-widget-content {
+  background-color: inherit;
+  color: inherit;
+  border: 0em;
 }
 
 .ui-widget .ui-widget {
@@ -90,7 +107,7 @@ mimimizer icon on each of the VDialogs
 /*input {margin: 1px;}*/
 table {
   /* border-collapse: collapse; */
-  width: 100%;
+  /* width: 100%; */
   border-radius: 5px;
 }
 
@@ -192,12 +209,11 @@ li {
   display: none;
 }
 
-/* vishva ui style */
 .vinput {
   display: inline-block;
   /* color: #000 !important;
   background-color: #d9d4dd !important; */
   border: 1px solid black;
   outline: none;
-  border-radius: 5px;
+  /* border-radius: 5px; */
 }

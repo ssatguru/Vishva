@@ -60,7 +60,8 @@ import {
     VertexBuffer,
     PBRMaterial,
     TransformNode,
-    StereoscopicArcRotateCamera
+    StereoscopicArcRotateCamera,
+    AnimationGroup
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -112,7 +113,7 @@ export class Vishva {
 
     canvas: HTMLCanvasElement;
     public static gui: HTMLElement;
-    public static theme: VTheme = VThemes.EggPlant;
+    public static theme: VTheme = VThemes.CurrentTheme;
 
     editEnabled: boolean;
 
@@ -258,12 +259,14 @@ export class Vishva {
     private enablePhysics: boolean = true;
 
     public static vishva: Vishva;
-    static version: string = "0.2.0";
+    static version: string = "0.3.0";
 
 
     public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string, guiId: string) {
 
         //BABYLON.OBJFileLoader.INVERT_Y = true;
+
+        console.log("vishva version : " + Vishva.version);
 
         Tools.LogLevels = Tools.AllLogLevel;
 
@@ -355,8 +358,8 @@ export class Vishva {
         var foo: Object = <Object>JSON.parse(tfat.text);
 
         this.vishvaSerialized = foo["VishvaSerialized"];
-        console.log("babylon version : " + this.vishvaSerialized.bVer);
-        console.log("vishva version : " + this.vishvaSerialized.vVer);
+        console.log("world babylon version : " + this.vishvaSerialized.bVer);
+        console.log("world vishva version : " + this.vishvaSerialized.vVer);
         //this.snas = <SNAserialized[]>foo["VishvaSNA"];
         this.snas = this.vishvaSerialized.snas;
         this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
@@ -573,7 +576,7 @@ export class Vishva {
         //                this.scene.fogDensity=0;
         //            }
         if (this.editEnabled) {
-            this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(evt, pickResult) };
+            this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(<PointerEvent>evt, pickResult) };
         }
 
         this.avManager = new AvManager(this.avatarFolder,
@@ -2767,45 +2770,70 @@ export class Vishva {
         if (this.meshSelected.skeleton == null) return null; else return this.meshSelected.skeleton;
     }
 
-    public getSkeltons(): Skeleton[] {
-        return this.scene.skeletons;
-    }
 
-    //TODO:skeleton id is not unique. need to figure out how to handle that
     public changeSkeleton(skelId: string): boolean {
         if (!(this.meshSelected instanceof AbstractMesh)) return false;
         let switched: boolean = false;
-        let skels: Skeleton[] = this.scene.skeletons;
+        //let skels: Skeleton[] = this.scene.skeletons;
         console.log("trying to swicth to " + skelId);
-        for (let skel of skels) {
-            let id = skel.id + "-" + skel.name;
-            if (id === skelId) {
-                console.log("found skeleton. swicthing. ")
-                this.meshSelected.skeleton = skel;
-                switched = true;
-                break;
-            }
-        }
-        return switched;
+        this.meshSelected.skeleton = this.scene.getSkeletonByUniqueId(Number(skelId));
+        return true;
+        // for (let skel of skels) {
+        //     if (skel.uniqueId === Number(skelId)) {
+        //         console.log("found skeleton. switching. ")
+        //         this.meshSelected.skeleton = skel;
+        //         switched = true;
+        //         break;
+        //     }
+        // }
+        // return switched;
     }
     //TODO during save unused skeleton are dropped and ID are reassigned.
     //how do we handle that.
     public cloneChangeSkeleton(skelId: string): boolean {
+
         if (!(this.meshSelected instanceof AbstractMesh)) return false;
-        let switched: boolean = false;
-        let skels: Skeleton[] = this.scene.skeletons;
-        for (let skel of skels) {
-            let id = skel.id + "-" + skel.name;
-            if (id === skelId) {
-                console.log("found skeleton. swicthing. ")
-                var newId: string = (<number>new Number(Date.now())).toString();
-                var clonedSkel: Skeleton = skel.clone(skel.name, newId);
-                this.meshSelected.skeleton = clonedSkel;
-                switched = true;
-                break;
-            }
+
+        let skel = this.scene.getSkeletonByUniqueId(Number(skelId));
+        if (skel == null) return false;
+        var newId: string = (<number>new Number(Date.now())).toString();
+        var clonedSkel: Skeleton = skel.clone(skel.name, newId);
+        this.meshSelected.skeleton = clonedSkel;
+        return true;
+
+        // let skels: Skeleton[] = this.scene.skeletons;
+        // for (let skel of skels) {
+        //     let id = skel.id + "-" + skel.name;
+        //     if (id === skelId) {
+        //         console.log("found skeleton. swicthing. ")
+        //         var newId: string = (<number>new Number(Date.now())).toString();
+        //         var clonedSkel: Skeleton = skel.clone(skel.name, newId);
+        //         this.meshSelected.skeleton = clonedSkel;
+        //         switched = true;
+        //         break;
+        //     }
+        // }
+        // return switched;
+
+    }
+
+    public linkAnimationsToSkeleton(skelId: string): boolean {
+
+        if (!(this.meshSelected instanceof AbstractMesh)) return false;
+        console.log("linking now");
+        let skel = this.scene.getSkeletonByUniqueId(Number(skelId));
+        if (skel == null) return false;
+        let fromBones: Bone[] = skel.bones;
+        let toBones: Bone[] = this.meshSelected.skeleton.bones;
+        for (let i = 0; i < fromBones.length; i++) {
+            console.log("linking animation " + i + ":" + fromBones[i].animations);
+            toBones[i].animations = fromBones[i].animations;
         }
-        return switched;
+        let fromAnimRanges: AnimationRange[] = skel.getAnimationRanges();
+        for (let fromAnimRange of fromAnimRanges) {
+            this.meshSelected.skeleton.createAnimationRange(fromAnimRange.name, fromAnimRange.from, fromAnimRange.to);
+        }
+        return true;
     }
 
     skelViewerArr: SkeletonViewer[] = [];
@@ -3560,7 +3588,7 @@ export class Vishva {
     //older, used by old GUI file loader dislog
     public loadAssetFile(file: File) {
         var sceneFolderName: string = file.name.split(".")[0];
-        SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, "", "") });
+        SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, "", "") });
     }
 
     filePath: string;
@@ -3582,7 +3610,7 @@ export class Vishva {
             Vishva.vHome + "assets/curated/" + assetType + "/" + fileName + "/",
             file,
             this.scene,
-            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file, "curated") });
+            (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "curated") });
     }
 
     /**
@@ -3599,7 +3627,7 @@ export class Vishva {
             Vishva.vHome + "assets/" + path,
             file,
             this.scene,
-            (meshes, particleSystems, skeletons) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, file, "user") });
+            (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "user") });
     }
 
     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
@@ -3611,7 +3639,7 @@ export class Vishva {
      */
 
 
-    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], file: string, assetType: string) {
+    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string) {
         console.log("loading meshes " + file);
         var boundingRadius: number = this.getBoundingRadius(meshes);
 

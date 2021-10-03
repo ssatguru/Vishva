@@ -1,4 +1,5 @@
 import { VButton } from "../components/VButton";
+import { VThemes } from "../components/VTheme";
 
 let genHTML = `
 
@@ -133,6 +134,7 @@ genElement.style.display = "grid";
 genElement.style.gridTemplateColumns = "auto";
 genElement.style.gridGap = "0.5em";
 genElement.style.alignItems = "center";
+genElement.style.padding = "1em";
 
 genElement.innerHTML = genHTML;
 VButton.styleThem(genElement.getElementsByTagName("button"));

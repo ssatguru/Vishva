@@ -10,6 +10,7 @@ import { VButton } from "./components/VButton";
 import { snaElement } from "./snaML";
 import { UIConst } from "./UIConst";
 import { VDiag } from "./components/VDiag";
+import { GuiUtils } from "./GuiUtils";
 /**
  * Provides a UI to manage sensors and actuators
  */
@@ -174,13 +175,6 @@ export class SnaUI {
             };
             cell = <HTMLTableCellElement>row.insertCell();
 
-            // TODO remove, replaced by VButton
-            // var delBut: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
-            // delBut.id = d.toString();
-            // delBut.innerHTML = "del";
-            // var jq2: JQuery = <JQuery>(<any>$(delBut));
-            // jq2.button();
-
             let delBut: HTMLButtonElement = VButton.create(d.toString(), "del");
 
             delBut["row"] = row;
@@ -205,22 +199,6 @@ export class SnaUI {
             this._vishva.enableKeys();
         }
 
-        // this.editSensDiag = $("#editSensDiag");
-        // var dos: DialogOptions = {};
-        // dos.autoOpen = false;
-        // dos.modal = true;
-        // dos.resizable = false;
-        // dos.width = "auto";
-        // dos.title = "Edit Sensor";
-        // dos.closeText = "";
-        // dos.closeOnEscape = false;
-        // dos.open = () => {
-        //     this._vishva.disableKeys();
-        // }
-        // dos.close = () => {
-        //     this._vishva.enableKeys();
-        // }
-        // this.editSensDiag.dialog(dos);
     }
     /*
     * show a dialog box to edit sensor properties
@@ -243,20 +221,12 @@ export class SnaUI {
                 return true;
             }
         } else this.editSensDiag.open();
-        // this.editSensDiag.dialog("open");
 
         var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
         var node: Node = parmDiv.firstChild;
         if (node != null) parmDiv.removeChild(node);
         var tbl: HTMLTableElement = this.formCreate(sensor.getProperties());
         parmDiv.appendChild(tbl);
-
-        //var dbo: DialogButtonOptions = {};
-        //dbo.text = "save";
-
-
-        // var dbos: DialogButtonOptions[] = [dbo];
-        // this.editSensDiag.dialog("option", "buttons", dbos);
 
     }
 
@@ -270,22 +240,6 @@ export class SnaUI {
             this._vishva.enableKeys();
         }
 
-        // this.editActDiag = <JQuery>(<any>$("#editActDiag"));
-        // var dos: DialogOptions = {};
-        // dos.autoOpen = false;
-        // dos.modal = true;
-        // dos.resizable = false;
-        // dos.width = "auto";
-        // dos.title = "Edit Actuator";
-        // dos.closeText = "";
-        // dos.closeOnEscape = false;
-        // dos.open = (e, ui) => {
-        //     this._vishva.disableKeys();
-        // }
-        // dos.close = (e, ui) => {
-        //     this._vishva.enableKeys();
-        // }
-        // this.editActDiag.dialog(dos);
     }
 
     /*
@@ -309,7 +263,6 @@ export class SnaUI {
                 return true;
             }
         } else this.editActDiag.open();
-        // this.editActDiag.dialog("open");
 
         var parmDiv: HTMLElement = document.getElementById("editActDiag.parms");
         var node: Node = parmDiv.firstChild;
@@ -319,12 +272,6 @@ export class SnaUI {
         var tbl: HTMLTableElement = this.formCreate(actuator.getProperties());
         parmDiv.appendChild(tbl);
 
-        // var dbo: DialogButtonOptions = {};
-        // dbo.text = "save";
-
-        // var dbos: DialogButtonOptions[] = [dbo];
-
-        // this.editActDiag.dialog("option", "buttons", dbos);
     }
     /*
      * auto generate forms based on properties
@@ -397,27 +344,13 @@ export class SnaUI {
                     inp.type = "checkbox";
                     if (check) inp.setAttribute("checked", "true");
                 }
-                this._stopPropagation(inp);
+                GuiUtils.stopPropagation(inp);
                 cell.appendChild(inp);
             }
         }
         return tbl;
     }
 
-    private _stopPropagation(inp: HTMLInputElement) {
-        inp.onkeypress = (e) => {
-            e.stopPropagation()
-        }
-        inp.onkeydown = (e) => {
-            e.stopPropagation()
-        }
-        inp.onkeyup = (e) => {
-            e.stopPropagation()
-        }
-        inp.onchange = (e) => {
-            e.preventDefault();
-        }
-    }
 
     private formRead(snaP: SNAproperties) {
         var keys: string[] = Object.keys(snaP);

@@ -5,7 +5,7 @@ import "./w3.css";
 //import "jquery-ui-themes/themes/dark-hive/jquery-ui.min.css";
 //import "./jquery-ui-1.12.1.custom/jquery-ui.theme.min.css";
 
-// import "./jquery/dark-hive/jquery-ui.css";
+//import "./jquery/dark-hive/jquery-ui.css";
 import "./jquery/eggplant/jquery-ui.css";
 import "./w3-theme-eggplant.css";
 import "./style.css";
@@ -28,7 +28,7 @@ import "pepjs";
 //import "cannon";
 
 //import "./misc/perlin";
-// import "./misc/babylon.dynamicTerrain.min";
+//import "./misc/babylon.dynamicTerrain.min";
 
 import "./sna/ActuatorAnimator";
 import "./sna/ActuatorAvAnimator";
@@ -47,6 +47,7 @@ import { VButton } from "./gui/components/VButton";
 import { VInputSelect } from "./gui/components/VInputSelect";
 
 
+
 declare var defaultWorld: any;
 declare var noEditWorlds: any;
 
@@ -54,29 +55,14 @@ window.onload = main;
 
 function main() {
 
-
     //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
     //in 4.0.3 setting this to true broke babylon file exported from GLB  
     //doesn't seem to make a difference in 4.1
     //BABYLON.Texture.UseSerializedUrlIfAny = true;
 
-
     let cls = "." + $("#lightType").val();
     $(".opt").hide();
     $(cls).show();
-
-    //change all buttons to jquery button
-    // $("button").button();
-
-    let btns = document.getElementsByTagName("button");
-    for (let i = 0; i < btns.length; i++) {
-        // btns[i].classList.add("w3-btn");
-        // btns[i].classList.add("w3-win8-mauve");
-        // btns[i].classList.add("w3-card");
-        // btns[i].classList.add("w3-round");
-        VButton.styleIt(btns[i]);
-    }
-    //button color 61,53,68 and 48,38,58 (darker)
 
     let slcs = document.getElementsByTagName("select");
     for (let i = 0; i < slcs.length; i++) {
@@ -96,8 +82,6 @@ function main() {
     $("button").click(function (e) {
         $(this).blur();
     });
-
-    //$('input').addClass("ui-corner-all");
 
     var search: HREFsearch = new HREFsearch();
 

@@ -48,13 +48,13 @@ export class VishvaGUI {
             this.guiSettings = new GuiSettings();
         }
 
-        $(document).tooltip({
-            open: (event, ui: any) => {
-                if (!this.guiSettings.enableToolTips) {
-                    ui.tooltip.stop().remove();
-                }
-            }
-        });
+        // $(document).tooltip({
+        //     open: (event, ui: any) => {
+        //         if (!this.guiSettings.enableToolTips) {
+        //             ui.tooltip.stop().remove();
+        //         }
+        //     }
+        // });
 
 
         //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
@@ -167,6 +167,7 @@ export class VishvaGUI {
     private addMenuOn: boolean = false;
 
     private _createNavMenu() {
+
         //button to show navigation menu - hamburger button
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
         showNavMenu.style.visibility = "visible";
@@ -191,8 +192,20 @@ export class VishvaGUI {
             return true;
         };
 
-        //add menu sliding setup
+        // button to download world
+        var downWorld: HTMLElement = document.getElementById("downWorld");
+        downWorld.onclick = (e) => {
+            var downloadURL: string = this._vishva.saveWorld();
+            if (downloadURL == null) return true;
+            if (this._downloadDialog == null) this._createDownloadDiag();
+            this._downloadLink.href = downloadURL;
+            this._downloadLink.download = Vishva.worldName + ".js";
+            this._downloadDialog.open();
+            return false;
+        };
 
+        // button for internal and curated items
+        //add menu sliding setup
         var slideDown: any = JSON.parse("{\"direction\":\"up\"}");
         var navAdd0: HTMLElement = document.getElementById("navCAssets");
         navAdd0.style.visibility = "visible";
@@ -229,11 +242,22 @@ export class VishvaGUI {
             return true;
         };
 
+        // button for all assets in world
+        let navItems: HTMLElement = document.getElementById("navItems");
+        navItems.onclick = (e) => {
+            if (this._items == null) {
+                this._items = new ItemListUI(this._vishva);
+            } else {
+                this._items.toggle();
+            }
+            return false;
+        }
 
+        // button for all assets in inventory 
         var navAdd: HTMLElement = document.getElementById("navAdd");
         navAdd.onclick = (e) => {
             if (this._addAssetTDiag == null) {
-                this._addAssetTDiag = new VTreeDialog(this._vishva, "Assets", VDiag.leftTop2, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
+                this._addAssetTDiag = new VTreeDialog(this._vishva, "all assets", VDiag.leftTop2, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
                 this._addAssetTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
@@ -250,6 +274,8 @@ export class VishvaGUI {
                 this._addAssetTDiag.toggle();
             }
         }
+
+        // button for all primitives
         var navPrim: HTMLElement = document.getElementById("navPrim");
         navPrim.onclick = () => {
             if (this._addInternalAssetUI == null) {
@@ -259,28 +285,7 @@ export class VishvaGUI {
 
         }
 
-
-        var downWorld: HTMLElement = document.getElementById("downWorld");
-        downWorld.onclick = (e) => {
-            var downloadURL: string = this._vishva.saveWorld();
-            if (downloadURL == null) return true;
-            if (this._downloadDialog == null) this._createDownloadDiag();
-            this._downloadLink.href = downloadURL;
-            this._downloadLink.download = Vishva.worldName + ".js";
-            this._downloadDialog.dialog("open");
-            return false;
-        };
-
-        let navItems: HTMLElement = document.getElementById("navItems");
-        navItems.onclick = (e) => {
-            if (this._items == null) {
-                this._items = new ItemListUI(this._vishva);
-            } else {
-                this._items.toggle();
-            }
-            return false;
-        }
-
+        // button for all environment
         var navEnv: HTMLElement = document.getElementById("navEnv");
         navEnv.onclick = (e) => {
             if (this._environment == null) {
@@ -293,6 +298,7 @@ export class VishvaGUI {
             return false;
         };
 
+        // button for edit
         var navEdit: HTMLElement = document.getElementById("navEdit");
         navEdit.onclick = (e) => {
             if ((this._itemProps != null) && (this._itemProps.isOpen())) {
@@ -303,7 +309,7 @@ export class VishvaGUI {
             return false;
         };
 
-
+        // button for settings
         var navSettings: HTMLElement = document.getElementById("navSettings");
         navSettings.onclick = (e) => {
             if (this._settingsUI == null) {
@@ -314,6 +320,7 @@ export class VishvaGUI {
             return false;
         };
 
+        // button for help
         let helpLink: HTMLElement = document.getElementById("helpLink");
         //let helpDiag: VDialog = null;
         let helpDiag: VDiag = null;
@@ -326,6 +333,7 @@ export class VishvaGUI {
             return true;
         };
 
+        // button for babylon inspector
         var debugLink: HTMLElement = document.getElementById("debugLink");
         debugLink.onclick = (e) => {
             this._vishva.toggleDebug();
@@ -372,12 +380,11 @@ export class VishvaGUI {
     }
 
     _downloadLink: HTMLAnchorElement;
-    _downloadDialog: JQuery;
+    _downloadDialog: VDiag;
     private _createDownloadDiag() {
         this._downloadLink = <HTMLAnchorElement>document.getElementById("downloadLink");
-        this._downloadDialog = <JQuery>(<any>$("#saveDiv"));
-        this._downloadDialog.dialog();
-        this._downloadDialog.dialog("close");
+        this._downloadDialog = new VDiag(document.getElementById("saveDiv"), "Download World", VDiag.center, "20em", "auto");
+        this._downloadDialog.close();
     }
 
     _loadDialog: JQuery;

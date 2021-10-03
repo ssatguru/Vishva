@@ -1,6 +1,6 @@
 
 const settingHTML: string = `
-<div id="settingDiag" style="display:grid; grid-template-columns:auto auto;data-keyboard="false">
+<div id="settingDiag" style="padding:0.5em; display:grid; grid-template-columns:auto auto; grid-gap:0.5em; data-keyboard='false'">
         <div>camera collision</div>
         <div><input id="camCol" type="checkbox"/></div>
 

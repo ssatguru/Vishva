@@ -1,4 +1,5 @@
 import { VButton } from "../components/VButton";
+import { VThemes } from "../components/VTheme";
 
 const ppHTML = `
 <div id="propsDiag" >
@@ -29,6 +30,9 @@ const ppHTML = `
 
 let ppElement = document.createElement("div");
 ppElement.style.visibility = "hidden";
+// ppElement.style.color = VThemes.CurrentTheme.colors.f;
+// ppElement.style.backgroundColor = VThemes.CurrentTheme.colors.b;
+
 ppElement.innerHTML = ppHTML;
 VButton.styleThem(ppElement.getElementsByTagName("button"));
 

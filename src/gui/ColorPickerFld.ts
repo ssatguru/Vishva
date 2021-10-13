@@ -17,9 +17,9 @@ export class ColorPickerFld {
             <input type='text' class='colorInputValue w3-input w3-cell vinput'  style='width:60%;min-width:4em' title='enter color in hex #hhhhhh'></input>
             <input type='text' class='colorInput w3-input w3-cell vinput' style='cursor: pointer;width:20%'  readonly></input>
         </div>
-        <div class='colorDiag' style='justify-self: center'>
-            <div  class='colorPicker cp-normal'></div>
-        </div>
+         <!-- <div class='colorDiag' style='justify-self: center;'> -->
+            <div  class='colorPicker' style='display:grid;grid-template-columns:auto auto;align-items:center;grid-gap:0.75em;padding:0.5em'></div>
+        <!-- </div> -->
     </div>
     `;
     colorInputValue: HTMLInputElement;
@@ -50,8 +50,10 @@ export class ColorPickerFld {
         this.colorInput = <HTMLInputElement>colorEle.getElementsByClassName("colorInput")[0];
         this.colorInput.style.backgroundColor = this.hexColor;
 
-        let colorDiag: HTMLDivElement = <HTMLDivElement>colorEle.getElementsByClassName("colorDiag")[0];
-        let colorPicker: HTMLElement = <HTMLElement>colorDiag.getElementsByClassName("colorPicker")[0];
+        // let colorDiag: HTMLDivElement = <HTMLDivElement>colorEle.getElementsByClassName("colorDiag")[0];
+        // let colorPicker: HTMLElement = <HTMLElement>colorDiag.getElementsByClassName("colorPicker")[0];
+
+        let colorPicker: HTMLElement = <HTMLElement>colorEle.getElementsByClassName("colorPicker")[0];
 
         this.colorInput.onclick = () => {
             if (this.vDiag == null) {
@@ -62,7 +64,8 @@ export class ColorPickerFld {
                     f(hex, hsv, rgb);
                 });
 
-                this.vDiag = new VDiag(colorDiag, title, pos, 0, "auto", "19em");
+                // this.vDiag = new VDiag(colorDiag, title, pos, 0, "auto", "19em");
+                this.vDiag = new VDiag(colorPicker, title, pos, 0, "auto", "19em");
             } else {
                 this.vDiag.toggle();
             }

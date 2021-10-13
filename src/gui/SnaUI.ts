@@ -71,8 +71,8 @@ export class SnaUI {
         }
     }
     /*
-     * A dialog box to show the list of available sensors 
-     * actuators, each in seperate tabs
+     * A dialog box to show the list of all sensors 
+     * actuators in Visha, each in seperate tabs
      */
     private create_sNaDiag() {
 
@@ -143,6 +143,7 @@ export class SnaUI {
     /*
      * fill up the sensor and actuator tables
      * with a list of sensors and actuators
+     * attached to the mesh
      */
     private updateSensActTbl(sensAct: Array<SensorActuator>, tbl: HTMLTableElement) {
         let l: number = tbl.rows.length;
@@ -150,12 +151,15 @@ export class SnaUI {
             tbl.deleteRow(i);
         }
         l = sensAct.length;
+        console.log("sns and acts " + l);
         for (var i: number = 0; i < l; i++) {
+            console.log("sna num " + i);
             var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.innerHTML = sensAct[i].getName();
             cell = <HTMLTableCellElement>row.insertCell();
             cell.innerHTML = sensAct[i].getProperties().signalId;
+            console.log(sensAct[i].getProperties());
             cell = <HTMLTableCellElement>row.insertCell();
 
             let d: number = i;
@@ -190,6 +194,7 @@ export class SnaUI {
         }
     }
     editSensDiag: VDiag;
+    _sensSaveButton: HTMLButtonElement;
     private createEditSensDiag() {
         this.editSensDiag = new VDiag(document.getElementById("editSensDiag"), "Edit Sensor", VDiag.center, "auto", "auto", "25em", true);
         this.editSensDiag.onOpen = () => {
@@ -212,15 +217,19 @@ export class SnaUI {
 
         if (this.editSensDiag == null) {
             this.createEditSensDiag();
-            let dbo = this.editSensDiag.addButton("save");
-            dbo.onclick = (e) => {
-                this.formRead(sensor.getProperties());
-                sensor.handlePropertiesChange()
-                this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
-                this.editSensDiag.close();
-                return true;
-            }
+            this._sensSaveButton = this.editSensDiag.addButton("save");
         } else this.editSensDiag.open();
+
+        //need to change savebutton function everytime, as sensor could have changed each time
+        //TODO clean up previous onclick properly. maybe use removeeventlistenere
+        this._sensSaveButton.onclick = (e) => {
+            this.formRead(sensor.getProperties());
+            console.log(sensor.getProperties());
+            sensor.handlePropertiesChange()
+            this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
+            this.editSensDiag.close();
+            return true;
+        }
 
         var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
         var node: Node = parmDiv.firstChild;
@@ -231,6 +240,7 @@ export class SnaUI {
     }
 
     editActDiag: VDiag;
+    _actSaveButton: HTMLButtonElement;
     private createEditActDiag() {
         this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.center, "auto", "auto");
         this.editActDiag.onOpen = () => {
@@ -254,15 +264,19 @@ export class SnaUI {
 
         if (this.editActDiag == null) {
             this.createEditActDiag();
-            let dbo = this.editActDiag.addButton("save");
-            dbo.onclick = (e) => {
-                this.formRead(actuator.getProperties());
-                actuator.handlePropertiesChange();
-                this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
-                this.editActDiag.close();
-                return true;
-            }
+            this._actSaveButton = this.editActDiag.addButton("save");
         } else this.editActDiag.open();
+
+        //need to change savebutton function everytime, as actuator could have changed each time
+        //TODO clean up previous onclick properly. maybe use removeeventlistenere
+        this._actSaveButton.onclick = (e) => {
+            this.formRead(actuator.getProperties());
+            console.log(actuator.getProperties());
+            actuator.handlePropertiesChange();
+            this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
+            this.editActDiag.close();
+            return true;
+        }
 
         var parmDiv: HTMLElement = document.getElementById("editActDiag.parms");
         var node: Node = parmDiv.firstChild;

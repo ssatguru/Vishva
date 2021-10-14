@@ -13,12 +13,12 @@ const snaHTML: string = `
       <select id="sensSel" class="w3-select" style="width:75%"></select>
       <button id="addSens" class="w3-btn w3-theme-l1 w3-round">add</button>
       <p></p>
-      <table id="sensTbl" style="text-align: left;">
+      <table id="sensTbl" style="text-align: left;width:100%">
         <tr>
           <td style="width:30%">NAME</td>
           <td style="width:30%">SIGNAL</td>
-          <td style="width:20%"></td>
-          <td style="width:20%"></td>
+          <td style="width:20%;border: 0px"></td>
+          <td style="width:20%;border: 0px"></td>
         </tr>
       </table>
     </div>
@@ -27,12 +27,12 @@ const snaHTML: string = `
       <select id="actSel" class="w3-select" style="width:75%"></select>
       <button id="addAct" class="w3-btn w3-theme-l1 w3-round">add</button>
       <p></p>
-      <table id="actTbl" style="text-align: left;">
+      <table id="actTbl" style="text-align: left;width:100%"">
         <tr>
           <td style="width:30%">NAME</td>
           <td style="width:30%">SIGNAL</td>
-          <td style="width:20%"></td>
-          <td style="width:20%"></td>
+          <td style="width:20%;border: 0px"></td>
+          <td style="width:20%;border: 0px"></td>
         </tr>
       </table>
     </div>
@@ -41,14 +41,10 @@ const snaHTML: string = `
 </div>
 
 <div id="editSensDiag">
-  Sensor:<label id="editSensDiag.sensName">sensor name</label>
-  <p>Sensor Properties</p>
   <div id="editSensDiag.parms"></div>
 </div>
 
 <div id="editActDiag">
-  Actuator:<label id="editActDiag.actName">actuator name</label>
-  <p>Actuator Properties</p>
   <div id="editActDiag.parms"></div>
 </div>
 `;
@@ -59,4 +55,4 @@ snaElement.innerHTML = snaHTML;
 // snaElement.style.visibility = "hidden";
 //VButton.styleThem(snaElement.getElementsByTagName("button"));
 
-export { snaElement };      
+export { snaElement };

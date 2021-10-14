@@ -107,16 +107,12 @@ table {
   border-radius: 5px;
 }
 
-/* table,
+table,
 th,
 td {
+  border-collapse: collapse;
   border: 1px solid white;
-  padding: 5px;
-  padding-left: 15px;
-  padding-right: 15px;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-} */
+}
 
 td {
   padding: 5px;

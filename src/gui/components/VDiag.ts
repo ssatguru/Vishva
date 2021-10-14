@@ -348,7 +348,9 @@ export class VDiag {
 
                 let button: HTMLButtonElement = VButton.create(txt, txt);
                 button.style.marginTop = "1em";
-                button.style.marginRight = "1em";
+                button.style.marginRight = "0.5em";
+                button.style.marginBottom = "0.5em";
+                button.style.float = "right";
                 this.f.appendChild(button);
 
                 return button;

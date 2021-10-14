@@ -70,9 +70,13 @@ export class SnaUI {
             btns[i].onclick = (e) => this.openTab(<HTMLButtonElement>e.target, ele);
         }
     }
+
     /*
-     * A dialog box to show the list of all sensors 
-     * actuators in Visha, each in seperate tabs
+     * A dialog box with ttwo tabs
+     * One for sensor , one for actuator
+     * Each tab has a drop down.
+     * The one in sensor shows all sensors available in Vishva
+     * The one in actuator shows all actuators available in Vishva
      */
     private create_sNaDiag() {
 
@@ -103,6 +107,7 @@ export class SnaUI {
     }
 
     public show_sNaDiag() {
+
         var sens: Array<SensorActuator> = <Array<SensorActuator>>this._vishva.getSensors();
         if (sens == null) {
             DialogMgr.showAlertDiag("no mesh selected");
@@ -137,9 +142,13 @@ export class SnaUI {
             return true;
         };
         let sNaDetails = <HTMLElement>document.getElementById("sNaDetails");
-        this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", UIConst._diagWidthS, false);
+
+        if (this.sNaDialog == null)
+            this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
+        else this.sNaDialog.open();
 
     }
+
     /*
      * fill up the sensor and actuator tables
      * with a list of sensors and actuators
@@ -193,43 +202,48 @@ export class SnaUI {
             };
         }
     }
+
+
     editSensDiag: VDiag;
-    _sensSaveButton: HTMLButtonElement;
     private createEditSensDiag() {
-        this.editSensDiag = new VDiag(document.getElementById("editSensDiag"), "Edit Sensor", VDiag.center, "auto", "auto", "25em", true);
+        this.editSensDiag = new VDiag(document.getElementById("editSensDiag"), "Edit Sensor", VDiag.center, "auto", "auto", "auto", true);
         this.editSensDiag.onOpen = () => {
             this._vishva.disableKeys();
         }
         this.editSensDiag.onClose = () => {
             this._vishva.enableKeys();
         }
+        let saveButton = this.editSensDiag.addButton("save");
+
+        saveButton.onclick = (e) => {
+            let sen = this.editSensDiag["s"];
+            this.formRead(sen.getProperties());
+            sen.handlePropertiesChange()
+            this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
+            this.editSensDiag.close();
+            return true;
+        }
 
     }
+
     /*
-    * show a dialog box to edit sensor properties
+    * shows a dialog box to edit sensor properties
     * dynamically creates an appropriate form.
     * 
     */
     private showEditSensDiag(sensor: Sensor) {
 
-        var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
-        sensNameEle.innerHTML = sensor.getName();
+        //var sensNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editSensDiag.sensName");
+        //sensNameEle.innerHTML = sensor.getName();
 
         if (this.editSensDiag == null) {
             this.createEditSensDiag();
-            this._sensSaveButton = this.editSensDiag.addButton("save");
         } else this.editSensDiag.open();
 
-        //need to change savebutton function everytime, as sensor could have changed each time
-        //TODO clean up previous onclick properly. maybe use removeeventlistenere
-        this._sensSaveButton.onclick = (e) => {
-            this.formRead(sensor.getProperties());
-            console.log(sensor.getProperties());
-            sensor.handlePropertiesChange()
-            this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
-            this.editSensDiag.close();
-            return true;
-        }
+        //attach reference to the sensor so that
+        //the save button click handler can retrieve it
+        this.editSensDiag["s"] = sensor;
+        this.editSensDiag.setTitle(sensor.getName() + " Sensor")
 
         var parmDiv: HTMLElement = document.getElementById("editSensDiag.parms");
         var node: Node = parmDiv.firstChild;
@@ -240,7 +254,6 @@ export class SnaUI {
     }
 
     editActDiag: VDiag;
-    _actSaveButton: HTMLButtonElement;
     private createEditActDiag() {
         this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.center, "auto", "auto");
         this.editActDiag.onOpen = () => {
@@ -249,34 +262,36 @@ export class SnaUI {
         this.editActDiag.onClose = () => {
             this._vishva.enableKeys();
         }
+        let saveButton = this.editActDiag.addButton("save");
+        saveButton.onclick = (e) => {
+            let act = this.editActDiag["a"];
+            this.formRead(act.getProperties());
+            act.handlePropertiesChange();
+            this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
+            this.editActDiag.close();
+            return true;
+        }
 
     }
 
     /*
-     * show a dialog box to edit actuator properties
+     * shows a dialog box to edit actuator properties
      * dynamically creates an appropriate form.
      * 
      */
     private showEditActDiag(actuator: Actuator) {
 
-        var actNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editActDiag.actName");
-        actNameEle.innerHTML = actuator.getName();
+        //var actNameEle: HTMLLabelElement = <HTMLLabelElement>document.getElementById("editActDiag.actName");
+        //actNameEle.innerHTML = actuator.getName();
 
         if (this.editActDiag == null) {
             this.createEditActDiag();
-            this._actSaveButton = this.editActDiag.addButton("save");
         } else this.editActDiag.open();
 
-        //need to change savebutton function everytime, as actuator could have changed each time
-        //TODO clean up previous onclick properly. maybe use removeeventlistenere
-        this._actSaveButton.onclick = (e) => {
-            this.formRead(actuator.getProperties());
-            console.log(actuator.getProperties());
-            actuator.handlePropertiesChange();
-            this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
-            this.editActDiag.close();
-            return true;
-        }
+        //attach reference to the actutor so that
+        //the save button click handler can retrieve it
+        this.editActDiag["a"] = actuator;
+        this.editActDiag.setTitle(actuator.getName() + " Actuator")
 
         var parmDiv: HTMLElement = document.getElementById("editActDiag.parms");
         var node: Node = parmDiv.firstChild;
@@ -334,7 +349,7 @@ export class SnaUI {
                 } else if (snaP[key] instanceof Range) {
                     let inp: HTMLInputElement = document.createElement("input");
                     this.mapKey2Ele[key] = inp;
-                    inp.className = "ui-widget-content ui-corner-all";
+                    // inp.className = "ui-widget-content ui-corner-all";
                     inp.value = <string>snaP[key];
                     let r: Range = <Range>snaP[key];
                     inp.type = "range";
@@ -348,7 +363,7 @@ export class SnaUI {
                 let inp: HTMLInputElement = document.createElement("input");
                 this.mapKey2Ele[key] = inp;
                 //inp.id=idPrefix+key;
-                inp.className = "ui-widget-content ui-corner-all";
+                inp.className = "vinput w3-input";
                 inp.value = <string>snaP[key];
                 if ((t === "string") || (t === "number")) {
                     inp.type = "text";

@@ -356,6 +356,15 @@ export class VDiag {
                 return button;
 
         }
+
+        public setBackGround(col: string) {
+                this.b.style.backgroundColor = col;
+        }
+
+        public setBorder(col: string) {
+                this.w.style.borderColor = col;
+        }
+
         //
         constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false) {
 
@@ -379,8 +388,8 @@ export class VDiag {
                 this.w.style.width = <string>width;
                 this.w.style.minWidth = minWidth;
 
-                this.w.style.color = Vishva.theme.darkColors.f;
-                this.w.style.backgroundColor == Vishva.theme.darkColors.b;
+                // this.w.style.color = Vishva.theme.darkColors.f;
+                // this.w.style.backgroundColor == Vishva.theme.darkColors.b;
 
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
 
@@ -404,6 +413,7 @@ export class VDiag {
                 this.b.appendChild(bc);
                 this.b.style.color = Vishva.theme.darkColors.f;
                 this.b.style.backgroundColor = Vishva.theme.darkColors.b;
+
                 this.b.style.overflow = "auto";
                 this.b.style.height = "inherit";
 

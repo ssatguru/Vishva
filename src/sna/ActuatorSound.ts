@@ -4,6 +4,7 @@ import { SNAManager } from "./SNA";
 import { Mesh, Sound } from "babylonjs";
 import { FileInputType, SelectType, Range } from "../gui/VishvaGUI";
 import { Vishva } from "../Vishva";
+import { Engine } from "babylonjs";
 
 export class ActSoundProp extends ActProperties {
 
@@ -36,6 +37,10 @@ export class ActuatorSound extends ActuatorAbstract {
     }
 
     public actuate() {
+        if (Engine.audioEngine.audioContext.state === "suspended") {
+            window.setTimeout((() => { return this.onActuateEnd() }), 0);
+            return;
+        }
         if (this.properties.toggle) {
             if (this.properties.state_notReversed) {
                 this.sound.play();

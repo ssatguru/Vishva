@@ -6,6 +6,7 @@ import { GuiUtils } from "../gui/GuiUtils";
 import { FileInputType } from "../gui/VishvaGUI";
 import { Vishva } from "../Vishva";
 import { VDiag } from "../gui/components/VDiag";
+import { Engine } from "babylonjs";
 
 
 export class ActDialogParm extends ActProperties {
@@ -16,10 +17,8 @@ export class ActDialogParm extends ActProperties {
     width: number = 50;
     modal: boolean = true;
     draggable: boolean = false;
-    openEffect: string = "scale";
-    openTime: number = 1000;
-    closeEffect: string = "explode";
-    closeTime: number = 1000;
+    transparent: boolean = false;
+    border: boolean = true;
 }
 
 /**
@@ -40,7 +39,7 @@ export class ActuatorDialog extends ActuatorAbstract {
 
 
     public actuate() {
-
+        console.log("actuating dialog");
         this.dialog.open();
     }
 
@@ -70,6 +69,13 @@ export class ActuatorDialog extends ActuatorAbstract {
             let button: HTMLButtonElement = this.dialog.addButton("Close");
 
             button.onclick = (e) => {
+                if (!Engine.audioEngine.unlocked) {
+                    Engine.audioEngine.unlock();
+                }
+                if (Engine.audioEngine.audioContext.state === "suspended") {
+                    Engine.audioEngine.audioContext.resume();
+                }
+
                 this.dialog.close();
                 return true;
             }
@@ -83,14 +89,23 @@ export class ActuatorDialog extends ActuatorAbstract {
             this.dialog.showTitleBar();
         }
 
-        this.dialog.setShowEffect({
-            effect: props.openEffect,
-            duration: props.openTime
-        });
-        this.dialog.setHideEffect({
-            effect: props.closeEffect,
-            duration: props.closeTime
-        });
+        if (props.transparent) {
+            this.dialog.setBackGround("transparent");
+        }
+
+        if (!props.border) {
+            this.dialog.setBorder("transparent");
+        }
+
+
+        // this.dialog.setShowEffect({
+        //     effect: props.openEffect,
+        //     duration: props.openTime
+        // });
+        // this.dialog.setHideEffect({
+        //     effect: props.closeEffect,
+        //     duration: props.closeTime
+        // });
 
         this.dialog.setTitle(props.title);
         this.div.innerHTML = props.msg;
@@ -106,7 +121,7 @@ export class ActuatorDialog extends ActuatorAbstract {
         }
 
         this.dialog.onClose(() => {
-            //Engine.audioEngine.unlock();
+
             this.onActuateEnd();
         })
 

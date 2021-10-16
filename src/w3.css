@@ -297,8 +297,7 @@ a {
   white-space: nowrap;
 }
 .w3-btn:hover {
-  /*box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
-  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 1), 0 6px 20px 0 rgba(0, 0, 0, 1);
+  box-shadow: 0.25em 0.5em 0.5em 0em rgba(0, 0, 0, 0.5);
 }
 .w3-btn,
 .w3-button {

@@ -30,9 +30,41 @@ export class SnaUI {
 
 
     constructor() {
+
         this._vishva = Vishva.vishva;
         Vishva.gui.appendChild(snaElement);
+
+        //set the background of tab body to dark color
+        let x: HTMLCollectionOf<Element> = snaElement.getElementsByClassName("vtab");
+        for (let i = 0; i < x.length; i++) {
+            (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.darkColors.b;
+            (<HTMLElement>x[i]).style.color = Vishva.theme.darkColors.f;
+
+        }
+
+        //darken the first tab link - on opening the first one is assumed to be selected
+        x = snaElement.getElementsByClassName("vtablink");
+        (<HTMLElement>x[0]).style.backgroundColor = Vishva.theme.darkColors.b;
+        (<HTMLElement>x[0]).style.color = Vishva.theme.darkColors.f;
+        (<HTMLElement>x[0]).style.boxShadow = "0 8px 16px 0 rgba(0, 0, 0, 1)";
+
+        //lighten the others
+        for (let i = 1; i < x.length; i++) {
+            (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.lightColors.b;
+            (<HTMLElement>x[i]).style.color = Vishva.theme.lightColors.f;
+            (<HTMLElement>x[i]).style.boxShadow = "none";
+
+        }
+
+        let y: HTMLCollectionOf<HTMLButtonElement> = snaElement.getElementsByTagName("button");
+        for (let i = 0; i < y.length; i++) {
+            if (y[i].innerHTML == "add") {
+                VButton.styleIt(y[i]);
+            }
+        }
+
     }
+
 
 
     public isOpen(): boolean {
@@ -44,6 +76,8 @@ export class SnaUI {
     }
 
     private openTab(btn: HTMLButtonElement, ele: HTMLElement) {
+
+        //display the tab body of the tab clicked and hide the other one
         let x: HTMLCollectionOf<Element> = ele.getElementsByClassName("vtab");
         for (let i = 0; i < x.length; i++) {
             if (x[i].id == btn.value) {
@@ -52,12 +86,18 @@ export class SnaUI {
                 (<HTMLElement>x[i]).style.display = "none";
         }
 
+        //darken the tab button which was clicked and lighten the others (body of all are dark)
         x = ele.getElementsByClassName("vtablink");
         for (let i = 0; i < x.length; i++) {
             if (x[i] == btn) {
-                (<HTMLElement>x[i]).classList.toggle("w3-theme-d4", true)
-            } else
-                (<HTMLElement>x[i]).classList.toggle("w3-theme-d4", false);
+                (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.darkColors.b;
+                (<HTMLElement>x[i]).style.color = Vishva.theme.darkColors.f;
+                (<HTMLElement>x[i]).style.boxShadow = "0 8px 16px 0 rgba(0, 0, 0, 1)";
+            } else {
+                (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.lightColors.b;
+                (<HTMLElement>x[i]).style.color = Vishva.theme.lightColors.f;
+                (<HTMLElement>x[i]).style.boxShadow = "none";
+            }
 
         }
 
@@ -72,7 +112,7 @@ export class SnaUI {
     }
 
     /*
-     * A dialog box with ttwo tabs
+     * A dialog box with two tabs
      * One for sensor , one for actuator
      * Each tab has a drop down.
      * The one in sensor shows all sensors available in Vishva
@@ -141,11 +181,14 @@ export class SnaUI {
             this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
             return true;
         };
-        let sNaDetails = <HTMLElement>document.getElementById("sNaDetails");
+        //let sNaDetails = <HTMLElement>document.getElementById("sNaDetails");
 
-        if (this.sNaDialog == null)
-            this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
-        else this.sNaDialog.open();
+        if (this.sNaDialog == null) {
+            //this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
+            this.sNaDialog = new VDiag(snaElement, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
+            this.sNaDialog.setBackGround(Vishva.theme.lightColors.b);
+            this.sNaDialog.setForeGround(Vishva.theme.lightColors.f);
+        } else this.sNaDialog.open();
 
     }
 

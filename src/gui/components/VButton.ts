@@ -4,12 +4,9 @@ import { VThemes } from "./VTheme";
 export class VButton {
         public static create(id: string, label: string): HTMLButtonElement {
                 let btn: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
-
                 btn.id = id;
                 btn.innerHTML = label;
-
                 this.styleIt(btn);
-
                 return btn;
         }
 

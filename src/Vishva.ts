@@ -1245,15 +1245,15 @@ export class Vishva {
     private createPrimMaterial() {
         this.primMaterial = new StandardMaterial("primMat", this.scene);
         //this.primMaterial.diffuseTexture = new Texture(this.primTexture, this.scene);
-        //LIGHT BROWN COLOR
-        this.primMaterial.diffuseColor = new Color3(0.67, 0.4, 0.2);
+        //GRAY COLOR
+        this.primMaterial.diffuseColor = new Color3(1, 1, 1);
         this.primMaterial.specularColor = new Color3(0, 0, 0);
     }
 
     private createPrimPBRMaterial() {
         this.primPBRMaterial = new PBRMetallicRoughnessMaterial("primMat", this.scene);
         //this.primPBRMaterial.baseTexture = new Texture(this.primTexture, this.scene);
-        this.primPBRMaterial.baseColor = new Color3(0.67, 0.4, 0.2);
+        this.primPBRMaterial.baseColor = new Color3(0.5, 0.5, 0.5);
         this.primPBRMaterial.roughness = 0.5;
         this.primPBRMaterial.metallic = 0.5;
         this.primPBRMaterial.environmentTexture = (<StandardMaterial>this.skybox.material).reflectionTexture;

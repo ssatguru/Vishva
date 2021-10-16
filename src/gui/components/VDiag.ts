@@ -361,6 +361,10 @@ export class VDiag {
                 this.b.style.backgroundColor = col;
         }
 
+        public setForeGround(col: string) {
+                this.b.style.color = col;
+        }
+
         public setBorder(col: string) {
                 this.w.style.borderColor = col;
         }

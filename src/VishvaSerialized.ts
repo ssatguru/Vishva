@@ -6,14 +6,15 @@
 
 
 import { Vector3 } from "babylonjs";
+import { Color4 } from "babylonjs/Maths/math.color";
 import { GroundSPSserialized } from "./GroundSPS";
 import { SNAserialized } from "./sna/SNA";
 
 export class VishvaSerialized {
     //babylon version
-    public bVer:string;
+    public bVer: string;
     //vishva version
-    public vVer:string;
+    public vVer: string;
     public snas: SNAserialized[];
     public settings: SettingsSerialized;
     public guiSettings: Object;
@@ -40,6 +41,7 @@ export class SettingsSerialized {
  */
 export class MiscSerialized {
     public activeCameraTarget: Vector3 = Vector3.Zero();
+    public skyColor: Color4;
 
 }
 

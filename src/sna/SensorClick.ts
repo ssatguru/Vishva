@@ -14,7 +14,7 @@ export class SenClickProp extends SNAproperties {
 
     constructor() {
         super();
-        this.clickType.values = ["leftClick", "middleClick", "rightClick", "doubleClick"];
+        this.clickType.values = ["leftClick", "middleClick", "rightClick", "anyClick", "doubleClick"];
         this.clickType.value = "leftClick";
     }
 }
@@ -58,11 +58,13 @@ export class SensorClick extends SensorAbstract {
         if (clickProp.clickType.value == "doubleClick") {
             actType = ActionManager.OnDoublePickTrigger;
         } else if (clickProp.clickType.value == "rightClick") {
-            actType = ActionManager.OnRightPickTrigger
+            actType = ActionManager.OnRightPickTrigger;
         } else if (clickProp.clickType.value == "leftClick") {
-            actType = ActionManager.OnLeftPickTrigger
+            actType = ActionManager.OnLeftPickTrigger;
         } else if (clickProp.clickType.value == "middleClick") {
-            actType = ActionManager.OnCenterPickTrigger
+            actType = ActionManager.OnCenterPickTrigger;
+        } else if (clickProp.clickType.value == "anyClick") {
+            actType = ActionManager.OnPickTrigger;
         }
 
         //TODO make sure we are not doing CTL/SHIFT/ALt too

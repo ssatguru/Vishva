@@ -14,7 +14,7 @@ import "jquery-ui/ui/widgets/accordion";
 import "jquery-ui/ui/widgets/button";
 import "jquery-ui/ui/widgets/menu";
 import "jquery-ui/ui/widgets/slider";
-import "jquery-ui/ui/widgets/tabs";
+// import "jquery-ui/ui/widgets/tabs";
 import "jquery-ui/ui/widgets/tooltip";
 
 import "jquery-ui/ui/effects/effect-slide.js";

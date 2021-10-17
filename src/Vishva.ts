@@ -74,7 +74,6 @@ import { SensorActuator } from "./sna/SNA";
 import { Sensor } from "./sna/SNA";
 import { Actuator } from "./sna/SNA";
 import { SNAproperties } from "./sna/SNA";
-import { SensorTouch } from "./sna/SensorTouch";
 import { ActuatorRotator } from "./sna/ActuatorRotator";
 import { ActRotatorParm } from "./sna/ActuatorRotator";
 import { ActuatorMover } from "./sna/ActuatorMover";
@@ -365,6 +364,12 @@ export class Vishva {
         this.snas = this.vishvaSerialized.snas;
         this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
         this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
+        if (this.vishvaSerialized.misc.skyColor) {
+            this.skyColor.r = this.vishvaSerialized.misc.skyColor.r;
+            this.skyColor.g = this.vishvaSerialized.misc.skyColor.g;
+            this.skyColor.b = this.vishvaSerialized.misc.skyColor.b;
+            this.skyColor.a = this.vishvaSerialized.misc.skyColor.a;
+        }
 
         var sceneData: string = "data:" + tfat.text;
         SceneLoader.ShowLoadingScreen = false;
@@ -457,7 +462,6 @@ export class Vishva {
         if (!sunFound) {
             console.log("no vishva sun found. creating sun");
 
-            //this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
             this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
             this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
             Tags.AddTagsTo(this.sun, "Vishva.sun");
@@ -466,17 +470,12 @@ export class Vishva {
             this.sunDR.position = new Vector3(0, 1048, 0);
 
             this._setSunAB(this.sun.direction);
-            //this.setSunPos();
 
             let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-
             this.shadowGenerator = new ShadowGenerator(1024, sl);
             this.setShadowProperty(sl, this.shadowGenerator);
-
             //                this.avShadowGenerator=new ShadowGenerator(512,sl);
             //                this.setShadowProperty(sl,this.avShadowGenerator);
-
-
         } else {
             for (let light of scene.lights) {
                 if (light.id === "Vishva.dl01") {
@@ -489,16 +488,22 @@ export class Vishva {
         }
 
         for (let mesh of scene.meshes) {
-            if (mesh != null && mesh instanceof InstancedMesh) {
-                mesh.checkCollisions = mesh.sourceMesh.checkCollisions;
-                //sat TODO remove comment
-                //mesh.receiveShadows = true;
-                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+            if (mesh != null) {
+                if (mesh instanceof InstancedMesh) {
+                    mesh.checkCollisions = mesh.sourceMesh.checkCollisions;
+                    //sat TODO remove comment
+                    //mesh.receiveShadows = true;
+                    this._addToShadowCasters(mesh);
+
+                } else {
+                    //(<Mesh>mesh).addLODLevel(55, null);
+                    //this._removeFromShadowCasters(mesh);
+                }
             }
-            //                }else{
-            //                    (<Mesh>mesh).addLODLevel(55,null);
-            //                }
         }
+
+        //add avatar back to shadow caster list
+        if (avFound) this._addToShadowCasters(this.avatar);
 
         for (let camera of scene.cameras) {
             if (Tags.MatchesQuery(camera, "Vishva.camera")) {
@@ -560,9 +565,10 @@ export class Vishva {
             }
         }
 
+
+        this.scene.clearColor = this.skyColor.scale(this.sun.intensity);
         if (!skyFound) {
             console.log("no vishva sky found. creating sky");
-            this.scene.clearColor = this.skyColor;
             //this.skybox = this.createSkyBox(this.scene,this.skyboxTextures);
             this.setLight(0.5);
         }
@@ -1269,7 +1275,7 @@ export class Vishva {
         mesh.position.addInPlace(placementGlobal);
 
         mesh.checkCollisions = true;
-        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+        this._addToShadowCasters(mesh);
         //sat TODO remove comment
         //mesh.receiveShadows = true;
         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
@@ -1429,10 +1435,9 @@ export class Vishva {
         for (let child of children) {
             this._instanceTransNode(child, _tnInst);
         }
+        //TODO ??
+        //this._addToShadowCasters(<AbstractMesh>inst);
 
-        //TODO think
-        //inst.receiveShadows = true;
-        //(this.shadowGenerator.getShadowMap().renderList).push(<AbstractMesh>inst);
         return _tnInst;
     }
 
@@ -1469,9 +1474,7 @@ export class Vishva {
         this.animateMesh(<AbstractMesh>inst);
         this.switchEditControl(<AbstractMesh>inst);
 
-        //TODO think
-        //inst.receiveShadows = true;
-        (this.shadowGenerator.getShadowMap().renderList).push(<AbstractMesh>inst);
+        this._addToShadowCasters(<AbstractMesh>inst);
 
         return null;
     }
@@ -1773,7 +1776,7 @@ export class Vishva {
         //clone.receiveShadows = true;
         this.unHighLight(mesh);
         if (clone instanceof AbstractMesh) {
-            (this.shadowGenerator.getShadowMap().renderList).push(clone);
+            this._addToShadowCasters(clone);
         }
         return clone;
     }
@@ -1809,11 +1812,7 @@ export class Vishva {
     public deleteTheMesh(mesh: TransformNode) {
         if (mesh instanceof AbstractMesh) {
             SNAManager.getSNAManager().removeSNAs(mesh);
-            var meshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
-            var i: number = meshes.indexOf(mesh);
-            if (i >= 0) {
-                meshes.splice(i, 1);
-            }
+            this._removeFromShadowCasters(mesh);
             //check if this mesh is an SPS mesh.
             //if yes then delete the sps
             this.deleteSPS(mesh);
@@ -1879,7 +1878,7 @@ export class Vishva {
             mergedMesh.position = this.meshSelected.position.clone();
             this.switchEditControl(mergedMesh);
             this.animateMesh(mergedMesh);
-            this.shadowGenerator.getShadowMap().renderList.push(mergedMesh);
+            this._addToShadowCasters(mergedMesh);
             this.multiUnSelectAll();
             return null;
         } else {
@@ -2967,9 +2966,6 @@ export class Vishva {
         if (!this.isMeshSelected) {
             return "no mesh selected";
         }
-        if (sensName === "Touch") {
-            var st: SensorTouch = new SensorTouch(<Mesh>this.meshSelected, prop);
-        } else return "No such sensor";
         return null;
     }
 
@@ -3018,66 +3014,53 @@ export class Vishva {
         sa.dispose();
     }
 
-    //setting sun beta
+    //setting sun beta (north south)
     public setSunBeta(d: number) {
         this._sunBeta = d;
         this.setSunPos();
     }
 
-    //setting sun alpha
+    //setting sun alpha (east wes)
     public setSunAlpha(d: number) {
         this._sunAlpha = d;
         this.setSunPos();
     }
 
+
     private setSunPos() {
+        let a: number = Math.PI * (180 - this._sunAlpha) / 180;
 
-        let a: number = Math.PI * this._sunAlpha / 180;
-        let b: number = Math.PI * this._sunBeta / 180;
+        let x: number = Math.cos(a);
+        let y: number = Math.sin(a);
+        let z: number = this._sunBeta / 100;
 
-        let x: number = Math.cos(b) * Math.cos(a);
-        let y: number = Math.sin(b);
-        let z: number = Math.cos(b) * Math.sin(a);
-
-        this.sunDR.direction.x = -x;
-        this.sunDR.direction.y = -y;
-        this.sunDR.direction.z = -z;
         this.sun.direction.x = x;
         this.sun.direction.y = y;
         this.sun.direction.z = z;
 
+        this.sunDR.direction.x = -x;
+        this.sunDR.direction.y = -y;
+        this.sunDR.direction.z = -z;
     }
 
     private _setSunAB(v: Vector3) {
-        let a: number = Math.atan(v.z / v.x);
-        let b: number = Math.atan(v.y / Math.sqrt(v.x * v.x + v.z * v.z));
-        this._sunAlpha = a * 180 / Math.PI;
-        this._sunBeta = b * 180 / Math.PI;
-        this._sunAlpha = (this._sunAlpha < 0) ? 0 : this._sunAlpha;
-        this._sunBeta = (this._sunBeta < 0) ? 0 : this._sunBeta;
+        let a: number = Math.atan2(v.y, v.x);
+        this._sunAlpha = 180 - a * 180 / Math.PI;
+        this._sunBeta = v.z * 100;
     }
 
     public getSunAlpha(): number {
         return this._sunAlpha;
     }
-
     public getSunBeta(): number {
         return this._sunBeta;
-    }
-
-    public getSunPos_old(): number {
-        var sunDir: Vector3 = this.sunDR.direction;
-        var x: number = sunDir.x;
-        var y: number = sunDir.y;
-        var l: number = Math.sqrt(x * x + y * y);
-        var d: number = Math.acos(x / l);
-        return d * 180 / Math.PI;
     }
 
     public setLight(d: number) {
         this.sun.intensity = d;
         this.sunDR.intensity = d;
-        if (this.skybox != null) this.skybox.visibility = 2 * d;
+        if (this.skybox != null) this.skybox.visibility = d;
+        this.scene.clearColor = this.skyColor.scale(d);
     }
 
     public getLight(): number {
@@ -3131,15 +3114,6 @@ export class Vishva {
         return this.arcCamera.fov * 180 / 3.14;
     }
 
-    public setSky_old(sky: any) {
-        var mat: StandardMaterial = <StandardMaterial>this.skybox.material;
-        mat.reflectionTexture.dispose();
-        var skyFile: string = Vishva.vHome + "assets/internal/skyboxes/" + sky + "/" + sky;
-        mat.reflectionTexture = new CubeTexture(skyFile, this.scene);
-        mat.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-        //            if (this.primMaterial !=null)
-        //            this.primMaterial.environmentTexture = (<StandardMaterial> this.skybox.material).reflectionTexture;
-    }
 
     public setSky(sky: any) {
         if (this.skybox == null) {
@@ -3365,6 +3339,7 @@ export class Vishva {
         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
         vishvaSerialzed.guiSettings = this.vishvaGUI.guiSettings;
         vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
+        vishvaSerialzed.misc.skyColor = this.skyColor;
 
         //we donot serialize the sps. 
         //the sps mesh's doNotSerialize property is set to true when the sps is created
@@ -3409,21 +3384,30 @@ export class Vishva {
         var meshes: AbstractMesh[] = this.scene.meshes;
         for (let mesh of meshes) {
             if (mesh != null && mesh instanceof InstancedMesh) {
-                var shadowMeshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
-                var i: number = shadowMeshes.indexOf(mesh);
-                if (i >= 0) {
-                    shadowMeshes.splice(i, 1);
-                }
+                this._removeFromShadowCasters(mesh);
             }
         }
     }
 
+    private _removeFromShadowCasters(mesh: AbstractMesh) {
+        var shadowMeshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
+        var i: number = shadowMeshes.indexOf(mesh);
+        if (i >= 0) {
+            shadowMeshes.splice(i, 1);
+        }
+    }
+
+    private _addToShadowCasters(mesh: AbstractMesh) {
+        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+        //TODO think
+        //mesh.receiveShadows = true;
+    }
+
+
     private addInstancesToShadow() {
         for (let mesh of this.scene.meshes) {
             if (mesh != null && mesh instanceof InstancedMesh) {
-                //TODO think
-                //mesh.receiveShadows = true;
-                (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+                this._addToShadowCasters(mesh);
             }
         }
     }
@@ -3665,7 +3649,7 @@ export class Vishva {
                 rootMesh = <Mesh>mesh;
             }
 
-            (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+            this._addToShadowCasters(mesh);
 
             //TODO think
             //mesh.receiveShadows = true;
@@ -4274,6 +4258,10 @@ export class Vishva {
         skybox.renderingGroupId = 0;
         skybox.isPickable = false;
         //skybox.position.y=-100;
+
+        //as the light becomes dim make the sybox less visible, more transparent
+        //show the sky's "clear color" which also becomes darker as the light dims
+        skybox.visibility = this.sun.intensity;
 
         Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
         return skybox;

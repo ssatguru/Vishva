@@ -6,7 +6,7 @@ const envHTML: string = `
             <div style="justify-self: end;">sun (west-east)</div>
             <div><div id="sunPos"></div></div>
         
-            <div style="justify-self: end;">sun (north-south)</div>
+            <div style="justify-self: end;">sun (south-nort)</div>
             <div><div id="sunPosNS"></div></div>
         
             <div style="justify-self: end;">light</div>            

@@ -38,7 +38,8 @@ export class EnvironmentUI {
         let fov: JQuery = $("#fov");
 
         sunPos.slider(this._sliderOptions(0, 180, this._vishva.getSunAlpha()));
-        sunPosNS.slider(this._sliderOptions(0, 180, this._vishva.getSunBeta()));
+        //sunPosNS.slider(this._sliderOptions(0, 180, this._vishva.getSunBeta()));
+        sunPosNS.slider(this._sliderOptions(-100, 100, this._vishva.getSunBeta()));
         light.slider(this._sliderOptions(0, 100, 100 * this._vishva.getLight()));
         shade.slider(this._sliderOptions(0, 100, 100 * this._vishva.getShade()));
         fog.slider(this._sliderOptions(0, 100, this._vishva.getFog()));
@@ -69,7 +70,7 @@ export class EnvironmentUI {
 
         let skyColDiag: ColorPickerFld = new ColorPickerFld("sky color", "skyCol", this._vishva.skyColor.toHexString().substr(0, 7), VDiag.centerBottom, (hex, hsv, rgb) => {
             this._vishva.skyColor = Color4.FromHexString(hex + "ff");
-            this._vishva.scene.clearColor = this._vishva.skyColor;
+            this._vishva.scene.clearColor = this._vishva.skyColor.scale(this._vishva.sun.intensity);
         });
 
 

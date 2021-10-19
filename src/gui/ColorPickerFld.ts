@@ -1,5 +1,6 @@
 import { ColorPicker } from "./colorpicker/colorpicker";
 import { VDiag } from "./components/VDiag";
+import { VInputText } from "./components/VInputText";
 
 /**
  * adds a two input box and a color dialog box inside the element whose id is passed
@@ -13,68 +14,68 @@ export class ColorPickerFld {
     // 
     ih: string = `
     <div>
-        <div class='w3-cell-row' style="width:100%">
-            <input type='text' class='colorInputValue w3-input w3-cell vinput'  style='width:60%;min-width:4em' title='enter color in hex #hhhhhh'></input>
+        <div class='colorFlds w3-cell-row' style="width:100%">
             <input type='text' class='colorInput w3-input w3-cell vinput' style='cursor: pointer;width:20%'  readonly></input>
         </div>
-         <!-- <div class='colorDiag' style='justify-self: center;'> -->
-            <div  class='colorPicker' style='display:grid;grid-template-columns:auto auto;align-items:center;grid-gap:0.75em;padding:0.5em'></div>
-        <!-- </div> -->
+        <div  class='colorPicker' style='display:grid;grid-template-columns:auto auto;align-items:center;grid-gap:0.75em;padding:0.5em'></div>
     </div>
     `;
-    colorInputValue: HTMLInputElement;
+    //colorInputValue: HTMLInputElement;
+    colorInputValue: VInputText;
     colorInput: HTMLInputElement;
 
     //vDiag: VDialog;
     vDiag: VDiag = null;
     cp: ColorPicker = null;
     hexColor: string;
+    private _chgHandler: (p1: any, p2: any, p3: RGB) => void;
 
     constructor(title: string, diagSelector: string, initialColor: string, pos: string, f: (p1: any, p2: any, p3: RGB) => void) {
+
+        this._chgHandler = f;
         this.hexColor = initialColor;
 
         let colorEle: HTMLElement = document.getElementById(diagSelector);
         colorEle.innerHTML = this.ih;
 
-        this.colorInputValue = <HTMLInputElement>colorEle.getElementsByClassName("colorInputValue")[0];
-        this.colorInputValue.value = this.hexColor;
+        this.colorInputValue = new VInputText();
+        this.colorInputValue.setStyle("width:60%;min-width:4em");
+        this.colorInputValue.setHint("enter color in hex #hhhhhh");
+        this.colorInputValue.appendTo(<HTMLElement>colorEle.getElementsByClassName("colorFlds")[0]);
 
+        this.colorInputValue.setValue(this.hexColor);
         //TODO - check for valid value, allow hsv and rgb too
-        this.colorInputValue.onchange = () => {
-            this.hexColor = this.colorInputValue.value;
+        this.colorInputValue.onChange = (color) => {
+            this.hexColor = color;
             this.colorInput.style.backgroundColor = this.hexColor;
-            this.cp.setHex(this.hexColor);
-            f(this.hexColor, null, null);
+            if (this.cp != null) this.cp.setHex(this.hexColor);
+            this._chgHandler(this.hexColor, null, null);
         }
 
         this.colorInput = <HTMLInputElement>colorEle.getElementsByClassName("colorInput")[0];
         this.colorInput.style.backgroundColor = this.hexColor;
 
-        // let colorDiag: HTMLDivElement = <HTMLDivElement>colorEle.getElementsByClassName("colorDiag")[0];
-        // let colorPicker: HTMLElement = <HTMLElement>colorDiag.getElementsByClassName("colorPicker")[0];
-
         let colorPicker: HTMLElement = <HTMLElement>colorEle.getElementsByClassName("colorPicker")[0];
 
         this.colorInput.onclick = () => {
             if (this.vDiag == null) {
-                this.cp = new ColorPicker(colorPicker, (hex: any, hsv: any, rgb: RGB) => {
-                    this.hexColor = hex;
-                    this.colorInput.style.backgroundColor = hex;
-                    this.colorInputValue.value = hex;
-                    f(hex, hsv, rgb);
-                });
-
-                // this.vDiag = new VDiag(colorDiag, title, pos, 0, "auto", "19em");
-                this.vDiag = new VDiag(colorPicker, title, pos, 0, "auto", "19em");
+                this._createCPdiag(colorPicker, title, pos);
             } else {
                 this.vDiag.toggle();
             }
             this.cp.setHex(this.hexColor);
         }
 
+    }
 
-
-
+    private _createCPdiag(colorPicker: HTMLElement, title: string, pos: string) {
+        this.cp = new ColorPicker(colorPicker, (hex: any, hsv: any, rgb: RGB) => {
+            this.hexColor = hex;
+            this.colorInput.style.backgroundColor = hex;
+            this.colorInputValue.setValue(hex);
+            this._chgHandler(hex, hsv, rgb);
+        });
+        this.vDiag = new VDiag(colorPicker, title, pos, 0, "auto", "19em");
     }
 
     // public open(hex: string) {
@@ -87,7 +88,7 @@ export class ColorPickerFld {
         // if color picker is open then set the color there too
         if (this.cp != null) this.cp.setHex(hex);
         this.colorInput.style.backgroundColor = hex;
-        this.colorInputValue.value = hex;
+        this.colorInputValue.setValue(hex);
     }
 
     public getColor(): string {

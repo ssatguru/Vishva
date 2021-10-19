@@ -45,8 +45,8 @@ export class VTreeDialog {
         this._tree = new VTree(treeDiv, treeData, filter, openAll);
         //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});
 
-        //let fi: HTMLInputElement=diagDiv.getElementsByTagName("input")[0];
-        let fi: VInputText = new VInputText(diagDiv.getElementsByTagName("span")[0]);
+        let fi: VInputText = new VInputText();
+        fi.appendTo(diagDiv.getElementsByTagName("span")[0]);
         let btns: HTMLCollectionOf<HTMLButtonElement> = diagDiv.getElementsByTagName("button");
         let fb: HTMLButtonElement = btns.item(0);
         let e: HTMLButtonElement = btns.item(1);

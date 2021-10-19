@@ -8,13 +8,7 @@ export class VInputText {
     private _inE: HTMLInputElement;
     public onChange: (s: string) => void;
 
-    constructor(eID: string | HTMLElement, value = "") {
-        let e: HTMLElement;
-
-        if (eID instanceof HTMLElement) {
-            e = eID;
-        } else e = document.getElementById(eID);
-
+    constructor(value = "") {
         this._inE = document.createElement("input");
         this._inE.type = "text";
         this._inE.setAttribute("class", "vinput w3-input");
@@ -41,7 +35,6 @@ export class VInputText {
                 this.onChange(this._inE.value);
             }
         }
-        e.appendChild(this._inE);
     }
 
 
@@ -51,6 +44,24 @@ export class VInputText {
     }
     public setValue(s: string) {
         this._inE.value = s;
+    }
+
+    public appendTo(eID: string | HTMLElement) {
+        let e: HTMLElement;
+
+        if (eID instanceof HTMLElement) {
+            e = eID;
+        } else e = document.getElementById(eID);
+
+        e.appendChild(this._inE);
+    }
+
+    public setStyle(style: string) {
+        this._inE.style.cssText = style;
+    }
+
+    public setHint(hint: string) {
+        this._inE.setAttribute("title", hint);
     }
 
 }

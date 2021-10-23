@@ -5,7 +5,7 @@ import {
 } from "babylonjs";
 import { VDiag } from "./components/VDiag";
 import { VTreeDialog } from "./components/VTreeDialog";
-import { DialogMgr } from "./DialogMgr";
+
 /*
  * provides a user interface which list all materials in the scene
  */

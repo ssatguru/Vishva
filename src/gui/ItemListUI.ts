@@ -1,8 +1,7 @@
 
-import { AbstractMesh, TransformNode, Mesh } from "babylonjs";
+import { TransformNode } from "babylonjs";
 import { Vishva } from "../Vishva";
 import { VTreeDialog } from "./components/VTreeDialog";
-import { DialogMgr } from "./DialogMgr";
 import { Node } from "babylonjs";
 import { VDiag } from "./components/VDiag";
 /*
@@ -47,9 +46,10 @@ export class ItemListUI {
     }
 
     public open() {
+        if (this._itemsDiag.isOpen()) return;
         this._itemsDiag.open();
         if (this._vishva.anyMeshSelected()) {
-            this.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
+            this.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
         }
 
     }
@@ -65,12 +65,19 @@ export class ItemListUI {
     /**
      * This search method finds, higlights and scrolls to the item in the list.
      * 
-     * Note: This search is not done when an item in the itemlist was selected
-     * Explanation: Normally when the user selects an item in the world
+     * Note: 
+     * This search is not done when an item in the itemlist was selected
+     * 
+     * Explanation: 
+     * Selecting item in world VS selecting item in itemlist
+     * 
+     * When the user selects an item in the world
      * system checks if the item list is open and if open it calls search
-     * to find, higlight and scroll to the item in the list.
-     * Selecting an item in the item list results in also selecting 
-     * an item in the world which results in a call to this search
+     * to "find, higlight and scroll" to the item in the list.
+     * 
+     * When the user selects an item in the item list 
+     * that also results in selecting  an item in the world 
+     * which results in a call to this search
      * but now we donot want to highlight or scroll 
      * to the item as the item is already higlighted and in view.
      * 

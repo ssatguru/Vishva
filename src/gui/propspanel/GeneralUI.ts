@@ -8,7 +8,6 @@ import { InternalAssetsUI } from "../InternalAssetsUI";
 import { VInputVector3 } from "../components/VInputVector3";
 import { VInputNumber } from "../components/VInputNumber";
 import { ParentChildUI } from "./ParentChildUI";
-import { saveElement } from "../VishvaML";
 import { VDiag } from "../components/VDiag";
 
 /**

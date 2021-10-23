@@ -354,7 +354,7 @@ export class VishvaGUI {
             this._itemProps = new PropsPanelUI(this._vishva, this);
         }
         this._itemProps.open();
-        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
+        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
     }
 
     /*
@@ -371,7 +371,7 @@ export class VishvaGUI {
      */
     public refreshPropsDiag() {
         if (this._itemProps != null) this._itemProps.refreshPropsDiag();
-        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ",");
+        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
     }
 
     //called when user has changed transforms using editcontrol

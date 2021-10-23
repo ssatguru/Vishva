@@ -83,7 +83,6 @@ export class VTree {
         for (let i = 0; i < lis.length; i++) {
             let t: string = lis.item(i).childNodes[1].textContent;
             if (t.indexOf(search) >= 0) {
-                console.log("a hit", t);
                 this._highLight(<HTMLElement>lis.item(i).childNodes[1]);
                 lis.item(i).scrollIntoView();
             }

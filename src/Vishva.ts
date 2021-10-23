@@ -2035,7 +2035,7 @@ export class Vishva {
     }
 
     public getMatNames(): Array<string> {
-        if (!(this.meshSelected instanceof AbstractMesh)) return null;
+        if (!(this.meshSelected instanceof AbstractMesh) || !this.meshSelected.material) return null;
         let mn: Array<string> = new Array();
         if (this.isMeshSelected) {
             if (this.meshSelected.material instanceof MultiMaterial) {
@@ -3996,7 +3996,6 @@ export class Vishva {
     private getBoundingRadius(meshes: AbstractMesh[]): number {
         var maxRadius: number = 0;
         for (let mesh of meshes) {
-            if (mesh.parent != null) console.log("parent " + mesh.parent.name);
             var bi: BoundingInfo = mesh.getBoundingInfo();
             var rw: number = bi.boundingSphere.radiusWorld;
             if (isFinite(rw)) {

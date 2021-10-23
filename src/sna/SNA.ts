@@ -159,10 +159,8 @@ export class SNAManager {
      * @param mesh
      */
     public disableSnAs(mesh: TransformNode) {
-        console.log("disabling sna for ", mesh.name);
         this.snaDisabledList.push(mesh);
         var actuators: Array<ActuatorAbstract> = <Array<ActuatorAbstract>>mesh["actuators"];
-        console.log("acts found ", actuators != null ? "yes" : "no");
         if (actuators != null) {
             for (let actuator of actuators) {
                 if (actuator.actuating) actuator.stop();
@@ -171,7 +169,6 @@ export class SNAManager {
     }
 
     public enableSnAs(mesh: TransformNode) {
-        console.log("enabling sna for ", mesh.name);
         var i: number = this.snaDisabledList.indexOf(mesh);
         if (i !== -1) {
             this.snaDisabledList.splice(i, 1);

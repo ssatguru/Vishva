@@ -1,5 +1,4 @@
 import { VButton } from "../components/VButton";
-import { VThemes } from "../components/VTheme";
 
 let genHTML = `
 

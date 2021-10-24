@@ -1,6 +1,4 @@
 import { Vishva } from "../Vishva";
-import SliderOptions = JQueryUI.SliderOptions;
-import SliderUIParams = JQueryUI.SliderUIParams;
 import { VishvaGUI } from "./VishvaGUI";
 import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ColorPickerFld } from "./ColorPickerFld";
@@ -27,28 +25,61 @@ export class EnvironmentUI {
         this._vishvaGUI = vishvaGUI;
         this._addInternalAssetUI = addInternalAssetUI;
 
-        //document.body.appendChild(envElement);
         Vishva.gui.appendChild(envElement);
 
-        let sunPos: JQuery = $("#sunPos");
-        let sunPosNS: JQuery = $("#sunPosNS");
-        let light: JQuery = $("#light");
-        let shade: JQuery = $("#shade");
-        let fog: JQuery = $("#fog");
-        let fov: JQuery = $("#fov");
+        let sunPos: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunPos")[0];
+        let sunPosNS: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunPosNS")[0];
+        let light: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("light")[0];
+        let shade: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("shade")[0];
+        let fog: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fog")[0];
+        let fov: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fov")[0];
 
-        sunPos.slider(this._sliderOptions(0, 180, this._vishva.getSunAlpha()));
-        //sunPosNS.slider(this._sliderOptions(0, 180, this._vishva.getSunBeta()));
-        sunPosNS.slider(this._sliderOptions(-100, 100, this._vishva.getSunBeta()));
-        light.slider(this._sliderOptions(0, 100, 100 * this._vishva.getLight()));
-        shade.slider(this._sliderOptions(0, 100, 100 * this._vishva.getShade()));
-        fog.slider(this._sliderOptions(0, 100, this._vishva.getFog()));
+        sunPos.min = "0";
+        sunPos.max = "180";
+        sunPos.value = this._vishva.getSunAlpha().toString();
+        sunPos.oninput = (ev) => {
+            this._vishva.setSunAlpha(Number((<HTMLInputElement>ev.target).value));
+        }
+
+        sunPosNS.min = "-100";
+        sunPosNS.max = "100";
+        sunPosNS.value = this._vishva.getSunBeta().toString();
+        sunPosNS.oninput = (ev) => {
+            this._vishva.setSunBeta(Number((<HTMLInputElement>ev.target).value));
+        }
+
+        light.min = "0";
+        light.max = "100";
+        light.value = (100 * this._vishva.getLight()).toString();
+        light.oninput = (ev) => {
+            this._vishva.setLight(Number((<HTMLInputElement>ev.target).value) / 100);
+        }
+
+        shade.min = "0";
+        shade.max = "100";
+        shade.value = (100 * this._vishva.getShade()).toString();
+        shade.oninput = (ev) => {
+            this._vishva.setShade(Number((<HTMLInputElement>ev.target).value) / 100);
+        }
+
+
+        fog.min = "0";
+        fog.max = "100";
+        fog.value = this._vishva.getFog().toString();
+        fog.oninput = (ev) => {
+            this._vishva.setFog(Number((<HTMLInputElement>ev.target).value));
+        }
 
         let fogColDiag: ColorPickerFld = new ColorPickerFld("fog color", "fogCol", this._vishva.getFogColor(), VDiag.centerBottom, (hex, hsv, rgb) => {
             this._vishva.setFogColor(hex);
         });
 
-        fov.slider(this._sliderOptions(0, 180, this._vishva.getFov()));
+        fov.min = "0";
+        fov.max = "180";
+        fov.value = this._vishva.getFov().toString();
+        fov.oninput = (ev) => {
+            this._vishva.setFov((<HTMLInputElement>ev.target).value);
+        }
 
         let envSnow: HTMLButtonElement = <HTMLButtonElement>document.getElementById("envSnow");
         envSnow.onclick = (e) => {
@@ -112,36 +143,6 @@ export class EnvironmentUI {
 
     }
 
-    private _sliderOptions(min: number, max: number, value: number): SliderOptions {
-        var so: SliderOptions = {};
-        so.min = min;
-        so.max = max;
-        so.value = value;
-        so.slide = (e, ui) => { return this._handleSlide(e, ui) };
-        return so;
-    }
-
-
-    private _handleSlide(e: Event, ui: SliderUIParams): boolean {
-        var slider: string = (<HTMLElement>e.target).id;
-        if (slider === "fov") {
-            this._vishva.setFov(ui.value);
-        } else if (slider === "sunPos") {
-            this._vishva.setSunAlpha(ui.value);
-        } else if (slider === "sunPosNS") {
-            this._vishva.setSunBeta(ui.value);
-        } else {
-            var v: number = ui.value;
-            if (slider === "light") {
-                this._vishva.setLight(v / 100);
-            } else if (slider === "shade") {
-                this._vishva.setShade(v / 100);
-            } else if (slider === "fog") {
-                this._vishva.setFog(v);
-            }
-        }
-        return true;
-    }
 
     public toggle() {
         this._envDiag.toggle();

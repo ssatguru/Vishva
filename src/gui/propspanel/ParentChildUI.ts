@@ -44,9 +44,10 @@ export class ParentChildUI {
             return false;
         };
         showTree.onclick = (e) => {
-            let il = this._vishvaGUI.getItemList();
-            il.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
+            let il = this._vishvaGUI.showItemList();
             il.open();
+            il._highlightSelected();
+
         }
 
 

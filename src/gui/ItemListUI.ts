@@ -29,12 +29,18 @@ export class ItemListUI {
             this._vishva.selectMesh(f);
         });
         this._itemsDiag.addRefreshHandler(() => {
-            this._itemsDiag.close();
-            this._updateTreeData();
-            this._itemsDiag.refresh(this.treeData);
-            this._itemsDiag.open();
+            this.refresh();
             return false;
         });
+    }
+
+    public refresh() {
+        this._refreshNeeded = false;
+        this._itemsDiag.close();
+        this._updateTreeData();
+        this._itemsDiag.refresh(this.treeData);
+        this._itemsDiag.open();
+        this._highlightSelected();
     }
 
     public toggle() {
@@ -47,19 +53,37 @@ export class ItemListUI {
 
     public open() {
         if (this._itemsDiag.isOpen()) return;
-        this._itemsDiag.open();
-        if (this._vishva.anyMeshSelected()) {
-            this.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
+        if (this._refreshNeeded) {
+            this.refresh();
+        } else {
+            this._itemsDiag.open();
+            this._highlightSelected();
         }
 
     }
 
-    public isOPen(): boolean {
+    public isOpen(): boolean {
         return this._itemsDiag.isOpen();
     }
 
     public filter(filter: string) {
         this._itemsDiag.filter(filter);
+    }
+
+    private _refreshNeeded = false;
+    public onItemAdded() {
+        if (this.isOpen()) {
+            this.refresh();
+        } else {
+            this._refreshNeeded = true;
+        }
+    }
+
+    public _highlightSelected() {
+        if (this._vishva.anyMeshSelected()) {
+            this.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
+        }
+
     }
 
     /**

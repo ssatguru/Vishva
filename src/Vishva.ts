@@ -84,6 +84,8 @@ import { VishvaGUI } from "./gui/VishvaGUI";
 import { AvManager } from "./avatar/avatar";
 import { DialogMgr } from "./gui/DialogMgr";
 import { VTheme, VThemes } from "./gui/components/VTheme";
+import { VEvent } from "./eventing/VEvent";
+import { EventManager } from "./eventing/EventManager";
 
 
 
@@ -1302,6 +1304,7 @@ export class Vishva {
             }
             this.animateMesh(mesh);
         }
+        EventManager.publish(VEvent._ITEM_ADDED_TO_WORLD);
     }
 
     private addPlane(): AbstractMesh {
@@ -3083,17 +3086,22 @@ export class Vishva {
      * @param d 
      */
     public setFog(d: number) {
+
         if (d != 0) {
             d = 0.00005 * Math.pow(1.08, d);
         }
         this.scene.fogDensity = d;
         //this.scene.fogStart = 10220*(1 - d/0.1);
+
+
     }
 
     public getFog(): number {
         //return (10220 - this.scene.fogStart )*0.1/10220;
         //return this.scene.fogDensity;
-        return Math.log(this.scene.fogDensity / 0.00005) / Math.log(1.08);
+        if (this.scene.fogDensity == 0) return 0;
+        let d = Math.log(this.scene.fogDensity / 0.00005) / Math.log(1.08);
+        return d;
     }
 
     public setFogColor(fogColor: string) {
@@ -3712,6 +3720,8 @@ export class Vishva {
             this.switchEditControl(rootMesh);
         }
         this.animateMesh(rootMesh);
+
+        EventManager.publish(VEvent._ITEM_ADDED_TO_WORLD);
     }
 
     private _fixGLB(meshes: AbstractMesh[]) {

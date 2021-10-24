@@ -58,13 +58,13 @@ export class ActuatorDialog extends ActuatorAbstract {
     }
 
     public onPropertiesChange() {
+        console.log("onPropertiesChange()");
         var props: ActDialogParm = <ActDialogParm>this.properties;
         if (this.dialog == null) {
             this.div = GuiUtils.createDiv();
             //this.div.style.visibility = "visible";
 
             this.dialog = new VDiag(this.div, props.title, VDiag.center, (window.innerWidth * props.width / 100) + "px", (window.innerHeight * props.height / 100) + "px", "350px", props.modal);
-
 
             let button: HTMLButtonElement = this.dialog.addButton("Close");
 
@@ -111,21 +111,23 @@ export class ActuatorDialog extends ActuatorAbstract {
         this.div.innerHTML = props.msg;
 
         if (props.htmlFile && props.htmlFile.value != null) {
-            $.ajax({
-                url: Vishva.vHome + "assets/" + props.htmlFile.value,
-                success: (data) => {
-                    this.div.innerHTML = data;
-                },
-                dataType: "text"
-            });
+            let xhttp = new XMLHttpRequest();
+            xhttp.onload = () => {
+                if (xhttp.readyState == 4 && xhttp.status == 200) {
+                    this.div.innerHTML = xhttp.responseText;
+                }
+            };
+            xhttp.open("GET", Vishva.vHome + "assets/" + props.htmlFile.value, true);
+            xhttp.send();
         }
 
         this.dialog.onClose(() => {
-
             this.onActuateEnd();
         })
 
         this.dialog.setSize(window.innerWidth * props.width / 100, window.innerHeight * props.height / 100);
+
+        window.addEventListener("resize", (event) => { this.dialog.setSize(window.innerWidth * props.width / 100, window.innerHeight * props.height / 100); });
 
         if (this.properties.autoStart) {
             this.dialog.open();

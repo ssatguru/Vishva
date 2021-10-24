@@ -4,22 +4,22 @@ const envHTML: string = `
 <div id="envDiv" style="display:grid;grid-template-columns:auto auto;align-items:center;grid-gap:0.75em;padding:0.5em" class="noselect">
         
             <div style="justify-self: end;">sun (west-east)</div>
-            <div><div id="sunPos"></div></div>
+            <div><input type="range" class="sunPos"></input></div>
         
             <div style="justify-self: end;">sun (south-nort)</div>
-            <div><div id="sunPosNS"></div></div>
-        
+            <div><input type="range" class="sunPosNS"></input></div>
+
             <div style="justify-self: end;">light</div>            
-            <div><div id="light"></div></div>
+            <div><input type="range" class="light"></input></div>
         
             <div style="justify-self: end;">light color</div>
             <div><div id="lightColor"></div></div>
         
             <div style="justify-self: end;">shade</div>
-            <div><div id="shade"></div></div>
+            <div><input type="range" class="shade"></input></div>
         
             <div style="justify-self: end;">fog</div>
-            <div><div id="fog"></div></div>
+            <div><input type="range" class="fog"></input></div>
         
             <div style="justify-self: end;">fog color</div>
             <div><div id="fogCol"></div></div>
@@ -34,7 +34,7 @@ const envHTML: string = `
             <div><Button id="envRain">rain</button></div>
         
             <div style="justify-self: end;">fov</div>
-            <div><div id="fov"></div></div>
+            <div><input class="fov" type="range"></input></div>
         
             <div style="justify-self: end;">sky</div>
             <div><Button id="skyButton">sky</button></div>

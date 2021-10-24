@@ -1,3 +1,5 @@
+declare var userAssets: Array<any>;
+
 import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { Vishva } from "../Vishva";
 import { DialogMgr } from "./DialogMgr";
@@ -57,9 +59,6 @@ export class VishvaGUI {
         // });
 
 
-        //when user is typing into ui inputs we donot want keys influencing editcontrol or av movement
-        $("input").on("focus", () => { this._vishva.disableKeys(); });
-        $("input").on("blur", () => { this._vishva.enableKeys(); });
 
         this._buildCuratedAssetsMenu();
 
@@ -151,12 +150,15 @@ export class VishvaGUI {
      */
 
     private _addInternalAssetUI: InternalAssetsUI;
-    private _addAssetTDiag: VTreeDialog;
+    private _allAssetsVTDiag: VTreeDialog;
     private _items: ItemListUI;
-    public getItemList(): ItemListUI {
+    public showItemList(): ItemListUI {
         if (this._items == null) {
             this._items = new ItemListUI(this._vishva);
         }
+        return this._items;
+    }
+    public getItemList() {
         return this._items;
     }
     private _environment: EnvironmentUI;
@@ -207,17 +209,17 @@ export class VishvaGUI {
         // button for internal and curated items
         //add menu sliding setup
         var slideDown: any = JSON.parse("{\"direction\":\"up\"}");
-        var navAdd0: HTMLElement = document.getElementById("navCAssets");
-        navAdd0.style.visibility = "visible";
+        var _navCAssets: HTMLElement = document.getElementById("navCAssets");
+        _navCAssets.style.visibility = "visible";
         document.getElementById("AddMenu").style.visibility = "visible";
         var addMenu: JQuery = $("#AddMenu");
         addMenu.hide(null);
-        navAdd0.onclick = (e) => {
+        _navCAssets.onclick = (e) => {
             if (this.firstTime) {
                 var jpo: JQueryPositionOptions = {
                     my: "left top",
                     at: "left bottom+4",
-                    of: navAdd0
+                    of: _navCAssets
                 };
                 addMenu.position(jpo);
                 this.firstTime = false;
@@ -243,8 +245,8 @@ export class VishvaGUI {
         };
 
         // button for all assets in world
-        let navItems: HTMLElement = document.getElementById("navItems");
-        navItems.onclick = (e) => {
+        let _navWorldAssets: HTMLElement = document.getElementById("navWorldAssets");
+        _navWorldAssets.onclick = (e) => {
             if (this._items == null) {
                 this._items = new ItemListUI(this._vishva);
             } else {
@@ -254,24 +256,36 @@ export class VishvaGUI {
         }
 
         // button for all assets in inventory 
-        var navAdd: HTMLElement = document.getElementById("navAdd");
-        navAdd.onclick = (e) => {
-            if (this._addAssetTDiag == null) {
-                this._addAssetTDiag = new VTreeDialog(this._vishva, "all assets", VDiag.leftTop2, Vishva.userAssets, "\.obj$|\.babylon$|\.glb$|\.gltf$", false);
-                this._addAssetTDiag.addTreeListener((f, p, l) => {
+        var navAllAssets: HTMLElement = document.getElementById("navAllAssets");
+        navAllAssets.onclick = (e) => {
+
+            if (this._allAssetsVTDiag == null) {
+
+                this._allAssetsVTDiag = new VTreeDialog(this._vishva, "all assets", VDiag.leftTop2, Vishva.userAssets, "", false);
+
+                this._allAssetsVTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
                             this._vishva.loadAsset2(p, f);
                         }
                     }
+                });
+
+                this._allAssetsVTDiag.addRefreshHandler(() => {
+                    let xhttp = new XMLHttpRequest();
+                    xhttp.onload = () => {
+                        if (xhttp.readyState == 4 && xhttp.status == 200) {
+                            eval(xhttp.responseText);
+                            Vishva.userAssets = userAssets;
+                            this._allAssetsVTDiag.refresh(Vishva.userAssets);
+                        }
+                    };
+                    xhttp.open("GET", "vishva/userAssets.js", true);
+                    xhttp.send();
                 })
-                this._addAssetTDiag.addRefreshHandler(() => {
-                    $.getScript("vishva/vishvaFiles.js", () => {
-                        this._addAssetTDiag.refresh(Vishva.userAssets);
-                    })
-                })
+
             } else {
-                this._addAssetTDiag.toggle();
+                this._allAssetsVTDiag.toggle();
             }
         }
 
@@ -354,7 +368,7 @@ export class VishvaGUI {
             this._itemProps = new PropsPanelUI(this._vishva, this);
         }
         this._itemProps.open();
-        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
+        if (this._items != null && this._items.isOpen()) this._items._highlightSelected();
     }
 
     /*
@@ -371,7 +385,7 @@ export class VishvaGUI {
      */
     public refreshPropsDiag() {
         if (this._itemProps != null) this._itemProps.refreshPropsDiag();
-        if (this._items != null && this._items.isOPen()) this._items.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
+        if (this._items != null && this._items.isOpen()) this._items._highlightSelected();
     }
 
     //called when user has changed transforms using editcontrol

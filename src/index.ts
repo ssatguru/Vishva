@@ -1,11 +1,7 @@
 import { Vishva } from "./Vishva";
 
 import "./w3.css";
-//import "jquery-ui-themes/themes/eggplant/jquery-ui.min.css";
-//import "jquery-ui-themes/themes/dark-hive/jquery-ui.min.css";
-//import "./jquery-ui-1.12.1.custom/jquery-ui.theme.min.css";
 
-//import "./jquery/dark-hive/jquery-ui.css";
 import "./jquery/eggplant/jquery-ui.css";
 import "./w3-theme-eggplant.css";
 import "./style.css";
@@ -13,9 +9,7 @@ import "./style.css";
 import "jquery-ui/ui/widgets/accordion";
 import "jquery-ui/ui/widgets/button";
 import "jquery-ui/ui/widgets/menu";
-import "jquery-ui/ui/widgets/slider";
-// import "jquery-ui/ui/widgets/tabs";
-import "jquery-ui/ui/widgets/tooltip";
+//import "jquery-ui/ui/widgets/tooltip";
 
 import "jquery-ui/ui/effects/effect-slide.js";
 
@@ -79,9 +73,9 @@ function main() {
     }
 
     //after click loose focus
-    $("button").click(function (e) {
-        $(this).blur();
-    });
+    // $("button").click(function (e) {
+    //     $(this).blur();
+    // });
 
     var search: HREFsearch = new HREFsearch();
 

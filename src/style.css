@@ -27,19 +27,6 @@ body {
 }
 
 /* ----- jquery ----- */
-/* remove button outlines */
-/* the button outline on dialog box close button on top-right are not done properly */
-.ui-button:focus {
-  outline: none !important;
-}
-.ui-button {
-  font-weight: lighter;
-}
-
-/* reduce the overlay for modal dialogs */
-.ui-widget-overlay {
-  opacity: 0.3;
-}
 
 .ui-accordion .ui-accordion-content {
   padding: 0em;
@@ -64,19 +51,6 @@ body {
   font-size: 1em;
 }
 
-/*remove shadow from tooltips etc*/
-.ui-widget-shadow {
-  box-shadow: none;
-}
-
-/* to flip some jquery icons - like undo redo */
-.flip {
-  -moz-transform: scaleX(-1);
-  -o-transform: scaleX(-1);
-  -webkit-transform: scaleX(-1);
-  transform: scaleX(-1);
-  filter: FlipH;
-}
 /* to display mutliple icons on same line */
 .ui-icon.inline {
   display: inline-block;

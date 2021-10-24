@@ -9,6 +9,8 @@ import { VInputVector3 } from "../components/VInputVector3";
 import { VInputNumber } from "../components/VInputNumber";
 import { ParentChildUI } from "./ParentChildUI";
 import { VDiag } from "../components/VDiag";
+import { EventManager } from "../../eventing/EventManager";
+import { VEvent } from "../../eventing/VEvent";
 
 /**
  * Provides UI for the Genral tab of mesh properties
@@ -65,6 +67,7 @@ export class GeneralUI {
         //this._genName.style.width = "80%";
         this._genName.onchange = () => {
             this._vishva.setName(this._genName.value);
+            EventManager.publish(VEvent._ITEM_ADDED_TO_WORLD);
         }
 
         //space

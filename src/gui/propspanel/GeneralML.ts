@@ -67,8 +67,8 @@ let genHTML = `
                 <button id="gridSnap">grid snap</button>
                 space 
                 <select class="w3-select" style="width:auto" id="genSpace" title="space for translation and rotation">
-                <option value="local" >local</option>
-                <option value="world">world</option>
+                        <option value="local" >local</option>
+                        <option value="world">world</option>
                 </select>
         </div>
         

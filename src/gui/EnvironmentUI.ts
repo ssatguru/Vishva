@@ -38,14 +38,14 @@ export class EnvironmentUI {
         sunPos.max = "180";
         sunPos.value = this._vishva.getSunAlpha().toString();
         sunPos.oninput = (ev) => {
-            this._vishva.setSunAlpha(Number((<HTMLInputElement>ev.target).value));
+            this._vishva.setSunEW(Number((<HTMLInputElement>ev.target).value));
         }
 
         sunPosNS.min = "-100";
         sunPosNS.max = "100";
         sunPosNS.value = this._vishva.getSunBeta().toString();
         sunPosNS.oninput = (ev) => {
-            this._vishva.setSunBeta(Number((<HTMLInputElement>ev.target).value));
+            this._vishva.setSunNS(Number((<HTMLInputElement>ev.target).value));
         }
 
         light.min = "0";

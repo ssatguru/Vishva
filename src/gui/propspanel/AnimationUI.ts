@@ -19,19 +19,71 @@ export class AnimationUI {
     private _skel: Skeleton;
     private _animSkelList: HTMLSelectElement;
 
+    private _attMode: number = 0;
+
     constructor(vishva: Vishva) {
         this._vishva = vishva;
 
-        var animSkelChange: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelChange");
-        var animSkelClone: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelClone");
-        var animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
-        var animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
-        var animRangeName: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeName");
-        var animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
-        var animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
-        var animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
+
+
+        let animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
+        let animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
+
+        let animSBS: HTMLInputElement = <HTMLInputElement>document.getElementById("animSBS");
+        let animDBS: HTMLInputElement = <HTMLInputElement>document.getElementById("animDBS");
+        let animAttach: HTMLInputElement = <HTMLInputElement>document.getElementById("animAttach");
+        let animDetach: HTMLInputElement = <HTMLInputElement>document.getElementById("animDetach");
+
+        let animRangeName: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeName");
+        let animRangeStart: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeStart");
+        let animRangeEnd: HTMLInputElement = <HTMLInputElement>document.getElementById("animRangeEnd");
+        let animRangeMake: HTMLButtonElement = <HTMLButtonElement>document.getElementById("animRangeMake");
 
         this._animSkelList = <HTMLSelectElement>document.getElementById("animSkelList");
+        let animSkelChange: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelChange");
+        let animSkelClone: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelClone");
+
+        //enable/disable skeleton view
+        animSkelView.onclick = (e) => {
+            this._vishva.toggleSkelView();
+        }
+
+        //show rest pose 
+        animRest.onclick = (e) => {
+            this._vishva.animRest();
+        }
+
+        animSBS.onclick = (e) => {
+            this._vishva._addBoneSelectors(this._skel);
+            //this._vishva._debugBoneChilds(this._skel);
+        }
+
+        animDBS.onclick = (e) => {
+            this._vishva._delBoneSelectors(this._skel);
+        }
+
+        animAttach.onclick = (e) => {
+            this._vishva._delBoneSelectors(this._skel);
+        }
+
+        //attach items to bone
+        animAttach.onclick = (e) => {
+            let err: string = this._vishva._attach2Bone(this._skel);
+            if (err != null) {
+                DialogMgr.showAlertDiag(err);
+            }
+
+        }
+
+        //attach items to bone
+        animDetach.onclick = (e) => {
+            let err: string = this._vishva._detach4Bone(this._skel);
+            if (err != null) {
+                DialogMgr.showAlertDiag(err);
+            }
+
+        }
+
 
         //change the mesh skeleton
         animSkelChange.onclick = (e) => {
@@ -40,7 +92,7 @@ export class AnimationUI {
                 this.update();
             else DialogMgr.showAlertDiag("Error: unable to switch");
         }
-        //clone the selected skeleton and swicth to it
+        //clone the selected skeleton and switch to it
         animSkelClone.onclick = (e) => {
 
             // if (this._vishva.cloneChangeSkeleton(this._animSkelList.selectedOptions[0].value))
@@ -52,15 +104,6 @@ export class AnimationUI {
             else DialogMgr.showAlertDiag("Error: unable to clone and switch");
         }
 
-        //enable/disable skeleton view
-        animSkelView.onclick = (e) => {
-            this._vishva.toggleSkelView();
-        }
-
-        //show rest pose 
-        animRest.onclick = (e) => {
-            this._vishva.animRest();
-        }
 
         //create
         animRangeMake.onclick = (e) => {

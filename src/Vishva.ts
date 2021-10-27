@@ -1,5 +1,11 @@
+
+/* global variables from script files loaded during startup */
 declare var userAssets: Array<any>;
 declare var internalAssets: Array<any>;
+// TODO Below applies to all curated item.
+// shoudld provide for mutiple curated config files, one in each of the "top folder" of curated items
+declare var curatedConfig: Object;
+
 
 import { EditControl } from "babylonjs-editcontrol";
 import { CharacterController } from "babylonjs-charactercontroller";
@@ -86,6 +92,8 @@ import { DialogMgr } from "./gui/DialogMgr";
 import { VTheme, VThemes } from "./gui/components/VTheme";
 import { VEvent } from "./eventing/VEvent";
 import { EventManager } from "./eventing/EventManager";
+import { InternalTexture } from "babylonjs/Materials/Textures/internalTexture";
+import { NodeMaterialBlockTargets } from "babylonjs/Materials/Node/Enums/nodeMaterialBlockTargets";
 
 
 
@@ -396,6 +404,10 @@ export class Vishva {
         //            shadowGenerator.depthScale = 2500;
         //            sl.shadowMinZ = 1;
         //            sl.shadowMaxZ = 2500;
+
+        this.sunDR.autoCalcShadowZBounds = true;
+        shadowGenerator.depthScale = 4;
+
     }
 
     debug: boolean = true;
@@ -1251,6 +1263,7 @@ export class Vishva {
     private primPBRMaterial: PBRMetallicRoughnessMaterial;
 
     private createPrimMaterial() {
+        if (this.primMaterial != null) return;
         this.primMaterial = new StandardMaterial("primMat", this.scene);
         //this.primMaterial.diffuseTexture = new Texture(this.primTexture, this.scene);
         //GRAY COLOR
@@ -1270,7 +1283,7 @@ export class Vishva {
 
     private setPrimProperties(mesh: Mesh) {
         if (this.primMaterial == null) this.createPrimMaterial();
-        //if(this.primPBRMaterial==null) this.createPrimPBRMaterial();
+        // if (this.primPBRMaterial == null) this.createPrimPBRMaterial();
         var r: number = mesh.getBoundingInfo().boundingSphere.radiusWorld;
         var placementLocal: Vector3 = new Vector3(0, r, -(r + 2));
         var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
@@ -1284,7 +1297,7 @@ export class Vishva {
         mesh.id = this.uid(mesh.name);//(<number>new Number(Date.now())).toString();
         mesh.name = mesh.id;
         mesh.material = this.primMaterial.clone("m" + mesh.name);
-        //mesh.material=this.primPBRMaterial.clone("m"+mesh.name);
+        // mesh.material = this.primPBRMaterial.clone("m" + mesh.name);
     }
 
     public addPrim(primType: string) {
@@ -2894,12 +2907,121 @@ export class Vishva {
         } else return null;
     }
 
-    public printAnimCount(skel: Skeleton) {
+    public _debugAnimCount(skel: Skeleton) {
         var bones: Bone[] = skel.bones;
         for (let bone of bones) {
             console.log(bone.name + "," + bone.animations.length + " , " + bone.animations[0].getHighestFrame());
             console.log(bone.animations[0]);
         }
+    }
+
+    public _debugBoneChilds(skel: Skeleton) {
+        var bones: Bone[] = skel.bones;
+        let i = 0;
+        for (let bone of bones) {
+            console.log(i + "," + bone.name);
+            console.log(bone.getChildMeshes());;
+
+        }
+    }
+    public _addBoneSelectors(skel: Skeleton) {
+
+        let bones: Bone[] = skel.bones;
+        let mesh: Mesh = Mesh.CreateBox("box", 0.1, this.scene);
+        this.createPrimMaterial();
+        mesh.material = this.primMaterial
+        let i = 0;
+        for (let bone of bones) {
+            let inst = mesh.createInstance("boneMarker-" + i);
+            inst.attachToBone(bone, this.meshSelected);
+            i++;
+        }
+    }
+
+    public _delBoneSelectors(skel: Skeleton) {
+
+        let bones: Bone[] = skel.bones;
+        let i = 0;
+        let sm: Mesh = null; //source mesh
+        for (let bone of bones) {
+            let markers: AbstractMesh[] = bone.getChildMeshes();
+            for (let marker of markers) {
+                if (marker.id.startsWith("boneMarker")) {
+                    marker.detachFromBone();
+                    sm = (<InstancedMesh>marker).sourceMesh;
+                    marker.dispose();
+                }
+            }
+        }
+        if (sm != null) sm.dispose();
+    }
+
+    public _attach2Bone(skel: Skeleton): string {
+        if (this.meshesPicked == null) {
+            return "please select (CTL-MouseLeftClick) two mesh - a) bone selector b) item to attach to the bone";
+        }
+        if (this.meshesPicked.length > 2) {
+            return "please select only two mesh";
+        }
+
+        let bm: AbstractMesh = null;
+        let att: AbstractMesh = null;
+
+        for (let mesh of this.meshesPicked) {
+            if (mesh.id.startsWith("boneMarker")) {
+                bm = <AbstractMesh>mesh;
+            } else {
+                att = <AbstractMesh>mesh;
+            }
+        }
+        if (bm == null) {
+            return "no bone selector selected";
+        }
+        if (att == null) {
+            return "no item selected for attachment";
+        }
+        let boneIndex = Number(bm.id.split("-")[1]);
+        let bone = skel.bones[boneIndex];
+        let tn: TransformNode = new TransformNode("attacher-" + boneIndex);
+        console.log(att);
+        tn.attachToBone(bone, this.meshSelected);
+        att.setParent(tn);
+        //att.attachToBone(bone, bone.getTransformNode());
+        //att.position = Vector3.Zero();
+        this.multiUnSelectAll();
+        this._delBoneSelectors(skel);
+
+        return null;
+    }
+
+    //detach an item from the bone
+    public _detach4Bone(skel: Skeleton): string {
+        if (this.meshesPicked == null || this.meshesPicked.length == 0) {
+            return "please select (CTL-MouseLeftClick) the mesh to detach";
+        }
+        if (this.meshesPicked.length > 1) {
+            return "please select only one mesh";
+        }
+
+        let att: AbstractMesh = <AbstractMesh>this.meshesPicked[0];
+        let tn: TransformNode = <TransformNode>att.parent;
+        if (tn == null) {
+            return "selected mesh has no parent. It is not attached to this skeleton";
+        }
+        if (!tn.name.startsWith("attacher-")) {
+            return "selected mesh parent is not a bone attacher. It's name does not start with 'attacher-'";
+        }
+
+        var m: Matrix = att.getWorldMatrix();
+        m.decompose(att.scaling, att.rotationQuaternion, att.position);
+        att.parent = null;
+
+        tn.detachFromBone();
+        tn.dispose();
+
+        this.multiUnSelectAll();
+
+        return null;
     }
 
     public playAnimation(animName: string, animRate: string, loop: boolean) {
@@ -3018,13 +3140,13 @@ export class Vishva {
     }
 
     //setting sun beta (north south)
-    public setSunBeta(d: number) {
+    public setSunNS(d: number) {
         this._sunBeta = d;
         this.setSunPos();
     }
 
     //setting sun alpha (east wes)
-    public setSunAlpha(d: number) {
+    public setSunEW(d: number) {
         this._sunAlpha = d;
         this.setSunPos();
     }
@@ -3040,6 +3162,10 @@ export class Vishva {
         this.sun.direction.x = x;
         this.sun.direction.y = y;
         this.sun.direction.z = z;
+
+        // this.sun.direction.x = 0;
+        // this.sun.direction.y = 1;
+        // this.sun.direction.z = 0;
 
         this.sunDR.direction.x = -x;
         this.sunDR.direction.y = -y;
@@ -3594,7 +3720,7 @@ export class Vishva {
      * @param assetType 
      * @param file 
      */
-    public loadAsset(assetType: string, file: string) {
+    public loadCurAsset(assetType: string, file: string) {
         console.log("loading curated");
         this.filePath = assetType;
         this.file = file;
@@ -3613,7 +3739,7 @@ export class Vishva {
      * @param file 
      */
 
-    public loadAsset2(path: string, file: string) {
+    public loadUserAsset(path: string, file: string) {
         this.filePath = path;
         this.file = file;
         SceneLoader.ImportMesh("",
@@ -3659,9 +3785,6 @@ export class Vishva {
 
             this._addToShadowCasters(mesh);
 
-            //TODO think
-            //mesh.receiveShadows = true;
-
             //no need to rename 3.1 version seems to preserve the texture img urls
             //this._renameTextures(mesh);
 
@@ -3705,13 +3828,10 @@ export class Vishva {
         }
 
 
+        console.log("post load now");
 
-        // TODO remove 
-        // obj laoder was fixed  
-        // some loader like the obj loader are not done loading the material when this onSuccess is called.
-        // to make any material changes call it after this method is done using the setTimeout trick
-        // window.setTimeout(() => {this._postLoad(meshes);},1000);
-
+        //TODO if a rootmesh was created  added before then scaling will not happen
+        //as we are not passing that rootmesh below and all other meshes now have a parent (the rootnode).
         this._postLoad(meshes, assetType);
 
         if (!this.isMeshSelected) {
@@ -3744,6 +3864,7 @@ export class Vishva {
         let a: Mesh;
         let s: Vector3;
         for (let mesh of meshes) {
+            if (mesh.parent != null) continue;
 
             //this._switchXZ2(<Mesh>mesh);
             // this._reverseAxis(mesh);
@@ -3881,11 +4002,30 @@ export class Vishva {
 
     //select and animate the last mesh loaded
     private _postLoad(meshes: AbstractMesh[], assetType: string) {
+        let scaling = false;
+        let sf: Vector3;
+        if (curatedConfig["scale"]) {
+            scaling = true;
+            sf = new Vector3();
+            sf.x = Number(curatedConfig["scale"][0]);
+            sf.y = Number(curatedConfig["scale"][1]);
+            sf.z = Number(curatedConfig["scale"][2]);
+        }
         if (meshes.length > 0) {
             for (let mesh of meshes) {
 
                 if (assetType == "curated") {
-                    this._processMaterial(mesh, m => this._reuseMaterial(m));
+                    if (curatedConfig["reuseMaterial"] == true && mesh instanceof Mesh) {
+                        this._processMaterial(mesh, m => this._reuseMaterial(m));
+                    }
+                    if (scaling && (mesh.parent == null)) {
+                        console.log("scaling curated");
+                        mesh.scaling.multiplyInPlace(sf);
+                    }
+                    if (curatedConfig["collision"] == true && mesh instanceof Mesh) {
+                        mesh.checkCollisions = true;
+                    }
+
                 } else {
                     this._processMaterial(mesh, m => this._makeMatIdUnique(m));
                 }
@@ -3908,6 +4048,7 @@ export class Vishva {
         If a material already exist lets reuse it
         instead of creating a new material.
         This is only done for  curated assets
+        The first one will be suffxed by "@cur"
     */
 
     private _reuseMaterial(mat: Material): Material {

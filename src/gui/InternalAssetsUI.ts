@@ -158,7 +158,7 @@ export class InternalAssetsUI {
         } else if (i.className === "particles") {
             this._vishva.createParticles(i.id);
         } else {
-            this._vishva.loadAsset(i.className, i.id);
+            this._vishva.loadCurAsset(i.className, i.id);
         }
         return true;
         //this._vishva.createWater();

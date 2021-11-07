@@ -1,17 +1,25 @@
-import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3 } from "babylonjs";
+import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
 import { CharacterController } from "babylonjs-charactercontroller";
+import { SNAManager } from "../sna/SNA";
 
 export class AvManager {
 
 
-    constructor(private avatarFolder: string,
+    private cc: CharacterController;
+    public avatar: Mesh;
+    public avatarSkeleton: Skeleton;
+    private _animBlend: number = 0.1;
+
+    constructor(
+        private avatarFolder: string,
         private avatarFile: string,
         private _avEllipsoid: Vector3,
         private _avEllipsoidOffset: Vector3,
         private scene: Scene,
         private shadowGenerator: ShadowGenerator,
         private spawnPosition: Vector3,
-        private mainCamera: ArcRotateCamera) {
+        private mainCamera: ArcRotateCamera,
+        private saveAVcameraPos: Vector3) {
     }
     onCreated: (avatar: Mesh) => void;
 
@@ -76,7 +84,9 @@ export class AvManager {
         //            this.mainCamera.radius=4;
         //            this.mainCamera.alpha=-this.avatar.rotation.y-4.69;
         //            this.mainCamera.beta = 1.4;
-
+        this.avatar = avatar;
+        this.avatarSkeleton = avatarSkeleton;
+        this.avatarSkeleton.enableBlending(this._animBlend);
         this.onCreated(avatar);
 
     }
@@ -114,7 +124,11 @@ export class AvManager {
     }
 
     //TODO persist charactercontroller settings
-    public setCharacterController(cc: CharacterController) {
+    public setCharacterController(avatar: Mesh) {
+
+        this.avatar = avatar;
+        let cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
+        console.log("set cc done");
         this.mainCamera.lowerRadiusLimit = 1;
         this.mainCamera.upperRadiusLimit = 100;
 
@@ -138,5 +152,80 @@ export class AvManager {
 
         cc.setStepOffset(0.5);
         cc.setSlopeLimit(60, 80);
+
+        if (this.avatar.scaling.z < 0) cc.setFaceForward(true);
+
+        this.cc = cc;
+        return cc;
+    }
+
+
+    public switchAvatar(mesh: Mesh): string {
+
+
+        this.cc.stop();
+        //old avatar
+        SNAManager.getSNAManager().enableSnAs(this.avatar);
+        this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
+        this.avatar.isPickable = true;
+        this.avatar.visibility = 1;
+        Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
+        if (this.avatarSkeleton != null) {
+            Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
+            this.avatarSkeleton.name = "";
+        }
+
+        //new avatar
+        this.avatar = mesh;
+        this.avatarSkeleton = this.avatar.skeleton;
+        Tags.AddTagsTo(this.avatar, "Vishva.avatar");
+        if (this.avatarSkeleton != null) {
+            Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
+            this.avatarSkeleton.name = "Vishva.skeleton";
+            this.avatarSkeleton.enableBlending(this._animBlend);
+        }
+        this.cc.setAvatar(this.avatar);
+        this.cc.setAvatarSkeleton(this.avatarSkeleton);
+
+        this.avatar.checkCollisions = true;
+        this.avatar.ellipsoid = this._avEllipsoid
+        this.avatar.ellipsoidOffset = this._avEllipsoidOffset
+        this.avatar.isPickable = false;
+        this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
+        this.avatar.rotationQuaternion = null;
+        // the camera might have been moved around and to/from this mesh
+        // we should use the new position as the camera position for the avatar.
+        // we shouldnot be moving the camera back to its old postion around the old avatar
+        this.saveAVcameraPos.copyFrom(this.mainCamera.position);
+        // this._vishva.isFocusOnAv = true;
+        // this._vishva.removeEditControl();
+        SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
+
+        //make character control to use the new avatar
+        this.cc.setAvatar(this.avatar);
+        this.cc.setAvatarSkeleton(this.avatarSkeleton);
+        if (this.avatar.scaling.z < 0) this.cc.setFaceForward(true);
+        //this.cc.setAnims(this.anims);
+        this.cc.start();
+
+        return null;
+    }
+
+    /**
+     * Check if the mesh is a "character" mesh
+     * a) plain mesh - p
+     * b) mesh with animation ranges - ar
+     * c) mesh with animation groups - ag
+     */
+
+    private characterType(mesh: Mesh): string {
+        if (mesh.skeleton) {
+            if (mesh.skeleton.overrideMesh) {
+                return "ag";
+            } else {
+                return "ar";
+            }
+        } else return "p";
+        return null;
     }
 }

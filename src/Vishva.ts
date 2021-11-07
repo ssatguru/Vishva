@@ -154,7 +154,7 @@ export class Vishva {
     /**
      * avatar stuff 
      */
-    private avManager: AvManager;
+    public avManager: AvManager;
     private cc: CharacterController;
     public avatar: Mesh;
     private avatarSkeleton: Skeleton;
@@ -166,7 +166,7 @@ export class Vishva {
     //spawnPosition: Vector3=new Vector3(0,12,0);
 
 
-    private _animBlend: number = 0.1;
+
     private _avEllipsoid: Vector3 = new Vector3(0.5, 1, 0.5);
     private _avEllipsoidOffset: Vector3 = new Vector3(0, 1, 0);
 
@@ -337,7 +337,7 @@ export class Vishva {
 
         this.scenePath = scenePath;
         if (sceneFile == "empty") {
-            this.setScenePhase1(this.scene);
+            this.setScenePhase1(this.scene, true);
         } else {
             this.loadSceneFile(scenePath, sceneFile + ".js", this.scene);
         }
@@ -370,7 +370,7 @@ export class Vishva {
         this.vishvaSerialized = foo["VishvaSerialized"];
         console.log("world babylon version : " + this.vishvaSerialized.bVer);
         console.log("world vishva version : " + this.vishvaSerialized.vVer);
-        //this.snas = <SNAserialized[]>foo["VishvaSNA"];
+
         this.snas = this.vishvaSerialized.snas;
         this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
         this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
@@ -383,10 +383,9 @@ export class Vishva {
 
         var sceneData: string = "data:" + tfat.text;
         SceneLoader.ShowLoadingScreen = false;
-        //SceneLoader.Append(this.scenePath, sceneData, this.scene, (scene) => { return this.onSceneLoaded(scene) });
 
         //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
-        //console.log(SceneLoader.loggingLevel);
+
         SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.setScenePhase1(scene) });
 
     }
@@ -422,7 +421,7 @@ export class Vishva {
      * 
      * @param scene 
      */
-    private setScenePhase1(scene: Scene) {
+    private setScenePhase1(scene: Scene, empty: boolean = false) {
 
         var avFound: boolean = false;
         var skelFound: boolean = false;
@@ -542,11 +541,14 @@ export class Vishva {
         this.arcCamera.collisionRadius = this._cameraEllipsoid;
 
         if (!groundFound) {
-            console.log("no vishva ground found. creating ground");
-            //this.ground=this.createGround(this.scene);
-            //this.createGround_htmap(this.scene);
-            //this.creatDynamicTerrain();
-            this._createPlaneGround(this.scene);
+            if (empty) {
+                //only create ground if we are starting from scratch, world=empty
+                console.log("no vishva ground found. creating ground");
+                //this.ground=this.createGround(this.scene);
+                //this.createGround_htmap(this.scene);
+                //this.creatDynamicTerrain();
+                this._createPlaneGround(this.scene);
+            }
 
         } else {
             //in case this wasn't set in serialized scene
@@ -593,21 +595,23 @@ export class Vishva {
         //            if(this.scene.fogMode!==Scene.FOGMODE_LINEAR) {
         //                this.scene.fogMode=Scene.FOGMODE_LINEAR;
         //                this.scene.fogStart=256;
-        //                this.scene.fogEnd=512;
-        //                this.scene.fogDensity=0;
+        //                   this.sthis.scene.fogEnd=512;
+        //             cene.fogDensity=0;
         //            }
         if (this.editEnabled) {
             this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(<PointerEvent>evt, pickResult) };
         }
 
-        this.avManager = new AvManager(this.avatarFolder,
+        this.avManager = new AvManager(
+            this.avatarFolder,
             this.avatarFile,
             this._avEllipsoid,
             this._avEllipsoidOffset,
             this.scene,
             this.shadowGenerator,
             this.spawnPosition,
-            this.arcCamera
+            this.arcCamera,
+            this.saveAVcameraPos
         );
 
         if (!avFound) {
@@ -625,11 +629,8 @@ export class Vishva {
 
 
     private setScenePhase2() {
-        this.avatarSkeleton.enableBlending(this._animBlend);
-        this.cc = new CharacterController(this.avatar, this.arcCamera, this.scene);
-        //TODO remove below. The character controller should be set using deserialization
-        this.avManager.setCharacterController(this.cc);
-        this.cc.setCameraElasticity(true);
+        this.cc = this.avManager.setCharacterController(this.avatar);
+        this.cc.setCameraElasticity(false);
         this.cc.start();
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
@@ -1008,7 +1009,7 @@ export class Vishva {
         this.meshesPicked = null;
     }
 
-    private removeEditControl() {
+    public removeEditControl() {
         this.multiUnSelectAll();
         this.isMeshSelected = false;
         //            if (!this.focusOnAv) {
@@ -1034,20 +1035,7 @@ export class Vishva {
     }
 
 
-    private switchFocusToAV_old() {
-        this.arcCamera.detachControl(this.canvas);
 
-        this.frames = 25;
-        this.f = this.frames;
-
-        this.deltaP = this.saveAVcameraPos.subtract(this.arcCamera.position).scale(1 / this.frames);
-
-        var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-        this.deltaT = avTarget.subtract((<Vector3>this.arcCamera.target)).scale(1 / this.frames);
-
-        this.cameraAnimating = true;
-        this.scene.registerBeforeRender(this.animFunc);
-    }
     private switchFocusToAV() {
         let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
 
@@ -1097,40 +1085,7 @@ export class Vishva {
             this.cc.start();
         }
     }
-    //TODO remove below
-    // private animateCamera_old2() {
-    //     this.arcCamera.setTarget((<Vector3>this.arcCamera.target).add(this.deltaT));
-    //     this.arcCamera.setPosition(this.arcCamera.position.add(this.deltaP));
 
-    //     this.f--;
-    //     if (this.f < 0) {
-    //         this.isFocusOnAv = true;
-    //         this.cameraAnimating = false;
-    //         this.scene.unregisterBeforeRender(this.animFunc);
-    //         this.arcCamera.attachControl(this.canvas);
-    //         this.cc.start();
-    //     }
-    // }
-
-    // private animateCamera_old() {
-    //     var avTarget: Vector3 = new Vector3(this.avatar.position.x, (this.avatar.position.y + 1.5), this.avatar.position.z);
-    //     var targetDiff = avTarget.subtract((<Vector3>this.arcCamera.target)).length();
-    //     if (targetDiff > 0.01)
-    //         this.arcCamera.setTarget((<Vector3>this.arcCamera.target).add(this.deltaT));
-
-    //     var posDiff = this.saveAVcameraPos.subtract(this.arcCamera.position).length();
-    //     if (posDiff > 0.01)
-    //         this.arcCamera.setPosition(this.arcCamera.position.add(this.deltaP));
-
-    //     this.f--;
-    //     if (this.f < 0) {
-    //         this.isFocusOnAv = true;
-    //         this.cameraAnimating = false;
-    //         this.scene.unregisterBeforeRender(this.animFunc);
-    //         this.arcCamera.attachControl(this.canvas);
-    //         this.cc.start();
-    //     }
-    // }
 
     private focusOnMesh(mesh: TransformNode, frames: number) {
         let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
@@ -1147,16 +1102,7 @@ export class Vishva {
         this.scene.registerBeforeRender(this.animFunc2);
     }
 
-    //TODO remove below
-    // private focusOnMesh_old(mesh: AbstractMesh, frames: number) {
-    //     this.arcCamera.detachControl(this.canvas);
-    //     this.frames = frames;
-    //     this.f = frames;
-    //     //this.delta2 = mesh.absolutePosition.subtract((<Vector3>this.mainCamera.target)).scale(1 / this.frames);
-    //     this.deltaT = mesh.getAbsolutePivotPoint().subtract((<Vector3>this.arcCamera.target)).scale(1 / this.frames);
-    //     this.cameraAnimating = true;
-    //     this.scene.registerBeforeRender(this.animFunc2);
-    // }
+
 
     animFunc2: () => void = () => { return this.justReFocus() };
     private justReFocus() {
@@ -1369,10 +1315,13 @@ export class Vishva {
         if (!this.isMeshSelected) {
             return "no mesh selected";
         }
-        Tags.RemoveTagsFrom(this.ground, "Vishva.ground");
-        this.ground.isPickable = true;
+        if (this.ground != null) {
+            Tags.RemoveTagsFrom(this.ground, "Vishva.ground");
+            this.ground.isPickable = true;
+        }
         this.ground = <Mesh>this.meshSelected;
         this.ground.isPickable = false;
+        this.ground.receiveShadows = true;
         Tags.AddTagsTo(this.ground, "Vishva.ground");
         this.removeEditControl();
         return null;
@@ -1404,13 +1353,21 @@ export class Vishva {
         // we can only clone it
         if (tn instanceof Mesh) {
             if ((<Mesh>tn).geometry == null) {
-                _tnInst = new TransformNode(_name);
+                //_tnInst = new TransformNode(_name);
+                _tnInst = new Mesh(_name);
+                _tnInst.scaling.copyFrom(tn.scaling);
+                _tnInst.position.copyFrom(tn.position);
+                if (tn.rotationQuaternion != null) _tnInst.rotationQuaternion = tn.rotationQuaternion.clone();
+                // if (tn.rotation != null) _tnInst.rotation = tn.rotation.clone();
+
             } else {
                 _tnInst = (<Mesh>tn).createInstance(_name);
                 (<InstancedMesh>_tnInst).checkCollisions = (<Mesh>tn).checkCollisions;
             }
             if (ptn == null) {
+                _tnInst.scaling.copyFrom(tn.absoluteScaling);
                 _tnInst.position.copyFrom(tn.absolutePosition);
+                if (tn.absoluteRotationQuaternion != null) _tnInst.rotationQuaternion = tn.absoluteRotationQuaternion.clone();
             } else {
                 _tnInst.parent = ptn;
             }
@@ -1447,7 +1404,7 @@ export class Vishva {
             }
         }
 
-        let children = tn.getChildTransformNodes();
+        let children = tn.getChildTransformNodes(true);
         for (let child of children) {
             this._instanceTransNode(child, _tnInst);
         }
@@ -1505,6 +1462,13 @@ export class Vishva {
     }
 
     public enableCollision(b: boolean) {
+        if (this.meshSelected instanceof AbstractMesh) {
+            this.meshSelected.checkCollisions = b;
+        }
+    }
+
+    // make all instances of a mesh collidable or not
+    public enableInstancesCollision(b: boolean) {
         if (this.meshSelected instanceof AbstractMesh) {
             let source: AbstractMesh = this.meshSelected instanceof InstancedMesh ? this.meshSelected.sourceMesh : this.meshSelected;
             source.checkCollisions = b;
@@ -1569,7 +1533,7 @@ export class Vishva {
         if (yes) {
             if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
                 Tags.RemoveTagsFrom(this.meshSelected, "invisible")
-                this.meshSelected.visibility = 1;
+                this.meshSelected.isVisible = true;
                 this.meshSelected.isPickable = true;
                 if (this.showingAllInvisibles)
                     this.unHighLight(mesh);
@@ -1578,11 +1542,12 @@ export class Vishva {
         else {
             Tags.AddTagsTo(this.meshSelected, "invisible");
             if (this.showingAllInvisibles) {
-                this.meshSelected.visibility = 0.5;
+                if (this.meshSelected instanceof InstancedMesh) this.meshSelected.isVisible = false;
+                else this.meshSelected.visibility = 0.5;
                 this.highLight(mesh);
                 this.meshSelected.isPickable = true;
             } else {
-                this.meshSelected.visibility = 0;
+                this.meshSelected.isVisible = false;
                 this.meshSelected.isPickable = false;
             }
         }
@@ -3532,7 +3497,9 @@ export class Vishva {
     }
 
     private _addToShadowCasters(mesh: AbstractMesh) {
-        (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+        if ((<Mesh>mesh).geometry != null)
+            (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+
         //TODO think
         //mesh.receiveShadows = true;
     }
@@ -3785,7 +3752,7 @@ export class Vishva {
 
             this._addToShadowCasters(mesh);
 
-            //no need to rename 3.1 version seems to preserve the texture img urls
+            //no need to rename, 3.1 version seems to preserve the texture img urls
             //this._renameTextures(mesh);
 
             this.scene.stopAnimation(mesh);
@@ -3824,6 +3791,9 @@ export class Vishva {
                 var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
                 var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
                 rootMesh.position.addInPlace(placementGlobal);
+                if (rootMesh.name === "__root__") {
+                    rootMesh.name = file;
+                }
             }
         }
 
@@ -4657,111 +4627,54 @@ export class Vishva {
     }
 
 
-    public switchAvatar(): string {
-        if (!this.isMeshSelected) {
-            return "no mesh selected";
-        }
+    // public switchAvatar(): string {
+    //     if (!this.isMeshSelected) {
+    //         return "no mesh selected";
+    //     }
 
-        this.cc.stop();
-        //old avatar
-        SNAManager.getSNAManager().enableSnAs(this.avatar);
-        this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
-        this.avatar.isPickable = true;
-        Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
-        if (this.avatarSkeleton != null) {
-            Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
-            this.avatarSkeleton.name = "";
-        }
+    //     this.cc.stop();
+    //     //old avatar
+    //     SNAManager.getSNAManager().enableSnAs(this.avatar);
+    //     this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
+    //     this.avatar.isPickable = true;
+    //     Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
+    //     if (this.avatarSkeleton != null) {
+    //         Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
+    //         this.avatarSkeleton.name = "";
+    //     }
 
-        //new avatar
-        this.avatar = <Mesh>this.meshSelected;
-        this.avatarSkeleton = this.avatar.skeleton;
-        Tags.AddTagsTo(this.avatar, "Vishva.avatar");
-        if (this.avatarSkeleton != null) {
-            Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
-            this.avatarSkeleton.name = "Vishva.skeleton";
-            this.avatarSkeleton.enableBlending(this._animBlend);
-        }
-        this.cc.setAvatar(this.avatar);
-        this.cc.setAvatarSkeleton(this.avatarSkeleton);
+    //     //new avatar
+    //     this.avatar = <Mesh>this.meshSelected;
+    //     this.avatarSkeleton = this.avatar.skeleton;
+    //     Tags.AddTagsTo(this.avatar, "Vishva.avatar");
+    //     if (this.avatarSkeleton != null) {
+    //         Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
+    //         this.avatarSkeleton.name = "Vishva.skeleton";
+    //         this.avatarSkeleton.enableBlending(this._animBlend);
+    //     }
+    //     this.cc.setAvatar(this.avatar);
+    //     this.cc.setAvatarSkeleton(this.avatarSkeleton);
 
-        this.avatar.checkCollisions = true;
-        this.avatar.ellipsoid = this._avEllipsoid
-        this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-        this.avatar.isPickable = false;
-        this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
-        this.avatar.rotationQuaternion = null;
-        this.saveAVcameraPos.copyFrom(this.arcCamera.position);
-        this.isFocusOnAv = true;
-        this.removeEditControl();
-        SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
+    //     this.avatar.checkCollisions = true;
+    //     this.avatar.ellipsoid = this._avEllipsoid
+    //     this.avatar.ellipsoidOffset = this._avEllipsoidOffset
+    //     this.avatar.isPickable = false;
+    //     this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
+    //     this.avatar.rotationQuaternion = null;
+    //     this.saveAVcameraPos.copyFrom(this.arcCamera.position);
+    //     this.isFocusOnAv = true;
+    //     this.removeEditControl();
+    //     SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
 
-        //make character control to use the new avatar
-        this.cc.setAvatar(this.avatar);
-        this.cc.setAvatarSkeleton(this.avatarSkeleton);
-        //this.cc.setAnims(this.anims);
-        this.cc.start();
+    //     //make character control to use the new avatar
+    //     this.cc.setAvatar(this.avatar);
+    //     this.cc.setAvatarSkeleton(this.avatarSkeleton);
+    //     //this.cc.setAnims(this.anims);
+    //     this.cc.start();
 
-        return null;
-    }
+    //     return null;
+    // }
 
-
-    public switchAvatar_old(): string {
-        if (!this.isMeshSelected) {
-            return "no mesh selected";
-        }
-        if (this.isAvatar(<Mesh>this.meshSelected)) {
-            this.cc.stop();
-            //old avatar
-            SNAManager.getSNAManager().enableSnAs(this.avatar);
-            this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
-            this.avatar.isPickable = true;
-            Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
-            if (this.avatarSkeleton != null) {
-                Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
-                this.avatarSkeleton.name = "";
-            }
-
-            //new avatar
-            this.avatar = <Mesh>this.meshSelected;
-            this.avatarSkeleton = this.avatar.skeleton;
-            Tags.AddTagsTo(this.avatar, "Vishva.avatar");
-            if (this.avatarSkeleton != null) {
-                Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
-                this.avatarSkeleton.name = "Vishva.skeleton";
-                this.avatarSkeleton.enableBlending(this._animBlend);
-            }
-            this.cc.setAvatar(this.avatar);
-            this.cc.setAvatarSkeleton(this.avatarSkeleton);
-
-            this.avatar.checkCollisions = true;
-            this.avatar.ellipsoid = this._avEllipsoid
-            this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-            this.avatar.isPickable = false;
-            this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
-            this.avatar.rotationQuaternion = null;
-            this.saveAVcameraPos.copyFrom(this.arcCamera.position);
-            this.isFocusOnAv = true;
-            this.removeEditControl();
-            SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
-
-            //make character control to use the new avatar
-            this.cc.setAvatar(this.avatar);
-            this.cc.setAvatarSkeleton(this.avatarSkeleton);
-            //this.cc.setAnims(this.anims);
-            this.cc.start();
-        } else {
-            return "cannot use this as avatar";
-        }
-        return null;
-    }
-
-    private isAvatar(mesh: Mesh): boolean {
-        if (mesh.skeleton == null) {
-            return false;
-        }
-        return true;
-    }
 
     /**
      * called by AvAnimator actuator via sna manger

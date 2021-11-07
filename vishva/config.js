@@ -1,4 +1,4 @@
-var defaultWorld = "empty";
+var defaultWorld = "kay";
 var noEditWorlds = ["demo3"];
 var curatedConfig = {
   scale: [6, 6, 6],

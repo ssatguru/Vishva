@@ -1,5 +1,5 @@
 
-import { Vector3 } from "babylonjs";
+import { Mesh, Vector3 } from "babylonjs";
 import { Vishva } from "../../Vishva";
 import { VishvaGUI } from "../VishvaGUI";
 import { DialogMgr } from "../DialogMgr";
@@ -299,10 +299,12 @@ export class GeneralUI {
         };
 
         swAv.onclick = (e) => {
-            let err: string = this._vishva.switchAvatar();
+            let err: string = this._vishva.avManager.switchAvatar(<Mesh>this._vishva.meshSelected);
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
+            this._vishva.isFocusOnAv = true;
+            this._vishva.removeEditControl();
             return true;
         };
         swGnd.onclick = (e) => {

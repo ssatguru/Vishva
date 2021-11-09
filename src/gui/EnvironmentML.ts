@@ -50,7 +50,10 @@ const envHTML: string = `
             </div>
         
             <div style="justify-self: end;">terrain</div>
-            <div><Button id="trnButton">edit terrain</button></td
+            <div><Button id="trnButton">edit terrain</button></div>
+
+            <div style="justify-self: end;">avatar</div>
+            <div><Button id="avButton">avatar settings</button></div>
         
 </div>`;
 

@@ -153,7 +153,6 @@ export class AvManager {
         cc.setStepOffset(0.5);
         cc.setSlopeLimit(60, 80);
 
-        if (this.avatar.scaling.z < 0) cc.setFaceForward(true);
 
         this.cc = cc;
         return cc;
@@ -161,7 +160,6 @@ export class AvManager {
 
 
     public switchAvatar(mesh: Mesh): string {
-
 
         this.cc.stop();
         //old avatar
@@ -184,8 +182,6 @@ export class AvManager {
             this.avatarSkeleton.name = "Vishva.skeleton";
             this.avatarSkeleton.enableBlending(this._animBlend);
         }
-        this.cc.setAvatar(this.avatar);
-        this.cc.setAvatarSkeleton(this.avatarSkeleton);
 
         this.avatar.checkCollisions = true;
         this.avatar.ellipsoid = this._avEllipsoid
@@ -204,11 +200,16 @@ export class AvManager {
         //make character control to use the new avatar
         this.cc.setAvatar(this.avatar);
         this.cc.setAvatarSkeleton(this.avatarSkeleton);
-        if (this.avatar.scaling.z < 0) this.cc.setFaceForward(true);
+
         //this.cc.setAnims(this.anims);
         this.cc.start();
 
         return null;
+    }
+
+
+    public setFaceForward(b: boolean) {
+        this.cc.setFaceForward(b);
     }
 
     /**

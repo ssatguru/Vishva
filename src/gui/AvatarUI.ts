@@ -54,8 +54,7 @@ export class AvatarUI {
     }
 
     private _updateSettings() {
-
-        //get face forward current status and show
+        this._faceFor.checked = this._avm.getFaceForward();
     }
 
     public toggle() {

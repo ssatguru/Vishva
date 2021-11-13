@@ -9,6 +9,7 @@ export class AvManager {
     public avatar: Mesh;
     public avatarSkeleton: Skeleton;
     private _animBlend: number = 0.1;
+    private _ff: boolean = false; //face forward
 
     constructor(
         private avatarFolder: string,
@@ -201,15 +202,23 @@ export class AvManager {
         this.cc.setAvatar(this.avatar);
         this.cc.setAvatarSkeleton(this.avatarSkeleton);
 
+
         //this.cc.setAnims(this.anims);
         this.cc.start();
+
+        this._ff = false;
 
         return null;
     }
 
 
     public setFaceForward(b: boolean) {
+        this._ff = b;
         this.cc.setFaceForward(b);
+    }
+
+    public getFaceForward(): boolean {
+        return this._ff;
     }
 
     /**

@@ -629,9 +629,12 @@ export class Vishva {
 
 
     private setScenePhase2() {
+
         this.cc = this.avManager.setCharacterController(this.avatar);
         this.cc.setCameraElasticity(false);
+        if (this.vishvaSerialized && this.vishvaSerialized.avSerialized) { this.avManager.setFaceForward(this.vishvaSerialized.avSerialized.faceForward) };
         this.cc.start();
+
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
         this.render();
@@ -3434,11 +3437,17 @@ export class Vishva {
         let vishvaSerialzed = new VishvaSerialized();
         vishvaSerialzed.bVer = Engine.Version;
         vishvaSerialzed.vVer = Vishva.version;
+
         vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
         vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
+
         vishvaSerialzed.guiSettings = this.vishvaGUI.guiSettings;
+
         vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
         vishvaSerialzed.misc.skyColor = this.skyColor;
+
+        vishvaSerialzed.avSerialized.faceForward = this.avManager.getFaceForward();
+
 
         //we donot serialize the sps. 
         //the sps mesh's doNotSerialize property is set to true when the sps is created
@@ -3729,9 +3738,14 @@ export class Vishva {
         console.log("loading meshes " + file);
         var boundingRadius: number = this.getBoundingRadius(meshes);
 
-        for (let skeleton of skeletons) {
-            this.scene.stopAnimation(skeleton);
+        for (let s of skeletons) {
+            this.scene.stopAnimation(s);
         }
+
+        for (let ag of animationGroups) {
+            ag.stop();
+        }
+
 
         if (file.split(".")[1] == "obj") {
             this._fixObj(meshes);

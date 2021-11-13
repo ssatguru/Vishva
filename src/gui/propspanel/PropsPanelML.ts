@@ -19,13 +19,15 @@ const ppHTML = `
                 <h3 class="mesh">Lights</h3>
                 <div id="Lights" class="mesh"></div>
 
-                <h3 class="mesh">Animations</h3>
+                <h3 class="mesh">Skeletal Animations</h3>
                 <div id="meshAnimDiag" class="mesh"></div>
 
                 <h3 class="grnd">Ground SPS</h3>
                 <div id="grndSPS" class="grnd"></div>
         </div>
 </div>`;
+
+//Note the <h3> text  above is used by PropsPanelUI.getPanelIndex() method
 
 
 let ppElement = document.createElement("div");

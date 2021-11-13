@@ -1,10 +1,3 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
 import { Vector3 } from "babylonjs";
 import { Color4 } from "babylonjs/Maths/math.color";
 import { GroundSPSserialized } from "./GroundSPS";
@@ -20,10 +13,12 @@ export class VishvaSerialized {
     public guiSettings: Object;
     public misc: MiscSerialized;
     public groundSPSserializeds: GroundSPSserialized[];
+    public avSerialized: AvSerialized;
 
     public constructor() {
         this.settings = new SettingsSerialized();
         this.misc = new MiscSerialized();
+        this.avSerialized = new AvSerialized();
 
     }
 }
@@ -42,6 +37,11 @@ export class SettingsSerialized {
 export class MiscSerialized {
     public activeCameraTarget: Vector3 = Vector3.Zero();
     public skyColor: Color4;
+
+}
+
+export class AvSerialized {
+    public faceForward: boolean;
 
 }
 

@@ -203,7 +203,7 @@ export class PropsPanelUI {
         if (ui.text() == "Physics") return propertyPanel.Physics;
         if (ui.text() == "Material") return propertyPanel.Material;
         if (ui.text() == "Lights") return propertyPanel.Lights;
-        if (ui.text() == "Animations") return propertyPanel.Animations;
+        if (ui.text() == "Skeletal Animations") return propertyPanel.Animations;
         if (ui.text() == "Ground SPS") return propertyPanel.GrndSPS;
     }
 

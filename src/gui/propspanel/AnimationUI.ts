@@ -1,9 +1,11 @@
 
 import { Vishva } from "../../Vishva";
 import { DialogMgr } from "../DialogMgr";
+import { animElement } from "./AnimationML";
 import {
     Skeleton,
-    AnimationRange
+    AnimationRange,
+    AnimationGroup
 } from "babylonjs";
 
 /**
@@ -13,18 +15,30 @@ export class AnimationUI {
 
     private _vishva: Vishva;
 
-    private _animSelect: HTMLSelectElement = null;
+    private _arSelect: HTMLSelectElement = null;
     private _animRate: HTMLInputElement;
     private _animLoop: HTMLInputElement;
+
+    private _agSelect: HTMLSelectElement = null;
+    private _agRate: HTMLInputElement;
+    private _agLoop: HTMLInputElement;
+    private _agPlaying: AnimationGroup;
+
     private _skel: Skeleton;
     private _animSkelList: HTMLSelectElement;
+
+    private _skelFound: HTMLElement;
+    private _agFound: HTMLElement;
+    private _arFound: HTMLElement;
 
     private _attMode: number = 0;
 
     constructor(vishva: Vishva) {
         this._vishva = vishva;
 
-
+        this._skelFound = <HTMLElement>animElement.getElementsByClassName("skelFound")[0];
+        this._agFound = <HTMLElement>animElement.getElementsByClassName("agFound")[0];
+        this._arFound = <HTMLElement>animElement.getElementsByClassName("arFound")[0];
 
         let animSkelView: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelView");
         let animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
@@ -118,14 +132,46 @@ export class AnimationUI {
                 DialogMgr.showAlertDiag("to frame is not a number")
             }
             this._vishva.createAnimRange(name, ars, are)
-            this._refreshAnimSelect();
+            this._refreshArSelect();
         }
 
+        //select for animation groups
+        this._agSelect = <HTMLSelectElement>animElement.getElementsByClassName("agList")[0];
+        this._agSelect.onchange = (e) => {
+            let agName = this._agSelect.value;
+            if (agName != null) {
+                let group: AnimationGroup = this._vishva.scene.getAnimationGroupByName(agName);
+                animElement.getElementsByClassName("agFrom")[0].innerHTML = (<number>new Number(group.from)).toString();
+                animElement.getElementsByClassName("agTo")[0].innerHTML = (<number>new Number(group.to)).toString();
+            }
+            return true;
+        }
+        //play animation group
+        this._agRate = <HTMLInputElement>animElement.getElementsByClassName("agRate")[0];
+        this._agLoop = <HTMLInputElement>animElement.getElementsByClassName("agLoop")[0];
+        (<HTMLElement>animElement.getElementsByClassName("agPlay")[0]).onclick = (e) => {
+            if (this._agPlaying! = null) this._agPlaying.stop();
+            let agName: string = this._agSelect.value;
+            this._agPlaying = this._vishva.scene.getAnimationGroupByName(agName);
+            if (this._agPlaying != null) {
+                this._agPlaying.play(this._agLoop.checked);
+            }
+            return true;
+        };
+        (<HTMLElement>animElement.getElementsByClassName("agStop")[0]).onclick = (e) => {
+            if (this._agPlaying != null) {
+                console.log("stopping " + this._agPlaying.name);
+                this._agPlaying.stop();
+                this._agPlaying = null;
+            }
+            return true;
+        };
 
-        //select
-        this._animSelect = <HTMLSelectElement>document.getElementById("animList");
-        this._animSelect.onchange = (e) => {
-            var animName: string = this._animSelect.value;
+
+        //select for animation ranges
+        this._arSelect = <HTMLSelectElement>document.getElementById("animList");
+        this._arSelect.onchange = (e) => {
+            var animName: string = this._arSelect.value;
             animRangeName.value = animName;
             if (animName != null) {
                 var range: AnimationRange = this._skel.getAnimationRange(animName);
@@ -137,12 +183,13 @@ export class AnimationUI {
             return true;
         };
 
+
         //play
         this._animRate = <HTMLInputElement>document.getElementById("animRate");
         this._animLoop = <HTMLInputElement>document.getElementById("animLoop");
         document.getElementById("playAnim").onclick = (e) => {
             if (this._skel == null) return true;
-            let animName: string = this._animSelect.value;
+            let animName: string = this._arSelect.value;
             let rate: string = this._animRate.value;
             if (animName != null) {
                 this._vishva.playAnimation(animName, rate, this._animLoop.checked);
@@ -156,16 +203,16 @@ export class AnimationUI {
         };
         document.getElementById("remAnim").onclick = (e) => {
             if (this._skel == null) return true;
-            let animName: string = this._animSelect.value;
+            let animName: string = this._arSelect.value;
             this._vishva.delAnimRange(animName, false);
-            this._refreshAnimSelect();
+            this._refreshArSelect();
             return true;
         };
         document.getElementById("delAnim").onclick = (e) => {
             if (this._skel == null) return true;
-            let animName: string = this._animSelect.value;
+            let animName: string = this._arSelect.value;
             this._vishva.delAnimRange(animName, true);
-            this._refreshAnimSelect();
+            this._refreshArSelect();
             return true;
         };
 
@@ -178,21 +225,32 @@ export class AnimationUI {
         var skelName: string;
         if (this._skel == null) {
             skelName = "NO SKELETON";
+            this._skelFound.style.display = "none";
         } else {
             skelName = this._skel.name.trim();
             if (skelName === "") skelName = "NO NAME";
             skelName = skelName + ", " + this._skel.id + ", " + this._skel.uniqueId;
+            this._skelFound.style.display = "inherit";
+            if (this._skel.overrideMesh) {
+                this._agFound.style.display = "inherit";
+                this._arFound.style.display = "none";
+                this._refreshAgSelect();
+            } else {
+                this._agFound.style.display = "none";
+                this._arFound.style.display = "inherit";
+                this._refreshArSelect();
+            }
         }
         document.getElementById("skelName").innerText = skelName;
 
-        this._refreshAnimSelect();
+
         this._refreshAnimSkelList();
     }
     /**
      * refresh the list of animation ranges
      */
-    private _refreshAnimSelect() {
-        var childs: HTMLCollection = this._animSelect.children;
+    private _refreshArSelect() {
+        var childs: HTMLCollection = this._arSelect.children;
         var l: number = (<number>childs.length | 0);
         for (var i: number = l - 1; i >= 0; i--) {
             childs[i].remove();
@@ -207,7 +265,7 @@ export class AnimationUI {
                 animOpt = document.createElement("option");
                 animOpt.value = ar.name;
                 animOpt.innerText = ar.name;
-                this._animSelect.appendChild(animOpt);
+                this._arSelect.appendChild(animOpt);
             }
 
             if (range[0] != null) {
@@ -222,6 +280,35 @@ export class AnimationUI {
             document.getElementById("animTo").innerText = "";
         }
     }
+
+    /**
+    * refresh the list of animation groups
+    */
+    private _refreshAgSelect() {
+        var childs: HTMLCollection = this._agSelect.children;
+        var l: number = (<number>childs.length | 0);
+        for (var i: number = l - 1; i >= 0; i--) {
+            childs[i].remove();
+        }
+        var groups: AnimationGroup[] = this._vishva.scene.animationGroups;
+        if (groups != null) {
+            var hoe: HTMLOptionElement;
+            for (let g of groups) {
+                hoe = document.createElement("option");
+                hoe.value = g.name;
+                hoe.innerText = g.name;
+                this._agSelect.appendChild(hoe);
+                if (g.isPlaying) {
+                    this._agPlaying = g;
+                    this._agLoop.checked = g.loopAnimation;
+                    this._agSelect.selectedIndex = hoe.index;
+                    animElement.getElementsByClassName("agFrom")[0].innerHTML = (<number>new Number(g.from)).toString();
+                    animElement.getElementsByClassName("agTo")[0].innerHTML = (<number>new Number(g.to)).toString();
+                }
+            }
+        }
+    }
+
 
     /**
      * refresh list of skeletons shown in animation tab

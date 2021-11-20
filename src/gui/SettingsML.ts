@@ -1,14 +1,14 @@
 
 const settingHTML: string = `
-<div id="settingDiag" style="padding:0.5em; display:grid; grid-template-columns:auto auto; grid-gap:0.5em; data-keyboard='false'">
+<div id="settingDiag" style="padding:0.5em; display:grid; grid-template-columns:auto auto; grid-gap:0.5em;">
         <div>camera collision</div>
-        <div><input id="camCol" type="checkbox"/></div>
+        <div><input type="checkbox" id="camCol" /></div>
 
         <div>show edit menu on mesh selection</div>
-        <div><input id="autoEditMenu" type="checkbox"/></div>
+        <div><input type="checkbox" id="autoEditMenu" /></div>
 
         <div>show tooltips</div>
-        <div><input id="showToolTips" type="checkbox"/></div>
+        <div><input type="checkbox" id="showToolTips" /></div>
 
         <div>show invisibles</div>
         <div><input type="checkbox" id="showInvis"></div>

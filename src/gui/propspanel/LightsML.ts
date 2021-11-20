@@ -68,14 +68,6 @@ let lightHTML = `
         </td>
         </tr>
 </table>
-<!-- <script>
-function showOpt(){
-var cls = "."+$("#lightType").val();
-$(".opt").hide();
-$(cls).show();
-}
-showOpt();
-</script> -->
 `;
 
 let lightElement = document.createElement("div");

@@ -13,13 +13,13 @@ export class SettingsUI {
     private _vishvaGUI: VishvaGUI;
 
     private _settingDiag: VDiag;
-    private _camCol: JQuery;
-    private _autoEditMenu: JQuery;
-    private _showToolTips: JQuery;
+    private _camCol: HTMLInputElement;
+    private _autoEditMenu: HTMLInputElement;
+    private _showToolTips: HTMLInputElement;
     public enableToolTips: boolean = true;
-    private _showInvis: JQuery;
-    private _showDisa: JQuery;
-    private _snapper: JQuery;
+    private _showInvis: HTMLInputElement;
+    private _showDisa: HTMLInputElement;
+    private _snapper: HTMLInputElement;
 
     //TODO pass property dialog instead of VishvaGUI
     constructor(vishvaGUI: VishvaGUI) {
@@ -36,25 +36,25 @@ export class SettingsUI {
         dboSave.style.margin = "1em";
         dboSave.onclick = (e) => {
 
-            this._vishva.enableCameraCollision(this._camCol.prop("checked"));
+            this._vishva.enableCameraCollision(this._camCol.checked);
 
-            this._vishva.enableAutoEditMenu(this._autoEditMenu.prop("checked"));
+            this._vishva.enableAutoEditMenu(this._autoEditMenu.checked);
 
-            this._vishvaGUI.guiSettings.enableToolTips = this._showToolTips.prop("checked");
+            this._vishvaGUI.guiSettings.enableToolTips = this._showToolTips.checked;
 
 
-            if (this._showInvis.prop("checked")) {
+            if (this._showInvis.checked) {
                 this._vishva.showAllInvisibles();
             } else {
                 this._vishva.hideAllInvisibles();
             }
-            if (this._showDisa.prop("checked")) {
+            if (this._showDisa.checked) {
                 this._vishva.showAllDisabled();
             } else {
                 this._vishva.hideAllDisabled()
             }
 
-            let err: string = this._vishva.snapper(this._snapper.prop("checked"));
+            let err: string = this._vishva.snapper(this._snapper.checked);
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
                 return false;
@@ -81,12 +81,12 @@ export class SettingsUI {
         div.appendChild(dboSave);
         div.appendChild(dboCancel);
 
-        this._camCol = $("#camCol");
-        this._autoEditMenu = $("#autoEditMenu");
-        this._showToolTips = $("#showToolTips");
-        this._showInvis = $("#showInvis");
-        this._showDisa = $("#showDisa");
-        this._snapper = $("#snapper");
+        this._camCol = <HTMLInputElement>document.getElementById("camCol");
+        this._autoEditMenu = <HTMLInputElement>document.getElementById("autoEditMenu");
+        this._showToolTips = <HTMLInputElement>document.getElementById("showToolTips");
+        this._showInvis = <HTMLInputElement>document.getElementById("showInvis");
+        this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
+        this._snapper = <HTMLInputElement>document.getElementById("snapper");
 
         this._updateSettings();
 
@@ -95,11 +95,11 @@ export class SettingsUI {
 
     private _updateSettings() {
 
-        this._camCol.prop("checked", this._vishva.isCameraCollisionOn());
+        this._camCol.checked = this._vishva.isCameraCollisionOn();
 
-        this._autoEditMenu.prop("checked", this._vishva.isAutoEditMenuOn());
+        this._autoEditMenu.checked = this._vishva.isAutoEditMenuOn();
 
-        this._showToolTips.prop("checked", this.enableToolTips);
+        this._showToolTips.checked = this.enableToolTips;
     }
 
     public toggle() {

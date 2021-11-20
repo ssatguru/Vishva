@@ -41,10 +41,6 @@ module.exports = {
   },
 
   plugins: [
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      jQuery: "jquery",
-    }),
     //copy the assets folder from src to the build folder
     new CopyPlugin([
       { context: "src/", from: "assets/**/*" },

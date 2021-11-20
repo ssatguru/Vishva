@@ -141,13 +141,19 @@ export class AnimationUI {
             let agName = this._agSelect.value;
             if (agName != null) {
                 let group: AnimationGroup = this._vishva.scene.getAnimationGroupByName(agName);
-                animElement.getElementsByClassName("agFrom")[0].innerHTML = (<number>new Number(group.from)).toString();
-                animElement.getElementsByClassName("agTo")[0].innerHTML = (<number>new Number(group.to)).toString();
+                animElement.getElementsByClassName("agFrom")[0].innerHTML = group.from.toString();
+                animElement.getElementsByClassName("agTo")[0].innerHTML = group.to.toString();
+                this._agRate.value = group.speedRatio.toString();
             }
             return true;
         }
         //play animation group
         this._agRate = <HTMLInputElement>animElement.getElementsByClassName("agRate")[0];
+        this._agRate.onchange = (e) => {
+            if (this._agPlaying != null) {
+                this._agPlaying.speedRatio = Number(this._agRate.value);
+            }
+        }
         this._agLoop = <HTMLInputElement>animElement.getElementsByClassName("agLoop")[0];
         (<HTMLElement>animElement.getElementsByClassName("agPlay")[0]).onclick = (e) => {
             if (this._agPlaying! = null) this._agPlaying.stop();
@@ -155,12 +161,12 @@ export class AnimationUI {
             this._agPlaying = this._vishva.scene.getAnimationGroupByName(agName);
             if (this._agPlaying != null) {
                 this._agPlaying.play(this._agLoop.checked);
+                this._agPlaying.speedRatio = Number(this._agRate.value);
             }
             return true;
         };
         (<HTMLElement>animElement.getElementsByClassName("agStop")[0]).onclick = (e) => {
             if (this._agPlaying != null) {
-                console.log("stopping " + this._agPlaying.name);
                 this._agPlaying.stop();
                 this._agPlaying = null;
             }
@@ -290,8 +296,15 @@ export class AnimationUI {
         for (var i: number = l - 1; i >= 0; i--) {
             childs[i].remove();
         }
+
+        //TODO filter out all animation groups which do not relate to this mesh.
+        //Check targets in each targetedAnimation in each animationgroup to see if they target
+        //any part of this mesh hierarchy
+        //NOTE targets are not mesh but transformnodes which are in the mesh-node hierrachy, not
+        // child of mesh but maybe peer or parent
         var groups: AnimationGroup[] = this._vishva.scene.animationGroups;
         if (groups != null) {
+
             var hoe: HTMLOptionElement;
             for (let g of groups) {
                 hoe = document.createElement("option");
@@ -300,12 +313,21 @@ export class AnimationUI {
                 this._agSelect.appendChild(hoe);
                 if (g.isPlaying) {
                     this._agPlaying = g;
-                    this._agLoop.checked = g.loopAnimation;
                     this._agSelect.selectedIndex = hoe.index;
-                    animElement.getElementsByClassName("agFrom")[0].innerHTML = (<number>new Number(g.from)).toString();
-                    animElement.getElementsByClassName("agTo")[0].innerHTML = (<number>new Number(g.to)).toString();
                 }
             }
+
+            let g: AnimationGroup;
+            if (this._agPlaying == null) {
+                g = groups[0];
+                this._agSelect.selectedIndex = 0;
+            } else {
+                g = this._agPlaying;
+            }
+            this._agLoop.checked = g.loopAnimation;
+            this._agRate.value = g.speedRatio.toString();
+            animElement.getElementsByClassName("agFrom")[0].innerHTML = g.from.toString();
+            animElement.getElementsByClassName("agTo")[0].innerHTML = g.to.toString();
         }
     }
 

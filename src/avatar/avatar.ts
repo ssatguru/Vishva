@@ -1,4 +1,4 @@
-import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
+import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Node, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
 import { CharacterController } from "babylonjs-charactercontroller";
 import { SNAManager } from "../sna/SNA";
 
@@ -6,8 +6,11 @@ export class AvManager {
 
 
     private cc: CharacterController;
+
     public avatar: Mesh;
     public avatarSkeleton: Skeleton;
+    public isAg: boolean; //animation groups or animation ranges
+
     private _animBlend: number = 0.1;
     private _ff: boolean = false; //face forward
 
@@ -16,7 +19,7 @@ export class AvManager {
         private avatarFile: string,
         private _avEllipsoid: Vector3,
         private _avEllipsoidOffset: Vector3,
-        private scene: Scene,
+        public scene: Scene,
         private shadowGenerator: ShadowGenerator,
         private spawnPosition: Vector3,
         private mainCamera: ArcRotateCamera,
@@ -56,7 +59,10 @@ export class AvManager {
             skeletons[i].dispose();
         }
 
-        this.fixAnimationRanges(avatarSkeleton);
+        this.isAg = this._isAg(avatar);
+
+        if (!this.isAg) this.fixAnimationRanges(avatarSkeleton);
+
         avatar.skeleton = avatarSkeleton;
 
         avatar.position = this.spawnPosition;
@@ -78,8 +84,6 @@ export class AvManager {
             sm.backFaceCulling = true;
             sm.ambientColor = new Color3(0, 0, 0);
         }
-
-
 
         //in 3.0 need to set the camera values again
         //            this.mainCamera.radius=4;
@@ -121,7 +125,6 @@ export class AvManager {
             range.from++;
 
         }
-
     }
 
     //TODO persist charactercontroller settings
@@ -176,6 +179,7 @@ export class AvManager {
 
         //new avatar
         this.avatar = mesh;
+        this.isAg = this._isAg(mesh);
         this.avatarSkeleton = this.avatar.skeleton;
         Tags.AddTagsTo(this.avatar, "Vishva.avatar");
         if (this.avatarSkeleton != null) {
@@ -221,21 +225,35 @@ export class AvManager {
         return this._ff;
     }
 
+
     /**
-     * Check if the mesh is a "character" mesh
-     * a) plain mesh - p
-     * b) mesh with animation ranges - ar
-     * c) mesh with animation groups - ag
+     * skeletons animated by animation grooups seem to have
+     * overrideMesh property
+     * So if any mesh in the character node hierarchy has a skeleton
+     * which has a overrideMesh then assume we are dealing
+     * with animation groups.
+     * 
      */
 
-    private characterType(mesh: Mesh): string {
-        if (mesh.skeleton) {
-            if (mesh.skeleton.overrideMesh) {
-                return "ag";
-            } else {
-                return "ar";
-            }
-        } else return "p";
-        return null;
+    private _isAg(n: Node): boolean {
+        let root = this._root(n);
+        let ms = root.getChildMeshes(
+            false,
+            (cm) => {
+                if (cm instanceof Mesh) {
+                    if (cm.skeleton) {
+                        if (cm.skeleton.overrideMesh) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            });
+        if (ms.length > 0) return true; else return false;
+    }
+
+    private _root(tn: Node): Node {
+        if (tn.parent == null) return tn;
+        return this._root(tn.parent);
     }
 }

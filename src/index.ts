@@ -1,17 +1,9 @@
 import { Vishva } from "./Vishva";
 
 import "./w3.css";
-
-import "./jquery/eggplant/jquery-ui.css";
 import "./w3-theme-eggplant.css";
 import "./style.css";
 
-import "jquery-ui/ui/widgets/accordion";
-import "jquery-ui/ui/widgets/button";
-import "jquery-ui/ui/widgets/menu";
-//import "jquery-ui/ui/widgets/tooltip";
-
-import "jquery-ui/ui/effects/effect-slide.js";
 
 import "babylonjs-inspector";
 import "babylonjs-loaders";
@@ -37,7 +29,6 @@ import "./sna/SensorContact";
 import "./sna/SensorTimer";
 
 import { HREFsearch } from "./util/HREFsearch";
-import { VButton } from "./gui/components/VButton";
 import { VInputSelect } from "./gui/components/VInputSelect";
 
 
@@ -54,10 +45,6 @@ function main() {
     //doesn't seem to make a difference in 4.1
     //BABYLON.Texture.UseSerializedUrlIfAny = true;
 
-    let cls = "." + $("#lightType").val();
-    $(".opt").hide();
-    $(cls).show();
-
     let slcs = document.getElementsByTagName("select");
     for (let i = 0; i < slcs.length; i++) {
         VInputSelect.styleIt(slcs[i]);
@@ -72,10 +59,6 @@ function main() {
         chks[i].className = "w3-check";
     }
 
-    //after click loose focus
-    // $("button").click(function (e) {
-    //     $(this).blur();
-    // });
 
     var search: HREFsearch = new HREFsearch();
 

@@ -4,30 +4,37 @@ import { VThemes } from "../components/VTheme";
 const ppHTML = `
 <div id="propsDiag" >
         <div id="propsAcc" >
-                <h3 class="mesh">General</h3>
-                <div id="gen" class="mesh"></div>
+                <details class="props" id="gen" class="mesh">
+                        <summary class="mesh">General</summary>
+                </details>
 
-                <h3 class="grnd">Ground Dimensions</h3>
-                <div id="grndDiv" class="grnd"></div>
+                <details class="props" id="grndDiv" class="grnd">
+                        <summary class="grnd">Ground Dimensions</summary>
+                </details>
 
-                <h3 class="mesh">Physics</h3>
-                <div id="Physics" class="mesh" ></div>
+                <details class="props" id="Physics" class="mesh">
+                        <summary class="mesh">Physics</summary>
+                </details>
 
-                <h3 >Material</h3>
-                <div id="Material"></div>
+                <details class="props" id="Material">
+                        <summary >Material</summary>
+                </details>
 
-                <h3 class="mesh">Lights</h3>
-                <div id="Lights" class="mesh"></div>
+                <details class="props" id="Lights" class="mesh">
+                        <summary class="mesh">Lights</summary>
+                </details>
 
-                <h3 class="mesh">Skeletal Animations</h3>
-                <div id="meshAnimDiag" class="mesh"></div>
+                <details class="props" id="meshAnimDiag" class="mesh">
+                        <summary class="mesh">Skeletal Animations</summary>
+                </details>
 
-                <h3 class="grnd">Ground SPS</h3>
-                <div id="grndSPS" class="grnd"></div>
+                <details class="props" id="grndSPS" class="grnd">
+                        <summary class="grnd">Ground SPS</summary>
+                </details>
         </div>
 </div>`;
 
-//Note the <h3> text  above is used by PropsPanelUI.getPanelIndex() method
+//Note the <summary> text  above is used by PropsPanelUI.getPanelIndex() method
 
 
 let ppElement = document.createElement("div");

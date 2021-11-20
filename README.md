@@ -32,7 +32,6 @@ run
 - [BabylonJS](http://www.babylonjs.com/)
 - [BabylonJS-CharacterController](https://github.com/ssatguru/BabylonJS-CharacterController)
 - [BabylonJS-EditControl](https://github.com/ssatguru/BabylonJS-EditControl)
-- [JQuery UI](https://jqueryui.com/)
 - [w3-css](https://www.w3schools.com/w3css/)
 
 ## Notes

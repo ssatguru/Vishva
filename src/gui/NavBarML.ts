@@ -4,31 +4,38 @@ import { VButton } from "./components/VButton";
 
 
 let navHTML = `
-<div style="padding: 4px; position: absolute; top: 0px; left: 0px; display: block;z-index:inherit">
+<nav style="position: absolute;left:1em;top:1em;z-index:inherit;">
+
         <button id="showNavMenu" title="build menu"><span class="material-icons-outlined" >menu</span></button>
-</div>
 
-<div id="navMenubar" style="display:grid; grid-auto-columns:min-content; grid-auto-flow:column; grid-gap:4px; position: absolute;z-index:inherit">
+        <nav id="navMenubar" style="display: inline-block;">
 
-        <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
+                <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
 
-        <button id="navWorldAssets" title="list items">assets in world</button>
-        <button id="navAllAssets" title="all assets">all assets</button>
-        <button id="navCAssets" title="curated assets">curated assets</button>
-        <button id="navPrim" title="add primitives"><span class="material-icons-outlined" >view_in_ar</span></button>
+                <button id="navWorldAssets" title="list items">assets in world</button>
 
-        <button id="navEdit" title="edit"><span class="material-icons-outlined" >construction</span></button>
+                <button id="navAllAssets" title="all assets">all assets</button>
 
-        <button id="navEnv" title="environment"><span class="material-icons-outlined" >terrain</span></button>
+                <div style="display:inline-block;">
+                        <button id="navCAssets" title="curated assets">curated assets</button>
+                        <div id="AddMenu" style="display: none; position:absolute"></div>
+                </div>
 
-        <button id="navSettings" title="settings"><span class="material-icons-outlined" >settings</span></button>
+                <button id="navPrim" title="add primitives"><span class="material-icons-outlined" >view_in_ar</span></button>
 
-        <button id="helpLink" title="help"><span class="material-icons-outlined" >help_outline</span></button>
-        
-        <button id="debugLink" title="inspector"><span class="material-icons-outlined" >info</span></button>
-</div>
+                <button id="navEdit" title="edit"><span class="material-icons-outlined" >construction</span></button>
 
-<div id="AddMenu" style="display: inline-grid; grid-template-columns: auto; grid-row-gap: 4px;"></div>
+                <button id="navEnv" title="environment"><span class="material-icons-outlined" >terrain</span></button>
+
+                <button id="navSettings" title="settings"><span class="material-icons-outlined" >settings</span></button>
+
+                <button id="helpLink" title="help"><span class="material-icons-outlined" >help_outline</span></button>
+                
+                <button id="debugLink" title="inspector"><span class="material-icons-outlined" >info</span></button>
+        </nav>
+
+</nav>
+
 `;
 
 

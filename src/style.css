@@ -7,7 +7,7 @@ body {
   /* overflow: hidden; */
   /* font-size: 85%; */
   /* font-size: 12px; */
-  font-size: 12px;
+  font-size: 14px;
   font-family: "Lucida Grande", sans-serif;
   font-weight: lighter;
   /* font-family: "Comic Sans"; */
@@ -24,36 +24,6 @@ body {
 .material-icons-outlined {
   font-size: 1em;
   vertical-align: middle;
-}
-
-/* ----- jquery ----- */
-
-.ui-accordion .ui-accordion-content {
-  padding: 0em;
-  border-top: 0;
-  overflow: hidden;
-}
-
-.ui-widget {
-  /* font-family: "Segoe UI", "Helvetica Neue", "Helvetica", Arial, sans-serif; */
-  font-family: "Lucida Grande", sans-serif;
-  font-weight: lighter;
-  font-size: 1em;
-}
-
-.ui-widget-content {
-  background-color: inherit;
-  color: inherit;
-  border: 0em;
-}
-
-.ui-widget .ui-widget {
-  font-size: 1em;
-}
-
-/* to display mutliple icons on same line */
-.ui-icon.inline {
-  display: inline-block;
 }
 
 /*

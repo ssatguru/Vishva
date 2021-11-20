@@ -1,6 +1,5 @@
 declare var userAssets: Array<any>;
 
-import JQueryPositionOptions = JQueryUI.JQueryPositionOptions;
 import { Vishva } from "../Vishva";
 import { DialogMgr } from "./DialogMgr";
 import { EnvironmentUI } from "./EnvironmentUI";
@@ -38,10 +37,8 @@ export class VishvaGUI {
         this._vishva = vishva;
         this._vishvaFiles = Vishva.userAssets;
 
-        //document.body.append(navElement);
         Vishva.gui.append(navElement);
 
-        //document.body.appendChild(saveElement);
         Vishva.gui.append(saveElement);
 
         //check if vishva got the settings from a scene if loaded
@@ -49,15 +46,6 @@ export class VishvaGUI {
         if (this.guiSettings == null) {
             this.guiSettings = new GuiSettings();
         }
-
-        // $(document).tooltip({
-        //     open: (event, ui: any) => {
-        //         if (!this.guiSettings.enableToolTips) {
-        //             ui.tooltip.stop().remove();
-        //         }
-        //     }
-        // });
-
 
 
         this._buildCuratedAssetsMenu();
@@ -134,6 +122,8 @@ export class VishvaGUI {
         addMenu.style.zIndex = "inherit";
         for (let dir of dirs) {
             let button: HTMLButtonElement = VButton.create(dir, dir);
+            button.style.display = "block";
+            button.style.margin = "0.2em";
             addMenu.appendChild(button);
             button.onclick = (e) => {
                 if (this._addInternalAssetUI == null) {
@@ -173,26 +163,18 @@ export class VishvaGUI {
         //button to show navigation menu - hamburger button
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
         showNavMenu.style.visibility = "visible";
-
-        //navigation menu sliding setup
-        document.getElementById("navMenubar").style.visibility = "visible";
-        let navMenuBar: JQuery = $("#navMenubar");
-        let jpo: JQueryPositionOptions = {
-            my: "left center",
-            at: "right+4 center",
-            of: showNavMenu
-        };
-        navMenuBar.position(jpo);
-        navMenuBar.show(null);
         showNavMenu.onclick = (e) => {
-            if (this.menuBarOn) {
-                navMenuBar.hide("slide", 100);
+            if (nm.style.visibility == "hidden") {
+                nm.style.visibility = "visible";
             } else {
-                navMenuBar.show("slide", 100);
+                nm.style.visibility = "hidden";
             }
-            this.menuBarOn = !this.menuBarOn;
-            return true;
-        };
+        }
+
+        //navigation menu 
+        let nm = document.getElementById("navMenubar");
+        nm.style.visibility = "visible";
+
 
         // button to download world
         var downWorld: HTMLElement = document.getElementById("downWorld");
@@ -206,43 +188,17 @@ export class VishvaGUI {
             return false;
         };
 
-        // button for internal and curated items
-        //add menu sliding setup
-        var slideDown: any = JSON.parse("{\"direction\":\"up\"}");
-        var _navCAssets: HTMLElement = document.getElementById("navCAssets");
-        _navCAssets.style.visibility = "visible";
-        document.getElementById("AddMenu").style.visibility = "visible";
-        var addMenu: JQuery = $("#AddMenu");
-        addMenu.hide(null);
+        // buttons for internal and curated items
+        let am = document.getElementById("AddMenu");
+
+        let _navCAssets: HTMLElement = document.getElementById("navCAssets");
         _navCAssets.onclick = (e) => {
-            if (this.firstTime) {
-                var jpo: JQueryPositionOptions = {
-                    my: "left top",
-                    at: "left bottom+4",
-                    of: _navCAssets
-                };
-                addMenu.position(jpo);
-                this.firstTime = false;
-            }
-            if (this.addMenuOn) {
-                // addMenu.menu().hide("slide", slideDown, 100);
-                addMenu.hide("slide", slideDown, 100);
+            if (am.style.display == "none") {
+                am.style.display = "block";
             } else {
-                // addMenu.menu().show("slide", slideDown, 100);
-                addMenu.show("slide", slideDown, 100);
+                am.style.display = "none";
             }
-            this.addMenuOn = !this.addMenuOn;
-            $(document).one("click", (jqe) => {
-                if (this.addMenuOn) {
-                    // addMenu.menu().hide("slide", slideDown, 100);
-                    addMenu.hide("slide", slideDown, 100);
-                    this.addMenuOn = false;
-                }
-                return true;
-            });
-            e.cancelBubble = true;
-            return true;
-        };
+        }
 
         // button for all assets in world
         let _navWorldAssets: HTMLElement = document.getElementById("navWorldAssets");
@@ -400,35 +356,6 @@ export class VishvaGUI {
         this._downloadDialog = new VDiag(document.getElementById("saveDiv"), "Download World", VDiag.center, "20em", "auto");
         this._downloadDialog.close();
     }
-
-    _loadDialog: JQuery;
-    private _createUploadDiag() {
-        var loadFileInput: HTMLInputElement = <HTMLInputElement>document.getElementById("loadFileInput");
-        var loadFileOk: HTMLButtonElement = <HTMLButtonElement>document.getElementById("loadFileOk");
-        loadFileOk.onclick = ((loadFileInput) => {
-            return (e) => {
-                var fl: FileList = loadFileInput.files;
-                if (fl.length === 0) {
-                    alert("no file slected");
-                    return null;
-                }
-                var file: File = null;
-                for (var index165 = 0; index165 < fl.length; index165++) {
-                    var f = fl[index165];
-                    {
-                        file = f;
-                    }
-                }
-                this._vishva.loadAssetFile(file);
-                this._loadDialog.dialog("close");
-                return true;
-            }
-        })(loadFileInput);
-        this._loadDialog = <JQuery>(<any>$("#loadDiv"));
-        this._loadDialog.dialog();
-        this._loadDialog.dialog("close");
-    }
-
 }
 
 

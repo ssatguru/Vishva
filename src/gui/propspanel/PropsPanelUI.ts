@@ -19,6 +19,7 @@ import { gsElement } from "./GrndSPSML";
 import { UIConst } from "../UIConst";
 import { VDiag } from "../components/VDiag";
 import { GuiUtils } from "../GuiUtils";
+import { VThemes } from "../components/VTheme";
 /**
  * Provides UI to manage an Item(mesh) properties
  */
@@ -26,13 +27,10 @@ export class PropsPanelUI {
 
     private _vishva: Vishva;
     private _vishvaGUI: VishvaGUI;
-    //private _snaUI:SnaUI;
 
-    //private _propsDiag: JQuery=null;
     private _propsVDiag: VDiag = null;
     private _propsAcc: HTMLElement = null;
-    private _fixingDragIssue: boolean = false;
-    private _activePanel: number = -1;
+    private _activeDtl: HTMLDetailsElement = null;
 
     //panels;
     private _generalUI: GeneralUI;
@@ -48,7 +46,6 @@ export class PropsPanelUI {
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
 
-        //document.body.appendChild(ppElement);
         Vishva.gui.appendChild(ppElement);
         this._propsAcc = document.getElementById("propsAcc");
         document.getElementById("gen").appendChild(genElement);
@@ -60,40 +57,45 @@ export class PropsPanelUI {
         document.getElementById("grndSPS").appendChild(gsElement);
 
 
+        let sms: HTMLCollectionOf<HTMLElement> = ppElement.getElementsByTagName("summary");
+
+        for (let i = 0; i < sms.length; i++) {
+            sms.item(i).style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
+            sms.item(i).style.margin = "0.2em";
+            sms.item(i).onclick = (e) => {
+                let dtl: HTMLDetailsElement = <HTMLDetailsElement>(<HTMLElement>e.target).parentElement;
+                //note the open and closed state change happens after this click event is handled
+                if (!dtl.open) {
+                    if (this._activeDtl != null) this._activeDtl.open = false;
+                    this._activeDtl = dtl;
+                    this.refreshPanel(dtl);
+                } else {
+                    this._activeDtl = null;
+                }
+            }
+
+        }
+
+
         // stop propagation of all input events.
         // this is to prevent key inputs propagating to canvas
         // and modifying nodes there.
+        //TODO DO WE STILL NEED THIS
         let inps: HTMLCollectionOf<HTMLInputElement> = ppElement.getElementsByTagName("input");
         for (let i = 0; i < inps.length; i++) {
             GuiUtils.stopPropagation(inps.item(i));
 
         }
 
-        let propsAcc: JQuery = $(this._propsAcc);
-
-        propsAcc.accordion({
-            animate: 100,
-            heightStyle: "content",
-            collapsible: true,
-            activate: () => {
-                this._activePanel = propsAcc.accordion("option", "active");
-            },
-            beforeActivate: (e, ui) => {
-                this.refreshPanel(this.getPanelIndex(ui.newHeader));
-
-            }
-        });
-
         this._propsVDiag = new VDiag("propsDiag", "mesh properties", VDiag.rightTop, 0, "auto", UIConst._diagWidthS);
         this._propsVDiag.onOpen(() => {
-            this._activePanel = propsAcc.accordion("option", "active");
-            this.refreshPanel(this._activePanel);
+            if (this._activeDtl != null) this.refreshPanel(this._activeDtl);
             this.refreshingPropsDiag = false;
         });
         this._propsVDiag.onClose(() => {
             if (this._vishvaGUI.resizing) return;
             if (!this.refreshingPropsDiag) {
-                if ((this._generalUI._snaUI != null) && this._generalUI._snaUI.isOpen()) {
+                if ((this._generalUI != null) && (this._generalUI._snaUI != null) && this._generalUI._snaUI.isOpen()) {
                     this._generalUI._snaUI.close();
                 }
                 if ((this._materialUI != null) && (this._materialUI._textureUI != null) && this._materialUI._textureUI.isOpen()) {
@@ -122,59 +124,33 @@ export class PropsPanelUI {
             for (let i = 0; i < es.length; i++) {
                 (<HTMLElement>es.item(i)).style.display = "none";
             }
-            //                es=document.getElementsByCla                ssName("grnd");
-            //                                
-            //                for(let i=0;i<e                s.length;i++) {
-            //                    if(es.item(i)                .tagName=="H3")
-            //                        (<HTMLElement>es.item(i)).style.d                isplay="block";
-            //                    //TODO : if panel is active th                en open div too
-            //                }
 
-            //display all ground related tabs
-            es = this._propsAcc.getElementsByTagName("h3");
-            console.log("in grnd - h3 found " + es.length);
+            es = this._propsAcc.getElementsByClassName("grnd");
             for (let i = 0; i < es.length; i++) {
-                if (es.item(i).className.indexOf("grnd") >= 0) {
-                    (<HTMLElement>es.item(i)).style.display = "block";
-                    if (this._activePanel == i) {
-                        (<HTMLElement>es.item(i).nextElementSibling).style.display = "block";
-                    }
-                }
+                (<HTMLElement>es.item(i)).style.display = "";
             }
+
         } else {
             //hide all ground related tabs
             es = this._propsAcc.getElementsByClassName("grnd");
             for (let i = 0; i < es.length; i++) {
                 (<HTMLElement>es.item(i)).style.display = "none";
             }
-            //                es=document.getElementsByCla                ssName("mesh");
-            //                for(let i=0;i<e                s.length;i++) {
-            //                    if(es.item(i)                .tagName=="H3")
-            //                        (<HTMLElement>es.item(i)).style.d                isplay="block";
-            //                }
 
-            //display all mesh related tabs
-            es = this._propsAcc.getElementsByTagName("h3");
+            es = this._propsAcc.getElementsByClassName("mesh");
             for (let i = 0; i < es.length; i++) {
-                if (es.item(i).className.indexOf("mesh") >= 0) {
-                    (<HTMLElement>es.item(i)).style.display = "block";
-                    if (this._activePanel == i) {
-                        (<HTMLElement>es.item(i).nextElementSibling).style.display = "block";
-                    }
-                }
+                (<HTMLElement>es.item(i)).style.display = "";
             }
+
         }
-        //this._propsDiag.dialog("open");
         this._propsVDiag.open();
     }
 
     public isOpen(): boolean {
-        //return this._propsDiag.dialog("isOpen");
         return this._propsVDiag.isOpen();
     }
 
     public close() {
-        //this._propsDiag.dialog("close");
         this._propsVDiag.close();
     }
 
@@ -193,58 +169,42 @@ export class PropsPanelUI {
     }
     //only refresh if general panel is active;
     public refreshGeneralPanel() {
-        if (this._activePanel === propertyPanel.General) this.refreshPropsDiag();
-    }
-
-    private getPanelIndex(ui: JQuery): number {
-        if (ui.text() == "General") return propertyPanel.General;
-        // if (ui.text() == "Parent Child") return propertyPanel.ParentChild;
-        if (ui.text() == "Ground Dimensions") return propertyPanel.GrndDim;
-        if (ui.text() == "Physics") return propertyPanel.Physics;
-        if (ui.text() == "Material") return propertyPanel.Material;
-        if (ui.text() == "Lights") return propertyPanel.Lights;
-        if (ui.text() == "Skeletal Animations") return propertyPanel.Animations;
-        if (ui.text() == "Ground SPS") return propertyPanel.GrndSPS;
+        if (this._activeDtl != null && this._activeDtl.id === "gen") this.refreshPropsDiag();
     }
 
 
-    private refreshPanel(panelIndex: number) {
-        if (panelIndex === propertyPanel.General) {
+    private refreshPanel(dtl: HTMLDetailsElement) {
+        if (dtl == null) return;
+        if (dtl.id === "gen") {
             if (this._generalUI == null) this._generalUI = new GeneralUI(this._vishva, this._vishvaGUI);
             this._generalUI.update();
-        } else if (panelIndex === propertyPanel.Lights) {
+        } else if (dtl.id === "Lights") {
             if (this._lightUI == null) this._lightUI = new LightUI(this._vishva);
             this._lightUI.update();
-        } else if (panelIndex === propertyPanel.Animations) {
+        } else if (dtl.id === "meshAnimDiag") {
             if (this._animationUI == null) this._animationUI = new AnimationUI(this._vishva);
             this._animationUI.update();
-        } else if (panelIndex === propertyPanel.Physics) {
+        } else if (dtl.id === "Physics") {
             if (this._physicsUI == null) this._physicsUI = new PhysicsUI(this._vishva);
             this._physicsUI.update()
-        } else if (panelIndex === propertyPanel.Material) {
+        } else if (dtl.id === "Material") {
             if (this._materialUI == null) this._materialUI = new MaterialUI(this._vishva);
             this._materialUI.update();
-        } else if (panelIndex === propertyPanel.GrndSPS) {
+        } else if (dtl.id === "grndSPS") {
             if (this._grndSPSUI == null) this._grndSPSUI = new GrndSPSUI(this._vishva);
             //this._grndSPSUI.update();
-        } else if (panelIndex === propertyPanel.GrndDim) {
+        } else if (dtl.id === "grndDiv") {
             if (this._grndDimUI == null) this._grndDimUI = new GrndDimUI(this._vishva);
             this._grndDimUI.update();
         }
         //refresh sNaDialog if open
-        if (this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
+        if (this._generalUI != null && this._generalUI._snaUI != null && this._generalUI._snaUI.isOpen()) {
             this._generalUI._snaUI.close();
             this._generalUI._snaUI.show_sNaDiag();
         }
     }
+
+
 }
-const enum propertyPanel {
-    General,
-    GrndDim,
-    Physics,
-    Material,
-    Lights,
-    Animations,
-    GrndSPS
-}
+
 

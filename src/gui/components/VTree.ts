@@ -10,13 +10,12 @@ export class VTree {
     private _vtree: HTMLUListElement;
     private _open: boolean;
 
-    private _closeIcon: string = "vt-icon ui-icon ui-icon-plus";
-    private _openIcon: string = "vt-icon ui-icon ui-icon-minus";
-    private _leafIcon: string = "vt-icon ui-icon ui-icon-blank";
+    private _closeIcon: string = "material-icons-outlined c";
+    private _openIcon: string = "material-icons-outlined o";
+    private _leafIcon: string = "material-icons-outlined";
 
-    // private _closeIcon: string = "ui-icon ui-icon-folder-collapsed";
-    // private _openIcon: string = "ui-icon ui-icon-folder-open";
-    // private _leafIcon: string = "ui-icon ui-icon-document";
+    private _closeIconTxt: string = "arrow_right";
+    private _openIconTxt: string = "arrow_drop_down";
 
     constructor(treeEle: string | HTMLDivElement, treeData: Array<string | object>, filter?: string, open = false) {
         if (treeEle instanceof HTMLDivElement) {
@@ -113,6 +112,11 @@ export class VTree {
             e.item(i).setAttribute("class", "treeFolderOpen");
         }
 
+        //note: we need to loop twice
+        e = this._vtree.getElementsByClassName(this._closeIcon);
+        for (let i = e.length - 1; i >= 0; i--) {
+            e.item(i).innerHTML = this._openIconTxt;
+        }
         e = this._vtree.getElementsByClassName(this._closeIcon);
         for (let i = e.length - 1; i >= 0; i--) {
             e.item(i).setAttribute("class", this._openIcon);
@@ -151,10 +155,17 @@ export class VTree {
             nl.item(i).setAttribute("class", "show");
         }
 
+        //note: we need to loop twice
+        nl = this._vtree.getElementsByClassName(this._closeIcon);
+        for (let i = nl.length - 1; i >= 0; i--) {
+            nl.item(i).innerHTML = this._openIconTxt;
+        }
         nl = this._vtree.getElementsByClassName(this._closeIcon);
         for (let i = nl.length - 1; i >= 0; i--) {
             nl.item(i).setAttribute("class", this._openIcon);
         }
+
+
     }
 
     public collapseAll() {
@@ -176,6 +187,11 @@ export class VTree {
             nl.item(i).setAttribute("class", "hide");
         }
 
+        //note: we need to loop twice
+        nl = this._vtree.getElementsByClassName(this._openIcon);
+        for (let i = nl.length - 1; i >= 0; i--) {
+            nl.item(i).innerHTML = this._closeIconTxt;
+        }
         nl = this._vtree.getElementsByClassName(this._openIcon);
         for (let i = nl.length - 1; i >= 0; i--) {
             nl.item(i).setAttribute("class", this._closeIcon);
@@ -226,15 +242,17 @@ export class VTree {
         let txt: HTMLSpanElement;
         let ul: HTMLUListElement;
         let icon: string;
-        let c1, c2: string;
+        let c1, c2, t: string;
         if (this._open) {
             icon = this._openIcon;
             c1 = "treeFolderOpen";
             c2 = "show";
+            t = this._openIconTxt;
         } else {
             icon = this._closeIcon;
             c1 = "treeFolderClose";
             c2 = "hide";
+            t = this._closeIconTxt;
         }
 
         for (let node of nodes) {
@@ -245,6 +263,7 @@ export class VTree {
 
                 span.setAttribute("class", icon);
                 span.style.display = "inline-block";
+                span.innerText = t;
                 li.appendChild(span);
 
                 //txt=document.createTextNode(node["d"]);
@@ -308,10 +327,12 @@ export class VTree {
             if (c == "treeFolderOpen") {
                 pe.setAttribute("class", "treeFolderClose");
                 pe.firstElementChild.setAttribute("class", this._closeIcon);
+                pe.firstElementChild.innerHTML = this._closeIconTxt;
                 pe.lastElementChild.setAttribute("class", "hide");
             } else if (c == "treeFolderClose") {
                 pe.setAttribute("class", "treeFolderOpen");
                 pe.firstElementChild.setAttribute("class", this._openIcon);
+                pe.firstElementChild.innerHTML = this._openIconTxt;
                 pe.lastElementChild.setAttribute("class", "show");
             }
         } else {

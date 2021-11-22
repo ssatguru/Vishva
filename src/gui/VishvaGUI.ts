@@ -13,6 +13,7 @@ import { hlpElement } from "./HelpML";
 import { navElement } from "./NavBarML";
 import { saveElement } from "./VishvaML";
 import { VDiag } from "./components/VDiag";
+import { VTheme, VThemes } from "./components/VTheme";
 
 
 export class GuiSettings {
@@ -38,6 +39,7 @@ export class VishvaGUI {
         this._vishvaFiles = Vishva.userAssets;
 
         Vishva.gui.append(navElement);
+
 
         Vishva.gui.append(saveElement);
 
@@ -174,7 +176,6 @@ export class VishvaGUI {
         //navigation menu 
         let nm = document.getElementById("navMenubar");
         nm.style.visibility = "visible";
-
 
         // button to download world
         var downWorld: HTMLElement = document.getElementById("downWorld");

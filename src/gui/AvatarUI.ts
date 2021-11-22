@@ -37,6 +37,9 @@ export class AvatarUI {
 
         dboSave.onclick = (e) => {
             this._avm.setFaceForward(this._faceFor.checked);
+
+            this._updateCC();
+
             this._avDiag.close();
             return true;
         };
@@ -68,38 +71,94 @@ export class AvatarUI {
         }
     }
 
+    private _onDragStart(ev: DragEvent) {
+        let e: HTMLElement = <HTMLElement>ev.target;
+        ev.dataTransfer.setData("text", e.innerText);
+
+    }
+
+
+
+    private _onDrop(ev: DragEvent) {
+        ev.preventDefault();
+        let data = ev.dataTransfer.getData("text");
+        let e: HTMLElement = <HTMLElement>ev.target;
+        if (data === "-remove-") data = "";
+        e.innerText = data;
+    }
+
+    private _onDragOver(ev: DragEvent) {
+        ev.preventDefault();
+    }
+
     private _updateAnimList() {
+
+        //update drag event handlers on target elemenets
+        let at = this.avElement.getElementsByClassName("av-at");
+
+        for (let i = 0; i < at.length; i++) {
+            let e: HTMLElement = <HTMLElement>at[i];
+            e.ondrop = this._onDrop;
+            e.ondragover = this._onDragOver;
+        }
+
         let al = this.avElement.getElementsByClassName("animList")[0];
 
-        let c = al.children;
+        let c = al.getElementsByTagName("div");
         var l: number = (<number>c.length | 0);
         for (var i: number = l - 1; i >= 0; i--) {
             c[i].remove();
         }
 
-        let hdr = document.createElement("div");
-        al.append(hdr);
         if (this._avm.isAg) {
             let groups: AnimationGroup[] = this._avm.scene.animationGroups;
-            hdr.innerHTML = "animation groups";
             for (let g of groups) {
-                let div = document.createElement("div");
-                div.innerHTML = g.name;
-                al.append(div);
+                this._draggableDiv(al, g.name);
+                this._agByNameMap[g.name] = g;
             }
+            this._draggableDiv(al, "-remove-");
         } else {
             if (!this._avm.avatarSkeleton) return;
             let ranges: AnimationRange[] = this._avm.avatarSkeleton.getAnimationRanges();
-            hdr.innerHTML = "animation ranges";
             for (let r of ranges) {
-                let div = document.createElement("div");
-                div.innerHTML = r.name;
-                al.append(div);
+                this._draggableDiv(al, r.name);
+            }
+            this._draggableDiv(al, "-remove-");
+        }
+    }
+
+    private _draggableDiv(al: Element, t: string) {
+        let div = document.createElement("div");
+
+        div.classList.add("av-as");
+        div.draggable = true;
+        div.ondragstart = this._onDragStart;
+
+        div.innerText = t;
+        al.append(div);
+
+    }
+
+    private _agMap = {};
+    private _agByNameMap = {};
+    private _arMap = {};
+
+    // update the charecter controller with new anim map
+    private _updateCC() {
+        let at = this.avElement.getElementsByClassName("av-at");
+        for (let i = 0; i < at.length; i++) {
+            let e: HTMLElement = <HTMLElement>at[i];
+            if (e.innerText === "") continue;
+            if (this._avm.isAg) {
+                if (e.innerText === "") delete this._agMap[e.id];
+                else this._agMap[e.id] = this._agByNameMap[e.innerText];
+            } else {
+                if (e.innerText === "") delete this._arMap[e.id];
+                else this._arMap[e.id] = e.innerText;
             }
         }
-
-
-
+        if (this._avm.isAg) this._avm.cc.setAnimationGroups(this._agMap)
+        else this._avm.cc.setAnimationRanges(this._arMap);
     }
 
 

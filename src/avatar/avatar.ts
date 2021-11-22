@@ -5,9 +5,9 @@ import { SNAManager } from "../sna/SNA";
 export class AvManager {
 
 
-    private cc: CharacterController;
+    public cc: CharacterController;
 
-    public avatar: Mesh;
+
     public avatarSkeleton: Skeleton;
     public isAg: boolean; //animation groups or animation ranges
 
@@ -15,6 +15,7 @@ export class AvManager {
     private _ff: boolean = false; //face forward
 
     constructor(
+        private avatar: Mesh,
         private avatarFolder: string,
         private avatarFile: string,
         private _avEllipsoid: Vector3,
@@ -24,6 +25,12 @@ export class AvManager {
         private spawnPosition: Vector3,
         private mainCamera: ArcRotateCamera,
         private saveAVcameraPos: Vector3) {
+
+        if (this.avatar != null) {
+            this.isAg = this._isAg(this.avatar);
+            this.avatarSkeleton = this.avatar.skeleton;
+        }
+
     }
     onCreated: (avatar: Mesh) => void;
 
@@ -132,7 +139,7 @@ export class AvManager {
 
         this.avatar = avatar;
         let cc = new CharacterController(this.avatar, this.mainCamera, this.scene);
-        console.log("set cc done");
+
         this.mainCamera.lowerRadiusLimit = 1;
         this.mainCamera.upperRadiusLimit = 100;
 

@@ -299,6 +299,9 @@ a {
 .w3-btn:hover {
   box-shadow: 0.25em 0.5em 0.5em 0em rgba(0, 0, 0, 0.5);
 }
+.w3-btn:active {
+  box-shadow: 0.1em 0.1em 0.1em 0em rgba(0, 0, 0, 0.5);
+}
 .w3-btn,
 .w3-button {
   -webkit-touch-callout: none;

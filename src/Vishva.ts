@@ -603,6 +603,7 @@ export class Vishva {
         }
 
         this.avManager = new AvManager(
+            this.avatar,
             this.avatarFolder,
             this.avatarFile,
             this._avEllipsoid,

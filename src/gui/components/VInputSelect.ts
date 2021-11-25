@@ -1,18 +1,18 @@
 export class VInputSelect {
 
-    private _s: HTMLSelectElement;
+    private _e: HTMLSelectElement;
     public onSelect: (v: string) => void = null;
 
     constructor(eId: string, options: Array<{ id: string, desc: string }>) {
         let e: HTMLElement = document.getElementById(eId);
-        this._s = document.createElement("select");
-        this._s.className = "w3-select";
-        this._s.onchange = () => {
+        this._e = document.createElement("select");
+        this._e.className = "w3-select";
+        this._e.onchange = () => {
             if (this.onSelect != null) {
-                this.onSelect(this._s.value);
+                this.onSelect(this._e.value);
             }
         }
-        e.appendChild(this._s);
+        e.appendChild(this._e);
         this.populateSelect(options);
     }
 
@@ -20,7 +20,7 @@ export class VInputSelect {
      * populates a html select element with options from the passed string array
      */
     public populateSelect(options: Array<{ id: string, desc: string }>) {
-        let childs: HTMLCollection = this._s.children;
+        let childs: HTMLCollection = this._e.children;
         let l: number = (<number>childs.length | 0);
         for (var i: number = l - 1; i >= 0; i--) {
             childs[i].remove();
@@ -30,12 +30,12 @@ export class VInputSelect {
             optEle = document.createElement("option");
             optEle.value = option.id;
             optEle.innerText = option.desc;
-            this._s.appendChild(optEle);
+            this._e.appendChild(optEle);
         }
     }
 
     public getValue(): string {
-        return this._s.value;
+        return this._e.value;
     }
 
     public static styleIt(se: HTMLSelectElement) {

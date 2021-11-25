@@ -57,8 +57,8 @@ export class PropsPanelUI {
         document.getElementById("grndSPS").appendChild(gsElement);
 
 
+        //set event handler for each summary tag
         let sms: HTMLCollectionOf<HTMLElement> = ppElement.getElementsByTagName("summary");
-
         for (let i = 0; i < sms.length; i++) {
             sms.item(i).style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
             sms.item(i).style.margin = "0.2em";
@@ -86,6 +86,10 @@ export class PropsPanelUI {
             GuiUtils.stopPropagation(inps.item(i));
 
         }
+
+        //on construction open gen tab
+        this._activeDtl = <HTMLDetailsElement>document.getElementById("gen");
+        this._activeDtl.open = true;
 
         this._propsVDiag = new VDiag("propsDiag", "mesh properties", VDiag.rightTop, 0, "auto", UIConst._diagWidthS);
         this._propsVDiag.onOpen(() => {

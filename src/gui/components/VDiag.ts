@@ -11,10 +11,12 @@ import { VButton } from "./VButton";
 */
 export class VDiag {
 
+
+        // markup for the dialog box.
+        // contains title bar DIV and  body DIV
         ml: string = `
         <div class="bar">
                 <div class="title" style="justify-self:start;">Window Title</div>
-
                 <svg class="vdiag-min" version="1.1"
                         style="cursor: pointer; "
                         width="16" height="16"
@@ -25,10 +27,7 @@ export class VDiag {
                         stroke="white"
                         stroke-width="2"/>
                 </svg>
-
-                
-
-                <svg class="close" version="1.1"
+                <svg class="vdiag-close" version="1.1"
                         style="cursor: pointer; "
                         width="16" height="16"
                         xmlns="http://www.w3.org/2000/svg">
@@ -44,6 +43,7 @@ export class VDiag {
                         stroke-width="2"/>
                 </svg>
         </div>
+
         <div class="bdy" style="padding:0em;display:grid"></div>`;
 
 
@@ -247,7 +247,10 @@ export class VDiag {
         }
 
         public open() {
-                if (!this.isClosed) return;
+                if (!this.isClosed) {
+                        return;
+                }
+
                 this.isClosed = false;
                 this.w.style.display = 'grid';
                 if (this.dirty) {
@@ -285,16 +288,16 @@ export class VDiag {
                 }
         }
 
-        public toggleBody1 = () => {
-                let s = this.b.getAttribute("style");
-                if (s.indexOf("display:none;") >= 0) {
-                        this.b.setAttribute("style", s.replace("display:none;", ""));
-                        this._moveIt(this.w.offsetTop, this.w.offsetLeft);
-                } else {
-                        this.b.setAttribute("style", s + "display:none;");
-                }
+        // public toggleBody1 = () => {
+        //         let s = this.b.getAttribute("style");
+        //         if (s.indexOf("display:none;") >= 0) {
+        //                 this.b.setAttribute("style", s.replace("display:none;", ""));
+        //                 this._moveIt(this.w.offsetTop, this.w.offsetLeft);
+        //         } else {
+        //                 this.b.setAttribute("style", s + "display:none;");
+        //         }
 
-        }
+        // }
         /**
          * if the height of the window is explicitly set, disabling the body
          * leaves a vacant body in the window.
@@ -387,17 +390,16 @@ export class VDiag {
                 this.w.innerHTML = this.ml;
                 Vishva.gui.appendChild(this.w);
 
+                // diag window
                 this.w.setAttribute("style", this._style);
                 this.w.style.height = <string>height;
                 this.w.style.width = <string>width;
                 this.w.style.minWidth = minWidth;
-
                 // this.w.style.color = Vishva.theme.darkColors.f;
                 // this.w.style.backgroundColor == Vishva.theme.darkColors.b;
-
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
 
-
+                // diag title bar
                 this.wb = <HTMLElement>this.w.getElementsByClassName('bar')[0];
                 this.showTitleBar();
                 this.wb.onmousedown = this.onMouseDown;
@@ -405,14 +407,16 @@ export class VDiag {
                 //bring to front when clicked
                 this.wb.onclick = () => this.w.parentNode.appendChild(this.w);
 
-
-
                 this.t = <HTMLElement>this.w.getElementsByClassName('title')[0];
                 this.t.innerText = title;
 
-                let closeButton: HTMLElement = <HTMLElement>this.w.getElementsByClassName('close')[0];
-                closeButton.addEventListener('click', this.close);
+                let monIcon: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
+                monIcon.addEventListener('click', this.toggleBody);
 
+                let closeIcon: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-close')[0];
+                closeIcon.addEventListener('click', this.close);
+
+                //diag body
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];
                 this.b.appendChild(bc);
                 this.b.style.color = Vishva.theme.darkColors.f;
@@ -420,9 +424,6 @@ export class VDiag {
 
                 this.b.style.overflow = "auto";
                 this.b.style.height = "inherit";
-
-                let minBut: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
-                minBut.addEventListener('click', this.toggleBody);
 
                 this.position(pos);
                 DialogMgr.vdiags.push(this);

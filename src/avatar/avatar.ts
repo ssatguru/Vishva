@@ -15,7 +15,7 @@ export class AvManager {
     private _ff: boolean = false; //face forward
 
     constructor(
-        private avatar: Mesh,
+        public avatar: Mesh,
         private avatarFolder: string,
         private avatarFile: string,
         private _avEllipsoid: Vector3,

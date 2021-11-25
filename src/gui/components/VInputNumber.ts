@@ -4,52 +4,54 @@
  */
 export class VInputNumber {
 
-    private _inE: HTMLInputElement;
+    public _e: HTMLInputElement;
     public onChange: (n: number) => void;
 
     constructor(eID: string | HTMLElement, value = 0, readOnly = false) {
-        let e: HTMLElement;
-        if (eID instanceof HTMLElement) {
-            e = eID;
-        } else e = document.getElementById(eID);
-        //let e: HTMLElement=document.getElementById(eID);
 
-        this._inE = document.createElement("input");
-        this._inE.type = "text";
-        this._inE.value = Number(value).toString();
-        this._inE.size = 2;
-        this._inE.setAttribute("class", "vinput  w3-input");
+        this._e = document.createElement("input");
+        this._e.type = "text";
+        this._e.value = Number(value).toString();
+        this._e.size = 2;
+        this._e.setAttribute("class", "vinput  w3-input");
 
-        if (readOnly) this._inE.readOnly = true;
-        this._inE.onkeypress = (e) => {
+        if (readOnly) this._e.readOnly = true;
+        this._e.onkeypress = (e) => {
             e.stopPropagation()
         }
-        this._inE.onkeydown = (e) => {
+        this._e.onkeydown = (e) => {
             e.stopPropagation()
         }
-        this._inE.onkeyup = (e) => {
+        this._e.onkeyup = (e) => {
             e.stopPropagation()
         }
-        this._inE.onchange = (e) => {
-            let n: number = Number(this._inE.value);
-            if (isNaN(n)) this._inE.value = "0";
+        this._e.onchange = (e) => {
+            let n: number = Number(this._e.value);
+            if (isNaN(n)) this._e.value = "0";
             e.preventDefault();
             if (this.onChange != null) {
-                this.onChange(Number(this._inE.value));
+                this.onChange(Number(this._e.value));
             }
         }
-        e.appendChild(this._inE);
+
+        if (eID != null) {
+            let e: HTMLElement;
+            if (eID instanceof HTMLElement) {
+                e = eID;
+            } else e = document.getElementById(eID);
+            e.appendChild(this._e);
+        }
     }
 
 
 
     public getValue(): number {
-        let n: number = Number(this._inE.value);
+        let n: number = Number(this._e.value);
         if (isNaN(n)) return 0;
         else return n;
     }
     public setValue(n: number) {
-        this._inE.value = Number(n).toFixed(2);
+        this._e.value = Number(n).toFixed(2);
     }
 
 }

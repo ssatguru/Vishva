@@ -5,7 +5,7 @@
 export class VRange {
 
 
-    private _r: HTMLInputElement;
+    private _e: HTMLInputElement;
     private _v: number;
     public onChange: (n: number) => void;
 
@@ -20,17 +20,17 @@ export class VRange {
         d.step = step.toString();
         d.value = value.toString();
 
-        this._r = d;
+        this._e = d;
 
     }
 
 
     public getValue(): number {
-        return Number(this._r.value);
+        return Number(this._e.value);
     }
 
     public setValue(n: number) {
-        this._r.value = n.toString();
+        this._e.value = n.toString();
     }
 
 }

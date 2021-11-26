@@ -67,7 +67,7 @@ export class GeneralUI {
         //this._genName.style.width = "80%";
         this._genName.onchange = () => {
             this._vishva.setName(this._genName.value);
-            EventManager.publish(VEvent._ITEM_ADDED_TO_WORLD);
+            EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
         }
 
         //space
@@ -294,6 +294,8 @@ export class GeneralUI {
             let err: string = this._vishva.delete_mesh();
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
+            } else {
+                EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
             }
             return false;
         };

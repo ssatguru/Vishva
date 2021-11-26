@@ -6,7 +6,7 @@ import { Color4 } from "babylonjs";
 import { envElement } from "./EnvironmentML";
 import { UIConst } from "./UIConst";
 import { VDiag } from "./components/VDiag";
-import { AvatarUI } from "./AvatarUI";
+import { CCUI } from "./CCUI";
 
 /**
  * provides a ui to manage the environment in the world
@@ -16,7 +16,7 @@ export class EnvironmentUI {
     private _vishvaGUI: VishvaGUI;
     private _envDiag: VDiag;
     private _addInternalAssetUI: InternalAssetsUI;
-    private _avUI: AvatarUI;
+    private _avUI: CCUI;
     /*
      * Create Environment Dialog
      */
@@ -137,7 +137,7 @@ export class EnvironmentUI {
 
         let avButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("avButton");
         avButton.onclick = (e) => {
-            if (this._avUI == null) this._avUI = new AvatarUI();
+            if (this._avUI == null) this._avUI = new CCUI(this._vishva.avManager.cc);
             this._avUI.toggle();
         }
 

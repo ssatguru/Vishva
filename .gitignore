@@ -7,3 +7,4 @@ userAssets.js
 vishva/assets/**/*
 vishva/worlds/*.js
 *.log
+package copy.json

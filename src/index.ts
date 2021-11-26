@@ -5,7 +5,7 @@ import "./w3-theme-eggplant.css";
 import "./style.css";
 
 
-import "babylonjs-inspector";
+// import "babylonjs-inspector";
 import "babylonjs-loaders";
 import "babylonjs-materials";
 import "pepjs";

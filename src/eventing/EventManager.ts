@@ -5,16 +5,23 @@ import { VEvent } from "./VEvent";
 
 
 export class EventManager {
-        public static publish(event: string): void {
-                switch (event) {
-                        case (VEvent._ITEM_ADDED_TO_WORLD): {
-                                let _itemListUI: ItemListUI = Vishva.vishva.vishvaGUI.getItemList()
-                                if (_itemListUI != null) {
-                                        _itemListUI.onItemAdded();
-                                }
-                        }
 
+        //for each event this map holds the functions that should be executed when that event happens
+        private static eventMap: Object = {};
+
+        public static publish(event: string): void {
+                let funcs: (() => void)[] = EventManager.eventMap[event];
+                if (funcs === undefined) return;
+                for (let func of funcs) {
+                        func();
                 }
+        }
+
+        public static subscribe(event: string, func: () => void) {
+                if (EventManager.eventMap[event] === undefined)
+                        EventManager.eventMap[event] = new Array();
+
+                EventManager.eventMap[event].push(func);
 
         }
 }

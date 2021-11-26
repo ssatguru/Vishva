@@ -67,7 +67,8 @@ import {
     PBRMaterial,
     TransformNode,
     StereoscopicArcRotateCamera,
-    AnimationGroup
+    AnimationGroup,
+    AssetContainer
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -87,7 +88,7 @@ import { ActMoverParm } from "./sna/ActuatorMover";
 import { VishvaSerialized } from "./VishvaSerialized";
 import { VishvaGUI } from "./gui/VishvaGUI";
 
-import { AvManager } from "./avatar/avatar";
+import { AvManager } from "./avatar/AvManager";
 import { DialogMgr } from "./gui/DialogMgr";
 import { VTheme, VThemes } from "./gui/components/VTheme";
 import { VEvent } from "./eventing/VEvent";
@@ -1267,7 +1268,7 @@ export class Vishva {
             }
             this.animateMesh(mesh);
         }
-        EventManager.publish(VEvent._ITEM_ADDED_TO_WORLD);
+        EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
     }
 
     private addPlane(): AbstractMesh {
@@ -3716,7 +3717,7 @@ export class Vishva {
      * @param file 
      */
 
-    public loadUserAsset(path: string, file: string) {
+    public loadUserAsset1(path: string, file: string) {
         this.filePath = path;
         this.file = file;
         SceneLoader.ImportMesh("",
@@ -3725,6 +3726,38 @@ export class Vishva {
             this.scene,
             (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "user") });
     }
+
+    public loadUserAsset(path: string, file: string) {
+        this.filePath = path;
+        this.file = file;
+        SceneLoader.LoadAssetContainer(
+            Vishva.vHome + "assets/" + path,
+            file,
+            this.scene,
+            (assets: AssetContainer) => {
+                let meshes = assets.meshes;
+                let particleSystems = assets.particleSystems;
+                let skeletons = assets.skeletons;
+                let animationGroups = assets.animationGroups;
+                assets.addAllToScene();
+                return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "user")
+            });
+    }
+
+    public loadUserAsset3(path: string, file: string) {
+        this.filePath = path;
+        this.file = file;
+        SceneLoader.Append(
+            Vishva.vHome + "assets/" + path,
+            file,
+            this.scene,
+            (scene) => {
+                console.log("scene loaded");
+            });
+    }
+
+
+
 
     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
 
@@ -3739,10 +3772,11 @@ export class Vishva {
         console.log("loading meshes " + file);
         var boundingRadius: number = this.getBoundingRadius(meshes);
 
+        console.log(skeletons);
         for (let s of skeletons) {
             this.scene.stopAnimation(s);
         }
-
+        console.log(animationGroups);
         for (let ag of animationGroups) {
             ag.stop();
         }
@@ -3826,7 +3860,7 @@ export class Vishva {
         }
         this.animateMesh(rootMesh);
 
-        EventManager.publish(VEvent._ITEM_ADDED_TO_WORLD);
+        EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
     }
 
     private _fixGLB(meshes: AbstractMesh[]) {

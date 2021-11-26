@@ -4,6 +4,8 @@ import { Vishva } from "../Vishva";
 import { VTreeDialog } from "./components/VTreeDialog";
 import { Node } from "babylonjs";
 import { VDiag } from "./components/VDiag";
+import { EventManager } from "../eventing/EventManager";
+import { VEvent } from "../eventing/VEvent";
 /*
  * provides a user interface which list all nodes in the scene
  */
@@ -32,6 +34,8 @@ export class ItemListUI {
             this.refresh();
             return false;
         });
+
+        EventManager.subscribe(VEvent._WORLD_ITEMS_CHANGED, () => { this.onItemsChanged(); });
     }
 
     public refresh() {
@@ -71,7 +75,7 @@ export class ItemListUI {
     }
 
     private _refreshNeeded = false;
-    public onItemAdded() {
+    public onItemsChanged() {
         if (this.isOpen()) {
             this.refresh();
         } else {

@@ -1,15 +1,17 @@
 
 import { Vishva } from "../Vishva";
-import { avHTML } from "./CCML";
+import { settingFormHtml, mapFormHTML } from "./CCML";
 import { VButton } from "./components/VButton";
 import { VDiag } from "./components/VDiag";
-import { AnimationGroup, AnimationRange, Mesh, Node } from "babylonjs";
+import { AnimationGroup, AnimationRange, Vector3 } from "babylonjs";
 import { AnimUtils } from "../util/AnimUtils";
 import { VInputText } from "./components/VInputText";
 import { VInputNumber } from "./components/VInputNumber";
-import { CharacterController } from "babylonjs-charactercontroller";
+import { ActionData, ActionMap, CCSettings, CharacterController } from "babylonjs-charactercontroller";
 import { EventManager } from "../eventing/EventManager";
 import { VEvent } from "../eventing/VEvent";
+import { VTab } from "./components/VTab";
+
 
 /**
  * provide ui to manage character controller  settings
@@ -17,22 +19,29 @@ import { VEvent } from "../eventing/VEvent";
 export class CCUI {
 
 
-    private _avDiag: VDiag;
-    private _faceFor: HTMLInputElement;
-    private avElement: HTMLElement;
-    private _anims: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "run", "runJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
+    private _ccDiag: VDiag;
+    private ccElement: HTMLElement;
+    private _actions: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "run", "runJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
 
     private _cc: CharacterController;
-
+    setTab: HTMLDivElement;
+    mapTab: HTMLDivElement;
 
     constructor(cc: CharacterController) {
         this._cc = cc;
 
-        this.avElement = document.createElement("div");
-        Vishva.gui.appendChild(this.avElement);
-        this.avElement.innerHTML = avHTML;
+        let tab = new VTab("Settings", "Mappings");
+        this.ccElement = tab._e;
+        Vishva.gui.appendChild(this.ccElement);
 
-        this._buildUI();
+        this.setTab = tab.getTabDiv("Settings");
+        this.mapTab = tab.getTabDiv("Mappings");
+
+        this.setTab.innerHTML = settingFormHtml;
+        this.mapTab.innerHTML = mapFormHTML;
+
+        this._buildSetUI(this.setTab);
+        this._buildMapUI(this.mapTab);
 
         let dboSave: HTMLButtonElement = VButton.create("save", "save");
         let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
@@ -40,48 +49,41 @@ export class CCUI {
         dboSave.style.margin = "1em";
         dboCancel.style.margin = "1em";
 
-        this.avElement.appendChild(dboSave);
-        this.avElement.appendChild(dboCancel);
+        this.ccElement.appendChild(dboSave);
+        this.ccElement.appendChild(dboCancel);
 
         dboSave.onclick = (e) => {
-            this._cc.setFaceForward(this._faceFor.checked);
-
-            this._updateCC();
-
-            this._avDiag.close();
+            this._saveCC();
+            this._ccDiag.close();
             return true;
         };
         dboCancel.onclick = (e) => {
-            this._avDiag.close();
+            this._ccDiag.close();
             return true;
         }
 
 
-        this._faceFor = <HTMLInputElement>this.avElement.getElementsByClassName("faceFor")[0];
-
-        //this._updateSettings();
-
-        this._avDiag = new VDiag(this.avElement, "Character Controller Settings", VDiag.center, "", "", "24em");
-        this._avDiag.close();
+        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.center, "", "", "12em");
+        this._ccDiag.close();
 
         EventManager.subscribe(VEvent._AVATAR_SWITCHED, () => { this._onAVSwicthed() });
     }
 
     public _onAVSwicthed() {
-        if (this._avDiag.isOpen()) this._updateUI();
+        if (this._ccDiag.isOpen()) this._updateUI();
     }
 
     private _updateUI() {
-        this._faceFor.checked = this._cc.isFaceForward();
-        this._updateAnimList();
+        this._updateUISet();
+        this._updateUIMap();
     }
 
     public toggle() {
-        if (!this._avDiag.isOpen()) {
+        if (!this._ccDiag.isOpen()) {
             this._updateUI();
-            this._avDiag.open();
+            this._ccDiag.open();
         } else {
-            this._avDiag.close();
+            this._ccDiag.close();
         }
     }
 
@@ -105,8 +107,10 @@ export class CCUI {
     private _onDragOver(ev: DragEvent) {
         ev.preventDefault();
     }
-    private _buildUI() {
-        let avMap: HTMLElement = document.getElementById("av-map");
+    private _buildMapUI(mapTab: HTMLElement) {
+
+        let avMap: HTMLElement = <HTMLElement>mapTab.getElementsByClassName("av-map")[0];
+
         /*
             <label class="av-m">idle
                 <input type="text"     class="av-ms" name="idle-speed"        > </input>
@@ -116,7 +120,7 @@ export class CCUI {
             </label>
 
         */
-        for (let anim of this._anims) {
+        for (let anim of this._actions) {
             let div = document.createElement("div");
             div.className = "av-m";
             div.innerText = anim;
@@ -129,6 +133,7 @@ export class CCUI {
             let nam = new VInputText();
             nam._e.name = anim + "-name";
             nam._e.classList.add("av-at");
+            nam._e.style.width = "6em"
             nam._e.readOnly = true;
 
             nam._e.ondrop = this._onDrop;
@@ -152,24 +157,64 @@ export class CCUI {
         }
     }
 
-    private _updateAnimList() {
+    private _buildSetUI(setTab: HTMLElement) {
+        let form: HTMLFormElement = <HTMLFormElement>setTab.getElementsByClassName("av-settings")[0];
+        new VInputNumber(form.gravity);
+        new VInputNumber(form.minSlopeLimit);
+        new VInputNumber(form.maxSlopeLimit);
+        new VInputNumber(form.stepOffset);
+        new VInputNumber(form.x);
+        new VInputNumber(form.y);
+        new VInputNumber(form.z);
+    }
+
+    private _updateUISet() {
+        let ccSettings: CCSettings = this._cc.getSettings();
+        console.log(ccSettings);
+        let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
+
+        form.faceForward.checked = ccSettings.faceForward;
+        form.topDown.checked = ccSettings.topDown;
+        form.camerElastic.checked = ccSettings.cameraElastic;
+        form.gravity.value = ccSettings.gravity;
+        form.keyboard.checked = ccSettings.keyboard;
+        form.maxSlopeLimit.value = ccSettings.maxSlopeLimit;
+        form.minSlopeLimit.value = ccSettings.minSlopeLimit;
+        form.noFirstPerson.checked = ccSettings.noFirstPerson;
+        form.stepOffset.value = ccSettings.stepOffset;
+        form.turningOff.checked = ccSettings.turningOff;
+        form.x.value = ccSettings.cameraTarget.x;
+        form.y.value = ccSettings.cameraTarget.y;
+        form.z.value = ccSettings.cameraTarget.z;
+    }
+
+    private _updateUIMap() {
 
         //update drag event handlers on target elements
         //and intialize the names to the currently mapped animation names
-        let actionMap: {} = this._cc.getActionMap();
-        let form: HTMLFormElement = <HTMLFormElement>document.getElementById("av-map-form");
+        let actionMap: ActionMap = this._cc.getActionMap();
+        let form: HTMLFormElement = <HTMLFormElement>this.mapTab.getElementsByClassName("av-map-form")[0];
         let actions: string[] = Object.keys(actionMap);
         for (let action of actions) {
-            let actData = actionMap[action];
-            form[action + "-speed"].value = actData["speed"] === undefined ? "" : actData["speed"];
-            form[action + "-name"].value = actData["ag"] === undefined ? "" : actData["ag"];
-            form[action + "-name"].value = actData["name"] === undefined ? "" : actData["name"];
-            form[action + "-rate"].value = actData["rate"] === undefined ? "" : actData["rate"];
-            form[action + "-loop"].value = actData["loop"] === undefined ? "" : actData["loop"];
+            let actData: ActionData = actionMap[action];
+            form[action + "-speed"].value = actData.speed === undefined ? "" : actData.speed;
+
+            if ((actData.ag === undefined) && (actData.name === undefined)) {
+                form[action + "-name"].value = "";
+            } else {
+                if (actData.ag !== undefined) {
+                    form[action + "-name"].value = actData.ag.name;
+                } else {
+                    form[action + "-name"].value = actData.name;
+                }
+            }
+
+            form[action + "-rate"].value = actData.rate === undefined ? "" : actData.rate;
+            form[action + "-loop"].checked = actData.loop === undefined ? "" : actData.loop;
         }
 
         //get the animations on the avatar
-        let al = this.avElement.getElementsByClassName("animList")[0];
+        let al = this.ccElement.getElementsByClassName("animList")[0];
         let c = al.getElementsByTagName("div");
         var l: number = (<number>c.length | 0);
         for (var i: number = l - 1; i >= 0; i--) {
@@ -193,6 +238,9 @@ export class CCUI {
         }
     }
 
+
+
+
     private _draggableDiv(al: Element, t: string) {
         let div = document.createElement("div");
 
@@ -207,38 +255,68 @@ export class CCUI {
 
     private _agByNameMap = {};
 
-    // update the charecter controller with new anim map
-    private _updateCC() {
-        let _actMap = {};
-        let form: HTMLFormElement = <HTMLFormElement>document.getElementById("av-map-form");
-        for (let action of this._anims) {
+    // update the charecter controller with new settings and action map
+    private _saveCC() {
+        this._saveCCSet();
+        this._saveCCMap();
+    }
+
+    private _saveCCSet() {
+        let ccSettings: CCSettings = new CCSettings();
+
+        let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
+        ccSettings.cameraElastic = form["camerElastic"].checked;
+        ccSettings.topDown = form["topDown"].checked;
+        ccSettings.gravity = Number(form["gravity"].value);
+        ccSettings.keyboard = form["keyboard"].checked;
+        ccSettings.maxSlopeLimit = Number(form["maxSlopeLimit"].value);
+        ccSettings.minSlopeLimit = Number(form["minSlopeLimit"].value);
+        ccSettings.noFirstPerson = form["noFirstPerson"].checked;
+        ccSettings.stepOffset = Number(form["stepOffset"].value);
+        ccSettings.cameraTarget = new Vector3(Number(form["x"].value), Number(form["y"].value), Number(form["z"].value));
+        ccSettings.turningOff = form["turningOff"].checked;
+        ccSettings.faceForward = form["faceForward"].checked;
+        console.log(ccSettings);
+        this._cc.setSettings(ccSettings);
+
+    }
+
+    private _saveCCMap() {
+        let _actMap: ActionMap = new ActionMap();
+        let form: HTMLFormElement = <HTMLFormElement>this.mapTab.getElementsByClassName("av-map-form")[0];
+        for (let action of this._actions) {
 
             let val = form[action + "-name"].value;
             if (val == "") continue;
 
-            let data = {};
+            let data: ActionData = _actMap[action];
 
             if (this._cc.isAg()) {
-                data["ag"] = this._agByNameMap[val];
+                data.ag = this._agByNameMap[val];
             } else {
-                data["name"] = val;
+                data.name = val;
             }
 
             val = form[action + "-speed"].value;
-            data["speed"] = Number(val);
+            data.speed = Number(val);
 
             val = form[action + "-rate"].value;
-            data["rate"] = Number(val);
+            data.rate = Number(val);
 
             val = form[action + "-loop"].checked;
-            data["loop"] = val;
+            data.loop = val;
+
+            data.exist = true;
 
             _actMap[action] = data;
 
         }
+        console.log(_actMap);
         if (this._cc.isAg()) this._cc.setAnimationGroups(_actMap)
         else this._cc.setAnimationRanges(_actMap);
     }
+
+
 
 
 

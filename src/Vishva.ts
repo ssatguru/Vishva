@@ -8,7 +8,7 @@ declare var curatedConfig: Object;
 
 
 import { EditControl } from "babylonjs-editcontrol";
-import { CharacterController } from "babylonjs-charactercontroller";
+import { ActionMap, CharacterController } from "babylonjs-charactercontroller";
 import { UniCamController } from "./CameraController";
 import {
     AbstractMesh,
@@ -85,7 +85,7 @@ import { ActuatorRotator } from "./sna/ActuatorRotator";
 import { ActRotatorParm } from "./sna/ActuatorRotator";
 import { ActuatorMover } from "./sna/ActuatorMover";
 import { ActMoverParm } from "./sna/ActuatorMover";
-import { VishvaSerialized } from "./VishvaSerialized";
+import { AvSerialized, VishvaSerialized } from "./VishvaSerialized";
 import { VishvaGUI } from "./gui/VishvaGUI";
 
 import { AvManager } from "./avatar/AvManager";
@@ -330,30 +330,28 @@ export class Vishva {
             this.key.alt = false;
         };
 
-
-
         //fix shadow and skinning issue
         //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
         SceneLoader.CleanBoneMatrixWeights = true
 
-        this.scenePath = scenePath;
         if (sceneFile == "empty") {
-            this.setScenePhase1(this.scene, true);
+            this.sceneLoad3(this.scene, true);
         } else {
-            this.loadSceneFile(scenePath, sceneFile + ".js", this.scene);
+            this.sceneLoad1(scenePath, sceneFile + ".js", this.scene);
         }
     }
 
-    scenePath: string;
 
-    private loadSceneFile(scenePath: string, sceneFile: string, scene: Scene) {
+    // -- sceneload1 --
+    private sceneLoad1(scenePath: string, sceneFile: string, scene: Scene) {
         var am: AssetsManager = new AssetsManager(scene);
         var task: TextFileAssetTask = am.addTextFileTask("sceneLoader", scenePath + sceneFile);
-        task.onSuccess = (obj) => { return this.onSceneLoaded(obj) };
+        task.onSuccess = (obj) => { return this.sceneLoad2(obj) };
         task.onError = (obj) => { alert("scene load failed"); };
         am.load();
     }
 
+    // -- sceneload2 --
     snas: SNAserialized[];
 
     vishvaSerialized: VishvaSerialized = null;
@@ -364,7 +362,7 @@ export class Vishva {
         else return null;
     }
 
-    private onSceneLoaded(obj: any) {
+    private sceneLoad2(obj: any) {
         var tfat: TextFileAssetTask = <TextFileAssetTask>obj;
         var foo: Object = <Object>JSON.parse(tfat.text);
 
@@ -387,33 +385,12 @@ export class Vishva {
 
         //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
 
-        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.setScenePhase1(scene) });
+        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.sceneLoad3(scene) });
 
     }
 
 
-    private setShadowProperty(sl: IShadowLight, shadowGenerator: ShadowGenerator) {
-        //            shadowGenerator.useBlurVarianceShadowMap = true;
-        //            shadowGenerator.bias = 1.0E-6;
-
-        shadowGenerator.useBlurExponentialShadowMap = true;
-        //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
-        shadowGenerator.bias = -0.3;
-
-        //            shadowGenerator.bias = 1.0E-6;
-        //            shadowGenerator.depthScale = 2500;
-        //            sl.shadowMinZ = 1;
-        //            sl.shadowMaxZ = 2500;
-
-        this.sunDR.autoCalcShadowZBounds = true;
-        shadowGenerator.depthScale = 4;
-
-    }
-
-    debug: boolean = true;
-    private logDebug(msg: string) {
-        if (this.debug) console.log(msg);
-    }
+    // -- sceneload3 --
 
     /**
      * sets the loaded scene
@@ -422,7 +399,7 @@ export class Vishva {
      * 
      * @param scene 
      */
-    private setScenePhase1(scene: Scene, empty: boolean = false) {
+    private sceneLoad3(scene: Scene, empty: boolean = false) {
 
         var avFound: boolean = false;
         var skelFound: boolean = false;
@@ -622,19 +599,27 @@ export class Vishva {
             this.avManager.createAvatar((avatar: Mesh) => {
                 this.avatar = avatar;
                 this.avatarSkeleton = this.avatar.skeleton;
-                this.setScenePhase2();
+                this.sceneLoad4();
             });
         } else {
-            this.setScenePhase2();
+            this.sceneLoad4();
         }
     }
 
+    // -- sceneload4 --
 
-    private setScenePhase2() {
+    private sceneLoad4() {
 
         this.cc = this.avManager.setCharacterController(this.avatar);
-        this.cc.setCameraElasticity(false);
-        if (this.vishvaSerialized && this.vishvaSerialized.avSerialized) { this.avManager.setFaceForward(this.vishvaSerialized.avSerialized.faceForward) };
+        if (this.vishvaSerialized && this.vishvaSerialized.avSerialized) {
+
+            this.cc.setSettings(this.vishvaSerialized.avSerialized.settings);
+
+            //if avatar is animated by animationgroups then we need to re-reference
+            //teh niamtion groups from the serialized data/
+            let ac: ActionMap = AvSerialized.deSerializeAG(this.scene, this.vishvaSerialized.avSerialized.actionMap);
+            this.cc.setActionMap(ac);
+        }
         this.cc.start();
 
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
@@ -761,7 +746,28 @@ export class Vishva {
         this.key.redo = false;
     }
 
+    private setShadowProperty(sl: IShadowLight, shadowGenerator: ShadowGenerator) {
+        //            shadowGenerator.useBlurVarianceShadowMap = true;
+        //            shadowGenerator.bias = 1.0E-6;
 
+        shadowGenerator.useBlurExponentialShadowMap = true;
+        //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
+        shadowGenerator.bias = -0.3;
+
+        //            shadowGenerator.bias = 1.0E-6;
+        //            shadowGenerator.depthScale = 2500;
+        //            sl.shadowMinZ = 1;
+        //            sl.shadowMaxZ = 2500;
+
+        this.sunDR.autoCalcShadowZBounds = true;
+        shadowGenerator.depthScale = 4;
+
+    }
+
+    debug: boolean = true;
+    private logDebug(msg: string) {
+        if (this.debug) console.log(msg);
+    }
 
     //how far away from the center can the avatar go
     //fog will start at the limitStart and will become dense at LimitEnd
@@ -3436,7 +3442,7 @@ export class Vishva {
         //this.cleanupMats();
         //this.renameWorldTextures();
         //TODO add support for CharacterController serialization.
-        let vishvaSerialzed = new VishvaSerialized();
+        let vishvaSerialzed = new VishvaSerialized(this);
         vishvaSerialzed.bVer = Engine.Version;
         vishvaSerialzed.vVer = Vishva.version;
 
@@ -3448,7 +3454,6 @@ export class Vishva {
         vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
         vishvaSerialzed.misc.skyColor = this.skyColor;
 
-        vishvaSerialzed.avSerialized.faceForward = this.avManager.getFaceForward();
 
 
         //we donot serialize the sps. 
@@ -3464,6 +3469,7 @@ export class Vishva {
                 vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
             }
         }
+
 
 
         //serialize sna before scene
@@ -4202,7 +4208,7 @@ export class Vishva {
         this.avatar = null;
         //TODO Charcter Controller check implication
         // this.prevAnim = null; 
-        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.setScenePhase1(scene) });
+        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.sceneLoad3(scene) });
     }
 
     shadowGenerator: ShadowGenerator;

@@ -9,10 +9,27 @@ export class VInputNumber {
 
     constructor(eID: string | HTMLElement, value = 0, readOnly = false) {
 
-        this._e = document.createElement("input");
-        this._e.type = "text";
+        if (eID != null) {
+            let e: HTMLElement;
+            if (eID instanceof HTMLInputElement) {
+                this._e = eID;
+            } else {
+                this._e = document.createElement("input");
+                this._e.type = "text";
+
+                if (eID instanceof HTMLElement) {
+                    e = eID;
+                } else e = document.getElementById(eID);
+
+                e.appendChild(this._e);
+            }
+        } else {
+            this._e = document.createElement("input");
+            this._e.type = "text";
+        }
+
         this._e.value = Number(value).toString();
-        this._e.size = 2;
+        this._e.style.width = "2em";
         this._e.setAttribute("class", "vinput  w3-input");
 
         if (readOnly) this._e.readOnly = true;
@@ -34,13 +51,7 @@ export class VInputNumber {
             }
         }
 
-        if (eID != null) {
-            let e: HTMLElement;
-            if (eID instanceof HTMLElement) {
-                e = eID;
-            } else e = document.getElementById(eID);
-            e.appendChild(this._e);
-        }
+
     }
 
 

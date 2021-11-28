@@ -37,7 +37,9 @@ export class AvManager {
     onCreated: (avatar: Mesh) => void;
 
     public createAvatar(onCreated: (avatar: Mesh) => void) {
+
         this.onCreated = onCreated;
+
         SceneLoader.ImportMesh("",
             this.avatarFolder,
             this.avatarFile,
@@ -145,26 +147,27 @@ export class AvManager {
         this.mainCamera.lowerRadiusLimit = 1;
         this.mainCamera.upperRadiusLimit = 100;
 
+        // set cc from persisted settings
         cc.setCameraTarget(new Vector3(0, 1.5, 0));
-        cc.setIdleAnim("idle", 1, true);
-        cc.setIdleJumpAnim("idleJump", 0.5, false);
-        cc.setTurnLeftAnim("turnLeft", 0.5, true);
-        cc.setTurnRightAnim("turnRight", 0.5, true);
-        cc.setWalkBackAnim("walkBack", 0.5, true);
-        cc.setRunJumpAnim("runJump", .5, false);
-        cc.setFallAnim("fall", 2, false);
-        cc.setSlideBackAnim("slideBack", 1, false);
+        // cc.setIdleAnim("idle", 1, true);
+        // cc.setIdleJumpAnim("idleJump", 0.5, false);
+        // cc.setTurnLeftAnim("turnLeft", 0.5, true);
+        // cc.setTurnRightAnim("turnRight", 0.5, true);
+        // cc.setWalkBackAnim("walkBack", 0.5, true);
+        // cc.setRunJumpAnim("runJump", .5, false);
+        // cc.setFallAnim("fall", 2, false);
+        // cc.setSlideBackAnim("slideBack", 1, false);
 
-        cc.setTurnSpeed(30);
+        // cc.setTurnSpeed(30);
         cc.setTurningOff(true);
 
-        cc.setTurnRightKey("D");
-        cc.setTurnLeftKey("A");
-        cc.setStrafeRightKey("E");
-        cc.setStrafeLeftKey("Q");
+        // cc.setTurnRightKey("D");
+        // cc.setTurnLeftKey("A");
+        // cc.setStrafeRightKey("E");
+        // cc.setStrafeLeftKey("Q");
 
-        cc.setStepOffset(0.5);
-        cc.setSlopeLimit(60, 80);
+        // cc.setStepOffset(0.5);
+        // cc.setSlopeLimit(60, 80);
 
 
         this.cc = cc;

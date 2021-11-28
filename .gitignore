@@ -8,3 +8,5 @@ vishva/assets/**/*
 vishva/worlds/*.js
 *.log
 package copy.json
+package-4.2.0.json
+package-5.0.json

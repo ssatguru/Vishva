@@ -4,9 +4,9 @@ let animHTML = `
 <h4>skeleton</h4>
 name,id,uniqueId : <label id="skelName"></label>
 
-<div class="skelFound">
+<div >
 
-        <div style="margin-top:0.5em">
+        <div class="skelFound" style="margin-top:0.5em">
                 <hr>
                 <button id="animSkelView">view skeleton</button>
                 <button id="animRest">show rest pose</button>

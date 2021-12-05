@@ -7,6 +7,8 @@ import {
     AnimationRange,
     AnimationGroup
 } from "babylonjs";
+import { AnimUtils } from "../../util/AnimUtils";
+import { AbstractMesh } from "babylonjs/Meshes/abstractMesh";
 
 /**
  * Provides UI for the Animation (Skeleton) tab of mesh properties
@@ -25,6 +27,7 @@ export class AnimationUI {
     private _agPlaying: AnimationGroup;
 
     private _skel: Skeleton;
+    private _skelMesh: AbstractMesh;
     private _animSkelList: HTMLSelectElement;
 
     private _skelFound: HTMLElement;
@@ -59,7 +62,7 @@ export class AnimationUI {
 
         //enable/disable skeleton view
         animSkelView.onclick = (e) => {
-            this._vishva.toggleSkelView();
+            this._vishva.toggleSkelView(this._skel, this._skelMesh);
         }
 
         //show rest pose 
@@ -225,13 +228,25 @@ export class AnimationUI {
     }
 
 
+
     public update() {
         //this.vishva.switchDisabled = true;
-        this._skel = this._vishva.getSkeleton();
+        let sm = AnimUtils.getMeshSkel(this._vishva.getMeshSelected(), this._vishva.isRootSelected());
+        this._skel = (sm === null) ? null : sm.skel;
+        this._skelMesh = (sm === null) ? null : sm.mesh;
+
         var skelName: string;
         if (this._skel == null) {
             skelName = "NO SKELETON";
             this._skelFound.style.display = "none";
+            //check if we have character animation groups without skeleton
+            if (this._refreshAgSelect()) {
+                this._agFound.style.display = "inherit";
+                this._arFound.style.display = "none";
+            } else {
+                this._agFound.style.display = "none";
+                this._arFound.style.display = "none";
+            }
         } else {
             skelName = this._skel.name.trim();
             if (skelName === "") skelName = "NO NAME";
@@ -289,8 +304,9 @@ export class AnimationUI {
 
     /**
     * refresh the list of animation groups
+    * if none found then returns false else returns true
     */
-    private _refreshAgSelect() {
+    private _refreshAgSelect(): boolean {
         var childs: HTMLCollection = this._agSelect.children;
         var l: number = (<number>childs.length | 0);
         for (var i: number = l - 1; i >= 0; i--) {
@@ -302,8 +318,8 @@ export class AnimationUI {
         //any part of this mesh hierarchy
         //NOTE targets are not mesh but transformnodes which are in the mesh-node hierrachy, not
         // child of mesh but maybe peer or parent
-        var groups: AnimationGroup[] = this._vishva.scene.animationGroups;
-        if (groups != null) {
+        var groups: AnimationGroup[] = AnimUtils.getMeshAg(this._vishva.getMeshSelected(), this._vishva.scene.animationGroups, this._vishva.isRootSelected());
+        if (groups.length > 0) {
 
             var hoe: HTMLOptionElement;
             for (let g of groups) {
@@ -328,7 +344,8 @@ export class AnimationUI {
             this._agRate.value = g.speedRatio.toString();
             animElement.getElementsByClassName("agFrom")[0].innerHTML = g.from.toString();
             animElement.getElementsByClassName("agTo")[0].innerHTML = g.to.toString();
-        }
+            return true;
+        } else return false;
     }
 
 

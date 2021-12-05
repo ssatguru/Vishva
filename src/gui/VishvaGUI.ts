@@ -120,19 +120,19 @@ export class VishvaGUI {
 
     private _buildCuratedAssetsMenu() {
         let dirs: Array<string> = this._getDirs(["curated"], this._vishvaFiles);
-        let addMenu: HTMLElement = document.getElementById("AddMenu");
-        addMenu.style.zIndex = "inherit";
+        let am: HTMLElement = document.getElementById("AddMenu");
+        am.style.zIndex = "inherit";
         for (let dir of dirs) {
             let button: HTMLButtonElement = VButton.create(dir, dir);
             button.style.display = "block";
             button.style.margin = "0.2em";
-            addMenu.appendChild(button);
+            am.appendChild(button);
             button.onclick = (e) => {
                 if (this._addInternalAssetUI == null) {
                     this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
                 }
                 this._addInternalAssetUI.toggleAssetDiag("curated", (<HTMLElement>e.target).id);
-
+                am.style.display = "none";
             };
         }
     }

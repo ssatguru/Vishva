@@ -95,6 +95,7 @@ import { VEvent } from "./eventing/VEvent";
 import { EventManager } from "./eventing/EventManager";
 import { InternalTexture } from "babylonjs/Materials/Textures/internalTexture";
 import { NodeMaterialBlockTargets } from "babylonjs/Materials/Node/Enums/nodeMaterialBlockTargets";
+import { GuiUtils } from "./gui/GuiUtils";
 
 
 
@@ -790,6 +791,12 @@ export class Vishva {
     //is set to null when all are deslected
     private meshesPicked: Array<TransformNode> = null;
 
+    //did we select just a node or the root of the node.
+    private rootSelected: boolean = false;
+    public isRootSelected(): boolean {
+        return this.rootSelected;
+    }
+
 
     private cameraTargetPos: Vector3 = new Vector3(0, 0, 0);
     private saveAVcameraPos: Vector3 = new Vector3(0, 0, 0);
@@ -805,6 +812,7 @@ export class Vishva {
         // pick the hit or its root ancestor or multi select the hit or its root ancestor
         let _pickHit: boolean = (this.key.alt) && (evt.button == 2);
         let _pickRoot: boolean = (this.key.alt) && (evt.button == 0);
+        this.rootSelected = _pickRoot;
         let _pickMultiHit: boolean = (this.key.ctl) && (evt.button == 2);
         let _pickMultiRoot: boolean = (this.key.ctl) && (evt.button == 0);
 
@@ -2828,13 +2836,14 @@ export class Vishva {
         return true;
     }
 
+
     skelViewerArr: SkeletonViewer[] = [];
-    public toggleSkelView() {
-        if (!(this.meshSelected instanceof AbstractMesh)) return false;
-        if (this.meshSelected.skeleton == null) return;
-        let sv = this.findSkelViewer(this.skelViewerArr, this.meshSelected);
+    public toggleSkelView(skel: Skeleton, mesh: AbstractMesh) {
+
+        if (skel === null || mesh === null) return;
+        let sv = this.findSkelViewer(this.skelViewerArr, mesh);
         if (sv === null) {
-            sv = new SkeletonViewer(this.meshSelected.skeleton, this.meshSelected, this.scene);
+            sv = new SkeletonViewer(skel, mesh, this.scene);
             sv.isEnabled = true;
             this.skelViewerArr.push(sv);
         } else {
@@ -3853,8 +3862,6 @@ export class Vishva {
         }
 
 
-        console.log("post load now");
-
         //TODO if a rootmesh was created  added before then scaling will not happen
         //as we are not passing that rootmesh below and all other meshes now have a parent (the rootnode).
         this._postLoad(meshes, assetType);
@@ -3864,6 +3871,7 @@ export class Vishva {
         } else {
             this.switchEditControl(rootMesh);
         }
+        this.rootSelected = true;
         this.animateMesh(rootMesh);
 
         EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
@@ -4682,53 +4690,7 @@ export class Vishva {
     }
 
 
-    // public switchAvatar(): string {
-    //     if (!this.isMeshSelected) {
-    //         return "no mesh selected";
-    //     }
 
-    //     this.cc.stop();
-    //     //old avatar
-    //     SNAManager.getSNAManager().enableSnAs(this.avatar);
-    //     this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
-    //     this.avatar.isPickable = true;
-    //     Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
-    //     if (this.avatarSkeleton != null) {
-    //         Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
-    //         this.avatarSkeleton.name = "";
-    //     }
-
-    //     //new avatar
-    //     this.avatar = <Mesh>this.meshSelected;
-    //     this.avatarSkeleton = this.avatar.skeleton;
-    //     Tags.AddTagsTo(this.avatar, "Vishva.avatar");
-    //     if (this.avatarSkeleton != null) {
-    //         Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
-    //         this.avatarSkeleton.name = "Vishva.skeleton";
-    //         this.avatarSkeleton.enableBlending(this._animBlend);
-    //     }
-    //     this.cc.setAvatar(this.avatar);
-    //     this.cc.setAvatarSkeleton(this.avatarSkeleton);
-
-    //     this.avatar.checkCollisions = true;
-    //     this.avatar.ellipsoid = this._avEllipsoid
-    //     this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-    //     this.avatar.isPickable = false;
-    //     this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
-    //     this.avatar.rotationQuaternion = null;
-    //     this.saveAVcameraPos.copyFrom(this.arcCamera.position);
-    //     this.isFocusOnAv = true;
-    //     this.removeEditControl();
-    //     SNAManager.getSNAManager().disableSnAs(<Mesh>this.avatar);
-
-    //     //make character control to use the new avatar
-    //     this.cc.setAvatar(this.avatar);
-    //     this.cc.setAvatarSkeleton(this.avatarSkeleton);
-    //     //this.cc.setAnims(this.anims);
-    //     this.cc.start();
-
-    //     return null;
-    // }
 
 
     /**

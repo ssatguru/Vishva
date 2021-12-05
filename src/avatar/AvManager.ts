@@ -3,6 +3,7 @@ import { CharacterController } from "babylonjs-charactercontroller";
 import { EventManager } from "../eventing/EventManager";
 import { VEvent } from "../eventing/VEvent";
 import { SNAManager } from "../sna/SNA";
+import { AnimUtils } from "../util/AnimUtils";
 
 export class AvManager {
 
@@ -70,7 +71,7 @@ export class AvManager {
             skeletons[i].dispose();
         }
 
-        this.isAg = this._isAg(avatar);
+        this.isAg = AnimUtils.containsAG(avatar, this.scene.animationGroups, true);
 
         if (!this.isAg) this.fixAnimationRanges(avatarSkeleton);
 
@@ -169,6 +170,7 @@ export class AvManager {
         // cc.setStepOffset(0.5);
         // cc.setSlopeLimit(60, 80);
 
+        // cc.enableBlending(0.02);
 
         this.cc = cc;
         return cc;
@@ -191,8 +193,9 @@ export class AvManager {
 
         //new avatar
         this.avatar = mesh;
-        this.isAg = this._isAg(mesh);
-        this.avatarSkeleton = this.avatar.skeleton;
+        this.isAg = AnimUtils.containsAG(mesh, this.scene.animationGroups, true);
+        let sm = AnimUtils.getMeshSkel(mesh, true);
+        this.avatarSkeleton = (sm === null) ? null : sm.skel;
         Tags.AddTagsTo(this.avatar, "Vishva.avatar");
         if (this.avatarSkeleton != null) {
             Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
@@ -241,7 +244,7 @@ export class AvManager {
 
 
     /**
-     * skeletons animated by animation grooups seem to have
+     * skeletons animated by animation groups seem to have
      * "overrideMesh" property
      * So if any mesh in the character node hierarchy has a skeleton
      * which has an "overrideMesh" then assume we are dealing

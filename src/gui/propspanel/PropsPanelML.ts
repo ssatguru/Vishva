@@ -25,7 +25,7 @@ const ppHTML = `
                 </details>
 
                 <details class="props" id="meshAnimDiag" class="mesh">
-                        <summary class="mesh">Skeletal Animations</summary>
+                        <summary class="mesh">Skeletons & Animations</summary>
                 </details>
 
                 <details class="props" id="grndSPS" class="grnd">

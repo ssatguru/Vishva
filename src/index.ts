@@ -30,6 +30,7 @@ import "./sna/SensorTimer";
 
 import { HREFsearch } from "./util/HREFsearch";
 import { VInputSelect } from "./gui/components/VInputSelect";
+import { Game } from "./Game";
 
 
 
@@ -60,11 +61,11 @@ function main() {
     }
 
 
-    var search: HREFsearch = new HREFsearch();
+    let search: HREFsearch = new HREFsearch();
 
-    var scene = search.getParm("world");
-    var scenePath = "vishva/worlds/";
-    var editEnabled = true;
+    let scene = search.getParm("world");
+    let scenePath = "vishva/worlds/";
+    let editEnabled = true;
 
     if (!scene) {
         if (typeof (defaultWorld) !== "undefined") {
@@ -83,5 +84,6 @@ function main() {
         }
     }
 
-    new Vishva(scene, scenePath, editEnabled, "vCanvas", "vGUI");
+    let vishva = new Vishva(scene, scenePath, editEnabled, "vCanvas", "vGUI");
+    new Game(vishva);
 }

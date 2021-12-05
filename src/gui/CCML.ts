@@ -68,7 +68,7 @@ const settingFormHtml: string = `
 const mapFormHTML: string = `
 <form  class="av-map-form" style="padding:0.5em; display:grid; grid-template-columns:min-content min-content; grid-gap:0.5em;">
 
-        <div class="av-map"  style="padding:0.5em; display:grid; grid-template-columns:min-content min-content min-content min-content min-content; grid-gap:0.5em;align-items: center;">
+        <div class="av-map"  style="padding:0.5em; display:grid;  grid-auto-rows: min-content; grid-template-columns:min-content min-content min-content min-content min-content; grid-gap:0.5em;align-items: center;">
                 <h5>motion</h5>
                 <h5>speed</h5>
                 <h5>animation</h5>
@@ -77,8 +77,10 @@ const mapFormHTML: string = `
      
         </div>
 
-        <div  class="animList" style="padding:0.5em; display:grid; grid-template-columns:auto; grid-auto-rows: min-content; grid-gap:0.5em;">
+        <div  class="animList" style="padding:0.5em; display:grid; grid-template-columns:min-content min-content min-content; grid-auto-rows: min-content; grid-gap:0.5em;white-space : nowrap;">
                 <h5> range/group </h5>
+                <h5> </h5>
+                <h5> </h5>
         </div>
 </form>
 `;

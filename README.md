@@ -1,6 +1,8 @@
-### Note:  
+### Note:
+
 Repo has been renamed from "Vishav.ts" to "Vishva".  
-Branch names and default branch have changed.  
+Branch names have changed.  
+Default branch has changed.  
 "modularize" has been renamed to "master" and is the default branch.  
 The old master has been renamed to "old-master".
 
@@ -12,11 +14,11 @@ Vishva - A hindi word for "World"
 
 A simple live scene editor for [BabylonJS](http://www.babylonjs.com/), a 3D HTML Webgl framework.
 
-Intro : [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html).  
+Intro : [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html).
 
-Demo : [https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin](https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin).  
+Demo : [https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin](https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin).
 
-Documentation : [wiki](https://github.com/ssatguru/Vishva/wiki).  
+Documentation : [wiki](https://github.com/ssatguru/Vishva/wiki).
 
 ## to test, build and run
 
@@ -28,12 +30,15 @@ run
 
 - npm run test  
   this will build in memory, start a webpack-dev-server and open browser at http://localhost:8080  
-  if you make any changes to source and save , this will automatically reload your project in the browser.
+  if you make any changes to source and save , this will automatically reload your project in the browser.  
+  goto "http://localhost:8080/bin/?world=empty" to open an empty world
 
 - npm run build  
   This will create a production build. It will compile,minify and bundle all reuired files into the bin folder.
 
-- to run , start an http server from the root of the project and goto url http://localhost:8080/bin
+- to run , start an http server from the root of the project and goto url "http://localhost:8080/bin/?world=empty"
+  - url "http://localhost:8080/bin" will also work as he default world in "config.js" is set to "empty"
+  - the default character jump animations might require some speed adjustment - lower speed , maybe 0.5 instead of 1
 
 ## built using
 

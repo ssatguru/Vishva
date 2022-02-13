@@ -124,8 +124,9 @@ name,id,uniqueId : <label id="skelName"></label>
 <h4>skeletons in scene </h4>
 <select id="animSkelList" class="w3-select"></select>
 <div style="margin-top:0.5em">
+        <button id="animSkelClone">clone skeleton</button>
         <button id="animSkelChange">switch to</button>
-        <button id="animSkelClone">copy animations</button>
+        <button id="animSkelLinkAnims">copy animations</button>
 </div>
 `;
 let animElement = document.createElement("div");

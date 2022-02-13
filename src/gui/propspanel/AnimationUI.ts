@@ -58,6 +58,7 @@ export class AnimationUI {
 
         this._animSkelList = <HTMLSelectElement>document.getElementById("animSkelList");
         let animSkelChange: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelChange");
+        let animSkelLinkAnims: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelLinkAnims");
         let animSkelClone: HTMLInputElement = <HTMLInputElement>document.getElementById("animSkelClone");
 
         //enable/disable skeleton view
@@ -109,8 +110,10 @@ export class AnimationUI {
                 this.update();
             else DialogMgr.showAlertDiag("Error: unable to switch");
         }
+
+
         //clone the selected skeleton and switch to it
-        animSkelClone.onclick = (e) => {
+        animSkelLinkAnims.onclick = (e) => {
 
             // if (this._vishva.cloneChangeSkeleton(this._animSkelList.selectedOptions[0].value))
             //     this.update();
@@ -120,6 +123,17 @@ export class AnimationUI {
                 this.update();
             else DialogMgr.showAlertDiag("Error: unable to clone and switch");
         }
+
+        //clone the selected skeleton
+        animSkelClone.onclick = (e) => {
+
+            if (this._vishva.cloneSkeleton(this._animSkelList.selectedOptions[0].value))
+                this.update();
+            else DialogMgr.showAlertDiag("Error: unable to clone and switch");
+
+
+        }
+
 
 
         //create

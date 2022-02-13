@@ -21,6 +21,9 @@ export class AnimUtils {
                         r = AnimUtils.getRoot(node);
                         ns = r.getChildren((n) => { return (n instanceof TransformNode) }, false);
 
+                        //if the root itself is a transform node then lets check it too
+                        if (r instanceof TransformNode) ns.push(r);
+
                 } else {
                         r = node;
                         ns = [r];
@@ -48,6 +51,9 @@ export class AnimUtils {
                         r = AnimUtils.getRoot(node);
                         ns = r.getChildren((n) => { return (n instanceof TransformNode) }, false);
 
+                        //if the root itself is a transform node then lets check it too
+                        if (r instanceof TransformNode) ns.push(r);
+
                 } else {
                         r = node;
                         ns = [r];
@@ -72,6 +78,11 @@ export class AnimUtils {
                 console.log(node);
                 console.log(fromRoot)
                 if (fromRoot) {
+
+                        //if the root itself has a skeleton then return that
+                        if (node instanceof AbstractMesh) {
+                                if (node.skeleton != null) return { "skel": node.skeleton, "mesh": node };
+                        }
 
                         let r: Node = AnimUtils.getRoot(node);
                         let ns: AbstractMesh[] = <AbstractMesh[]>r.getChildren((n) => { return (n instanceof AbstractMesh) }, false);

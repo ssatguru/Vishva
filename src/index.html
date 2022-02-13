@@ -18,22 +18,14 @@
   </head>
 
   <body oncontextmenu="return false;" style="background-color: #000000; color: #ffffff">
-    <!-- <div>starting here</div> -->
-    <script type="text/javascript">
-      let start = Date.now();
-      console.log("1 " + Date.now());
-    </script>
-    <!-- <div style="position: relative; width: 80%; height: 80%"> -->
-      <div id="vGUI" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%">
-        <div id="loadingMsg" style="text-align: center; width: 100px; height: 100px; position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto">
-          loading<br />
-          please wait<br />
-        </div>
+    <div id="vGUI" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%">
+      <div id="loadingMsg" style="text-align: center; width: 100px; height: 100px; position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto">
+        loading<br />
+        please wait<br />
       </div>
-      
     </div>
-    <canvas id="vCanvas" tabindex="1" touch-action="none" style="position: absolute;top:100px; width: 80%; height: 80%"> </canvas>
-  <!-- </body> -->
+    <canvas id="vCanvas" tabindex="1" touch-action="none" style="position: absolute; top: 0; bottom: 0; width: 100%; height: 100%"> </canvas>
+  </body>
 
   <!-- <script type="text/javascript" src="https://cdn.babylonjs.com/Oimo.js"></script> -->
   <script type="text/javascript" src="bin/lib/Oimo.js"></script>
@@ -41,5 +33,4 @@
   <script type="text/javascript" src="vishva/userAssets.js"></script>
   <script type="text/javascript" src="bin/assets/internalAssets.js"></script>
   <script type="text/javascript" src="bin/main.js"></script>
-
 </html>

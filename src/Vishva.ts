@@ -3,7 +3,7 @@
 declare var userAssets: Array<any>;
 declare var internalAssets: Array<any>;
 // TODO Below applies to all curated item.
-// shoudld provide for mutiple curated config files, one in each of the "top folder" of curated items
+// should provide for mutiple curated config files, one in each of the "top folder" of curated items
 declare var curatedConfig: Object;
 
 
@@ -2770,65 +2770,98 @@ export class Vishva {
         if (this.meshSelected.skeleton == null) return null; else return this.meshSelected.skeleton;
     }
 
+    /**
+     * attach an existing skeleton to a mesh
+     * 
+     * @param skelId 
+     * @returns 
+     */
+
 
     public changeSkeleton(skelId: string): boolean {
         if (!(this.meshSelected instanceof AbstractMesh)) return false;
-        let switched: boolean = false;
-        //let skels: Skeleton[] = this.scene.skeletons;
-        console.log("trying to swicth to " + skelId);
+
         this.meshSelected.skeleton = this.scene.getSkeletonByUniqueId(Number(skelId));
+
+        // if the source skeleton had an overrideMesh, in otherwords was setup
+        // for playing animation groups, then set the override mesh of the
+        // cloned skeleton to the mesh selected.
+
+        if (this.meshSelected.skeleton.overrideMesh) {
+            this.meshSelected.skeleton.overrideMesh = this.meshSelected;
+        }
+        console.log(this.meshSelected.skeleton.bones);
+        for (let b of this.meshSelected.skeleton.bones) {
+            console.log(b.id);
+        }
+        let tns: TransformNode[] = this.meshSelected.getChildTransformNodes(false, (node) => {
+            return !(node instanceof AbstractMesh);
+        })
+        console.log(tns);
+        for (let tn of tns) {
+            console.log(tn.id);
+        }
+
         return true;
-        // for (let skel of skels) {
-        //     if (skel.uniqueId === Number(skelId)) {
-        //         console.log("found skeleton. switching. ")
-        //         this.meshSelected.skeleton = skel;
-        //         switched = true;
-        //         break;
-        //     }
-        // }
-        // return switched;
     }
+
+    /**
+     * clone an existing skeleton 
+     * 
+     * @param skelId 
+     * @returns 
+     */
     //TODO during save unused skeleton are dropped and ID are reassigned.
     //how do we handle that.
-    public cloneChangeSkeleton(skelId: string): boolean {
+    public cloneSkeleton(skelId: string): boolean {
 
         if (!(this.meshSelected instanceof AbstractMesh)) return false;
 
         let skel = this.scene.getSkeletonByUniqueId(Number(skelId));
         if (skel == null) return false;
+
         var newId: string = (<number>new Number(Date.now())).toString();
         var clonedSkel: Skeleton = skel.clone(skel.name, newId);
-        this.meshSelected.skeleton = clonedSkel;
+
+        // if the source skeleton had an overrideMesh, in otherwords was setup
+        // for playing animation groups, then set the override mesh of the
+        // cloned skeleton to the mesh selected.
+        //if (skel.overrideMesh) clonedSkel.overrideMesh = this.meshSelected;
+
+        //this.meshSelected.skeleton = clonedSkel;
+
+
         return true;
-
-        // let skels: Skeleton[] = this.scene.skeletons;
-        // for (let skel of skels) {
-        //     let id = skel.id + "-" + skel.name;
-        //     if (id === skelId) {
-        //         console.log("found skeleton. swicthing. ")
-        //         var newId: string = (<number>new Number(Date.now())).toString();
-        //         var clonedSkel: Skeleton = skel.clone(skel.name, newId);
-        //         this.meshSelected.skeleton = clonedSkel;
-        //         switched = true;
-        //         break;
-        //     }
-        // }
-        // return switched;
-
     }
 
+    /**
+     * source skeleton - passed skel id
+     * target skeleton - selected mesh's skeleton
+     * 
+     * link animation of each bones of source to
+     * each bone of the target
+     * 
+     * copy (create) animation ranges on target for each one on source
+     * 
+     * @param skelId 
+     * @returns 
+     */
     public linkAnimationsToSkeleton(skelId: string): boolean {
 
         if (!(this.meshSelected instanceof AbstractMesh)) return false;
-        console.log("linking now");
+
         let skel = this.scene.getSkeletonByUniqueId(Number(skelId));
         if (skel == null) return false;
         let fromBones: Bone[] = skel.bones;
+
+        //link animations
         let toBones: Bone[] = this.meshSelected.skeleton.bones;
         for (let i = 0; i < fromBones.length; i++) {
-            console.log("linking animation " + i + ":" + fromBones[i].animations);
+            console.log(fromBones[i].name, fromBones[i].animations);
             toBones[i].animations = fromBones[i].animations;
         }
+
+        //create animation range
         let fromAnimRanges: AnimationRange[] = skel.getAnimationRanges();
         for (let fromAnimRange of fromAnimRanges) {
             this.meshSelected.skeleton.createAnimationRange(fromAnimRange.name, fromAnimRange.from, fromAnimRange.to);
@@ -3785,13 +3818,12 @@ export class Vishva {
 
     private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string) {
         console.log("loading meshes " + file);
-        var boundingRadius: number = this.getBoundingRadius(meshes);
 
-        console.log(skeletons);
+
         for (let s of skeletons) {
             this.scene.stopAnimation(s);
         }
-        console.log(animationGroups);
+
         for (let ag of animationGroups) {
             ag.stop();
         }
@@ -3839,22 +3871,16 @@ export class Vishva {
             //cannot instance mesh without geometry
             //so create a small mesh
             //rootMesh = Mesh.CreatePlane("root-" + this.uid(), 0.01, this.scene);
-
             //rootMesh = new Mesh("root-" + this.uid(), this.scene);
 
-            var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
-            var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-            rootMesh.position.addInPlace(placementGlobal);
             for (let mesh of meshes) {
                 if (mesh.parent == null) {
                     mesh.parent = rootMesh;
                 }
             }
+
         } else {
             if (rootMesh != null) {
-                var placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
-                var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                rootMesh.position.addInPlace(placementGlobal);
                 if (rootMesh.name === "__root__") {
                     rootMesh.name = file;
                 }
@@ -3862,17 +3888,52 @@ export class Vishva {
         }
 
 
-        //TODO if a rootmesh was created  added before then scaling will not happen
-        //as we are not passing that rootmesh below and all other meshes now have a parent (the rootnode).
+        // if a rootmesh was created before then scaling will not happen
+        // as we didnot add the rootmesh (a TransformNode) to the meshes array (Array of AbstractMesh)
+        // and thus are not passing that rootmesh below. all other meshes now have a parent (the rootmesh).
+        // Hences we should not do scaling in postLoad
         this._postLoad(meshes, assetType);
 
-        if (!this.isMeshSelected) {
-            this.selectForEdit(rootMesh);
-        } else {
-            this.switchEditControl(rootMesh);
+        let boundingRadius: number = this.getBoundingRadius(meshes);
+        //bounding radius doesnot seem to change with scale (radius or radiusWorld give same result)
+
+        let scaling = false;
+        let sf: Vector3;
+        if (curatedConfig["scale"]) {
+            scaling = true;
+            sf = new Vector3();
+            sf.x = Number(curatedConfig["scale"][0]);
+            sf.y = Number(curatedConfig["scale"][1]);
+            sf.z = Number(curatedConfig["scale"][2]);
+            if (rootMesh != null) {
+                rootMesh.scaling.multiplyInPlace(sf);
+                //for bounding we will assume, for now, that scaling is same in all three dimensions
+                boundingRadius = boundingRadius * sf.x;
+            }
         }
-        this.rootSelected = true;
-        this.animateMesh(rootMesh);
+
+        let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
+
+        //rootmesh location wrt min = - bb.min
+
+        // 2 m in front of av
+        let placementLocal: Vector3 = new Vector3(0, 0, -10);
+        let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+
+        //let placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
+        //let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+        if (rootMesh != null) {
+            rootMesh.position.addInPlace(placementGlobal);
+            rootMesh.position.subtractInPlace(bb.min);
+
+            if (!this.isMeshSelected) {
+                this.selectForEdit(rootMesh);
+            } else {
+                this.switchEditControl(rootMesh);
+            }
+            this.rootSelected = true;
+            this.animateMesh(rootMesh);
+        }
 
         EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
     }
@@ -3904,7 +3965,7 @@ export class Vishva {
 
             s = mesh.scaling;
             s.z = -s.z;
-            mesh.scaling = s.multiplyByFloats(3.0, 3.0, 3.0);
+            //mesh.scaling = s.multiplyByFloats(3.0, 3.0, 3.0);
             this._bakeTransforms(<Mesh>mesh);
 
         }
@@ -4035,15 +4096,6 @@ export class Vishva {
 
     //select and animate the last mesh loaded
     private _postLoad(meshes: AbstractMesh[], assetType: string) {
-        let scaling = false;
-        let sf: Vector3;
-        if (curatedConfig["scale"]) {
-            scaling = true;
-            sf = new Vector3();
-            sf.x = Number(curatedConfig["scale"][0]);
-            sf.y = Number(curatedConfig["scale"][1]);
-            sf.z = Number(curatedConfig["scale"][2]);
-        }
         if (meshes.length > 0) {
             for (let mesh of meshes) {
 
@@ -4051,10 +4103,7 @@ export class Vishva {
                     if (curatedConfig["reuseMaterial"] == true && mesh instanceof Mesh) {
                         this._processMaterial(mesh, m => this._reuseMaterial(m));
                     }
-                    if (scaling && (mesh.parent == null)) {
-                        console.log("scaling curated");
-                        mesh.scaling.multiplyInPlace(sf);
-                    }
+
                     if (curatedConfig["collision"] == true && mesh instanceof Mesh) {
                         mesh.checkCollisions = true;
                     }
@@ -4067,15 +4116,10 @@ export class Vishva {
                 this._processMaterial(mesh, m => this._removeSpecular(m));
             }
 
-            let lastMesh: AbstractMesh = meshes[meshes.length - 1];
-            if (!this.isMeshSelected) {
-                this.selectForEdit(lastMesh);
-            } else {
-                this.switchEditControl(lastMesh);
-            }
-            this.animateMesh(lastMesh);
         }
     }
+
+
 
     /*
         If a material already exist lets reuse it
@@ -4169,10 +4213,13 @@ export class Vishva {
     }
 
     /**
-     * finds the bounding sphere radius for a set of meshes. for each mesh gets
-     * bounding radius from the local center. this is the bounding world radius
-     * for that mesh plus the distance from the local center. takes the maximum
-     * of these
+     * finds the bounding sphere radius for a set of meshes. 
+     * 
+     * for each mesh gets bounding radius in world scale (radiusWorld).
+     * as these meshes jave just been loaded they will be located at world origin.
+     * get the radius of the sphere, centered at world origin) which encloses it.
+     * 
+     * takes the maximum of these
      * 
      * @param meshes
      * @return

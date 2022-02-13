@@ -1,7 +1,8 @@
 ### Note:  
+Repo has been renamed from "Vishav.ts" to "Vishva".  
 Branch names and default branch have changed.  
-"modularize" is now named "master" and is the default branch.  
-The old master is now named "old-master".
+"modularize" has been renamed to "master" and is the default branch.  
+The old master has been renamed to "old-master".
 
 # Vishva
 
@@ -11,9 +12,11 @@ Vishva - A hindi word for "World"
 
 A simple live scene editor for [BabylonJS](http://www.babylonjs.com/), a 3D HTML Webgl framework.
 
-For intro see [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html)
+Intro : [http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html](http://ssatguru.appspot.com/BabylonJS-Vishva/intro.html).  
 
-For a demo of latest version see [https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin](https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin)
+Demo : [https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin](https://ssatguru.github.io/VishvaWorlds-KennyLowPoly/bin).  
+
+Documentation : [wiki](https://github.com/ssatguru/Vishva/wiki).  
 
 ## to test, build and run
 

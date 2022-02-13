@@ -1,3 +1,8 @@
+### Note:  
+Branch names and default branch have changed.  
+"modularize" is now named "master" and is the default branch.  
+The old master is now named "old-master".
+
 # Vishva
 
 ## about

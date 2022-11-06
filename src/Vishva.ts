@@ -230,6 +230,7 @@ export class Vishva {
 
     skybox: Mesh;
     skyColor: Color4 = new Color4(0.5, 0.5, 0.5, 1);
+    skyBright: number = 0.5;
 
     waterMesh: Mesh;
 
@@ -379,6 +380,10 @@ export class Vishva {
             this.skyColor.g = this.vishvaSerialized.misc.skyColor.g;
             this.skyColor.b = this.vishvaSerialized.misc.skyColor.b;
             this.skyColor.a = this.vishvaSerialized.misc.skyColor.a;
+        }
+
+        if (typeof this.vishvaSerialized.misc.skyBright !== "undefined") {
+            this.skyBright = this.vishvaSerialized.misc.skyBright;
         }
 
         var sceneData: string = "data:" + tfat.text;
@@ -561,11 +566,12 @@ export class Vishva {
         }
 
 
-        this.scene.clearColor = this.skyColor.scale(this.sun.intensity);
+        this.scene.clearColor = this.skyColor.scale(this.skyBright);
+
         if (!skyFound) {
             console.log("no vishva sky found. creating sky");
             //this.skybox = this.createSkyBox(this.scene,this.skyboxTextures);
-            this.setLight(0.5);
+            this.setSunBright(0.5);
         }
         if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
             this.scene.fogMode = Scene.FOGMODE_EXP;
@@ -1108,7 +1114,7 @@ export class Vishva {
 
     private focusOnMesh(mesh: TransformNode, frames: number) {
         let camera: TargetCamera = <TargetCamera>this.scene.activeCamera;
-        this.scene.activeCamera.detachControl(this.canvas);
+        this.scene.activeCamera.detachControl();
         this.frames = frames;
         this.f = frames;
         this.start = camera.getFrontPosition(1);
@@ -2786,10 +2792,12 @@ export class Vishva {
         // if the source skeleton had an overrideMesh, in otherwords was setup
         // for playing animation groups, then set the override mesh of the
         // cloned skeleton to the mesh selected.
+        //TODO overrideMesh has been removed from 5.0.0
+        // if (this.meshSelected.skeleton.overrideMesh) {
+        //     this.meshSelected.skeleton.overrideMesh = this.meshSelected;
+        // }
 
-        if (this.meshSelected.skeleton.overrideMesh) {
-            this.meshSelected.skeleton.overrideMesh = this.meshSelected;
-        }
+
         console.log(this.meshSelected.skeleton.bones);
         for (let b of this.meshSelected.skeleton.bones) {
             console.log(b.id);
@@ -3203,15 +3211,30 @@ export class Vishva {
         return this._sunBeta;
     }
 
-    public setLight(d: number) {
-        this.sun.intensity = d;
+    public setSunBright(d: number) {
         this.sunDR.intensity = d;
-        if (this.skybox != null) this.skybox.visibility = d;
-        this.scene.clearColor = this.skyColor.scale(d);
     }
 
-    public getLight(): number {
+    public getSunBright(): number {
+        return this.sunDR.intensity;
+    }
+
+    public setSceneBright(d: number) {
+        this.sun.intensity = d;
+    }
+
+    public getSceneBright(): number {
         return this.sun.intensity;
+    }
+
+    public setSkyBright(d: number) {
+        if (this.skybox != null) this.skybox.visibility = d;
+        this.scene.clearColor = this.skyColor.scale(d);
+        this.skyBright = d;
+    }
+
+    public getSkyBright(): number {
+        return this.skyBright
     }
 
     public setShade(dO: any) {
@@ -3495,6 +3518,7 @@ export class Vishva {
 
         vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
         vishvaSerialzed.misc.skyColor = this.skyColor;
+        vishvaSerialzed.misc.skyBright = this.skyBright;
 
 
 
@@ -4502,7 +4526,7 @@ export class Vishva {
         this.skybox.material.dispose();
         this.skybox.dispose();
         this.skybox = null;
-        this.scene.clearColor = this.skyColor;
+        this.scene.clearColor = this.skyColor.scale(this.skyBright);
     }
 
 

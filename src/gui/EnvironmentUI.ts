@@ -30,7 +30,9 @@ export class EnvironmentUI {
 
         let sunPos: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunPos")[0];
         let sunPosNS: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunPosNS")[0];
-        let light: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("light")[0];
+        let sunBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunBright")[0];
+        let sceneBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sceneBright")[0];
+        let skyBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("skyBright")[0];
         let shade: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("shade")[0];
         let fog: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fog")[0];
         let fov: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fov")[0];
@@ -49,11 +51,25 @@ export class EnvironmentUI {
             this._vishva.setSunNS(Number((<HTMLInputElement>ev.target).value));
         }
 
-        light.min = "0";
-        light.max = "100";
-        light.value = (100 * this._vishva.getLight()).toString();
-        light.oninput = (ev) => {
-            this._vishva.setLight(Number((<HTMLInputElement>ev.target).value) / 100);
+        sunBright.min = "0";
+        sunBright.max = "100";
+        sunBright.value = (100 * this._vishva.getSunBright()).toString();
+        sunBright.oninput = (ev) => {
+            this._vishva.setSunBright(Number((<HTMLInputElement>ev.target).value) / 100);
+        }
+
+        sceneBright.min = "0";
+        sceneBright.max = "100";
+        sceneBright.value = (100 * this._vishva.getSceneBright()).toString();
+        sceneBright.oninput = (ev) => {
+            this._vishva.setSceneBright(Number((<HTMLInputElement>ev.target).value) / 100);
+        }
+
+        skyBright.min = "0";
+        skyBright.max = "100";
+        skyBright.value = (100 * this._vishva.getSkyBright()).toString();
+        skyBright.oninput = (ev) => {
+            this._vishva.setSkyBright(Number((<HTMLInputElement>ev.target).value) / 100);
         }
 
         shade.min = "0";

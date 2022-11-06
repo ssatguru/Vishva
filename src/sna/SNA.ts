@@ -12,7 +12,8 @@ import {
     Tags,
     Vector3,
     Vector2,
-    TransformNode
+    TransformNode,
+    InstancedMesh
 } from "babylonjs";
 // import AbstractMesh = BABYLON.AbstractMesh;
 // import Action = BABYLON.Action;
@@ -399,7 +400,7 @@ export class SNAManager {
             uid = "Vishva.uid." + (<number>new Number(Date.now())).toString();
         };
         this.prevUID = uid;
-        if (mesh instanceof BABYLON.InstancedMesh) {
+        if (mesh instanceof InstancedMesh) {
             mesh.name = mesh.name + "." + uid;
             return mesh.name;
         } else {

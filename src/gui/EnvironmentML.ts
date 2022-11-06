@@ -9,8 +9,14 @@ const envHTML: string = `
             <div style="justify-self: end;">sun (south-nort)</div>
             <div><input type="range" class="sunPosNS"></input></div>
 
-            <div style="justify-self: end;">light</div>            
-            <div><input type="range" class="light"></input></div>
+            <div style="justify-self: end;">sun brightness</div>            
+            <div><input type="range" class="sunBright"></input></div>
+
+            <div style="justify-self: end;">sky brightness</div>            
+            <div><input type="range" class="skyBright"></input></div>
+
+            <div style="justify-self: end;">scene brightness</div>            
+            <div><input type="range" class="sceneBright"></input></div>
         
             <div style="justify-self: end;">light color</div>
             <div><div id="lightColor"></div></div>

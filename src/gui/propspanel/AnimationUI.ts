@@ -266,7 +266,7 @@ export class AnimationUI {
             if (skelName === "") skelName = "NO NAME";
             skelName = skelName + ", " + this._skel.id + ", " + this._skel.uniqueId;
             this._skelFound.style.display = "inherit";
-            if (this._skel.overrideMesh) {
+            if (AnimUtils.skelDrivenByAG(this._skel, this._vishva.scene)) {
                 this._agFound.style.display = "inherit";
                 this._arFound.style.display = "none";
                 this._refreshAgSelect();

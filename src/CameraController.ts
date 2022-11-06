@@ -17,7 +17,7 @@ export class UniCamController {
         this.active = true;
 
         let oldCam: TargetCamera = <TargetCamera>this.scene.activeCamera;
-        oldCam.detachControl(this.canvas);
+        oldCam.detachControl();
 
         //this.camera = new UniversalCamera("",oldCam.getFrontPosition(-1),this.scene);
         this.camera = new UniversalCamera("", oldCam.position, this.scene);
@@ -42,7 +42,7 @@ export class UniCamController {
 
     public stop() {
         if (!this.active) return;
-        this.camera.detachControl(this.canvas);
+        this.camera.detachControl();
         this.camera.dispose();
         this.active = false;
     }

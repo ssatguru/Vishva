@@ -1,4 +1,4 @@
-import { AbstractMesh, Mesh, Node, TransformNode } from "babylonjs";
+import { AbstractMesh, Mesh, Node, Scene, TransformNode } from "babylonjs";
 import { AnimationGroup, TargetedAnimation } from "babylonjs/Animations/animationGroup";
 import { Skeleton } from "babylonjs/Bones/skeleton";
 
@@ -96,6 +96,17 @@ export class AnimUtils {
                                 if (node.skeleton == null) return null; else return { "skel": node.skeleton, "mesh": node };
                         } else return null;
                 }
+        }
+
+
+        // this checks if any of this skeleton animations is referenced by any targetedAnimation in any of the animationGroup in the scene.
+        // scene can have many animationGroups
+        // each animationGroup can have many TargetedAnimations. (Each TargetedAnimation has one animation.)
+        // skeletion may have many animations
+        public static skelDrivenByAG(skel: Skeleton, scene: Scene): boolean {
+                if (!skel.animations) return false;
+
+                return skel.animations.some(sa => scene.animationGroups.some(ag => ag.children.some(ta => ta.animation == sa)));
         }
 
 

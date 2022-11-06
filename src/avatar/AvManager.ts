@@ -252,6 +252,29 @@ export class AvManager {
      * 
      */
 
+    // private _isAg(n: Node): boolean {
+    //     let root = this._root(n);
+    //     let ms = root.getChildMeshes(
+    //         false,
+    //         (cm) => {
+    //             if (cm instanceof Mesh) {
+    //                 if (cm.skeleton) {
+    //                     if (cm.skeleton.overrideMesh) {
+    //                         return true;
+    //                     }
+    //                 }
+    //             }
+    //             return false;
+    //         });
+    //     if (ms.length > 0) return true; else return false;
+    // }
+
+
+    /**
+     *  "overrideMesh" property has been removed in 5.0.0
+     */
+
+
     private _isAg(n: Node): boolean {
         let root = this._root(n);
         let ms = root.getChildMeshes(
@@ -259,7 +282,7 @@ export class AvManager {
             (cm) => {
                 if (cm instanceof Mesh) {
                     if (cm.skeleton) {
-                        if (cm.skeleton.overrideMesh) {
+                        if (AnimUtils.skelDrivenByAG(cm.skeleton, this.scene)) {
                             return true;
                         }
                     }
@@ -273,4 +296,10 @@ export class AvManager {
         if (tn.parent == null) return tn;
         return this._root(tn.parent);
     }
+
+    // this check if any of this skeleton animations is referenced by any targetedAnimation in any of the animationgroup in the scene.
+    private _skelDrivenByAG(skel: Skeleton) {
+        return skel.animations.some(sa => this.scene.animationGroups.some(ag => ag.children.some(ta => ta.animation == sa)));
+}
+
 }

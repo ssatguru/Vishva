@@ -16,6 +16,7 @@ export class VTree {
 
     private _closeIconTxt: string = "arrow_right";
     private _openIconTxt: string = "arrow_drop_down";
+    private _fileIconTxt: string = "remove";
 
     constructor(treeEle: string | HTMLDivElement, treeData: Array<string | object>, filter?: string, open = false) {
         if (treeEle instanceof HTMLDivElement) {
@@ -287,6 +288,7 @@ export class VTree {
 
                 span.setAttribute("class", this._leafIcon);
                 span.style.display = "inline-block";
+                span.innerText = this._fileIconTxt;
                 li.appendChild(span);
 
                 //txt=document.createTextNode(node);

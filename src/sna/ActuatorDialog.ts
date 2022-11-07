@@ -3,7 +3,7 @@ import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
 import { Mesh } from "babylonjs";
 import { GuiUtils } from "../gui/GuiUtils";
-import { FileInputType } from "../gui/VishvaGUI";
+import { FileInputType, SelectType } from "../gui/VishvaGUI";
 import { Vishva } from "../Vishva";
 import { VDiag } from "../gui/components/VDiag";
 import { Engine } from "babylonjs";
@@ -15,10 +15,17 @@ export class ActDialogParm extends ActProperties {
     title: string = "";
     height: number = 50;
     width: number = 50;
+    sizeType: SelectType = new SelectType();
     modal: boolean = true;
     draggable: boolean = false;
     transparent: boolean = false;
     border: boolean = true;
+
+    public constructor() {
+        super();
+        this.sizeType.values = ["%", "px"];
+        this.sizeType.value = "%";
+    }
 }
 
 /**
@@ -28,6 +35,8 @@ export class ActuatorDialog extends ActuatorAbstract {
 
     div: HTMLDivElement;
     dialog: VDiag;
+    w: string;
+    h: string;
 
     public constructor(mesh: Mesh, parms: ActProperties) {
         if (parms != null) {
@@ -35,11 +44,10 @@ export class ActuatorDialog extends ActuatorAbstract {
         } else {
             super(mesh, new ActDialogParm());
         }
+
     }
 
-
     public actuate() {
-        console.log("actuating dialog");
         this.dialog.open();
     }
 
@@ -48,7 +56,6 @@ export class ActuatorDialog extends ActuatorAbstract {
     }
 
     public stop() {
-
     }
 
     public cleanUp() {
@@ -57,14 +64,36 @@ export class ActuatorDialog extends ActuatorAbstract {
         this.dialog = null;
     }
 
+    private setSize() {
+        let props: ActDialogParm = <ActDialogParm>this.properties;
+
+        if (props.sizeType.value === "%") {
+            this.w = (window.innerWidth * props.width / 100) + "px";
+            this.h = (window.innerHeight * props.height / 100) + "px";
+        } else {
+            this.w = props.width + "px";
+            this.h = props.height + "px";
+        }
+
+    }
+
     public onPropertiesChange() {
-        console.log("onPropertiesChange()");
         var props: ActDialogParm = <ActDialogParm>this.properties;
+
+        //remove after migration to new version of dialog actuator is complete
+        //previous version did not have sizeType
+        if (!props.sizeType) {
+            props.sizeType = new SelectType();
+            props.sizeType.values = ["%", "px"];
+            props.sizeType.value = "%";
+        }
+
+        this.setSize();
         if (this.dialog == null) {
             this.div = GuiUtils.createDiv();
             //this.div.style.visibility = "visible";
 
-            this.dialog = new VDiag(this.div, props.title, VDiag.center, (window.innerWidth * props.width / 100) + "px", (window.innerHeight * props.height / 100) + "px", "350px", props.modal);
+            this.dialog = new VDiag(this.div, props.title, VDiag.center, this.w, this.h, "350px", props.modal);
 
             let button: HTMLButtonElement = this.dialog.addButton("Close");
 
@@ -125,9 +154,12 @@ export class ActuatorDialog extends ActuatorAbstract {
             this.onActuateEnd();
         })
 
-        this.dialog.setSize(window.innerWidth * props.width / 100, window.innerHeight * props.height / 100);
+        this.dialog.setSize(this.w, this.h);
 
-        window.addEventListener("resize", (event) => { this.dialog.setSize(window.innerWidth * props.width / 100, window.innerHeight * props.height / 100); });
+        window.addEventListener("resize", (event) => {
+            this.setSize();
+            this.dialog.setSize(this.w, this.h);
+        });
 
         if (this.properties.autoStart) {
             this.dialog.open();

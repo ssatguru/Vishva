@@ -5,31 +5,31 @@ const ppHTML = `
 <div id="propsDiag" >
         <div id="propsAcc" >
                 <details class="props" id="gen" class="mesh">
-                        <summary class="mesh">General</summary>
+                        <summary class="mesh" style="padding:0.5em">General</summary>
                 </details>
 
                 <details class="props" id="grndDiv" class="grnd">
-                        <summary class="grnd">Ground Dimensions</summary>
+                        <summary class="grnd" style="padding:0.5em">Ground Dimensions</summary>
                 </details>
 
                 <details class="props" id="Physics" class="mesh">
-                        <summary class="mesh">Physics</summary>
+                        <summary class="mesh" style="padding:0.5em">Physics</summary>
                 </details>
 
                 <details class="props" id="Material">
-                        <summary >Material</summary>
+                        <summary style="padding:0.5em">Material</summary>
                 </details>
 
                 <details class="props" id="Lights" class="mesh">
-                        <summary class="mesh">Lights</summary>
+                        <summary class="mesh" style="padding:0.5em">Lights</summary>
                 </details>
 
                 <details class="props" id="meshAnimDiag" class="mesh">
-                        <summary class="mesh">Skeletons & Animations</summary>
+                        <summary class="mesh" style="padding:0.5em">Skeletons & Animations</summary>
                 </details>
 
                 <details class="props" id="grndSPS" class="grnd">
-                        <summary class="grnd">Ground SPS</summary>
+                        <summary class="grnd" style="padding:0.5em">Ground SPS</summary>
                 </details>
         </div>
 </div>`;

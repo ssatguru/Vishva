@@ -1,6 +1,7 @@
 import { VButton } from "../components/VButton";
 
 let gdHTML = `
+<div style="padding:1.0em;">
 <table>
         <tr>
         <td>ground name</td>
@@ -49,6 +50,7 @@ let gdHTML = `
         </td>
         </tr>
 </table>
+</div>
 `;
 
 let gdElement = document.createElement("div");

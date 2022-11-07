@@ -1,6 +1,7 @@
 import { VButton } from "../components/VButton";
 
 let lightHTML = `
+<div style="padding:1.0em;">
 <table>
         <tr>
         <td>attach</td>
@@ -68,6 +69,7 @@ let lightHTML = `
         </td>
         </tr>
 </table>
+</div>
 `;
 
 let lightElement = document.createElement("div");

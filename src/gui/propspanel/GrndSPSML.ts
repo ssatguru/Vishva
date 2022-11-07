@@ -1,6 +1,7 @@
 import { VButton } from "../components/VButton";
 
 let gsHTML = `
+<div style="padding:1.0em;">
 <table width="100%">
 <colgroup>
 <col span="1" style="width: 50%;">
@@ -94,6 +95,7 @@ let gsHTML = `
 </td>
 </tr>
 </table>
+</div>
 `;
 
 let gsElement = document.createElement("div");

@@ -1,6 +1,7 @@
 import { VButton } from "../components/VButton";
 
 let matHTML = `
+<div style="padding:1.0em;">
 <table >
         <tr>
         <td >
@@ -109,6 +110,7 @@ let matHTML = `
         </td>
         </tr>
 </table>
+</div>
 `;
 
 let matElement = document.createElement("div");

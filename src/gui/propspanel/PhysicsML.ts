@@ -1,6 +1,7 @@
 import { VButton } from "../components/VButton";
 
 let phyHTML = `
+<div style="padding:1.0em;">
 <table>
         <tr>
                 <td>enabled</td>
@@ -54,6 +55,7 @@ let phyHTML = `
                 </td>
         </tr>
 </table>
+</div>
 <!--
 <br>
 <button id ="phyApply">apply</button>

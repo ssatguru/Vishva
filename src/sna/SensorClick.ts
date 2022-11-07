@@ -8,6 +8,7 @@ import {
     Mesh
 } from "babylonjs";
 import { SelectType } from "../gui/VishvaGUI";
+import { Vishva } from "../Vishva";
 
 export class SenClickProp extends SNAproperties {
     clickType: SelectType = new SelectType();
@@ -67,14 +68,22 @@ export class SensorClick extends SensorAbstract {
             actType = ActionManager.OnPickTrigger;
         }
 
-        //TODO make sure we are not doing CTL/SHIFT/ALt too
+
 
         let action: Action = new ExecuteCodeAction(actType, (e) => {
+
+            if (Vishva.vishva.key.alt ||
+                Vishva.vishva.key.ctl ||
+                Vishva.vishva.key.shift
+            ) return;
+
             this.emitSignal(e);
         }
         );
 
+
         this.mesh.actionManager.registerAction(action);
+
         this.actions.push(action)
     }
 }

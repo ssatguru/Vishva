@@ -256,7 +256,7 @@ export class Vishva {
 
 
 
-    key: Key;
+    public key: Key;
 
     private keysDisabled: boolean = false;
 
@@ -2329,13 +2329,19 @@ export class Vishva {
 
     }
 
-    public selectGround() {
+    public selectGround(): boolean {
+        if (this.ground == null) {
+            DialogMgr.showAlertDiag("no ground found");
+            return false;
+
+        }
         if (!this.isMeshSelected) {
             this.selectForEdit(this.ground);
         } else {
             this.switchEditControl(this.ground);
         }
         this.ground.unfreezeWorldMatrix();
+        return true;
     }
 
     public unSelectGrnd() {

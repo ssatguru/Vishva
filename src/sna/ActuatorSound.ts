@@ -14,7 +14,8 @@ export class ActSoundProp extends ActProperties {
     rolloffFactor: number = 1;
     refDistance: number = 1
     distanceModel: SelectType = new SelectType();
-    volume: Range = new Range(0.0, 1.0, 1.0, 0.1);
+    //volume: Range = new Range(0.0, 1.0, 1.0, 0.1);
+    volume: number = 0.01;
 
     constructor() {
         super();
@@ -101,7 +102,8 @@ export class ActuatorSound extends ActuatorAbstract {
             this.sound.attachToMesh(this.mesh);
         }
         this.sound.onended = () => { return this.onActuateEnd() };
-        this.sound.setVolume(properties.volume.value);
+        //this.sound.setVolume(properties.volume.value);
+        this.sound.setVolume(properties.volume);
         this.sound.setPosition(this.mesh.position.clone());
     }
 

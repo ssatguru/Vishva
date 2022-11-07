@@ -161,8 +161,6 @@ export class VDiag {
                                 this.w.style.right = "auto";
                                 break;
                         case VDiag.center:
-                                console.log("w: " + this.w.offsetHeight);
-                                console.log("h: " + this.w.offsetHeight);
                                 this.w.style.top = Math.round((Vishva.gui.offsetHeight - this.w.offsetHeight) / 2) + "px";
                                 this.w.style.left = Math.round((Vishva.gui.offsetWidth - this.w.offsetWidth) / 2) + "px";
                                 this.w.style.bottom = 'auto';
@@ -337,9 +335,9 @@ export class VDiag {
                 this.t.innerText = title;
         }
 
-        public setSize(w: number, h: number) {
-                this.w.style.width = w + "px";
-                this.w.style.height = h + "px";
+        public setSize(w: string, h: string) {
+                this.w.style.width = w;
+                this.w.style.height = h;
         }
 
         public addButton(txt: string): HTMLButtonElement {

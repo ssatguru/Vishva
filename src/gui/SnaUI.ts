@@ -174,7 +174,6 @@ export class SnaUI {
         };
         var addAct: HTMLElement = document.getElementById("addAct");
         addAct.onclick = (e) => {
-            console.log("add button clicked");
             var a: HTMLOptionElement = <HTMLOptionElement>this.actSel.item(this.actSel.selectedIndex);
             var actuator: string = a.value;
             this._vishva.addActuaorByName(actuator);
@@ -203,15 +202,12 @@ export class SnaUI {
             tbl.deleteRow(i);
         }
         l = sensAct.length;
-        console.log("sns and acts " + l);
         for (var i: number = 0; i < l; i++) {
-            console.log("sna num " + i);
             var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.innerHTML = sensAct[i].getName();
             cell = <HTMLTableCellElement>row.insertCell();
             cell.innerHTML = sensAct[i].getProperties().signalId;
-            console.log(sensAct[i].getProperties());
             cell = <HTMLTableCellElement>row.insertCell();
 
             let d: number = i;

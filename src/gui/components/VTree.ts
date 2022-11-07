@@ -14,9 +14,14 @@ export class VTree {
     private _openIcon: string = "material-icons-outlined o";
     private _leafIcon: string = "material-icons-outlined";
 
-    private _closeIconTxt: string = "arrow_right";
-    private _openIconTxt: string = "arrow_drop_down";
-    private _fileIconTxt: string = "remove";
+    // private _closeIconTxt: string = "arrow_right";
+    // private _openIconTxt: string = "arrow_drop_down";
+    // private _fileIconTxt: string = "remove";
+
+    private _closeIconTxt: string = "add";
+    private _openIconTxt: string = "remove";
+    private _fileIconTxt: string = "arrow_right";
+
 
     constructor(treeEle: string | HTMLDivElement, treeData: Array<string | object>, filter?: string, open = false) {
         if (treeEle instanceof HTMLDivElement) {
@@ -264,6 +269,7 @@ export class VTree {
 
                 span.setAttribute("class", icon);
                 span.style.display = "inline-block";
+                span.style.paddingRight = "0.5em";
                 span.innerText = t;
                 li.appendChild(span);
 
@@ -288,6 +294,7 @@ export class VTree {
 
                 span.setAttribute("class", this._leafIcon);
                 span.style.display = "inline-block";
+                span.style.paddingRight = "0.5em";
                 span.innerText = this._fileIconTxt;
                 li.appendChild(span);
 

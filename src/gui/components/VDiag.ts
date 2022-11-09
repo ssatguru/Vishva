@@ -16,7 +16,7 @@ export class VDiag {
         // contains title bar DIV and  body DIV
         ml: string = `
         <div class="bar">
-        <div class="title" style="justify-self:start;">Window Title</div>
+                <div class="title" >Window Title</div>
                 <span class="material-icons-outlined vdiag-min" style="display: inline-block;cursor: pointer; ">remove</span>
                 <span class="material-icons-outlined vdiag-add" style="display: none;cursor: pointer; ">add</span>
                 <span class="material-icons-outlined vdiag-close" style="display: inline-block;cursor: pointer; ">close</span>
@@ -42,7 +42,7 @@ export class VDiag {
 
         _barStyle: string = `
                         display:grid;
-                        grid-template-columns: auto min-content min-content ;
+                        grid-template-columns: auto min-content min-content min-content ;
                         padding: 0.5em;
                         cursor: move;`;
 
@@ -198,6 +198,10 @@ export class VDiag {
         }
 
         private onMouseDown = (e: MouseEvent) => {
+
+                //bring to front when clicked
+                this.w.parentNode.appendChild(this.w);
+
                 this.mx = e.clientX;
                 this.my = e.clientY;
 
@@ -398,13 +402,12 @@ export class VDiag {
                 // diag title bar
                 this.wb = <HTMLElement>this.w.getElementsByClassName('bar')[0];
                 this.showTitleBar();
-                this.wb.onmousedown = this.onMouseDown;
+                //this.wb.onmousedown = this.onMouseDown;
                 this.wb.ondblclick = () => this.position(this.pos);
-                //bring to front when clicked
-                this.wb.onclick = () => this.w.parentNode.appendChild(this.w);
 
                 this.t = <HTMLElement>this.w.getElementsByClassName('title')[0];
                 this.t.innerText = title;
+                this.t.onmousedown = this.onMouseDown;
 
                 this.minIcon = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
                 this.minIcon.addEventListener('click', this.toggleBody);

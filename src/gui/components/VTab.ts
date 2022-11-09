@@ -26,9 +26,11 @@ export class VTab {
 
                 let rootDiv: HTMLDivElement = document.createElement("div");
                 rootDiv.style.paddingTop = "0.5em";
+                rootDiv.style.backgroundColor = Vishva.theme.lightColors.b;
 
                 let tabDiv: HTMLDivElement = document.createElement("div");
                 tabDiv.className = "w3-bar";
+
                 rootDiv.append(tabDiv);
 
                 let firstTab: boolean = true;

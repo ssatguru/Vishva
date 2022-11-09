@@ -20,8 +20,9 @@ export class VTree {
 
     private _closeIconTxt: string = "add";
     private _openIconTxt: string = "remove";
-    private _fileIconTxt: string = "arrow_right";
-
+    //TODO "a" or some single charcater results in blank
+    //need to find a better way to display blank
+    private _fileIconTxt: string = "a";
 
     constructor(treeEle: string | HTMLDivElement, treeData: Array<string | object>, filter?: string, open = false) {
         if (treeEle instanceof HTMLDivElement) {

@@ -127,7 +127,7 @@ export class InternalAssetsUI {
             } else {
                 img.src = Vishva.vHome + imgURL;
             }
-            img.setAttribute("style", VishvaGUI.SMALL_ICON_SIZE + "cursor:pointer;");
+            img.setAttribute("style", VishvaGUI.LARGE_ICON_SIZE + "cursor:pointer;");
             img.className = assetCat;
             img.onclick = f;
             img.title = item["d"];

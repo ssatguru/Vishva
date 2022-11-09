@@ -16,36 +16,12 @@ export class VDiag {
         // contains title bar DIV and  body DIV
         ml: string = `
         <div class="bar">
-                <div class="title" style="justify-self:start;">Window Title</div>
-                <svg class="vdiag-min" version="1.1"
-                        style="cursor: pointer; "
-                        width="16" height="16"
-                        xmlns="http://www.w3.org/2000/svg">
-
-                        <line x1="4" y1="8"
-                        x2="12" y2="8"
-                        stroke="white"
-                        stroke-width="2"/>
-                </svg>
-                <svg class="vdiag-close" version="1.1"
-                        style="cursor: pointer; "
-                        width="16" height="16"
-                        xmlns="http://www.w3.org/2000/svg">
-
-                        <line x1="4" y1="4"
-                        x2="12" y2="12"
-                        stroke="white"
-                        stroke-width="2"/>
-
-                        <line x1="4" y1="12"
-                        x2="12" y2="4"
-                        stroke="white"
-                        stroke-width="2"/>
-                </svg>
+        <div class="title" style="justify-self:start;">Window Title</div>
+                <span class="material-icons-outlined vdiag-min" style="display: inline-block;cursor: pointer; ">remove</span>
+                <span class="material-icons-outlined vdiag-add" style="display: none;cursor: pointer; ">add</span>
+                <span class="material-icons-outlined vdiag-close" style="display: inline-block;cursor: pointer; ">close</span>
         </div>
-
         <div class="bdy" style="padding:0em;display:grid"></div>`;
-
 
 
         _style: string = ` 
@@ -98,6 +74,8 @@ export class VDiag {
         t: HTMLElement;  //title
         b: HTMLElement;  //body
         f: HTMLElement;  //footer
+        minIcon: HTMLElement;
+        addIcon: HTMLElement;
 
         mx: number;
         my: number;
@@ -303,14 +281,34 @@ export class VDiag {
          * manually
          */
         _savHt: string;
-        public toggleBody = () => {
+        public toggleBody_old = () => {
                 if (this.b.style.display == "none") {
                         this.b.style.display = "grid";
                         this.w.style.height = this._savHt;
+                        this.minIcon.style.display = "inline-block";
+                        this.addIcon.style.display = "none";
                 } else {
                         this.b.style.display = "none";
                         this._savHt = this.w.style.height;
                         this.w.style.height = "auto";
+                        this.minIcon.style.display = "none";
+                        this.addIcon.style.display = "inline-block";
+                }
+        }
+
+        _minimized: boolean;
+        public toggleBody = () => {
+                if (this._minimized) {
+                        this._minimized = false;
+                        this.b.style.height = this._savHt;
+                        this.minIcon.style.display = "inline-block";
+                        this.addIcon.style.display = "none";
+                } else {
+                        this._minimized = true;
+                        this._savHt = this.w.style.height;
+                        this.b.style.height = "0px";
+                        this.minIcon.style.display = "none";
+                        this.addIcon.style.display = "inline-block";
                 }
         }
 
@@ -408,8 +406,11 @@ export class VDiag {
                 this.t = <HTMLElement>this.w.getElementsByClassName('title')[0];
                 this.t.innerText = title;
 
-                let monIcon: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
-                monIcon.addEventListener('click', this.toggleBody);
+                this.minIcon = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
+                this.minIcon.addEventListener('click', this.toggleBody);
+
+                this.addIcon = <HTMLElement>this.w.getElementsByClassName('vdiag-add')[0];
+                this.addIcon.addEventListener('click', this.toggleBody);
 
                 let closeIcon: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-close')[0];
                 closeIcon.addEventListener('click', this.close);

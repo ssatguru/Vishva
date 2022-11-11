@@ -102,10 +102,12 @@ export class ActuatorDialog extends ActuatorAbstract {
                     Engine.audioEngine.unlock();
                 }
                 if (Engine.audioEngine.audioContext.state === "suspended") {
-                    Engine.audioEngine.audioContext.resume();
+                    Engine.audioEngine.audioContext.resume().then(() => {
+                        this.dialog.close();
+                    });
+                } else {
+                    this.dialog.close();
                 }
-
-                this.dialog.close();
                 return true;
             }
             this.dialog.close();

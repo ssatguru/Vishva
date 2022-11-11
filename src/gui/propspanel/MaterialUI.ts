@@ -163,16 +163,17 @@ export class MaterialUI {
         this._matVis.value = Number(this._vishva.getMeshVisibility()).toString();
         this._matVisVal["value"] = Number(this._matVis.value).toFixed(2);
 
-
         let mn: Array<string> = this._vishva.getMatNames();
         if (mn != null) {
             this._matCount.innerText = Number(mn.length).toString();
             GuiUtils.PopulateSelect(this._matIDs, mn);
             this._updateMatDetails();
-
         }
     }
 
+    //FYI there is an issue in chrome with reading a table cell value
+    //https://stackoverflow.com/questions/52901043/chrome-v70-has-issue-with-innertext-in-td-cells
+    //so use this._matID.innerText  to set value but not to get value !!
     private _updateMatDetails() {
         this._matID.innerText = this._matIDs.value;
         this._matName.innerText = this._vishva.getMaterialName(this._matIDs.value);
@@ -183,7 +184,7 @@ export class MaterialUI {
         } else this._matBF.checked = b;
 
         this._matColDiag.setColor(this._vishva.getMeshColor(this._matIDs.value, this._matColType.value));
-        let dtls: Array<string> = this._vishva.getMatTexture(this._matID.innerText, this._matTextType.value);
+        let dtls: Array<string> = this._vishva.getMatTexture(this._matIDs.value, this._matTextType.value);
         this._textID = dtls[0];
         this._textName = dtls[1];
         this._matTextImg.src = this._textName;

@@ -39,7 +39,9 @@ export class ActuatorSound extends ActuatorAbstract {
 
     public actuate() {
         if (Engine.audioEngine.audioContext.state === "suspended") {
-            window.setTimeout((() => { return this.onActuateEnd() }), 0);
+            window.setTimeout((() => {
+                return this.onActuateEnd()
+            }), 0);
             return;
         }
         if (this.properties.toggle) {

@@ -1,7 +1,7 @@
 import { Vector3, AnimationGroup, Scene, Tags } from "babylonjs";
 import { ActionData, ActionMap, CCSettings } from "babylonjs-charactercontroller";
 import { Color4 } from "babylonjs/Maths/math.color";
-import { GroundSPSserialized } from "./GroundSPS";
+import { GrndSpread_Serializeable } from "./GrndSpread";
 import { SNAserialized } from "./sna/SNA";
 import { Vishva } from "./Vishva";
 
@@ -14,13 +14,25 @@ export class VishvaSerialized {
     public settings: SettingsSerialized;
     public guiSettings: Object;
     public misc: MiscSerialized;
-    public groundSPSserializeds: GroundSPSserialized[];
+    public grndSpreadArray: GrndSpread_Serializeable[];
     public avSerialized: AvSerialized;
 
     public constructor(vishva: Vishva) {
         this.settings = new SettingsSerialized();
         this.misc = new MiscSerialized();
         this.avSerialized = new AvSerialized(vishva);
+
+        //we donot serialize the sps. 
+        //the sps mesh's doNotSerialize property is set to true when the sps is created
+        //serializing the sps bloats up the file
+        //instead we just serialize the sps properties and recreate the sps when the file
+        //is loaded in future
+        if (vishva.GrndSpreads != null) {
+            this.grndSpreadArray = new Array();
+            for (let gSPS of vishva.GrndSpreads) {
+                this.grndSpreadArray.push(gSPS.serialize());
+            }
+        }
 
     }
 }

@@ -12,7 +12,7 @@
                 "babylonjs-loaders": "5.0.0",
                 "babylonjs-materials": "5.0.0",
                 "babylonjs-gui": "5.0.0",
-                "babylonjs-charactercontroller": "^0.4.3",
+                "babylonjs-charactercontroller": "^0.4.4-alpha.2",
                 "babylonjs-editcontrol": "^3.2.5",
                 "cannon": "^0.6.2",
                 "file-loader": "^3.0.1",

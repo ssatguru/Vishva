@@ -73,8 +73,8 @@ import {
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
 
-import { GroundSPS } from "./GroundSPS";
-import { SpreadDtls } from "./GroundSPS";
+import { GrndSpread, GrndSpread_Serializeable } from "./GrndSpread";
+import { SpreadDtl } from "./GrndSpread";
 import { SNAserialized } from "./sna/SNA";
 import { SNAManager } from "./sna/SNA";
 import { SensorActuator } from "./sna/SNA";
@@ -112,6 +112,8 @@ export class Vishva {
     //location of all vishva binary files and internal assets
     //normally "/bin/" folder. will keep it relative
     public static vBinHome: string = "bin/";
+    public static NO_TEXTURE = Vishva.vBinHome + "assets/internal/textures/no-texture.jpg";
+    public static TGA_IMAGE = Vishva.vBinHome + "assets/internal/textures/tga-image.jpg";
 
     public static userAssets: Array<any>;
     public static internalAssets: Array<any>;
@@ -179,8 +181,7 @@ export class Vishva {
     private avatarFile: string = "starterAvatars.babylon";
 
 
-    NO_TEXTURE: string = Vishva.vBinHome + "assets/internal/textures/no-texture.jpg"
-    TGA_IMAGE: string = Vishva.vBinHome + "assets/internal/textures/tga-image.jpg"
+
 
     groundTexture: string = Vishva.vBinHome + "assets/internal/textures/ground.jpg";
     groundBumpTexture: string = Vishva.vBinHome + "assets/internal/textures/ground-normal.jpg";
@@ -245,7 +246,7 @@ export class Vishva {
 
     vishvaGUI: VishvaGUI;
 
-    GroundSPSs: GroundSPS[];
+    GrndSpreads: GrndSpread[];
 
 
 
@@ -541,25 +542,16 @@ export class Vishva {
             //                if (this.enablePhysics) {
             //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
             //                }
-            if (this.vishvaSerialized.groundSPSserializeds != null) {
-                this.GroundSPSs = new Array()
-                for (let gSPSs of this.vishvaSerialized.groundSPSserializeds) {
-                    let mesh: Mesh = <Mesh>this.scene.getMeshByID(gSPSs.meshID);
-                    if (mesh != null) {
-                        //TODO when ground is changed update each sps grdounMeshID
-                        //for now let's assume just one groundmesh and use that
-                        //let groundMesh: GroundMesh=<GroundMesh>this.scene.getMeshByID(gSPSs.groundMeshID);
-                        let groundMesh: GroundMesh = <GroundMesh>this.ground;
-                        let gSPS = new GroundSPS(gSPSs.name, this, mesh, groundMesh, gSPSs.spreadDtls);
-                        try {
-                            gSPS.generate();
-                        } catch (e) {
-                            console.log("error during gSPS.generate()")
-                            console.log(e);
-                        }
-                        this.GroundSPSs.push(gSPS);
-                    } else {
-                        console.log("could not find sps mesh for id = " + gSPSs.meshID)
+            if (this.vishvaSerialized.grndSpreadArray != null) {
+                this.GrndSpreads = new Array()
+                for (let gSPSs of this.vishvaSerialized.grndSpreadArray) {
+                    try {
+                        let gSPS = GrndSpread_Serializeable.deserialize(gSPSs);
+                        gSPS.generate();
+                        this.GrndSpreads.push(gSPS);
+                    } catch (e) {
+                        console.log("error during gSPS.generate()")
+                        console.log(e);
                     }
                 }
             }
@@ -891,7 +883,7 @@ export class Vishva {
             this.editControl.setLocal(false);
         }
         if (this.autoEditMenu) {
-            this.vishvaGUI.showPropDiag();
+            this.vishvaGUI.showPropDiag(mesh);
         }
         //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
 
@@ -2013,176 +2005,9 @@ export class Vishva {
     }
 
     //MATERIAL
-    public setMeshVisibility(vis: number) {
-        if (!(this.meshSelected instanceof AbstractMesh)) return;
-        this.meshSelected.visibility = vis;
-    }
-    public getMeshVisibility(): number {
-        if (!(this.meshSelected instanceof AbstractMesh)) return;
-        return this.meshSelected.visibility;
-    }
 
-    public setMeshColor(matId: string, colType: string, hex: string): string {
-        let sm: StandardMaterial = <StandardMaterial>this.scene.getMaterialByID(matId);
-        if (sm == null) return "material not found";
-        let col: Color3 = Color3.FromHexString(hex);
-        if (colType === "diffuse")
-            sm.diffuseColor = col;
-        else if (colType === "emissive")
-            sm.emissiveColor = col;
-        else if (colType === "specular")
-            sm.specularColor = col;
-        else if (colType === "ambient")
-            sm.ambientColor = col;
-        else {
-            return "invalid color type [" + colType + "]";
-        }
-        return null;
-    }
 
-    public getMatNames(): Array<string> {
-        if (!(this.meshSelected instanceof AbstractMesh) || !this.meshSelected.material) return null;
-        let mn: Array<string> = new Array();
-        if (this.isMeshSelected) {
-            if (this.meshSelected.material instanceof MultiMaterial) {
-                let mm: MultiMaterial = this.meshSelected.material;
-                for (let m of mm.subMaterials) {
-                    mn.push(m.id);
-                }
-                return mn;
-            }
-            else {
-                mn.push(this.meshSelected.material.id);
-                return mn;
-            }
-        } else return null;
 
-    }
-    public getMaterialName(id: string): string {
-        let mat: Material = this.scene.getMaterialByID(id);
-        if (mat == null) return null;
-        else return mat.name;
-    }
-    public getMaterialType(id: string): string {
-        let mat: Material = this.scene.getMaterialByID(id);
-        if (mat == null) return null;
-        if (mat instanceof StandardMaterial) return "standard material";
-        else return "not standard material";
-    }
-    //back face culling
-    public setMaterialBFC(id: string, b: boolean): string {
-        let mat: Material = this.scene.getMaterialByID(id);
-        if (mat == null) return null;
-        mat.backFaceCulling = b;
-    }
-    //back face culling
-    public getMaterialBFC(id: string): boolean | string {
-        let mat: Material = this.scene.getMaterialByID(id);
-        if (mat == null) return "material not found";
-        return mat.backFaceCulling;
-    }
-
-    public cloneMaterial(id: string) {
-        if (!(this.meshSelected instanceof AbstractMesh)) return;
-        let mat: Material = this.scene.getMaterialByID(id);
-        if (mat == null) return null;
-        if (this.meshSelected.material instanceof MultiMaterial) {
-            let mm: MultiMaterial = this.meshSelected.material;
-            this.meshSelected.material = mm.clone(mat.name + "Clone", true);
-        } else {
-            this.meshSelected.material = mat.clone(mat.name + "Clone");
-        }
-    }
-
-    public createText(): string {
-        let text: Texture = new Texture("", this.scene);
-        return text.uid;
-
-    }
-
-    /**
-     * returns an array containing 2 elements - texture id and texture name
-     */
-
-    public getMatTexture(matId: string, type: string): Array<string> {
-
-        let sm: StandardMaterial = <StandardMaterial>this.scene.getMaterialByID(matId);
-        if (sm == null) return null;
-        let uid: string = null;
-        let img: string = null;
-        if (type == "diffuse" && sm.diffuseTexture != null) {
-            uid = sm.diffuseTexture.uid;
-            img = (<Texture>sm.diffuseTexture).url;
-        } else if (type == "ambient" && sm.ambientTexture != null) {
-            uid = sm.ambientTexture.uid;
-            img = (<Texture>sm.ambientTexture).url;
-        } else if (type == "opacity" && sm.opacityTexture != null) {
-            uid = sm.opacityTexture.uid;
-            img = (<Texture>sm.opacityTexture).url;
-        } else if (type == "reflection" && sm.reflectionTexture != null) {
-            uid = sm.reflectionTexture.uid;
-            img = (<Texture>sm.reflectionTexture).url;
-        } else if (type == "emissive" && sm.emissiveTexture != null) {
-            uid = sm.emissiveTexture.uid;
-            img = (<Texture>sm.emissiveTexture).url;
-        } else if (type == "specular" && sm.specularTexture != null) {
-            uid = sm.specularTexture.uid;
-            img = (<Texture>sm.specularTexture).url;
-        } else if (type == "bump" && sm.bumpTexture != null) {
-            uid = sm.bumpTexture.uid;
-            img = (<Texture>sm.bumpTexture).url;
-        } else {
-            uid = null;
-            img = this.NO_TEXTURE;
-        }
-        //            if (img.indexOf("            .tga")>=0){
-        //                img=this            .TGA_IMAGE;
-        //            }
-
-        return [uid, img];
-    }
-    public setMatTexture(matId: string, type: string, textID: string) {
-        let bt: BaseTexture = this.getTextureByID(textID);
-        if (bt != null) {
-            let sm: StandardMaterial = <StandardMaterial>this.scene.getMaterialByID(matId);
-            if (sm == null) return;
-            if (type == "diffuse") {
-                sm.diffuseTexture = bt;
-            } else if (type == "ambient") {
-                sm.ambientTexture = bt;
-            } else if (type == "opacity") {
-                sm.opacityTexture = bt;
-            } else if (type == "reflection") {
-                sm.reflectionTexture = bt;
-            } else if (type == "emissive") {
-                sm.emissiveTexture = bt;
-            } else if (type == "specular") {
-                sm.specularTexture = bt;
-            } else if (type == "bump") {
-                sm.bumpTexture = bt;
-            }
-        }
-    }
-    public removeMatTexture(matId: string, type: string) {
-        let sm: StandardMaterial = <StandardMaterial>this.scene.getMaterialByID(matId);
-        if (sm == null) return;
-        if (type == "diffuse") {
-            sm.diffuseTexture = null;
-        } else if (type == "ambient") {
-            sm.ambientTexture = null;
-        } else if (type == "opacity") {
-            sm.opacityTexture = null;
-        } else if (type == "reflection") {
-            sm.reflectionTexture = null;
-        } else if (type == "emissive") {
-            sm.emissiveTexture = null;
-        } else if (type == "specular") {
-            sm.specularTexture = null;
-        } else if (type == "bump") {
-            sm.bumpTexture = null;
-        }
-
-    }
 
     public setTextURL(textID: string, textName: string) {
         let bt: Texture = <Texture>this.getTextureByID(textID);
@@ -2260,33 +2085,6 @@ export class Vishva {
             if (t.uid == id) return t;
         }
         return null;
-    }
-    public getMeshColor(matId: string, colType: string): string {
-
-        let sm: StandardMaterial = <StandardMaterial>this.scene.getMaterialByID(matId);
-        if (sm == null) return null;
-
-        if (!(sm instanceof StandardMaterial)) {
-            return "#000000";;
-        }
-
-        if (colType === "diffuse") {
-            if (sm.diffuseColor !== undefined) return sm.diffuseColor.toHexString();
-            else return "#000000";
-        } else if (colType === "emissive") {
-            if (sm.emissiveColor !== undefined) return sm.emissiveColor.toHexString();
-            else return "#000000";
-        } else if (colType === "specular") {
-            if (sm.specularColor !== undefined) return sm.specularColor.toHexString();
-            else return "#000000";
-        } else if (colType === "ambient") {
-            if (sm.ambientColor !== undefined) return sm.ambientColor.toHexString();
-            else return "#000000";
-        } else {
-            console.error("invalid color type [" + colType + "]");
-            return null;
-        }
-
     }
 
     public getMeshList(): Array<AbstractMesh> {
@@ -3354,8 +3152,8 @@ export class Vishva {
     */
 
     //private _grndSPS: GroundSPS;
-    public getGrndSPSbyID(gSpsId: string): GroundSPS {
-        for (let g of this.GroundSPSs) {
+    public getGrndSPSbyID(gSpsId: string): GrndSpread {
+        for (let g of this.GrndSpreads) {
             if (g.id == gSpsId) {
                 return g;
             }
@@ -3363,46 +3161,46 @@ export class Vishva {
         return null;
     }
 
-    public createGrndSPS(): GroundSPS | string {
-        let gs: GroundSPS;
+    public createGrndSPS(): GrndSpread | string {
+        let gs: GrndSpread;
         if (this.meshesPicked == null) {
             return "select a mesh to spread - use ctl-right click to select";
         } else if (this.meshesPicked.length > 1) {
             return "more than one mesh selected to spread - select only one";
         }
         let mesh: Mesh = <Mesh>this.meshesPicked[0];
-        gs = new GroundSPS(mesh.name + "-SPS", this, mesh, <GroundMesh>this.ground, {});
+        gs = new GrndSpread(mesh.name + "-SPS", this, mesh, <GroundMesh>this.ground, null);
         return gs;
     }
 
-    public getMeshSpreadDtls(meshId: string): SpreadDtls | string {
-        let gs: GroundSPS;
+    public getMeshSpreadDtls(meshId: string): SpreadDtl | string {
+        let gs: GrndSpread;
         let mesh: Mesh = <Mesh>this.scene.getMeshByID(meshId);
         if (mesh == null) {
             return "no mesh found with id : " + meshId;
         }
-        gs = new GroundSPS(mesh.name + "-SPS", this, mesh, <GroundMesh>this.ground, {});
+        gs = new GrndSpread(mesh.name + "-SPS", this, mesh, <GroundMesh>this.ground, null);
         return gs.getSpreadDtls();
     }
 
-    public updateSPSArray(gs: GroundSPS) {
-        if (this.GroundSPSs == null) {
-            this.GroundSPSs = new Array();
+    public updateSPSArray(gs: GrndSpread) {
+        if (this.GrndSpreads == null) {
+            this.GrndSpreads = new Array();
         }
-        this.GroundSPSs.push(gs);
+        this.GrndSpreads.push(gs);
     }
 
     /**
      * delete the sps if its underlying mesh is being deleted
      */
     public deleteSPS(mesh: AbstractMesh) {
-        if (this.GroundSPSs == null) return;
+        if (this.GrndSpreads == null) return;
         let i: number = 0;
-        for (let gSps of this.GroundSPSs) {
+        for (let gSps of this.GrndSpreads) {
             console.log(gSps);
             if (gSps.spsMesh == mesh) {
                 console.log("removing sps");
-                this.GroundSPSs.splice(i, 1);
+                this.GrndSpreads.splice(i, 1);
                 gSps.sps.dispose();
             }
             i++;
@@ -3411,31 +3209,31 @@ export class Vishva {
     }
     public getGrndSPSList(): Array<{ id: string, desc: string }> {
         let sl: Array<{ id: string, desc: string }> = new Array();
-        if (this.GroundSPSs == null) return sl;
-        for (let gSps of this.GroundSPSs) {
+        if (this.GrndSpreads == null) return sl;
+        for (let gSps of this.GrndSpreads) {
             sl.push({ id: gSps.id, desc: gSps.name });
         }
         return sl;
     }
 
 
-    public spreadOnGround(): string {
-        if (!this.isMeshSelected) {
-            return "no mesh selected";
-        }
-        let seed: number = Math.random() * 100;
-        let spreadDtls: SpreadDtls = {
-            seed: seed,
-            step: 5,
-            posMax: new Vector3(5, -1, 5)
-        };
-        let groundSPS: GroundSPS = new GroundSPS("sps", this, <Mesh>this.meshSelected, <GroundMesh>this.ground, spreadDtls);
-        if (this.GroundSPSs == null) {
-            this.GroundSPSs = new Array();
-        }
-        this.GroundSPSs.push(groundSPS);
-        return null;
-    }
+    // public spreadOnGround(): string {
+    //     if (!this.isMeshSelected) {
+    //         return "no mesh selected";
+    //     }
+    //     let seed: number = Math.random() * 100;
+    //     let spreadDtls: SpreadDtls = {
+    //         seed: seed,
+    //         step: 5,
+    //         posMax: new Vector3(5, -1, 5)
+    //     };
+    //     let groundSPS: GroundSPS = new GroundSPS("sps", this, <Mesh>this.meshSelected, <GroundMesh>this.ground, spreadDtls);
+    //     if (this.GroundSPSs == null) {
+    //         this.GroundSPSs = new Array();
+    //     }
+    //     this.GroundSPSs.push(groundSPS);
+    //     return null;
+    // }
 
 
     debugVisible: boolean = false;
@@ -3512,7 +3310,7 @@ export class Vishva {
         this.resetSkels(this.scene);
         //this.cleanupMats();
         //this.renameWorldTextures();
-        //TODO add support for CharacterController serialization.
+
         let vishvaSerialzed = new VishvaSerialized(this);
         vishvaSerialzed.bVer = Engine.Version;
         vishvaSerialzed.vVer = Vishva.version;
@@ -3526,24 +3324,6 @@ export class Vishva {
         vishvaSerialzed.misc.skyColor = this.skyColor;
         vishvaSerialzed.misc.skyBright = this.skyBright;
 
-
-
-        //we donot serialize the sps. 
-        //the sps mesh's doNotSerialize property is set to true when the sps is created
-        //serializing the sps bloats up the file
-        //instead we just serialize the sps properties and recreate the sps when the file
-        //is loaded in future
-        if (this.GroundSPSs != null) {
-            vishvaSerialzed.groundSPSserializeds = new Array();
-            for (let gSPS of this.GroundSPSs) {
-                console.log("saving");
-                console.log(gSPS);
-                vishvaSerialzed.groundSPSserializeds.push(gSPS.serialize());
-            }
-        }
-
-
-
         //serialize sna before scene
         //we might add tags to meshes in scene during sna serialize.
         //if we serialize scene before then we would miss those
@@ -3556,8 +3336,6 @@ export class Vishva {
 
         //sceneObj["VishvaSNA"] = snaObj;
         sceneObj["VishvaSerialized"] = vishvaSerialzed;
-
-
 
         let sceneString: string = JSON.stringify(sceneObj);
         //var file: File = new File([sceneString], "WorldFile.babylon");

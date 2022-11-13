@@ -20,6 +20,7 @@ import { UIConst } from "../UIConst";
 import { VDiag } from "../components/VDiag";
 import { GuiUtils } from "../GuiUtils";
 import { VThemes } from "../components/VTheme";
+import { InstancedMesh, Mesh, TransformNode } from "babylonjs";
 /**
  * Provides UI to manage an Item(mesh) properties
  */
@@ -41,10 +42,12 @@ export class PropsPanelUI {
     private _materialUI: MaterialUI;
     private _grndSPSUI: GrndSPSUI;
     private _grndDimUI: GrndDimUI;
+    private _node: TransformNode
 
-    constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
+    constructor(vishva: Vishva, vishvaGUI: VishvaGUI, node: TransformNode) {
         this._vishva = vishva;
         this._vishvaGUI = vishvaGUI;
+        this._node = node;
 
         Vishva.gui.appendChild(ppElement);
         this._propsAcc = document.getElementById("propsAcc");
@@ -113,7 +116,7 @@ export class PropsPanelUI {
 
 
     }
-
+    roque
 
 
     public open() {
@@ -147,6 +150,7 @@ export class PropsPanelUI {
             }
 
         }
+
         this._propsVDiag.open();
     }
 
@@ -193,6 +197,7 @@ export class PropsPanelUI {
             this._physicsUI.update()
         } else if (dtl.id === "Material") {
             if (this._materialUI == null) this._materialUI = new MaterialUI(this._vishva);
+            this._materialUI.setMesh(this._vishva.meshSelected);
             this._materialUI.update();
         } else if (dtl.id === "grndSPS") {
             if (this._grndSPSUI == null) this._grndSPSUI = new GrndSPSUI(this._vishva);

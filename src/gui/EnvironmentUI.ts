@@ -146,7 +146,7 @@ export class EnvironmentUI {
             //                    DialogMgr.showAlertDiag(r);
             //                }
 
-            if (this._vishva.selectGround()) vishvaGUI.showPropDiag();
+            if (this._vishva.selectGround()) vishvaGUI.showPropDiag(this._vishva.meshSelected);
             return true;
         };
 

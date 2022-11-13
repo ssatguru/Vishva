@@ -14,6 +14,7 @@ import { navElement } from "./NavBarML";
 import { saveElement } from "./VishvaML";
 import { VDiag } from "./components/VDiag";
 import { VTheme, VThemes } from "./components/VTheme";
+import { TransformNode } from "babylonjs";
 
 
 export class GuiSettings {
@@ -275,7 +276,12 @@ export class VishvaGUI {
             if ((this._itemProps != null) && (this._itemProps.isOpen())) {
                 this._itemProps.close();
             } else {
-                this.showPropDiag();
+                if (!this._vishva.anyMeshSelected()) {
+                    DialogMgr.showAlertDiag("no mesh selected")
+                    return;
+                } else {
+                    this.showPropDiag(this._vishva.meshSelected);
+                }
             }
             return false;
         };
@@ -316,13 +322,10 @@ export class VishvaGUI {
      * called by vishva when editcontrol
      * is attached to mesh
      */
-    public showPropDiag() {
-        if (!this._vishva.anyMeshSelected()) {
-            DialogMgr.showAlertDiag("no mesh selected")
-            return;
-        }
+    public showPropDiag(node: TransformNode) {
+
         if (this._itemProps == null) {
-            this._itemProps = new PropsPanelUI(this._vishva, this);
+            this._itemProps = new PropsPanelUI(this._vishva, this, node);
         }
         this._itemProps.open();
         if (this._items != null && this._items.isOpen()) this._items._highlightSelected();

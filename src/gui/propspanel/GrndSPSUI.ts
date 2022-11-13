@@ -1,6 +1,6 @@
 import { Vector2 } from "babylonjs";
 import { Vishva } from "../../Vishva";
-import { GroundSPS, SpreadDtls } from "../../GroundSPS";
+import { GrndSpread, SpreadDtl } from "../../GrndSpread";
 import { VInputNumber } from "../components/VInputNumber";
 import { VInputVector2 } from "../components/VInputVector2";
 import { VInputVector3 } from "../components/VInputVector3";
@@ -13,7 +13,7 @@ import { VInputSelect } from "../components/VInputSelect";
 export class GrndSPSUI {
 
     private _vishva: Vishva;
-    private _grndSPS: GroundSPS;
+    private _grndSPS: GrndSpread;
     private _ready: boolean = false;
 
     private _spsList: VInputSelect;
@@ -50,6 +50,7 @@ export class GrndSPSUI {
         let genSPS: HTMLButtonElement = <HTMLButtonElement>document.getElementById("genSPS");
         genSPS.disabled = this._ready;
         genSPS.onclick = () => {
+            //get the parms from UI and then generate 
             if (this._updateSpreadParms()) {
                 this._ready = true;
             } else {
@@ -80,10 +81,11 @@ export class GrndSPSUI {
     }
 
 
+    //updates UI from SPS
     private _updateUI(gSPSid?: string): boolean {
-        let sdo: SpreadDtls;
+        let sdo: SpreadDtl;
         if (gSPSid) {
-            let gs: GroundSPS;
+            let gs: GrndSpread;
             gs = this._vishva.getGrndSPSbyID(gSPSid);
             if (gs == null) {
                 DialogMgr.showAlertDiag("could not find gound sps with id : " + gSPSid);
@@ -92,13 +94,13 @@ export class GrndSPSUI {
             sdo = gs.getSpreadDtls();
             this._grndSPS = gs;
         } else {
-            let gs: GroundSPS | string = this._vishva.createGrndSPS();
+            let gs: GrndSpread | string = this._vishva.createGrndSPS();
             if (!(gs instanceof Object)) {
                 DialogMgr.showAlertDiag(gs);
                 return false;
             } else {
-                sdo = (<GroundSPS>gs).getSpreadDtls();
-                this._grndSPS = <GroundSPS>gs;
+                sdo = (<GrndSpread>gs).getSpreadDtls();
+                this._grndSPS = <GrndSpread>gs;
             }
         }
         this._spsName.innerText = this._grndSPS.name + "(" + this._grndSPS.id + ")";
@@ -111,14 +113,15 @@ export class GrndSPSUI {
         this.posMax.setValue(sdo.posMax);
         this.sclMin.setValue(sdo.sclMin);
         this.sclMax.setValue(sdo.sclMax);
-        this.rotMin.setValue(sdo.rotMin);
-        this.rotMax.setValue(sdo.rotMax);
+        this.rotMin.setValue(sdo.rotMin.scale(180 / Math.PI));
+        this.rotMax.setValue(sdo.rotMax.scale(180 / Math.PI));
         this.posRange.setValue(sdo.posRange);
         this.sclRange.setValue(sdo.sclRange);
-        this.rotRange.setValue(sdo.rotRange);
+        this.rotRange.setValue(sdo.rotRange * 180 / Math.PI);
         return true;
     }
 
+    //update spread details from UI and generate spread
     private _updateSpreadParms(): boolean {
         let smax: Vector2 = this.sprdCon2.getValue();
         let smin: Vector2 = this.sprdCon1.getValue();
@@ -130,7 +133,7 @@ export class GrndSPSUI {
             DialogMgr.showAlertDiag("corners y co-ordinates cannot be the same");
             return false;
         }
-        let sdo: SpreadDtls = this._grndSPS.getSpreadDtls();
+        let sdo: SpreadDtl = this._grndSPS.getSpreadDtls();
         sdo.seed = this._spsSeed.getValue();
         sdo.step = this.spsStep.getValue();
         sdo.sprdCon1 = this.sprdCon1.getValue();
@@ -139,11 +142,11 @@ export class GrndSPSUI {
         sdo.posMax = this.posMax.getValue();
         sdo.sclMin = this.sclMin.getValue();
         sdo.sclMax = this.sclMax.getValue();
-        sdo.rotMin = this.rotMin.getValue();
-        sdo.rotMax = this.rotMax.getValue();
+        sdo.rotMin = this.rotMin.getValue().scale(Math.PI / 180);
+        sdo.rotMax = this.rotMax.getValue().scale(Math.PI / 180);
         sdo.posRange = this.posRange.getValue();
         sdo.sclRange = this.sclRange.getValue();
-        sdo.rotRange = this.rotRange.getValue();
+        sdo.rotRange = this.rotRange.getValue() * Math.PI / 180
         this._grndSPS.setSpreadDtls(sdo);
         this._grndSPS.generate();
         this._vishva.updateSPSArray(this._grndSPS);

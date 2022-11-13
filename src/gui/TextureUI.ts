@@ -32,6 +32,8 @@ export class TextureUI {
     constructor(vishva: Vishva) {
         this._vishva = vishva;
 
+
+
         document.body.appendChild(txtrElement);
 
         this._textureDiag = new VDiag("textureDiag", "Texture", VDiag.centerBottom, "auto", "auto", "0", false);
@@ -83,7 +85,7 @@ export class TextureUI {
                     this._textName = imgsrc;
                     this._textImgSrc.innerText = imgsrc;
                     if (imgsrc.indexOf(".tga") >= 0) {
-                        imgsrc = this._vishva.TGA_IMAGE;
+                        imgsrc = Vishva.TGA_IMAGE;
                     }
                     this._textureImg.src = imgsrc;
                     this._matTextImg.src = imgsrc;

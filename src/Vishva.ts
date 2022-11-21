@@ -465,7 +465,7 @@ export class Vishva {
             Tags.AddTagsTo(this.sun, "Vishva.sun");
 
             this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-            this.sunDR.position = new Vector3(0, 1048, 0);
+            this.sunDR.position = new Vector3(0, 128, 0);
 
             this._setSunAB(this.sun.direction);
 
@@ -478,6 +478,7 @@ export class Vishva {
             for (let light of scene.lights) {
                 if (light.id === "Vishva.dl01") {
                     this.sunDR = <DirectionalLight>light;
+                    this.sunDR.position = new Vector3(0, 128, 0);
                     this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
                     let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                     this.setShadowProperty(sl, this.shadowGenerator);
@@ -651,9 +652,9 @@ export class Vishva {
     uniCamController: UniCamController;
 
     private process() {
-        this.sunDR.position.x = this.avatar.position.x + 100;
-        this.sunDR.position.y = this.avatar.position.y + 100;
-        this.sunDR.position.z = this.avatar.position.z + 0;
+        // this.sunDR.position.x = this.avatar.position.x + 100;
+        // this.sunDR.position.y = this.avatar.position.y + 100;
+        // this.sunDR.position.z = this.avatar.position.z + 0;
 
         if (this.cameraAnimating) return;
 

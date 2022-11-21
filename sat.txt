@@ -22,3 +22,17 @@ In index.html note the <base href="../" />
 
 webpack-dev-server is setup to serve build and static content from  root "./"
 webpack will copy all src/assets folder to bin folder.
+
+
+themes
+download themes from
+https://www.w3schools.com/w3css/w3css_color_themes.asp
+example
+w3-theme-eggpant.css
+
+The css itself isn't used.
+Instead the color values fromthe css needs to be copied to sr/gui/components/VTheme.ts
+a) create a new class say EggPlantTheme which extends VTheme.
+b) copy the 10 foreground and background colors from the css to this class
+c) set the CurretTheme  to an instance of this new class.
+See VTheme.ts for more instructions.

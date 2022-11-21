@@ -266,14 +266,18 @@ export class AnimationUI {
             if (skelName === "") skelName = "NO NAME";
             skelName = skelName + ", " + this._skel.id + ", " + this._skel.uniqueId;
             this._skelFound.style.display = "inherit";
-            if (AnimUtils.skelDrivenByAG(this._skel, this._vishva.scene)) {
+            console.log(this._skel.animations);
+
+            //if (AnimUtils.skelDrivenByAG(this._skel, this._vishva.scene)) {
+            if (this._refreshAgSelect()) {
                 this._agFound.style.display = "inherit";
                 this._arFound.style.display = "none";
-                this._refreshAgSelect();
-            } else {
+            } else if (this._refreshArSelect()) {
                 this._agFound.style.display = "none";
                 this._arFound.style.display = "inherit";
-                this._refreshArSelect();
+            } else {
+                this._agFound.style.display = "none";
+                this._arFound.style.display = "none";
             }
         }
         document.getElementById("skelName").innerText = skelName;
@@ -284,7 +288,7 @@ export class AnimationUI {
     /**
      * refresh the list of animation ranges
      */
-    private _refreshArSelect() {
+    private _refreshArSelect(): boolean {
         var childs: HTMLCollection = this._arSelect.children;
         var l: number = (<number>childs.length | 0);
         for (var i: number = l - 1; i >= 0; i--) {
@@ -292,7 +296,7 @@ export class AnimationUI {
         }
 
         var range: AnimationRange[] = this._vishva.getAnimationRanges();
-        if (range != null) {
+        if (range != null && range.length > 0) {
             var animOpt: HTMLOptionElement;
             for (let ar of range) {
                 //if a range is deleted using skeleton.deleteAnimationRange , it shows up as null !!
@@ -306,13 +310,16 @@ export class AnimationUI {
             if (range[0] != null) {
                 document.getElementById("animFrom").innerText = (<number>new Number(range[0].from)).toString();
                 document.getElementById("animTo").innerText = (<number>new Number(range[0].to)).toString();
+                return true;
             } else {
                 document.getElementById("animFrom").innerText = "";
                 document.getElementById("animTo").innerText = "";
+                return false;
             }
         } else {
             document.getElementById("animFrom").innerText = "";
             document.getElementById("animTo").innerText = "";
+            return false;
         }
     }
 

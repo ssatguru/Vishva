@@ -11,6 +11,16 @@ let hlpHTML = `
           <li>Jump - press and release "space" key</li>
         </ul>
 
+        <h6>Camera Movement Keys</h6>
+        <ul>
+          <li> Normally the camera follows the avatar.<br>
+          To move the camera independently of the avatar, press the "ESC" key. <br>
+          The avatar will become semi-transparent  to indicate it no longer controls the cameras. <br>
+          Pressing the "A,D,W,S" or arrow kyes will just move the camera.<br>
+          To switch back to Avatar, press  "ESC" key again.
+          </li>
+        </ul>
+
         <h6>Item Edit Keys</h6>
         <ul>
           <li>
@@ -34,8 +44,8 @@ let hlpHTML = `
           <li>To pan around focused item - press and drag mouse right key</li>
         </ul>
 
-        <h6>For more help</h6>
-        <a href="https://github.com/ssatguru/Vishva.ts/tree/modularize" target="_blank">https://github.com/ssatguru/Vishva.ts/tree/modularize</a>
+        <h6>For more help and source code</h6>
+        <a href="https://github.com/ssatguru/Vishva/tree/master" target="_blank">https://github.com/ssatguru/Vishva/tree/master</a>
 
 </div>        
 `;

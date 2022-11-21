@@ -106,7 +106,12 @@ export class AnimUtils {
         public static skelDrivenByAG(skel: Skeleton, scene: Scene): boolean {
                 if (!skel.animations) return false;
 
-                return skel.animations.some(sa => scene.animationGroups.some(ag => ag.children.some(ta => ta.animation == sa)));
+                return skel.animations.some(
+                        sa => {
+                                console.log(sa.name);
+                                scene.animationGroups.some(ag => ag.children.some(ta => ta.animation == sa))
+                        }
+                );
         }
 
 

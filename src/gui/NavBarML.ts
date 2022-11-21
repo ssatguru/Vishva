@@ -8,7 +8,7 @@ let navHTML = `
 
         <button id="showNavMenu" title="build menu"><span class="material-icons-outlined" >menu</span></button>
 
-        <nav id="navMenubar" style="display: inline-block;">
+        <nav id="navMenubar" style="display: inline-block; border-style:solid;border-width:1px;">
 
                 <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
 

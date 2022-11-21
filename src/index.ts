@@ -1,7 +1,7 @@
 import { Vishva } from "./Vishva";
 
 import "./w3.css";
-import "./w3-theme-eggplant.css";
+//import "./w3-theme-eggplant.css";
 import "./style.css";
 
 

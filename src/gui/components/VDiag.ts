@@ -233,6 +233,11 @@ export class VDiag {
 
                 this.isClosed = false;
                 this.w.style.display = 'grid';
+
+                //bring to front when opened
+                this.w.parentNode.appendChild(this.w);
+
+
                 if (this.dirty) {
                         this.dirty = false;
                         this.position(this.pos);

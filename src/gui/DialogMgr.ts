@@ -11,6 +11,7 @@ export class DialogMgr {
         if (this._alertDialog == null) {
             this._alertDiv = document.createElement("div");
             this._alertDiv.style.textAlign = "center";
+            this._alertDiv.style.padding = "1em";
             this._alertDialog = new VDiag(this._alertDiv, "Info", VDiag.center, "", "", "12em");
         }
     }

@@ -58,10 +58,8 @@ export class GrndSPSUI {
             };
             genSPS.disabled = !this._ready;
         }
-        this._spsList = new VInputSelect("spsList", this._vishva.getGrndSPSList());
-        this._spsList.onSelect = (id: string) => {
-            this._updateUI(id);
-        }
+
+
 
         this._spsName = document.getElementById("spsName");
         this._spsMesh = document.getElementById("spsMesh");
@@ -78,6 +76,18 @@ export class GrndSPSUI {
         this.posRange = new VRange("posRange", 0, 1, 0.1, 0.5);
         this.sclRange = new VRange("sclRange", 0, 1, 0.1, 0.5);
         this.rotRange = new VRange("rotRange", 0, 180, 1, 5);
+
+
+        let sl = this._vishva.getGrndSPSList();
+        sl.push({ id: "new", desc: "generate new one" });
+        this._spsList = new VInputSelect("spsList", sl);
+        this._spsList.onSelect = (id: string) => {
+            console.log("sps selected " + id);
+            this._updateUI(id);
+        }
+        if (sl.length == 1) {
+            this._updateUI(sl[0].id);
+        }
     }
 
 

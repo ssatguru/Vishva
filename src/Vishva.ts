@@ -68,7 +68,8 @@ import {
     TransformNode,
     StereoscopicArcRotateCamera,
     AnimationGroup,
-    AssetContainer
+    AssetContainer,
+    LinesMesh
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -366,10 +367,12 @@ export class Vishva {
     }
 
     private sceneLoad2(obj: any) {
-        var tfat: TextFileAssetTask = <TextFileAssetTask>obj;
-        var foo: Object = <Object>JSON.parse(tfat.text);
+        // console.log("sceneload2");
+        let tfat: TextFileAssetTask = <TextFileAssetTask>obj;
+        let foo: Object = <Object>JSON.parse(tfat.text);
 
         this.vishvaSerialized = foo["VishvaSerialized"];
+        // console.log(this.vishvaSerialized);
         console.log("world babylon version : " + this.vishvaSerialized.bVer);
         console.log("world vishva version : " + this.vishvaSerialized.vVer);
 
@@ -391,7 +394,7 @@ export class Vishva {
         SceneLoader.ShowLoadingScreen = false;
 
         //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
-
+        // console.log("to sceneload3");
         SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.sceneLoad3(scene) });
 
     }
@@ -407,216 +410,237 @@ export class Vishva {
      * @param scene 
      */
     private sceneLoad3(scene: Scene, empty: boolean = false) {
+        // console.log("sceneload3");
+        try {
 
-        var avFound: boolean = false;
-        var skelFound: boolean = false;
-        var sunFound: boolean = false;
-        var groundFound: boolean = false;
-        var skyFound: boolean = false;
-        var cameraFound: boolean = false;
+            var avFound: boolean = false;
+            var skelFound: boolean = false;
+            var sunFound: boolean = false;
+            var groundFound: boolean = false;
+            var skyFound: boolean = false;
+            var cameraFound: boolean = false;
 
-        for (let mesh of scene.meshes) {
+            for (let mesh of scene.meshes) {
 
-            //sat TODO
-            //mesh.receiveShadows = false;
-            if (Tags.HasTags(mesh)) {
-                if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
-                    avFound = true;
-                    this.avatar = <Mesh>mesh;
-                    //TODO ellipsoidOffset not serialized?
-                    this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
-                    //TODO override ellipsoid ?
-                    this.avatar.ellipsoid = this._avEllipsoid;
-                } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
-                    skyFound = true;
-                    this.skybox = <Mesh>mesh;
-                    this.skybox.isPickable = false;
-                } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
-                    groundFound = true;
-                    this.ground = <Mesh>mesh;
-                }
-            }
-        }
+                //sat TODO
 
-        for (let skeleton of scene.skeletons) {
-            if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
-                skelFound = true;
-                this.avatarSkeleton = skeleton;
-            }
-        }
+                //  if (mesh.getClassName() != "InstancedMesh") mesh.receiveShadows = true;
 
-        if (!skelFound) {
-            console.log("No Skeleton found");
-        }
-
-        for (let light of scene.lights) {
-            if (Tags.MatchesQuery(light, "Vishva.sun")) {
-                sunFound = true;
-                this.sun = <HemisphericLight>light;
-                this._setSunAB(this.sun.direction);
-            }
-        }
-
-        if (!sunFound) {
-            console.log("no vishva sun found. creating sun");
-
-            this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
-            this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
-            Tags.AddTagsTo(this.sun, "Vishva.sun");
-
-            this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
-            this.sunDR.position = new Vector3(0, 128, 0);
-
-            this._setSunAB(this.sun.direction);
-
-            let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-            this.shadowGenerator = new ShadowGenerator(1024, sl);
-            this.setShadowProperty(sl, this.shadowGenerator);
-            //                this.avShadowGenerator=new ShadowGenerator(512,sl);
-            //                this.setShadowProperty(sl,this.avShadowGenerator);
-        } else {
-            for (let light of scene.lights) {
-                if (light.id === "Vishva.dl01") {
-                    this.sunDR = <DirectionalLight>light;
-                    this.sunDR.position = new Vector3(0, 128, 0);
-                    this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
-                    let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                    this.setShadowProperty(sl, this.shadowGenerator);
-                }
-            }
-        }
-
-        for (let mesh of scene.meshes) {
-            if (mesh != null) {
-                if (mesh instanceof InstancedMesh) {
-                    mesh.checkCollisions = mesh.sourceMesh.checkCollisions;
-                    //sat TODO remove comment
-                    //mesh.receiveShadows = true;
-                    this._addToShadowCasters(mesh);
-
-                } else {
-                    //(<Mesh>mesh).addLODLevel(55, null);
-                    //this._removeFromShadowCasters(mesh);
-                }
-            }
-        }
-
-        //add avatar back to shadow caster list
-        if (avFound) this._addToShadowCasters(this.avatar);
-
-        for (let camera of scene.cameras) {
-            if (Tags.MatchesQuery(camera, "Vishva.camera")) {
-                cameraFound = true;
-                this.arcCamera = <ArcRotateCamera>camera;
-                this.setCameraSettings(this.arcCamera);
-                this.arcCamera.attachControl(this.canvas, true);
-                //this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
-            }
-        }
-
-        if (!cameraFound) {
-            console.log("no vishva camera found. creating camera");
-            this.arcCamera = this.createCamera(this.scene, this.canvas);
-            this.scene.activeCamera = this.arcCamera;
-        }
-
-
-        //TODO
-        this.arcCamera.checkCollisions = this._cameraCollision;
-        //this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
-        this.arcCamera.collisionRadius = this._cameraEllipsoid;
-
-        if (!groundFound) {
-            if (empty) {
-                //only create ground if we are starting from scratch, world=empty
-                console.log("no vishva ground found. creating ground");
-                //this.ground=this.createGround(this.scene);
-                //this.createGround_htmap(this.scene);
-                //this.creatDynamicTerrain();
-                this._createPlaneGround(this.scene);
-            }
-
-        } else {
-            //in case this wasn't set in serialized scene
-            this.ground.receiveShadows = true;
-            //are physicsImpostor serialized?
-            //                if (this.enablePhysics) {
-            //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
-            //                }
-            if (this.vishvaSerialized.grndSpreadArray != null) {
-                this.GrndSpreads = new Array()
-                for (let gSPSs of this.vishvaSerialized.grndSpreadArray) {
-                    try {
-                        let gSPS = GrndSpread_Serializeable.deserialize(gSPSs);
-                        gSPS.generate();
-                        this.GrndSpreads.push(gSPS);
-                    } catch (e) {
-                        console.log("error during gSPS.generate()")
-                        console.log(e);
+                if (Tags.HasTags(mesh)) {
+                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                        avFound = true;
+                        this.avatar = <Mesh>mesh;
+                        //TODO ellipsoidOffset not serialized?
+                        this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
+                        //TODO override ellipsoid ?
+                        this.avatar.ellipsoid = this._avEllipsoid;
+                    } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
+                        skyFound = true;
+                        this.skybox = <Mesh>mesh;
+                        this.skybox.isPickable = false;
+                    } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
+                        if (!groundFound) {
+                            groundFound = true;
+                            this.ground = <Mesh>mesh;
+                            this.ground.isPickable = true;
+                        }
                     }
                 }
             }
-        }
 
 
-        this.scene.clearColor = this.skyColor.scale(this.skyBright);
+            // console.log("sceneload3 skesls");
 
-        if (!skyFound) {
-            console.log("no vishva sky found. creating sky");
-            //this.skybox = this.createSkyBox(this.scene,this.skyboxTextures);
-            this.setSunBright(0.5);
-        }
-        if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
-            this.scene.fogMode = Scene.FOGMODE_EXP;
-            this.scene.fogDensity = 0;
-        }
-        //            if(this.scene.fogMode!==Scene.FOGMODE_LINEAR) {
-        //                this.scene.fogMode=Scene.FOGMODE_LINEAR;
-        //                this.scene.fogStart=256;
-        //                   this.sthis.scene.fogEnd=512;
-        //             cene.fogDensity=0;
-        //            }
-        if (this.editEnabled) {
-            this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(<PointerEvent>evt, pickResult) };
-        }
+            for (let skeleton of scene.skeletons) {
+                if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
+                    skelFound = true;
+                    this.avatarSkeleton = skeleton;
+                }
+            }
 
-        this.avManager = new AvManager(
-            this.avatar,
-            this.avatarFolder,
-            this.avatarFile,
-            this._avEllipsoid,
-            this._avEllipsoidOffset,
-            this.scene,
-            this.shadowGenerator,
-            this.spawnPosition,
-            this.arcCamera,
-            this.saveAVcameraPos
-        );
+            if (!skelFound) {
+                console.log("No Skeleton found");
+            }
 
-        if (!avFound) {
-            console.log("no vishva av found. creating av");
-            //remember loadAvatar is async. process
-            this.avManager.createAvatar((avatar: Mesh) => {
-                this.avatar = avatar;
-                this.avatarSkeleton = this.avatar.skeleton;
+            for (let light of scene.lights) {
+                if (Tags.MatchesQuery(light, "Vishva.sun")) {
+                    sunFound = true;
+                    this.sun = <HemisphericLight>light;
+                    this._setSunAB(this.sun.direction);
+                }
+            }
+
+            // console.log("sceneload3 suns");
+            if (!sunFound) {
+                console.log("no vishva sun found. creating sun");
+
+                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
+                this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
+                Tags.AddTagsTo(this.sun, "Vishva.sun");
+
+                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
+                this.sunDR.position = new Vector3(0, 128, 0);
+
+                this._setSunAB(this.sun.direction);
+
+                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                this.shadowGenerator = new ShadowGenerator(1024, sl);
+                this.setShadowProperty(sl, this.shadowGenerator);
+                //                this.avShadowGenerator=new ShadowGenerator(512,sl);
+                //                this.setShadowProperty(sl,this.avShadowGenerator);
+            } else {
+                for (let light of scene.lights) {
+                    if (light.id === "Vishva.dl01") {
+                        this.sunDR = <DirectionalLight>light;
+                        this.sunDR.position = new Vector3(0, 128, 0);
+                        this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
+                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                        this.setShadowProperty(sl, this.shadowGenerator);
+                    }
+                }
+            }
+
+            // console.log("sceneload3 meshes");
+            for (let mesh of scene.meshes) {
+                if (mesh != null) {
+                    if (mesh instanceof InstancedMesh) {
+                        mesh.checkCollisions = mesh.sourceMesh.checkCollisions;
+                        //sat TODO remove comment
+                        //mesh.receiveShadows = true;
+                        this._addToShadowCasters(mesh);
+
+                    } else {
+                        //(<Mesh>mesh).addLODLevel(55, null);
+                        //this._removeFromShadowCasters(mesh);
+                    }
+                }
+            }
+
+            //add avatar back to shadow caster list
+            if (avFound) this._addToShadowCasters(this.avatar);
+
+            // console.log("sceneload3 cameras");
+
+            for (let camera of scene.cameras) {
+                if (Tags.MatchesQuery(camera, "Vishva.camera")) {
+                    cameraFound = true;
+                    this.arcCamera = <ArcRotateCamera>camera;
+                    this.setCameraSettings(this.arcCamera);
+                    this.arcCamera.attachControl(true, false, 2);
+                    //this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
+                }
+            }
+
+            if (!cameraFound) {
+                console.log("no vishva camera found. creating camera");
+                this.arcCamera = this.createCamera(this.scene, this.canvas);
+                this.scene.activeCamera = this.arcCamera;
+            }
+
+
+            //TODO
+            this.arcCamera.checkCollisions = this._cameraCollision;
+            //this.mainCamera.collisionRadius=new Vector3(0.5,0.5,0.5);
+            this.arcCamera.collisionRadius = this._cameraEllipsoid;
+
+            if (!groundFound) {
+                if (empty) {
+                    //only create ground if we are starting from scratch, world=empty
+                    console.log("no vishva ground found. creating ground");
+                    //this.ground=this.createGround(this.scene);
+                    //this.createGround_htmap(this.scene);
+                    //this.creatDynamicTerrain();
+                    this._createPlaneGround(this.scene);
+                }
+
+            } else {
+                //in case this wasn't set in serialized scene
+                this.ground.receiveShadows = true;
+                //are physicsImpostor serialized?
+                //                if (this.enablePhysics) {
+                //                    this.ground.physicsImpostor = new BABYLON.PhysicsImpostor(this.ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0, restitution: 0.1}, this.scene);
+                //                }
+                if (this.vishvaSerialized.grndSpreadArray != null) {
+                    this.GrndSpreads = new Array()
+                    for (let gSPSs of this.vishvaSerialized.grndSpreadArray) {
+                        try {
+                            let gSPS = GrndSpread_Serializeable.deserialize(gSPSs);
+                            gSPS.generate();
+                            this.GrndSpreads.push(gSPS);
+                        } catch (e) {
+                            console.log("error during gSPS.generate()")
+                            console.log(e);
+                        }
+                    }
+                }
+            }
+
+
+            this.scene.clearColor = this.skyColor.scale(this.skyBright);
+
+            if (!skyFound) {
+                console.log("no vishva sky found. creating sky");
+                //this.skybox = this.createSkyBox(this.scene,this.skyboxTextures);
+                this.setSunBright(0.5);
+            }
+            if (this.scene.fogMode !== Scene.FOGMODE_EXP) {
+                this.scene.fogMode = Scene.FOGMODE_EXP;
+                this.scene.fogDensity = 0;
+            }
+            //            if(this.scene.fogMode!==Scene.FOGMODE_LINEAR) {
+            //                this.scene.fogMode=Scene.FOGMODE_LINEAR;
+            //                this.scene.fogStart=256;
+            //                   this.sthis.scene.fogEnd=512;
+            //             cene.fogDensity=0;
+            //            }
+            if (this.editEnabled) {
+                this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(<PointerEvent>evt, pickResult) };
+            }
+
+            this.avManager = new AvManager(
+                this.avatar,
+                this.avatarFolder,
+                this.avatarFile,
+                this._avEllipsoid,
+                this._avEllipsoidOffset,
+                this.scene,
+                this.shadowGenerator,
+                this.spawnPosition,
+                this.arcCamera,
+                this.saveAVcameraPos
+            );
+
+            if (!avFound) {
+                console.log("no vishva av found. creating av");
+                //remember loadAvatar is async. process
+                this.avManager.createAvatar((avatar: Mesh) => {
+                    this.avatar = avatar;
+                    this.avatarSkeleton = this.avatar.skeleton;
+                    this.sceneLoad4();
+                });
+            } else {
                 this.sceneLoad4();
-            });
-        } else {
-            this.sceneLoad4();
+            }
+        } catch (e) {
+            console.log(e);
         }
     }
 
     // -- sceneload4 --
 
     private sceneLoad4() {
+        // console.log("sceneLaod4");
 
         this.cc = this.avManager.setCharacterController(this.avatar);
         if (this.vishvaSerialized && this.vishvaSerialized.avSerialized) {
 
+            if (this.vishvaSerialized.avSerialized.settings.sound)
+                this.vishvaSerialized.avSerialized.settings.sound = AvSerialized.deSerializeSound(this.vishvaSerialized.avSerialized.settings.sound);
+
             this.cc.setSettings(this.vishvaSerialized.avSerialized.settings);
 
             //if avatar is animated by animationgroups then we need to re-reference
-            //teh niamtion groups from the serialized data/
+            //the animation groups from the serialized data
             let ac: ActionMap = AvSerialized.deSerializeAG(this.scene, this.vishvaSerialized.avSerialized.actionMap);
             this.cc.setActionMap(ac);
         }
@@ -652,9 +676,31 @@ export class Vishva {
     uniCamController: UniCamController;
 
     private process() {
+
+        this.arcCamera.position.subtractToRef(this.arcCamera.target, this.sun.direction);
+
         // this.sunDR.position.x = this.avatar.position.x + 100;
         // this.sunDR.position.y = this.avatar.position.y + 100;
         // this.sunDR.position.z = this.avatar.position.z + 0;
+
+        if (this._clickMove) {
+            let d = Vector3.Distance(this._clickMoveTarget, this.avatar.position);
+
+            //every cycle the distance should be decreasing
+            //the previous distance should be less than the current distance
+            //if we have reached the destination or if the distance has started increasing instead of decreasing or remains the same then then stop
+            //if same means the avatar is stuck and cannot move forward.
+            if (d < 0.5 || d >= this._prevClickMoveDist) {
+                this.cc.walk(false);
+                this._clickMove = false;
+                // this._marker.isVisible = false;
+                // this._markerLine.isVisible = false;
+                this.cc.setMode(0);
+                this._prevClickMoveDist = 0;
+            } else {
+                this._prevClickMoveDist = d;
+            }
+        }
 
         if (this.cameraAnimating) return;
 
@@ -749,8 +795,9 @@ export class Vishva {
     private setShadowProperty(sl: IShadowLight, shadowGenerator: ShadowGenerator) {
         //            shadowGenerator.useBlurVarianceShadowMap = true;
         //            shadowGenerator.bias = 1.0E-6;
-
-        shadowGenerator.useBlurExponentialShadowMap = true;
+        if (shadowGenerator == null) return;
+        //shadowGenerator.useBlurExponentialShadowMap = true;
+        shadowGenerator.useExponentialShadowMap = true;
         //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
         shadowGenerator.bias = -0.3;
 
@@ -761,7 +808,6 @@ export class Vishva {
 
         this.sunDR.autoCalcShadowZBounds = true;
         shadowGenerator.depthScale = 4;
-
     }
 
     debug: boolean = true;
@@ -802,11 +848,71 @@ export class Vishva {
 
     public editControl: EditControl;
 
+    private _clickMove: boolean = false;
+    private _clickMoveTarget: Vector3;
+    private _prevClickMoveDist: number = 0;
+
+    private _marker: Mesh = null;
+    private _markerLine: LinesMesh = null;
+    private _lineOptions = { points: [new Vector3(0, 0, 0), new Vector3(0, 0, 0)], dashSize: 2, gapSize: 1, updatable: true, instance: this._markerLine };
+
+
+    private _createMarker() {
+        this._marker = MeshBuilder.CreateCylinder("cylinder", { height: 0.25, diameterTop: 0, diameterBottom: 0.25 });
+        this._marker.doNotSerialize = true;
+        this._marker.rotation.x = Math.PI;
+        const m: StandardMaterial = new StandardMaterial("marker", this.scene);
+        m.diffuseColor = new Color3(1, 0.6, 0);
+        this._marker.material = m;
+
+        this._markerLine = MeshBuilder.CreateLines("markerlines", this._lineOptions);
+        this._markerLine.doNotSerialize = true;
+        this._markerLine.color = new Color3(1, 0.6, 0);
+        this._markerLine.alwaysSelectAsActiveMesh = true;
+    }
+
     private pickObject(evt: PointerEvent, pickResult: PickingInfo) {
         // prevent curosr from changing to a edit caret in Chrome
         evt.preventDefault();
 
         if (!pickResult.hit) return
+
+        //move av using click
+        // if (pickResult.pickedMesh == this.ground) {
+        //if (this.key.shift && evt.button == 0) {
+
+        if ((evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
+            // console.log("click move");
+            let diffX = pickResult.pickedPoint.x - this.avatar.position.x;
+            let diffY = pickResult.pickedPoint.z - this.avatar.position.z;
+            this.avatar.rotation.y = Math.PI + Math.atan2(diffX, diffY);
+            this._clickMove = true;
+            this._clickMoveTarget = pickResult.pickedPoint.clone();
+
+
+            //every cycle the distance should be decreasing
+            //the previous distance should be less than the current distance
+            //lets start with some arbitrary large number for previous distance
+            this._prevClickMoveDist = 10000;
+
+            // if (this._marker == null) this._createMarker();
+            // this._marker.position = this._clickMoveTarget.clone();
+            // this._marker.position.y += 0.125;
+            // this._marker.isVisible = true;
+
+            // this._lineOptions.points[0] = this.avatar.position;
+            // this._lineOptions.points[1] = this._clickMoveTarget;
+            // this._lineOptions.instance = this._markerLine;
+            // MeshBuilder.CreateLines("markerlines", this._lineOptions);
+
+            // this._markerLine.isVisible = true;
+
+            this.cc.setMode(1);
+            this.cc.walk(true);
+            return;
+        }
+
+
 
         // pick the hit or its root ancestor or multi select the hit or its root ancestor
         let _pickHit: boolean = (this.key.alt) && (evt.button == 2);
@@ -821,6 +927,7 @@ export class Vishva {
 
 
         let pm: TransformNode = pickResult.pickedMesh;
+        if (pm == this.ground) return;
         if (_pickRoot || _pickMultiRoot) pm = this._getRootMesh(pm, pm);
 
         if (_pickHit || _pickRoot) {
@@ -1099,7 +1206,8 @@ export class Vishva {
 
             this.uniCamController.stop();
 
-            this.arcCamera.attachControl(this.canvas);
+            //this.arcCamera.attachControl(this.canvas);
+            this.arcCamera.attachControl(true, false, 2);
             this.cc.start();
         }
     }
@@ -1139,7 +1247,8 @@ export class Vishva {
             this.cameraAnimating = false;
             this.scene.unregisterBeforeRender(this.animFunc2);
             if (camera instanceof ArcRotateCamera) {
-                camera.attachControl(this.canvas);
+                //camera.attachControl(this.canvas);
+                camera.attachControl(true, false, 2);
             } else {
                 if (this.editControl != null) {
                     this.editControl.switchCamera(this.arcCamera);
@@ -1147,7 +1256,8 @@ export class Vishva {
                 this.arcCamera.setPosition(camera.position);
                 this.arcCamera.setTarget(this.start);
                 this.scene.activeCamera = this.arcCamera;
-                this.arcCamera.attachControl(this.canvas);
+                // this.arcCamera.attachControl(this.canvas);
+                this.arcCamera.attachControl(true, false, 2);
                 this.uniCamController.stop();
             }
 
@@ -1351,9 +1461,12 @@ export class Vishva {
         }
 
         let inst: TransformNode = this._instanceTransNode(this.meshSelected, null);
-
         this.animateMesh(inst);
         this.switchEditControl(inst);
+
+        // this.instance_mesh_old();
+
+
         return null;
     }
 
@@ -2990,9 +3103,9 @@ export class Vishva {
         let y: number = Math.sin(a);
         let z: number = this._sunBeta / 100;
 
-        this.sun.direction.x = x;
-        this.sun.direction.y = y;
-        this.sun.direction.z = z;
+        // this.sun.direction.x = x;
+        // this.sun.direction.y = y;
+        // this.sun.direction.z = z;
 
         // this.sun.direction.x = 0;
         // this.sun.direction.y = 1;
@@ -3274,7 +3387,9 @@ export class Vishva {
         this.meshSelected.position = p;
         this.meshSelected.rotation = re;
         this.meshSelected.rotationQuaternion = rq;
-        var meshString: string = JSON.stringify(meshObj);
+        //var meshString: string = JSON.stringify(meshObj);
+        //pretty save
+        var meshString: string = JSON.stringify(meshObj, null, 1);
         var file: File = new File([meshString], "AssetFile.babylon");
         return URL.createObjectURL(file);
     }
@@ -3309,7 +3424,7 @@ export class Vishva {
         this.renameMeshIds();
         this.cleanupSkels();
         this.resetSkels(this.scene);
-        //this.cleanupMats();
+        this.cleanupMats();
         //this.renameWorldTextures();
 
         let vishvaSerialzed = new VishvaSerialized(this);
@@ -3338,7 +3453,11 @@ export class Vishva {
         //sceneObj["VishvaSNA"] = snaObj;
         sceneObj["VishvaSerialized"] = vishvaSerialzed;
 
+        //pretty formatted json
+        //let sceneString: string = JSON.stringify(sceneObj, null, 1);
+
         let sceneString: string = JSON.stringify(sceneObj);
+
         //var file: File = new File([sceneString], "WorldFile.babylon");
         let blob = new Blob([sceneString], { type: "octet/stream" });
         this.addInstancesToShadow();
@@ -3347,6 +3466,9 @@ export class Vishva {
     }
 
 
+    //this will effect the current running scene
+    //so we will add them back after save
+    //see addInstancesToShadow()
     private removeInstancesFromShadow() {
         var meshes: AbstractMesh[] = this.scene.meshes;
         for (let mesh of meshes) {
@@ -4160,7 +4282,7 @@ export class Vishva {
         var grnd: Mesh = Mesh.CreateGround("ground", 256, 256, 1, scene);
         grnd.material = groundMaterial;
         grnd.checkCollisions = true;
-        grnd.isPickable = false;
+        //grnd.isPickable = false;
         Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
         grnd.freezeWorldMatrix();
         grnd.receiveShadows = true;
@@ -4532,7 +4654,7 @@ export class Vishva {
         var camera: ArcRotateCamera = new ArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 1000, 0), scene);
         //var camera: StereoscopicArcRotateCamera = new StereoscopicArcRotateCamera("v.c-camera", 1, 1.4, 4, new Vector3(0, 1000, 0), 0.005, true, scene);
         this.setCameraSettings(camera);
-        camera.attachControl(canvas, true);
+        camera.attachControl(true, false, 2);
         if ((this.avatar !== null) && (this.avatar !== undefined)) {
             camera.target = new Vector3(this.avatar.position.x, this.avatar.position.y + 1.5, this.avatar.position.z);
             camera.alpha = -this.avatar.rotation.y - 4.69;
@@ -4574,6 +4696,8 @@ export class Vishva {
         camera.keysRight = [];
         camera.keysUp = [];
         camera.keysDown = [];
+
+
 
         camera.panningInertia = 0.1;
         camera.inertia = 0.1;

@@ -2,10 +2,10 @@
 Takes three args
 
 varName - variable name to use in the output file
-path - the folder, with path, to be scanned for file
+path - the path to be scanned for file
 fn - name of the output file
 
-creates an array of items in the folder
+creates an array of items
 if an item is a string then it is a file
 if it is an object then it is a directory
 the directory object contains

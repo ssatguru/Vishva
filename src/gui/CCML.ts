@@ -39,8 +39,14 @@ const settingFormHtml: string = `
         <label>disable firstperson</label>
         <input name="noFirstPerson" type="checkbox"/>
         
-        <label>allow camera block</label>
+        <label>elastic camera</label>
         <input name="camerElastic" type="checkbox"/>
+
+        <label>elastic camera steps</label>
+        <input name="elasticSteps" type="text"/>
+
+        <label>make obstructions invisible</label>
+        <input name="makeInvisible" type="checkbox"/>
         
         <label>keyboard control</label>
         <input name="keyboard" type="checkbox"/>
@@ -63,6 +69,9 @@ const settingFormHtml: string = `
                 <input name="y" type="text" /> 
                 <input name="z" type="text" />
         </div>
+
+        <label>step sound</label>
+        <button name="stepSnd" type="button" >set sound</button>
 </form>
 `;
 const mapFormHTML: string = `

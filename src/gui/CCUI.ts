@@ -3,7 +3,7 @@ import { Vishva } from "../Vishva";
 import { settingFormHtml, mapFormHTML } from "./CCML";
 import { VButton } from "./components/VButton";
 import { VDiag } from "./components/VDiag";
-import { AnimationGroup, AnimationRange, Vector3 } from "babylonjs";
+import { AnimationGroup, AnimationRange, Sound, Vector3 } from "babylonjs";
 import { AnimUtils } from "../util/AnimUtils";
 import { VInputText } from "./components/VInputText";
 import { VInputNumber } from "./components/VInputNumber";
@@ -11,6 +11,8 @@ import { ActionData, ActionMap, CCSettings, CharacterController } from "babylonj
 import { EventManager } from "../eventing/EventManager";
 import { VEvent } from "../eventing/VEvent";
 import { VTab } from "./components/VTab";
+import { VFileInput } from "./components/VFileInput";
+import { SoundUI } from "./SoundUI";
 
 
 /**
@@ -28,6 +30,7 @@ export class CCUI {
     mapTab: HTMLDivElement;
 
     constructor(cc: CharacterController) {
+
         this._cc = cc;
 
         let tab = new VTab("Settings", "Mappings");
@@ -157,8 +160,11 @@ export class CCUI {
         }
     }
 
+    _sndUI: SoundUI;
+
     private _buildSetUI(setTab: HTMLElement) {
         let form: HTMLFormElement = <HTMLFormElement>setTab.getElementsByClassName("av-settings")[0];
+        new VInputNumber(form.elasticSteps);
         new VInputNumber(form.gravity);
         new VInputNumber(form.minSlopeLimit);
         new VInputNumber(form.maxSlopeLimit);
@@ -166,16 +172,23 @@ export class CCUI {
         new VInputNumber(form.x);
         new VInputNumber(form.y);
         new VInputNumber(form.z);
+        this._sndUI = new SoundUI(this._cc.getSettings().sound);
+        (<HTMLButtonElement>form.stepSnd).onclick = () => {
+            this._sndUI.toggle();
+        }
+
     }
 
     private _updateUISet() {
         let ccSettings: CCSettings = this._cc.getSettings();
-        console.log(ccSettings);
+
         let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
 
         form.faceForward.checked = ccSettings.faceForward;
         form.topDown.checked = ccSettings.topDown;
         form.camerElastic.checked = ccSettings.cameraElastic;
+        form.elasticSteps.value = ccSettings.elasticSteps;
+        form.makeInvisible.checked = ccSettings.makeInvisble;
         form.gravity.value = ccSettings.gravity;
         form.keyboard.checked = ccSettings.keyboard;
         form.maxSlopeLimit.value = ccSettings.maxSlopeLimit;
@@ -266,6 +279,8 @@ export class CCUI {
 
         let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
         ccSettings.cameraElastic = form["camerElastic"].checked;
+        ccSettings.elasticSteps = form["elasticSteps"].value;
+        ccSettings.makeInvisble = form["makeInvisible"].checked;
         ccSettings.topDown = form["topDown"].checked;
         ccSettings.gravity = Number(form["gravity"].value);
         ccSettings.keyboard = form["keyboard"].checked;
@@ -276,7 +291,8 @@ export class CCUI {
         ccSettings.cameraTarget = new Vector3(Number(form["x"].value), Number(form["y"].value), Number(form["z"].value));
         ccSettings.turningOff = form["turningOff"].checked;
         ccSettings.faceForward = form["faceForward"].checked;
-        console.log(ccSettings);
+        ccSettings.sound = this._sndUI.getSound();
+
         this._cc.setSettings(ccSettings);
 
     }

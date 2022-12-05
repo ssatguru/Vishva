@@ -23,6 +23,7 @@ import "./sna/ActuatorDialog";
 import "./sna/ActuatorDisabler";
 import "./sna/ActuatorEnabler";
 import "./sna/ActuatorLight";
+import "./sna/ActuatorTextBar";
 import "./sna/ActuatorSound";
 import "./sna/SensorClick";
 import "./sna/SensorContact";

@@ -52,17 +52,17 @@ export class EnvironmentUI {
         }
 
         sunBright.min = "0";
-        sunBright.max = "100";
-        sunBright.value = (100 * this._vishva.getSunBright()).toString();
+        sunBright.max = "1000";
+        sunBright.value = (500 * this._vishva.getSunBright()).toString();
         sunBright.oninput = (ev) => {
-            this._vishva.setSunBright(Number((<HTMLInputElement>ev.target).value) / 100);
+            this._vishva.setSunBright(Number((<HTMLInputElement>ev.target).value) / 500);
         }
 
         sceneBright.min = "0";
-        sceneBright.max = "100";
-        sceneBright.value = (100 * this._vishva.getSceneBright()).toString();
+        sceneBright.max = "1000";
+        sceneBright.value = (500 * this._vishva.getSceneBright()).toString();
         sceneBright.oninput = (ev) => {
-            this._vishva.setSceneBright(Number((<HTMLInputElement>ev.target).value) / 100);
+            this._vishva.setSceneBright(Number((<HTMLInputElement>ev.target).value) / 500);
         }
 
         skyBright.min = "0";

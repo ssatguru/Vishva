@@ -1,18 +1,27 @@
+import { HtmlElementTexture } from "babylonjs";
+
 export class VInputSelect {
 
     private _e: HTMLSelectElement;
     public onSelect: (v: string) => void = null;
 
-    constructor(eId: string, options: Array<{ id: string, desc: string }>) {
-        let e: HTMLElement = document.getElementById(eId);
-        this._e = document.createElement("select");
+    constructor(eId: string | HTMLElement, options: Array<{ id: string, desc: string }>) {
+
+        if (eId instanceof HTMLSelectElement) {
+            this._e = eId;
+        } else {
+            this._e = document.createElement("select");
+            let e: HTMLElement = (eId instanceof HTMLElement) ? eId : document.getElementById(eId);
+            e.appendChild(this._e);
+        }
+
         this._e.className = "w3-select";
         this._e.onchange = () => {
             if (this.onSelect != null) {
                 this.onSelect(this._e.value);
             }
         }
-        e.appendChild(this._e);
+
         this.populateSelect(options);
     }
 

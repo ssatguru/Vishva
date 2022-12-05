@@ -1,4 +1,4 @@
-var defaultWorld = "empty";
+var defaultWorld = "fantasy-town";
 var noEditWorlds = [""];
 var curatedConfig = {
   scale: [3, 3, 3],
@@ -6,3 +6,4 @@ var curatedConfig = {
   collision: true,
   shadow: true,
 };
+

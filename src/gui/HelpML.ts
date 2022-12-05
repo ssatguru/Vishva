@@ -3,6 +3,8 @@ import { VButton } from "./components/VButton";
 let hlpHTML = `
 <div id="helpDiv" class="noselect" style="padding:1em;">
         <h6>Avatar Movement Keys</h6>
+        Click right mouse button on the ground to move the avatar to that position
+        or use keyboard and mouse as explained below.
         <ul>
           <li>Turn left, right - press "A,D" or "left,right arrow" key or press and drag left mouse key</li>
           <li>Strafe left, right - press "Q,E" key</li>
@@ -15,8 +17,8 @@ let hlpHTML = `
         <ul>
           <li> Normally the camera follows the avatar.<br>
           To move the camera independently of the avatar, press the "ESC" key. <br>
-          The avatar will become semi-transparent  to indicate it no longer controls the cameras. <br>
-          Pressing the "A,D,W,S" or arrow kyes will just move the camera.<br>
+          The avatar will become semi-transparent  to indicate it no longer controls the camera. <br>
+          Pressing the "A,D,W,S" or arrow kyes will now move the camera instead of the avatar.<br>
           To switch back to Avatar, press  "ESC" key again.
           </li>
         </ul>
@@ -24,14 +26,14 @@ let hlpHTML = `
         <h6>Item Edit Keys</h6>
         <ul>
           <li>
-            To select an item press 'ALT' and mouse LEFT or RIGHT click the item
+            To select an item press 'ALT' and the mouse LEFT or RIGHT click the item
             <ul>
               <li>LEFT click will pick the root of that item</li>
               <li>RIGHT click will just pick that item</li>
             </ul>
           </li>
           <li>
-            To select multiple item press 'CTL' and mouse LEFT or RIGHT click each of the multiple items
+            To select multiple items press 'CTL' and mouse LEFT or RIGHT click each of the items
             <ul>
               <li>LEFT click will add the item's root and all its childrens to the items already selected</li>
               <li>RIGHT click will just add that item to items already selected</li>

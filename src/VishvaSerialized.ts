@@ -1,4 +1,4 @@
-import { Vector3, AnimationGroup, Scene, Tags } from "babylonjs";
+import { Vector3, AnimationGroup, Scene, Tags, Sound, ISoundOptions } from "babylonjs";
 import { ActionData, ActionMap, CCSettings } from "babylonjs-charactercontroller";
 import { Color4 } from "babylonjs/Maths/math.color";
 import { GrndSpread_Serializeable } from "./GrndSpread";
@@ -62,8 +62,29 @@ export class AvSerialized {
 
     constructor(vishva: Vishva) {
         this.settings = vishva.avManager.cc.getSettings();
+        console.log(JSON.stringify(this.settings.sound.serialize()));
+        this.settings.sound = this.settings.sound.serialize();
         this.actionMap = vishva.avManager.cc.getActionMap();
+        let keys = Object.keys(this.actionMap);
+        for (let key of keys) {
+            let ad: ActionData = this.actionMap[key];
+            ad.sound = null;
+        }
         this.serializeAG();
+    }
+
+
+    public static deSerializeSound(sndObj: Object): Sound {
+        let sndOptions: ISoundOptions = {};
+        sndOptions.autoplay = false;
+        sndOptions.distanceModel = sndObj["distanceModel"];
+        sndOptions.spatialSound = sndObj["spatialSound"];
+        sndOptions.maxDistance = sndObj["maxDistance"];
+        sndOptions.refDistance = sndObj["refDistance"];
+        sndOptions.rolloffFactor = sndObj["rolloffFactor"];
+        sndOptions.volume = sndObj["volume"];
+
+        return new Sound(sndObj["name"], sndObj["name"], Vishva.vishva.scene, null, sndOptions);
     }
 
     //replace any reference to AnimationGroup instance with just the name of the AnimationGroup
@@ -74,8 +95,8 @@ export class AvSerialized {
             let ad: ActionData = this.actionMap[key];
             if (ad.ag instanceof AnimationGroup) {
                 this.actionMap[key]["ag"] = this.actionMap[key]["ag"].name;
-
             }
+
         }
     }
 

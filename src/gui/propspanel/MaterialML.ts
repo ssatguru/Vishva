@@ -2,7 +2,7 @@ import { VButton } from "../components/VButton";
 
 let matHTML = `
 <div style="padding:1.0em;">
-<table id="matDetails">
+<table id="matDetails" class="withBorder">
         <tr>
                 <td >
                         transparency  <output for="matVis" id="matVisVal"></output>   

@@ -97,26 +97,24 @@ export class PropsPanelUI {
         this._propsVDiag = new VDiag("propsDiag", "mesh properties", VDiag.rightTop, 0, "auto", UIConst._diagWidthS);
         this._propsVDiag.onOpen(() => {
             if (this._activeDtl != null) this.refreshPanel(this._activeDtl);
-            this.refreshingPropsDiag = false;
         });
         this._propsVDiag.onClose(() => {
             if (this._vishvaGUI.resizing) return;
-            if (!this.refreshingPropsDiag) {
-                if ((this._generalUI != null) && (this._generalUI._snaUI != null) && this._generalUI._snaUI.isOpen()) {
-                    this._generalUI._snaUI.close();
-                }
-                if ((this._materialUI != null) && (this._materialUI._textureUI != null) && this._materialUI._textureUI.isOpen()) {
-                    this._materialUI._textureUI.close();
-                }
-                if (this._vishva.isGroundPicked()) {
-                    this._vishva.unSelectGrnd();
-                }
+            if ((this._generalUI != null) && (this._generalUI._snaUI != null) && this._generalUI._snaUI.isOpen()) {
+                this._generalUI._snaUI.close();
             }
+            if ((this._materialUI != null) && (this._materialUI._textureUI != null) && this._materialUI._textureUI.isOpen()) {
+                this._materialUI._textureUI.close();
+            }
+            if (this._vishva.isGroundPicked()) {
+                this._vishva.unSelectGrnd();
+            }
+
         });
 
 
     }
-    roque
+
 
 
     public open() {
@@ -166,15 +164,13 @@ export class PropsPanelUI {
      * called by vishva when editcontrol
      * is switched from another mesh
      */
-    refreshingPropsDiag: boolean = false;
     public refreshPropsDiag() {
         if ((this._propsVDiag === undefined) || (this._propsVDiag === null)) return;
         if (this._propsVDiag.isOpen()) {
-            this.refreshingPropsDiag = true;
-            this.close();
-            this.open();
+            if (this._activeDtl != null) this.refreshPanel(this._activeDtl);
         }
     }
+    //called when something is moved using edit control.
     //only refresh if general panel is active;
     public refreshGeneralPanel() {
         if (this._activeDtl != null && this._activeDtl.id === "gen") this.refreshPropsDiag();

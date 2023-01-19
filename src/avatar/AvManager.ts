@@ -50,19 +50,25 @@ export class AvManager {
 
     private onAvatarLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[]) {
 
+
         let avatar = <Mesh>meshes[0];
 
         (this.shadowGenerator.getShadowMap().renderList).push(avatar);
         //(this.avShadowGenerator.getShadowMap().renderList).push(this.avatar);
-        //TODO
+
+
         //this.avatar.receiveShadows = true;
 
         //dispose of all OTHER meshes
         let l: number = meshes.length;
-        for (let i = 1; i < l; i++) {
-            meshes[i].checkCollisions = false;
-            meshes[i].dispose();
-        }
+        // console.log("meshes " + l);
+        // for (let i = 0; i < l; i++) {
+        //     // meshes[i].checkCollisions = false;
+        //     // meshes[i].dispose();
+
+        //     console.log(meshes[i]);
+
+        // }
 
         let avatarSkeleton = skeletons[0];
         //dispose of all OTHER skeletons
@@ -90,7 +96,8 @@ export class AvManager {
         this.mainCamera.alpha = avatar.rotation.y - 4.69;
 
         var sm: StandardMaterial = <StandardMaterial>avatar.material;
-        if (sm.diffuseTexture != null) {
+
+        if (sm instanceof StandardMaterial && sm.diffuseTexture != null) {
             var textureName: string = sm.diffuseTexture.name;
             sm.diffuseTexture.name = this.avatarFolder + textureName;
             sm.backFaceCulling = true;
@@ -300,6 +307,6 @@ export class AvManager {
     // this check if any of this skeleton animations is referenced by any targetedAnimation in any of the animationgroup in the scene.
     private _skelDrivenByAG(skel: Skeleton) {
         return skel.animations.some(sa => this.scene.animationGroups.some(ag => ag.children.some(ta => ta.animation == sa)));
-}
+    }
 
 }

@@ -69,7 +69,8 @@ import {
     StereoscopicArcRotateCamera,
     AnimationGroup,
     AssetContainer,
-    LinesMesh
+    LinesMesh,
+    Camera
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -179,6 +180,7 @@ export class Vishva {
     // "assets/.." and not "/assets"
     // This is becuase internal assets would be stored in the distribution itself
     private avatarFolder: string = Vishva.vBinHome + "assets/internal/avatar/";
+    //private avatarFile: string = "boxman.gltf";
     private avatarFile: string = "starterAvatars.babylon";
 
 
@@ -229,6 +231,9 @@ export class Vishva {
     sunDR: DirectionalLight;
     _sunAlpha: number = 0;
     _sunBeta: number = 45;
+
+    //allow object sto recieve shadows
+    _recShadowFlag: boolean = false;
 
     skybox: Mesh;
     skyColor: Color4 = new Color4(0.5, 0.5, 0.5, 1);
@@ -336,7 +341,7 @@ export class Vishva {
 
         //fix shadow and skinning issue
         //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
-        SceneLoader.CleanBoneMatrixWeights = true
+        //SceneLoader.CleanBoneMatrixWeights = true
 
         if (sceneFile == "empty") {
             this.sceneLoad3(this.scene, true);
@@ -422,10 +427,6 @@ export class Vishva {
 
             for (let mesh of scene.meshes) {
 
-                //sat TODO
-
-                //  if (mesh.getClassName() != "InstancedMesh") mesh.receiveShadows = true;
-
                 if (Tags.HasTags(mesh)) {
                     if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
                         avFound = true;
@@ -474,11 +475,11 @@ export class Vishva {
             if (!sunFound) {
                 console.log("no vishva sun found. creating sun");
 
-                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
+                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
                 this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
                 Tags.AddTagsTo(this.sun, "Vishva.sun");
 
-                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
+                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(0, -1, 0), this.scene);
                 this.sunDR.position = new Vector3(0, 128, 0);
 
                 this._setSunAB(this.sun.direction);
@@ -486,8 +487,6 @@ export class Vishva {
                 let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                 this.shadowGenerator = new ShadowGenerator(1024, sl);
                 this.setShadowProperty(sl, this.shadowGenerator);
-                //                this.avShadowGenerator=new ShadowGenerator(512,sl);
-                //                this.setShadowProperty(sl,this.avShadowGenerator);
             } else {
                 for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
@@ -505,8 +504,8 @@ export class Vishva {
                 if (mesh != null) {
                     if (mesh instanceof InstancedMesh) {
                         mesh.checkCollisions = mesh.sourceMesh.checkCollisions;
-                        //sat TODO remove comment
-                        //mesh.receiveShadows = true;
+
+                        mesh.sourceMesh.receiveShadows = this._recShadowFlag;
                         this._addToShadowCasters(mesh);
 
                     } else {
@@ -793,21 +792,27 @@ export class Vishva {
     }
 
     private setShadowProperty(sl: IShadowLight, shadowGenerator: ShadowGenerator) {
-        //            shadowGenerator.useBlurVarianceShadowMap = true;
-        //            shadowGenerator.bias = 1.0E-6;
+
         if (shadowGenerator == null) return;
-        //shadowGenerator.useBlurExponentialShadowMap = true;
-        shadowGenerator.useExponentialShadowMap = true;
+
+
+        //shadowGenerator.useBlurVarianceShadowMap = true;
+        //shadowGenerator.useExponentialShadowMap = true;
+        shadowGenerator.useBlurExponentialShadowMap = true;
+        shadowGenerator.blurScale = 1;
+        //shadowGenerator.usePercentageCloserFiltering = true;
+
         //http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/
-        shadowGenerator.bias = -0.3;
+        //shadowGenerator.bias = -0.3;
+        shadowGenerator.bias = 1.0E-6;
 
-        //            shadowGenerator.bias = 1.0E-6;
-        //            shadowGenerator.depthScale = 2500;
-        //            sl.shadowMinZ = 1;
-        //            sl.shadowMaxZ = 2500;
+        //shadowGenerator.depthScale = 2500;
+        shadowGenerator.depthScale = 0;
 
+        //sl.shadowMinZ = 1;
+        //sl.shadowMaxZ = 2500;
         this.sunDR.autoCalcShadowZBounds = true;
-        shadowGenerator.depthScale = 4;
+
     }
 
     debug: boolean = true;
@@ -1366,7 +1371,7 @@ export class Vishva {
         mesh.checkCollisions = true;
         this._addToShadowCasters(mesh);
         //sat TODO remove comment
-        //mesh.receiveShadows = true;
+        mesh.receiveShadows = this._recShadowFlag;
         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
         mesh.id = this.uid(mesh.name);//(<number>new Number(Date.now())).toString();
         mesh.name = mesh.id;
@@ -1539,8 +1544,8 @@ export class Vishva {
         for (let child of children) {
             this._instanceTransNode(child, _tnInst);
         }
-        //TODO ??
-        //this._addToShadowCasters(<AbstractMesh>inst);
+
+        this._addToShadowCasters(<AbstractMesh>_tnInst);
 
         return _tnInst;
     }
@@ -1880,12 +1885,10 @@ export class Vishva {
         clone.scaling.copyFrom(mesh.scaling);
         delete clone["sensors"];
         delete clone["actuators"];
-        //console.log(mesh);
-        //console.log(clone);
 
         this.animateMesh(clone);
         //TODO think
-        //clone.receiveShadows = true;
+        (<AbstractMesh>clone).receiveShadows = this._recShadowFlag;
         this.unHighLight(mesh);
         if (clone instanceof AbstractMesh) {
             this._addToShadowCasters(clone);
@@ -2260,8 +2263,6 @@ export class Vishva {
         this.removeEditControl();
     }
 
-
-    //
     // LIGHTS
 
     /*
@@ -3420,6 +3421,16 @@ export class Vishva {
             return null;
         }
 
+        //remove redundant cameras
+        let cameras: Camera[] = this.scene.cameras;
+        let l = cameras.length;
+        //iterate in reverse
+        for (let i = l - 1; i >= 0; i--) {
+            if (cameras[i].name == "") {
+                cameras[i].dispose();
+            }
+        }
+
         this.removeInstancesFromShadow();
         this.renameMeshIds();
         this.cleanupSkels();
@@ -3487,11 +3498,16 @@ export class Vishva {
     }
 
     private _addToShadowCasters(mesh: AbstractMesh) {
-        if ((<Mesh>mesh).geometry != null)
-            (this.shadowGenerator.getShadowMap().renderList).push(mesh);
+        if ((<Mesh>mesh).geometry != null || mesh.isAnInstance) {
+            this.shadowGenerator.getShadowMap().renderList.push(mesh);
+            if (mesh instanceof InstancedMesh) {
+                mesh.sourceMesh.receiveShadows = this._recShadowFlag;
+            } else {
+                mesh.receiveShadows = this._recShadowFlag;
+            }
+        }
 
-        //TODO think
-        //mesh.receiveShadows = true;
+
     }
 
 
@@ -3778,6 +3794,7 @@ export class Vishva {
             }
 
             this._addToShadowCasters(mesh);
+            mesh.receiveShadows = this._recShadowFlag;
 
             //no need to rename, 3.1 version seems to preserve the texture img urls
             //this._renameTextures(mesh);

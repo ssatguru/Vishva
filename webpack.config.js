@@ -7,10 +7,14 @@ module.exports = {
   mode: "development",
   entry: ["./src/index.ts", "./src/index.html"],
   devtool: "source-map",
-  //don't need devServer options. These are default option.s
   devServer: {
-    contentBase: "./",
-    publicPath: "/bin/",
+    devMiddleware: {
+      publicPath: "/bin/",
+    },
+    static: {
+      directory: "./",
+      serveIndex: true,
+    },
   },
   module: {
     rules: [
@@ -42,10 +46,12 @@ module.exports = {
 
   plugins: [
     //copy the assets folder from src to the build folder
-    new CopyPlugin([
-      { context: "src/", from: "assets/**/*" },
-      { context: "src/", from: "lib/**/*" },
-    ]),
+    new CopyPlugin({
+      patterns: [
+        { context: "src/", from: "assets/**/*" },
+        { context: "src/", from: "lib/**/*" },
+      ],
+    }),
   ],
   //   externals: {
   //     oimo: "OIMO", //or true

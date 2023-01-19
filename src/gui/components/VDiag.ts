@@ -25,6 +25,8 @@ export class VDiag {
 
 
         _style: string = ` 
+                border-radius: 0.5em;
+                overflow:hidden;
                 display:grid;
                 grid-template-columns:auto;
                 grid-template-rows:min-content auto;
@@ -32,6 +34,8 @@ export class VDiag {
                 position: absolute;
                 border-style:solid;
                 border-width:1px;
+                animation-name:scaleAnim;
+                animation-duration:0.5s;
         
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
@@ -99,6 +103,7 @@ export class VDiag {
         }
 
         public position(pos: string): void {
+
                 switch (pos) {
 
                         case VDiag.leftTop:
@@ -196,10 +201,12 @@ export class VDiag {
                 this.w.style.right = 'auto';
 
         }
-
+        private _ad: string;
         private onMouseDown = (e: MouseEvent) => {
 
                 //bring to front when clicked
+                //we donot want animation during drags
+                this.w.style.animationDuration = "0s";
                 this.w.parentNode.appendChild(this.w);
 
                 this.mx = e.clientX;
@@ -227,6 +234,7 @@ export class VDiag {
         }
 
         public open() {
+
                 if (!this.isClosed) {
                         return;
                 }
@@ -236,7 +244,6 @@ export class VDiag {
 
                 //bring to front when opened
                 this.w.parentNode.appendChild(this.w);
-
 
                 if (this.dirty) {
                         this.dirty = false;
@@ -253,6 +260,7 @@ export class VDiag {
         public close = () => {
                 if (this.isClosed) return;
                 this.isClosed = true;
+                this.w.style.animationDuration = this._ad;
                 this.w.style.display = 'none';
                 if (this._onClose != null) this._onClose();
         }
@@ -397,6 +405,8 @@ export class VDiag {
 
                 // diag window
                 this.w.setAttribute("style", this._style);
+                //save animation duration for furture use
+                this._ad = this.w.style.animationDuration;
                 this.w.style.height = <string>height;
                 this.w.style.width = <string>width;
                 this.w.style.minWidth = minWidth;
@@ -408,11 +418,12 @@ export class VDiag {
                 this.wb = <HTMLElement>this.w.getElementsByClassName('bar')[0];
                 this.showTitleBar();
                 //this.wb.onmousedown = this.onMouseDown;
-                this.wb.ondblclick = () => this.position(this.pos);
+                //this.wb.ondblclick = () => this.position(this.pos);
 
                 this.t = <HTMLElement>this.w.getElementsByClassName('title')[0];
                 this.t.innerText = title;
                 this.t.onmousedown = this.onMouseDown;
+                this.t.ondblclick = () => this.position(this.pos);
 
                 this.minIcon = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];
                 this.minIcon.addEventListener('click', this.toggleBody);

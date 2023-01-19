@@ -55,6 +55,10 @@ table,
 th,
 td {
   border-collapse: collapse;
+}
+
+table.withBorder td {
+  border-collapse: collapse;
   border: 1px solid white;
 }
 
@@ -97,13 +101,19 @@ input[type="text"] {
 }
 
 .noselect {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
   -o-user-select: none;
-  user-select: none; /* Non-prefixed version, currently
+  user-select: none;
+  /* Non-prefixed version, currently
                           supported by Chrome and Opera */
 }
 
@@ -113,6 +123,7 @@ ul {
   margin-left: 0;
   padding-left: 0;
 }
+
 li {
   padding-left: 1em;
 }
@@ -129,18 +140,22 @@ li {
 .vt-icon {
   cursor: pointer;
 }
+
 .txt:hover {
   background-color: gray;
   color: white;
   cursor: pointer;
 }
+
 .txt:active {
   background-color: white;
   color: black;
 }
+
 .show {
   display: block;
 }
+
 .hide {
   display: none;
 }
@@ -152,4 +167,15 @@ li {
   border: 1px solid black;
   outline: none;
   /* border-radius: 5px; */
+}
+
+@keyframes scaleAnim {
+  0% {
+    transform: scale(0.5);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+
 }

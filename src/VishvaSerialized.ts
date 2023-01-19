@@ -62,8 +62,8 @@ export class AvSerialized {
 
     constructor(vishva: Vishva) {
         this.settings = vishva.avManager.cc.getSettings();
-        console.log(JSON.stringify(this.settings.sound.serialize()));
-        this.settings.sound = this.settings.sound.serialize();
+        if (this.settings.sound)
+            this.settings.sound = this.settings.sound.serialize();
         this.actionMap = vishva.avManager.cc.getActionMap();
         let keys = Object.keys(this.actionMap);
         for (let key of keys) {

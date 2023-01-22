@@ -294,7 +294,7 @@ export class SnaUI {
 
     editActDiag: VDiag;
     private createEditActDiag() {
-        this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.center, "auto", "auto");
+        this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.centerTop, "auto", "auto");
         this.editActDiag.onOpen = () => {
             this._vishva.disableKeys();
         }
@@ -476,11 +476,10 @@ export class SnaUI {
                     if (fit.filter.indexOf(f.substring(f.length - 4)) >= 0) {
                         fibL.textContent = p + f
                         fit.value = fibL.textContent;
-
                     }
                 }
             })
-            this._assetTDiag.toggle();
+            this._assetTDiag.open();
         }
         let div: HTMLDivElement = document.createElement("div");
         div.appendChild(fibL);

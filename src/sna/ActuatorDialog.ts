@@ -20,11 +20,19 @@ export class ActDialogParm extends ActProperties {
     draggable: boolean = false;
     transparent: boolean = false;
     border: boolean = true;
+    openEffect: SelectType = new SelectType();
+    openDuration: number = 0.5;
+    closeEffect: SelectType = new SelectType();
+    closeDuration: number = 0.5;
 
     public constructor() {
         super();
         this.sizeType.values = ["%", "px"];
         this.sizeType.value = "%";
+        this.openEffect.values = ["scale", "fade", "rotate", "newsFlash"];
+        this.openEffect.value = "scale";
+        this.closeEffect.values = this.openEffect.values;
+        this.closeEffect.value = this.openEffect.value;
     }
 }
 
@@ -44,7 +52,6 @@ export class ActuatorDialog extends ActuatorAbstract {
         } else {
             super(mesh, new ActDialogParm());
         }
-
     }
 
     public actuate() {
@@ -80,7 +87,7 @@ export class ActuatorDialog extends ActuatorAbstract {
     public onPropertiesChange() {
         var props: ActDialogParm = <ActDialogParm>this.properties;
 
-        //remove after migration to new version of dialog actuator is complete
+        //TODO remove after migration to new version of dialog actuator is complete
         //previous version did not have sizeType
         if (!props.sizeType) {
             props.sizeType = new SelectType();
@@ -90,10 +97,12 @@ export class ActuatorDialog extends ActuatorAbstract {
 
         this.setSize();
         if (this.dialog == null) {
+
             this.div = GuiUtils.createDiv();
-            //this.div.style.visibility = "visible";
 
             this.dialog = new VDiag(this.div, props.title, VDiag.center, this.w, this.h, "350px", props.modal);
+
+            this.dialog.setType("g");
 
             let button: HTMLButtonElement = this.dialog.addButton("Close");
 
@@ -110,8 +119,20 @@ export class ActuatorDialog extends ActuatorAbstract {
                 }
                 return true;
             }
-            this.dialog.close();
 
+            //close dialog without doing the close animation
+            this.dialog.close(false);
+        }
+
+
+
+        //TODO remove after the migration of worlds to new version of dialog actuator is complete
+        //previous version did not have open/close effect options
+        if (props.openEffect) {
+            this.dialog.setEffects(props.openEffect.value,
+                props.openDuration.toString() + "s",
+                props.closeEffect.value,
+                props.closeDuration.toString() + "s");
         }
 
         if (props.title.trim() == "") {
@@ -128,17 +149,8 @@ export class ActuatorDialog extends ActuatorAbstract {
             this.dialog.setBorder("transparent");
         }
 
-
-        // this.dialog.setShowEffect({
-        //     effect: props.openEffect,
-        //     duration: props.openTime
-        // });
-        // this.dialog.setHideEffect({
-        //     effect: props.closeEffect,
-        //     duration: props.closeTime
-        // });
-
         this.dialog.setTitle(props.title);
+
         this.div.innerHTML = props.msg;
 
         if (props.htmlFile && props.htmlFile.value != null) {
@@ -150,6 +162,11 @@ export class ActuatorDialog extends ActuatorAbstract {
             };
             xhttp.open("GET", Vishva.vHome + "assets/" + props.htmlFile.value, true);
             xhttp.send();
+        } else {
+            this.div.innerHTML = props.msg;
+            this.div.style.display = "flex";
+            this.div.style.justifyContent = "center";
+            this.div.style.alignItems = "center";
         }
 
         this.dialog.onClose(() => {
@@ -157,11 +174,6 @@ export class ActuatorDialog extends ActuatorAbstract {
         })
 
         this.dialog.setSize(this.w, this.h);
-
-        window.addEventListener("resize", (event) => {
-            this.setSize();
-            this.dialog.setSize(this.w, this.h);
-        });
 
         if (this.properties.autoStart) {
             this.dialog.open();

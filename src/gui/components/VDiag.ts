@@ -34,8 +34,9 @@ export class VDiag {
                 position: absolute;
                 border-style:solid;
                 border-width:1px;
-                animation-name:scaleAnim;
-                animation-duration:0.5s;
+                scale:100%;
+                animation-name:scaleUpAnim;
+                animation-duration:0.5s; 
         
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
@@ -92,13 +93,29 @@ export class VDiag {
         private _onOpen: () => void;
         private _onClose: () => void;
 
+        //css animations to play on open and close dialog
+        private _oAnim: string = "scaleIn";
+        private _cAnim: string = "scaleOut";
+        private _oD: string = "0.5s";
+        private _cD: string = "0.5s";
 
+        //effects on open and close dialog
+        //fade,scale,rotate,newsFlash(scale and rotate)
+        private _oEffect: string;
+        private _cEffect: string;
+
+        //called during window resize
         public reset() {
                 if (this.isClosed) {
                         this.dirty = true;
                 } else {
-                        //this.position(this.pos);
-                        this._moveIt(this.w.offsetTop, this.w.offsetLeft);
+                        //during game we want the dialog box to snap to its original intended  postion.
+                        //during editing we do not want the dialog box to move until pushed by windows border
+                        if (this._type === "g") {
+                                this.position(this.pos);
+                        } else {
+                                this._moveIt(this.w.offsetTop, this.w.offsetLeft);
+                        }
                 }
         }
 
@@ -199,14 +216,12 @@ export class VDiag {
                 this.w.style.left = l + 'px';
                 this.w.style.bottom = 'auto';
                 this.w.style.right = 'auto';
-
         }
-        private _ad: string;
+
         private onMouseDown = (e: MouseEvent) => {
 
                 //bring to front when clicked
                 //we donot want animation during drags
-                this.w.style.animationDuration = "0s";
                 this.w.parentNode.appendChild(this.w);
 
                 this.mx = e.clientX;
@@ -240,6 +255,10 @@ export class VDiag {
                 }
 
                 this.isClosed = false;
+
+                //open animation
+                this.w.style.animationName = this._oAnim;
+                this.w.style.animationDuration = this._oD;
                 this.w.style.display = 'grid';
 
                 //bring to front when opened
@@ -257,11 +276,27 @@ export class VDiag {
 
         }
 
-        public close = () => {
+        private _closeit = () => {
+                this.close(true);
+        }
+
+        //note we are not really closing it, just hiding it
+        //resources are still being consumed
+        public close = (anim?: boolean) => {
                 if (this.isClosed) return;
                 this.isClosed = true;
-                this.w.style.animationDuration = this._ad;
-                this.w.style.display = 'none';
+
+                //do not do animation if caller doesnot want it
+                //sometime after creating dialog caller maynot want to show it mmediately
+                //playing animation will force a display and then set display to none at aniamtionend event
+                if (anim == undefined || anim === true) {
+                        this.w.style.animationDuration = this._cD;
+                        this.w.style.animationName = this._cAnim;
+                        this.w.classList.toggle("dummy");
+                } else {
+                        this.w.style.display = "none";
+                }
+
                 if (this._onClose != null) this._onClose();
         }
 
@@ -329,12 +364,61 @@ export class VDiag {
                 }
         }
 
-        public setShowEffect(option: {}) {
-                //TODO
-        }
+        public setEffects(openEffect: string, openDuration?: string, closeEffect?: string, closeDuration?: string) {
+                this._oEffect = openEffect;
+                this._cEffect = closeEffect;
 
-        public setHideEffect(option: {}) {
-                //TODO
+                switch (openEffect) {
+                        case "fade": {
+                                this._oAnim = "fadeIn";
+                                this._cAnim = "fadeOut";
+                                break;
+                        }
+                        case "scale": {
+                                this._oAnim = "scaleIn";
+                                this._cAnim = "scaleOut";
+                                break;
+                        }
+                        case "rotate": {
+                                this._oAnim = "rotateIn";
+                                this._cAnim = "rotateOut";
+                                break;
+                        }
+                        case "newsFlash": {
+                                this._oAnim = "nfIn";
+                                this._cAnim = "nfOut";
+                                break;
+                        }
+                        //this.w.style.animationName = this._oAnim;
+                }
+                if (openDuration !== undefined) {
+                        this._oD = openDuration;
+                        //this.w.style.animationDuration = this._oD;
+                }
+                if (closeEffect !== undefined) {
+                        switch (closeEffect) {
+                                case "fade": {
+                                        this._cAnim = "fadeOut";
+                                        break;
+                                }
+                                case "scale": {
+                                        this._cAnim = "scaleOut";
+                                        break;
+                                }
+                                case "rotate": {
+                                        this._cAnim = "rotateOut";
+                                        break;
+                                }
+                                case "newsFlash": {
+                                        this._cAnim = "nfOut";
+                                        break;
+                                }
+                        }
+                }
+                if (closeDuration !== undefined) {
+                        this._cD = closeDuration;
+                }
+
         }
 
         public hideTitleBar() {
@@ -386,6 +470,13 @@ export class VDiag {
         }
 
         //
+
+        //type: "g" for game use  or "e" for editor use
+        private _type: string = "e";
+        public setType(type: string) {
+                this._type = type;
+        }
+
         constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false) {
 
                 let bc: HTMLElement;
@@ -403,10 +494,8 @@ export class VDiag {
                 this.w.innerHTML = this.ml;
                 Vishva.gui.appendChild(this.w);
 
-                // diag window
+                // diag window ===========================================
                 this.w.setAttribute("style", this._style);
-                //save animation duration for furture use
-                this._ad = this.w.style.animationDuration;
                 this.w.style.height = <string>height;
                 this.w.style.width = <string>width;
                 this.w.style.minWidth = minWidth;
@@ -414,7 +503,28 @@ export class VDiag {
                 // this.w.style.backgroundColor == Vishva.theme.darkColors.b;
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
 
-                // diag title bar
+                //open animation
+                this.w.style.animationName = this._oAnim;
+                this.w.style.animationDuration = this._oD;
+
+                //at the end of open animation change the name to a non existent animation
+                //during events like drag or bring forward the dialogs are closed and opened again
+                //we donot want these animations to play during those events
+                this.w.addEventListener("animationend", (e) => {
+                        if (e.animationName == this._oAnim) {
+                                (<HTMLElement>e.target).style.animationName = "dummy";
+                        }
+                });
+
+                this.w.addEventListener("animationend", (e) => {
+                        if (e.animationName == this._cAnim) {
+                                (<HTMLElement>e.target).style.animationName = this._oAnim;
+                                (<HTMLElement>e.target).style.animationDuration = this._oD;
+                                (<HTMLElement>e.target).style.display = "none";
+                        }
+                });
+
+                // diag title bar ===========================================
                 this.wb = <HTMLElement>this.w.getElementsByClassName('bar')[0];
                 this.showTitleBar();
                 //this.wb.onmousedown = this.onMouseDown;
@@ -432,9 +542,9 @@ export class VDiag {
                 this.addIcon.addEventListener('click', this.toggleBody);
 
                 let closeIcon: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-close')[0];
-                closeIcon.addEventListener('click', this.close);
+                closeIcon.addEventListener('click', this._closeit);
 
-                //diag body
+                //diag body ===========================================
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];
                 this.b.appendChild(bc);
                 this.b.style.color = Vishva.theme.darkColors.f;
@@ -445,6 +555,10 @@ export class VDiag {
 
                 this.position(pos);
                 DialogMgr.vdiags.push(this);
+
+                //should we close the dialog after creation
+                //return a closed dialog to the caller and then
+                //let the caller call open() to then open it?
 
 
         }

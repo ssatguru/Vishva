@@ -169,13 +169,93 @@ li {
   /* border-radius: 5px; */
 }
 
-@keyframes scaleAnim {
+
+@keyframes scaleIn {
   0% {
-    transform: scale(0.5);
+    scale: 0%;
   }
 
   100% {
-    transform: scale(1);
+    scale: 100%;
+
+  }
+}
+
+@keyframes scaleOut {
+  0% {
+    scale: 100%;
   }
 
+  100% {
+    scale: 0%;
+  }
+}
+
+@keyframes rotateIn {
+  0% {
+    rotate: 0deg;
+  }
+
+  100% {
+    rotate: 360deg;
+
+  }
+}
+
+@keyframes rotateOut {
+  0% {
+    rotate: 360deg;
+  }
+
+  100% {
+    rotate: 0deg;
+
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0.0;
+  }
+
+  100% {
+    opacity: 1.0;
+
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1.0;
+  }
+
+  100% {
+    opacity: 0.0;
+
+  }
+}
+
+@keyframes nfIn {
+  0% {
+    scale: 0%;
+    rotate: 0deg;
+  }
+
+  100% {
+    scale: 100%;
+    rotate: 360deg;
+
+  }
+}
+
+@keyframes nfOut {
+  0% {
+    scale: 100%;
+    rotate: 360deg;
+  }
+
+  100% {
+    scale: 0%;
+    rotate: 0deg;
+  }
 }

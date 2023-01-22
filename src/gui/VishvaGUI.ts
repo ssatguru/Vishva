@@ -358,7 +358,7 @@ export class VishvaGUI {
     private _createDownloadDiag() {
         this._downloadLink = <HTMLAnchorElement>document.getElementById("downloadLink");
         this._downloadDialog = new VDiag(document.getElementById("saveDiv"), "Download World", VDiag.center, "20em", "auto");
-        this._downloadDialog.close();
+        // this._downloadDialog.close();
     }
 }
 

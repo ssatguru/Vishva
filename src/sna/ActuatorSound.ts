@@ -123,7 +123,8 @@ export class ActuatorSound extends ActuatorAbstract {
     }
 
     public cleanUp() {
-        this.sound.dispose();
+        if (this.sound != null)
+            this.sound.dispose();
     }
 
     public isReady(): boolean {

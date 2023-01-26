@@ -17,7 +17,7 @@ export class SettingsUI {
     private _autoEditMenu: HTMLInputElement;
     private _showToolTips: HTMLInputElement;
     public enableToolTips: boolean = true;
-    private _showInvis: HTMLInputElement;
+    private _revealInvis: HTMLInputElement;
     private _showDisa: HTMLInputElement;
     private _snapper: HTMLInputElement;
 
@@ -43,10 +43,10 @@ export class SettingsUI {
             this._vishvaGUI.guiSettings.enableToolTips = this._showToolTips.checked;
 
 
-            if (this._showInvis.checked) {
-                this._vishva.showAllInvisibles();
+            if (this._revealInvis.checked) {
+                this._vishva.revealInvisibles();
             } else {
-                this._vishva.hideAllInvisibles();
+                this._vishva.hideInvisibles();
             }
             if (this._showDisa.checked) {
                 this._vishva.showAllDisabled();
@@ -84,7 +84,7 @@ export class SettingsUI {
         this._camCol = <HTMLInputElement>document.getElementById("camCol");
         this._autoEditMenu = <HTMLInputElement>document.getElementById("autoEditMenu");
         this._showToolTips = <HTMLInputElement>document.getElementById("showToolTips");
-        this._showInvis = <HTMLInputElement>document.getElementById("showInvis");
+        this._revealInvis = <HTMLInputElement>document.getElementById("revealInvis");
         this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
         this._snapper = <HTMLInputElement>document.getElementById("snapper");
 

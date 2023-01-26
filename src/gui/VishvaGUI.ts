@@ -165,12 +165,12 @@ export class VishvaGUI {
 
         //button to show navigation menu - hamburger button
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
-        showNavMenu.style.visibility = "visible";
+        showNavMenu.style.display = "inline-block";
         showNavMenu.onclick = (e) => {
-            if (nm.style.visibility == "hidden") {
-                nm.style.visibility = "visible";
+            if (nm.style.display == "inline-block") {
+                nm.style.display = "none";
             } else {
-                nm.style.visibility = "hidden";
+                nm.style.display = "inline-block";
             }
         }
 

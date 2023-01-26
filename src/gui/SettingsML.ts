@@ -10,8 +10,8 @@ const settingHTML: string = `
         <div>show tooltips</div>
         <div><input type="checkbox" id="showToolTips" /></div>
 
-        <div>show invisibles</div>
-        <div><input type="checkbox" id="showInvis"></div>
+        <div>reveal invisibles</div>
+        <div><input type="checkbox" id="revealInvis"></div>
 
         <div>show disabled</div>
         <div><input type="checkbox" id="showDisa"></div>

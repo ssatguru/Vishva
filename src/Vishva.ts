@@ -1055,13 +1055,16 @@ export class Vishva {
         }
     }
 
-    private highLight(am: TransformNode) {
+    private highLight(am: TransformNode, color?: Color4) {
         //            am.renderOutline=true;
         //            am.outlineWidth=this.ow;
         //            am.showBoundingBox=true;
         if (am instanceof AbstractMesh) {
             am.enableEdgesRendering();
             am.edgesWidth = 4.0;
+            if (color !== undefined) {
+                am.edgesColor = color;
+            }
         }
     }
 
@@ -1346,7 +1349,7 @@ export class Vishva {
         this.primMaterial = new StandardMaterial("primMat", this.scene);
         //this.primMaterial.diffuseTexture = new Texture(this.primTexture, this.scene);
         //GRAY COLOR
-        this.primMaterial.diffuseColor = new Color3(1, 1, 1);
+        this.primMaterial.diffuseColor = new Color3(0.6, 0.6, 0.6);
         this.primMaterial.specularColor = new Color3(0, 0, 0);
     }
 
@@ -1658,6 +1661,15 @@ export class Vishva {
         }
     }
 
+    public isVisible(): boolean {
+        if (Tags.HasTags(this.meshSelected)) {
+            if (Tags.MatchesQuery(this.meshSelected, "invisible")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public makeVisibile(yes: boolean) {
         if (!this.isMeshSelected) {
             return "no mesh selected";
@@ -1671,16 +1683,20 @@ export class Vishva {
                 Tags.RemoveTagsFrom(this.meshSelected, "invisible")
                 this.meshSelected.isVisible = true;
                 this.meshSelected.isPickable = true;
-                if (this.showingAllInvisibles)
+                if (this.revealingInvisibles)
                     this.unHighLight(mesh);
             }
         }
         else {
             Tags.AddTagsTo(this.meshSelected, "invisible");
-            if (this.showingAllInvisibles) {
-                if (this.meshSelected instanceof InstancedMesh) this.meshSelected.isVisible = false;
-                else this.meshSelected.visibility = 0.5;
-                this.highLight(mesh);
+            //if settings to reveal invisibe is on then
+            //we cannot hide the object
+            //we will just highlight it to indicate
+            //that this would normally be invisible
+            //if reveal invisible is turned off
+            if (this.revealingInvisibles) {
+                this.meshSelected.isVisible = true;
+                this.highLight(mesh, this._revelColor);
                 this.meshSelected.isPickable = true;
             } else {
                 this.meshSelected.isVisible = false;
@@ -1688,38 +1704,32 @@ export class Vishva {
             }
         }
     }
-    public isVisible(): boolean {
-        if (Tags.HasTags(this.meshSelected)) {
-            if (Tags.MatchesQuery(this.meshSelected, "invisible")) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    showingAllInvisibles: boolean = false;
-    public showAllInvisibles() {
-        this.showingAllInvisibles = true;
+
+    private _revelColor: Color4 = new Color4(1, 1, 0, 1);
+    revealingInvisibles: boolean = false;
+    public revealInvisibles() {
+        this.revealingInvisibles = true;
         for (var i = 0; i < this.scene.meshes.length; i++) {
             var mesh = this.scene.meshes[i];
             if (Tags.HasTags(mesh)) {
                 if (Tags.MatchesQuery(mesh, "invisible")) {
-                    mesh.visibility = 0.5;
-                    this.highLight(mesh);
+                    mesh.isVisible = true;
+                    this.highLight(mesh, this._revelColor);
                     mesh.isPickable = true;
                 }
             }
         }
     }
 
-    public hideAllInvisibles() {
-        this.showingAllInvisibles = false;
+    public hideInvisibles() {
+        this.revealingInvisibles = false;
         for (var i = 0; i < this.scene.meshes.length; i++) {
             for (var i = 0; i < this.scene.meshes.length; i++) {
                 var mesh = this.scene.meshes[i];
                 if (Tags.HasTags(mesh)) {
                     if (Tags.MatchesQuery(mesh, "invisible")) {
-                        mesh.visibility = 0;
+                        mesh.isVisible = false;
                         this.unHighLight(mesh);
                         mesh.isPickable = false;
                     }
@@ -3865,7 +3875,7 @@ export class Vishva {
         //rootmesh location wrt min = - bb.min
 
         // 2 m in front of av
-        let placementLocal: Vector3 = new Vector3(0, 0, -10);
+        let placementLocal: Vector3 = new Vector3(0, 0, -2);
         let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
 
         //let placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));

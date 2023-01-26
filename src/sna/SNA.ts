@@ -558,28 +558,38 @@ export abstract class SensorAbstract implements Sensor {
         //remove all actions which might have been added by previous property
         this.removeActions();
 
+        /**
+        * enabling/disabling signal
+        * two ways to ahndle this.
+        * if user provides enabling or disabling signal then
+        * a) disbable the sensor with the assumption the user will enable it by sending an enable signal
+        * b) leave it enabled and let the user send disable signal if the user wants to disable it
+        *  
+        */
+
+
         if (this.properties.signalEnable != null && this.properties.signalEnable != "") {
             if (this.signalEnable == null) {
                 this.signalEnable = this.properties.signalEnable;
                 SNAManager.getSNAManager().subscribe(this, this.signalEnable);
-                this.disabled = true;
+                //this.disabled = true;
             } else if (this.signalEnable !== this.properties.signalEnable) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalEnable);
                 this.signalEnable = this.properties.signalEnable;
                 SNAManager.getSNAManager().subscribe(this, this.signalEnable);
-                this.disabled = true;
+                //this.disabled = true;
             }
         }
         if (this.properties.signalDisable != null && this.properties.signalDisable != "") {
             if (this.signalDisable == null) {
                 this.signalDisable = this.properties.signalDisable;
                 SNAManager.getSNAManager().subscribe(this, this.signalDisable);
-                this.disabled = true;
+                //this.disabled = true;
             } else if (this.signalDisable !== this.properties.signalDisable) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalDisable);
                 this.signalDisable = this.properties.signalDisable;
                 SNAManager.getSNAManager().subscribe(this, this.signalDisable);
-                this.disabled = true;
+                //this.disabled = true;
             }
         }
         this.onPropertiesChange();
@@ -756,28 +766,40 @@ export abstract class ActuatorAbstract implements Actuator {
                 SNAManager.getSNAManager().subscribe(this, this.signalId);
             }
         }
+
+        /**
+         * enabling/disabling signal
+         * two ways to ahndle this.
+         * if user provides enabling or disabling signal then
+         * a) disbable the actuator with the assumption the user will enable it by sending an enable signal
+         * b) leave it enabled and let the user send disable signal if the user wants to disable it
+         * 
+         * 
+         */
+
+
         if (this.properties.signalEnable != null && this.properties.signalEnable != "") {
             if (this.signalEnable == null) {
                 this.signalEnable = this.properties.signalEnable;
                 SNAManager.getSNAManager().subscribe(this, this.signalEnable);
-                this.disabled = true;
+                //this.disabled = true;
             } else if (this.signalEnable !== this.properties.signalEnable) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalEnable);
                 this.signalEnable = this.properties.signalEnable;
                 SNAManager.getSNAManager().subscribe(this, this.signalEnable);
-                this.disabled = true;
+                //this.disabled = true;
             }
         }
         if (this.properties.signalDisable != null && this.properties.signalDisable != "") {
             if (this.signalDisable == null) {
                 this.signalDisable = this.properties.signalDisable;
                 SNAManager.getSNAManager().subscribe(this, this.signalDisable);
-                this.disabled = true;
+                // this.disabled = true;
             } else if (this.signalDisable !== this.properties.signalDisable) {
                 SNAManager.getSNAManager().unSubscribe(this, this.signalDisable);
                 this.signalDisable = this.properties.signalDisable;
                 SNAManager.getSNAManager().subscribe(this, this.signalDisable);
-                this.disabled = true;
+                // this.disabled = true;
             }
         }
 

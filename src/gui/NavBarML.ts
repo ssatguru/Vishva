@@ -4,11 +4,11 @@ import { VButton } from "./components/VButton";
 
 
 let navHTML = `
-<nav style="position: absolute;left:1em;top:1em;z-index:inherit;">
+<nav style="position: absolute;left:1em;top:1em;z-index:inherit;border-style:solid;border-width:1px;">
 
         <button id="showNavMenu" title="build menu"><span class="material-icons-outlined" >menu</span></button>
 
-        <nav id="navMenubar" style="display: inline-block; border-style:solid;border-width:1px;">
+        <nav id="navMenubar" style="display: inline-block;">
 
                 <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
 

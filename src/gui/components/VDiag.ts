@@ -78,6 +78,7 @@ export class VDiag {
         wb: HTMLElement; //window bar
         t: HTMLElement;  //title
         b: HTMLElement;  //body
+        bc: HTMLElement;  //bodycontent
         f: HTMLElement;  //footer
         minIcon: HTMLElement;
         addIcon: HTMLElement;
@@ -217,6 +218,7 @@ export class VDiag {
                 this.w.style.bottom = 'auto';
                 this.w.style.right = 'auto';
         }
+
 
         private onMouseDown = (e: MouseEvent) => {
 
@@ -479,11 +481,10 @@ export class VDiag {
 
         constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false) {
 
-                let bc: HTMLElement;
                 if (id instanceof HTMLElement) {
-                        bc = id;
+                        this.bc = id;
                 } else {
-                        bc = document.getElementById(id);
+                        this.bc = document.getElementById(id);
                 }
 
                 this.pos = pos;
@@ -546,7 +547,7 @@ export class VDiag {
 
                 //diag body ===========================================
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];
-                this.b.appendChild(bc);
+                this.b.appendChild(this.bc);
                 this.b.style.color = Vishva.theme.darkColors.f;
                 this.b.style.backgroundColor = Vishva.theme.darkColors.b;
 

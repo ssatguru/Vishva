@@ -96,6 +96,11 @@ export class VTreeDialog {
     public open() {
         this._treeDiag.open();
     }
+
+    public onOpen(f: () => void) {
+        this._treeDiag.onOpen(f);
+    }
+
     public isOpen(): boolean {
         return this._treeDiag.isOpen();
     }

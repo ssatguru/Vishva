@@ -28,8 +28,9 @@ export class EnvironmentUI {
 
         Vishva.gui.appendChild(envElement);
 
-        let sunPos: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunPos")[0];
-        let sunPosNS: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunPosNS")[0];
+        let sunElevation: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunElev")[0];
+        let sunAzimuth: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunAzim")[0];
+
         let sunBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sunBright")[0];
         let sceneBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sceneBright")[0];
         let skyBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("skyBright")[0];
@@ -37,18 +38,21 @@ export class EnvironmentUI {
         let fog: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fog")[0];
         let fov: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fov")[0];
 
-        sunPos.min = "0";
-        sunPos.max = "180";
-        sunPos.value = this._vishva.getSunAlpha().toString();
-        sunPos.oninput = (ev) => {
-            this._vishva.setSunEW(Number((<HTMLInputElement>ev.target).value));
+        //elevation 0 to 90  from the xz plane
+        sunElevation.min = "0";
+        sunElevation.max = "900";
+        sunElevation.value = (10 * this._vishva.getSunElevation()).toString();
+        sunElevation.oninput = (ev) => {
+            this._vishva.setSunElevation(Number((<HTMLInputElement>ev.target).value));
         }
 
-        sunPosNS.min = "-100";
-        sunPosNS.max = "100";
-        sunPosNS.value = this._vishva.getSunBeta().toString();
-        sunPosNS.oninput = (ev) => {
-            this._vishva.setSunNS(Number((<HTMLInputElement>ev.target).value));
+
+        //azimuth - 0 to 360 ,clockwise from n
+        sunAzimuth.min = "0";
+        sunAzimuth.max = "3600";
+        sunAzimuth.value = (10 * this._vishva.getSunAzimuth()).toString();
+        sunAzimuth.oninput = (ev) => {
+            this._vishva.setSunAzimuth(Number((<HTMLInputElement>ev.target).value));
         }
 
         sunBright.min = "0";

@@ -70,7 +70,8 @@ import {
     AnimationGroup,
     AssetContainer,
     LinesMesh,
-    Camera
+    Camera,
+    CascadedShadowGenerator
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -105,6 +106,8 @@ import { GuiUtils } from "./gui/GuiUtils";
  * @author satguru
  */
 export class Vishva {
+
+    static version: string = "0.4.0-alpha.0";
 
     public static worldName: string;
 
@@ -226,11 +229,16 @@ export class Vishva {
     //we can use below too but then while passing data to scene loader use empty string as root url
     RELATIVE_ASSET_LOCATION: string = "";
 
-
+    //hemisphere light for ambience/brightness
     sun: HemisphericLight;
+    //direction light for shadows
     sunDR: DirectionalLight;
-    _sunAlpha: number = 0;
-    _sunBeta: number = 45;
+
+    //azimuth
+    _sunElevation: number = 0;
+
+    //elevation
+    _sunAzimuth: number = 45;
 
     //allow object sto recieve shadows
     _recShadowFlag: boolean = false;
@@ -278,7 +286,7 @@ export class Vishva {
     private enablePhysics: boolean = true;
 
     public static vishva: Vishva;
-    static version: string = "0.3.0";
+
 
 
     public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string, guiId: string) {
@@ -458,46 +466,57 @@ export class Vishva {
                     this.avatarSkeleton = skeleton;
                 }
             }
-
             if (!skelFound) {
                 console.log("No Skeleton found");
             }
 
+            //lets look for the sun- a hemispherical light
             for (let light of scene.lights) {
                 if (Tags.MatchesQuery(light, "Vishva.sun")) {
                     sunFound = true;
                     this.sun = <HemisphericLight>light;
-                    this._setSunAB(this.sun.direction);
+                    break;
                 }
             }
 
-            // console.log("sceneload3 suns");
-            if (!sunFound) {
-                console.log("no vishva sun found. creating sun");
-
-                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(0, 1, 0), this.scene);
-                this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
-                Tags.AddTagsTo(this.sun, "Vishva.sun");
-
-                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(0, -1, 0), this.scene);
-                this.sunDR.position = new Vector3(0, 128, 0);
-
-                this._setSunAB(this.sun.direction);
-
-                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                this.shadowGenerator = new ShadowGenerator(1024, sl);
-                this.setShadowProperty(sl, this.shadowGenerator);
-            } else {
+            //if we found a hemispherical light then lets look for the directional light
+            //directional light is just used for shadows
+            if (sunFound) {
                 for (let light of scene.lights) {
                     if (light.id === "Vishva.dl01") {
                         this.sunDR = <DirectionalLight>light;
                         this.sunDR.position = new Vector3(0, 128, 0);
-                        this.shadowGenerator = <ShadowGenerator>light.getShadowGenerator();
-                        let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
-                        this.setShadowProperty(sl, this.shadowGenerator);
+
+                        this._setSunsDirection(this.sunDR.direction);
+
+                        // this.shadowGenerator = <CascadedShadowGenerator>light.getShadowGenerator();
+                        // let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                        this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
+                        this.setShadowProperty(this.shadowGenerator);
+                        break;
                     }
                 }
+            } else {
+                console.log("no vishva sun found. creating sun");
+
+                this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
+                this.sun.diffuse = new Color3(1, 1, 1);
+                //this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
+                this.sun.groundColor = new Color3(0, 0, 0);
+                Tags.AddTagsTo(this.sun, "Vishva.sun");
+
+                this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
+                this.sunDR.position = new Vector3(0, 128, 0);
+                this.sunDR.intensity = 0.5;
+
+                this._setSunsDirection(this.sunDR.direction.normalize());
+
+                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                // this.shadowGenerator = new ShadowGenerator(1024, sl);
+                this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
+                this.setShadowProperty(this.shadowGenerator);
             }
+
 
             // console.log("sceneload3 meshes");
             for (let mesh of scene.meshes) {
@@ -791,7 +810,7 @@ export class Vishva {
         this.key.redo = false;
     }
 
-    private setShadowProperty(sl: IShadowLight, shadowGenerator: ShadowGenerator) {
+    private setShadowProperty_old(sl: IShadowLight, shadowGenerator: CascadedShadowGenerator) {
 
         if (shadowGenerator == null) return;
 
@@ -812,6 +831,29 @@ export class Vishva {
         //sl.shadowMinZ = 1;
         //sl.shadowMaxZ = 2500;
         this.sunDR.autoCalcShadowZBounds = true;
+
+    }
+
+
+    private setShadowProperty(shadowGenerator: CascadedShadowGenerator) {
+
+        if (shadowGenerator == null) return;
+
+        shadowGenerator.usePercentageCloserFiltering = true;
+        shadowGenerator.blurScale = 1;
+
+
+        //shadowGenerator.bias = -0.3;
+        shadowGenerator.bias = 1.0E-6;
+
+        shadowGenerator.depthScale = 0;
+
+        shadowGenerator.lambda = 1;
+        // shadowGenerator.stabilizeCascades = true;
+        shadowGenerator.autoCalcDepthBounds = true;
+
+        //this.sunDR.autoCalcShadowZBounds = true;
+
 
     }
 
@@ -3094,50 +3136,73 @@ export class Vishva {
         sa.dispose();
     }
 
+
     //setting sun beta (north south)
-    public setSunNS(d: number) {
-        this._sunBeta = d;
+    //set azimuth
+    public setSunAzimuth(d: number) {
+        this._sunAzimuth = d / 10;
         this.setSunPos();
     }
+
 
     //setting sun alpha (east wes)
-    public setSunEW(d: number) {
-        this._sunAlpha = d;
+    //set elevation
+    public setSunElevation(d: number) {
+        this._sunElevation = d / 10;
         this.setSunPos();
     }
 
-
     private setSunPos() {
-        let a: number = Math.PI * (180 - this._sunAlpha) / 180;
+        let a: number = Math.PI * (this._sunElevation) / 180;
+        let y: number = Math.sin(a);
+
+        let b: number = Math.PI * (90 - this._sunAzimuth) / 180;
+        let x: number = Math.cos(a) * Math.cos(b);
+        let z: number = Math.cos(a) * Math.sin(b);
+
+        this.sun.direction = this.sunDR.direction.clone();
+
+        this.sunDR.direction.x = -x;
+        this.sunDR.direction.y = -y;
+        this.sunDR.direction.z = -z;
+
+
+    }
+
+
+
+    private setSunPos_old() {
+        let a: number = Math.PI * (180 - this._sunElevation) / 180;
 
         let x: number = Math.cos(a);
+
         let y: number = Math.sin(a);
-        let z: number = this._sunBeta / 100;
 
-        // this.sun.direction.x = x;
-        // this.sun.direction.y = y;
-        // this.sun.direction.z = z;
+        let b: number = Math.PI * (180 - this._sunAzimuth) / 180;
+        //let z: number = this._sunBeta / 100;
+        let z: number = Math.cos(b);
 
-        // this.sun.direction.x = 0;
-        // this.sun.direction.y = 1;
-        // this.sun.direction.z = 0;
 
         this.sunDR.direction.x = -x;
         this.sunDR.direction.y = -y;
         this.sunDR.direction.z = -z;
     }
 
-    private _setSunAB(v: Vector3) {
-        let a: number = Math.atan2(v.y, v.x);
-        this._sunAlpha = 180 - a * 180 / Math.PI;
-        this._sunBeta = v.z * 100;
+    private _setSunsDirection(v: Vector3) {
+
+        let e = Math.asin(-v.y);
+        this._sunElevation = e * 180 / Math.PI;
+        this._sunAzimuth = 90 - Math.asin(-v.z / Math.cos(e)) * 180 / Math.PI;
+
+        //sync hemisphere direction with directional light direction
+        this.sun.direction = v.multiplyByFloats(-1, -1, -1);
     }
 
-    public getSunAlpha(): number {
-        return this._sunAlpha;
+    public getSunElevation(): number {
+        return this._sunElevation;
     }
-    public getSunBeta(): number {
-        return this._sunBeta;
+    public getSunAzimuth(): number {
+        return this._sunAzimuth;
     }
 
     public setSunBright(d: number) {
@@ -4224,8 +4289,8 @@ export class Vishva {
         SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.sceneLoad3(scene) });
     }
 
-    shadowGenerator: ShadowGenerator;
-    avShadowGenerator: ShadowGenerator;
+    shadowGenerator: CascadedShadowGenerator;
+    avShadowGenerator: CascadedShadowGenerator;
 
 
     public createWater() {

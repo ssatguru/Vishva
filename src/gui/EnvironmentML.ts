@@ -3,11 +3,11 @@ import { VButton } from "./components/VButton";
 const envHTML: string = `
 <div id="envDiv" style="display:grid;grid-template-columns:auto auto;align-items:center;grid-gap:0.75em;padding:0.5em" class="noselect">
         
-            <div style="justify-self: end;">sun (west-east)</div>
-            <div><input type="range" class="sunPos"></input></div>
+            <div style="justify-self: end;">sun elevation</div>
+            <div><input type="range" class="sunElev"></input></div>
         
-            <div style="justify-self: end;">sun (south-nort)</div>
-            <div><input type="range" class="sunPosNS"></input></div>
+            <div style="justify-self: end;">sun azimuth</div>
+            <div><input type="range" class="sunAzim"></input></div>
 
             <div style="justify-self: end;">sun brightness</div>            
             <div><input type="range" class="sunBright"></input></div>

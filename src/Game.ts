@@ -7,6 +7,6 @@ import { Vishva } from "./Vishva";
 export class Game {
 
         constructor(vishva: Vishva) {
-                console.log("vishva game. vishva version : ", Vishva.version);
+
         }
 }

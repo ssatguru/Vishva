@@ -93,6 +93,12 @@ export class VDiag {
 
         private _onOpen: () => void;
         private _onClose: () => void;
+        //whenever the dialog is resized this _onResize function will be called
+        // a dialog could be resized by
+        // user dragging the boundary, 
+        // dialog animation during open,
+        // dialog being closed and opened during append operation (done to bring the dialog in front of other components)
+        private _onResize: () => void;
 
         //css animations to play on open and close dialog
         private _oAnim: string = "scaleIn";
@@ -225,6 +231,7 @@ export class VDiag {
                 //bring to front when clicked
                 //we donot want animation during drags
                 this.w.parentNode.appendChild(this.w);
+                if (this._onResize != null) this._onResize();
 
                 this.mx = e.clientX;
                 this.my = e.clientY;
@@ -258,24 +265,26 @@ export class VDiag {
 
                 this.isClosed = false;
 
+                //bring to front when opened
+                this.w.parentNode.appendChild(this.w);
+
+
                 //open animation
                 this.w.style.animationName = this._oAnim;
                 this.w.style.animationDuration = this._oD;
                 this.w.style.display = 'grid';
+                if (this._onResize != null) this._onResize();
 
-                //bring to front when opened
-                this.w.parentNode.appendChild(this.w);
 
                 if (this.dirty) {
                         this.dirty = false;
                         this.position(this.pos);
                 }
-                if (this._onOpen != null) this._onOpen();
+
         }
 
         public isOpen(): boolean {
                 return !this.isClosed;
-
         }
 
         private _closeit = () => {
@@ -290,7 +299,7 @@ export class VDiag {
 
                 //do not do animation if caller doesnot want it
                 //sometime after creating dialog caller maynot want to show it mmediately
-                //playing animation will force a display and then set display to none at aniamtionend event
+                //playing animation will force a display and then set display to none at animationend event
                 if (anim == undefined || anim === true) {
                         this.w.style.animationDuration = this._cD;
                         this.w.style.animationName = this._cAnim;
@@ -317,6 +326,11 @@ export class VDiag {
                         if (f != null) this._onOpen();
                 }
         }
+
+        public onResize(f: () => void) {
+                this._onResize = f;
+        }
+
 
         // public toggleBody1 = () => {
         //         let s = this.b.getAttribute("style");
@@ -514,6 +528,7 @@ export class VDiag {
                 this.w.addEventListener("animationend", (e) => {
                         if (e.animationName == this._oAnim) {
                                 (<HTMLElement>e.target).style.animationName = "dummy";
+                                if (this._onOpen != null) this._onOpen();
                         }
                 });
 

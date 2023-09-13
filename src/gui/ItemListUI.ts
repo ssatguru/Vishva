@@ -63,7 +63,10 @@ export class ItemListUI {
             this._itemsDiag.open();
             this._highlightSelected();
         }
+    }
 
+    public onOpen(f: () => void) {
+        this._itemsDiag.onOpen(f);
     }
 
     public isOpen(): boolean {
@@ -83,7 +86,7 @@ export class ItemListUI {
         }
     }
 
-    public _highlightSelected() {
+    public _highlightSelected = () => {
         if (this._vishva.anyMeshSelected()) {
             this.search(Number(this._vishva.meshSelected.uniqueId).toString() + ", " + this._vishva.meshSelected.name);
         }

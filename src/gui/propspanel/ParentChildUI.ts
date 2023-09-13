@@ -45,8 +45,9 @@ export class ParentChildUI {
         };
         showTree.onclick = (e) => {
             let il = this._vishvaGUI.showItemList();
+            il.onOpen(il._highlightSelected);
             il.open();
-            il._highlightSelected();
+            //il._highlightSelected();
 
         }
 

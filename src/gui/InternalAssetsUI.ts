@@ -51,8 +51,6 @@ export class InternalAssetsUI {
      * @param assetCat 
      */
     private _createAssetDiag(topFolder: string, assetCat: string): VDiag {
-        console.log("dir " + topFolder + " assetType " + assetCat);
-
         //get the list of items in the internal or curated folder
         let fileList: Array<string | object>;
         if (topFolder == "internal") {
@@ -69,7 +67,6 @@ export class InternalAssetsUI {
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetCat + "Tbl";
 
-
         //populate that table
         this._updateAssetTable(topFolder, table, assetCat, items);
 
@@ -79,7 +76,6 @@ export class InternalAssetsUI {
         div.appendChild(table);
         div.style.overflow = "auto";
         document.body.appendChild(div);
-
 
         let assetDiag: VDiag = new VDiag(div, assetCat, VDiag.leftBottom, "auto", "auto");
         return assetDiag;

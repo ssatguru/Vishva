@@ -107,7 +107,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.0";
+    static version: string = "0.4.0-alpha.1";
 
     public static worldName: string;
 
@@ -487,7 +487,7 @@ export class Vishva {
                         this.sunDR = <DirectionalLight>light;
                         this.sunDR.position = new Vector3(0, 128, 0);
 
-                        this._setSunsDirection(this.sunDR.direction);
+                        this._setSunElevationAzimuth(this.sunDR.direction.normalize());
 
                         // this.shadowGenerator = <CascadedShadowGenerator>light.getShadowGenerator();
                         // let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
@@ -509,14 +509,13 @@ export class Vishva {
                 this.sunDR.position = new Vector3(0, 128, 0);
                 this.sunDR.intensity = 0.5;
 
-                this._setSunsDirection(this.sunDR.direction.normalize());
+                this._setSunElevationAzimuth(this.sunDR.direction.normalize());
 
                 let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                 // this.shadowGenerator = new ShadowGenerator(1024, sl);
                 this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
                 this.setShadowProperty(this.shadowGenerator);
             }
-
 
             // console.log("sceneload3 meshes");
             for (let mesh of scene.meshes) {
@@ -778,8 +777,10 @@ export class Vishva {
                     //this.animateMesh(this.avatar, 1.1);
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
+                        console.log("creating new uniCam");
                         this.uniCamController = new UniCamController(this.scene, this.canvas);
                     }
+                    console.log("starting uni cam ");
                     this.uniCamController.start();
                 }
 
@@ -3137,66 +3138,64 @@ export class Vishva {
     }
 
 
-    //setting sun beta (north south)
     //set azimuth
     public setSunAzimuth(d: number) {
         this._sunAzimuth = d / 10;
-        this.setSunPos();
+        this._setLightDirection();
     }
 
-
-    //setting sun alpha (east wes)
     //set elevation
     public setSunElevation(d: number) {
         this._sunElevation = d / 10;
-        this.setSunPos();
+        this._setLightDirection();
     }
 
-    private setSunPos() {
+    private _setLightDirection() {
         let a: number = Math.PI * (this._sunElevation) / 180;
         let y: number = Math.sin(a);
+        //projection on xz plane
+        let lxz = Math.cos(a);
 
-        let b: number = Math.PI * (90 - this._sunAzimuth) / 180;
-        let x: number = Math.cos(a) * Math.cos(b);
-        let z: number = Math.cos(a) * Math.sin(b);
+        let b: number = Math.PI * (this._sunAzimuth) / 180;
+        let z: number = lxz * Math.cos(b);
+        let x: number = lxz * Math.sin(b);
 
         this.sun.direction = this.sunDR.direction.clone();
 
         this.sunDR.direction.x = -x;
         this.sunDR.direction.y = -y;
         this.sunDR.direction.z = -z;
-
-
     }
 
 
+    private _setSunElevationAzimuth(ld: Vector3) {
+        //reverse the light direction to get sun location
+        //if sun sends light down then it is up
+        let rld = ld.multiplyByFloats(-1, -1, -1);
 
-    private setSunPos_old() {
-        let a: number = Math.PI * (180 - this._sunElevation) / 180;
+        //unit vector in Z direction (considered North).
+        //need it, to measeure azimuth which is angle from north
+        let Uz = new Vector3(0, 0, 1);
+        //projection of sun position on xz plane
+        let Vxz = new Vector3(rld.x, 0, rld.z);
 
-        let x: number = Math.cos(a);
+        let cosAngle = Vector3.Dot(Vxz, Uz) / Vxz.length();
+        let angle = Math.acos(cosAngle) * 180 / Math.PI;
 
-        let y: number = Math.sin(a);
+        //azimuth is 0 to 360
+        if (rld.x < 0) {
+            angle = (cosAngle >= 0) ? 360 - angle : angle = 90 + angle;
+        }
 
-        let b: number = Math.PI * (180 - this._sunAzimuth) / 180;
-        //let z: number = this._sunBeta / 100;
-        let z: number = Math.cos(b);
+        this._sunAzimuth = angle;
 
-
-        this.sunDR.direction.x = -x;
-        this.sunDR.direction.y = -y;
-        this.sunDR.direction.z = -z;
-    }
-
-    private _setSunsDirection(v: Vector3) {
-
-        let e = Math.asin(-v.y);
+        let e = Math.asin(rld.y);
         this._sunElevation = e * 180 / Math.PI;
-        this._sunAzimuth = 90 - Math.asin(-v.z / Math.cos(e)) * 180 / Math.PI;
 
-        //sync hemisphere direction with directional light direction
-        this.sun.direction = v.multiplyByFloats(-1, -1, -1);
+        //sync hemispherical light direction with directional light direction
+        this.sun.direction = rld;
     }
+
 
     public getSunElevation(): number {
         return this._sunElevation;

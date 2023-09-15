@@ -107,7 +107,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.2";
+    static version: string = "0.4.0-alpha.3";
 
     public static worldName: string;
 
@@ -493,7 +493,13 @@ export class Vishva {
                         // let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                         // this.setShadowProperty_old(sl, this.shadowGenerator);
 
-                        this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
+                        this.shadowGenerator = <CascadedShadowGenerator>this.sunDR.getShadowGenerator();
+                        if (this.shadowGenerator == null) {
+                            console.log("new shadow generator");
+                            this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
+                        }
+
+                        //this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
                         this.setShadowProperty(this.shadowGenerator);
                         break;
                     }
@@ -513,8 +519,9 @@ export class Vishva {
 
                 this._setSunElevationAzimuth(this.sunDR.direction.normalize());
 
-                let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                //let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
                 // this.shadowGenerator = new ShadowGenerator(1024, sl);
+
                 this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
                 this.setShadowProperty(this.shadowGenerator);
             }
@@ -865,11 +872,27 @@ export class Vishva {
         shadowGenerator.depthScale = 0;
 
         shadowGenerator.lambda = 1;
-        // shadowGenerator.stabilizeCascades = true;
+        shadowGenerator.stabilizeCascades = true;
         shadowGenerator.autoCalcDepthBounds = true;
 
         //this.sunDR.autoCalcShadowZBounds = true;
 
+    }
+
+    public redoShadows() {
+
+        console.log("removing all shadow casters");
+        this.scene.meshes.forEach((m) => {
+            this.shadowGenerator.removeShadowCaster(m, false);
+        });
+
+        console.log("making all meshes shadow casters");
+
+        this.scene.meshes.forEach((m) => {
+            if (m.name == "ground" || m.name == "skyBox") return;
+            if (m instanceof Mesh || m instanceof InstancedMesh)
+                this.shadowGenerator.addShadowCaster(m, false);
+        })
 
     }
 

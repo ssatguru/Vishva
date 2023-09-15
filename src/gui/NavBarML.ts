@@ -29,9 +29,10 @@ let navHTML = `
 
                 <button id="navSettings" title="settings"><span class="material-icons-outlined" >settings</span></button>
 
+                <button id="debugLink" title="inspector"><span class="material-icons-outlined" >info</span></button>
+
                 <button id="helpLink" title="help"><span class="material-icons-outlined" >help_outline</span></button>
                 
-                <button id="debugLink" title="inspector"><span class="material-icons-outlined" >info</span></button>
         </nav>
 
 </nav>

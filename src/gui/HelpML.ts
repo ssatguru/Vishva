@@ -19,6 +19,7 @@ let hlpHTML = `
           To move the camera independently of the avatar, press the "ESC" key. <br>
           The avatar will become semi-transparent  to indicate it no longer controls the camera. <br>
           Pressing the "A,D,W,S" or arrow kyes will now move the camera instead of the avatar.<br>
+          Pressing "SHIFT" and above keys will move the camera faster.<br>
           To switch back to Avatar, press  "ESC" key again.
           </li>
         </ul>

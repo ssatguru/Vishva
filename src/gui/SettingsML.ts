@@ -18,6 +18,8 @@ const settingHTML: string = `
 
         <div>enable snapper</div>
         <div><input type="checkbox" id="snapper"></div>
+
+        <button id="redoShadow">redo shadow </button>
 </div>
 `;
 

@@ -21,6 +21,8 @@ export class SettingsUI {
     private _showDisa: HTMLInputElement;
     private _snapper: HTMLInputElement;
 
+    private _redoShadows: HTMLButtonElement;
+
     //TODO pass property dialog instead of VishvaGUI
     constructor(vishvaGUI: VishvaGUI) {
         this._vishva = Vishva.vishva;
@@ -87,6 +89,12 @@ export class SettingsUI {
         this._revealInvis = <HTMLInputElement>document.getElementById("revealInvis");
         this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
         this._snapper = <HTMLInputElement>document.getElementById("snapper");
+
+        this._redoShadows = <HTMLButtonElement>document.getElementById("redoShadow");
+
+        this._redoShadows.onclick = (e) => {
+            this._vishva.redoShadows();
+        }
 
         this._updateSettings();
 

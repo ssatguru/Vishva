@@ -107,7 +107,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.1";
+    static version: string = "0.4.0-alpha.2";
 
     public static worldName: string;
 
@@ -491,6 +491,8 @@ export class Vishva {
 
                         // this.shadowGenerator = <CascadedShadowGenerator>light.getShadowGenerator();
                         // let sl: IShadowLight = <IShadowLight>(<any>this.sunDR);
+                        // this.setShadowProperty_old(sl, this.shadowGenerator);
+
                         this.shadowGenerator = new CascadedShadowGenerator(1024, this.sunDR);
                         this.setShadowProperty(this.shadowGenerator);
                         break;
@@ -691,6 +693,7 @@ export class Vishva {
 
     cameraAnimating: boolean = false;
     uniCamController: UniCamController;
+    uniCamOn = false;
 
     private process() {
 
@@ -741,9 +744,10 @@ export class Vishva {
                 if (!this.isFocusOnAv) {
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
-                        this.uniCamController = new UniCamController(this.scene, this.canvas);
+                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator);
                     }
                     this.uniCamController.start();
+                    this.uniCamOn = true;
                 }
 
             }
@@ -777,11 +781,10 @@ export class Vishva {
                     //this.animateMesh(this.avatar, 1.1);
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
-                        console.log("creating new uniCam");
-                        this.uniCamController = new UniCamController(this.scene, this.canvas);
+                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator);
                     }
-                    console.log("starting uni cam ");
                     this.uniCamController.start();
+                    this.uniCamOn = true;
                 }
 
             } //else if (this.key.up || this.key.down || this.key.esc) {
@@ -791,6 +794,14 @@ export class Vishva {
                 } else if (!this.editControl.isEditing()) {
                     this.switchFocusToAV();
                 }
+            }
+        }
+
+        if (this.uniCamOn) {
+            if (this.key.shift) {
+                this.uniCamController.speedUp();
+            } else {
+                this.uniCamController.slowDown();
             }
         }
 
@@ -836,6 +847,10 @@ export class Vishva {
     }
 
 
+    /*
+    https://forum.babylonjs.com/t/casceded-shadow-map-fails-to-add-shadow-casters/20676
+    https://forum.babylonjs.com/t/csm-depthrenderer-on-camera-change/14260
+    */
     private setShadowProperty(shadowGenerator: CascadedShadowGenerator) {
 
         if (shadowGenerator == null) return;
@@ -1256,6 +1271,7 @@ export class Vishva {
             this.arcCamera.setPosition(this.saveAVcameraPos);
 
             this.uniCamController.stop();
+            this.uniCamOn = false;
 
             //this.arcCamera.attachControl(this.canvas);
             this.arcCamera.attachControl(true, false, 2);
@@ -1310,6 +1326,7 @@ export class Vishva {
                 // this.arcCamera.attachControl(this.canvas);
                 this.arcCamera.attachControl(true, false, 2);
                 this.uniCamController.stop();
+                this.uniCamOn = false;
             }
 
         }

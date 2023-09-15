@@ -1,16 +1,20 @@
-import { Scene, Camera, ArcRotateCamera, UniversalCamera, TargetCamera, Vector3 } from "babylonjs";
+import { Scene, Camera, ArcRotateCamera, UniversalCamera, TargetCamera, Vector3, CascadedShadowGenerator } from "babylonjs";
 
 export class UniCamController {
     camera: UniversalCamera;
     canvas: HTMLCanvasElement;
     active: boolean;
-
+    csg: CascadedShadowGenerator;
     scene: Scene;
+    defaultSpeed: number;
+    isFast: boolean = false;
 
-    constructor(scene: Scene, canvas: HTMLCanvasElement) {
+    constructor(scene: Scene, canvas: HTMLCanvasElement, csg: CascadedShadowGenerator) {
         this.scene = scene;
         this.canvas = canvas;
         this.active = false;
+        this.csg = csg;
+        console.log("creating new uni camera");
     }
 
     public start() {
@@ -24,6 +28,8 @@ export class UniCamController {
         this.camera.setTarget(oldCam.getTarget());//.subtractFromFloats(0,0.5,0));
 
         this.camera.speed = this.camera.speed / 8;
+        this.defaultSpeed = this.camera.speed;
+
         this.camera.attachControl(this.canvas);
 
         //left arrow, "a"
@@ -37,7 +43,8 @@ export class UniCamController {
 
         this.scene.activeCamera = this.camera;
 
-
+        //if we donot do this then this camera  doesnot move
+        this.csg.autoCalcDepthBounds = false;
     }
 
     public stop() {
@@ -45,6 +52,19 @@ export class UniCamController {
         this.camera.detachControl();
         this.camera.dispose();
         this.active = false;
+        this.csg.autoCalcDepthBounds = true;
+    }
+
+    public speedUp() {
+        if (this.isFast) return;
+        this.isFast = true;
+        this.camera.speed = this.defaultSpeed * 4;
+    }
+
+    public slowDown() {
+        if (!this.isFast) return;
+        this.isFast = false;
+        this.camera.speed = this.defaultSpeed;
     }
 
 

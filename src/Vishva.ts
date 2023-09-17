@@ -71,7 +71,8 @@ import {
     AssetContainer,
     LinesMesh,
     Camera,
-    CascadedShadowGenerator
+    CascadedShadowGenerator,
+    DepthRenderer
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -107,7 +108,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.3";
+    static version: string = "0.4.0-alpha.4";
 
     public static worldName: string;
 
@@ -253,6 +254,7 @@ export class Vishva {
 
 
 
+    dr: DepthRenderer;
     arcCamera: ArcRotateCamera;
     private _cameraCollision: boolean = true;
     //private _cameraEllipsoid:Vector3= new Vector3(0.01,0.01,0.01);
@@ -553,6 +555,7 @@ export class Vishva {
                     this.arcCamera = <ArcRotateCamera>camera;
                     this.setCameraSettings(this.arcCamera);
                     this.arcCamera.attachControl(true, false, 2);
+
                     //this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
                 }
             }
@@ -562,6 +565,10 @@ export class Vishva {
                 this.arcCamera = this.createCamera(this.scene, this.canvas);
                 this.scene.activeCamera = this.arcCamera;
             }
+
+            this.dr = this.scene.enableDepthRenderer(this.arcCamera);
+            this.dr.useOnlyInActiveCamera = true;
+            this.dr.enabled = true;
 
 
             //TODO
@@ -704,7 +711,9 @@ export class Vishva {
 
     private process() {
 
-        this.arcCamera.position.subtractToRef(this.arcCamera.target, this.sun.direction);
+        //point the hemisphere camera light to whatever the camera is pointing too
+        //this would light up whatever the camera is pointing too
+        this.scene.activeCamera.position.subtractToRef((<TargetCamera>this.scene.activeCamera).target, this.sun.direction);
 
         // this.sunDR.position.x = this.avatar.position.x + 100;
         // this.sunDR.position.y = this.avatar.position.y + 100;
@@ -751,7 +760,7 @@ export class Vishva {
                 if (!this.isFocusOnAv) {
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
-                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator);
+                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
                     }
                     this.uniCamController.start();
                     this.uniCamOn = true;
@@ -788,7 +797,7 @@ export class Vishva {
                     //this.animateMesh(this.avatar, 1.1);
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
-                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator);
+                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
                     }
                     this.uniCamController.start();
                     this.uniCamOn = true;
@@ -1296,8 +1305,6 @@ export class Vishva {
             this.uniCamController.stop();
             this.uniCamOn = false;
 
-            //this.arcCamera.attachControl(this.canvas);
-            this.arcCamera.attachControl(true, false, 2);
             this.cc.start();
         }
     }
@@ -1345,9 +1352,7 @@ export class Vishva {
                 }
                 this.arcCamera.setPosition(camera.position);
                 this.arcCamera.setTarget(this.start);
-                this.scene.activeCamera = this.arcCamera;
-                // this.arcCamera.attachControl(this.canvas);
-                this.arcCamera.attachControl(true, false, 2);
+
                 this.uniCamController.stop();
                 this.uniCamOn = false;
             }

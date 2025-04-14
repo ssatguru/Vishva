@@ -1,3 +1,6 @@
+### 4/13/2025 0.4.0-alpha.5
+- added new actuator SignalEmitter
+- refactored actuators
 ### 9/13/2023 0.4.0-alpha.4
 - added two depth renderer for each of the arc and uni cameras. previous fix for unicam not moving when Cascade shadow map used no longer required
 ### 9/13/2023 0.4.0-alpha.3

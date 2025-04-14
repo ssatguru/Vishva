@@ -20,14 +20,9 @@ export class ActMoverParm extends ActProperties {
 export class ActuatorMover extends ActuatorAbstract {
     a: Animatable;
 
-    public constructor(mesh: Mesh, parms: ActProperties) {
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-            super(mesh, new ActMoverParm());
-        }
+    public constructor(mesh: Mesh, parms: ActMoverParm) {
+        super(mesh, parms != null ? parms : new ActMoverParm());
     }
-
 
     public actuate() {
         var props: ActMoverParm = <ActMoverParm>this.properties;
@@ -52,31 +47,31 @@ export class ActuatorMover extends ActuatorAbstract {
         this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, 0, null, () => { return this.onActuateEnd() });
     }
 
-    public getName(): string {
+     public override getName(): string {
         return "Mover";
     }
 
-    public stop() {
+    public override stop() {
         if (this.a != null) {
             this.a.stop();
             window.setTimeout((() => { return this.onActuateEnd() }), 0);
         }
     }
-
-    public cleanUp() {
+    
+    public override cleanUp() {
     }
 
-    public onPropertiesChange() {
+    public override onPropertiesChange() {
         if (this.properties.autoStart) {
             var started: boolean = this.start(this.properties.signalId);
         }
     }
 
-    public isReady(): boolean {
+    public override isReady(): boolean {
         return true;
     }
 
-    public newInstance(mesh: Mesh, parms: ActProperties): ActuatorMover {
+    public newInstance(mesh: Mesh, parms: ActMoverParm): ActuatorMover {
         return new ActuatorMover(mesh, parms);
     }
 }

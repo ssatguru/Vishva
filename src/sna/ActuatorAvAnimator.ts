@@ -28,12 +28,7 @@ export class AvAnimatorProp extends ActProperties {
 export class ActuatorAvAnimator extends ActuatorAbstract {
 
     public constructor(mesh: Mesh, parms: AvAnimatorProp) {
-
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-            super(mesh, new AvAnimatorProp());
-        }
+        super(mesh, parms != null ? parms : new AvAnimatorProp());
 
         this._sp = new Vector3(0, 0, 0);
         this._sr = new Vector3(0, 0, 0);

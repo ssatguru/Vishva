@@ -17,11 +17,7 @@ export class ActuatorCloaker extends ActuatorAbstract {
     e: number;
 
     public constructor(mesh: Mesh, parms: ActCloakerProp) {
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-            super(mesh, new ActCloakerProp());
-        }
+        super(mesh, parms != null ? parms : new ActCloakerProp());
         this.s = 1;
         this.e = 0;
     }

@@ -29,12 +29,7 @@ export class ActuatorSound extends ActuatorAbstract {
     sound: Sound;
 
     public constructor(mesh: Mesh, prop: ActSoundProp) {
-        if (prop != null) {
-            super(mesh, prop);
-        } else {
-            super(mesh, new ActSoundProp());
-        }
-
+        super(mesh, prop != null ? prop : new ActSoundProp());
     }
 
     public actuate() {

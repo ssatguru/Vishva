@@ -23,11 +23,7 @@ export class ActuatorLight extends ActuatorAbstract {
 
 
     public constructor(mesh: Mesh, prop: ActLightProp) {
-        if (prop != null) {
-            super(mesh, prop);
-        } else {
-            super(mesh, new ActLightProp());
-        }
+        super(mesh, prop != null ? prop : new ActLightProp());
     }
 
     public actuate() {

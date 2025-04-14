@@ -12,12 +12,8 @@ export class AnimatorProp extends ActProperties {
 export class ActuatorAnimator extends ActuatorAbstract {
     public constructor(mesh: Mesh, parms: AnimatorProp) {
 
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-
-            super(mesh, new AnimatorProp());
-        }
+        super(mesh, parms != null ? parms : new AnimatorProp());
+        
         var prop: AnimatorProp = <AnimatorProp>this.properties;
         var skel: Skeleton = mesh.skeleton;
         if (skel != null) {

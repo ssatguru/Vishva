@@ -38,13 +38,8 @@ export class ActuatorTextBar extends ActuatorAbstract {
     tb: TextBlock;
     option: { width: 0, height: 0 };
 
-    public constructor(mesh: Mesh, parms: ActProperties) {
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-            super(mesh, new ActTextBar());
-        }
-
+    public constructor(mesh: Mesh, parms: ActTextBar) {
+        super(mesh, parms != null ? parms : new ActTextBar());
     }
 
     public actuate() {

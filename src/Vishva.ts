@@ -108,7 +108,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.4";
+    static version: string = "0.4.0-alpha.5";
 
     public static worldName: string;
 
@@ -1447,7 +1447,7 @@ export class Vishva {
         this.primPBRMaterial.baseColor = new Color3(0.5, 0.5, 0.5);
         this.primPBRMaterial.roughness = 0.5;
         this.primPBRMaterial.metallic = 0.5;
-        this.primPBRMaterial.environmentTexture = (<StandardMaterial>this.skybox.material).reflectionTexture;
+         this.primPBRMaterial.environmentTexture = (<StandardMaterial>this.skybox.material).reflectionTexture;
 
     }
 
@@ -3883,7 +3883,7 @@ export class Vishva {
 
 
     private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string) {
-        console.log("loading meshes " + file);
+        console.log("loading meshes from " + file + " mesh count " + meshes.length);
 
 
         for (let s of skeletons) {
@@ -3903,6 +3903,7 @@ export class Vishva {
 
         let _rootMeshesCount: number = 0;
         let rootMesh: TransformNode = null;
+        let i = 0;
         for (let mesh of meshes) {
 
             mesh.isPickable = true;
@@ -3912,8 +3913,8 @@ export class Vishva {
                 rootMesh = <Mesh>mesh;
             }
 
+            //TODO Large world asset , _addToShadowCasters resulted in FPS fallin from 35=39 to 16-20
             this._addToShadowCasters(mesh);
-            mesh.receiveShadows = this._recShadowFlag;
 
             //no need to rename, 3.1 version seems to preserve the texture img urls
             //this._renameTextures(mesh);
@@ -3923,6 +3924,8 @@ export class Vishva {
                 this.scene.stopAnimation(mesh.skeleton);
                 this.avManager.fixAnimationRanges(mesh.skeleton);
             }
+
+
 
 
         }
@@ -3966,7 +3969,7 @@ export class Vishva {
 
         let scaling = false;
         let sf: Vector3;
-        if (curatedConfig["scale"]) {
+        if (assetType == "curated" && curatedConfig["scale"]) {
             scaling = true;
             sf = new Vector3();
             sf.x = Number(curatedConfig["scale"][0]);
@@ -3979,6 +3982,36 @@ export class Vishva {
             }
         }
 
+        this.postionAsset(rootMesh);
+        /*
+                let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
+        
+                //rootmesh location wrt min = - bb.min
+        
+                // 2 m in front of av
+                let placementLocal: Vector3 = new Vector3(0, 0, -2);
+                let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+        
+                //let placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
+                //let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
+                if (rootMesh != null) {
+                    rootMesh.position.addInPlace(placementGlobal);
+                    rootMesh.position.subtractInPlace(bb.min);
+        
+                    if (!this.isMeshSelected) {
+                        this.selectForEdit(rootMesh);
+                    } else {
+                        this.switchEditControl(rootMesh);
+                    }
+                    this.rootSelected = true;
+                    this.animateMesh(rootMesh);
+                }
+        */
+
+        EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
+    }
+
+    private postionAsset(rootMesh: TransformNode) {
         let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
 
         //rootmesh location wrt min = - bb.min
@@ -4002,7 +4035,7 @@ export class Vishva {
             this.animateMesh(rootMesh);
         }
 
-        EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
+
     }
 
     private _fixGLB(meshes: AbstractMesh[]) {
@@ -4176,11 +4209,19 @@ export class Vishva {
                     }
 
                 } else {
+                    //TODO Large world asset processMaterial was failing
                     this._processMaterial(mesh, m => this._makeMatIdUnique(m));
                 }
 
                 //TODO one time. remove afterwards
                 this._processMaterial(mesh, m => this._removeSpecular(m));
+
+                //TODO Large world asset one time ?
+                //console.log("mesh collision " + mesh.name);
+                //mesh.checkCollisions = true;
+
+
+
             }
 
         }

@@ -29,11 +29,7 @@ export class ActuatorRotator extends ActuatorAbstract {
     a: Animatable;
 
     public constructor(mesh: Mesh, parms: ActRotatorParm) {
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-            super(mesh, new ActRotatorParm());
-        }
+        super(mesh, parms != null ? parms : new ActRotatorParm());
     }
 
     public actuate() {

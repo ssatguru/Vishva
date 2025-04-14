@@ -12,12 +12,8 @@ export class ActDisablerProp extends ActProperties {
 export class ActuatorDisabler extends ActuatorAbstract {
 
 
-    public constructor(mesh: Mesh, prop: ActDisablerProp) {
-        if (prop != null) {
-            super(mesh, prop);
-        } else {
-            super(mesh, new ActDisablerProp());
-        }
+    public constructor(mesh: Mesh, parms: ActDisablerProp) {
+        super(mesh, parms != null ? parms : new ActDisablerProp());
     }
 
     public actuate() {

@@ -66,6 +66,7 @@ export class InternalAssetsUI {
         //create a table to display the asset pictures
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetCat + "Tbl";
+        table.className = "withBorder";
 
         //populate that table
         this._updateAssetTable(topFolder, table, assetCat, items);
@@ -130,12 +131,13 @@ export class InternalAssetsUI {
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.appendChild(img);
         }
-        // var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
-        // for (let item of items) {
-        //     if (!(item instanceof Object)) continue;
-        //     let cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
-        //     cell.innerText = item["d"];
-        // }
+        var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
+        for (let item of items) {
+            if (!(item instanceof Object)) continue;
+            let cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
+            cell.innerText = item["d"];
+            cell.style.textAlign="center";
+        }
     }
     private _isAsset(fileName: String): boolean {
         let ft = fileName.split(".")[1];

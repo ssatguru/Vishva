@@ -46,12 +46,8 @@ export class ActuatorDialog extends ActuatorAbstract {
     w: string;
     h: string;
 
-    public constructor(mesh: Mesh, parms: ActProperties) {
-        if (parms != null) {
-            super(mesh, parms);
-        } else {
-            super(mesh, new ActDialogParm());
-        }
+    public constructor(mesh: Mesh, parms: ActDialogParm) {
+        super(mesh, parms != null ? parms : new ActDialogParm());
     }
 
     public actuate() {

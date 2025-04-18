@@ -6,8 +6,12 @@ const saveHTML: string = `
         Your world file is ready for download.
         <p>
         <a id="downloadLink" href="www" download oncontextmenu="return true;">
-                Right click here and select "Save link as..." to save this file on your computer
+                Right click here
         </a>
+        <br>
+        then select "Save link as..." 
+        <br>
+        to save this file on your computer
         <br />
         <br />
         </p>
@@ -17,8 +21,12 @@ const saveHTML: string = `
         <br/>Your asset file is ready for download.
         <p>
         <a id="downloadAssetLink" href="www" download oncontextmenu="return true;">
-                Right click here and select "Save link as..." to save this file on your computer<
-        /a> 
+                Right click here
+        </a>
+        <br>
+        then select "Save link as..." 
+        <br>
+        to save this file on your computer
         <br/>
         <br/>
         </p>

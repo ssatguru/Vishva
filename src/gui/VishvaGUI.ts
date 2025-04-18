@@ -28,7 +28,8 @@ export class VishvaGUI {
     local: boolean = true;
 
     //LARGE_ICON_SIZE  "width:128px;height:128px;";
-    public static LARGE_ICON_SIZE: string = "width:" + 128/window.devicePixelRatio + "px;height:"+ 128/window.devicePixelRatio +"px;";
+    //public static LARGE_ICON_SIZE: string = "width:" + 128/window.devicePixelRatio + "px;height:"+ 128/window.devicePixelRatio +"px;";
+    public static LARGE_ICON_SIZE: string = "width:128px;height:128px";
     public static SMALL_ICON_SIZE: string = "width:64px;height:64px;";
     public guiSettings: GuiSettings;
 

@@ -287,6 +287,7 @@ export class GeneralUI {
             }
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
+            this._downloadLink.download = this._vishva.meshSelected.name + ".babylon";
             this._downloadDialog.open();
             return false;
         };

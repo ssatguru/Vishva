@@ -44,11 +44,10 @@ window.onload = main;
 function main() {
 
     //adjust for hi dpi monitors
-
-    var el = document.body;
-    var fs = window.getComputedStyle(el, null).getPropertyValue('font-size');
-    var fontSize = parseFloat(fs); 
-    el.style.fontSize = (fontSize/window.devicePixelRatio) + 'px';
+    // var el = document.body;
+    // var fs = window.getComputedStyle(el, null).getPropertyValue('font-size');
+    // var fontSize = parseFloat(fs); 
+    // el.style.fontSize = (fontSize/window.devicePixelRatio) + 'px';
 
     //http://www.html5gamedevs.com/topic/35741-sceneloaderappend-do-not-load-images-of-models-correctly/?tab=comments#comment-205631
     //in 4.0.3 setting this to true broke babylon file exported from GLB  

@@ -60,7 +60,7 @@ import {
     //WaterMaterial,
     IParticleSystem,
     TargetCamera,
-    ImageProcessingConfigurationDefines,
+    // ImageProcessingConfigurationDefines,
     SpotLight,
     PointLight,
     VertexBuffer,
@@ -108,7 +108,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.5";
+    static version: string = "0.4.0-alpha.6";
 
     public static worldName: string;
 
@@ -325,13 +325,13 @@ export class Vishva {
         this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
 
         Engine.audioEngine.useCustomUnlockedButton = true;
-
+      
 
         this.scene = new Scene(this.engine);
         //let pOn = this.scene.enablePhysics();
         //let pOn = this.scene.enablePhysics(new Vector3(0, -9.8, 0));
         let pOn = this.scene.enablePhysics(new Vector3(0, -9.81, 0), new OimoJSPlugin());
-        //this.scene.useRightHandedSystem = true;
+        this.scene.useRightHandedSystem = true;
         //
         //lets make night black
         this.scene.clearColor = new Color4(0, 0, 0, 1);
@@ -3501,12 +3501,16 @@ export class Vishva {
         let p: Vector3 = this.meshSelected.position.clone();
         let re: Vector3 = this.meshSelected.rotation.clone();
         let rq: Quaternion = this.meshSelected.rotationQuaternion.clone();
+
         this.meshSelected.position = Vector3.Zero();
         this.meshSelected.rotation = Vector3.Zero();
         var meshObj: any = SceneSerializer.SerializeMesh(this.meshSelected, false, true);
+        meshObj.useRightHandedSystem = this.scene.useRightHandedSystem;
+
         this.meshSelected.position = p;
         this.meshSelected.rotation = re;
         this.meshSelected.rotationQuaternion = rq;
+
         //var meshString: string = JSON.stringify(meshObj);
         //pretty save
         var meshString: string = JSON.stringify(meshObj, null, 1);

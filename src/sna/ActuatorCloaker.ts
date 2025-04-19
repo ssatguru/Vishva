@@ -38,7 +38,7 @@ export class ActuatorCloaker extends ActuatorAbstract {
             this.e = 0;
         }
 
-        this.a = Animation.CreateAndStartAnimation("cloaker", this.mesh, "visibility", 60, 60 * props.timeToCloak, this.s, this.e, 0, null, () => { return this.onActuateEnd() });
+        this.a = Animation.CreateAndStartAnimation("cloaker", this.mesh, "visibility", 60, 60 * props.timeToCloak, this.s, this.e, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => { return this.onActuateEnd() });
     }
 
     public stop() {

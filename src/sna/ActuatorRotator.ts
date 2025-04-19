@@ -50,7 +50,7 @@ export class ActuatorRotator extends ActuatorAbstract {
         properties.state_notReversed = !properties.state_notReversed;
         var cY: number = this.mesh.position.y;
         var nY: number = this.mesh.position.y + 5;
-        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, 0, null, () => {
+        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => {
             return this.onActuateEnd()
         });
     }

@@ -108,7 +108,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.6";
+    static version: string = "0.4.0-alpha.7";
 
     public static worldName: string;
 
@@ -322,7 +322,7 @@ export class Vishva {
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
         //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
         //this.engine = new Engine(this.canvas, true);
-        this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true });
+        this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true, audioEngine: true });
 
         Engine.audioEngine.useCustomUnlockedButton = true;
       
@@ -2000,7 +2000,7 @@ export class Vishva {
         if (scale == null) scale = 1.5;
         let startScale: Vector3 = mesh.scaling.clone().scaleInPlace(scale);
         let endScale: Vector3 = mesh.scaling.clone();
-        Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, 0);
+        Animation.CreateAndStartAnimation('boxscale', mesh, 'scaling', 10, 2, startScale, endScale, Animation.ANIMATIONLOOPMODE_CONSTANT);
     }
 
     public delete_mesh(): string {

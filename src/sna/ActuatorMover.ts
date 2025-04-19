@@ -44,7 +44,7 @@ export class ActuatorMover extends ActuatorAbstract {
         } else {
             nPos = cPos.add(moveBy);
         }
-        this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, 0, null, () => { return this.onActuateEnd() });
+        this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => { return this.onActuateEnd() });
     }
 
      public override getName(): string {

@@ -10,6 +10,9 @@ import "babylonjs-loaders";
 import "babylonjs-materials";
 import "pepjs";
 
+//add this when GLTF export is needed
+//import "babylonjs-serializers";
+
 //import "oimo";
 //import "cannon";
 

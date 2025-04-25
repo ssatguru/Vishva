@@ -1,3 +1,8 @@
+### 4/19/2025 0.4.0-alpha.8
+- added ambient occlusion
+- fixed hemisphere light orientation
+### 4/19/2025 0.4.0-alpha.7
+- updated babylonjs to 8.x version
 ### 4/13/2025 0.4.0-alpha.5
 - added new actuator SignalEmitter
 - refactored actuators

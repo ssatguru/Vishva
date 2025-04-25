@@ -72,7 +72,8 @@ import {
     LinesMesh,
     Camera,
     CascadedShadowGenerator,
-    DepthRenderer
+    DepthRenderer,
+    SSAO2RenderingPipeline
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -108,7 +109,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.7";
+    static version: string = "0.4.0-alpha.8";
 
     public static worldName: string;
 
@@ -511,8 +512,7 @@ export class Vishva {
 
                 this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
                 this.sun.diffuse = new Color3(1, 1, 1);
-                //this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
-                this.sun.groundColor = new Color3(0, 0, 0);
+                this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
                 Tags.AddTagsTo(this.sun, "Vishva.sun");
 
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
@@ -569,6 +569,12 @@ export class Vishva {
             this.dr = this.scene.enableDepthRenderer(this.arcCamera);
             this.dr.useOnlyInActiveCamera = true;
             this.dr.enabled = true;
+
+            //ambient occlusion
+            //https://forum.babylonjs.com/t/why-does-ssao-2-wreck-aa-for-me/28665/9
+            const ssao = new SSAO2RenderingPipeline('ssaopipeline', this.scene, 0.5, [this.arcCamera]);
+            ssao.samples = 16;
+            this.scene.prePassRenderer!.samples = 16; // OHHH!
 
 
             //TODO
@@ -713,7 +719,8 @@ export class Vishva {
 
         //point the hemisphere camera light to whatever the camera is pointing too
         //this would light up whatever the camera is pointing too
-        this.scene.activeCamera.position.subtractToRef((<TargetCamera>this.scene.activeCamera).target, this.sun.direction);
+        //ignore for now
+        //this.scene.activeCamera.position.subtractToRef((<TargetCamera>this.scene.activeCamera).target, this.sun.direction);
 
         // this.sunDR.position.x = this.avatar.position.x + 100;
         // this.sunDR.position.y = this.avatar.position.y + 100;
@@ -3205,11 +3212,12 @@ export class Vishva {
         let z: number = lxz * Math.cos(b);
         let x: number = lxz * Math.sin(b);
 
-        this.sun.direction = this.sunDR.direction.clone();
 
         this.sunDR.direction.x = -x;
         this.sunDR.direction.y = -y;
         this.sunDR.direction.z = -z;
+
+        this.sun.direction = this.sunDR.direction.clone().multiplyByFloats(-1, -1, -1);
     }
 
 

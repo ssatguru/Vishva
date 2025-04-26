@@ -53,6 +53,7 @@ export class MiscSerialized {
     public activeCameraTarget: Vector3 = Vector3.Zero();
     public skyColor: Color4;
     public skyBright: number;
+    public sceneShadowsEnabled: boolean;
 
 }
 

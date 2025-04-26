@@ -1,7 +1,5 @@
 bugs
 04/19/2025
-in free camera mode if you select a mesh and then press "esc", the camera returns to focusing on avatar but it no longer follows avatar properly
-
 migrate to new audio engine in 8.x
 
 05/05/2019

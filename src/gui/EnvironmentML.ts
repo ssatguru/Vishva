@@ -23,6 +23,9 @@ const envHTML: string = `
         
             <div style="justify-self: end;">shade</div>
             <div><input type="range" class="shade"></input></div>
+
+            <div style="justify-self: end;">shadows on/off</div>
+            <div><input type="checkbox" class="shadows"></input></div>
         
             <div style="justify-self: end;">fog</div>
             <div><input type="range" class="fog"></input></div>
@@ -57,9 +60,6 @@ const envHTML: string = `
         
             <div style="justify-self: end;">terrain</div>
             <div><Button id="trnButton">edit terrain</button></div>
-
-            <div style="justify-self: end;">avatar</div>
-            <div><Button id="avButton">avatar settings</button></div>
         
 </div>`;
 

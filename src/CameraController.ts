@@ -23,36 +23,35 @@ export class UniCamController {
         this.csg = csg;
         this.oldDr = oldDr;
 
-        this.camera = new UniversalCamera("", Vector3.Zero(), this.scene);
+        this.camera = new UniversalCamera("UniCam", Vector3.Zero(), this.scene);
+        
         this.camera.speed = this.camera.speed / 8;
         this.defaultSpeed = this.camera.speed;
         this.dr = this.scene.enableDepthRenderer(this.camera);
         this.dr.useOnlyInActiveCamera = true;
 
+        scene.postProcessRenderPipelineManager.attachCamerasToRenderPipeline("ssaopipeline", this.camera);
+
     }
 
     public start() {
+        if (this.active) return;
         this.active = true;
 
         this.oldCam = <TargetCamera>this.scene.activeCamera;
         this.oldCam.detachControl();
 
-        //this.camera = new UniversalCamera("",oldCam.getFrontPosition(-1),this.scene);
-        // this.camera = new UniversalCamera("", oldCam.position, this.scene);
-
         this.camera.position = this.oldCam.position;
-        this.camera.setTarget(this.oldCam.getTarget());//.subtractFromFloats(0,0.5,0));
+        this.camera.setTarget(this.oldCam.getTarget());
 
         this.camera.attachControl(true);
-
-        //left arrow, "a"
-        this.camera.keysLeft = [37, 65];
-        //right arrow,"d"
-        this.camera.keysRight = [39, 68];
-        //up arrow,"w"
-        this.camera.keysUp = [38, 87];
-        //down arrow,"s"
-        this.camera.keysDown = [40, 83];
+       
+        this.camera.keysLeft = [37, 65]; //left arrow, "a"
+        this.camera.keysRight = [39, 68];//right arrow,"d"
+        this.camera.keysUp = [38, 87];//up arrow,"w"
+        this.camera.keysDown = [40, 83];//down arrow,"s"
+        this.camera.keysUpward = [33, 81]; //page up,"q"
+        this.camera.keysDownward = [34, 69]; //page down,"e"
 
         this.oldDr.enabled = false;
         this.dr.enabled = true;
@@ -69,8 +68,6 @@ export class UniCamController {
 
         this.camera.detachControl();
         this.dr.enabled = false;
-        //this.camera.dispose();
-
 
         this.oldDr.enabled = true;
         this.csg.setDepthRenderer(this.oldDr);

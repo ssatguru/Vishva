@@ -16,7 +16,6 @@ export class EnvironmentUI {
     private _vishvaGUI: VishvaGUI;
     private _envDiag: VDiag;
     private _addInternalAssetUI: InternalAssetsUI;
-    private _avUI: CCUI;
     /*
      * Create Environment Dialog
      */
@@ -35,6 +34,7 @@ export class EnvironmentUI {
         let sceneBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("sceneBright")[0];
         let skyBright: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("skyBright")[0];
         let shade: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("shade")[0];
+        let shadows: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("shadows")[0];
         let fog: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fog")[0];
         let fov: HTMLInputElement = <HTMLInputElement>envElement.getElementsByClassName("fov")[0];
 
@@ -81,6 +81,12 @@ export class EnvironmentUI {
         shade.value = (100 * this._vishva.getShade()).toString();
         shade.oninput = (ev) => {
             this._vishva.setShade(Number((<HTMLInputElement>ev.target).value) / 100);
+        }
+
+
+        shadows.checked = this._vishva.scene.shadowsEnabled;
+        shadows.oninput = (ev) => {
+            this._vishva.scene.shadowsEnabled = (<HTMLInputElement>ev.target).checked;
         }
 
 
@@ -153,12 +159,6 @@ export class EnvironmentUI {
             if (this._vishva.selectGround()) vishvaGUI.showPropDiag(this._vishva.meshSelected);
             return true;
         };
-
-        let avButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("avButton");
-        avButton.onclick = (e) => {
-            if (this._avUI == null) this._avUI = new CCUI(this._vishva.avManager.cc);
-            this._avUI.toggle();
-        }
 
         //            
         //            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this._vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {

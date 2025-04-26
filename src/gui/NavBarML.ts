@@ -25,6 +25,8 @@ let navHTML = `
 
                 <button id="navEdit" title="edit"><span class="material-icons-outlined" >construction</span></button>
 
+                <button id="navAV" title="character controller"><span class="material-icons-outlined" >face</span></button>
+
                 <button id="navEnv" title="environment"><span class="material-icons-outlined" >terrain</span></button>
 
                 <button id="navSettings" title="settings"><span class="material-icons-outlined" >settings</span></button>

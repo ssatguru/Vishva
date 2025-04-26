@@ -109,7 +109,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.8";
+    static version: string = "0.4.0-alpha.9";
 
     public static worldName: string;
 
@@ -242,7 +242,7 @@ export class Vishva {
     //elevation
     _sunAzimuth: number = 45;
 
-    //allow object sto recieve shadows
+    //allow objects to recieve shadows
     _recShadowFlag: boolean = false;
 
     skybox: Mesh;
@@ -252,8 +252,6 @@ export class Vishva {
     waterMesh: Mesh;
 
     ground: Mesh;
-
-
 
     dr: DepthRenderer;
     arcCamera: ArcRotateCamera;
@@ -265,14 +263,10 @@ export class Vishva {
 
     GrndSpreads: GrndSpread[];
 
-
-
     /**
      * use this to prevent users from switching to another mesh during edit.
      */
     public switchDisabled: boolean = false;
-
-
 
     public key: Key;
 
@@ -282,14 +276,12 @@ export class Vishva {
 
     showBoundingBox: boolean = false;
 
-
     //automatcally open edit menu whenever a mesh is selected
     private autoEditMenu: boolean = true;
 
     private enablePhysics: boolean = true;
 
     public static vishva: Vishva;
-
 
 
     public constructor(sceneFile: string, scenePath: string, editEnabled: boolean, canvasId: string, guiId: string) {
@@ -326,7 +318,6 @@ export class Vishva {
         this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true, audioEngine: true });
 
         Engine.audioEngine.useCustomUnlockedButton = true;
-      
 
         this.scene = new Scene(this.engine);
         //let pOn = this.scene.enablePhysics();
@@ -405,6 +396,11 @@ export class Vishva {
         if (typeof this.vishvaSerialized.misc.skyBright !== "undefined") {
             this.skyBright = this.vishvaSerialized.misc.skyBright;
         }
+
+        if (typeof this.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
+            this.scene.shadowsEnabled = this.vishvaSerialized.misc.sceneShadowsEnabled;
+        }
+
 
         var sceneData: string = "data:" + tfat.text;
         SceneLoader.ShowLoadingScreen = false;
@@ -528,6 +524,7 @@ export class Vishva {
                 this.setShadowProperty(this.shadowGenerator);
             }
 
+
             // console.log("sceneload3 meshes");
             for (let mesh of scene.meshes) {
                 if (mesh != null) {
@@ -574,8 +571,7 @@ export class Vishva {
             //https://forum.babylonjs.com/t/why-does-ssao-2-wreck-aa-for-me/28665/9
             const ssao = new SSAO2RenderingPipeline('ssaopipeline', this.scene, 0.5, [this.arcCamera]);
             ssao.samples = 16;
-            this.scene.prePassRenderer!.samples = 16; // OHHH!
-
+            this.scene.prePassRenderer!.samples = 16; 
 
             //TODO
             this.arcCamera.checkCollisions = this._cameraCollision;
@@ -591,7 +587,6 @@ export class Vishva {
                     //this.creatDynamicTerrain();
                     this._createPlaneGround(this.scene);
                 }
-
             } else {
                 //in case this wasn't set in serialized scene
                 this.ground.receiveShadows = true;
@@ -613,7 +608,6 @@ export class Vishva {
                     }
                 }
             }
-
 
             this.scene.clearColor = this.skyColor.scale(this.skyBright);
 
@@ -690,8 +684,6 @@ export class Vishva {
         this.render();
     }
 
-
-
     private render() {
         this.scene.registerBeforeRender(() => { return this.process() });
         this.scene.executeWhenReady(() => { return this.startRenderLoop() });
@@ -754,7 +746,6 @@ export class Vishva {
             return;
         }
 
-
         if (this.isMeshSelected) {
             if (this.key.focus) {
                 //this.key.focus = false;
@@ -762,7 +753,7 @@ export class Vishva {
             }
             if (this.key.esc) {
                 this.key.esc = false;
-                //this.animateMesh(this.meshPicked);
+                this.animateMesh(this.meshSelected, 1.1);
                 this.removeEditControl();
                 if (!this.isFocusOnAv) {
                     this.setFocusOnNothing();
@@ -772,7 +763,6 @@ export class Vishva {
                     this.uniCamController.start();
                     this.uniCamOn = true;
                 }
-
             }
             if (this.key.trans) {
                 //this.key.trans = false;
@@ -801,7 +791,7 @@ export class Vishva {
         if (!this._avDisabled) {
             if (this.isFocusOnAv) {
                 if (this.key.esc) {
-                    //this.animateMesh(this.avatar, 1.1);
+                    this.animateMesh(this.avatar, 1.1);
                     this.setFocusOnNothing();
                     if (this.uniCamController == null) {
                         this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
@@ -1113,6 +1103,8 @@ export class Vishva {
                 this.editControl.setScaleSnapValue(this.snapScaleValue);
             };
         }
+
+        this.animateMesh(this.meshSelected, 1.1);
     }
 
 
@@ -1141,6 +1133,7 @@ export class Vishva {
         //if (this.key.ctl) this.multiSelect(prevMesh, this.meshPicked);
         //refresh the properties dialog box if open
         this.vishvaGUI.refreshPropsDiag();
+        this.animateMesh(this.meshSelected, 1.1);
     }
     /**
      * if not set then set the mesh rotation in qauternion
@@ -3581,6 +3574,7 @@ export class Vishva {
         vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
         vishvaSerialzed.misc.skyColor = this.skyColor;
         vishvaSerialzed.misc.skyBright = this.skyBright;
+        vishvaSerialzed.misc.sceneShadowsEnabled = this.scene.shadowsEnabled;
 
         //serialize sna before scene
         //we might add tags to meshes in scene during sna serialize.

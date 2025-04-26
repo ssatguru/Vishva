@@ -1,4 +1,8 @@
-### 4/19/2025 0.4.0-alpha.8
+### 4/25/2025 0.4.0-alpha.9
+- fixed universal camera not becoming active due to ambient occlusion issue
+- added option to disable shadow and serilizing that option during save
+- upgraded to bablonjs version 8.4
+### 4/24/2025 0.4.0-alpha.8
 - added ambient occlusion
 - fixed hemisphere light orientation
 ### 4/19/2025 0.4.0-alpha.7

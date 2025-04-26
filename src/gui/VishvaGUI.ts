@@ -15,6 +15,7 @@ import { saveElement } from "./VishvaML";
 import { VDiag } from "./components/VDiag";
 import { VTheme, VThemes } from "./components/VTheme";
 import { TransformNode } from "babylonjs";
+import { CCUI } from "./CCUI";
 
 
 export class GuiSettings {
@@ -29,7 +30,7 @@ export class VishvaGUI {
 
     //LARGE_ICON_SIZE  "width:128px;height:128px;";
     //public static LARGE_ICON_SIZE: string = "width:" + 128/window.devicePixelRatio + "px;height:"+ 128/window.devicePixelRatio +"px;";
-    public static LARGE_ICON_SIZE: string = "width:128px;height:128px";
+    public static LARGE_ICON_SIZE: string = "width:128px;height:128px;";
     public static SMALL_ICON_SIZE: string = "width:64px;height:64px;";
     public guiSettings: GuiSettings;
 
@@ -162,6 +163,7 @@ export class VishvaGUI {
 
     private firstTime: boolean = true;
     private addMenuOn: boolean = false;
+    private _avUI: CCUI;
 
     private _createNavMenu() {
 
@@ -259,7 +261,14 @@ export class VishvaGUI {
 
         }
 
-        // button for all environment
+        // button for character controller
+        var navAV: HTMLElement = document.getElementById("navAV");
+        navAV.onclick = (e) => {
+            if (this._avUI == null) this._avUI = new CCUI(this._vishva.avManager.cc);
+            this._avUI.toggle();
+        }
+
+        // button for environment
         var navEnv: HTMLElement = document.getElementById("navEnv");
         navEnv.onclick = (e) => {
             if (this._environment == null) {

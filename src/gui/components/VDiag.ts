@@ -214,11 +214,25 @@ export class VDiag {
 
         }
 
+        /**
+         * This _moveIt method is responsible for adjusting 
+         * the position of a dialog window (this.w) to ensure it stays within the 
+         * visible boundaries of the parent GUI container (Vishva.gui). 
+         * It takes two parameters, t (top position) and l (left position), 
+         * which represent the desired new position of the dialog. 
+         * The function modifies these values to prevent the dialog from overflowing 
+         * outside the GUI container.
+         */
+
         private _moveIt(t: number, l: number) {
-                t = Math.min(t, Vishva.gui.offsetHeight - this.w.offsetHeight);
-                l = Math.min(l, Vishva.gui.offsetWidth - this.w.offsetWidth);
+                //Clamp the Top Position (t):
+                //-1 is to prevent vertical scroll bar from showing up
+                t = Math.min(t, Vishva.gui.offsetHeight - 1 - this.w.offsetHeight);
                 t = Math.max(t, Vishva.gui.offsetTop);
+                //Clamp the Left Position (l):
+                l = Math.min(l, Vishva.gui.offsetWidth - this.w.offsetWidth);
                 l = Math.max(l, Vishva.gui.offsetLeft);
+                //Set the New Position of the Dialog:
                 this.w.style.top = t + 'px';
                 this.w.style.left = l + 'px';
                 this.w.style.bottom = 'auto';
@@ -371,6 +385,8 @@ export class VDiag {
                         this.b.style.height = this._savHt;
                         this.minIcon.style.display = "inline-block";
                         this.addIcon.style.display = "none";
+                        //when expanding call _moveIt. _moveIt adjusts the positions of the window in case it spills outside the screen
+                        this._moveIt(this.w.offsetTop, this.w.offsetLeft);
                 } else {
                         this._minimized = true;
                         this._savHt = this.w.style.height;

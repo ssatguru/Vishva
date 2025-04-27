@@ -23,7 +23,7 @@ export class UniCamController {
         this.csg = csg;
         this.oldDr = oldDr;
 
-        this.camera = new UniversalCamera("UniCam", Vector3.Zero(), this.scene);
+       this.camera = new UniversalCamera("UniCam", Vector3.Zero(), this.scene);
         
         this.camera.speed = this.camera.speed / 8;
         this.defaultSpeed = this.camera.speed;
@@ -56,6 +56,7 @@ export class UniCamController {
         this.oldDr.enabled = false;
         this.dr.enabled = true;
         this.csg.setDepthRenderer(this.dr);
+        
         this.scene.activeCamera = this.camera;
 
         //if we donot do this then this camera  doesnot move

@@ -1,3 +1,6 @@
+### 4/26/2025 0.4.0-alpha.10
+- fixed issue of dialog box spilling out of screen when it is restored after minimizing and moving it around
+- fixed SNA ActuatorTextBar. Text would become transparent when the background was skybox
 ### 4/25/2025 0.4.0-alpha.9
 - fixed universal camera not becoming active due to ambient occlusion issue
 - added option to disable shadow and serilizing that option during save

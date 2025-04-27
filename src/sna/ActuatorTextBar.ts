@@ -1,3 +1,4 @@
+import { Vishva } from "../Vishva";
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
@@ -74,6 +75,13 @@ export class ActuatorTextBar extends ActuatorAbstract {
         this.plane.position.y = props.floatHeight;
         this.plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
         this.plane.isVisible = false;
+        //setting renderingGroupId to 1 (default 0) to avoid the AdvanceDynamictexture issue explained here
+        //https://forum.babylonjs.com/t/skybox-visibility-effecting-advanceddynamictexture-transparency/58087
+        this.plane.renderingGroupId = 1;
+
+        //GUI doesnot respect right handedness of the scene. So we need to flip the plane scaling if the scene is right handed.
+        if (Vishva.vishva.scene.useRightHandedSystem) 
+            this.plane.scaling.x = -this.plane.scaling.x;
 
         if (this.td != null) this.td.dispose();
         let td = AdvancedDynamicTexture.CreateForMesh(this.plane);

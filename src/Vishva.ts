@@ -109,7 +109,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.9";
+    static version: string = "0.4.0-alpha.10";
 
     public static worldName: string;
 
@@ -3823,6 +3823,12 @@ export class Vishva {
         this.filePath = assetType;
         this.file = file;
         let fileName: string = file.split(".")[0];
+        //check if "asset.json" exist in the same folder as the asset
+        //if yes then load that file along with the asset and use it to configure the asset after it is loaded
+        //if no then load the asset as is
+        //TODO check if file exists in Vishva.userAssets
+        
+
         SceneLoader.ImportMesh("",
             Vishva.vHome + "assets/curated/" + assetType + "/" + fileName + "/",
             file,
@@ -4595,13 +4601,14 @@ export class Vishva {
         skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
 
 
-        var skybox: Mesh = Mesh.CreateBox("skyBox", 10000.0, scene);
         //var skybox: Mesh=Mesh.CreateSphere("skybox",4,10000,scene);
+        var skybox = MeshBuilder.CreateBox("skyBox", {size:10000.0}, scene);
         skybox.material = skyboxMaterial;
         skybox.infiniteDistance = true;
         skybox.renderingGroupId = 0;
         skybox.isPickable = false;
         //skybox.position.y=-100;
+      
 
         //as the light becomes dim make the sybox less visible, more transparent
         //show the sky's "clear color" which also becomes darker as the light dims

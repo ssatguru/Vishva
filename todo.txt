@@ -1,4 +1,8 @@
 bugs
+04/27/2025
+Avatar Manager diaglog box does not resize properly when switching to mapping tab and spills out of canvas.
+switching tabs should trigger a dialog size check.
+
 04/26/2025
 first time esc key is pressed the ground becomes invisible for a moment (flickers for a moment)
 this doesnot happen when shadows are turned off
@@ -8,8 +12,6 @@ subsequent esc key doesn't have this issue.
 04/19/2025
 migrate to new audio engine in 8.x
 
-05/05/2019
-in free camera mode after using edit control we have to clikc in the screen for WASD keys to take effect
 
 05/09/2017 r
 - remove children removes attached light too.

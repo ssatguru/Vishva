@@ -121,6 +121,7 @@ export class VDiag {
                         if (this._type === "g") {
                                 this.position(this.pos);
                         } else {
+                                this.w.style.maxHeight =  Number(Vishva.gui.offsetHeight - 1).toString()+"px";
                                 this._moveIt(this.w.offsetTop, this.w.offsetLeft);
                         }
                 }
@@ -527,7 +528,8 @@ export class VDiag {
 
                 // diag window ===========================================
                 this.w.setAttribute("style", this._style);
-                this.w.style.height = <string>height;
+                this.w.style.maxHeight =  Number(Vishva.gui.offsetHeight - 1).toString()+"px";
+                this.w.style.overflow = "auto";
                 this.w.style.width = <string>width;
                 this.w.style.minWidth = minWidth;
                 // this.w.style.color = Vishva.theme.darkColors.f;

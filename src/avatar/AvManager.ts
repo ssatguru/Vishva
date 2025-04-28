@@ -188,11 +188,19 @@ export class AvManager {
 
     public switchAvatar(mesh: Mesh): string {
 
+        let rootNode = this._root(mesh);
+        if (!(rootNode instanceof Mesh)) {
+            let msg = "Cannot use this node as an Avatar. The root of this node is not a MESH.";
+            console.error(msg);
+            return msg;
+        }
+
         this.cc.stop();
         //old avatar
         SNAManager.getSNAManager().enableSnAs(this.avatar);
         this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
-        this.avatar.isPickable = true;
+        //now that this mesh is not the avatar anymore, we can make it and its children pickable and remove the avatar tags
+        this._makeAllUnPickable(this.avatar,false);
         this.avatar.visibility = 1;
         Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
         if (this.avatarSkeleton != null) {
@@ -215,7 +223,7 @@ export class AvManager {
         this.avatar.checkCollisions = true;
         this.avatar.ellipsoid = this._avEllipsoid
         this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-        this.avatar.isPickable = false;
+        this._makeAllUnPickable(this.avatar,true);
         this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
         this.avatar.rotationQuaternion = null;
         // the camera might have been moved around and to/from this mesh
@@ -239,6 +247,17 @@ export class AvManager {
         EventManager.publish(VEvent._AVATAR_SWITCHED);
 
         return null;
+    }
+
+    //make all meshes in the hierarchy pickable/unpickable
+    //this is needed to prevent the avatar from being picked by the raycaster
+    private _makeAllUnPickable(node:Node,pickable:boolean){
+        if (node instanceof Mesh) {
+            node.isPickable = !pickable;
+        }
+        node.getChildren().forEach((child) => {
+            this._makeAllUnPickable(child,pickable);
+        }); 
     }
 
 

@@ -1,8 +1,13 @@
+### 4/27/2025 0.4.0-alpha.11
+- fixed issue of dialog box spilling out of canvas when its content height exceed the canvas height
+- when switching avatar and the new avatar root is not a mesh throws a error and prevents switching
+- if avatar mesh has one or more children then instead of just making the mesh unpickable make all chilren unpickable too
 ### 4/26/2025 0.4.0-alpha.10
-- fixed issue of dialog box spilling out of screen when it is restored after minimizing and moving it around
+- fixed issue of dialog box spilling out of canvas when it is restored after minimizing and moving it around
 - fixed SNA ActuatorTextBar. Text would become transparent when the background was skybox
 ### 4/25/2025 0.4.0-alpha.9
 - fixed universal camera not becoming active due to ambient occlusion issue
+- added keys q and e to move universal camera up and down
 - added option to disable shadow and serilizing that option during save
 - upgraded to bablonjs version 8.4
 ### 4/24/2025 0.4.0-alpha.8

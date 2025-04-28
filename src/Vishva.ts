@@ -109,7 +109,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.10";
+    static version: string = "0.4.0-alpha.11";
 
     public static worldName: string;
 

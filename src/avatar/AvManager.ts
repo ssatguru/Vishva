@@ -1,4 +1,4 @@
-import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Node, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
+    import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Node, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
 import { CharacterController } from "babylonjs-charactercontroller";
 import { EventManager } from "../eventing/EventManager";
 import { VEvent } from "../eventing/VEvent";

@@ -72,6 +72,9 @@ const settingFormHtml: string = `
 
         <label>step sound</label>
         <button name="stepSnd" type="button" >set sound</button>
+
+        <label>show elipsoid</label>
+        <input name="elipsoid" type="checkbox"/>
 </form>
 `;
 const mapFormHTML: string = `

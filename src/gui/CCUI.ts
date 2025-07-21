@@ -199,6 +199,7 @@ export class CCUI {
         form.x.value = ccSettings.cameraTarget.x;
         form.y.value = ccSettings.cameraTarget.y;
         form.z.value = ccSettings.cameraTarget.z;
+
     }
 
     private _updateUIMap() {
@@ -294,6 +295,12 @@ export class CCUI {
         ccSettings.sound = this._sndUI.getSound();
 
         this._cc.setSettings(ccSettings);
+
+        if (form["elipsoid"].checked) {
+            this._cc.showEllipsoid(true);
+        }else{
+            this._cc.showEllipsoid(false);
+        }
 
     }
 

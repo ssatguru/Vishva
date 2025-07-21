@@ -34,8 +34,29 @@ export class SettingsUI {
         div.innerHTML = settingHTML;
 
 
-        let dboSave: HTMLButtonElement = VButton.create("save", "save");
-        dboSave.style.margin = "1em";
+        
+
+        this._camCol = <HTMLInputElement>document.getElementById("camCol");
+        this._autoEditMenu = <HTMLInputElement>document.getElementById("autoEditMenu");
+        this._showToolTips = <HTMLInputElement>document.getElementById("showToolTips");
+        this._revealInvis = <HTMLInputElement>document.getElementById("revealInvis");
+        this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
+        this._snapper = <HTMLInputElement>document.getElementById("snapper");
+
+        this._redoShadows = <HTMLButtonElement>document.getElementById("redoShadow");
+
+        this._redoShadows.onclick = (e) => {
+            this._vishva.redoShadows();
+        }
+
+        this._updateSettings();
+
+        this._settingDiag = new VDiag(div, "Settings", VDiag.center, "", "", "24em");
+
+        // let dboSave: HTMLButtonElement = VButton.create("save", "save");
+        // dboSave.style.margin = "1em";
+
+        let dboSave: HTMLButtonElement = this._settingDiag.addButton("save");
         dboSave.onclick = (e) => {
 
             this._vishva.enableCameraCollision(this._camCol.checked);
@@ -73,32 +94,17 @@ export class SettingsUI {
             return true;
         };
 
-        let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
+        //let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
         //dboCancel.style.marginTop = "1em";
-        dboCancel.style.margin = "1em";
+        //dboCancel.style.margin = "1em";
+        let dboCancel: HTMLButtonElement = this._settingDiag.addButton("cancel");
         dboCancel.onclick = (e) => {
             this._settingDiag.close();
             return true;
         }
-        div.appendChild(dboSave);
-        div.appendChild(dboCancel);
+        // div.appendChild(dboSave);
+        // div.appendChild(dboCancel);
 
-        this._camCol = <HTMLInputElement>document.getElementById("camCol");
-        this._autoEditMenu = <HTMLInputElement>document.getElementById("autoEditMenu");
-        this._showToolTips = <HTMLInputElement>document.getElementById("showToolTips");
-        this._revealInvis = <HTMLInputElement>document.getElementById("revealInvis");
-        this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
-        this._snapper = <HTMLInputElement>document.getElementById("snapper");
-
-        this._redoShadows = <HTMLButtonElement>document.getElementById("redoShadow");
-
-        this._redoShadows.onclick = (e) => {
-            this._vishva.redoShadows();
-        }
-
-        this._updateSettings();
-
-        this._settingDiag = new VDiag(div, "Settings", VDiag.center, "", "", "24em");
     }
 
     private _updateSettings() {

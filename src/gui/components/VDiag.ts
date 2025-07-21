@@ -469,14 +469,15 @@ export class VDiag {
 
         public setSize(w: string, h: string) {
                 this.w.style.width = w;
-                this.w.style.height = h;
+                this.b.style.height = h;
         }
 
         public addButton(txt: string): HTMLButtonElement {
                 if (this.f == null) {
                         this.f = document.createElement('div');
-                        this.b.appendChild(this.f);
-                        this.b.style.gridTemplateRows = "auto min-content";
+                        this.w.appendChild(this.f);
+                        this.f.style.backgroundColor = Vishva.theme.colors.b;
+                        this.f.style.color = Vishva.theme.colors.f;
                 }
 
                 let button: HTMLButtonElement = VButton.create(txt, txt);
@@ -520,7 +521,7 @@ export class VDiag {
 
                 this.pos = pos;
 
-                if (height == null || height == "") height = "auto";
+                
 
                 this.w = document.createElement("div");
                 this.w.innerHTML = this.ml;
@@ -583,9 +584,10 @@ export class VDiag {
                 this.b.appendChild(this.bc);
                 this.b.style.color = Vishva.theme.darkColors.f;
                 this.b.style.backgroundColor = Vishva.theme.darkColors.b;
+                if (height == null || height == "") height = "auto";
+                else this.b.style.height = <string>height;
 
                 this.b.style.overflow = "auto";
-                this.b.style.height = "inherit";
 
                 this.position(pos);
                 DialogMgr.vdiags.push(this);

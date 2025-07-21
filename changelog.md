@@ -1,3 +1,10 @@
+### 7/20/2025 0.4.0-alpha.12
+- switched to new version of character controller
+- added option to show avatar ellipsoid in av manger dialog box
+- fixed issue with dialog box and dialog box actuator showing scroll bars every time
+- fixed issue with snapper where snapping would not happen when switching edit from one selected asset to another
+- fixed issue when avatar becomes semi transparent on pressing "esc" and then wrongly remains semi-transparent even after "esc" is pressed again and focus switches back to avatar
+
 ### 4/27/2025 0.4.0-alpha.11
 - fixed issue of dialog box spilling out of canvas when its content height exceed the canvas height
 - when switching avatar and the new avatar root is not a mesh throws a error and prevents switching

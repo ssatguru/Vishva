@@ -109,7 +109,7 @@ import { GuiUtils } from "./gui/GuiUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.11";
+    static version: string = "0.4.0-alpha.12";
 
     public static worldName: string;
 
@@ -178,8 +178,8 @@ export class Vishva {
 
 
 
-    private _avEllipsoid: Vector3 = new Vector3(0.5, 1, 0.5);
-    private _avEllipsoidOffset: Vector3 = new Vector3(0, 1, 0);
+    private _avEllipsoid: Vector3 = new Vector3(0.15, 0.8, 0.15);
+    private _avEllipsoidOffset: Vector3 = new Vector3(0, 0.8, 0);
 
     // Note the usage of relative url for internal assets
     // "assets/.." and not "/assets"
@@ -324,6 +324,10 @@ export class Vishva {
         //let pOn = this.scene.enablePhysics(new Vector3(0, -9.8, 0));
         let pOn = this.scene.enablePhysics(new Vector3(0, -9.81, 0), new OimoJSPlugin());
         this.scene.useRightHandedSystem = true;
+
+        console.log("epsilon : " + Engine.CollisionsEpsilon);//0.001
+        Engine.CollisionsEpsilon = 0.01;
+
         //
         //lets make night black
         this.scene.clearColor = new Color4(0, 0, 0, 1);
@@ -1087,22 +1091,7 @@ export class Vishva {
         }
         //if (this.key.ctl) this.multiSelect(null, this.meshPicked);
 
-        if (this.snapperOn) {
-            this.setSnapperOn();
-        } else {
-            if (this.snapTransOn) {
-                this.editControl.setTransSnap(true);
-                this.editControl.setTransSnapValue(this.snapTransValue);
-            };
-            if (this.snapRotOn) {
-                this.editControl.setRotSnap(true);
-                this.editControl.setRotSnapValue(this.snapRotValue);
-            };
-            if (this.snapScaleOn) {
-                this.editControl.setScaleSnap(true);
-                this.editControl.setScaleSnapValue(this.snapScaleValue);
-            };
-        }
+        this._managesnapping();
 
         this.animateMesh(this.meshSelected, 1.1);
     }
@@ -1130,9 +1119,13 @@ export class Vishva {
         if (this.meshSelected instanceof AbstractMesh) {
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshSelected);
         }
+
+        this._managesnapping();
+
         //if (this.key.ctl) this.multiSelect(prevMesh, this.meshPicked);
         //refresh the properties dialog box if open
         this.vishvaGUI.refreshPropsDiag();
+
         this.animateMesh(this.meshSelected, 1.1);
     }
     /**
@@ -1296,6 +1289,7 @@ export class Vishva {
         this.f--;
         if (this.f < 0) {
             this.isFocusOnAv = true;
+            this.avatar.visibility = 1;
             this.cameraAnimating = false;
             this.scene.unregisterBeforeRender(this.animFunc);
 
@@ -2551,6 +2545,10 @@ export class Vishva {
         return;
     }
 
+    /**
+     *  Snapping Code Start
+     */
+
     public snapTrans(yes: boolean): string {
         if (this.snapperOn) {
             return "Cannot change snapping mode when snapper is on"
@@ -2626,6 +2624,25 @@ export class Vishva {
         return;
     }
 
+    private _managesnapping(){
+         if (this.snapperOn) {
+            this.startSnapping();
+        } else {
+            if (this.snapTransOn) {
+                this.editControl.setTransSnap(true);
+                this.editControl.setTransSnapValue(this.snapTransValue);
+            };
+            if (this.snapRotOn) {
+                this.editControl.setRotSnap(true);
+                this.editControl.setRotSnapValue(this.snapRotValue);
+            };
+            if (this.snapScaleOn) {
+                this.editControl.setScaleSnap(true);
+                this.editControl.setScaleSnapValue(this.snapScaleValue);
+            };
+        }
+    }
+
     public snapper(yes: boolean): string {
         if (!this.spaceWorld && yes) {
             this.spaceWorld = true;
@@ -2636,15 +2653,15 @@ export class Vishva {
         //if edit control is already up then lets switch snaps on
         if (this.editControl != null) {
             if (this.snapperOn) {
-                this.setSnapperOn();
+                this.startSnapping();
             } else {
-                this.setSnapperOff();
+                this.stopSnapping();
             }
         }
         return;
     }
 
-    private setSnapperOn() {
+    private startSnapping() {
         this.editControl.setRotSnap(true);
         this.editControl.setTransSnap(true);
         this.editControl.setScaleSnap(true);
@@ -2654,7 +2671,7 @@ export class Vishva {
         this.snapToGlobal();
     }
 
-    private setSnapperOff() {
+    private stopSnapping() {
         this.editControl.setRotSnap(false);
         this.editControl.setTransSnap(false);
         this.editControl.setScaleSnap(false);
@@ -2681,6 +2698,8 @@ export class Vishva {
         }
 
     }
+
+    // Snapping code End
 
     public getSoundFiles(): string[] {
         //TODO implement this.

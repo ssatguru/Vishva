@@ -13,7 +13,6 @@ import { hlpElement } from "./HelpML";
 import { NavBar } from "./NavBarML";
 import { saveElement } from "./VishvaML";
 import { VDiag } from "./components/VDiag";
-import { VTheme, VThemes } from "./components/VTheme";
 import { TransformNode } from "babylonjs";
 import { CCUI } from "./CCUI";
 import { SNAManager } from "../sna/SNA";

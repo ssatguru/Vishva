@@ -4,6 +4,7 @@ node_modules
 ig_*.*
 ig_*
 userAssets.js
+vishva/config.js
 vishva/assets/**/*
 vishva/worlds/*
 *.log

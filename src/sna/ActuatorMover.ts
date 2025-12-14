@@ -26,14 +26,18 @@ export class ActuatorMover extends ActuatorAbstract {
 
     public actuate() {
         var props: ActMoverParm = <ActMoverParm>this.properties;
+        //current position
         var cPos: Vector3 = this.mesh.position.clone();
+        //next position
         var nPos: Vector3;
         var moveBy: Vector3;
+
         if (props.local) {
             var meshMatrix: Matrix = this.mesh.getWorldMatrix();
             var localMove: Vector3 = new Vector3(props.x * (1 / this.mesh.scaling.x), props.y * (1 / this.mesh.scaling.y), props.z * (1 / this.mesh.scaling.z));
             moveBy = Vector3.TransformCoordinates(localMove, meshMatrix).subtract(this.mesh.position);
         } else moveBy = new Vector3(props.x, props.y, props.z);
+
         if (props.toggle) {
             if (props.state_notReversed) {
                 nPos = cPos.add(moveBy);
@@ -44,6 +48,7 @@ export class ActuatorMover extends ActuatorAbstract {
         } else {
             nPos = cPos.add(moveBy);
         }
+
         this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => { return this.onActuateEnd() });
     }
 

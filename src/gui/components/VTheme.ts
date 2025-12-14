@@ -32,7 +32,19 @@ export class FB {
  * eggplant-light theme - three variation of light colors, very-light light less-light
  * always light to dark
  * 
+ * 
+ * download themes from
+ * https://www.w3schools.com/w3css/w3css_color_themes.asp
+ * example
+ * w3-theme-eggpant.css
+ * The css itself isn't used.
+ * Instead the color values fromthe css needs to be copied here
+ * a) create a new class say EggPlantTheme which extends VTheme.
+ * b) copy the 10 foreground and background colors from the css to this class
+ * c) set the CurretTheme  to an instance of this new class.
+ * 
  */
+
 export class VTheme {
         public fbs: Array<FB> = new Array<FB>(10);
 

@@ -167,9 +167,9 @@ export class SNAManager {
         if (actuators != null) {
             for (let actuator of actuators) {
                 if (actuator.actuating) actuator.stop();
-                actuator.mesh.getWorldMatrix().copyFrom(actuator.initialMatrix);
-                actuator.initialMatrix.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
-                actuator.properties.state_notReversed = true;
+                // actuator.mesh.getWorldMatrix().copyFrom(actuator.initialMatrix);
+                // actuator.initialMatrix.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
+                // actuator.properties.state_notReversed = true;
             }
         }
     }
@@ -182,7 +182,6 @@ export class SNAManager {
         var actuators: Array<ActuatorAbstract> = <Array<ActuatorAbstract>>mesh["actuators"];
         if (actuators != null) {
             for (let actuator of actuators) {
-                //actuator.mesh.getWorldMatrix().copyFrom(actuator.initialMatrix);
                 if (actuator.properties.autoStart) actuator.start(actuator.properties.signalId);
             }
         }
@@ -508,7 +507,7 @@ export abstract class SensorAbstract implements Sensor {
 
     properties: SNAproperties;
     mesh: Mesh;
-    initialMatrix:Matrix = Matrix.Zero();;
+    // initialMatrix:Matrix = Matrix.Zero();;
     
     signalId: string;
     signalEnable: string;
@@ -529,7 +528,7 @@ export abstract class SensorAbstract implements Sensor {
         }
         sensors.push(this);
         SNAManager.getSNAManager().meshWithSNAlist.push(this.mesh);
-        this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
+        // this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
     }
 
     public start(signal: string): boolean {
@@ -688,7 +687,7 @@ export abstract class ActuatorAbstract implements Actuator {
 
     properties: ActProperties;
     mesh: Mesh;
-    initialMatrix:Matrix = Matrix.Zero();
+    // initialMatrix:Matrix = Matrix.Zero();
     signalId: string;
     signalEnable: string;
     signalDisable: string;
@@ -710,7 +709,7 @@ export abstract class ActuatorAbstract implements Actuator {
         }
         actuators.push(this);
         SNAManager.getSNAManager().meshWithSNAlist.push(this.mesh);
-        this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
+        // this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
     }
 
     public start(signal: string): boolean {

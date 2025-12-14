@@ -53,7 +53,7 @@ export class SoundUI {
         }
 
         this._sndDiag = new VDiag(sndElement, "Sound Settings", VDiag.center, "", "", "12em", false);
-        this._sndDiag.close();
+        this._sndDiag.close(false);
 
         SoundUI.instance = this;
 

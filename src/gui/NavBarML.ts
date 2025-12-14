@@ -4,7 +4,7 @@ import { VButton } from "./components/VButton";
 
 
 let navHTML = `
-<nav style="position: absolute;left:1em;top:1em;z-index:inherit;border-style:solid;border-width:1px;">
+<nav style="position: absolute;left:1em;top:1em;z-index:inherit;border-style:solid;border-width:5px;border-radius: 0.5em;padding:0.25em;cursor:pointer;">
 
         <button id="showNavMenu" title="build menu"><span class="material-icons-outlined" >menu</span></button>
 
@@ -12,12 +12,12 @@ let navHTML = `
 
                 <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
 
-                <button id="navWorldAssets" title="list items">assets in world</button>
+                <button id="navWorldAssets" title="list items in scene"><span class="material-icons-outlined">account_tree</span></button>
 
-                <button id="navAllAssets" title="all assets">all assets</button>
+                <button id="navAllAssets" title="all files"><span class="material-icons-outlined" >folder</span></button>
 
                 <div style="display:inline-block;">
-                        <button id="navCAssets" title="curated assets">curated assets</button>
+                        <button id="navCAssets" title="assets"><span class="material-icons-outlined" >storefront</span></button>
                         <div id="AddMenu" style="display: none; position:absolute"></div>
                 </div>
 
@@ -34,6 +34,8 @@ let navHTML = `
                 <button id="debugLink" title="inspector"><span class="material-icons-outlined" >info</span></button>
 
                 <button id="helpLink" title="help"><span class="material-icons-outlined" >help_outline</span></button>
+
+                <button id="pauseActuators" title="pause actuators"><span id ="pauseIcon" class="material-icons-outlined" >pause</span></button>
                 
         </nav>
 
@@ -41,11 +43,14 @@ let navHTML = `
 
 `;
 
-
-let navElement = document.createElement("div");
-navElement.style.zIndex = "999";
-navElement.innerHTML = navHTML;
-VButton.styleThem(navElement.getElementsByTagName("button"));
-
-
-export { navElement };
+export class NavBar{
+        navElement:HTMLDivElement;
+        constructor() {
+                this.navElement = document.createElement("div");
+                this.navElement.style.zIndex = "999";
+                this.navElement.innerHTML = navHTML;
+                this.navElement.getElementsByTagName("nav")[0].style.borderColor = Vishva.theme.lightColors.b;
+                VButton.styleThem(this.navElement.getElementsByTagName("button"));
+                document.body.appendChild(this.navElement);
+        }
+}

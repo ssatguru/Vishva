@@ -10,12 +10,13 @@ import { SettingsUI } from "./SettingsUI";
 import { PropsPanelUI } from "./propspanel/PropsPanelUI";
 import { VButton } from "./components/VButton";
 import { hlpElement } from "./HelpML";
-import { navElement } from "./NavBarML";
+import { NavBar } from "./NavBarML";
 import { saveElement } from "./VishvaML";
 import { VDiag } from "./components/VDiag";
 import { VTheme, VThemes } from "./components/VTheme";
 import { TransformNode } from "babylonjs";
 import { CCUI } from "./CCUI";
+import { SNAManager } from "../sna/SNA";
 
 
 export class GuiSettings {
@@ -42,8 +43,7 @@ export class VishvaGUI {
         this._vishva = vishva;
         this._vishvaFiles = Vishva.userAssets;
 
-        Vishva.gui.append(navElement);
-
+        Vishva.gui.append(new NavBar().navElement);
 
         Vishva.gui.append(saveElement);
 
@@ -223,7 +223,7 @@ export class VishvaGUI {
 
             if (this._allAssetsVTDiag == null) {
 
-                this._allAssetsVTDiag = new VTreeDialog(this._vishva, "all assets", VDiag.leftTop2, Vishva.userAssets, "", false);
+                this._allAssetsVTDiag = new VTreeDialog(this._vishva, "files", VDiag.leftTop2, Vishva.userAssets, "", false);
 
                 this._allAssetsVTDiag.addTreeListener((f, p, l) => {
                     if (l) {
@@ -258,13 +258,14 @@ export class VishvaGUI {
                 this._addInternalAssetUI = new InternalAssetsUI(this._vishva);
             }
             this._addInternalAssetUI.toggleAssetDiag("internal", "primitives");
-
         }
 
         // button for character controller
         var navAV: HTMLElement = document.getElementById("navAV");
         navAV.onclick = (e) => {
-            if (this._avUI == null) this._avUI = new CCUI(this._vishva.avManager.cc);
+            if (this._avUI == null) {
+                this._avUI = new CCUI(this._vishva.avManager.cc);
+            }
             this._avUI.toggle();
         }
 
@@ -327,7 +328,24 @@ export class VishvaGUI {
             this._vishva.toggleDebug();
             return true;
         };
+
+        // button for babylon inspector
+        var pause: HTMLElement = document.getElementById("pauseActuators");
+        var pauseIcon:HTMLSpanElement = pause.getElementsByTagName("span")[0];
+        pause.onclick = (e) => {
+            if (this.isWorldPaused) {
+                SNAManager.getSNAManager().resumeSNAs();
+                pauseIcon.innerHTML="pause_circle";
+            } else {
+                SNAManager.getSNAManager().pauseSNAs();
+                pauseIcon.innerHTML="play_arrow";
+            }
+            this.isWorldPaused = !this.isWorldPaused;
+            return true;
+        };
     }
+
+    isWorldPaused:boolean = false;
 
     /*
      * called by vishva when editcontrol

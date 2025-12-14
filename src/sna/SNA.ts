@@ -13,7 +13,8 @@ import {
     Vector3,
     Vector2,
     TransformNode,
-    InstancedMesh
+    InstancedMesh,
+    Matrix
 } from "babylonjs";
 // import AbstractMesh = BABYLON.AbstractMesh;
 // import Action = BABYLON.Action;
@@ -41,6 +42,7 @@ export class SNAManager {
     actuatorMap: any = {};
     sensorMap: any = {};
     snaDisabledList: Array<TransformNode> = new Array();
+    meshWithSNAlist : Array<TransformNode> = new Array();
     sig2saMap: Object = <Object>new Object();
 
     static sm: SNAManager;
@@ -165,6 +167,9 @@ export class SNAManager {
         if (actuators != null) {
             for (let actuator of actuators) {
                 if (actuator.actuating) actuator.stop();
+                actuator.mesh.getWorldMatrix().copyFrom(actuator.initialMatrix);
+                actuator.initialMatrix.decompose(mesh.scaling, mesh.rotationQuaternion, mesh.position);
+                actuator.properties.state_notReversed = true;
             }
         }
     }
@@ -177,6 +182,7 @@ export class SNAManager {
         var actuators: Array<ActuatorAbstract> = <Array<ActuatorAbstract>>mesh["actuators"];
         if (actuators != null) {
             for (let actuator of actuators) {
+                //actuator.mesh.getWorldMatrix().copyFrom(actuator.initialMatrix);
                 if (actuator.properties.autoStart) actuator.start(actuator.properties.signalId);
             }
         }
@@ -206,6 +212,26 @@ export class SNAManager {
         var i: number = this.snaDisabledList.indexOf(mesh);
         if (i !== -1) {
             this.snaDisabledList.splice(i, 1);
+        }
+    }
+
+    /**
+     * pause all sensors and actuators. 
+     * 
+     */
+    public pauseSNAs() {
+        for (let mesh of this.meshWithSNAlist){
+            this.disableSnAs(mesh);
+        }
+    }
+
+    /**
+     * resume all sensors and actuators. 
+     * 
+     */
+    public resumeSNAs() {
+        for (let mesh of this.meshWithSNAlist){
+            this.enableSnAs(mesh);
         }
     }
 
@@ -482,6 +508,8 @@ export abstract class SensorAbstract implements Sensor {
 
     properties: SNAproperties;
     mesh: Mesh;
+    initialMatrix:Matrix = Matrix.Zero();;
+    
     signalId: string;
     signalEnable: string;
     signalDisable: string;
@@ -500,6 +528,8 @@ export abstract class SensorAbstract implements Sensor {
             mesh["sensors"] = sensors;
         }
         sensors.push(this);
+        SNAManager.getSNAManager().meshWithSNAlist.push(this.mesh);
+        this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
     }
 
     public start(signal: string): boolean {
@@ -658,6 +688,7 @@ export abstract class ActuatorAbstract implements Actuator {
 
     properties: ActProperties;
     mesh: Mesh;
+    initialMatrix:Matrix = Matrix.Zero();
     signalId: string;
     signalEnable: string;
     signalDisable: string;
@@ -678,6 +709,8 @@ export abstract class ActuatorAbstract implements Actuator {
             this.mesh["actuators"] = actuators;
         }
         actuators.push(this);
+        SNAManager.getSNAManager().meshWithSNAlist.push(this.mesh);
+        this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
     }
 
     public start(signal: string): boolean {

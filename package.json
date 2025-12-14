@@ -1,6 +1,6 @@
 {
         "name": "vishva",
-        "version": "0.4.0-alpha.12",
+        "version": "0.4.0-alpha.13",
         "keywords": [
                 "babylonjs",
                 "editor"
@@ -8,13 +8,13 @@
         "author": "satguru p srivastava",
         "contributors": [],
         "dependencies": {
-                "babylonjs": "^8.4.0",
-                "babylonjs-charactercontroller": "^0.4.4-alpha.10",
+                "babylonjs": "^8.41.1",
+                "babylonjs-charactercontroller": "^0.4.4-alpha.11",
                 "babylonjs-editcontrol": "^3.3.0",
-                "babylonjs-gui": "^8.4.0",
-                "babylonjs-loaders": "^8.4.0",
-                "babylonjs-materials": "^8.4.0",
-                "babylonjs-serializers": "^8.4.0",
+                "babylonjs-gui": "^8.41.1",
+                "babylonjs-loaders": "^8.41.1",
+                "babylonjs-materials": "^8.41.1",
+                "babylonjs-serializers": "^8.41.1",
                 "cannon": "^0.6.2",
                 "oimo": "^1.0.9",
                 "pepjs": "^0.4.3"

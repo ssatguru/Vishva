@@ -98,9 +98,6 @@ import { DialogMgr } from "./gui/DialogMgr";
 import { VTheme, VThemes } from "./gui/components/VTheme";
 import { VEvent } from "./eventing/VEvent";
 import { EventManager } from "./eventing/EventManager";
-import { InternalTexture } from "babylonjs/Materials/Textures/internalTexture";
-import { NodeMaterialBlockTargets } from "babylonjs/Materials/Node/Enums/nodeMaterialBlockTargets";
-import { GuiUtils } from "./gui/GuiUtils";
 
 
 
@@ -325,7 +322,6 @@ export class Vishva {
         let pOn = this.scene.enablePhysics(new Vector3(0, -9.81, 0), new OimoJSPlugin());
         this.scene.useRightHandedSystem = true;
 
-        console.log("epsilon : " + Engine.CollisionsEpsilon);//0.001
         Engine.CollisionsEpsilon = 0.01;
 
         //
@@ -350,9 +346,9 @@ export class Vishva {
         //SceneLoader.CleanBoneMatrixWeights = true
 
         if (sceneFile == "empty") {
-            this.sceneLoad3(this.scene, true);
+            this.loadBabylonjsPart(this.scene, true);
         } else {
-            this.sceneLoad1(scenePath, sceneFile + ".js", this.scene);
+            this.sceneLoad1(scenePath, sceneFile, this.scene);
         }
     }
 
@@ -361,14 +357,22 @@ export class Vishva {
     private sceneLoad1(scenePath: string, sceneFile: string, scene: Scene) {
         var am: AssetsManager = new AssetsManager(scene);
         var task: TextFileAssetTask = am.addTextFileTask("sceneLoader", scenePath + sceneFile);
-        task.onSuccess = (obj) => { return this.sceneLoad2(obj) };
-        task.onError = (obj) => { alert("scene load failed"); };
+        task.onSuccess = (tsk) => { 
+            try{
+                this.loadVishvaPart(tsk) 
+            }catch(e){
+                console.log(e);
+                alert("scene parsing failed ");
+            }
+        };
+        task.onError = (tsk,msg,exp) => { 
+            console.log(msg, exp);
+            alert("scene load failed "); };
         am.load();
     }
 
-    // -- sceneload2 --
+    // -- loadVishvaPart --
     snas: SNAserialized[];
-
     vishvaSerialized: VishvaSerialized = null;
 
     public getGuiSettings(): Object {
@@ -377,32 +381,40 @@ export class Vishva {
         else return null;
     }
 
-    private sceneLoad2(obj: any) {
-        // console.log("sceneload2");
-        let tfat: TextFileAssetTask = <TextFileAssetTask>obj;
+    //load the vishva part 
+    private loadVishvaPart(tsk: TextFileAssetTask) {
+        // console.log("loadVishvaPart");
+        let tfat: TextFileAssetTask = tsk;
         let foo: Object = <Object>JSON.parse(tfat.text);
 
         this.vishvaSerialized = foo["VishvaSerialized"];
-        // console.log(this.vishvaSerialized);
-        console.log("world babylon version : " + this.vishvaSerialized.bVer);
-        console.log("world vishva version : " + this.vishvaSerialized.vVer);
 
-        this.snas = this.vishvaSerialized.snas;
-        this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
-        this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
-        if (this.vishvaSerialized.misc.skyColor) {
-            this.skyColor.r = this.vishvaSerialized.misc.skyColor.r;
-            this.skyColor.g = this.vishvaSerialized.misc.skyColor.g;
-            this.skyColor.b = this.vishvaSerialized.misc.skyColor.b;
-            this.skyColor.a = this.vishvaSerialized.misc.skyColor.a;
-        }
+        //check if we have a vishva file. Might just be a babylon file
+        if (!(this.vishvaSerialized === undefined)) {
+        
+            console.log(this.vishvaSerialized);
+            console.log("world babylon version : " + this.vishvaSerialized.bVer);
+            console.log("world vishva version : " + this.vishvaSerialized.vVer);
 
-        if (typeof this.vishvaSerialized.misc.skyBright !== "undefined") {
-            this.skyBright = this.vishvaSerialized.misc.skyBright;
-        }
+            this.snas = this.vishvaSerialized.snas;
+            this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
+            this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
+            if (this.vishvaSerialized.misc.skyColor) {
+                this.skyColor.r = this.vishvaSerialized.misc.skyColor.r;
+                this.skyColor.g = this.vishvaSerialized.misc.skyColor.g;
+                this.skyColor.b = this.vishvaSerialized.misc.skyColor.b;
+                this.skyColor.a = this.vishvaSerialized.misc.skyColor.a;
+            }
 
-        if (typeof this.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
-            this.scene.shadowsEnabled = this.vishvaSerialized.misc.sceneShadowsEnabled;
+            if (typeof this.vishvaSerialized.misc.skyBright !== "undefined") {
+                this.skyBright = this.vishvaSerialized.misc.skyBright;
+            }
+
+            if (typeof this.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
+                this.scene.shadowsEnabled = this.vishvaSerialized.misc.sceneShadowsEnabled;
+            }
+        }else{
+            this.vishvaSerialized = new VishvaSerialized();
         }
 
 
@@ -410,8 +422,8 @@ export class Vishva {
         SceneLoader.ShowLoadingScreen = false;
 
         //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
-        // console.log("to sceneload3");
-        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.sceneLoad3(scene) });
+        // console.log("to loadBabylonjsPart");
+        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.loadBabylonjsPart(scene) });
 
     }
 
@@ -419,14 +431,15 @@ export class Vishva {
     // -- sceneload3 --
 
     /**
+     * load the babylonjs part
      * sets the loaded scene
      * checks if the scene is a standard vishva scene - by checking if it has standard vishva assets
      * if not then it creates those standard vishva assets - avatar, sky, camera, terrain
      * 
      * @param scene 
      */
-    private sceneLoad3(scene: Scene, empty: boolean = false) {
-        // console.log("sceneload3");
+    private loadBabylonjsPart(scene: Scene, empty: boolean = false) {
+        // console.log("loadBabylonjsPart");
         try {
 
             var avFound: boolean = false;
@@ -435,6 +448,7 @@ export class Vishva {
             var groundFound: boolean = false;
             var skyFound: boolean = false;
             var cameraFound: boolean = false;
+            var spawnPointFound: boolean = false;
 
             for (let mesh of scene.meshes) {
 
@@ -456,12 +470,15 @@ export class Vishva {
                             this.ground = <Mesh>mesh;
                             this.ground.isPickable = true;
                         }
+                    }else if (Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                        spawnPointFound = true;
+                        this.spawnPosition = mesh.position.clone();
                     }
                 }
             }
 
 
-            // console.log("sceneload3 skesls");
+            // console.log("loadBabylonjsPart skesls");
 
             for (let skeleton of scene.skeletons) {
                 if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
@@ -548,7 +565,7 @@ export class Vishva {
             //add avatar back to shadow caster list
             if (avFound) this._addToShadowCasters(this.avatar);
 
-            // console.log("sceneload3 cameras");
+            // console.log("loadBabylonjsPart cameras");
 
             for (let camera of scene.cameras) {
                 if (Tags.MatchesQuery(camera, "Vishva.camera")) {
@@ -3610,7 +3627,6 @@ export class Vishva {
 
         //pretty formatted json
         //let sceneString: string = JSON.stringify(sceneObj, null, 1);
-
         let sceneString: string = JSON.stringify(sceneObj);
 
         //var file: File = new File([sceneString], "WorldFile.babylon");
@@ -4402,7 +4418,7 @@ export class Vishva {
         this.avatar = null;
         //TODO Charcter Controller check implication
         // this.prevAnim = null; 
-        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.sceneLoad3(scene) });
+        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.loadBabylonjsPart(scene) });
     }
 
     shadowGenerator: CascadedShadowGenerator;

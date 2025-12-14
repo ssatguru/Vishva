@@ -17,9 +17,12 @@ export class VishvaSerialized {
     public grndSpreadArray: GrndSpread_Serializeable[];
     public avSerialized: AvSerialized;
 
-    public constructor(vishva: Vishva) {
+    
+
+    public constructor(vishva?: Vishva) {
         this.settings = new SettingsSerialized();
         this.misc = new MiscSerialized();
+        if (vishva == null) return;
         this.avSerialized = new AvSerialized(vishva);
 
         //we donot serialize the sps. 

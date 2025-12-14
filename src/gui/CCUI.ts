@@ -30,7 +30,6 @@ export class CCUI {
     mapTab: HTMLDivElement;
 
     constructor(cc: CharacterController) {
-
         this._cc = cc;
 
         let tab = new VTab("Settings", "Mappings");
@@ -65,9 +64,8 @@ export class CCUI {
             return true;
         }
 
-
         this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.center, "", "", "12em");
-        this._ccDiag.close();
+        this._ccDiag.close(false);
 
         EventManager.subscribe(VEvent._AVATAR_SWITCHED, () => { this._onAVSwicthed() });
     }

@@ -21,7 +21,15 @@ export class VDiag {
                 <span class="material-icons-outlined vdiag-add" style="display: none;cursor: pointer; ">add</span>
                 <span class="material-icons-outlined vdiag-close" style="display: inline-block;cursor: pointer; ">close</span>
         </div>
-        <div class="bdy" style="padding:0em;display:grid"></div>`;
+        <div class="bdy" style="padding:0em;display:grid"></div>
+        <div class="resize-handle resize-n" style="position:absolute;top:0;left:0;right:0;height:5px;cursor:n-resize;"></div>
+        <div class="resize-handle resize-s" style="position:absolute;bottom:0;left:0;right:0;height:5px;cursor:s-resize;"></div>
+        <div class="resize-handle resize-w" style="position:absolute;top:0;bottom:0;left:0;width:5px;cursor:w-resize;"></div>
+        <div class="resize-handle resize-e" style="position:absolute;top:0;bottom:0;right:0;width:5px;cursor:e-resize;"></div>
+        <div class="resize-handle resize-nw" style="position:absolute;top:0;left:0;width:10px;height:10px;cursor:nw-resize;"></div>
+        <div class="resize-handle resize-ne" style="position:absolute;top:0;right:0;width:10px;height:10px;cursor:ne-resize;"></div>
+        <div class="resize-handle resize-sw" style="position:absolute;bottom:0;left:0;width:10px;height:10px;cursor:sw-resize;"></div>
+        <div class="resize-handle resize-se" style="position:absolute;bottom:0;right:0;width:10px;height:10px;cursor:se-resize;"></div>`;
 
 
         _style: string = ` 
@@ -29,11 +37,11 @@ export class VDiag {
                 overflow:hidden;
                 display:grid;
                 grid-template-columns:auto;
-                grid-template-rows:min-content auto;
+                grid-template-rows:min-content 1fr auto;
                 z-index: 2;
                 position: absolute;
                 border-style:solid;
-                border-width:1px;
+                border-width:5px;
                 scale:100%;
                 animation-name:scaleUpAnim;
                 animation-duration:0.5s; 
@@ -87,6 +95,16 @@ export class VDiag {
         my: number;
         dx: number;
         dy: number;
+        
+        // Resize properties
+        isResizing: boolean = false;
+        resizeDirection: string = '';
+        startX: number;
+        startY: number;
+        startWidth: number;
+        startHeight: number;
+        startTop: number;
+        startLeft: number;
 
         isClosed: boolean = false;
         dirty: boolean = false;
@@ -205,6 +223,8 @@ export class VDiag {
 
 
         private onMouseMove = (e: MouseEvent) => {
+                if (this.isResizing) return;
+                
                 this.dx = this.mx - e.clientX;
                 this.dy = this.my - e.clientY;
                 this.mx = e.clientX;
@@ -258,6 +278,89 @@ export class VDiag {
         private onMouseUp = () => {
                 document.removeEventListener("mousemove", this.onMouseMove);
                 document.removeEventListener("mouseup", this.onMouseUp);
+                this.isResizing = false;
+        }
+        
+        private onResizeMouseDown = (e: MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                this.isResizing = true;
+                this.resizeDirection = (e.target as HTMLElement).className.split(' ')[1];
+                this.startX = e.clientX;
+                this.startY = e.clientY;
+                this.startWidth = this.w.offsetWidth;
+                this.startHeight = this.w.offsetHeight;
+                this.startTop = this.w.offsetTop;
+                this.startLeft = this.w.offsetLeft;
+                
+                document.addEventListener("mousemove", this.onResizeMouseMove);
+                document.addEventListener("mouseup", this.onResizeMouseUp);
+        }
+        
+        private onResizeMouseMove = (e: MouseEvent) => {
+                if (!this.isResizing) return;
+                
+                const deltaX = e.clientX - this.startX;
+                const deltaY = e.clientY - this.startY;
+                
+                let newWidth = this.startWidth;
+                let newHeight = this.startHeight;
+                let newTop = this.startTop;
+                let newLeft = this.startLeft;
+                
+                switch (this.resizeDirection) {
+                        case 'resize-n':
+                                newHeight = Math.max(this.startHeight - deltaY, 100);
+                                newTop = this.startTop + deltaY;
+                                break;
+                        case 'resize-s':
+                                newHeight = Math.max(this.startHeight + deltaY, 100);
+                                break;
+                        case 'resize-w':
+                                newWidth = Math.max(this.startWidth - deltaX, 200);
+                                newLeft = this.startLeft + deltaX;
+                                break;
+                        case 'resize-e':
+                                newWidth = Math.max(this.startWidth + deltaX, 200);
+                                break;
+                        case 'resize-nw':
+                                newWidth = Math.max(this.startWidth - deltaX, 200);
+                                newHeight = Math.max(this.startHeight - deltaY, 100);
+                                newLeft = this.startLeft + deltaX;
+                                newTop = this.startTop + deltaY;
+                                break;
+                        case 'resize-ne':
+                                newWidth = Math.max(this.startWidth + deltaX, 200);
+                                newHeight = Math.max(this.startHeight - deltaY, 100);
+                                newTop = this.startTop + deltaY;
+                                break;
+                        case 'resize-sw':
+                                newWidth = Math.max(this.startWidth - deltaX, 200);
+                                newHeight = Math.max(this.startHeight + deltaY, 100);
+                                newLeft = this.startLeft + deltaX;
+                                break;
+                        case 'resize-se':
+                                newWidth = Math.max(this.startWidth + deltaX, 200);
+                                newHeight = Math.max(this.startHeight + deltaY, 100);
+                                break;
+                }
+                
+                this.w.style.width = newWidth + 'px';
+                this.w.style.height = newHeight + 'px';
+                this.w.style.top = newTop + 'px';
+                this.w.style.left = newLeft + 'px';
+                
+                // Remove explicit height from body to allow it to resize
+                this.b.style.height = 'auto';
+                
+                if (this._onResize != null) this._onResize();
+        }
+        
+        private onResizeMouseUp = () => {
+                document.removeEventListener("mousemove", this.onResizeMouseMove);
+                document.removeEventListener("mouseup", this.onResizeMouseUp);
+                this.isResizing = false;
         }
 
         private closeWindow = () => {
@@ -315,7 +418,7 @@ export class VDiag {
                 //do not do animation if caller doesnot want it
                 //sometime after creating dialog caller maynot want to show it mmediately
                 //playing animation will force a display and then set display to none at animationend event
-                if (anim == undefined || anim === true) {
+                if (anim == undefined || anim ) {
                         this.w.style.animationDuration = this._cD;
                         this.w.style.animationName = this._cAnim;
                         this.w.classList.toggle("dummy");
@@ -511,7 +614,7 @@ export class VDiag {
                 this._type = type;
         }
 
-        constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false) {
+        constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false, resizable = false) {
 
                 if (id instanceof HTMLElement) {
                         this.bc = id;
@@ -588,6 +691,18 @@ export class VDiag {
                 else this.b.style.height = <string>height;
 
                 this.b.style.overflow = "auto";
+                
+                // Setup resize handles if resizable
+                if (resizable) {
+                        const resizeHandles = this.w.querySelectorAll('.resize-handle');
+                        resizeHandles.forEach(handle => {
+                                handle.addEventListener('mousedown', this.onResizeMouseDown);
+                        });
+                } else {
+                        // Remove resize handles if not resizable
+                        const resizeHandles = this.w.querySelectorAll('.resize-handle');
+                        resizeHandles.forEach(handle => handle.remove());
+                }
 
                 this.position(pos);
                 DialogMgr.vdiags.push(this);

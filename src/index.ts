@@ -38,7 +38,7 @@ import { VInputSelect } from "./gui/components/VInputSelect";
 import { Game } from "./Game";
 
 
-
+//following two would be loaded from "vishva/config.js"
 declare var defaultWorld: any;
 declare var noEditWorlds: any;
 
@@ -79,7 +79,7 @@ function main() {
     let editEnabled = true;
 
     if (!scene) {
-        if (typeof (defaultWorld) !== "undefined") {
+        if (typeof (defaultWorld) !== "undefined" && defaultWorld !== "") {
             scene = defaultWorld;
         } else {
             scene = "empty";

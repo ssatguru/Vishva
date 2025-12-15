@@ -390,6 +390,34 @@ export class VTree {
 
     }
 
+     // Scroll position preservation
+        savedScrollTop: number = 0;
+        savedScrollLeft: number = 0;
+
+    // evertime the dialog box containg this tree is moved the tree content scrolls to the top
+    // this draghandler restores the scroll position
+    // the dialog box provides a setDragHandler() by which the clients can be informed when it is being dragged.
+    // the VTreeDialog which embeds this tree calls that method to set below as the drag handler.
+    public dragHandler = (s:string)=>{
+        if (s=="start") {
+            // Save scroll position before moving
+            if (this._treeEle && this._treeEle.scrollHeight > this._treeEle.clientHeight) {
+                    this.savedScrollTop = this._treeEle.scrollTop;
+            }
+            if (this._treeEle && this._treeEle.scrollWidth > this._treeEle.clientWidth) {
+                    this.savedScrollLeft = this._treeEle.scrollLeft;
+            }
+        }else if (s=="stop") {
+            // Restore scroll position after moving
+            if (this._treeEle && this._treeEle.scrollHeight > this._treeEle.clientHeight) {
+                    this._treeEle.scrollTop = this.savedScrollTop;
+            }
+            if (this._treeEle && this._treeEle.scrollWidth > this._treeEle.clientWidth) {
+                    this._treeEle.scrollLeft = this.savedScrollLeft;
+            }
+        }
+    }
+
 }
 
 

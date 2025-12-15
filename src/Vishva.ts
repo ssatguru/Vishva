@@ -310,12 +310,13 @@ export class Vishva {
 
         Vishva.gui = <HTMLCanvasElement>document.getElementById(guiId);
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
-        //this.engine=new Engine(this.canvas,true,{"disableWebGL2Support":true});
-        //this.engine = new Engine(this.canvas, true);
-        this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true, audioEngine: true });
+        
+        //new version of engine uses audio engine 2, so setting "audioEngine: true" to support legacy code
+        //a new version (around 7.3) of engine broke how GLTF textures are handled. during import "gammaSpace" is set to false and use "useSRGBBuffer" is set to true. which is wrong. :(
+        //so setting "forceSRGBBufferSupportState: false" . workarounds,workarounds!!
+        this.engine = new Engine(this.canvas, true, { preserveDrawingBuffer: true, stencil: true, audioEngine: true,forceSRGBBufferSupportState: false });
 
         Engine.audioEngine.useCustomUnlockedButton = true;
-
         this.scene = new Scene(this.engine);
         //let pOn = this.scene.enablePhysics();
         //let pOn = this.scene.enablePhysics(new Vector3(0, -9.8, 0));
@@ -3618,6 +3619,8 @@ export class Vishva {
         //var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
         vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.scene);
 
+
+        Texture.ForceSerializeBuffers = false;
         let sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
         //this.changeSoundUrl(sceneObj);
         this.removeSounds(sceneObj);
@@ -3626,6 +3629,7 @@ export class Vishva {
         sceneObj["VishvaSerialized"] = vishvaSerialzed;
 
         //pretty formatted json
+        //console.log("pretty formatting and writing");
         //let sceneString: string = JSON.stringify(sceneObj, null, 1);
         let sceneString: string = JSON.stringify(sceneObj);
 

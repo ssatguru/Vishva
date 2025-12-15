@@ -44,6 +44,7 @@ export class VTreeDialog {
         //this._treeDiag.setResizable(true);
         this._tree = new VTree(treeDiv, treeData, filter, openAll);
         //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});
+        this._treeDiag.setDragHandler(this._tree.dragHandler);
 
         let fi: VInputText = new VInputText();
         fi.appendTo(diagDiv.getElementsByTagName("span")[0]);

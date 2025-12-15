@@ -1,8 +1,17 @@
 BUGS
 
+- when a skeleton animated asset is selected by alt-left click, the asset children are scanned for skeleton and when found are displayed in property dialog. 
+  not so when the asset is selected from the scene\world dialog. (12/15/2025)
+
 - when serialized to babylonjs file, glb object in scene have their color map/texture seems faded/washed out (12/14/2025).
+  during import gammSpace is set to false and use useSRGBBuffer is set to true. which is wrong. They should be true and false respt.
+  which is how they show up when importd to sandbox.
+  Surprisingly the asset shows up ok.
+  when serialized to babylon format the same values are preserved. when the babylon file is imported then the issue props up.
+fixed 12/15/2025 0.4.0-alpha.14
 
 - when scene dialog box  is moved the list scrolls to the top. no scrolling should take place (12/14/2025)
+fixed 12/15/2025 0.4.0-alpha.14
 
 - gltf mesh and animations are not serialized and saved properly  (12/12/2025)
 

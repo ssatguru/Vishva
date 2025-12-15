@@ -23,7 +23,7 @@ export class ItemListUI {
 
         this._updateTreeData();
 
-        this._itemsDiag = new VTreeDialog(this._vishva, "scene", VDiag.leftCenter, this.treeData);
+        this._itemsDiag = new VTreeDialog(this._vishva, "world", VDiag.leftCenter, this.treeData);
         this._itemsDiag.addTreeListener((f, p, l) => {
             let i: number = f.indexOf(",");
             f = f.substring(0, i);

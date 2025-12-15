@@ -96,6 +96,10 @@ export class VDiag {
         dx: number;
         dy: number;
         
+        // Scroll position preservation
+        savedScrollTop: number = 0;
+        savedScrollLeft: number = 0;
+        
         // Resize properties
         isResizing: boolean = false;
         resizeDirection: string = '';
@@ -128,6 +132,7 @@ export class VDiag {
         //fade,scale,rotate,newsFlash(scale and rotate)
         private _oEffect: string;
         private _cEffect: string;
+        
 
         //called during window resize
         public reset() {
@@ -247,7 +252,7 @@ export class VDiag {
 
         private _moveIt(t: number, l: number) {
                 //Clamp the Top Position (t):
-                //-1 is to prevent vertical scroll bar from showing up
+                //-1 is to prevent vertical scroll bar in body from showing up
                 t = Math.min(t, Vishva.gui.offsetHeight - 1 - this.w.offsetHeight);
                 t = Math.max(t, Vishva.gui.offsetTop);
                 //Clamp the Left Position (l):
@@ -263,10 +268,23 @@ export class VDiag {
 
         private onMouseDown = (e: MouseEvent) => {
 
+                if (this._dragHandler != null){this._dragHandler("start");}
+
+                // Save scroll position before moving
+                if (this.b && this.b.scrollHeight > this.b.clientHeight) {
+                        console.log("saving scroll top position");
+                        this.savedScrollTop = this.b.scrollTop;
+                }
+                if (this.b && this.b.scrollWidth > this.b.clientWidth) {
+                        this.savedScrollLeft = this.b.scrollLeft;
+                }
+
                 //bring to front when clicked
                 //we donot want animation during drags
                 this.w.parentNode.appendChild(this.w);
                 if (this._onResize != null) this._onResize();
+
+                
 
                 this.mx = e.clientX;
                 this.my = e.clientY;
@@ -276,9 +294,19 @@ export class VDiag {
         }
 
         private onMouseUp = () => {
+                if (this._dragHandler != null){this._dragHandler("stop");}
                 document.removeEventListener("mousemove", this.onMouseMove);
                 document.removeEventListener("mouseup", this.onMouseUp);
                 this.isResizing = false;
+                
+                // Restore scroll position after moving
+                if (this.b && this.b.scrollHeight > this.b.clientHeight) {
+                        console.log("restoring scroll top position");
+                        this.b.scrollTop = this.savedScrollTop;
+                }
+                if (this.b && this.b.scrollWidth > this.b.clientWidth) {
+                        this.b.scrollLeft = this.savedScrollLeft;
+                }
         }
         
         private onResizeMouseDown = (e: MouseEvent) => {
@@ -604,6 +632,13 @@ export class VDiag {
 
         public setBorder(col: string) {
                 this.w.style.borderColor = col;
+        }
+
+        //clients can register dragHandlers if they want to do know when this diaglog box of which they are part of is being dragged around
+        //They might, for example, want to restore scrollbar postion which scrolls to the top when they are moved around
+        private _dragHandler: (s: string) => void;
+        public setDragHandler(dragHandler: (s: string) => void) {
+                this._dragHandler = dragHandler;
         }
 
         //

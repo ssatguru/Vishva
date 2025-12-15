@@ -1,3 +1,7 @@
+### 12/15/2025 0.4.0-alpha.14
+- fixed issue - when scene dialog box  is moved the content scrolls to the top. now scroll position will be restored
+- fixed issue - when serialized to babylonjs file, glb object in scene have their color map/texture seems faded/washed out . this was due to change in engine which forced sRGB buffer support. This is now set to false when creating engine
+- rolled back some of the "pause all actuators". pause still happens but with some caveat namely resume doesn't start always from correct postion. 
 ### 12/13/2025 0.4.0-alpha.13
 - added button in navbar to pause all actuators
 - made dialog box resizable

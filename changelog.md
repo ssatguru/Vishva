@@ -1,3 +1,8 @@
+### 01/01/2026 0.4.0-alpha.16
+- fixed issue where if two character animationgroups were named the same, clicking "play" in the animation section of mesh property dialog box, will play the animationgroup  on a different character and not the one selected
+### 12/16/2025 0.4.0-alpha.15
+- improved asset placement position when asset is added to the scene.
+- provided for how curated asset are scaled when being added to the scene. previously there was a global setting which effected all curated asset. Now an individual asset can override the global setting.
 ### 12/15/2025 0.4.0-alpha.14
 - fixed issue - when scene dialog box  is moved the content scrolls to the top. now scroll position will be restored
 - fixed issue - when serialized to babylonjs file, glb object in scene have their color map/texture seems faded/washed out . this was due to change in engine which forced sRGB buffer support. This is now set to false when creating engine

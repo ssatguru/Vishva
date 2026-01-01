@@ -157,9 +157,9 @@ export class AnimationUI {
         this._agSelect.onchange = (e) => {
             let agName = this._agSelect.value;
             if (agName != null) {
-                let group: AnimationGroup = this._vishva.scene.getAnimationGroupByName(agName);
-                animElement.getElementsByClassName("agFrom")[0].innerHTML = group.from.toString();
-                animElement.getElementsByClassName("agTo")[0].innerHTML = group.to.toString();
+                let group: AnimationGroup = this._agSelect.options[this._agSelect.selectedIndex]["ag"];
+                animElement.getElementsByClassName("agFrom")[0].innerHTML = Math.round(group.from).toString();
+                animElement.getElementsByClassName("agTo")[0].innerHTML = Math.round(group.to).toString();
                 this._agRate.value = group.speedRatio.toString();
             }
             return true;
@@ -174,8 +174,7 @@ export class AnimationUI {
         this._agLoop = <HTMLInputElement>animElement.getElementsByClassName("agLoop")[0];
         (<HTMLElement>animElement.getElementsByClassName("agPlay")[0]).onclick = (e) => {
             if (this._agPlaying! = null) this._agPlaying.stop();
-            let agName: string = this._agSelect.value;
-            this._agPlaying = this._vishva.scene.getAnimationGroupByName(agName);
+            this._agPlaying = this._agSelect.options[this._agSelect.selectedIndex]["ag"];
             if (this._agPlaying != null) {
                 this._agPlaying.play(this._agLoop.checked);
                 this._agPlaying.speedRatio = Number(this._agRate.value);
@@ -347,6 +346,10 @@ export class AnimationUI {
                 hoe = document.createElement("option");
                 hoe.value = g.name;
                 hoe.innerText = g.name;
+                // animation group name is not unique
+                // so storing just animation group name is not good enough, as we will not be able to retrieve the aniamtion group by its name
+                // so lets store reference to the animation group itseld in the option
+                hoe["ag"] = g;
                 this._agSelect.appendChild(hoe);
                 if (g.isPlaying) {
                     this._agPlaying = g;
@@ -363,8 +366,8 @@ export class AnimationUI {
             }
             this._agLoop.checked = g.loopAnimation;
             this._agRate.value = g.speedRatio.toString();
-            animElement.getElementsByClassName("agFrom")[0].innerHTML = g.from.toString();
-            animElement.getElementsByClassName("agTo")[0].innerHTML = g.to.toString();
+            animElement.getElementsByClassName("agFrom")[0].innerHTML = Math.round(g.from).toString();
+            animElement.getElementsByClassName("agTo")[0].innerHTML = Math.round(g.to).toString();
             return true;
         } else return false;
     }

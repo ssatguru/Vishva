@@ -74,9 +74,7 @@ export class AnimUtils {
         }
 
         public static getMeshSkel(node: Node, fromRoot = true): { "skel": Skeleton, "mesh": AbstractMesh } {
-                console.log("getMeshSke()");
-                console.log(node);
-                console.log(fromRoot)
+
                 if (fromRoot) {
 
                         //if the root itself has a skeleton then return that

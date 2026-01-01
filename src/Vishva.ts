@@ -106,7 +106,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.12";
+    static version: string = "0.4.0-alpha.15";
 
     public static worldName: string;
 
@@ -3854,14 +3854,15 @@ export class Vishva {
     /**
      * used to load internal/curated assets
      * 
-     * @param assetType 
-     * @param file 
+     * @param category 
+     * @param asset 
      */
-    public loadCurAsset(assetType: string, file: string) {
-        console.log("loading curated");
-        this.filePath = assetType;
-        this.file = file;
-        let fileName: string = file.split(".")[0];
+    public loadCurAsset(category: string, asset: string) {
+        console.log("loading curated ",category,asset);
+        this.filePath = category;
+        this.file = asset;
+        let folder: string = asset.split(".")[0];
+
         //check if "asset.json" exist in the same folder as the asset
         //if yes then load that file along with the asset and use it to configure the asset after it is loaded
         //if no then load the asset as is
@@ -3869,10 +3870,10 @@ export class Vishva {
         
 
         SceneLoader.ImportMesh("",
-            Vishva.vHome + "assets/curated/" + assetType + "/" + fileName + "/",
-            file,
+            Vishva.vHome + "assets/curated/" + category + "/" + folder + "/",
+            asset,
             this.scene,
-            (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "curated") });
+            (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, asset, "curated",category) });
     }
 
     /**
@@ -3933,8 +3934,8 @@ export class Vishva {
      */
 
 
-    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string) {
-        console.log("loading meshes from " + file + " mesh count " + meshes.length);
+    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string,category?:string) {
+        console.log("loading meshes from file " + file + "of type "+ assetType + " mesh count " + meshes.length);
 
 
         for (let s of skeletons) {
@@ -3956,30 +3957,22 @@ export class Vishva {
         let rootMesh: TransformNode = null;
         let i = 0;
         for (let mesh of meshes) {
-
             mesh.isPickable = true;
-
             if (mesh.parent == null) {
                 _rootMeshesCount++;
                 rootMesh = <Mesh>mesh;
             }
-
             //TODO Large world asset , _addToShadowCasters resulted in FPS fallin from 35=39 to 16-20
             this._addToShadowCasters(mesh);
-
             //no need to rename, 3.1 version seems to preserve the texture img urls
             //this._renameTextures(mesh);
-
             this.scene.stopAnimation(mesh);
             if (mesh.skeleton != null) {
                 this.scene.stopAnimation(mesh.skeleton);
                 this.avManager.fixAnimationRanges(mesh.skeleton);
             }
-
-
-
-
         }
+
         /*
         if multiple meshes then create a empty root mesh, place it in front of the avatar
         and add all other meshes as children to this.
@@ -4015,68 +4008,81 @@ export class Vishva {
         // Hences we should not do scaling in postLoad
         this._postLoad(meshes, assetType);
 
-        let boundingRadius: number = this.getBoundingRadius(meshes);
+        //let boundingRadius: number = this.getBoundingRadius(meshes);
         //bounding radius doesnot seem to change with scale (radius or radiusWorld give same result)
 
         let scaling = false;
         let sf: Vector3;
-        if (assetType == "curated" && curatedConfig["scale"]) {
-            scaling = true;
-            sf = new Vector3();
-            sf.x = Number(curatedConfig["scale"][0]);
-            sf.y = Number(curatedConfig["scale"][1]);
-            sf.z = Number(curatedConfig["scale"][2]);
-            if (rootMesh != null) {
-                rootMesh.scaling.multiplyInPlace(sf);
-                //for bounding we will assume, for now, that scaling is same in all three dimensions
-                boundingRadius = boundingRadius * sf.x;
+        let scaleNum: number = 1;
+        let scaleObj ={};
+        if (assetType == "curated" && curatedConfig) {
+            if(curatedConfig[category]){
+                if( curatedConfig[category][file] && curatedConfig[category][file]["scale"]) {
+                    scaling = true;
+                    scaleObj = curatedConfig[category][file]["scale"];
+                }else if(curatedConfig[category]["scale"]) {
+                    scaling = true;
+                    scaleObj =curatedConfig[category]["scale"];
+                }
+            }else if (curatedConfig["scale"]) {
+                scaling = true;
+                scaleObj =curatedConfig["scale"];
             }
         }
-
-        this.postionAsset(rootMesh);
-        /*
-                let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
+        if (scaling && rootMesh != null) {
+            sf = new Vector3();
+            sf.x = Number(scaleObj[0]);
+            sf.y = Number(scaleObj[1]);
+            sf.z = Number(scaleObj[2]);
+            rootMesh.scaling.multiplyInPlace(sf);
+            //for bounding we will assume, for now, that scaling is same in all three dimensions
+            scaleNum = sf.x;
+        }
         
-                //rootmesh location wrt min = - bb.min
-        
-                // 2 m in front of av
-                let placementLocal: Vector3 = new Vector3(0, 0, -2);
-                let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-        
-                //let placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
-                //let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-                if (rootMesh != null) {
-                    rootMesh.position.addInPlace(placementGlobal);
-                    rootMesh.position.subtractInPlace(bb.min);
-        
-                    if (!this.isMeshSelected) {
-                        this.selectForEdit(rootMesh);
-                    } else {
-                        this.switchEditControl(rootMesh);
-                    }
-                    this.rootSelected = true;
-                    this.animateMesh(rootMesh);
-                }
-        */
+        this.postionAsset(rootMesh,scaleNum);
 
         EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
     }
 
-    private postionAsset(rootMesh: TransformNode) {
+    private postionAsset(rootMesh: TransformNode,scaleNum) {
         let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
 
-        //rootmesh location wrt min = - bb.min
 
-        // 2 m in front of av
-        let placementLocal: Vector3 = new Vector3(0, 0, -2);
+        // 2 m in front of av (TODO front of AV? what if AV is backward facing?)
+        let placementLocal: Vector3 = new Vector3(0, 0, -(scaleNum * 2));
+        //in global space
         let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
 
-        //let placementLocal: Vector3 = new Vector3(0, 0, -(boundingRadius + 2));
-        //let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-        if (rootMesh != null) {
-            rootMesh.position.addInPlace(placementGlobal);
-            rootMesh.position.subtractInPlace(bb.min);
+        //vector from av to placementGlobal
+        let v: Vector3 = placementGlobal.subtract(this.avatar.position);
+        //now find which co-ordinate quadrant is this v in, that will give the quadrant the AV is facing
+        //quadrant 1 to 4 anti clockwise
+        let q:number=0;
+        if (v.x>=0 && v.z>=0){
+            q=1;
+        }else if (v.x<=0 && v.z>=0){
+            q=2;
+        }else if (v.x<=0 && v.z<=0){
+            q=3;
+        }else q=4;
 
+        //now find bounding box corner closest to AV
+        //this is the corner which will be placed on placementGlobal
+        let corner: Vector3;
+        if (q==1){
+            corner=bb.min;
+        }else if (q==2){
+            corner=new Vector3(bb.max.x,bb.min.y,bb.min.z);
+        }else if (q==3){
+            corner=new Vector3(bb.max.x,bb.min.y,bb.max.z);
+        }else corner=new Vector3(bb.min.x,bb.min.y,bb.max.z); 
+
+        //now place the bb corner on the placementGobalPoint
+        if (rootMesh != null) {
+            //rootmesh location wrt corner = - corner vector
+            rootMesh.position.subtractInPlace(corner);
+            rootMesh.position.addInPlace(placementGlobal);
+            
             if (!this.isMeshSelected) {
                 this.selectForEdit(rootMesh);
             } else {
@@ -4085,8 +4091,6 @@ export class Vishva {
             this.rootSelected = true;
             this.animateMesh(rootMesh);
         }
-
-
     }
 
     private _fixGLB(meshes: AbstractMesh[]) {

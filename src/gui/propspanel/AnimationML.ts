@@ -37,7 +37,7 @@ let animHTML = `
                                                 <select class="agList w3-select" ></select>
                                         </div>
 
-                                        <div>from - to</div>
+                                        <div> from - to :&nbsp;</div>
                                         <div>
                                                 <label class="agFrom"></label>
                                                 -
@@ -69,7 +69,7 @@ let animHTML = `
                                                 <select id="animList" class="w3-select" ></select>
                                         </div>
 
-                                        <div>from - to</div>
+                                        <div>from - to :&nbsp;</div>
                                         <div>
                                                 <label id="animFrom"></label>
                                                 -

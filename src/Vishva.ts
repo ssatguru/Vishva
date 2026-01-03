@@ -106,7 +106,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.15";
+    static version: string = "0.4.0-alpha.17";
 
     public static worldName: string;
 
@@ -341,6 +341,8 @@ export class Vishva {
             this.key.ctl = false
             this.key.alt = false;
         };
+        this.canvas.focus();
+        
 
         //fix shadow and skinning issue
         //see http://www.html5gamedevs.com/topic/31834-shadow-casted-by-mesh-with-skeleton-not-proper/ 
@@ -1403,9 +1405,10 @@ export class Vishva {
 
 
         var chr: string = String.fromCharCode(event.keyCode);
-        //WASD or arrow keys
-        if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
-        if ((chr === "S") || (event.keyCode === 40)) this.key.down = true;
+
+        //WASD or arrow keys ( TODO is this still needed ? should be handled by character controller)
+        // if ((chr === "W") || (event.keyCode === 38)) this.key.up = true;
+        // if ((chr === "S") || (event.keyCode === 40)) this.key.down = true;
 
         //
         if (chr === "1") this.key.trans = false;
@@ -1425,8 +1428,10 @@ export class Vishva {
         //if (event.key === "Delete") this.key.del = true;
         //
         var chr: string = String.fromCharCode(event.keyCode);
-        if ((chr === "W") || (event.keyCode === 38)) this.key.up = false;
-        if ((chr === "S") || (event.keyCode === 40)) this.key.down = false;
+        
+        //( TODO is this still needed ? should be handled by character controller)
+        // if ((chr === "W") || (event.keyCode === 38)) this.key.up = false;
+        // if ((chr === "S") || (event.keyCode === 40)) this.key.down = false;
         //
         if (chr === "1") this.key.trans = true;
         if (chr === "2") this.key.rot = true;
@@ -1438,6 +1443,7 @@ export class Vishva {
         if (chr === "Z" && this.key.ctl && this.key.shift) this.key.redo = true;
     }
 
+   
     /**
      * material for primitives
      */
@@ -4929,8 +4935,6 @@ export class Vishva {
         camera.keysRight = [];
         camera.keysUp = [];
         camera.keysDown = [];
-
-
 
         camera.panningInertia = 0.1;
         camera.inertia = 0.1;

@@ -441,11 +441,14 @@ export class VDiag {
         //resources are still being consumed
         public close = (anim?: boolean) => {
                 if (this.isClosed) return;
+                // shift keyboard focus to canvas
+                Vishva.vishva.canvas.focus();
                 this.isClosed = true;
 
-                //do not do animation if caller doesnot want it
-                //sometime after creating dialog caller maynot want to show it mmediately
-                //playing animation will force a display and then set display to none at animationend event
+                //do not do close dialog animation if caller doesnot want it
+                //for example sometime after creating dialog, caller mayot want to show the dialog mmediately in which case they will called close() immediately after creation.
+                //if a close dialog animation is defined then we donot want to play for this use case
+                //as otherwise it will start with a display and then close it with animation leading to a flicker
                 if (anim == undefined || anim ) {
                         this.w.style.animationDuration = this._cD;
                         this.w.style.animationName = this._cAnim;
@@ -667,6 +670,7 @@ export class VDiag {
 
                 // diag window ===========================================
                 this.w.setAttribute("style", this._style);
+                this.w.setAttribute("tabindex", "-1"); // Make dialog focusable
                 this.w.style.maxHeight =  Number(Vishva.gui.offsetHeight - 1).toString()+"px";
                 this.w.style.overflow = "auto";
                 this.w.style.width = <string>width;
@@ -742,11 +746,14 @@ export class VDiag {
                 this.position(pos);
                 DialogMgr.vdiags.push(this);
 
+                // Focus management
+                this.w.addEventListener('mouseleave', () => {
+                        Vishva.vishva.canvas.focus();
+                });
+
                 //should we close the dialog after creation
                 //return a closed dialog to the caller and then
                 //let the caller call open() to then open it?
-
-
         }
 
 }

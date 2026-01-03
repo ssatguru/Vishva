@@ -8,7 +8,7 @@ let genHTML = `
                 <input type="text" id="genID"  class="vinput  w3-input" style="width:10%;vertical-align:middle;" readonly>
                 <label for="genName" style="vertical-align:middle;">name</label>
                 <input type="text" id="genName"  class="vinput  w3-input" style="width:50%;vertical-align:middle;">
-                <button id="showTree" style="vertical-align:middle;">show</button>
+                <button id="showTree" title="show item in hierarchy" style="vertical-align:middle;"><span class="material-icons-outlined">account_tree</span></button>
         </div>
         
         
@@ -27,36 +27,41 @@ let genHTML = `
         
         <div style="display:grid;grid-template-columns:auto auto auto auto;align-items:center;">
                 
-                        <div>transform</div>
-                        <div>x,y,z</div>
+                        <div>transform space</div>
+                        <div>
+                                <select class="w3-select" style="width:auto" id="genSpace" title="space for translation and rotation">
+                                        <option value="local" >local</option>
+                                        <option value="world">world</option>
+                                </select>
+                        </div>
                         <div>snap</div>
                         <div>on</div>
                 
 
                 
-                        <div>position</div>
+                        <div>position (x y z)</div>
                         <div id="loc"></div>
                         <div id="snapTransValue"></div>
                         <div><input type="checkbox" id="snapTrans"></div>
                 
                 
-                        <div>rotation</div>
+                        <div>rotation (x y z)</div>
                         <div id="rot"></div>
                         <div id="snapRotValue"></div>
                         <div><input type="checkbox" id="snapRot"></div>
                 
                 
-                        <div>scaling</div>
+                        <div>scaling (x y z)</div>
                         <div id="scale"></div>
                         <div id="snapScaleValue"></div>
                         <div><input type="checkbox" id="snapScale"></div>  
                 
                 
-                        <div>size</div>
+                        <div>size (x y z)</div>
                         <div id="size"></div>
+                        <div><button id="gridSnap">grid snap</button></div>
                         <div></div>
-                        <div></div>
-                
+                        
 
         </div>
         
@@ -64,12 +69,13 @@ let genHTML = `
         <div>
                 <button id="transRefresh" title="refresh"><span class="material-icons-outlined">refresh</span></button>
                 <button id="transBake">bake</button>
-                <button id="gridSnap">grid snap</button>
+                <!--
                 space 
                 <select class="w3-select" style="width:auto" id="genSpace" title="space for translation and rotation">
                         <option value="local" >local</option>
                         <option value="world">world</option>
                 </select>
+                -->
         </div>
         
         
@@ -99,8 +105,8 @@ let genHTML = `
         
         <div>
                 <button id="mergeMesh" title="merge meshes"><span class="material-icons-outlined">queue</span></button>
-                <button id="subMesh" title="subtract a mesh from another"><span class="material-icons-outlined">content_cut</span></button>
-                <button id="interMesh">intersect</button>
+                <button id="subMesh" title="mesh by subtracting a mesh from another"><span class="material-icons-outlined">content_cut</span></button>
+                <button id="interMesh" title="mesh from intersection of two mesh">intersect</button>
 
 
         </div>

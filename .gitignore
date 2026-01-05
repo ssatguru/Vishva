@@ -5,6 +5,6 @@ ig_*.*
 ig_*
 userAssets.js
 vishva/config.js
-vishva/assets/**/*
+vishva/assets/*
 vishva/worlds/*
 *.log

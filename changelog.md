@@ -1,6 +1,10 @@
+### 01/01/2026 0.4.0-alpha.18
+- improved curated asset property setting. scale,reusematerial and collision proeprties can be set or all curated assets, or a category of asset or a specific asset. previously it was just scale.
+  setting collision 'on' for characters can create problem if character has mutiple meshes.
 ### 01/01/2026 0.4.0-alpha.17
 - fixed minor focus issues when focus is on dialog and mosue moves to canvas. previosuly one had to click canvas to say move avatar. now the focus shifts to canvas if mouse moved to over canvas.
 - moved few fields around in mesh property dialog box. 
+- fixed issue of assets placement when the avatar is switched. previously the assets would be placed in front of old avatar
 ### 01/01/2026 0.4.0-alpha.16
 - fixed issue where if two character animationgroups were named the same, clicking "play" in the animation section of mesh property dialog box, will play the animationgroup  on a different character and not the one selected
 ### 12/16/2025 0.4.0-alpha.15

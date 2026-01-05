@@ -1,9 +1,11 @@
-    import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Node, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
+import { AnimationRange, SceneLoader, AbstractMesh, IParticleSystem, Mesh, Node, Skeleton, Scene, ShadowGenerator, StandardMaterial, Tags, Vector3, Camera, ArcRotateCamera, Color3, Quaternion } from "babylonjs";
 import { CharacterController } from "babylonjs-charactercontroller";
 import { EventManager } from "../eventing/EventManager";
 import { VEvent } from "../eventing/VEvent";
 import { SNAManager } from "../sna/SNA";
 import { AnimUtils } from "../util/AnimUtils";
+import { Vishva } from "../Vishva";
+
 
 export class AvManager {
 
@@ -238,13 +240,14 @@ export class AvManager {
         this.cc.setAvatar(this.avatar);
         //this.cc.setAvatarSkeleton(this.avatarSkeleton);
 
-
         //this.cc.setAnims(this.anims);
         this.cc.start();
 
         this._ff = false;
 
         EventManager.publish(VEvent._AVATAR_SWITCHED);
+        
+        Vishva.vishva.avatar = this.avatar;
 
         return null;
     }

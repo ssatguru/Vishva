@@ -106,7 +106,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.17";
+    static version: string = "0.4.0-alpha.18";
 
     public static worldName: string;
 
@@ -3849,6 +3849,7 @@ export class Vishva {
 
     //older, used by old GUI file loader dislog
     public loadAssetFile(file: File) {
+        console.log("loading loadAssetFile old ");
         var sceneFolderName: string = file.name.split(".")[0];
         SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, "", "") });
     }
@@ -3873,7 +3874,6 @@ export class Vishva {
         //if yes then load that file along with the asset and use it to configure the asset after it is loaded
         //if no then load the asset as is
         //TODO check if file exists in Vishva.userAssets
-        
 
         SceneLoader.ImportMesh("",
             Vishva.vHome + "assets/curated/" + category + "/" + folder + "/",
@@ -3890,6 +3890,7 @@ export class Vishva {
      */
 
     public loadUserAsset1(path: string, file: string) {
+        console.log("loading loadUserAsset1 ");
         this.filePath = path;
         this.file = file;
         SceneLoader.ImportMesh("",
@@ -3899,7 +3900,9 @@ export class Vishva {
             (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "user") });
     }
 
+    //used to load assets other than curated asset
     public loadUserAsset(path: string, file: string) {
+        console.log("loading loadUserAsset ");
         this.filePath = path;
         this.file = file;
         SceneLoader.LoadAssetContainer(
@@ -3917,6 +3920,7 @@ export class Vishva {
     }
 
     public loadUserAsset3(path: string, file: string) {
+        console.log("loading loadUserAsset3 ");
         this.filePath = path;
         this.file = file;
         SceneLoader.Append(
@@ -3940,8 +3944,8 @@ export class Vishva {
      */
 
 
-    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string,category?:string) {
-        console.log("loading meshes from file " + file + "of type "+ assetType + " mesh count " + meshes.length);
+    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string,folder?:string) {
+        console.log("loading meshes from file " + file + " from folder " + folder + " of type "+ assetType + " mesh count " + meshes.length);
 
 
         for (let s of skeletons) {
@@ -4012,7 +4016,7 @@ export class Vishva {
         // as we didnot add the rootmesh (a TransformNode) to the meshes array (Array of AbstractMesh)
         // and thus are not passing that rootmesh below. all other meshes now have a parent (the rootmesh).
         // Hences we should not do scaling in postLoad
-        this._postLoad(meshes, assetType);
+        this._postLoad(meshes, assetType, folder, file);
 
         //let boundingRadius: number = this.getBoundingRadius(meshes);
         //bounding radius doesnot seem to change with scale (radius or radiusWorld give same result)
@@ -4022,17 +4026,22 @@ export class Vishva {
         let scaleNum: number = 1;
         let scaleObj ={};
         if (assetType == "curated" && curatedConfig) {
-            if(curatedConfig[category]){
-                if( curatedConfig[category][file] && curatedConfig[category][file]["scale"]) {
-                    scaling = true;
-                    scaleObj = curatedConfig[category][file]["scale"];
-                }else if(curatedConfig[category]["scale"]) {
-                    scaling = true;
-                    scaleObj =curatedConfig[category]["scale"];
-                }
-            }else if (curatedConfig["scale"]) {
+            if ('scale' in curatedConfig){
+                console.log('scale in curatedConfig');
                 scaling = true;
-                scaleObj =curatedConfig["scale"];
+                scaleObj = curatedConfig['scale'];
+            }
+            if(folder in curatedConfig){
+                if ('scale' in curatedConfig[folder]){
+                    console.log('scale in curatedConfig[folder]');
+                    scaling = true;
+                    scaleObj = curatedConfig[folder]['scale'];
+                }
+                if( file in curatedConfig[folder] && 'scale' in curatedConfig[folder][file]) {
+                    console.log('scale in curatedConfig[folder][file]');
+                    scaling = true;
+                    scaleObj = curatedConfig[folder][file]["scale"];
+                }
             }
         }
         if (scaling && rootMesh != null) {
@@ -4256,34 +4265,44 @@ export class Vishva {
     }
 
     //select and animate the last mesh loaded
-    private _postLoad(meshes: AbstractMesh[], assetType: string) {
+    private _postLoad(meshes: AbstractMesh[], assetType: string,folder:string,file:string) {
+        let reuseMaterials = false;
         if (meshes.length > 0) {
             for (let mesh of meshes) {
-
-                if (assetType == "curated") {
-                    if (curatedConfig["reuseMaterial"] == true && mesh instanceof Mesh) {
-                        this._processMaterial(mesh, m => this._reuseMaterial(m));
+                if (!(mesh instanceof Mesh)) continue;
+                reuseMaterials = false;
+                if (assetType == "curated" && curatedConfig) {
+                    if ('collision' in curatedConfig) mesh.checkCollisions = true;
+                    if ('reuseMaterial' in curatedConfig) reuseMaterials = true;
+                    if(folder in curatedConfig){
+                        if ('collision' in curatedConfig[folder])
+                            mesh.checkCollisions = curatedConfig[folder]['collision'];
+                        if('reuseMaterial' in curatedConfig[folder]) 
+                            reuseMaterials = curatedConfig[folder]['reuseMaterial'];
+                        if( file in curatedConfig[folder]){
+                            if( 'collision' in curatedConfig[folder][file])
+                                mesh.checkCollisions = curatedConfig[folder][file]['collision'];
+                            if( 'reuseMaterial' in curatedConfig[folder][file]) 
+                                reuseMaterials = curatedConfig[folder][file]['reuseMaterial'];
+                        }
                     }
-
-                    if (curatedConfig["collision"] == true && mesh instanceof Mesh) {
-                        mesh.checkCollisions = true;
-                    }
-
-                } else {
+                }
+                if (reuseMaterials){
+                    this._processMaterial(mesh, m => this._reuseMaterial(m));
+                }else{
                     //TODO Large world asset processMaterial was failing
                     this._processMaterial(mesh, m => this._makeMatIdUnique(m));
                 }
-
                 //TODO one time. remove afterwards
                 this._processMaterial(mesh, m => this._removeSpecular(m));
+
+            }
 
                 //TODO Large world asset one time ?
                 //console.log("mesh collision " + mesh.name);
                 //mesh.checkCollisions = true;
 
-
-
-            }
+            
 
         }
     }

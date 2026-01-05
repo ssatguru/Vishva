@@ -1,8 +1,7 @@
 BUGS
-
 - bug in charactercontroller, stop() should stop all animations too, currently it doesn't. pauseanims() should only stop animations not charcater movement
   if the canvas looses focus while key is pressed, the key release event isn't recoqnized and thus the action initiated by key press continues - exmaple walk forward
-  soln is to reset all actions initiated by any other key pressed event before this key pressed event is handled. this way any acion initiated just before canvas lost focus will be stopped when a key press happens after canvas regains focus.
+  soln might be to reset all actions initiated by any other key pressed event before this key pressed event is handled. this way any acion initiated just before canvas lost focus will be stopped when a key press happens after canvas regains focus.
   issue would be when two key press events are valid - example walk side and forward
   (1/3/2026)
 

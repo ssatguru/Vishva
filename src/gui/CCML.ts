@@ -63,6 +63,9 @@ const settingFormHtml: string = `
         <label>step offset</label>
         <input name="stepOffset" type="text" />
 
+        <label>animation blending</label>
+        <input name="animBlend" type="text" />
+
         <label>camera target offset</label>
         <div>
                 <input name="x" type="text" />
@@ -90,9 +93,9 @@ const mapFormHTML: string = `
         </div>
 
         <div  class="animList" style="padding:0.5em; display:grid; grid-template-columns:min-content min-content min-content; grid-auto-rows: min-content; grid-gap:0.5em;white-space : nowrap;">
-                <h5> range/group </h5>
-                <h5> </h5>
-                <h5> </h5>
+                <h5>anims </h5>
+                <h5>(drag/drop)</h5>
+                <h5></h5>
         </div>
 </form>
 `;

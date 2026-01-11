@@ -17,6 +17,7 @@ export class ActDialogParm extends ActProperties {
     width: number = 50;
     sizeType: SelectType = new SelectType();
     modal: boolean = true;
+    resizable: boolean = false;
     draggable: boolean = false;
     transparent: boolean = false;
     border: boolean = true;
@@ -24,6 +25,7 @@ export class ActDialogParm extends ActProperties {
     openDuration: number = 0.5;
     closeEffect: SelectType = new SelectType();
     closeDuration: number = 0.5;
+    position: SelectType = new SelectType();
 
     public constructor() {
         super();
@@ -33,6 +35,7 @@ export class ActDialogParm extends ActProperties {
         this.openEffect.value = "scale";
         this.closeEffect.values = this.openEffect.values;
         this.closeEffect.value = this.openEffect.value;
+        this.position.values = [VDiag.leftTop, VDiag.leftTop1, VDiag.leftTop2, VDiag.leftCenter, VDiag.leftBottom, VDiag.centerTop, VDiag.center, VDiag.centerBottom, VDiag.rightTop, VDiag.rightCenter, VDiag.rightBottom];
     }
 }
 
@@ -41,17 +44,18 @@ export class ActDialogParm extends ActProperties {
  */
 export class ActuatorDialog extends ActuatorAbstract {
 
-    div: HTMLDivElement;
-    dialog: VDiag;
-    w: string;
-    h: string;
+    _div: HTMLDivElement;
+    _dialog: VDiag;
+    _w: string;
+    _h: string;
+    _pos: string = VDiag.leftTop;
 
     public constructor(mesh: Mesh, parms: ActDialogParm) {
         super(mesh, parms != null ? parms : new ActDialogParm());
     }
 
     public actuate() {
-        this.dialog.open();
+        this._dialog.open();
     }
 
     public getName(): string {
@@ -62,117 +66,102 @@ export class ActuatorDialog extends ActuatorAbstract {
     }
 
     public cleanUp() {
-        this.div.remove();
-        this.div = null;
-        this.dialog = null;
+        this._div.remove();
+        this._div = null;
+        this._dialog = null;
     }
 
     private setSize() {
         let props: ActDialogParm = <ActDialogParm>this.properties;
 
         if (props.sizeType.value === "%") {
-            this.w = (window.innerWidth * props.width / 100) + "px";
-            this.h = (window.innerHeight * props.height / 100) + "px";
+            this._w = (window.innerWidth * props.width / 100) + "px";
+            this._h = (window.innerHeight * props.height / 100) + "px";
         } else {
-            this.w = props.width + "px";
-            this.h = props.height + "px";
+            this._w = props.width + "px";
+            this._h = props.height + "px";
         }
 
     }
 
     public onPropertiesChange() {
+
+        if (this._dialog != null){
+            this._dialog.dispose();
+            this._dialog = null;
+        }
+
         var props: ActDialogParm = <ActDialogParm>this.properties;
 
-        //TODO remove after migration to new version of dialog actuator is complete
-        //previous version did not have sizeType
-        if (!props.sizeType) {
-            props.sizeType = new SelectType();
-            props.sizeType.values = ["%", "px"];
-            props.sizeType.value = "%";
-        }
-
         this.setSize();
-        if (this.dialog == null) {
+        
 
-            this.div = GuiUtils.createDiv();
+        this._div = GuiUtils.createDiv();
 
-            this.dialog = new VDiag(this.div, props.title, VDiag.center, this.w, this.h, "350px", props.modal);
+        this._dialog = new VDiag(this._div, props.title, props.position.value, this._w, this._h, "350px", props.modal,props.resizable,props.draggable);
 
-            this.dialog.setType("g");
+        this._dialog.setType("g");
 
-            let button: HTMLButtonElement = this.dialog.addButton("Close");
+        let button: HTMLButtonElement = this._dialog.addButton("Close");
 
-            button.onclick = (e) => {
-                if (!Engine.audioEngine.unlocked) {
-                    Engine.audioEngine.unlock();
-                }
-                if (Engine.audioEngine.audioContext.state === "suspended") {
-                    Engine.audioEngine.audioContext.resume().then(() => {
-                        this.dialog.close();
-                    });
-                } else {
-                    this.dialog.close();
-                }
-                return true;
+        button.onclick = (e) => {
+            if (!Engine.audioEngine.unlocked) {
+                Engine.audioEngine.unlock();
             }
-
-            //close dialog without doing the close animation
-            this.dialog.close(false);
+            if (Engine.audioEngine.audioContext.state === "suspended") {
+                Engine.audioEngine.audioContext.resume().then(() => {
+                    this._dialog.close();
+                });
+            } else {
+                this._dialog.close();
+            }
+            return true;
         }
 
-
-
-        //TODO remove after the migration of worlds to new version of dialog actuator is complete
-        //previous version did not have open/close effect options
-        if (props.openEffect) {
-            this.dialog.setEffects(props.openEffect.value,
-                props.openDuration.toString() + "s",
-                props.closeEffect.value,
-                props.closeDuration.toString() + "s");
-        }
-
+        //close dialog without doing the close animation
+        this._dialog.close(false);
+    
         if (props.title.trim() == "") {
-            this.dialog.hideTitleBar();
+            this._dialog.hideTitleBar();
         } else {
-            this.dialog.showTitleBar();
+            this._dialog.setTitle(props.title);
+            this._dialog.showTitleBar();
         }
 
         if (props.transparent) {
-            this.dialog.setBackGround("transparent");
+            this._dialog.setBackGround("transparent");
         }
 
         if (!props.border) {
-            this.dialog.setBorder("transparent");
+            this._dialog.setBorder("transparent");
         }
-
-        this.dialog.setTitle(props.title);
-
-        this.div.innerHTML = props.msg;
+       
+        this._div.innerHTML = props.msg;
 
         if (props.htmlFile && props.htmlFile.value != null) {
             let xhttp = new XMLHttpRequest();
             xhttp.onload = () => {
                 if (xhttp.readyState == 4 && xhttp.status == 200) {
-                    this.div.innerHTML = xhttp.responseText;
+                    this._div.innerHTML = xhttp.responseText;
                 }
             };
             xhttp.open("GET", Vishva.vHome + "assets/" + props.htmlFile.value, true);
             xhttp.send();
         } else {
-            this.div.innerHTML = props.msg;
-            this.div.style.display = "flex";
-            this.div.style.justifyContent = "center";
-            this.div.style.alignItems = "center";
+            this._div.innerHTML = props.msg;
+            this._div.style.display = "flex";
+            this._div.style.justifyContent = "center";
+            this._div.style.alignItems = "center";
         }
 
-        this.dialog.onClose(() => {
+        this._dialog.onClose(() => {
             this.onActuateEnd();
         })
 
-        this.dialog.setSize(this.w, this.h);
+        this._pos = props.position.value;
 
         if (this.properties.autoStart) {
-            this.dialog.open();
+            this._dialog.open();
         }
 
     }

@@ -64,7 +64,7 @@ export class CCUI {
             return true;
         }
 
-        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.center, "", "", "12em");
+        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.centerTop, "", "", "12em");
         this._ccDiag.close(false);
 
         EventManager.subscribe(VEvent._AVATAR_SWITCHED, () => { this._onAVSwicthed() });
@@ -167,6 +167,7 @@ export class CCUI {
         new VInputNumber(form.minSlopeLimit);
         new VInputNumber(form.maxSlopeLimit);
         new VInputNumber(form.stepOffset);
+        new VInputNumber(form.animBlend);
         new VInputNumber(form.x);
         new VInputNumber(form.y);
         new VInputNumber(form.z);
@@ -179,6 +180,7 @@ export class CCUI {
 
     private _updateUISet() {
         let ccSettings: CCSettings = this._cc.getSettings();
+        ccSettings.animBlend = 0.05;
 
         let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
 
@@ -193,6 +195,7 @@ export class CCUI {
         form.minSlopeLimit.value = ccSettings.minSlopeLimit;
         form.noFirstPerson.checked = ccSettings.noFirstPerson;
         form.stepOffset.value = ccSettings.stepOffset;
+        form.animBlend.value = ccSettings.animBlend;
         form.turningOff.checked = ccSettings.turningOff;
         form.x.value = ccSettings.cameraTarget.x;
         form.y.value = ccSettings.cameraTarget.y;
@@ -269,8 +272,8 @@ export class CCUI {
 
     // update the charecter controller with new settings and action map
     private _saveCC() {
-        this._saveCCSet();
         this._saveCCMap();
+        this._saveCCSet();
     }
 
     private _saveCCSet() {
@@ -293,6 +296,7 @@ export class CCUI {
         ccSettings.sound = this._sndUI.getSound();
 
         this._cc.setSettings(ccSettings);
+        this._cc.enableBlending(Number(form["animBlend"].value));
 
         if (form["elipsoid"].checked) {
             this._cc.showEllipsoid(true);
@@ -332,7 +336,7 @@ export class CCUI {
             _actMap[action] = data;
 
         }
-        console.log(_actMap);
+
         if (this._cc.isAg()) this._cc.setAnimationGroups(_actMap)
         else this._cc.setAnimationRanges(_actMap);
     }

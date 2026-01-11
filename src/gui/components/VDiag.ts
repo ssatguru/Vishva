@@ -56,8 +56,7 @@ export class VDiag {
         _barStyle: string = `
                         display:grid;
                         grid-template-columns: auto min-content min-content min-content ;
-                        padding: 0.5em;
-                        cursor: move;`;
+                        padding: 0.5em;`
 
         _closeStyle: string = `
                         cursor: pointer;
@@ -151,7 +150,6 @@ export class VDiag {
         }
 
         public position(pos: string): void {
-
                 switch (pos) {
 
                         case VDiag.leftTop:
@@ -248,19 +246,24 @@ export class VDiag {
          * which represent the desired new position of the dialog. 
          * The function modifies these values to prevent the dialog from overflowing 
          * outside the GUI container.
+         * This is called when dragging and also when expanding the minimized dialog box 
+         * In first case  force should be true as we do want to drag the dialog box to a new position
+         * In second case force should be false as we are just restoring to old postion
+         * It should only be moved to new posistion in case it was dragged to the edge when minimized.
          */
 
-        private _moveIt(t: number, l: number) {
+        private _moveIt(t: number, l: number , force=true) {
                 //Clamp the Top Position (t):
                 //-1 is to prevent vertical scroll bar in body from showing up
-                t = Math.min(t, Vishva.gui.offsetHeight - 1 - this.w.offsetHeight);
-                t = Math.max(t, Vishva.gui.offsetTop);
+                let newT = Math.min(t, Vishva.gui.offsetHeight -1 - this.w.offsetHeight);
+                newT = Math.max(newT, Vishva.gui.offsetTop);
                 //Clamp the Left Position (l):
-                l = Math.min(l, Vishva.gui.offsetWidth - this.w.offsetWidth);
-                l = Math.max(l, Vishva.gui.offsetLeft);
+                let newL = Math.min(l, Vishva.gui.offsetWidth - this.w.offsetWidth);
+                newL = Math.max(newL, Vishva.gui.offsetLeft);
+                if (!force) if ((newT == t-1) && (newL==l)) return;
                 //Set the New Position of the Dialog:
-                this.w.style.top = t + 'px';
-                this.w.style.left = l + 'px';
+                this.w.style.top = newT + 'px';
+                this.w.style.left = newL + 'px';
                 this.w.style.bottom = 'auto';
                 this.w.style.right = 'auto';
         }
@@ -521,10 +524,10 @@ export class VDiag {
                         this.minIcon.style.display = "inline-block";
                         this.addIcon.style.display = "none";
                         //when expanding call _moveIt. _moveIt adjusts the positions of the window in case it spills outside the screen
-                        this._moveIt(this.w.offsetTop, this.w.offsetLeft);
+                        this._moveIt(this.w.offsetTop, this.w.offsetLeft,false);
                 } else {
                         this._minimized = true;
-                        this._savHt = this.w.style.height;
+                        this._savHt = this.b.style.height;
                         this.b.style.height = "0px";
                         this.minIcon.style.display = "none";
                         this.addIcon.style.display = "inline-block";
@@ -652,7 +655,11 @@ export class VDiag {
                 this._type = type;
         }
 
-        constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false, resizable = false) {
+        public dispose(){
+                this.w.remove();
+        }
+
+        constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false, resizable = false, draggable= true) {
 
                 if (id instanceof HTMLElement) {
                         this.bc = id;
@@ -709,7 +716,10 @@ export class VDiag {
 
                 this.t = <HTMLElement>this.w.getElementsByClassName('title')[0];
                 this.t.innerText = title;
-                this.t.onmousedown = this.onMouseDown;
+                if (draggable){
+                        this.t.style.cursor = "move";
+                        this.t.onmousedown = this.onMouseDown;
+                }
                 this.t.ondblclick = () => this.position(this.pos);
 
                 this.minIcon = <HTMLElement>this.w.getElementsByClassName('vdiag-min')[0];

@@ -1,8 +1,14 @@
+### 01/08/2026 0.4.0-alpha.19
+- added animation blend field in character controller UI.
+- updated Animator and AvAnimator actutators to work with animation groups too. Previously it was just animation ranges.
+- updated DialogActuator. Added "position" parameter to postion the dialog.
+- fixed prim placement issue. if avatar was forward facing the prim was created at back of avatar
+- fixed click to move avatar issue. if avatar was facing forward the avatar would not move. the system would think the distance to click point had increased rather than decreased.
 ### 01/01/2026 0.4.0-alpha.18
 - improved curated asset property setting. scale,reusematerial and collision proeprties can be set or all curated assets, or a category of asset or a specific asset. previously it was just scale.
   setting collision 'on' for characters can create problem if character has mutiple meshes.
 ### 01/01/2026 0.4.0-alpha.17
-- fixed minor focus issues when focus is on dialog and mosue moves to canvas. previosuly one had to click canvas to say move avatar. now the focus shifts to canvas if mouse moved to over canvas.
+- fixed minor focus issues when focus is on dialog and mouse moves to canvas. previosuly one had to click canvas to say move avatar. now the focus shifts to canvas if mouse moved to over canvas.
 - moved few fields around in mesh property dialog box. 
 - fixed issue of assets placement when the avatar is switched. previously the assets would be placed in front of old avatar
 ### 01/01/2026 0.4.0-alpha.16

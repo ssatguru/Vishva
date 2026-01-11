@@ -139,6 +139,7 @@ genElement.style.alignItems = "center";
 genElement.style.padding = "1em";
 
 genElement.innerHTML = genHTML;
+genHTML = null;
 VButton.styleThem(genElement.getElementsByTagName("button"));
 
 

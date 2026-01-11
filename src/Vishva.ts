@@ -106,7 +106,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.18";
+    static version: string = "0.4.0-alpha.19";
 
     public static worldName: string;
 
@@ -752,7 +752,7 @@ export class Vishva {
             if (d < 0.5 || d >= this._prevClickMoveDist) {
                 this.cc.walk(false);
                 this._clickMove = false;
-                // this._marker.isVisible = false;
+                this._marker.isVisible = false;
                 // this._markerLine.isVisible = false;
                 this.cc.setMode(0);
                 this._prevClickMoveDist = 0;
@@ -974,11 +974,13 @@ export class Vishva {
 
 
     private _createMarker() {
-        this._marker = MeshBuilder.CreateCylinder("cylinder", { height: 0.25, diameterTop: 0, diameterBottom: 0.25 });
+        // this._marker = MeshBuilder.CreateCylinder("cylinder", { height: 0.25, diameterTop: 0, diameterBottom: 0.25 });
+        this._marker = MeshBuilder.CreateSphere("marker",{diameter:0.25});
         this._marker.doNotSerialize = true;
-        this._marker.rotation.x = Math.PI;
+        // this._marker.rotation.x = Math.PI;
         const m: StandardMaterial = new StandardMaterial("marker", this.scene);
-        m.diffuseColor = new Color3(1, 0.6, 0);
+        // m.diffuseColor = new Color3(1, 0.6, 0);
+        m.emissiveColor = new Color3(1, 1, 1);
         this._marker.material = m;
 
         this._markerLine = MeshBuilder.CreateLines("markerlines", this._lineOptions);
@@ -1001,7 +1003,9 @@ export class Vishva {
             // console.log("click move");
             let diffX = pickResult.pickedPoint.x - this.avatar.position.x;
             let diffY = pickResult.pickedPoint.z - this.avatar.position.z;
-            this.avatar.rotation.y = Math.PI + Math.atan2(diffX, diffY);
+            //this.avatar.rotation.y = Math.PI + Math.atan2(diffX, diffY);
+            this.avatar.rotation.y =  Math.atan2(diffX, diffY);
+            if (!this.avManager.cc.getSettings().faceForward) this.avatar.rotation.y += Math.PI;
             this._clickMove = true;
             this._clickMoveTarget = pickResult.pickedPoint.clone();
 
@@ -1011,10 +1015,10 @@ export class Vishva {
             //lets start with some arbitrary large number for previous distance
             this._prevClickMoveDist = 10000;
 
-            // if (this._marker == null) this._createMarker();
-            // this._marker.position = this._clickMoveTarget.clone();
-            // this._marker.position.y += 0.125;
-            // this._marker.isVisible = true;
+            if (this._marker == null) this._createMarker();
+            this._marker.position = this._clickMoveTarget.clone();
+            //this._marker.position.y += 0.125;
+            this._marker.isVisible = true;
 
             // this._lineOptions.points[0] = this.avatar.position;
             // this._lineOptions.points[1] = this._clickMoveTarget;
@@ -1473,7 +1477,10 @@ export class Vishva {
         if (this.primMaterial == null) this.createPrimMaterial();
         // if (this.primPBRMaterial == null) this.createPrimPBRMaterial();
         var r: number = mesh.getBoundingInfo().boundingSphere.radiusWorld;
-        var placementLocal: Vector3 = new Vector3(0, r, -(r + 2));
+        //2 meter in front of av
+        let d = -(r+2)
+        if (this.avManager.cc.getSettings().faceForward) d=-d;
+        var placementLocal: Vector3 = new Vector3(0, r, d);
         var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
         mesh.position.addInPlace(placementGlobal);
 
@@ -3676,8 +3683,6 @@ export class Vishva {
                 mesh.receiveShadows = this._recShadowFlag;
             }
         }
-
-
     }
 
 
@@ -4063,8 +4068,12 @@ export class Vishva {
         let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
 
 
-        // 2 m in front of av (TODO front of AV? what if AV is backward facing?)
-        let placementLocal: Vector3 = new Vector3(0, 0, -(scaleNum * 2));
+        // 2 m in front of av. also check if AV is forward facing
+        let dist =2;
+        if (this.avManager.cc.getSettings().faceForward) {
+            dist=-2;
+        }
+        let placementLocal: Vector3 = new Vector3(0, 0, -(scaleNum * dist));
         //in global space
         let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
 

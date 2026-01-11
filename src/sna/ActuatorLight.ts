@@ -21,12 +21,9 @@ export class ActLightProp extends ActProperties {
 
 export class ActuatorLight extends ActuatorAbstract {
 
+    override init(){}
 
-    public constructor(mesh: Mesh, prop: ActLightProp) {
-        super(mesh, prop != null ? prop : new ActLightProp());
-    }
-
-    public actuate() {
+    override actuate() {
         let lights: Light[] = this.getLights(this.mesh);
         if (lights.length == 0) {
             this.onActuateEnd();
@@ -68,7 +65,7 @@ export class ActuatorLight extends ActuatorAbstract {
         return lights;
     }
 
-    public stop() {
+    override stop() {
         let actLightProp: ActLightProp = <ActLightProp>this.properties;
         let enable: boolean;
         if (actLightProp.switchType.value == "OnSwitch") enable = true;
@@ -76,21 +73,25 @@ export class ActuatorLight extends ActuatorAbstract {
         this.switchLights(this.getLights(this.mesh), true);
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 
-    public getName(): string {
+    override getName(): string {
         return "Light";
     }
 
-    public onPropertiesChange() {
+    override getPropertiesType(): typeof ActProperties {
+        return ActLightProp;
+    }
+
+    override onPropertiesChange() {
         if (this.properties.autoStart) {
             this.start(this.properties.signalId);
         }
     }
 
-    public cleanUp() {
+    override cleanUp() {
         this.properties.loop = false;
     }
 }

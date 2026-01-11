@@ -9,11 +9,10 @@ export class ActEnablerProp extends ActProperties {
 export class ActuatorEnabler extends ActuatorAbstract {
 
 
-    public constructor(mesh: Mesh, parms: ActEnablerProp) {
-        super(mesh, parms != null ? parms : new ActEnablerProp());
+    override init(){
     }
 
-    public actuate() {
+    override actuate() {
         let enableState: boolean = true;
         if (this.properties.toggle) {
             enableState = this.properties.state_notReversed;
@@ -32,25 +31,29 @@ export class ActuatorEnabler extends ActuatorAbstract {
         }
     }
 
-    public stop() {
+    override stop() {
         this.mesh.setEnabled(true);
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 
-    public getName(): string {
+    override getName(): string {
         return "Enabler";
     }
 
-    public onPropertiesChange() {
+    override getPropertiesType(): typeof ActProperties {
+        return ActEnablerProp;
+    }
+
+    override onPropertiesChange() {
         if (this.properties.autoStart) {
             var started: boolean = this.start(this.properties.signalId);
         }
     }
 
-    public cleanUp() {
+    override cleanUp() {
         this.properties.loop = false;
     }
 }

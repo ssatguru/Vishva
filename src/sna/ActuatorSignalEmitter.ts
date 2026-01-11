@@ -29,18 +29,16 @@ export class ActuatorSignalEmitter extends ActuatorAbstract {
     sigs: string[] = [];
     nextSig : number = 0;
 
-    public constructor(mesh: Mesh, parms: SignalEmitterProp) {
-        super(mesh, parms != null ? parms : new SignalEmitterProp());
-        if (parms != null) { 
-            this.sigs = parms.signals.split("|");
-        }
+    override init(){
+        let props: SignalEmitterProp = <SignalEmitterProp>this.properties;
+        this.sigs = props.signals.split("|");
     }
 
-    public actuate() {
+    override actuate() {
         let signals: string[] = this.sigs[this.nextSig].split(",");
 
         signals.forEach((signal) => {
-            console.log("SignalEmitter: emitting signal " + signal);
+            if (signal == "") return;
             SNAManager.getSNAManager().emitSignal(signal.trim());
         });
         // Increment the nextSig index to point to the next signal
@@ -54,25 +52,29 @@ export class ActuatorSignalEmitter extends ActuatorAbstract {
      
     }
 
-    public stop() {
+    override stop() {
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 
-    public getName(): string {
+    override getName(): string {
         return "SignalEmitter";
     }
 
-    public onPropertiesChange() {
+    override getPropertiesType(): typeof ActProperties {
+        return SignalEmitterProp;
+    } 
+
+    override onPropertiesChange() {
         let parms: SignalEmitterProp = <SignalEmitterProp>this.properties;
         if (parms != null) { 
             this.sigs = parms.signals.split("|");
         }
     }
 
-    public cleanUp() {
+    override cleanUp() {
     }
 }
 

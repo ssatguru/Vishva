@@ -23,34 +23,30 @@ export class SenClickProp extends SNAproperties {
 export class SensorClick extends SensorAbstract {
     //properties: SNAproperties;
 
-    public constructor(mesh: Mesh, prop: SenClickProp) {
-        if (prop != null) {
-            super(mesh, prop);
-        } else {
-            super(mesh, new SenClickProp());
-        }
-    }
+    override init(){};
 
-
-
-    public getName(): string {
+    override getName(): string {
         return "Click";
     }
 
-    public getProperties(): SNAproperties {
+    override getPropertiesType() : typeof SNAproperties {
+        return SenClickProp;
+    }
+
+    override getProperties(): SNAproperties {
         return this.properties;
     }
 
-    public setProperties(properties: SNAproperties) {
+    override setProperties(properties: SNAproperties) {
         this.properties = properties;
     }
 
 
-    public cleanUp() {
+    override cleanUp() {
 
     }
 
-    public onPropertiesChange() {
+    override onPropertiesChange() {
         if (this.mesh.actionManager == null) {
             this.mesh.actionManager = new ActionManager(this.mesh.getScene());
         }
@@ -67,7 +63,6 @@ export class SensorClick extends SensorAbstract {
         } else if (clickProp.clickType.value == "anyClick") {
             actType = ActionManager.OnPickTrigger;
         }
-
 
 
         let action: Action = new ExecuteCodeAction(actType, (e) => {

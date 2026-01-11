@@ -20,11 +20,9 @@ export class ActMoverParm extends ActProperties {
 export class ActuatorMover extends ActuatorAbstract {
     a: Animatable;
 
-    public constructor(mesh: Mesh, parms: ActMoverParm) {
-        super(mesh, parms != null ? parms : new ActMoverParm());
-    }
+    override init(){}
 
-    public actuate() {
+    override actuate() {
         var props: ActMoverParm = <ActMoverParm>this.properties;
         //current position
         var cPos: Vector3 = this.mesh.position.clone();
@@ -52,27 +50,31 @@ export class ActuatorMover extends ActuatorAbstract {
         this.a = Animation.CreateAndStartAnimation("move", this.mesh, "position", 60, 60 * props.duration, cPos, nPos, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => { return this.onActuateEnd() });
     }
 
-     public override getName(): string {
+    override getName(): string {
         return "Mover";
     }
 
-    public override stop() {
+    override getPropertiesType(): typeof ActProperties {
+        return ActMoverParm;
+    }
+
+    override stop() {
         if (this.a != null) {
             this.a.stop();
             window.setTimeout((() => { return this.onActuateEnd() }), 0);
         }
     }
     
-    public override cleanUp() {
+    override cleanUp() {
     }
 
-    public override onPropertiesChange() {
+    override onPropertiesChange() {
         if (this.properties.autoStart) {
             var started: boolean = this.start(this.properties.signalId);
         }
     }
 
-    public override isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 

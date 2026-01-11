@@ -1,3 +1,5 @@
+### 01/11/2026 0.4.0-alpha.20
+- made some architectural changes to the SNA framework. Simplified its usage
 ### 01/08/2026 0.4.0-alpha.19
 - added animation blend field in character controller UI.
 - updated Animator and AvAnimator actutators to work with animation groups too. Previously it was just animation ranges.

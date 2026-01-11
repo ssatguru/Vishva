@@ -28,12 +28,11 @@ export class AvAnimatorProp extends ActProperties {
  * This way the same signal would enable and start it 
  */
 export class ActuatorAvAnimator extends ActuatorAbstract {
-
+    
     _isAG:boolean = false;
     _skel:Skeleton = null;
 
-    public constructor(mesh: Mesh, parms: AvAnimatorProp) {
-        super(mesh, parms != null ? parms : new AvAnimatorProp());
+    override init(){
 
         this._sp = new Vector3(0, 0, 0);
         this._sr = new Vector3(0, 0, 0);
@@ -168,8 +167,12 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
         return true;
     }
 
-    public getName(): string {
+    override getName(): string {
         return "AvAnimator";
+    }
+
+    override getPropertiesType(): typeof ActProperties {
+        return AvAnimatorProp;
     }
 
     public onPropertiesChange() {

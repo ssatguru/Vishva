@@ -21,30 +21,28 @@ export class SenContactProp extends SNAproperties {
 export class SensorContact extends SensorAbstract {
 
 
-    public constructor(mesh: Mesh, prop: SenContactProp) {
-        if (prop != null) {
-            super(mesh, prop);
-        } else {
-            super(mesh, new SenContactProp());
-        }
-    }
+    override init(){}
 
-    public getName(): string {
+    override getName(): string {
         return "Contact";
     }
 
-    public getProperties(): SNAproperties {
+    override getPropertiesType() : typeof SNAproperties {
+        return SenContactProp;
+    }
+
+    override getProperties(): SNAproperties {
         return this.properties;
     }
 
-    public setProperties(properties: SNAproperties) {
+    override setProperties(properties: SNAproperties) {
         this.properties = <SenContactProp>properties;
     }
 
-    public cleanUp() {
+    override cleanUp() {
     }
 
-    public onPropertiesChange() {
+    override onPropertiesChange() {
         let properties: SenContactProp = <SenContactProp>this.properties;
         var scene: Scene = this.mesh.getScene();
 

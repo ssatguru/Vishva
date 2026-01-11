@@ -50,22 +50,24 @@ export class ActuatorDialog extends ActuatorAbstract {
     _h: string;
     _pos: string = VDiag.leftTop;
 
-    public constructor(mesh: Mesh, parms: ActDialogParm) {
-        super(mesh, parms != null ? parms : new ActDialogParm());
-    }
+    override init(){}
 
-    public actuate() {
+    override actuate() {
         this._dialog.open();
     }
 
-    public getName(): string {
+    override getName(): string {
         return "Dialog";
     }
 
-    public stop() {
+    override getPropertiesType(): typeof ActProperties {
+        return ActDialogParm;
     }
 
-    public cleanUp() {
+    override stop() {
+    }
+
+    override cleanUp() {
         this._div.remove();
         this._div = null;
         this._dialog = null;
@@ -84,7 +86,7 @@ export class ActuatorDialog extends ActuatorAbstract {
 
     }
 
-    public onPropertiesChange() {
+    override onPropertiesChange() {
 
         if (this._dialog != null){
             this._dialog.dispose();
@@ -94,10 +96,19 @@ export class ActuatorDialog extends ActuatorAbstract {
         var props: ActDialogParm = <ActDialogParm>this.properties;
 
         this.setSize();
-        
+ 
 
         this._div = GuiUtils.createDiv();
 
+        //TODO
+        //position is new.
+        //we need to take care of old serialized worlds which don't have position
+        //should be removed when old worlds have been upgraded
+        if (!props.position){
+            props.position = new SelectType();
+            props.position.values = [VDiag.leftTop, VDiag.leftTop1, VDiag.leftTop2, VDiag.leftCenter, VDiag.leftBottom, VDiag.centerTop, VDiag.center, VDiag.centerBottom, VDiag.rightTop, VDiag.rightCenter, VDiag.rightBottom];
+            props.position.value = VDiag.center;
+        }
         this._dialog = new VDiag(this._div, props.title, props.position.value, this._w, this._h, "350px", props.modal,props.resizable,props.draggable);
 
         this._dialog.setType("g");
@@ -120,6 +131,13 @@ export class ActuatorDialog extends ActuatorAbstract {
 
         //close dialog without doing the close animation
         this._dialog.close(false);
+
+        if (props.openEffect) {
+            this._dialog.setEffects(props.openEffect.value,
+                props.openDuration.toString() + "s",
+                props.closeEffect.value,
+                props.closeDuration.toString() + "s");
+        }
     
         if (props.title.trim() == "") {
             this._dialog.hideTitleBar();
@@ -166,7 +184,7 @@ export class ActuatorDialog extends ActuatorAbstract {
 
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 

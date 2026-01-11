@@ -28,11 +28,9 @@ export class ActuatorSound extends ActuatorAbstract {
 
     sound: Sound;
 
-    public constructor(mesh: Mesh, prop: ActSoundProp) {
-        super(mesh, prop != null ? prop : new ActSoundProp());
-    }
+    override init(){}
 
-    public actuate() {
+    override actuate() {
         if (Engine.audioEngine.audioContext.state === "suspended") {
             window.setTimeout((() => {
                 return this.onActuateEnd()
@@ -56,7 +54,7 @@ export class ActuatorSound extends ActuatorAbstract {
     happens aynchronously
     it is not ready to play immediately
     */
-    public onPropertiesChange() {
+    override onPropertiesChange() {
         var _props: ActSoundProp = <ActSoundProp>this.properties;
         if (_props.soundFile.value == null) return;
 
@@ -104,11 +102,15 @@ export class ActuatorSound extends ActuatorAbstract {
         this.sound.setPosition(this.mesh.position.clone());
     }
 
-    public getName(): string {
+    override getName(): string {
         return "Sound";
     }
 
-    public stop() {
+    override getPropertiesType(): typeof ActSoundProp {
+        return ActSoundProp;
+    }
+
+    override stop() {
         if (this.sound != null) {
             if (this.sound.isPlaying) {
                 this.sound.stop();
@@ -117,12 +119,12 @@ export class ActuatorSound extends ActuatorAbstract {
         }
     }
 
-    public cleanUp() {
+    override cleanUp() {
         if (this.sound != null)
             this.sound.dispose();
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return this.ready;
     }
 }

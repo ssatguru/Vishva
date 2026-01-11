@@ -16,8 +16,7 @@ export class ActuatorCloaker extends ActuatorAbstract {
     s: number;
     e: number;
 
-    public constructor(mesh: Mesh, parms: ActCloakerProp) {
-        super(mesh, parms != null ? parms : new ActCloakerProp());
+    override init(){
         this.s = 1;
         this.e = 0;
     }
@@ -54,6 +53,10 @@ export class ActuatorCloaker extends ActuatorAbstract {
 
     public getName(): string {
         return "Cloaker";
+    }
+
+    override getPropertiesType(): typeof ActProperties {
+        return ActCloakerProp;
     }
 
     public onPropertiesChange() {

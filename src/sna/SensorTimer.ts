@@ -1,9 +1,6 @@
 import { SNAproperties } from "./SNA";
 import { SensorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import {Mesh} from "babylonjs";
-
-
 
 export class SenTimerProp extends SNAproperties {
     interval: number = 1000;
@@ -14,27 +11,25 @@ export class SensorTimer extends SensorAbstract {
 
     timerId: number;
 
-    public constructor(mesh: Mesh, prop: SenTimerProp) {
-        if (prop != null) {
-            super(mesh, prop);
-        } else {
-            super(mesh, new SenTimerProp());
-        }
-    }
+    override init(){}
 
-    public getName(): string {
+    override getName(): string {
         return "Timer";
     }
 
-    public getProperties(): SNAproperties {
+    override getPropertiesType() : typeof SNAproperties {
+        return SenTimerProp;
+    }
+
+    override getProperties(): SNAproperties {
         return this.properties;
     }
 
-    public setProperties(properties: SNAproperties) {
+    override setProperties(properties: SNAproperties) {
         this.properties = <SenTimerProp>properties;
     }
 
-    public cleanUp() {
+    override cleanUp() {
         //window.clearInterval(this.timerId);
         window.clearTimeout(this.timerId);
     }
@@ -46,7 +41,7 @@ export class SensorTimer extends SensorAbstract {
         }
         this.timerId = window.setInterval(() => { this.emitSignal(); }, properties.interval);
     }
-    public onPropertiesChange() {
+    override onPropertiesChange() {
         let properties: SenTimerProp = <SenTimerProp>this.properties;
         if (this.timerId) {
             window.clearTimeout(this.timerId);

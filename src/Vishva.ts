@@ -106,7 +106,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.19";
+    static version: string = "0.4.0-alpha.20";
 
     public static worldName: string;
 
@@ -394,8 +394,6 @@ export class Vishva {
 
         //check if we have a vishva file. Might just be a babylon file
         if (!(this.vishvaSerialized === undefined)) {
-        
-            console.log(this.vishvaSerialized);
             console.log("world babylon version : " + this.vishvaSerialized.bVer);
             console.log("world vishva version : " + this.vishvaSerialized.vVer);
 

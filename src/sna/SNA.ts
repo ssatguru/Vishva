@@ -42,7 +42,7 @@ export class SNAManager {
     actuatorMap: any = {};
     sensorMap: any = {};
     snaDisabledList: Array<TransformNode> = new Array();
-    meshWithSNAlist : Array<TransformNode> = new Array();
+    meshesWithSNA : Array<TransformNode> = new Array();
     sig2saMap: Object = <Object>new Object();
 
     static sm: SNAManager;
@@ -219,7 +219,7 @@ export class SNAManager {
      * 
      */
     public pauseSNAs() {
-        for (let mesh of this.meshWithSNAlist){
+        for (let mesh of this.meshesWithSNA){
             this.disableSnAs(mesh);
         }
     }
@@ -229,7 +229,7 @@ export class SNAManager {
      * 
      */
     public resumeSNAs() {
-        for (let mesh of this.meshWithSNAlist){
+        for (let mesh of this.meshesWithSNA){
             this.enableSnAs(mesh);
         }
     }
@@ -501,7 +501,9 @@ export interface Actuator extends SensorActuator {
 }
 
 export abstract class SensorAbstract implements Sensor {
+    public abstract init():void;
     public abstract getName(): string;
+    public abstract getPropertiesType():typeof SNAproperties;
     public abstract onPropertiesChange(): any;
     public abstract cleanUp(): any;
 
@@ -518,27 +520,35 @@ export abstract class SensorAbstract implements Sensor {
     actions: Action[] = new Array();
 
     public constructor(mesh: Mesh, properties: SNAproperties) {
-        this.properties = properties;
         this.mesh = mesh;
-        this.handlePropertiesChange();
+        if (properties ==  null){ 
+            const propConstructor:typeof SNAproperties = this.getPropertiesType();
+            this.properties = new propConstructor();
+        }else{
+            this.properties = properties;
+        }
+
         var sensors: Array<Sensor> = <Array<Sensor>>this.mesh["sensors"];
         if (sensors == null) {
             sensors = new Array<Sensor>();
             mesh["sensors"] = sensors;
         }
         sensors.push(this);
-        SNAManager.getSNAManager().meshWithSNAlist.push(this.mesh);
+        SNAManager.getSNAManager().meshesWithSNA.push(this.mesh);
         // this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
+
+        //We should call any other sub class method, especially of they might change the property of the object being create, after exiting constructor
+        //This will allow constructor finish contructing the object.
+        //We will do this using zero time interval timeout.
+        setTimeout(()=>{this.init();this.handlePropertiesChange()},0);
     }
 
     public start(signal: string): boolean {
         if (signal == this.signalDisable) {
-            console.log("disable signaled");
             this.disabled = true;
             this.unRegisterAll();
         }
         if (signal == this.signalEnable) {
-            console.log("enable signaled");
             this.disabled = false;
             this.reRegisterAll();
         }
@@ -678,6 +688,8 @@ export abstract class ActuatorAbstract implements Actuator {
     public abstract getName(): any;
     public abstract onPropertiesChange(): any;
     public abstract cleanUp(): any;
+    public abstract getPropertiesType(): typeof ActProperties;
+    public abstract init():void;
     /*
      * called when actuator recieves a disable signal or is being disposed
      */
@@ -698,18 +710,34 @@ export abstract class ActuatorAbstract implements Actuator {
     disabled: boolean = false;
     stopped: boolean = false;
 
+
+    
+
     public constructor(mesh: Mesh, prop: ActProperties) {
-        this.properties = prop;
         this.mesh = mesh;
-        this.handlePropertiesChange();
+        if (prop ==  null){ 
+            const propConstructor:typeof ActProperties = this.getPropertiesType();
+            this.properties = new propConstructor();
+        }else{
+            this.properties = prop;
+        }
+        
         var actuators: Array<Actuator> = <Array<Actuator>>this.mesh["actuators"];
         if (actuators == null) {
             actuators = new Array<Actuator>();
             this.mesh["actuators"] = actuators;
         }
         actuators.push(this);
-        SNAManager.getSNAManager().meshWithSNAlist.push(this.mesh);
+        SNAManager.getSNAManager().meshesWithSNA.push(this.mesh);
         // this.initialMatrix.copyFrom(this.mesh.getWorldMatrix());
+
+        //this.init();
+        //this.handlePropertiesChange();
+        
+        //We should call any other sub class method, especially of they might change the property of the object being create, after exiting constructor
+        //This will allow constructor finish contructing the object.
+        //We will do this using zero time interval timeout.
+        setTimeout(()=>{this.init();this.handlePropertiesChange()},0);
     }
 
     public start(signal: string): boolean {
@@ -779,15 +807,8 @@ export abstract class ActuatorAbstract implements Actuator {
     }
 
     public handlePropertiesChange() {
+
         // check if signalId changed, if yes then resubscribe
-        //            if(this.signalId!=null&&this.signalId!==this.properties.signalId) {
-        //                SNAManager.getSNAManager().unSubscribe(this,this.signalId);
-        //                this.signalId=this.properties.signalId;
-        //                SNAManager.getSNAManager().subscribe(this,this.signalId);
-        //            } else if(this.signalId==null) {
-        //                this.signalId=this.properties.signalId;
-        //                SNAManager.getSNAManager().subscribe(this,this.signalId);
-        //            }
         if (this.properties.signalId != null && this.properties.signalId != "") {
             if (this.signalId == null) {
                 this.signalId = this.properties.signalId;
@@ -801,7 +822,7 @@ export abstract class ActuatorAbstract implements Actuator {
 
         /**
          * enabling/disabling signal
-         * two ways to ahndle this.
+         * two ways to handle this.
          * if user provides enabling or disabling signal then
          * a) disbable the actuator with the assumption the user will enable it by sending an enable signal
          * b) leave it enabled and let the user send disable signal if the user wants to disable it
@@ -874,13 +895,13 @@ export abstract class ActuatorAbstract implements Actuator {
 
 
 
-export abstract class SNAproperties {
+export class SNAproperties {
     signalId: string = "0";
     signalEnable: string = "";
     signalDisable: string = "";
 }
 
-export abstract class ActProperties extends SNAproperties {
+export class ActProperties extends SNAproperties {
     signalStart: string = "";
     signalEnd: string = "";
     autoStart: boolean = false;

@@ -39,11 +39,9 @@ export class ActuatorTextBar extends ActuatorAbstract {
     tb: TextBlock;
     option: { width: 0, height: 0 };
 
-    public constructor(mesh: Mesh, parms: ActTextBar) {
-        super(mesh, parms != null ? parms : new ActTextBar());
-    }
+    override init(){}
 
-    public actuate() {
+    override actuate() {
         if (this.properties.toggle) {
             this.plane.isVisible = !this.plane.isVisible;
         } else {
@@ -52,20 +50,24 @@ export class ActuatorTextBar extends ActuatorAbstract {
         this.onActuateEnd();
     }
 
-    public getName(): string {
+    override getName(): string {
         return "TextBar";
     }
 
-    public stop() {
+    override getPropertiesType() : typeof ActTextBar{
+        return ActTextBar;
+    }
+
+    override stop() {
         console.log("stopped ");
     }
 
-    public cleanUp() {
+    override cleanUp() {
         this.plane.dispose();
     }
 
 
-    public onPropertiesChange() {
+    override onPropertiesChange() {
         var props: ActTextBar = <ActTextBar>this.properties;
 
         if (this.plane != null) this.plane.dispose();
@@ -110,7 +112,7 @@ export class ActuatorTextBar extends ActuatorAbstract {
 
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 

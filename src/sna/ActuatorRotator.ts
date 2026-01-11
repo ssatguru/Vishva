@@ -28,11 +28,9 @@ export class ActRotatorParm extends ActProperties {
 export class ActuatorRotator extends ActuatorAbstract {
     a: Animatable;
 
-    public constructor(mesh: Mesh, parms: ActRotatorParm) {
-        super(mesh, parms != null ? parms : new ActRotatorParm());
-    }
+    override init(){}
 
-    public actuate() {
+    override actuate() {
         var properties: ActRotatorParm = <ActRotatorParm>this.properties;
         var cPos: Quaternion = this.mesh.rotationQuaternion.clone();
         var nPos: Quaternion;
@@ -55,21 +53,25 @@ export class ActuatorRotator extends ActuatorAbstract {
         });
     }
 
-    public getName(): string {
+    override getName(): string {
         return "Rotator";
     }
 
-    public stop() {
+    override getPropertiesType(): typeof ActProperties {
+        return ActRotatorParm;
+    }
+
+    override stop() {
         if (this.a != null) {
             this.a.stop();
             window.setTimeout((() => { return this.onActuateEnd() }), 0);
         }
     }
 
-    public cleanUp() {
+    override cleanUp() {
     }
 
-    public onPropertiesChange() {
+    override onPropertiesChange() {
         if (this.properties.autoStart) {
             var started: boolean = this.start(this.properties.signalId);
             // sometime a start maynot be possible example during edit
@@ -79,7 +81,7 @@ export class ActuatorRotator extends ActuatorAbstract {
         }
     }
 
-    public isReady(): boolean {
+    override isReady(): boolean {
         return true;
     }
 }

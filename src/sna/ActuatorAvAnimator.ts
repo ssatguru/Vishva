@@ -15,17 +15,18 @@ export class AvAnimatorProp extends ActProperties {
     focusPosition: Vector3 = new Vector3(0, 0, 0);
     animation: SelectType = new SelectType();
     rate: number = 1;
+    //restore AV's transform back to what it was before Av was taken over by this actuator
+    restoreOnDisable:boolean = true;
 }
 
 /**
  * this actuator will play animation on the Avatar.
  * On receiving a signal this will "capture" the AV
- * To "release" the av send a disable signal.
- * One will have to send an enable signal eventually to make it
- * effective one more time.
- * One way to handle this would be to set the signal id and the signalEnable
- * to the same signal.
- * This way the same signal would enable and start it 
+ * To "release" the av send a "disable" signal.
+ * And then ofcourse to enable it, send an enable signal.
+ * One way to handle this would be to set the "signalId" and 
+ * the "signalEnable" to the same signal.
+ * This way the same signal would both enable and start it.
  */
 export class ActuatorAvAnimator extends ActuatorAbstract {
     
@@ -150,9 +151,18 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
         }else{
             if (this.anim != null) this.anim.stop();
         }
-        this.avMesh.parent = null;
-        this.avMesh.position.copyFrom(this._sp);
-        this.avMesh.rotation.copyFrom(this._sr);
+
+        if (prop.restoreOnDisable){
+            this.avMesh.parent = null;
+            this.avMesh.position.copyFrom(this._sp);
+            this.avMesh.rotation.copyFrom(this._sr);
+        }else{
+            let ap = this.avMesh.getAbsolutePosition().clone();
+            let ar = this.avMesh.absoluteRotationQuaternion.toEulerAngles().clone();
+            this.avMesh.parent = null;
+            this.avMesh.setAbsolutePosition(ap);
+            this.avMesh.rotation = ar;
+        }
         if (prop.focusOnAV) {
             let camera: ArcRotateCamera = SNAManager.getSNAManager().getCamera();
             camera.setPosition(this._scp.clone());

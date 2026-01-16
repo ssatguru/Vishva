@@ -106,7 +106,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.20";
+    static version: string = "0.4.0-alpha.21";
 
     public static worldName: string;
 
@@ -730,121 +730,124 @@ export class Vishva {
     uniCamOn = false;
 
     private process() {
+        try{
+            //point the hemisphere camera light to whatever the camera is pointing too
+            //this would light up whatever the camera is pointing too
+            //ignore for now
+            //this.scene.activeCamera.position.subtractToRef((<TargetCamera>this.scene.activeCamera).target, this.sun.direction);
 
-        //point the hemisphere camera light to whatever the camera is pointing too
-        //this would light up whatever the camera is pointing too
-        //ignore for now
-        //this.scene.activeCamera.position.subtractToRef((<TargetCamera>this.scene.activeCamera).target, this.sun.direction);
+            // this.sunDR.position.x = this.avatar.position.x + 100;
+            // this.sunDR.position.y = this.avatar.position.y + 100;
+            // this.sunDR.position.z = this.avatar.position.z + 0;
 
-        // this.sunDR.position.x = this.avatar.position.x + 100;
-        // this.sunDR.position.y = this.avatar.position.y + 100;
-        // this.sunDR.position.z = this.avatar.position.z + 0;
+            if (this._clickMove) {
+                let d = Vector3.Distance(this._clickMoveTarget, this.avatar.position);
 
-        if (this._clickMove) {
-            let d = Vector3.Distance(this._clickMoveTarget, this.avatar.position);
-
-            //every cycle the distance should be decreasing
-            //the previous distance should be less than the current distance
-            //if we have reached the destination or if the distance has started increasing instead of decreasing or remains the same then then stop
-            //if same means the avatar is stuck and cannot move forward.
-            if (d < 0.5 || d >= this._prevClickMoveDist) {
-                this.cc.walk(false);
-                this._clickMove = false;
-                this._marker.isVisible = false;
-                // this._markerLine.isVisible = false;
-                this.cc.setMode(0);
-                this._prevClickMoveDist = 0;
-            } else {
-                this._prevClickMoveDist = d;
-            }
-        }
-
-        if (this.cameraAnimating) return;
-
-        //sometime (example - when gui dialogs is on and user is typing into it) we donot want to interpret keys
-        //except ofcourse the esc key
-        if (this.keysDisabled && !this.key.esc) {
-            this.resetKeys();
-            return;
-        }
-
-        if (this.isMeshSelected) {
-            if (this.key.focus) {
-                //this.key.focus = false;
-                this.setFocusOnMesh();
-            }
-            if (this.key.esc) {
-                this.key.esc = false;
-                this.animateMesh(this.meshSelected, 1.1);
-                this.removeEditControl();
-                if (!this.isFocusOnAv) {
-                    this.setFocusOnNothing();
-                    if (this.uniCamController == null) {
-                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
-                    }
-                    this.uniCamController.start();
-                    this.uniCamOn = true;
+                //every cycle the distance should be decreasing
+                //the previous distance should be less than the current distance
+                //if we have reached the destination or if the distance has started increasing instead of decreasing or remains the same then then stop
+                //if same means the avatar is stuck and cannot move forward.
+                if (d < 0.5 || d >= this._prevClickMoveDist) {
+                    this.cc.walk(false);
+                    this._clickMove = false;
+                    this._marker.isVisible = false;
+                    // this._markerLine.isVisible = false;
+                    this.cc.setMode(0);
+                    this._prevClickMoveDist = 0;
+                } else {
+                    this._prevClickMoveDist = d;
                 }
             }
-            if (this.key.trans) {
-                //this.key.trans = false;
-                this.setTransOn();
-            }
-            if (this.key.rot) {
-                //this.key.rot = false;
-                this.setRotOn();
-            }
-            if (this.key.scale) {
-                //this.key.scale = false;
-                this.setScaleOn();
-            }
-            if (this.key.del) {
-                this.delete_mesh();
-            }
-            if (this.key.undo) {
-                this.undo();
-            }
-            if (this.key.redo) {
-                this.redo();
+
+            if (this.cameraAnimating) return;
+
+            //sometime (example - when gui dialogs is on and user is typing into it) we donot want to interpret keys
+            //except ofcourse the esc key
+            if (this.keysDisabled && !this.key.esc) {
+                this.resetKeys();
+                return;
             }
 
-        }
-
-        if (!this._avDisabled) {
-            if (this.isFocusOnAv) {
+            if (this.isMeshSelected) {
+                if (this.key.focus) {
+                    //this.key.focus = false;
+                    this.setFocusOnMesh();
+                }
                 if (this.key.esc) {
-                    this.animateMesh(this.avatar, 1.1);
-                    this.setFocusOnNothing();
-                    if (this.uniCamController == null) {
-                        this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
+                    this.key.esc = false;
+                    this.animateMesh(this.meshSelected, 1.1);
+                    this.removeEditControl();
+                    if (!this.isFocusOnAv) {
+                        this.setFocusOnNothing();
+                        if (this.uniCamController == null) {
+                            this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
+                        }
+                        this.uniCamController.start();
+                        this.uniCamOn = true;
                     }
-                    this.uniCamController.start();
-                    this.uniCamOn = true;
+                }
+                if (this.key.trans) {
+                    //this.key.trans = false;
+                    this.setTransOn();
+                }
+                if (this.key.rot) {
+                    //this.key.rot = false;
+                    this.setRotOn();
+                }
+                if (this.key.scale) {
+                    //this.key.scale = false;
+                    this.setScaleOn();
+                }
+                if (this.key.del) {
+                    this.delete_mesh();
+                }
+                if (this.key.undo) {
+                    this.undo();
+                }
+                if (this.key.redo) {
+                    this.redo();
                 }
 
-            } //else if (this.key.up || this.key.down || this.key.esc) {
-            else if (this.key.esc) {
-                if (this.editControl == null) {
-                    this.switchFocusToAV();
-                } else if (!this.editControl.isEditing()) {
-                    this.switchFocusToAV();
+            }
+
+            if (!this._avDisabled) {
+                if (this.isFocusOnAv) {
+                    if (this.key.esc) {
+                        this.animateMesh(this.avatar, 1.1);
+                        this.setFocusOnNothing();
+                        if (this.uniCamController == null) {
+                            this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
+                        }
+                        this.uniCamController.start();
+                        this.uniCamOn = true;
+                    }
+
+                } //else if (this.key.up || this.key.down || this.key.esc) {
+                else if (this.key.esc) {
+                    if (this.editControl == null) {
+                        this.switchFocusToAV();
+                    } else if (!this.editControl.isEditing()) {
+                        this.switchFocusToAV();
+                    }
                 }
             }
-        }
 
-        if (this.uniCamOn) {
-            if (this.key.shift) {
-                this.uniCamController.speedUp();
-            } else {
-                this.uniCamController.slowDown();
+            if (this.uniCamOn) {
+                if (this.key.shift) {
+                    this.uniCamController.speedUp();
+                } else {
+                    this.uniCamController.slowDown();
+                }
             }
-        }
 
-        if (this.key.esc) {
-            this.multiUnSelectAll();
-        }
+            if (this.key.esc) {
+                this.multiUnSelectAll();
+            }
 
-        this.resetKeys();
+            this.resetKeys();
+        }catch(e){
+            console.log(e);
+        }
     }
     private resetKeys() {
         this.key.focus = false;

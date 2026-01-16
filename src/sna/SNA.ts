@@ -366,7 +366,9 @@ export class SNAManager {
                 let o: Object = obj[pName];
                 let ns: string[] = Object.keys(o);
                 let l: number = ns.length;
-                if (ns.indexOf("x") >= 0) {
+                if ((ns.indexOf("_x") >= 0)&& (ns.indexOf("_y") >= 0) && (ns.indexOf("_z") >= 0) && (ns.indexOf("_isDirty") >= 0)) {
+                        if (l == 4) obj[pName] = new Vector3(o["_x"], o["_y"], o["_z"]);
+                }else if (ns.indexOf("x") >= 0) {
                     if (ns.indexOf("y") >= 0) {
                         if (ns.indexOf("z") >= 0) {
                             if (ns.indexOf("w") >= 0) {

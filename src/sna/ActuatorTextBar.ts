@@ -13,7 +13,7 @@ export class ActTextBar extends ActProperties {
     color: string = "black";
     background: string = "green";
     outlineColor: string = "blue";
-    outlineWidth: number = 10;
+    outlineWidth: number = 5;
 
     floatHeight: number = 1;
     height: number = 0.5;
@@ -70,9 +70,13 @@ export class ActuatorTextBar extends ActuatorAbstract {
     override onPropertiesChange() {
         var props: ActTextBar = <ActTextBar>this.properties;
 
-        if (this.plane != null) this.plane.dispose();
+        if (this.plane != null){ 
+            this.plane.material.dispose();
+            this.plane.dispose();
+        }
 
-        this.plane = MeshBuilder.CreatePlane("txtPlane", { width: props.width, height: props.height });
+        this.plane = MeshBuilder.CreatePlane("ActuatorTextBar", { width: props.width, height: props.height });
+        this.plane.doNotSerialize = true;
         this.plane.parent = this.mesh;
         this.plane.position.y = props.floatHeight;
         this.plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
@@ -80,10 +84,6 @@ export class ActuatorTextBar extends ActuatorAbstract {
         //setting renderingGroupId to 1 (default 0) to avoid the AdvanceDynamictexture issue explained here
         //https://forum.babylonjs.com/t/skybox-visibility-effecting-advanceddynamictexture-transparency/58087
         this.plane.renderingGroupId = 1;
-
-        //GUI doesnot respect right handedness of the scene. So we need to flip the plane scaling if the scene is right handed.
-        if (Vishva.vishva.scene.useRightHandedSystem) 
-            this.plane.scaling.x = -this.plane.scaling.x;
 
         if (this.td != null) this.td.dispose();
         let td = AdvancedDynamicTexture.CreateForMesh(this.plane);

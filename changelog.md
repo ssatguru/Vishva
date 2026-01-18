@@ -1,4 +1,5 @@
 ### 01/11/2026 0.4.0-alpha.21
+- fixed Acuator TextBar serialization issue wherein disposed material was being serialized
 - updated AvAnimator. added "restoreOnDisable" proeprty. fixed vector3 deserialization
 ### 01/11/2026 0.4.0-alpha.20
 - made some architectural changes to the SNA framework. Simplified its usage

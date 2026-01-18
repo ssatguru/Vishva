@@ -2355,8 +2355,8 @@ export class Vishva {
     }
 
     public selectMesh(meshId: string) {
-        let mesh: TransformNode = this.scene.getTransformNodeByUniqueID(Number(meshId));
-        if (mesh == null) mesh = this.scene.getMeshByUniqueID(Number(meshId));
+        let mesh: TransformNode = this.scene.getTransformNodeById(meshId);
+        if (mesh == null) mesh = this.scene.getMeshByUniqueId(Number(meshId));
         if (mesh == null) {
             return;
         }
@@ -3638,6 +3638,10 @@ export class Vishva {
         let sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
         //this.changeSoundUrl(sceneObj);
         this.removeSounds(sceneObj);
+        //remove all materials created for ActuatorTextBar
+        //these are always recreated when scene is loaded.
+        //they have dynatic textures stored as base64 which makes the file large
+        this._removeActuatorTextBarMat(sceneObj);
 
         //sceneObj["VishvaSNA"] = snaObj;
         sceneObj["VishvaSerialized"] = vishvaSerialzed;
@@ -3788,6 +3792,20 @@ export class Vishva {
         var sounds = sceneObj["sounds"];
         if (sounds != null) {
             sceneObj["sounds"] = [];
+        }
+
+    }
+
+    private _removeActuatorTextBarMat(sceneObj){
+        let materials = sceneObj["materials"];
+        if (materials != null) {
+            var l = materials.length;
+            for (let i = l - 1; i >= 0; i--) {
+                if (materials[i]["id"].startsWith("AdvancedDynamicTextureMaterial for ActuatorTextBar")) {
+                    console.log("removing ActuatorTextBar material ", materials[i]["id"]);
+                    materials.splice(i, 1);
+                }
+            }
         }
 
     }

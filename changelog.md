@@ -1,6 +1,10 @@
+### 01/30/2026 0.4.0-alpha.22
+- added modal capability to dialog box
+- Character Controller can now be added to any mesh. Previosuly it was just menat for the Avatar.
+- upgraded to the current version of babylonjs 8.47.0
 ### 01/11/2026 0.4.0-alpha.21
 - fixed Acuator TextBar serialization issue wherein disposed material was being serialized
-- updated AvAnimator. added "restoreOnDisable" proeprty. fixed vector3 deserialization
+- updated AvAnimator. added "restoreOnDisable" property. fixed vector3 deserialization
 ### 01/11/2026 0.4.0-alpha.20
 - made some architectural changes to the SNA framework. Simplified its usage
 ### 01/08/2026 0.4.0-alpha.19

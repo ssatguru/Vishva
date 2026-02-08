@@ -95,10 +95,10 @@ export class PropsPanelUI {
         this._activeDtl.open = true;
 
         this._propsVDiag = new VDiag("propsDiag", "mesh properties", VDiag.rightTop, 0, "auto", UIConst._diagWidthS);
-        this._propsVDiag.onOpen(() => {
+        this._propsVDiag.onShow(() => {
             if (this._activeDtl != null) this.refreshPanel(this._activeDtl);
         });
-        this._propsVDiag.onClose(() => {
+        this._propsVDiag.onHide(() => {
             if (this._vishvaGUI.resizing) return;
             if ((this._generalUI != null) && (this._generalUI._snaUI != null) && this._generalUI._snaUI.isOpen()) {
                 this._generalUI._snaUI.close();
@@ -149,15 +149,15 @@ export class PropsPanelUI {
 
         }
 
-        this._propsVDiag.open();
+        this._propsVDiag.show();
     }
 
     public isOpen(): boolean {
-        return this._propsVDiag.isOpen();
+        return this._propsVDiag.isShown();
     }
 
     public close() {
-        this._propsVDiag.close();
+        this._propsVDiag.hide();
     }
 
     /*
@@ -166,7 +166,7 @@ export class PropsPanelUI {
      */
     public refreshPropsDiag() {
         if ((this._propsVDiag === undefined) || (this._propsVDiag === null)) return;
-        if (this._propsVDiag.isOpen()) {
+        if (this._propsVDiag.isShown()) {
             if (this._activeDtl != null) this.refreshPanel(this._activeDtl);
         }
     }

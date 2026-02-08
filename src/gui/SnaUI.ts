@@ -7,7 +7,7 @@ import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
 import { VTreeDialog } from "./components/VTreeDialog";
 import { VInputVector3 } from "./components/VInputVector3";
 import { VButton } from "./components/VButton";
-import { snaElement } from "./snaML";
+import { snaElement } from "./SnaML";
 import { UIConst } from "./UIConst";
 import { VDiag } from "./components/VDiag";
 import { GuiUtils } from "./GuiUtils";
@@ -68,11 +68,11 @@ export class SnaUI {
 
 
     public isOpen(): boolean {
-        return this.sNaDialog.isOpen();
+        return this.sNaDialog.isShown();
     }
 
     public close() {
-        this.sNaDialog.close();
+        this.sNaDialog.hide();
     }
 
     private openTab(btn: HTMLButtonElement, ele: HTMLElement) {
@@ -184,10 +184,10 @@ export class SnaUI {
 
         if (this.sNaDialog == null) {
             //this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
-            this.sNaDialog = new VDiag(snaElement, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
+            this.sNaDialog = new VDiag(snaElement, "Sensors and Actuators", VDiag.center, "", "", "19em", true);
             this.sNaDialog.setBackGround(Vishva.theme.lightColors.b);
             this.sNaDialog.setForeGround(Vishva.theme.lightColors.f);
-        } else this.sNaDialog.open();
+        } else this.sNaDialog.show();
 
     }
 
@@ -246,10 +246,10 @@ export class SnaUI {
     editSensDiag: VDiag;
     private createEditSensDiag() {
         this.editSensDiag = new VDiag(document.getElementById("editSensDiag"), "Edit Sensor", VDiag.center, "auto", "auto", "auto", true);
-        this.editSensDiag.onOpen = () => {
+        this.editSensDiag.onShow = () => {
             this._vishva.disableKeys();
         }
-        this.editSensDiag.onClose = () => {
+        this.editSensDiag.onHide = () => {
             this._vishva.enableKeys();
         }
         let saveButton = this.editSensDiag.addButton("save");
@@ -259,7 +259,7 @@ export class SnaUI {
             this.formRead(sen.getProperties());
             sen.handlePropertiesChange()
             this.updateSensActTbl(this._vishva.getSensors(), this.sensTbl);
-            this.editSensDiag.close();
+            this.editSensDiag.hide();
             return true;
         }
 
@@ -277,7 +277,7 @@ export class SnaUI {
 
         if (this.editSensDiag == null) {
             this.createEditSensDiag();
-        } else this.editSensDiag.open();
+        } else this.editSensDiag.show();
 
         //attach reference to the sensor so that
         //the save button click handler can retrieve it
@@ -294,11 +294,11 @@ export class SnaUI {
 
     editActDiag: VDiag;
     private createEditActDiag() {
-        this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.centerTop, "auto", "auto");
-        this.editActDiag.onOpen = () => {
+        this.editActDiag = new VDiag(document.getElementById("editActDiag"), "Edit Actuator", VDiag.centerTop, "auto", "auto","auto",true);
+        this.editActDiag.onShow = () => {
             this._vishva.disableKeys();
         }
-        this.editActDiag.onClose = () => {
+        this.editActDiag.onHide = () => {
             this._vishva.enableKeys();
         }
         let saveButton = this.editActDiag.addButton("save");
@@ -307,7 +307,7 @@ export class SnaUI {
             this.formRead(act.getProperties());
             act.handlePropertiesChange();
             this.updateSensActTbl(this._vishva.getActuators(), this.actTbl);
-            this.editActDiag.close();
+            this.editActDiag.hide();
             return true;
         }
 
@@ -325,7 +325,7 @@ export class SnaUI {
 
         if (this.editActDiag == null) {
             this.createEditActDiag();
-        } else this.editActDiag.open();
+        } else this.editActDiag.show();
 
         //attach reference to the actutor so that
         //the save button click handler can retrieve it
@@ -388,8 +388,6 @@ export class SnaUI {
                 } else if (snaP[key] instanceof Range) {
                     let inp: HTMLInputElement = document.createElement("input");
                     this.mapKey2Ele[key] = inp;
-                    // inp.className = "ui-widget-content ui-corner-all";
-                    inp.value = <string>snaP[key];
                     let r: Range = <Range>snaP[key];
                     inp.type = "range";
                     inp.max = (<number>new Number(r.max)).toString();
@@ -470,6 +468,7 @@ export class SnaUI {
         fib.onclick = (e) => {
             if (this._assetTDiag == null) {
                 this._assetTDiag = new VTreeDialog(this._vishva, fit.title, VDiag.centerBottom, Vishva.userAssets, fit.filter, fit.openAll);
+                this._assetTDiag.makeModal();
             }
             this._assetTDiag.addTreeListener((f, p, l) => {
                 if (l) {

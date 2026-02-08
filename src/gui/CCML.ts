@@ -76,6 +76,19 @@ const settingFormHtml: string = `
         <label>step sound</label>
         <button name="stepSnd" type="button" >set sound</button>
 
+        <label>ellipsoid</label>
+        <div>
+                <input name="ex" type="text" />
+                <input name="ey" type="text" /> 
+                <input name="ez" type="text" />
+        </div>
+        <label>ellipsoid offset</label>
+        <div>
+                <input name="eox" type="text" />
+                <input name="eoy" type="text" /> 
+                <input name="eoz" type="text" />
+        </div>
+
         <label>show elipsoid</label>
         <input name="elipsoid" type="checkbox"/>
 </form>

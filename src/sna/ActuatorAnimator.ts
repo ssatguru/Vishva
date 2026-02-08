@@ -64,7 +64,10 @@ export class ActuatorAnimator extends ActuatorAbstract {
         let prop: AnimatorProp = <AnimatorProp>this.properties;
         if (this._skel) {
             if(this._isAG){
-                Vishva.vishva.scene.getAnimationGroupByName(prop.animation.value).start(prop.loop, prop.rate).onAnimationGroupEndObservable.addOnce(() => { return this.onActuateEnd() });
+                Vishva.vishva.scene
+                    .getAnimationGroupByName(prop.animation.value)
+                    .start(false, prop.rate)
+                    .onAnimationGroupEndObservable.addOnce(() => {return this.onActuateEnd() });
             }else{
                 this.mesh.skeleton.beginAnimation(prop.animation.value, false, prop.rate, () => { return this.onActuateEnd() });
             }

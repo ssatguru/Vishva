@@ -26,7 +26,7 @@ export class SoundUI {
         this._snd = snd;
 
         if (SoundUI.instance != null) {
-            SoundUI.instance.toggle();
+            // SoundUI.instance.toggle();
             return;
 
         }
@@ -43,17 +43,17 @@ export class SoundUI {
         sndElement.appendChild(dboCancel);
 
         dboSave.onclick = (e) => {
-            if (this._saveSnd()) this._sndDiag.close();
+            if (this._saveSnd()) this._sndDiag.hide();
             return true;
         };
 
         dboCancel.onclick = (e) => {
-            this._sndDiag.close();
+            this._sndDiag.hide();
             return true;
         }
 
-        this._sndDiag = new VDiag(sndElement, "Sound Settings", VDiag.center, "", "", "12em", false);
-        this._sndDiag.close(false);
+        this._sndDiag = new VDiag(sndElement, "Sound Settings", VDiag.center, "", "", "12em", true);
+        this._sndDiag.hide(false);
 
         SoundUI.instance = this;
 
@@ -61,11 +61,11 @@ export class SoundUI {
 
 
     public toggle() {
-        if (!this._sndDiag.isOpen()) {
+        if (!this._sndDiag.isShown()) {
             this._updateUI(this._snd);
-            this._sndDiag.open();
+            this._sndDiag.show();
         } else {
-            this._sndDiag.close();
+            this._sndDiag.hide();
         }
     }
 

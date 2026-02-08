@@ -541,8 +541,7 @@ export abstract class SensorAbstract implements Sensor {
 
         //We should call any other sub class method, especially of they might change the property of the object being create, after exiting constructor
         //This will allow constructor finish contructing the object.
-        //We will do this using zero time interval timeout.
-        setTimeout(()=>{this.init();this.handlePropertiesChange()},0);
+        queueMicrotask(()=>{this.init();this.handlePropertiesChange()});
     }
 
     public start(signal: string): boolean {
@@ -736,10 +735,11 @@ export abstract class ActuatorAbstract implements Actuator {
         //this.init();
         //this.handlePropertiesChange();
         
-        //We should call any other sub class method, especially of they might change the property of the object being create, after exiting constructor
+        //We should call any other sub class method, especially if they might change the property of the object being create, after exiting constructor
         //This will allow constructor finish contructing the object.
         //We will do this using zero time interval timeout.
-        setTimeout(()=>{this.init();this.handlePropertiesChange()},0);
+        // setTimeout(()=>{this.init();this.handlePropertiesChange()},0);
+        queueMicrotask(()=>{this.init();this.handlePropertiesChange()});
     }
 
     public start(signal: string): boolean {
@@ -776,7 +776,7 @@ export abstract class ActuatorAbstract implements Actuator {
         }
         SNAManager.getSNAManager().emitSignal(this.properties.signalStart);
         this.actuating = true;
-        this.actuate();
+        queueMicrotask(()=>this.actuate());
         return true;
     }
 
@@ -869,11 +869,15 @@ export abstract class ActuatorAbstract implements Actuator {
         }
         if (this.queued > 0) {
             this.queued--;
-            this.start(this.signalId);
+            //lets get out of the actuate end before starting this actuator again
+            //else we will create an mutiple recursive call to onActuateEnd
+            setTimeout(()=>{this.start(this.signalId);},0)
             return null;
         }
         if (this.properties.loop) {
-            this.start(this.signalId);
+            //lets get out of the actuate end before starting this actuator again
+            //else we will create an infinite recursive call to onActuateEnd
+            setTimeout(()=>{this.start(this.signalId);},0)
             return null;
         }
         return null;

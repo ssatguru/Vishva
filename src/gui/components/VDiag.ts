@@ -89,6 +89,9 @@ export class VDiag {
         f: HTMLElement;  //footer
         minIcon: HTMLElement;
         addIcon: HTMLElement;
+        static backdrop: HTMLElement; //modal backdrop
+        static _modalOn:boolean = false;
+        static _zIndex:number=1000;
 
         mx: number;
         my: number;
@@ -109,11 +112,11 @@ export class VDiag {
         startTop: number;
         startLeft: number;
 
-        isClosed: boolean = false;
+        isHidden: boolean = false;
         dirty: boolean = false;
 
-        private _onOpen: () => void;
-        private _onClose: () => void;
+        private _onShow: () => void;
+        private _onHide: () => void;
         //whenever the dialog is resized this _onResize function will be called
         // a dialog could be resized by
         // user dragging the boundary, 
@@ -131,11 +134,12 @@ export class VDiag {
         //fade,scale,rotate,newsFlash(scale and rotate)
         private _oEffect: string;
         private _cEffect: string;
+        private _isModal: boolean = false;
         
 
         //called during window resize
         public reset() {
-                if (this.isClosed) {
+                if (this.isHidden) {
                         this.dirty = true;
                 } else {
                         //during game we want the dialog box to snap to its original intended  postion.
@@ -275,7 +279,6 @@ export class VDiag {
 
                 // Save scroll position before moving
                 if (this.b && this.b.scrollHeight > this.b.clientHeight) {
-                        console.log("saving scroll top position");
                         this.savedScrollTop = this.b.scrollTop;
                 }
                 if (this.b && this.b.scrollWidth > this.b.clientWidth) {
@@ -304,7 +307,6 @@ export class VDiag {
                 
                 // Restore scroll position after moving
                 if (this.b && this.b.scrollHeight > this.b.clientHeight) {
-                        console.log("restoring scroll top position");
                         this.b.scrollTop = this.savedScrollTop;
                 }
                 if (this.b && this.b.scrollWidth > this.b.clientWidth) {
@@ -399,24 +401,32 @@ export class VDiag {
         }
 
         public toggle() {
-                if (this.isClosed) {
-                        this.open();
+                if (this.isHidden) {
+                        this.show();
                 } else {
-                        this.close();
+                        this.hide();
                 }
         }
 
-        public open() {
+        public show() {
 
-                if (!this.isClosed) {
+                if (!this.isHidden) {
                         return;
                 }
 
-                this.isClosed = false;
+                 //show modal backdrop if modal
+                if (this._isModal ) {
+                        if (VDiag._modalOn){
+                                VDiag._zIndex = VDiag._zIndex +2;
+                                VDiag.backdrop.style.zIndex = VDiag._zIndex.toString();                                
+                        }
+                        this.w.style.zIndex = (VDiag._zIndex + 1).toString();
+                }
+
+                this.isHidden = false;
 
                 //bring to front when opened
                 this.w.parentNode.appendChild(this.w);
-
 
                 //open animation
                 this.w.style.animationName = this._oAnim;
@@ -424,29 +434,41 @@ export class VDiag {
                 this.w.style.display = 'grid';
                 if (this._onResize != null) this._onResize();
 
-
                 if (this.dirty) {
                         this.dirty = false;
                         this.position(this.pos);
                 }
-
         }
 
-        public isOpen(): boolean {
-                return !this.isClosed;
+        public isShown(): boolean {
+                return !this.isHidden;
         }
 
-        private _closeit = () => {
-                this.close(true);
+        private _hideit = () => {
+                this.hide(true);
         }
 
         //note we are not really closing it, just hiding it
         //resources are still being consumed
-        public close = (anim?: boolean) => {
-                if (this.isClosed) return;
+        public hide = (anim?: boolean) => {
+
+                if (this.isHidden) return;
+
+                //hide modal backdrop if modal
+                if (this._isModal && VDiag.backdrop) {
+                        if (VDiag._zIndex === 1000){
+                                VDiag.backdrop.style.display = 'none';
+                                VDiag._modalOn = false;
+                        }else{
+                                VDiag._zIndex = VDiag._zIndex - 2;
+                                VDiag.backdrop.style.zIndex = VDiag._zIndex.toString();
+                        }
+                }
+                
                 // shift keyboard focus to canvas
                 Vishva.vishva.canvas.focus();
-                this.isClosed = true;
+                this.isHidden = true;
+
 
                 //do not do close dialog animation if caller doesnot want it
                 //for example sometime after creating dialog, caller mayot want to show the dialog mmediately in which case they will called close() immediately after creation.
@@ -460,23 +482,40 @@ export class VDiag {
                         this.w.style.display = "none";
                 }
 
-                if (this._onClose != null) this._onClose();
-        }
-
-        public onClose(f: () => void) {
-                this._onClose = f;
-                if (this.isClosed) {
-                        // f could be null if trying to remove handlers
-                        if (f != null) this._onClose();
+                if (this._onHide != null) {
+                        console.log("on close from vdiag");
+                        this._onHide();
                 }
         }
 
-        public onOpen(f: () => void) {
-                this._onOpen = f;
-                if (this.isOpen) {
+        public onHide(f: () => void) {
+                console.log("on close registered");
+                this._onHide = f;
+                if (this.isHidden) {
                         // f could be null if trying to remove handlers
-                        if (f != null) this._onOpen();
+                        if (f != null) this._onHide();
                 }
+        }
+
+        public onShow(f: () => void) {
+                this._onShow = f;
+                if (this.isShown) {
+                        // f could be null if trying to remove handlers
+                        if (f != null) this._onShow();
+                }
+        }
+
+        public dispose(){
+                if (this._isModal && VDiag.backdrop) {
+                        if (VDiag._zIndex === 1000){
+                                VDiag.backdrop.style.display = 'none';
+                                VDiag._modalOn = false;
+                        }else{
+                                VDiag._zIndex = VDiag._zIndex - 2;
+                                VDiag.backdrop.style.zIndex = VDiag._zIndex.toString();
+                        }
+                }
+                this.w.remove();
         }
 
         public onResize(f: () => void) {
@@ -494,6 +533,7 @@ export class VDiag {
         //         }
 
         // }
+
         /**
          * if the height of the window is explicitly set, disabling the body
          * leaves a vacant body in the window.
@@ -655,9 +695,34 @@ export class VDiag {
                 this._type = type;
         }
 
-        public dispose(){
-                this.w.remove();
+        
+
+        public makeModal(){
+                if (this._isModal) return;
+                this._isModal = true;
+                if (VDiag._modalOn){
+                        if (!this.isHidden){
+                                VDiag._zIndex = VDiag._zIndex +2;
+                                VDiag.backdrop.style.zIndex = VDiag._zIndex.toString();
+                        }
+                }else{
+                        VDiag._modalOn=true;
+                        VDiag.backdrop = document.createElement("div");
+                        VDiag.backdrop.style.cssText = `
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background-color: rgba(1, 1, 1, 0.1);
+                                z-index: ${VDiag._zIndex};
+                                display: ${this.isHidden?"none":"block"};`;
+                        Vishva.gui.appendChild(VDiag.backdrop);
+                }
+                // Set higher z-index for modal dialogs
+                this.w.style.zIndex = (VDiag._zIndex + 1).toString();
         }
+
 
         constructor(id: string | HTMLElement, title: string, pos: string, width: string | number = 0, height?: string | number, minWidth: string = "0px", modal = false, resizable = false, draggable= true) {
 
@@ -668,8 +733,6 @@ export class VDiag {
                 }
 
                 this.pos = pos;
-
-                
 
                 this.w = document.createElement("div");
                 this.w.innerHTML = this.ml;
@@ -686,6 +749,29 @@ export class VDiag {
                 // this.w.style.backgroundColor == Vishva.theme.darkColors.b;
                 this.w.style.borderColor = Vishva.theme.lightColors.b;
 
+                this._isModal = modal;
+                if (modal) {
+                        if (VDiag._modalOn){
+                                VDiag._zIndex = VDiag._zIndex +2;
+                                VDiag.backdrop.style.zIndex = VDiag._zIndex.toString();
+                        }else{
+                                VDiag._modalOn=true;                                
+                                VDiag.backdrop = document.createElement("div");
+                                VDiag.backdrop.style.cssText = `
+                                        position: fixed;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100%;
+                                        height: 100%;
+                                        background-color: rgba(1, 1, 1, 0.1);
+                                        z-index: ${VDiag._zIndex};
+                                        display: block;`;
+                                Vishva.gui.appendChild(VDiag.backdrop);
+                        }
+                        // Set higher z-index for modal dialogs
+                        this.w.style.zIndex = (VDiag._zIndex + 1).toString();
+                }
+
                 //open animation
                 this.w.style.animationName = this._oAnim;
                 this.w.style.animationDuration = this._oD;
@@ -696,7 +782,7 @@ export class VDiag {
                 this.w.addEventListener("animationend", (e) => {
                         if (e.animationName == this._oAnim) {
                                 (<HTMLElement>e.target).style.animationName = "dummy";
-                                if (this._onOpen != null) this._onOpen();
+                                if (this._onShow != null) this._onShow();
                         }
                 });
 
@@ -729,7 +815,7 @@ export class VDiag {
                 this.addIcon.addEventListener('click', this.toggleBody);
 
                 let closeIcon: HTMLElement = <HTMLElement>this.w.getElementsByClassName('vdiag-close')[0];
-                closeIcon.addEventListener('click', this._closeit);
+                closeIcon.addEventListener('click', this._hideit);
 
                 //diag body ===========================================
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];

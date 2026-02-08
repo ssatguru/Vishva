@@ -19,7 +19,7 @@ export class DialogMgr {
     public static showAlertDiag(msg: string) {
         if (this._alertDialog == null) DialogMgr.createAlertDiag();
         this._alertDiv.innerHTML = msg;
-        this._alertDialog.open();
+        this._alertDialog.show();
     }
 
 }

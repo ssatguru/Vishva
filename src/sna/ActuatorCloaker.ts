@@ -9,6 +9,7 @@ import {
 
 export class ActCloakerProp extends ActProperties {
     timeToCloak: number = 1;
+    state_notReversed: boolean = true;
 }
 
 export class ActuatorCloaker extends ActuatorAbstract {

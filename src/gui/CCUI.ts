@@ -56,22 +56,23 @@ export class CCUI {
 
         dboSave.onclick = (e) => {
             this._saveCC();
-            this._ccDiag.close();
+            this._ccDiag.dispose();
             return true;
         };
         dboCancel.onclick = (e) => {
-            this._ccDiag.close();
+            this._ccDiag.dispose();
             return true;
         }
 
-        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.centerTop, "", "", "12em");
-        this._ccDiag.close(false);
+        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.centerTop, "", "", "12em",true);
+        this._ccDiag.onHide ( () => {this._ccDiag.dispose();});
 
         EventManager.subscribe(VEvent._AVATAR_SWITCHED, () => { this._onAVSwicthed() });
+
     }
 
     public _onAVSwicthed() {
-        if (this._ccDiag.isOpen()) this._updateUI();
+        if (this._ccDiag.isShown()) this._updateUI();
     }
 
     private _updateUI() {
@@ -79,12 +80,13 @@ export class CCUI {
         this._updateUIMap();
     }
 
+    //TODO remove - we now dispose, not hide, when closed
     public toggle() {
-        if (!this._ccDiag.isOpen()) {
+        if (!this._ccDiag.isShown()) {
             this._updateUI();
-            this._ccDiag.open();
+            this._ccDiag.show();
         } else {
-            this._ccDiag.close();
+            this._ccDiag.hide();
         }
     }
 
@@ -171,6 +173,12 @@ export class CCUI {
         new VInputNumber(form.x);
         new VInputNumber(form.y);
         new VInputNumber(form.z);
+        new VInputNumber(form.ex);
+        new VInputNumber(form.ey);
+        new VInputNumber(form.ez);
+        new VInputNumber(form.eox);
+        new VInputNumber(form.eoy);
+        new VInputNumber(form.eoz);
         this._sndUI = new SoundUI(this._cc.getSettings().sound);
         (<HTMLButtonElement>form.stepSnd).onclick = () => {
             this._sndUI.toggle();
@@ -200,7 +208,12 @@ export class CCUI {
         form.x.value = ccSettings.cameraTarget.x;
         form.y.value = ccSettings.cameraTarget.y;
         form.z.value = ccSettings.cameraTarget.z;
-
+        form.ex.value = ccSettings.ellipsoid.x;
+        form.ey.value = ccSettings.ellipsoid.y;
+        form.ez.value = ccSettings.ellipsoid.z;
+        form.eox.value = ccSettings.ellipsoidOffset.x;
+        form.eoy.value = ccSettings.ellipsoidOffset.y;
+        form.eoz.value = ccSettings.ellipsoidOffset.z;
     }
 
     private _updateUIMap() {
@@ -277,7 +290,8 @@ export class CCUI {
     }
 
     private _saveCCSet() {
-        let ccSettings: CCSettings = new CCSettings();
+        // let ccSettings: CCSettings = new CCSettings();
+        let ccSettings: CCSettings = this._cc.getSettings();
 
         let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
         ccSettings.cameraElastic = form["camerElastic"].checked;
@@ -294,6 +308,9 @@ export class CCUI {
         ccSettings.turningOff = form["turningOff"].checked;
         ccSettings.faceForward = form["faceForward"].checked;
         ccSettings.sound = this._sndUI.getSound();
+        ccSettings.animBlend = Number(form["animBlend"].value);
+        ccSettings.ellipsoid = new Vector3(Number(form["ex"].value), Number(form["ey"].value), Number(form["ez"].value));
+        ccSettings.ellipsoidOffset = new Vector3(Number(form["eox"].value), Number(form["eoy"].value), Number(form["eoz"].value));
 
         this._cc.setSettings(ccSettings);
         this._cc.enableBlending(Number(form["animBlend"].value));

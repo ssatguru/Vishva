@@ -162,7 +162,7 @@ export class VishvaGUI {
 
     private firstTime: boolean = true;
     private addMenuOn: boolean = false;
-    private _avUI: CCUI;
+    // private _avUI: CCUI;
 
     private _createNavMenu() {
 
@@ -189,7 +189,7 @@ export class VishvaGUI {
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
             this._downloadLink.download = Vishva.worldName;
-            this._downloadDialog.open();
+            this._downloadDialog.show();
             return false;
         };
 
@@ -262,10 +262,7 @@ export class VishvaGUI {
         // button for character controller
         var navAV: HTMLElement = document.getElementById("navAV");
         navAV.onclick = (e) => {
-            if (this._avUI == null) {
-                this._avUI = new CCUI(this._vishva.avManager.cc);
-            }
-            this._avUI.toggle();
+           new CCUI(this._vishva.avManager.cc);
         }
 
         // button for environment
@@ -370,6 +367,7 @@ export class VishvaGUI {
     /*
      * called by vishva when editcontrol
      * is switched from another mesh
+     * TODO Close all child windows before switching
      */
     public refreshPropsDiag() {
         if (this._itemProps != null) this._itemProps.refreshPropsDiag();

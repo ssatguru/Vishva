@@ -83,7 +83,7 @@ export class SettingsUI {
                 return false;
             }
 
-            this._settingDiag.close();
+            this._settingDiag.hide();
             //DialogMgr.showAlertDiag("Saved");
             //refresh the property dialog in case something changed here
 
@@ -99,7 +99,7 @@ export class SettingsUI {
         //dboCancel.style.margin = "1em";
         let dboCancel: HTMLButtonElement = this._settingDiag.addButton("cancel");
         dboCancel.onclick = (e) => {
-            this._settingDiag.close();
+            this._settingDiag.hide();
             return true;
         }
         // div.appendChild(dboSave);
@@ -117,11 +117,11 @@ export class SettingsUI {
     }
 
     public toggle() {
-        if (!this._settingDiag.isOpen()) {
+        if (!this._settingDiag.isShown()) {
             this._updateSettings();
-            this._settingDiag.open();
+            this._settingDiag.show();
         } else {
-            this._settingDiag.close();
+            this._settingDiag.hide();
         }
     }
 

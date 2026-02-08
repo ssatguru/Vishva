@@ -73,7 +73,7 @@ export class ColorPickerFld {
             this.colorInputText.setValue(hex);
             this._chgHandler(hex, hsv, rgb);
         });
-        this.cpDiag = new VDiag(colorPicker, title, pos, 0, "auto", "19em");
+        this.cpDiag = new VDiag(colorPicker, title, pos, 0, "auto", "19em",true);
     }
 
     // public open(hex: string) {

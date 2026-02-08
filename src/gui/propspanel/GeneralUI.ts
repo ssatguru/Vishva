@@ -11,6 +11,8 @@ import { ParentChildUI } from "./ParentChildUI";
 import { VDiag } from "../components/VDiag";
 import { EventManager } from "../../eventing/EventManager";
 import { VEvent } from "../../eventing/VEvent";
+import { CharacterController } from "babylonjs-charactercontroller";
+import { CCUI } from "../CCUI";
 
 /**
  * Provides UI for the Genral tab of mesh properties
@@ -228,6 +230,7 @@ export class GeneralUI {
 
         let swAv: HTMLElement = document.getElementById("swAv");
         let swGnd: HTMLElement = document.getElementById("swGnd");
+        let addCC : HTMLElement = document.getElementById("addCC");
 
         let sNa: HTMLElement = document.getElementById("sNa");
         let addParticles: HTMLButtonElement = <HTMLButtonElement>document.getElementById("addParticles");
@@ -288,7 +291,7 @@ export class GeneralUI {
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
             this._downloadLink.download = this._vishva.meshSelected.name + ".babylon";
-            this._downloadDialog.open();
+            this._downloadDialog.show();
             return false;
         };
         delMesh.onclick = (e) => {
@@ -316,6 +319,29 @@ export class GeneralUI {
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
+            return true;
+        };
+        addCC.onclick = (e) => {
+            let cc:CharacterController = this._vishva.meshSelected["characterController"];
+            if(cc === undefined ){
+                let m:Mesh = <Mesh>this._vishva.meshSelected;
+               //m.ellipsoid =  new Vector3(0.15, 0.8, 0.15);
+                m.ellipsoidOffset =  new Vector3(0,m.ellipsoid.y,0);
+                console.log(m.rotation);
+                if (m.rotationQuaternion !==null){
+                    console.log("removing quaternion",m.rotationQuaternion);
+                    m.rotation = m.rotationQuaternion.toEulerAngles();
+                    m.rotationQuaternion = null;
+                    console.log("after removal", m.rotation);
+                }
+
+                cc =new CharacterController(<Mesh>this._vishva.meshSelected,null,this._vishva.scene);
+                cc.setTurnSpeed(45);
+                cc.enableKeyBoard(false);
+                cc.start();
+            }
+            this._vishva.meshSelected["characterController"] = cc;
+            let ccui = new CCUI(this._vishva.meshSelected["characterController"]);
             return true;
         };
 
@@ -380,7 +406,7 @@ export class GeneralUI {
     private _createDownloadDiag() {
         this._downloadLink = <HTMLAnchorElement>document.getElementById("downloadAssetLink");
         this._downloadDialog = new VDiag("saveAssetDiv", "Download an asset", VDiag.center, "20em");
-        this._downloadDialog.close();
+        this._downloadDialog.hide();
     }
 
     private _toString(d: number): string {

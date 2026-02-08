@@ -37,10 +37,10 @@ export class InternalAssetsUI {
             }
             this._assetDiagMap[assetCat] = assetDialog;
         } else {
-            if (assetDialog.isOpen()) {
-                assetDialog.close();
+            if (assetDialog.isShown()) {
+                assetDialog.hide();
             } else {
-                assetDialog.open();
+                assetDialog.show();
             }
         }
     }

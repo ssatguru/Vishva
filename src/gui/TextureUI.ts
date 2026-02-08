@@ -109,13 +109,13 @@ export class TextureUI {
     }
 
     public open() {
-        this._textureDiag.open();
+        this._textureDiag.show();
     }
     public isOpen(): boolean {
-        return this._textureDiag.isOpen();
+        return this._textureDiag.isShown();
     }
     public close() {
-        this._textureDiag.close();
+        this._textureDiag.hide();
     }
 
     public setParms(textID: string, textName: string, textType: string, matdId: string, matTextImg: HTMLImageElement) {

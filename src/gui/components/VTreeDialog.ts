@@ -74,6 +74,10 @@ export class VTreeDialog {
 
     }
 
+    public makeModal(){
+        this._treeDiag.makeModal();
+    }
+
     public addTreeListener(treeListener: (leaf: string, path: string, isLeaf: boolean) => void = null) {
         this._tree.addClickListener(treeListener);
     }
@@ -83,10 +87,10 @@ export class VTreeDialog {
     }
 
     public toggle() {
-        if (this._treeDiag.isOpen()) {
-            this._treeDiag.close();
+        if (this._treeDiag.isShown()) {
+            this._treeDiag.hide();
         } else {
-            this._treeDiag.open();
+            this._treeDiag.show();
         }
     }
 
@@ -95,18 +99,18 @@ export class VTreeDialog {
     }
 
     public open() {
-        this._treeDiag.open();
+        this._treeDiag.show();
     }
 
     public onOpen(f: () => void) {
-        this._treeDiag.onOpen(f);
+        this._treeDiag.onShow(f);
     }
 
     public isOpen(): boolean {
-        return this._treeDiag.isOpen();
+        return this._treeDiag.isShown();
     }
     public close() {
-        this._treeDiag.close();
+        this._treeDiag.hide();
     }
     public refresh(treeData: Array<string | object>) {
         this._tree.refresh(treeData);

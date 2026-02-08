@@ -53,7 +53,7 @@ export class ActuatorDialog extends ActuatorAbstract {
     override init(){}
 
     override actuate() {
-        this._dialog.open();
+        this._dialog.show();
     }
 
     override getName(): string {
@@ -121,16 +121,16 @@ export class ActuatorDialog extends ActuatorAbstract {
             }
             if (Engine.audioEngine.audioContext.state === "suspended") {
                 Engine.audioEngine.audioContext.resume().then(() => {
-                    this._dialog.close();
+                    this._dialog.hide();
                 });
             } else {
-                this._dialog.close();
+                this._dialog.hide();
             }
             return true;
         }
 
         //close dialog without doing the close animation
-        this._dialog.close(false);
+        this._dialog.hide(false);
 
         if (props.openEffect) {
             this._dialog.setEffects(props.openEffect.value,
@@ -172,14 +172,14 @@ export class ActuatorDialog extends ActuatorAbstract {
             this._div.style.alignItems = "center";
         }
 
-        this._dialog.onClose(() => {
+        this._dialog.onHide(() => {
             this.onActuateEnd();
         })
 
         this._pos = props.position.value;
 
         if (this.properties.autoStart) {
-            this._dialog.open();
+            this._dialog.show();
         }
 
     }

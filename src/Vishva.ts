@@ -98,6 +98,7 @@ import { DialogMgr } from "./gui/DialogMgr";
 import { VTheme, VThemes } from "./gui/components/VTheme";
 import { VEvent } from "./eventing/VEvent";
 import { EventManager } from "./eventing/EventManager";
+import { VDiag } from "./gui/components/VDiag";
 
 
 
@@ -106,7 +107,7 @@ import { EventManager } from "./eventing/EventManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.21";
+    static version: string = "0.4.0-alpha.22";
 
     public static worldName: string;
 
@@ -384,6 +385,23 @@ export class Vishva {
         else return null;
     }
 
+    //TODO see SNA.ts unMarshalProps - duplicate code
+    private _umarshalVec3(obj:Object ):void{
+        let keys:string[]=Object.keys(obj);
+        for (let key of keys){
+            if (obj[key] instanceof Object) {
+                let o: Object = obj[key];
+                let ns: string[] = Object.keys(o);
+                let l: number = ns.length;
+                if ((l == 4) &&(ns.indexOf("_x") >= 0)&& (ns.indexOf("_y") >= 0) && (ns.indexOf("_z") >= 0) && (ns.indexOf("_isDirty") >= 0)) {
+                        obj[key] =new Vector3(o["_x"], o["_y"], o["_z"]);
+                }else{
+                    this._umarshalVec3(o);
+                }
+            }
+        }
+    }
+
     //load the vishva part 
     private loadVishvaPart(tsk: TextFileAssetTask) {
         // console.log("loadVishvaPart");
@@ -391,6 +409,9 @@ export class Vishva {
         let foo: Object = <Object>JSON.parse(tfat.text);
 
         this.vishvaSerialized = foo["VishvaSerialized"];
+
+        this._umarshalVec3(this.vishvaSerialized);
+        // console.log(this.vishvaSerialized);
 
         //check if we have a vishva file. Might just be a babylon file
         if (!(this.vishvaSerialized === undefined)) {
@@ -775,15 +796,17 @@ export class Vishva {
                 }
                 if (this.key.esc) {
                     this.key.esc = false;
-                    this.animateMesh(this.meshSelected, 1.1);
-                    this.removeEditControl();
-                    if (!this.isFocusOnAv) {
-                        this.setFocusOnNothing();
-                        if (this.uniCamController == null) {
-                            this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
+                    if (!VDiag._modalOn){
+                        this.animateMesh(this.meshSelected, 1.1);
+                        this.removeEditControl();
+                        if (!this.isFocusOnAv) {
+                            this.setFocusOnNothing();
+                            if (this.uniCamController == null) {
+                                this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
+                            }
+                            this.uniCamController.start();
+                            this.uniCamOn = true;
                         }
-                        this.uniCamController.start();
-                        this.uniCamOn = true;
                     }
                 }
                 if (this.key.trans) {
@@ -1101,8 +1124,7 @@ export class Vishva {
         if (this.meshSelected instanceof AbstractMesh) {
             this.savePhyParms(this.meshSelected);
         }
-        this.switchToQuats(this.meshSelected);
-        //this.editControl = new EditControl(<Mesh>this.meshPicked, this.arcCamera, this.canvas, 0.75);
+        //this.switchToQuats(this.meshSelected);
         this.editControl = new EditControl(this.meshSelected, this.scene.activeCamera, this.canvas, 0.5);
         this.editControl.addActionEndListener((actionType: number) => {
             this.vishvaGUI.handleTransChange();
@@ -1139,7 +1161,7 @@ export class Vishva {
             this.savePhyParms(this.meshSelected);
         }
 
-        this.switchToQuats(this.meshSelected);
+        //this.switchToQuats(this.meshSelected);
         this.editControl.switchTo(this.meshSelected);
         if (this.meshSelected instanceof AbstractMesh) {
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshSelected);
@@ -2769,7 +2791,13 @@ export class Vishva {
     public setRotation(valX: number, valY: number, valZ: number) {
         if (isNaN(valX) || isNaN(valY) || isNaN(valZ)) return;
         if (this.isMeshSelected) {
+            if (this.meshSelected.rotationQuaternion !== null){
             Quaternion.RotationYawPitchRollToRef(valY * Math.PI / 180, valX * Math.PI / 180, valZ * Math.PI / 180, this.meshSelected.rotationQuaternion)
+            }else{
+                this.meshSelected.rotation.x = valX * Math.PI / 180;
+                this.meshSelected.rotation.y = valY * Math.PI / 180;
+                this.meshSelected.rotation.z = valZ * Math.PI / 180;
+            }
         }
     }
     public setScale(valX: number, valY: number, valZ: number) {
@@ -2782,7 +2810,12 @@ export class Vishva {
     }
 
     public getRotation(): Vector3 {
-        var euler: Vector3 = this.meshSelected.rotationQuaternion.toEulerAngles();
+        let euler: Vector3
+        if (this.meshSelected.rotationQuaternion !== null){
+            euler = this.meshSelected.rotationQuaternion.toEulerAngles();
+        }else{
+            euler = this.meshSelected.rotation;
+        }
         var r: number = 180 / Math.PI;
         var degrees: Vector3 = euler.multiplyByFloats(r, r, r);
         return degrees;
@@ -3646,6 +3679,8 @@ export class Vishva {
         //sceneObj["VishvaSNA"] = snaObj;
         sceneObj["VishvaSerialized"] = vishvaSerialzed;
 
+        //sceneObj = this._justAG(sceneObj);
+
         //pretty formatted json
         //console.log("pretty formatting and writing");
         //let sceneString: string = JSON.stringify(sceneObj, null, 1);
@@ -3796,13 +3831,17 @@ export class Vishva {
 
     }
 
+    private _justAG(sceneObj){
+        let ag = sceneObj["animationGroups"];
+        return {"animationGroups": ag};
+    }
+
     private _removeActuatorTextBarMat(sceneObj){
         let materials = sceneObj["materials"];
         if (materials != null) {
             var l = materials.length;
             for (let i = l - 1; i >= 0; i--) {
                 if (materials[i]["id"].startsWith("AdvancedDynamicTextureMaterial for ActuatorTextBar")) {
-                    console.log("removing ActuatorTextBar material ", materials[i]["id"]);
                     materials.splice(i, 1);
                 }
             }
@@ -3956,7 +3995,24 @@ export class Vishva {
             });
     }
 
-
+   /**
+    *  resue animationgroup
+    *  if an animation group with the same name as that of the passed animationGroup exist in the scene  then 
+    *  go thru each targeted animation in this passed animation group and replace 
+    *  its animation with the one from the scene
+    */
+    private reuseAnimationGroup(ag:AnimationGroup){
+        let existingAG = this.scene.getAnimationGroupByName(ag.name);
+        if (existingAG && existingAG !== ag ) {
+            console.log("reusing animation group " + ag.name);
+            for (let targetedAnim of ag.targetedAnimations) {
+                let existingTargetedAnim = existingAG.targetedAnimations.find(ta => ta.animation.name === targetedAnim.animation.name);
+                if (existingTargetedAnim) {
+                    targetedAnim.animation = existingTargetedAnim.animation;
+                }
+            }
+        }
+    }
 
 
     //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
@@ -3971,13 +4027,13 @@ export class Vishva {
     private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string,folder?:string) {
         console.log("loading meshes from file " + file + " from folder " + folder + " of type "+ assetType + " mesh count " + meshes.length);
 
-
         for (let s of skeletons) {
             this.scene.stopAnimation(s);
         }
 
         for (let ag of animationGroups) {
             ag.stop();
+            this.reuseAnimationGroup(ag);
         }
 
 

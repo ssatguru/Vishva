@@ -8,7 +8,6 @@ import "./style.css";
 // import "babylonjs-inspector";
 import "babylonjs-loaders";
 import "babylonjs-materials";
-import "pepjs";
 
 //add this when GLTF export is needed
 //import "babylonjs-serializers";
@@ -21,14 +20,16 @@ import "pepjs";
 
 import "./sna/ActuatorAnimator";
 import "./sna/ActuatorAvAnimator";
+import "./sna/ActuatorCC";
 import "./sna/ActuatorCloaker";
 import "./sna/ActuatorDialog";
 import "./sna/ActuatorDisabler";
 import "./sna/ActuatorEnabler";
 import "./sna/ActuatorLight";
-import "./sna/ActuatorTextBar";
+import "./sna/ActuatorPointerLock";
 import "./sna/ActuatorSignalEmitter";
 import "./sna/ActuatorSound";
+import "./sna/ActuatorTextBar";
 import "./sna/SensorClick";
 import "./sna/SensorContact";
 import "./sna/SensorTimer";

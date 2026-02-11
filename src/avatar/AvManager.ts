@@ -180,8 +180,7 @@ export class AvManager {
         cc.setStepOffset(0.5);
         cc.setSlopeLimit(60, 80);
 
-        //TODO blending not being serailized
-        //cc.enableBlending(0.02);
+        cc.enableBlending(this._animBlend);
 
         this.cc = cc;
         return cc;

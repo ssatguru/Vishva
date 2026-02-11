@@ -107,7 +107,7 @@ import { VDiag } from "./gui/components/VDiag";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.22";
+    static version: string = "0.4.0-alpha.23";
 
     public static worldName: string;
 
@@ -411,7 +411,13 @@ export class Vishva {
         this.vishvaSerialized = foo["VishvaSerialized"];
 
         this._umarshalVec3(this.vishvaSerialized);
-        // console.log(this.vishvaSerialized);
+
+        //version 0.4.0-alpha.21 and prior didnot have ellipsoid value serialized
+        //following can be removed once those worlds have been upgraded
+        if (!this.vishvaSerialized.avSerialized.settings.ellipsoid){
+            this.vishvaSerialized.avSerialized.settings.ellipsoid = new Vector3(0.15,0.8,0.15);
+            this.vishvaSerialized.avSerialized.settings.ellipsoidOffset = new Vector3(0.0,0.8,0.0);
+        }
 
         //check if we have a vishva file. Might just be a babylon file
         if (!(this.vishvaSerialized === undefined)) {

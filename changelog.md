@@ -1,4 +1,8 @@
 ### 01/30/2026 0.4.0-alpha.22
+- updated tsconfig
+- fixed charactercontroller animblending issue when empty world is loaded
+- fxied issue with 0.4.0-alpha.21 version world failing during load. character controller ellipsoid values were not being serialized previously
+### 01/30/2026 0.4.0-alpha.22
 - added modal capability to dialog box
 - Character Controller can now be added to any mesh. Previosuly it was just menat for the Avatar.
 - upgraded to the current version of babylonjs 8.47.0

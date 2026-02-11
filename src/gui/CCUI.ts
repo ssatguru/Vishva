@@ -44,6 +44,7 @@ export class CCUI {
 
         this._buildSetUI(this.setTab);
         this._buildMapUI(this.mapTab);
+        this._updateUI();
 
         let dboSave: HTMLButtonElement = VButton.create("save", "save");
         let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
@@ -188,7 +189,6 @@ export class CCUI {
 
     private _updateUISet() {
         let ccSettings: CCSettings = this._cc.getSettings();
-        ccSettings.animBlend = 0.05;
 
         let form: HTMLFormElement = <HTMLFormElement>this.setTab.getElementsByClassName("av-settings")[0];
 

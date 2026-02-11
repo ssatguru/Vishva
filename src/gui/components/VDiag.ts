@@ -483,13 +483,11 @@ export class VDiag {
                 }
 
                 if (this._onHide != null) {
-                        console.log("on close from vdiag");
                         this._onHide();
                 }
         }
 
         public onHide(f: () => void) {
-                console.log("on close registered");
                 this._onHide = f;
                 if (this.isHidden) {
                         // f could be null if trying to remove handlers

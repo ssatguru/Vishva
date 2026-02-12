@@ -107,7 +107,7 @@ import { VDiag } from "./gui/components/VDiag";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.23";
+    static version: string = "0.4.0-alpha.24";
 
     public static worldName: string;
 
@@ -727,6 +727,26 @@ export class Vishva {
             this.cc.setActionMap(ac);
         }
         this.cc.start();
+
+        //deserialize character controllers attached to meshes
+        if (this.vishvaSerialized && this.vishvaSerialized.meshCCs) {
+            for (let meshCC of this.vishvaSerialized.meshCCs) {
+                let mesh = this.scene.getMeshById(meshCC.meshId);
+                if (mesh) {
+                    if (meshCC.settings.sound)
+                        meshCC.settings.sound = AvSerialized.deSerializeSound(meshCC.settings.sound);
+                    let cc = new CharacterController(<Mesh>mesh, null, this.scene);
+                    cc.setSettings(meshCC.settings);
+                    let ac: ActionMap = AvSerialized.deSerializeAG(this.scene, meshCC.actionMap);
+                    cc.setActionMap(ac);
+                    cc.start();
+                    mesh["characterController"] = cc;
+                    if (meshCC.originalEllipsoid) {
+                        mesh["_originalEllipsoid"] = meshCC.originalEllipsoid;
+                    }
+                }
+            }
+        }
 
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;

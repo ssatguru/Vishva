@@ -231,6 +231,7 @@ export class GeneralUI {
         let swAv: HTMLElement = document.getElementById("swAv");
         let swGnd: HTMLElement = document.getElementById("swGnd");
         let addCC : HTMLElement = document.getElementById("addCC");
+        let removeCC : HTMLElement = document.getElementById("removeCC");
 
         let sNa: HTMLElement = document.getElementById("sNa");
         let addParticles: HTMLButtonElement = <HTMLButtonElement>document.getElementById("addParticles");
@@ -323,11 +324,18 @@ export class GeneralUI {
         };
         addCC.onclick = (e) => {
             let cc:CharacterController = this._vishva.meshSelected["characterController"];
-            if(cc === undefined ){
+            let isNew = cc === undefined;
+            let originalEllipsoid: Vector3;
+            if(isNew){
+                console.log("is new cc");
                 let m:Mesh = <Mesh>this._vishva.meshSelected;
+                originalEllipsoid = m.ellipsoid.clone();
+                m["_originalEllipsoid"] = originalEllipsoid;
                //m.ellipsoid =  new Vector3(0.15, 0.8, 0.15);
-                m.ellipsoidOffset =  new Vector3(0,m.ellipsoid.y,0);
-                console.log(m.rotation);
+                //m.ellipsoidOffset =  new Vector3(0,m.ellipsoid.y,0);
+                let boundingInfo = m.getBoundingInfo();
+                let size = boundingInfo.boundingBox.extendSize;
+                m.ellipsoid = new Vector3(size.x, size.y, size.z);
                 if (m.rotationQuaternion !==null){
                     console.log("removing quaternion",m.rotationQuaternion);
                     m.rotation = m.rotationQuaternion.toEulerAngles();
@@ -338,10 +346,29 @@ export class GeneralUI {
                 cc =new CharacterController(<Mesh>this._vishva.meshSelected,null,this._vishva.scene);
                 cc.setTurnSpeed(45);
                 cc.enableKeyBoard(false);
-                cc.start();
+                this._vishva.meshSelected["characterController"] = cc;
             }
-            this._vishva.meshSelected["characterController"] = cc;
-            let ccui = new CCUI(this._vishva.meshSelected["characterController"]);
+            let ccui = new CCUI(cc, isNew ? () => {
+                (<Mesh>this._vishva.meshSelected).ellipsoid = originalEllipsoid;
+                delete this._vishva.meshSelected["characterController"];
+            } : null, isNew ? () => {
+                cc.start();
+            } : null);
+            return true;
+        };
+
+        removeCC.onclick = (e) => {
+            let cc:CharacterController = this._vishva.meshSelected["characterController"];
+            if(cc !== undefined){
+                cc.showEllipsoid(false);
+                cc.stop();
+                let m:Mesh = <Mesh>this._vishva.meshSelected;
+                if(m["_originalEllipsoid"]){
+                    m.ellipsoid = m["_originalEllipsoid"];
+                    delete m["_originalEllipsoid"];
+                }
+                delete this._vishva.meshSelected["characterController"];
+            }
             return true;
         };
 

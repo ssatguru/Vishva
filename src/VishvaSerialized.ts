@@ -16,6 +16,7 @@ export class VishvaSerialized {
     public misc: MiscSerialized;
     public grndSpreadArray: GrndSpread_Serializeable[];
     public avSerialized: AvSerialized;
+    public meshCCs: MeshCCSerialized[];
 
     
 
@@ -34,6 +35,14 @@ export class VishvaSerialized {
             this.grndSpreadArray = new Array();
             for (let gSPS of vishva.GrndSpreads) {
                 this.grndSpreadArray.push(gSPS.serialize());
+            }
+        }
+
+        //serialize character controllers attached to meshes
+        this.meshCCs = new Array();
+        for (let mesh of vishva.scene.meshes) {
+            if (mesh["characterController"]) {
+                this.meshCCs.push(new MeshCCSerialized(mesh));
             }
         }
 
@@ -140,3 +149,30 @@ export class AvSerialized {
 }
 
 
+
+export class MeshCCSerialized {
+    public meshId: string;
+    public settings: CCSettings;
+    public actionMap: ActionMap;
+    public originalEllipsoid: Vector3;
+
+    constructor(mesh: any) {
+        this.meshId = mesh.id;
+        let cc = mesh["characterController"];
+        this.settings = cc.getSettings();
+        if (this.settings.sound)
+            this.settings.sound = this.settings.sound.serialize();
+        this.actionMap = cc.getActionMap();
+        let keys = Object.keys(this.actionMap);
+        for (let key of keys) {
+            let ad: ActionData = this.actionMap[key];
+            ad.sound = null;
+            if (ad.ag instanceof AnimationGroup) {
+                this.actionMap[key]["ag"] = this.actionMap[key]["ag"].name;
+            }
+        }
+        if (mesh["_originalEllipsoid"]) {
+            this.originalEllipsoid = mesh["_originalEllipsoid"];
+        }
+    }
+}

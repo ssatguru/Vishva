@@ -116,6 +116,7 @@ let genHTML = `
                 <button id="swAv" title="use as avatar"><span class="material-icons-outlined">wc</span></button>
                 <button id="swGnd" title="use as ground"><span class="material-icons-outlined">terrain</span></button>
                 <button id="addCC" title="add a character controller to this ">CC</button>
+                <button id="removeCC" title="remove character controller">remove CC</button>
         </div>
         
         

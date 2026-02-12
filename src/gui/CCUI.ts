@@ -26,11 +26,16 @@ export class CCUI {
     private _actions: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "run", "runJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
 
     private _cc: CharacterController;
+    private _onCancelCallback: () => void;
+    private _onSaveCallback: () => void;
+    private _saved: boolean = false;
     setTab: HTMLDivElement;
     mapTab: HTMLDivElement;
 
-    constructor(cc: CharacterController) {
+    constructor(cc: CharacterController, onCancelCallback?: () => void, onSaveCallback?: () => void) {
         this._cc = cc;
+        this._onCancelCallback = onCancelCallback;
+        this._onSaveCallback = onSaveCallback;
 
         let tab = new VTab("Settings", "Mappings");
         this.ccElement = tab._e;
@@ -56,17 +61,29 @@ export class CCUI {
         this.ccElement.appendChild(dboCancel);
 
         dboSave.onclick = (e) => {
+            this._saved = true;
             this._saveCC();
+            if (this._onSaveCallback) {
+                this._onSaveCallback();
+            }
             this._ccDiag.dispose();
             return true;
         };
         dboCancel.onclick = (e) => {
+            if (!this._saved && this._onCancelCallback) {
+                this._onCancelCallback();
+            }
             this._ccDiag.dispose();
             return true;
         }
 
         this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.centerTop, "", "", "12em",true);
-        this._ccDiag.onHide ( () => {this._ccDiag.dispose();});
+        this._ccDiag.onHide ( () => {
+            if (!this._saved && this._onCancelCallback) {
+                this._onCancelCallback();
+            }
+            this._ccDiag.dispose();
+        });
 
         EventManager.subscribe(VEvent._AVATAR_SWITCHED, () => { this._onAVSwicthed() });
 

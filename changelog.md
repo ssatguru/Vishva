@@ -1,3 +1,9 @@
+### 02/01/2026 0.4.0-alpha.24
+- added ability to add and remove character controller from any mesh
+- character controllers attached to meshes are now serialized and deserialized when world is saved and loaded
+- added cancel/close handling for character controller dialog - if new character controller is cancelled, it is properly cleaned up
+- character controller is only started after save button is clicked in character controller dialog
+- original ellipsoid value is restored when character controller is removed from mesh
 ### 01/30/2026 0.4.0-alpha.22
 - updated tsconfig
 - fixed charactercontroller animblending issue when empty world is loaded

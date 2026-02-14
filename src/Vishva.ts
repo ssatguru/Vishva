@@ -99,6 +99,8 @@ import { VTheme, VThemes } from "./gui/components/VTheme";
 import { VEvent } from "./eventing/VEvent";
 import { EventManager } from "./eventing/EventManager";
 import { VDiag } from "./gui/components/VDiag";
+import { SaveManager } from "./managers/SaveManager";
+import { LoadManager } from "./managers/LoadManager";
 
 
 
@@ -107,7 +109,7 @@ import { VDiag } from "./gui/components/VDiag";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.24";
+    static version: string = "0.4.0-alpha.25";
 
     public static worldName: string;
 
@@ -168,6 +170,10 @@ export class Vishva {
     public avatar: Mesh;
     private avatarSkeleton: Skeleton;
     private _avDisabled: boolean = false;
+
+    // Managers
+    private saveManager: SaveManager;
+    public loadManager: LoadManager;
 
 
     //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -309,8 +315,15 @@ export class Vishva {
         this.editEnabled = editEnabled;
         this.key = new Key();
 
+        // Initialize managers
+        this.saveManager = new SaveManager(this);
+        this.loadManager = new LoadManager(this);
+
         Vishva.gui = <HTMLCanvasElement>document.getElementById(guiId);
         this.canvas = <HTMLCanvasElement>document.getElementById(canvasId);
+        
+        // Setup drag and drop for loading assets
+        this.loadManager.setupDragAndDrop(this.canvas);
         
         //new version of engine uses audio engine 2, so setting "audioEngine: true" to support legacy code
         //a new version (around 7.3) of engine broke how GLTF textures are handled. during import "gammaSpace" is set to false and use "useSRGBBuffer" is set to true. which is wrong. :(
@@ -352,28 +365,10 @@ export class Vishva {
         if (sceneFile == "empty") {
             this.loadBabylonjsPart(this.scene, true);
         } else {
-            this.sceneLoad1(scenePath, sceneFile, this.scene);
+            this.loadManager.sceneLoad1(scenePath, sceneFile, this.scene);
         }
     }
 
-
-    // -- sceneload1 --
-    private sceneLoad1(scenePath: string, sceneFile: string, scene: Scene) {
-        var am: AssetsManager = new AssetsManager(scene);
-        var task: TextFileAssetTask = am.addTextFileTask("sceneLoader", scenePath + sceneFile);
-        task.onSuccess = (tsk) => { 
-            try{
-                this.loadVishvaPart(tsk) 
-            }catch(e){
-                console.log(e);
-                alert("scene parsing failed ");
-            }
-        };
-        task.onError = (tsk,msg,exp) => { 
-            console.log(msg, exp);
-            alert("scene load failed "); };
-        am.load();
-    }
 
     // -- loadVishvaPart --
     snas: SNAserialized[];
@@ -384,79 +379,6 @@ export class Vishva {
             return this.vishvaSerialized.guiSettings;
         else return null;
     }
-
-    //TODO see SNA.ts unMarshalProps - duplicate code
-    private _umarshalVec3(obj:Object ):void{
-        let keys:string[]=Object.keys(obj);
-        for (let key of keys){
-            if (obj[key] instanceof Object) {
-                let o: Object = obj[key];
-                let ns: string[] = Object.keys(o);
-                let l: number = ns.length;
-                if ((l == 4) &&(ns.indexOf("_x") >= 0)&& (ns.indexOf("_y") >= 0) && (ns.indexOf("_z") >= 0) && (ns.indexOf("_isDirty") >= 0)) {
-                        obj[key] =new Vector3(o["_x"], o["_y"], o["_z"]);
-                }else{
-                    this._umarshalVec3(o);
-                }
-            }
-        }
-    }
-
-    //load the vishva part 
-    private loadVishvaPart(tsk: TextFileAssetTask) {
-        // console.log("loadVishvaPart");
-        let tfat: TextFileAssetTask = tsk;
-        let foo: Object = <Object>JSON.parse(tfat.text);
-
-        this.vishvaSerialized = foo["VishvaSerialized"];
-
-        this._umarshalVec3(this.vishvaSerialized);
-
-        //version 0.4.0-alpha.21 and prior didnot have ellipsoid value serialized
-        //following can be removed once those worlds have been upgraded
-        if (!this.vishvaSerialized.avSerialized.settings.ellipsoid){
-            this.vishvaSerialized.avSerialized.settings.ellipsoid = new Vector3(0.15,0.8,0.15);
-            this.vishvaSerialized.avSerialized.settings.ellipsoidOffset = new Vector3(0.0,0.8,0.0);
-        }
-
-        //check if we have a vishva file. Might just be a babylon file
-        if (!(this.vishvaSerialized === undefined)) {
-            console.log("world babylon version : " + this.vishvaSerialized.bVer);
-            console.log("world vishva version : " + this.vishvaSerialized.vVer);
-
-            this.snas = this.vishvaSerialized.snas;
-            this._cameraCollision = this.vishvaSerialized.settings.cameraCollision;
-            this.autoEditMenu = this.vishvaSerialized.settings.autoEditMenu;
-            if (this.vishvaSerialized.misc.skyColor) {
-                this.skyColor.r = this.vishvaSerialized.misc.skyColor.r;
-                this.skyColor.g = this.vishvaSerialized.misc.skyColor.g;
-                this.skyColor.b = this.vishvaSerialized.misc.skyColor.b;
-                this.skyColor.a = this.vishvaSerialized.misc.skyColor.a;
-            }
-
-            if (typeof this.vishvaSerialized.misc.skyBright !== "undefined") {
-                this.skyBright = this.vishvaSerialized.misc.skyBright;
-            }
-
-            if (typeof this.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
-                this.scene.shadowsEnabled = this.vishvaSerialized.misc.sceneShadowsEnabled;
-            }
-        }else{
-            this.vishvaSerialized = new VishvaSerialized();
-        }
-
-
-        var sceneData: string = "data:" + tfat.text;
-        SceneLoader.ShowLoadingScreen = false;
-
-        //SceneLoader.loggingLevel = SceneLoader.DETAILED_LOGGING;
-        // console.log("to loadBabylonjsPart");
-        SceneLoader.Append("", sceneData, this.scene, (scene) => { return this.loadBabylonjsPart(scene) });
-
-    }
-
-
-    // -- sceneload3 --
 
     /**
      * load the babylonjs part
@@ -990,7 +912,7 @@ export class Vishva {
 
     fogDensity: number = 0;
 
-    private isMeshSelected: boolean = false;
+    public isMeshSelected: boolean = false;
     //NOTE: sometime isMeshSelected is false and meshSelected != null
     //see removeEditControl()
     public meshSelected: TransformNode;
@@ -1003,7 +925,7 @@ export class Vishva {
     private meshesPicked: Array<TransformNode> = null;
 
     //did we select just a node or the root of the node.
-    private rootSelected: boolean = false;
+    public rootSelected: boolean = false;
     public isRootSelected(): boolean {
         return this.rootSelected;
     }
@@ -1141,7 +1063,7 @@ export class Vishva {
         }
     }
 
-    private selectForEdit(mesh: TransformNode) {
+    public selectForEdit(mesh: TransformNode) {
         //if in multiselect then remove from multiselect
         this.multiUnSelect(mesh);
         this.isMeshSelected = true;
@@ -1575,6 +1497,7 @@ export class Vishva {
     private addBox(): AbstractMesh {
         let mesh: Mesh = Mesh.CreateBox("box", 1, this.scene);
         this.setPrimProperties(mesh);
+        console.log(mesh.rotationQuaternion);
         return mesh;
     }
 
@@ -2069,7 +1992,7 @@ export class Vishva {
     }
 
     //play a small scaling animation when cloning or instancing a mesh.
-    private animateMesh(mesh: TransformNode, scale?: number): void {
+    public animateMesh(mesh: TransformNode, scale?: number): void {
         //if (!(mesh instanceof AbstractMesh)) return;
         if (scale == null) scale = 1.5;
         let startScale: Vector3 = mesh.scaling.clone().scaleInPlace(scale);
@@ -2099,7 +2022,7 @@ export class Vishva {
     public deleteTheMesh(mesh: TransformNode) {
         if (mesh instanceof AbstractMesh) {
             SNAManager.getSNAManager().removeSNAs(mesh);
-            this._removeFromShadowCasters(mesh);
+            this.saveManager.removeFromShadowCasters(mesh);
             //check if this mesh is an SPS mesh.
             //if yes then delete the sps
             this.deleteSPS(mesh);
@@ -3605,28 +3528,7 @@ export class Vishva {
      */
 
     public saveAsset(): string {
-        if (!this.isMeshSelected) {
-            return null;
-        }
-        //this.renameWorldTextures();
-        let p: Vector3 = this.meshSelected.position.clone();
-        let re: Vector3 = this.meshSelected.rotation.clone();
-        let rq: Quaternion = this.meshSelected.rotationQuaternion.clone();
-
-        this.meshSelected.position = Vector3.Zero();
-        this.meshSelected.rotation = Vector3.Zero();
-        var meshObj: any = SceneSerializer.SerializeMesh(this.meshSelected, false, true);
-        meshObj.useRightHandedSystem = this.scene.useRightHandedSystem;
-
-        this.meshSelected.position = p;
-        this.meshSelected.rotation = re;
-        this.meshSelected.rotationQuaternion = rq;
-
-        //var meshString: string = JSON.stringify(meshObj);
-        //pretty save
-        var meshString: string = JSON.stringify(meshObj, null, 1);
-        var file: File = new File([meshString], "AssetFile.babylon");
-        return URL.createObjectURL(file);
+        return this.saveManager.saveAsset();
     }
     public saveAsset_old(): string {
         if (!this.isMeshSelected) {
@@ -3644,152 +3546,14 @@ export class Vishva {
         return URL.createObjectURL(file);
     }
     public saveWorld(): string {
-
-        if (this.editControl != null) {
-            DialogMgr.showAlertDiag("cannot save during edit");
-            return null;
-        }
-
-        if (!this.isFocusOnAv) {
-            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to switch focus to avatar and try again");
-            return null;
-        }
-
-        //remove redundant cameras
-        let cameras: Camera[] = this.scene.cameras;
-        let l = cameras.length;
-        //iterate in reverse
-        for (let i = l - 1; i >= 0; i--) {
-            if (cameras[i].name == "") {
-                cameras[i].dispose();
-            }
-        }
-
-        this.removeInstancesFromShadow();
-        this.renameMeshIds();
-        this.cleanupSkels();
-        this.resetSkels(this.scene);
-        this.cleanupMats();
-        //this.renameWorldTextures();
-
-        let vishvaSerialzed = new VishvaSerialized(this);
-        vishvaSerialzed.bVer = Engine.Version;
-        vishvaSerialzed.vVer = Vishva.version;
-
-        vishvaSerialzed.settings.cameraCollision = this._cameraCollision;
-        vishvaSerialzed.settings.autoEditMenu = this.autoEditMenu;
-
-        vishvaSerialzed.guiSettings = this.vishvaGUI.guiSettings;
-
-        vishvaSerialzed.misc.activeCameraTarget = this.arcCamera.target;
-        vishvaSerialzed.misc.skyColor = this.skyColor;
-        vishvaSerialzed.misc.skyBright = this.skyBright;
-        vishvaSerialzed.misc.sceneShadowsEnabled = this.scene.shadowsEnabled;
-
-        //serialize sna before scene
-        //we might add tags to meshes in scene during sna serialize.
-        //if we serialize scene before then we would miss those
-        //var snaObj: Object = SNAManager.getSNAManager().serializeSnAs(this.scene);
-        vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.scene);
-
-
-        Texture.ForceSerializeBuffers = false;
-        let sceneObj: Object = <Object>SceneSerializer.Serialize(this.scene);
-        //this.changeSoundUrl(sceneObj);
-        this.removeSounds(sceneObj);
-        //remove all materials created for ActuatorTextBar
-        //these are always recreated when scene is loaded.
-        //they have dynatic textures stored as base64 which makes the file large
-        this._removeActuatorTextBarMat(sceneObj);
-
-        //sceneObj["VishvaSNA"] = snaObj;
-        sceneObj["VishvaSerialized"] = vishvaSerialzed;
-
-        //sceneObj = this._justAG(sceneObj);
-
-        //pretty formatted json
-        //console.log("pretty formatting and writing");
-        //let sceneString: string = JSON.stringify(sceneObj, null, 1);
-        let sceneString: string = JSON.stringify(sceneObj);
-
-        //var file: File = new File([sceneString], "WorldFile.babylon");
-        let blob = new Blob([sceneString], { type: "octet/stream" });
-        this.addInstancesToShadow();
-        //return URL.createObjectURL(file);
-        return URL.createObjectURL(blob);
+        return this.saveManager.saveWorld();
     }
 
-
-    //this will effect the current running scene
-    //so we will add them back after save
-    //see addInstancesToShadow()
-    private removeInstancesFromShadow() {
-        var meshes: AbstractMesh[] = this.scene.meshes;
-        for (let mesh of meshes) {
-            if (mesh != null && mesh instanceof InstancedMesh) {
-                this._removeFromShadowCasters(mesh);
-            }
-        }
-    }
-
-    private _removeFromShadowCasters(mesh: AbstractMesh) {
-        var shadowMeshes: Array<AbstractMesh> = this.shadowGenerator.getShadowMap().renderList;
-        var i: number = shadowMeshes.indexOf(mesh);
-        if (i >= 0) {
-            shadowMeshes.splice(i, 1);
-        }
-    }
 
     private _addToShadowCasters(mesh: AbstractMesh) {
-        if ((<Mesh>mesh).geometry != null || mesh.isAnInstance) {
-            this.shadowGenerator.getShadowMap().renderList.push(mesh);
-            if (mesh instanceof InstancedMesh) {
-                mesh.sourceMesh.receiveShadows = this._recShadowFlag;
-            } else {
-                mesh.receiveShadows = this._recShadowFlag;
-            }
-        }
+        this.saveManager.addToShadowCasters(mesh);
     }
 
-
-    private addInstancesToShadow() {
-        for (let mesh of this.scene.meshes) {
-            if (mesh != null && mesh instanceof InstancedMesh) {
-                this._addToShadowCasters(mesh);
-            }
-        }
-    }
-
-    /**
-     * 
-     * assign unique id to each mesh. serialization uses mesh id to add mesh to
-     * the shadowgenerator renderlist if two or more mesh have same id then
-     * during desrialization only one mesh gets added to the renderlist
-     * 
-     */
-    private renameMeshIds() {
-        var i: number = 0;
-        for (let mesh of this.scene.meshes) {
-            mesh.id = (<number>new Number(i)).toString();
-            i++;
-        }
-    }
-
-    /**
-     * resets each skel.assign. unique id to each skeleton. deserialization uses
-     * skeleton id to associate skel with mesh. if id isn't unique wrong skels
-     * could get assigned to a mesh.
-     * 
-     * @param scene
-     */
-    private resetSkels(scene: Scene) {
-        var i: number = 0;
-        for (let skel of scene.skeletons) {
-            skel.id = (<number>new Number(i)).toString();
-            i++;
-            skel.returnToRest();
-        }
-    }
 
     private renameWorldTextures() {
         var mats: Material[] = this.scene.materials;
@@ -3845,412 +3609,9 @@ export class Vishva {
             //sceneObj["sounds"] = soundList;
         }
     }
-    /**
-     * there seems to be some issue with sounds attached to mesh "instances"
-     * they donot deserialze properly
-     */
-    private removeSounds(sceneObj: Object) {
-        var sounds = sceneObj["sounds"];
-        if (sounds != null) {
-            sceneObj["sounds"] = [];
-        }
-
-    }
-
-    private _justAG(sceneObj){
-        let ag = sceneObj["animationGroups"];
-        return {"animationGroups": ag};
-    }
-
-    private _removeActuatorTextBarMat(sceneObj){
-        let materials = sceneObj["materials"];
-        if (materials != null) {
-            var l = materials.length;
-            for (let i = l - 1; i >= 0; i--) {
-                if (materials[i]["id"].startsWith("AdvancedDynamicTextureMaterial for ActuatorTextBar")) {
-                    materials.splice(i, 1);
-                }
-            }
-        }
-
-    }
-
-    /**
-     * remove all materials not referenced by any mesh
-     * TODO do we really want to do this?. Materila might be needed later on.
-     */
-    private cleanupMats() {
-        var meshes: AbstractMesh[] = this.scene.meshes;
-        var mats: Array<Material> = new Array<Material>();
-        var mms: Array<MultiMaterial> = new Array<MultiMaterial>();
-        for (let mesh of meshes) {
-            if (mesh.material != null) {
-                if (mesh.material != null && mesh.material instanceof MultiMaterial) {
-                    var mm: MultiMaterial = <MultiMaterial>mesh.material;
-                    mms.push(mm);
-                    var ms: Material[] = mm.subMaterials;
-                    for (let mat of ms) {
-                        mats.push(mat);
-                    }
-                } else {
-                    mats.push(mesh.material);
-                }
-            }
-        }
-
-        var allMats: Material[] = this.scene.materials;
-        var l: number = allMats.length;
-        for (var i: number = l - 1; i >= 0; i--) {
-            if (mats.indexOf(allMats[(<number>i | 0)]) === -1) {
-                allMats[(<number>i | 0)].dispose();
-            }
-        }
-        var allMms: MultiMaterial[] = this.scene.multiMaterials;
-        l = allMms.length;
-        for (var i: number = l - 1; i >= 0; i--) {
-            if (mms.indexOf(allMms[(<number>i | 0)]) === -1) {
-                allMms[(<number>i | 0)].dispose();
-            }
-        }
-    }
-
-    /**
-     * remove all skeletons not referenced by any mesh
-     *  TODO do we really want to do this?. Skeleton might be needed later on.
-     * 
-     */
-    private cleanupSkels() {
-        var meshes: AbstractMesh[] = this.scene.meshes;
-        var skels: Array<Skeleton> = new Array<Skeleton>();
-        for (let mesh of meshes) {
-            if (mesh.skeleton != null) {
-                skels.push(mesh.skeleton);
-            }
-        }
-        var allSkels: Skeleton[] = this.scene.skeletons;
-        var l: number = allSkels.length;
-        for (var i: number = l - 1; i >= 0; i--) {
-            if (skels.indexOf(allSkels[(<number>i | 0)]) === -1) {
-                allSkels[(<number>i | 0)].dispose();
-            }
-        }
-    }
-
-    //older, used by old GUI file loader dislog
-    public loadAssetFile(file: File) {
-        console.log("loading loadAssetFile old ");
-        var sceneFolderName: string = file.name.split(".")[0];
-        SceneLoader.ImportMesh("", Vishva.vHome + "assets/" + sceneFolderName + "/", file.name, this.scene, (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, "", "") });
-    }
-
-    filePath: string;
-
-    file: string;
-
-    /**
-     * used to load internal/curated assets
-     * 
-     * @param category 
-     * @param asset 
-     */
-    public loadCurAsset(category: string, asset: string) {
-        console.log("loading curated ",category,asset);
-        this.filePath = category;
-        this.file = asset;
-        let folder: string = asset.split(".")[0];
-
-        //check if "asset.json" exist in the same folder as the asset
-        //if yes then load that file along with the asset and use it to configure the asset after it is loaded
-        //if no then load the asset as is
-        //TODO check if file exists in Vishva.userAssets
-
-        SceneLoader.ImportMesh("",
-            Vishva.vHome + "assets/curated/" + category + "/" + folder + "/",
-            asset,
-            this.scene,
-            (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, asset, "curated",category) });
-    }
-
-    /**
-     * used to load user assets
-     * 
-     * @param path 
-     * @param file 
-     */
-
-    public loadUserAsset1(path: string, file: string) {
-        console.log("loading loadUserAsset1 ");
-        this.filePath = path;
-        this.file = file;
-        SceneLoader.ImportMesh("",
-            Vishva.vHome + "assets/" + path,
-            file,
-            this.scene,
-            (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "user") });
-    }
-
-    //used to load assets other than curated asset
-    public loadUserAsset(path: string, file: string) {
-        console.log("loading loadUserAsset ");
-        this.filePath = path;
-        this.file = file;
-        SceneLoader.LoadAssetContainer(
-            Vishva.vHome + "assets/" + path,
-            file,
-            this.scene,
-            (assets: AssetContainer) => {
-                let meshes = assets.meshes;
-                let particleSystems = assets.particleSystems;
-                let skeletons = assets.skeletons;
-                let animationGroups = assets.animationGroups;
-                assets.addAllToScene();
-                return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file, "user")
-            });
-    }
-
-    public loadUserAsset3(path: string, file: string) {
-        console.log("loading loadUserAsset3 ");
-        this.filePath = path;
-        this.file = file;
-        SceneLoader.Append(
-            Vishva.vHome + "assets/" + path,
-            file,
-            this.scene,
-            (scene) => {
-                console.log("scene loaded");
-            });
-    }
-
-   /**
-    *  resue animationgroup
-    *  if an animation group with the same name as that of the passed animationGroup exist in the scene  then 
-    *  go thru each targeted animation in this passed animation group and replace 
-    *  its animation with the one from the scene
-    */
-    private reuseAnimationGroup(ag:AnimationGroup){
-        let existingAG = this.scene.getAnimationGroupByName(ag.name);
-        if (existingAG && existingAG !== ag ) {
-            console.log("reusing animation group " + ag.name);
-            for (let targetedAnim of ag.targetedAnimations) {
-                let existingTargetedAnim = existingAG.targetedAnimations.find(ta => ta.animation.name === targetedAnim.animation.name);
-                if (existingTargetedAnim) {
-                    targetedAnim.animation = existingTargetedAnim.animation;
-                }
-            }
-        }
-    }
 
 
-    //TODO if mesh created using Blender (check producer == Blender, find all skeleton animations and increment "from frame"  by 1
-
-    /*
-     * if multiple meshes and more than one are parentless then create a empty mesh and add all the parentless meshes to 
-     * it as childs.
-     * if just one mesh or just on root mesh then just add them to scene
-     */
-
-
-    private onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string,folder?:string) {
-        console.log("loading meshes from file " + file + " from folder " + folder + " of type "+ assetType + " mesh count " + meshes.length);
-
-        for (let s of skeletons) {
-            this.scene.stopAnimation(s);
-        }
-
-        for (let ag of animationGroups) {
-            ag.stop();
-            this.reuseAnimationGroup(ag);
-        }
-
-
-        if (file.split(".")[1] == "obj") {
-            this._fixObj(meshes);
-        }
-
-        //this._fixGLB(meshes);
-
-        let _rootMeshesCount: number = 0;
-        let rootMesh: TransformNode = null;
-        let i = 0;
-        for (let mesh of meshes) {
-            mesh.isPickable = true;
-            if (mesh.parent == null) {
-                _rootMeshesCount++;
-                rootMesh = <Mesh>mesh;
-            }
-            //TODO Large world asset , _addToShadowCasters resulted in FPS fallin from 35=39 to 16-20
-            this._addToShadowCasters(mesh);
-            //no need to rename, 3.1 version seems to preserve the texture img urls
-            //this._renameTextures(mesh);
-            this.scene.stopAnimation(mesh);
-            if (mesh.skeleton != null) {
-                this.scene.stopAnimation(mesh.skeleton);
-                this.avManager.fixAnimationRanges(mesh.skeleton);
-            }
-        }
-
-        /*
-        if multiple meshes then create a empty root mesh, place it in front of the avatar
-        and add all other meshes as children to this.
-        else if just one mesh add that in front of avatar
-        */
-        if (_rootMeshesCount > 1) {
-
-            rootMesh = new TransformNode(file, this.scene, true);
-
-            //cannot instance mesh without geometry
-            //so create a small mesh
-            //rootMesh = Mesh.CreatePlane("root-" + this.uid(), 0.01, this.scene);
-            //rootMesh = new Mesh("root-" + this.uid(), this.scene);
-
-            for (let mesh of meshes) {
-                if (mesh.parent == null) {
-                    mesh.parent = rootMesh;
-                }
-            }
-
-        } else {
-            if (rootMesh != null) {
-                if (rootMesh.name === "__root__") {
-                    rootMesh.name = file;
-                }
-            }
-        }
-
-
-        // if a rootmesh was created before then scaling will not happen
-        // as we didnot add the rootmesh (a TransformNode) to the meshes array (Array of AbstractMesh)
-        // and thus are not passing that rootmesh below. all other meshes now have a parent (the rootmesh).
-        // Hences we should not do scaling in postLoad
-        this._postLoad(meshes, assetType, folder, file);
-
-        //let boundingRadius: number = this.getBoundingRadius(meshes);
-        //bounding radius doesnot seem to change with scale (radius or radiusWorld give same result)
-
-        let scaling = false;
-        let sf: Vector3;
-        let scaleNum: number = 1;
-        let scaleObj ={};
-        if (assetType == "curated" && curatedConfig) {
-            if ('scale' in curatedConfig){
-                console.log('scale in curatedConfig');
-                scaling = true;
-                scaleObj = curatedConfig['scale'];
-            }
-            if(folder in curatedConfig){
-                if ('scale' in curatedConfig[folder]){
-                    console.log('scale in curatedConfig[folder]');
-                    scaling = true;
-                    scaleObj = curatedConfig[folder]['scale'];
-                }
-                if( file in curatedConfig[folder] && 'scale' in curatedConfig[folder][file]) {
-                    console.log('scale in curatedConfig[folder][file]');
-                    scaling = true;
-                    scaleObj = curatedConfig[folder][file]["scale"];
-                }
-            }
-        }
-        if (scaling && rootMesh != null) {
-            sf = new Vector3();
-            sf.x = Number(scaleObj[0]);
-            sf.y = Number(scaleObj[1]);
-            sf.z = Number(scaleObj[2]);
-            rootMesh.scaling.multiplyInPlace(sf);
-            //for bounding we will assume, for now, that scaling is same in all three dimensions
-            scaleNum = sf.x;
-        }
-        
-        this.postionAsset(rootMesh,scaleNum);
-
-        EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
-    }
-
-    private postionAsset(rootMesh: TransformNode,scaleNum) {
-        let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
-
-
-        // 2 m in front of av. also check if AV is forward facing
-        let dist =2;
-        if (this.avManager.cc.getSettings().faceForward) {
-            dist=-2;
-        }
-        let placementLocal: Vector3 = new Vector3(0, 0, -(scaleNum * dist));
-        //in global space
-        let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-
-        //vector from av to placementGlobal
-        let v: Vector3 = placementGlobal.subtract(this.avatar.position);
-        //now find which co-ordinate quadrant is this v in, that will give the quadrant the AV is facing
-        //quadrant 1 to 4 anti clockwise
-        let q:number=0;
-        if (v.x>=0 && v.z>=0){
-            q=1;
-        }else if (v.x<=0 && v.z>=0){
-            q=2;
-        }else if (v.x<=0 && v.z<=0){
-            q=3;
-        }else q=4;
-
-        //now find bounding box corner closest to AV
-        //this is the corner which will be placed on placementGlobal
-        let corner: Vector3;
-        if (q==1){
-            corner=bb.min;
-        }else if (q==2){
-            corner=new Vector3(bb.max.x,bb.min.y,bb.min.z);
-        }else if (q==3){
-            corner=new Vector3(bb.max.x,bb.min.y,bb.max.z);
-        }else corner=new Vector3(bb.min.x,bb.min.y,bb.max.z); 
-
-        //now place the bb corner on the placementGobalPoint
-        if (rootMesh != null) {
-            //rootmesh location wrt corner = - corner vector
-            rootMesh.position.subtractInPlace(corner);
-            rootMesh.position.addInPlace(placementGlobal);
-            
-            if (!this.isMeshSelected) {
-                this.selectForEdit(rootMesh);
-            } else {
-                this.switchEditControl(rootMesh);
-            }
-            this.rootSelected = true;
-            this.animateMesh(rootMesh);
-        }
-    }
-
-    private _fixGLB(meshes: AbstractMesh[]) {
-        for (let mesh of meshes) {
-            console.log(mesh.name);
-            if (mesh.name === "__root__") {
-                console.log("found glb");
-                let childs: AbstractMesh[] = mesh.getChildMeshes();
-                for (let child of childs) {
-                    mesh.removeChild(child);
-                    this._reverseAxis(<Mesh>child);
-                }
-                mesh.dispose();
-            }
-        }
-    }
-
-    private _fixObj(meshes: AbstractMesh[]) {
-        console.log("fixing obj");
-        let a: Mesh;
-        let s: Vector3;
-        for (let mesh of meshes) {
-            if (mesh.parent != null) continue;
-
-            //this._switchXZ2(<Mesh>mesh);
-            // this._reverseAxis(mesh);
-
-            s = mesh.scaling;
-            s.z = -s.z;
-            //mesh.scaling = s.multiplyByFloats(3.0, 3.0, 3.0);
-            this._bakeTransforms(<Mesh>mesh);
-
-        }
-    }
-
+   
     //https://www.html5gamedevs.com/topic/33907-altering-the-vertices-of-an-imported-mesh/
     private _switchXZ(mesh: AbstractMesh) {
 
@@ -4374,99 +3735,7 @@ export class Vishva {
 
     }
 
-    //select and animate the last mesh loaded
-    private _postLoad(meshes: AbstractMesh[], assetType: string,folder:string,file:string) {
-        let reuseMaterials = false;
-        if (meshes.length > 0) {
-            for (let mesh of meshes) {
-                if (!(mesh instanceof Mesh)) continue;
-                reuseMaterials = false;
-                if (assetType == "curated" && curatedConfig) {
-                    if ('collision' in curatedConfig) mesh.checkCollisions = true;
-                    if ('reuseMaterial' in curatedConfig) reuseMaterials = true;
-                    if(folder in curatedConfig){
-                        if ('collision' in curatedConfig[folder])
-                            mesh.checkCollisions = curatedConfig[folder]['collision'];
-                        if('reuseMaterial' in curatedConfig[folder]) 
-                            reuseMaterials = curatedConfig[folder]['reuseMaterial'];
-                        if( file in curatedConfig[folder]){
-                            if( 'collision' in curatedConfig[folder][file])
-                                mesh.checkCollisions = curatedConfig[folder][file]['collision'];
-                            if( 'reuseMaterial' in curatedConfig[folder][file]) 
-                                reuseMaterials = curatedConfig[folder][file]['reuseMaterial'];
-                        }
-                    }
-                }
-                if (reuseMaterials){
-                    this._processMaterial(mesh, m => this._reuseMaterial(m));
-                }else{
-                    //TODO Large world asset processMaterial was failing
-                    this._processMaterial(mesh, m => this._makeMatIdUnique(m));
-                }
-                //TODO one time. remove afterwards
-                this._processMaterial(mesh, m => this._removeSpecular(m));
 
-            }
-
-                //TODO Large world asset one time ?
-                //console.log("mesh collision " + mesh.name);
-                //mesh.checkCollisions = true;
-
-            
-
-        }
-    }
-
-
-
-    /*
-        If a material already exist lets reuse it
-        instead of creating a new material.
-        This is only done for  curated assets
-        The first one will be suffxed by "@cur"
-    */
-
-    private _reuseMaterial(mat: Material): Material {
-        let m = this.scene.getLastMaterialByID(mat.id + "@cur");
-        if (m != null) {
-            mat.dispose();
-            return m;
-        } else {
-            mat.id = mat.id + "@cur";
-            return mat;
-        }
-    }
-
-    /*
-     * if we load the same mesh more than once than 
-     * these meshes end up with the same material id.
-     * 
-     */
-    private _makeMatIdUnique(mat: Material): Material {
-        mat.id = this.uid(mat.id);
-        return mat;
-    }
-
-    private _removeSpecular(m: Material) {
-        if (m instanceof StandardMaterial) {
-            m.specularColor = Color3.Black();
-        }
-        return m;
-    }
-
-    private _processMaterial(mesh: AbstractMesh, f: (mat: Material) => Material) {
-        if (mesh.material != null) {
-            if (mesh.material instanceof MultiMaterial) {
-                var mm: MultiMaterial = <MultiMaterial>mesh.material;
-                var mats: Material[] = mm.subMaterials;
-                for (let i = 0; i < mats.length; i++) {
-                    mats[i] = f(mats[i]);
-                }
-            } else {
-                mesh.material = f(mesh.material);
-            }
-        }
-    }
 
     /**
      * newids = oldsIds + "@" + some new unique number
@@ -4476,7 +3745,7 @@ export class Vishva {
      */
     private prevUid: number = 0;
     private uidPlus = 0;
-    private uid(oldId?: string): string {
+    public uid(oldId?: string): string {
         let newUid: number = Date.now();
         let ups = "";
         if (newUid == this.prevUid) {

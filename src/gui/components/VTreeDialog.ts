@@ -40,7 +40,7 @@ export class VTreeDialog {
         document.body.appendChild(diagDiv);
 
         let treeDiv: HTMLDivElement = <HTMLDivElement>diagDiv.lastElementChild;//.getElementsByTagName("div")[1];
-        this._treeDiag = new VDiag(diagDiv, diagTitle, pos, UIConst._diagWidth);
+        this._treeDiag = new VDiag(diagDiv, diagTitle, pos, UIConst._diagWidth,null,null,true);
         //this._treeDiag.setResizable(true);
         this._tree = new VTree(treeDiv, treeData, filter, openAll);
         //this._treeDiag.onClose((e,ul)=>{this._tree.onClose(e,ul);});

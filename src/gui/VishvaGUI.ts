@@ -227,7 +227,7 @@ export class VishvaGUI {
                 this._allAssetsVTDiag.addTreeListener((f, p, l) => {
                     if (l) {
                         if (f.indexOf(".obj") > 0 || f.indexOf(".babylon") > 0 || f.indexOf(".glb") > 0 || f.indexOf(".gltf") > 0) {
-                            this._vishva.loadUserAsset(p, f);
+                            this._vishva.loadManager.loadUserAsset(p, f);
                         }
                     }
                 });

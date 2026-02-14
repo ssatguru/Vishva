@@ -1,3 +1,7 @@
+### 02/14/2026 0.4.0-alpha.25
+- added drag and drop support for loading 3D assets directly from file system to canvas
+- supported formats: GLTF, GLB, OBJ, Babylon, STL
+- refactored code - now save world and load assets functionalites are in their own seperate files - SaveManager.ts and LoadManager.ts
 ### 02/01/2026 0.4.0-alpha.24
 - added ability to add and remove character controller from any mesh
 - character controllers attached to meshes are now serialized and deserialized when world is saved and loaded

@@ -1,3 +1,6 @@
+### 02/16/2026 0.4.0-alpha.27
+- added ability to save world to browser IndexedDB ("Save World to Browser" button)
+- load now checks browser IndexedDB first and will load world from browser storage if available (falls back to server)
 ### 02/15/2026 0.4.0-alpha.26
 - saveWorld now saves VishvaSerialized and Scene as separate files (Vishva.json and Scene.babylon) in a zip archive
 - world files now have .zip extension

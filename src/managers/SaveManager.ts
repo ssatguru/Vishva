@@ -37,7 +37,6 @@ export class SaveManager {
     }
 
     public async saveWorld(): Promise<string> {
-
         if (this.vishva.editControl != null) {
             DialogMgr.showAlertDiag("cannot save during edit");
             return null;
@@ -48,10 +47,62 @@ export class SaveManager {
             return null;
         }
 
-        // Show progress
         this.vishva.progressManager.show("Saving World", "Preparing scene...");
         this.vishva.progressManager.setProgress(10);
 
+        const zipBlob = await this._getWorldZipBlob();
+        
+        this.vishva.progressManager.setProgress(100);
+        
+        // Hide progress after a short delay
+        setTimeout(() => {
+            this.vishva.progressManager.hide();
+        }, 500);
+        
+        return URL.createObjectURL(zipBlob);
+    }
+
+    public async saveWorldToIndexedDB(): Promise<boolean> {
+        if (this.vishva.editControl != null) {
+            DialogMgr.showAlertDiag("cannot save during edit");
+            return false;
+        }
+
+        if (!this.vishva.isFocusOnAv) {
+            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to switch focus to avatar and try again");
+            return false;
+        }
+
+        this.vishva.progressManager.show("Saving World to Browser", "Preparing scene...");
+        this.vishva.progressManager.setProgress(10);
+
+        try {
+            const zipBlob = await this._getWorldZipBlob();
+            
+            this.vishva.progressManager.update("Saving to browser storage...", 95);
+
+            // Save to IndexedDB
+            const worldName = this.vishva.constructor.worldName || "world";
+            await this._saveZipBlobToIndexedDB(worldName, zipBlob);
+
+            this.vishva.progressManager.setProgress(100);
+            
+            // Hide progress after a short delay
+            setTimeout(() => {
+                this.vishva.progressManager.hide();
+            }, 500);
+
+            DialogMgr.showAlertDiag(`World saved to browser as "${worldName}"`);
+            return true;
+        } catch (error) {
+            console.error("Error saving world to IndexedDB:", error);
+            DialogMgr.showAlertDiag("Error saving world to browser: " + error.message);
+            this.vishva.progressManager.hide();
+            return false;
+        }
+    }
+
+    private async _getWorldZipBlob(): Promise<Blob> {
         this.removeRedundantCameras();
         this.removeInstancesFromShadow();
         this.renameMeshIds();
@@ -104,23 +155,85 @@ export class SaveManager {
             compressionOptions: { level: 6 }
         });
         
-        this.vishva.progressManager.update("Finalizing...", 95);
-        
         this.addInstancesToShadow();
         
-        this.vishva.progressManager.setProgress(100);
-        
-        // Hide progress after a short delay
-        setTimeout(() => {
-            this.vishva.progressManager.hide();
-        }, 500);
-        
-        return URL.createObjectURL(zipBlob);
-    
-        // const zipBlob = await zip.generateAsync({ type: "blob" });
-        
-        // this.addInstancesToShadow();
-        // return URL.createObjectURL(zipBlob);
+        return zipBlob;
+    }
+
+    private _saveZipBlobToIndexedDB(worldName: string, zipBlob: Blob): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const dbName = "VishvaWorlds";
+            const storeName = "worlds";
+            
+            const request = indexedDB.open(dbName, 1);
+
+            request.onerror = () => {
+                reject(new Error("Failed to open IndexedDB"));
+            };
+
+            request.onsuccess = () => {
+                const db = request.result;
+
+                // Create object store if it doesn't exist
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.close();
+                    const upgradeRequest = indexedDB.open(dbName, db.version + 1);
+                    
+                    upgradeRequest.onupgradeneeded = (event) => {
+                        const upgradeDb = (event.target as IDBOpenDBRequest).result;
+                        if (!upgradeDb.objectStoreNames.contains(storeName)) {
+                            upgradeDb.createObjectStore(storeName, { keyPath: "name" });
+                        }
+                    };
+
+                    upgradeRequest.onsuccess = () => {
+                        this._saveWorldToStore(upgradeRequest.result, worldName, zipBlob, resolve, reject);
+                    };
+
+                    upgradeRequest.onerror = () => {
+                        reject(new Error("Failed to upgrade IndexedDB"));
+                    };
+                } else {
+                    this._saveWorldToStore(db, worldName, zipBlob, resolve, reject);
+                }
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "name" });
+                }
+            };
+        });
+    }
+
+    private _saveWorldToStore(
+        db: IDBDatabase,
+        worldName: string,
+        zipBlob: Blob,
+        resolve: () => void,
+        reject: (error: Error) => void
+    ): void {
+        const transaction = db.transaction(["worlds"], "readwrite");
+        const store = transaction.objectStore("worlds");
+
+        const worldData = {
+            name: worldName,
+            data: zipBlob,
+            timestamp: new Date().toISOString()
+        };
+
+        const putRequest = store.put(worldData);
+
+        putRequest.onsuccess = () => {
+            db.close();
+            resolve();
+        };
+
+        putRequest.onerror = () => {
+            db.close();
+            reject(new Error("Failed to save world to IndexedDB"));
+        };
     }
 
     private removeRedundantCameras() {

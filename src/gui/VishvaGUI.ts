@@ -193,6 +193,13 @@ export class VishvaGUI {
             return false;
         };
 
+        // button to save world to browser IndexedDB
+        var saveWorld: HTMLElement = document.getElementById("saveWorld");
+        saveWorld.onclick = async (e) => {
+            var saved: boolean = await this._vishva.saveManager.saveWorldToIndexedDB();
+            return false;
+        };
+
         // buttons for internal and curated items
         let am = document.getElementById("AddMenu");
 

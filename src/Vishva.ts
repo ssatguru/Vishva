@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.26";
+    static version: string = "0.4.0-alpha.27";
 
     public static worldName: string;
 
@@ -173,7 +173,7 @@ export class Vishva {
     private _avDisabled: boolean = false;
 
     // Managers
-    private saveManager: SaveManager;
+    public saveManager: SaveManager;
     public loadManager: LoadManager;
     public progressManager: ProgressManager;
 

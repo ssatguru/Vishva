@@ -46,14 +46,29 @@ export class LoadManager {
 
     /**
      * Load world from zip file containing Vishva.json and Scene.babylon
+     * First tries to load from IndexedDB, then falls back to server
      */
     private async loadZipWorld(scenePath: string, sceneFile: string, scene: Scene) {
         try {
             // Show progress
-            this.vishva.progressManager.show("Loading World", "Fetching world file...");
-            this.vishva.progressManager.setProgress(10);
+            this.vishva.progressManager.show("Loading World", "Checking browser storage...");
+            this.vishva.progressManager.setProgress(5);
             
-            // Fetch the zip file
+            // Try to load from IndexedDB first
+            // const worldName = sceneFile.replace(/\.zip$/i, '');
+            const indexedDBData = await this._loadWorldFromIndexedDB(sceneFile);
+            
+            if (indexedDBData) {
+                const { vishvaData, sceneData } = indexedDBData;
+                this.vishva.progressManager.update("Processing world data...", 60);
+                this.loadVishvaPartFromObjects(vishvaData, sceneData);
+                return;
+            }
+
+           
+            // If not in IndexedDB, fetch from server
+            this.vishva.progressManager.update("Fetching world file from server...", 10);
+            
             const response = await fetch(scenePath + sceneFile);
             if (!response.ok) {
                 throw new Error(`Failed to load ${sceneFile}: ${response.statusText}`);
@@ -96,6 +111,92 @@ export class LoadManager {
             const errorMessage = e instanceof Error ? e.message : String(e);
             alert("Failed to load world: " + errorMessage);
         }
+    }
+
+    /**
+     * Try to load world from IndexedDB
+     * Returns { vishvaData, sceneData } if found, null otherwise
+     */
+    private _loadWorldFromIndexedDB(worldName: string): Promise<{ vishvaData: any; sceneData: any } | null> {
+        return new Promise((resolve) => {
+            try {
+                const dbName = "VishvaWorlds";
+                const storeName = "worlds";
+                
+                const request = indexedDB.open(dbName, 1);
+
+                request.onerror = () => {
+                    resolve(null);
+                };
+
+                request.onsuccess = () => {
+                    const db = request.result;
+
+                    // Check if object store exists
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.close();
+                        resolve(null);
+                        return;
+                    }
+                    try {
+                        const transaction = db.transaction([storeName], "readonly");
+                        const store = transaction.objectStore(storeName);
+                        const getRequest = store.get(worldName);
+
+                        getRequest.onsuccess = async () => {
+                            const result = getRequest.result;
+                            db.close();
+
+                            if (result && result.data) {
+                                this.vishva.progressManager.update("Loading and unzipping from browser storage...", 20);
+                                try {
+                                    const JSZip = (await import('jszip')).default;
+                                    const zip = await JSZip.loadAsync(result.data);
+
+                                    this.vishva.progressManager.update("Parsing data...", 40);
+
+                                    // Extract Vishva.json
+                                    const vishvaFile = zip.file("Vishva.json");
+                                    const vishvaText = await vishvaFile.async("text");
+                                    const vishvaData = JSON.parse(vishvaText);
+
+                                    // Extract Scene.babylon
+                                    const sceneFileInZip = zip.file("Scene.babylon");
+                                    const sceneText = await sceneFileInZip.async("text");
+                                    const sceneData = JSON.parse(sceneText);
+
+                                    resolve({ vishvaData, sceneData });
+                                } catch (e) {
+                                    console.error("Error extracting world from IndexedDB:", e);
+                                    resolve(null);
+                                }
+                            } else {
+                                resolve(null);
+                            }
+                        };
+
+                        getRequest.onerror = () => {
+                            db.close();
+                            resolve(null);
+                        };
+                    } catch (e) {
+                        console.error("Error accessing IndexedDB:", e);
+                        db.close();
+                        resolve(null);
+                    }
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = (event.target as IDBOpenDBRequest).result;
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: "name" });
+                    }
+                };
+            } catch (e) {
+                console.error("Error checking IndexedDB:", e);
+                resolve(null);
+            }
+        });
     }
 
     /**

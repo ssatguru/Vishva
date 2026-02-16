@@ -12,6 +12,8 @@ let navHTML = `
 
                 <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
 
+                <button id="saveWorld" title="save world to browser"><span class="material-icons-outlined">save</span></button>
+
                 <button id="navWorldAssets" title="list items in world"><span class="material-icons-outlined">account_tree</span></button>
 
                 <button id="navAllAssets" title="all files"><span class="material-icons-outlined" >folder</span></button>

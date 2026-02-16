@@ -1,4 +1,6 @@
 BUGS
+-stepsound in CCUi broken. second time it throws exception
+-actuatorRotator has stopped working on prims. by default rotationQuaternion for prims are set to nulls by default. (2/11/2026)
 
 - bug in charactercontroller, stop() should stop all animations too, currently it doesn't. pauseanims() should only stop animations not charcater movement
   if the canvas looses focus while key is pressed, the key release event isn't recoqnized and thus the action initiated by key press continues - exmaple walk forward

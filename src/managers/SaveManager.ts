@@ -5,6 +5,7 @@ import {
 import { VishvaSerialized } from "../VishvaSerialized";
 import { SNAManager, SNAserialized } from "../sna/SNA";
 import { DialogMgr } from "../gui/DialogMgr";
+import JSZip from "jszip";
 
 export class SaveManager {
     private vishva: any;
@@ -35,7 +36,8 @@ export class SaveManager {
         return URL.createObjectURL(file);
     }
 
-    public saveWorld(): string {
+    public async saveWorld(): Promise<string> {
+
         if (this.vishva.editControl != null) {
             DialogMgr.showAlertDiag("cannot save during edit");
             return null;
@@ -46,6 +48,10 @@ export class SaveManager {
             return null;
         }
 
+        // Show progress
+        this.vishva.progressManager.show("Saving World", "Preparing scene...");
+        this.vishva.progressManager.setProgress(10);
+
         this.removeRedundantCameras();
         this.removeInstancesFromShadow();
         this.renameMeshIds();
@@ -53,6 +59,9 @@ export class SaveManager {
         this.resetSkels(this.vishva.scene);
         this.cleanupMats();
 
+        this.vishva.progressManager.update("Creating world data...", 30);
+
+        // Create VishvaSerialized object
         let vishvaSerialzed = new VishvaSerialized(this.vishva);
         vishvaSerialzed.bVer = Engine.Version;
         vishvaSerialzed.vVer = this.vishva.constructor.version;
@@ -67,20 +76,51 @@ export class SaveManager {
 
         vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
 
+        this.vishva.progressManager.update("Serializing scene...", 50);
+
+        // Serialize the scene
         Texture.ForceSerializeBuffers = false;
         let sceneObj: Object = <Object>SceneSerializer.Serialize(this.vishva.scene);
         this.removeSounds(sceneObj);
         this.removeActuatorTextBarMat(sceneObj);
 
-        sceneObj["VishvaSerialized"] = vishvaSerialzed;
+        this.vishva.progressManager.update("Creating JSON files...", 70);
 
-        //pretty formatted json
-        //console.log("pretty formatting and writing");
-        //let sceneString: string = JSON.stringify(sceneObj, null, 1);
+        // Create separate JSON strings
+        let vishvaString: string = JSON.stringify(vishvaSerialzed);
         let sceneString: string = JSON.stringify(sceneObj);
-        let blob = new Blob([sceneString], { type: "octet/stream" });
+
+        this.vishva.progressManager.update("Creating zip archive...", 85);
+
+        // Create a zip file
+        const zip = new JSZip();
+        zip.file("Vishva.json", vishvaString);
+        zip.file("Scene.babylon", sceneString);
+
+        // Generate the zip file as a blob
+        const zipBlob = await zip.generateAsync({ 
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: { level: 6 }
+        });
+        
+        this.vishva.progressManager.update("Finalizing...", 95);
+        
         this.addInstancesToShadow();
-        return URL.createObjectURL(blob);
+        
+        this.vishva.progressManager.setProgress(100);
+        
+        // Hide progress after a short delay
+        setTimeout(() => {
+            this.vishva.progressManager.hide();
+        }, 500);
+        
+        return URL.createObjectURL(zipBlob);
+    
+        // const zipBlob = await zip.generateAsync({ type: "blob" });
+        
+        // this.addInstancesToShadow();
+        // return URL.createObjectURL(zipBlob);
     }
 
     private removeRedundantCameras() {

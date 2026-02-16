@@ -183,12 +183,12 @@ export class VishvaGUI {
 
         // button to download world
         var downWorld: HTMLElement = document.getElementById("downWorld");
-        downWorld.onclick = (e) => {
-            var downloadURL: string = this._vishva.saveWorld();
+        downWorld.onclick = async (e) => {
+            var downloadURL: string = await this._vishva.saveWorld();
             if (downloadURL == null) return true;
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
-            this._downloadLink.download = Vishva.worldName;
+            this._downloadLink.download = Vishva.worldName + ".zip";
             this._downloadDialog.show();
             return false;
         };

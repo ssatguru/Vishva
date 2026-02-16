@@ -327,15 +327,14 @@ export class GeneralUI {
             let isNew = cc === undefined;
             let originalEllipsoid: Vector3;
             if(isNew){
-                console.log("is new cc");
                 let m:Mesh = <Mesh>this._vishva.meshSelected;
                 originalEllipsoid = m.ellipsoid.clone();
                 m["_originalEllipsoid"] = originalEllipsoid;
-               //m.ellipsoid =  new Vector3(0.15, 0.8, 0.15);
-                //m.ellipsoidOffset =  new Vector3(0,m.ellipsoid.y,0);
-                let boundingInfo = m.getBoundingInfo();
-                let size = boundingInfo.boundingBox.extendSize;
-                m.ellipsoid = new Vector3(size.x, size.y, size.z);
+                m.ellipsoid =  new Vector3(0.5, 1, 0.5);
+                m.ellipsoidOffset =  new Vector3(0,m.ellipsoid.y,0);
+                // let boundingInfo = m.getBoundingInfo();
+                // let size = boundingInfo.boundingBox.extendSize;
+                // m.ellipsoid = new Vector3(size.x, size.y, size.z);
                 if (m.rotationQuaternion !==null){
                     console.log("removing quaternion",m.rotationQuaternion);
                     m.rotation = m.rotationQuaternion.toEulerAngles();

@@ -9,7 +9,8 @@ import {
     Animation,
     Axis,
     Mesh,
-    Quaternion
+    Quaternion,
+    Vector3
 } from "babylonjs";
 // import Axis = BABYLON.Axis;
 // import Mesh = BABYLON.Mesh;
@@ -32,25 +33,56 @@ export class ActuatorRotator extends ActuatorAbstract {
 
     override actuate() {
         var properties: ActRotatorParm = <ActRotatorParm>this.properties;
-        var cPos: Quaternion = this.mesh.rotationQuaternion.clone();
-        var nPos: Quaternion;
-        var rotX: Quaternion = Quaternion.RotationAxis(Axis.X, properties.x * Math.PI / 180);
-        var rotY: Quaternion = Quaternion.RotationAxis(Axis.Y, properties.y * Math.PI / 180);
-        var rotZ: Quaternion = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
-        var abc: Quaternion = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
-        if (properties.toggle) {
-            if (properties.state_notReversed) {
-                nPos = cPos.multiply(abc);
+        
+        // Check if mesh uses quaternion or euler rotation
+        const usesQuaternion = this.mesh.rotationQuaternion != null;
+        
+        if (usesQuaternion) {
+            // Original quaternion-based rotation
+            var cPos: Quaternion = this.mesh.rotationQuaternion.clone();
+            var nPos: Quaternion;
+            var rotX: Quaternion = Quaternion.RotationAxis(Axis.X, properties.x * Math.PI / 180);
+            var rotY: Quaternion = Quaternion.RotationAxis(Axis.Y, properties.y * Math.PI / 180);
+            var rotZ: Quaternion = Quaternion.RotationAxis(Axis.Z, properties.z * Math.PI / 180);
+            var abc: Quaternion = Quaternion.RotationYawPitchRoll(properties.y * Math.PI / 180, properties.x * Math.PI / 180, properties.z * Math.PI / 180);
+            if (properties.toggle) {
+                if (properties.state_notReversed) {
+                    nPos = cPos.multiply(abc);
+                } else {
+                    nPos = cPos.multiply(Quaternion.Inverse(abc));
+                }
+            } else nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
+            properties.state_notReversed = !properties.state_notReversed;
+            
+            this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => {
+                return this.onActuateEnd()
+            });
+        } else {
+            // Euler-based rotation
+            var cRot = this.mesh.rotation.clone();
+            var nRot = cRot.clone();
+            
+            if (properties.toggle) {
+                if (properties.state_notReversed) {
+                    nRot.x += properties.x * Math.PI / 180;
+                    nRot.y += properties.y * Math.PI / 180;
+                    nRot.z += properties.z * Math.PI / 180;
+                } else {
+                    nRot.x -= properties.x * Math.PI / 180;
+                    nRot.y -= properties.y * Math.PI / 180;
+                    nRot.z -= properties.z * Math.PI / 180;
+                }
             } else {
-                nPos = cPos.multiply(Quaternion.Inverse(abc));
+                nRot.x += properties.x * Math.PI / 180;
+                nRot.y += properties.y * Math.PI / 180;
+                nRot.z += properties.z * Math.PI / 180;
             }
-        } else nPos = cPos.multiply(rotX).multiply(rotY).multiply(rotZ);
-        properties.state_notReversed = !properties.state_notReversed;
-        var cY: number = this.mesh.position.y;
-        var nY: number = this.mesh.position.y + 5;
-        this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotationQuaternion", 60, 60 * properties.duration, cPos, nPos, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => {
-            return this.onActuateEnd()
-        });
+            properties.state_notReversed = !properties.state_notReversed;
+            
+            this.a = Animation.CreateAndStartAnimation("rotate", this.mesh, "rotation", 60, 60 * properties.duration, cRot, nRot, Animation.ANIMATIONLOOPMODE_CONSTANT, null, () => {
+                return this.onActuateEnd()
+            });
+        }
     }
 
     override getName(): string {

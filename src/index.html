@@ -20,9 +20,14 @@
 
   <body oncontextmenu="return false;" style="background-color: #000000; color: #ffffff">
     <div id="vGUI" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%">
-      <div id="loadingMsg" style="text-align: center; width: 100px; height: 100px; position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto">
-        loading<br />
-        please wait<br />
+      <div id="modalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999; pointer-events: auto;"></div>
+      <div id="loadingMsg" style="text-align: center; width: 300px; height: 150px; position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; background-color: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 10px; z-index: 1000;">
+        <div id="loadingText" style="font-size: 18px; margin-bottom: 10px;">Loading</div>
+        <div id="loadingStatus" style="font-size: 14px; margin-bottom: 15px; color: #aaa;">Please wait...</div>
+        <div style="width: 100%; background-color: #333; border-radius: 5px; overflow: hidden;">
+          <div id="loadingProgress" style="width: 0%; height: 20px; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s ease;"></div>
+        </div>
+        <div id="loadingPercent" style="font-size: 12px; margin-top: 10px; color: #888;">0%</div>
       </div>
     </div>
     <canvas id="vCanvas" tabindex="1" touch-action="none" style="position: absolute; top: 0%; bottom: 0%; width: 100%; height: 100%"> </canvas>

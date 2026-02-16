@@ -1,3 +1,10 @@
+### 02/15/2026 0.4.0-alpha.26
+- saveWorld now saves VishvaSerialized and Scene as separate files (Vishva.json and Scene.babylon) in a zip archive
+- world files now have .zip extension
+- loading supports both new .zip format and legacy single-file format for backward compatibility
+- ActuatorRotator now supports both Quaternion and Euler rotation modes
+- improved drag and drop to handle multiple files and dependencies (textures, MTL files, etc.)
+- added progress bar during load and save
 ### 02/14/2026 0.4.0-alpha.25
 - added drag and drop support for loading 3D assets directly from file system to canvas
 - supported formats: GLTF, GLB, OBJ, Babylon, STL

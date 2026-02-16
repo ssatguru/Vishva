@@ -101,6 +101,7 @@ import { EventManager } from "./eventing/EventManager";
 import { VDiag } from "./gui/components/VDiag";
 import { SaveManager } from "./managers/SaveManager";
 import { LoadManager } from "./managers/LoadManager";
+import { ProgressManager } from "./managers/ProgressManager";
 
 
 
@@ -109,7 +110,7 @@ import { LoadManager } from "./managers/LoadManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.25";
+    static version: string = "0.4.0-alpha.26";
 
     public static worldName: string;
 
@@ -174,6 +175,7 @@ export class Vishva {
     // Managers
     private saveManager: SaveManager;
     public loadManager: LoadManager;
+    public progressManager: ProgressManager;
 
 
     //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -316,6 +318,7 @@ export class Vishva {
         this.key = new Key();
 
         // Initialize managers
+        this.progressManager = new ProgressManager();
         this.saveManager = new SaveManager(this);
         this.loadManager = new LoadManager(this);
 
@@ -3545,8 +3548,8 @@ export class Vishva {
         var file: File = new File([meshString], "AssetFile.babylon");
         return URL.createObjectURL(file);
     }
-    public saveWorld(): string {
-        return this.saveManager.saveWorld();
+    public async saveWorld(): Promise<string> {
+        return await this.saveManager.saveWorld();
     }
 
 
@@ -3805,37 +3808,8 @@ export class Vishva {
         return maxRadius;
     }
 
-    private loadWorldFile(file: File) {
-        this.sceneFolderName = file.name.split(".")[0];
-        var fr: FileReader = new FileReader();
-        fr.onload = (e) => { return this.onSceneFileRead(e) };
-        fr.readAsText(file);
-    }
-
-    private onSceneFileRead(e: Event): any {
-        this.sceneData = "data:" + <string>(<FileReader>e.target).result;
-        this.engine.stopRenderLoop();
-        this.scene.onDispose = () => { return this.onSceneDispose() };
-        this.scene.dispose();
-        return null;
-    }
-
-    sceneFolderName: string;
-
-    sceneData: string;
-
-    private onSceneDispose() {
-        this.scene = null;
-        this.avatarSkeleton = null;
-        this.avatar = null;
-        //TODO Charcter Controller check implication
-        // this.prevAnim = null; 
-        SceneLoader.Load("worlds/" + this.sceneFolderName + "/", this.sceneData, this.engine, (scene) => { return this.loadBabylonjsPart(scene) });
-    }
-
     shadowGenerator: CascadedShadowGenerator;
     avShadowGenerator: CascadedShadowGenerator;
-
 
     public createWater() {
         console.log("creating water");

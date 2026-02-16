@@ -18,21 +18,137 @@ export class LoadManager {
     }
 
     public sceneLoad1(scenePath: string, sceneFile: string, scene: Scene) {
-        var am: AssetsManager = new AssetsManager(scene);
-        var task: TextFileAssetTask = am.addTextFileTask("sceneLoader", scenePath + sceneFile);
-        task.onSuccess = (tsk) => {
-            try {
-                this.loadVishvaPart(tsk);
-            } catch (e) {
-                console.log(e);
-                alert("scene parsing failed ");
+        // Check if the file is a zip file
+        const isZipFile = sceneFile.toLowerCase().endsWith('.zip');
+        
+        if (isZipFile) {
+            // Load as zip file
+            this.loadZipWorld(scenePath, sceneFile, scene);
+        } else {
+            // Load as traditional single file
+            var am: AssetsManager = new AssetsManager(scene);
+            var task: TextFileAssetTask = am.addTextFileTask("sceneLoader", scenePath + sceneFile);
+            task.onSuccess = (tsk) => {
+                try {
+                    this.loadVishvaPart(tsk);
+                } catch (e) {
+                    console.log(e);
+                    alert("scene parsing failed ");
+                }
+            };
+            task.onError = (tsk, msg, exp) => {
+                console.log(msg, exp);
+                alert("scene load failed ");
+            };
+            am.load();
+        }
+    }
+
+    /**
+     * Load world from zip file containing Vishva.json and Scene.babylon
+     */
+    private async loadZipWorld(scenePath: string, sceneFile: string, scene: Scene) {
+        try {
+            // Show progress
+            this.vishva.progressManager.show("Loading World", "Fetching world file...");
+            this.vishva.progressManager.setProgress(10);
+            
+            // Fetch the zip file
+            const response = await fetch(scenePath + sceneFile);
+            if (!response.ok) {
+                throw new Error(`Failed to load ${sceneFile}: ${response.statusText}`);
             }
-        };
-        task.onError = (tsk, msg, exp) => {
-            console.log(msg, exp);
-            alert("scene load failed ");
-        };
-        am.load();
+            
+            this.vishva.progressManager.update("Extracting archive...", 30);
+            
+            const zipBlob = await response.blob();
+            const JSZip = (await import('jszip')).default;
+            const zip = await JSZip.loadAsync(zipBlob);
+            
+            this.vishva.progressManager.update("Reading world data...", 50);
+            
+            // Extract Vishva.json
+            const vishvaFile = zip.file("Vishva.json");
+            if (!vishvaFile) {
+                throw new Error("Vishva.json not found in zip file");
+            }
+            const vishvaText = await vishvaFile.async("text");
+            const vishvaData = JSON.parse(vishvaText);
+            
+            this.vishva.progressManager.update("Reading scene data...", 70);
+            
+            // Extract Scene.babylon
+            const sceneFileInZip = zip.file("Scene.babylon");
+            if (!sceneFileInZip) {
+                throw new Error("Scene.babylon not found in zip file");
+            }
+            const sceneText = await sceneFileInZip.async("text");
+            const sceneData = JSON.parse(sceneText);
+            
+            this.vishva.progressManager.update("Loading scene...", 85);
+            
+            // Process the loaded data
+            this.loadVishvaPartFromObjects(vishvaData, sceneData);
+            
+        } catch (e) {
+            this.vishva.progressManager.hide();
+            console.error("Error loading zip world:", e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            alert("Failed to load world: " + errorMessage);
+        }
+    }
+
+    /**
+     * Load Vishva data from separate objects (used for zip format)
+     */
+    private loadVishvaPartFromObjects(vishvaData: any, sceneData: any) {
+        this.vishva.progressManager.update("Processing world data...", 90);
+        
+        this.vishva.vishvaSerialized = vishvaData;
+
+        this.umarshalVec3(this.vishva.vishvaSerialized);
+
+        if (!this.vishva.vishvaSerialized.avSerialized.settings.ellipsoid) {
+            this.vishva.vishvaSerialized.avSerialized.settings.ellipsoid = new Vector3(0.15, 0.8, 0.15);
+            this.vishva.vishvaSerialized.avSerialized.settings.ellipsoidOffset = new Vector3(0.0, 0.8, 0.0);
+        }
+
+        if (!(this.vishva.vishvaSerialized === undefined)) {
+            console.log("world babylon version : " + this.vishva.vishvaSerialized.bVer);
+            console.log("world vishva version : " + this.vishva.vishvaSerialized.vVer);
+
+            this.vishva.snas = this.vishva.vishvaSerialized.snas;
+            this.vishva._cameraCollision = this.vishva.vishvaSerialized.settings.cameraCollision;
+            this.vishva.autoEditMenu = this.vishva.vishvaSerialized.settings.autoEditMenu;
+            if (this.vishva.vishvaSerialized.misc.skyColor) {
+                this.vishva.skyColor.r = this.vishva.vishvaSerialized.misc.skyColor.r;
+                this.vishva.skyColor.g = this.vishva.vishvaSerialized.misc.skyColor.g;
+                this.vishva.skyColor.b = this.vishva.vishvaSerialized.misc.skyColor.b;
+                this.vishva.skyColor.a = this.vishva.vishvaSerialized.misc.skyColor.a;
+            }
+
+            if (typeof this.vishva.vishvaSerialized.misc.skyBright !== "undefined") {
+                this.vishva.skyBright = this.vishva.vishvaSerialized.misc.skyBright;
+            }
+
+            if (typeof this.vishva.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
+                this.vishva.scene.shadowsEnabled = this.vishva.vishvaSerialized.misc.sceneShadowsEnabled;
+            }
+        } else {
+            this.vishva.vishvaSerialized = new VishvaSerialized();
+        }
+
+        this.vishva.progressManager.setProgress(95);
+
+        var sceneDataStr: string = "data:" + JSON.stringify(sceneData);
+        SceneLoader.ShowLoadingScreen = false;
+        SceneLoader.Append("", sceneDataStr, this.vishva.scene, (scene) => { 
+            // Hide progress when scene is loaded
+            setTimeout(() => {
+                this.vishva.progressManager.hide();
+            }, 500);
+            return this.vishva.loadBabylonjsPart(scene);
+        });
     }
 
     private umarshalVec3(obj: Object): void {

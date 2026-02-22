@@ -1,6 +1,6 @@
 {
         "name": "vishva",
-        "version": "0.4.0-alpha.27",
+        "version": "0.4.0-alpha.28",
         "keywords": [
                 "babylonjs",
                 "editor"
@@ -10,7 +10,7 @@
         "dependencies": {
                 "@types/jszip": "^3.4.1",
                 "babylonjs": "^8.47.0",
-                "babylonjs-charactercontroller": "^0.4.4-alpha.11",
+                "babylonjs-charactercontroller": "^0.4.4-alpha.13",
                 "babylonjs-editcontrol": "^4.0.0",
                 "babylonjs-gui": "^8.47.0",
                 "babylonjs-loaders": "^8.47.0",

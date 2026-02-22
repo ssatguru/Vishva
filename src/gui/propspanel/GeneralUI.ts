@@ -335,12 +335,7 @@ export class GeneralUI {
                 // let boundingInfo = m.getBoundingInfo();
                 // let size = boundingInfo.boundingBox.extendSize;
                 // m.ellipsoid = new Vector3(size.x, size.y, size.z);
-                if (m.rotationQuaternion !==null){
-                    console.log("removing quaternion",m.rotationQuaternion);
-                    m.rotation = m.rotationQuaternion.toEulerAngles();
-                    m.rotationQuaternion = null;
-                    console.log("after removal", m.rotation);
-                }
+                
 
                 cc =new CharacterController(<Mesh>this._vishva.meshSelected,null,this._vishva.scene);
                 cc.setTurnSpeed(45);

@@ -1,4 +1,4 @@
-internalAssets=[
+let internalAssets=[
   {"d":"internal",
    "f":[
     {"d":"avatar",

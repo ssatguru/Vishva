@@ -387,7 +387,7 @@ export class LoadManager {
                 _rootMeshesCount++;
                 rootMesh = <Mesh>mesh;
             }
-            this.vishva.saveLoadManager.addToShadowCasters(mesh);
+            this.vishva.saveManager.addToShadowCasters(mesh);
             this.vishva.scene.stopAnimation(mesh);
             if (mesh.skeleton != null) {
                 this.vishva.scene.stopAnimation(mesh.skeleton);

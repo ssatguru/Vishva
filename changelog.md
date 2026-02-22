@@ -1,3 +1,5 @@
+### 02/17/2026 0.4.0-alpha.28
+- upgraded CharacterController 0.4.4-alpha.13 which no longer requires character rotation be in euler. removed code which converted rotation to euler.
 ### 02/16/2026 0.4.0-alpha.27
 - added ability to save world to browser IndexedDB ("Save World to Browser" button)
 - load now checks browser IndexedDB first and will load world from browser storage if available (falls back to server)

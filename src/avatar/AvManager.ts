@@ -199,7 +199,7 @@ export class AvManager {
         this.cc.stop();
         //old avatar
         SNAManager.getSNAManager().enableSnAs(this.avatar);
-        this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
+        //TODO Remove this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
         //now that this mesh is not the avatar anymore, we can make it and its children pickable and remove the avatar tags
         this._makeAllUnPickable(this.avatar,false);
         this.avatar.visibility = 1;
@@ -225,8 +225,6 @@ export class AvManager {
         this.avatar.ellipsoid = this._avEllipsoid
         this.avatar.ellipsoidOffset = this._avEllipsoidOffset
         this._makeAllUnPickable(this.avatar,true);
-        this.avatar.rotation = this.avatar.rotationQuaternion.toEulerAngles();
-        this.avatar.rotationQuaternion = null;
         // the camera might have been moved around and to/from this mesh
         // we should use the new position as the camera position for the avatar.
         // we shouldnot be moving the camera back to its old postion around the old avatar

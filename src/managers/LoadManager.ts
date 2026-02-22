@@ -18,11 +18,11 @@ export class LoadManager {
     }
 
     public sceneLoad1(scenePath: string, sceneFile: string, scene: Scene) {
-        // Check if the file is a zip file
-        const isZipFile = sceneFile.toLowerCase().endsWith('.zip');
+        // Check if the file is a compressed gzip file
+        const isCompressedFile = sceneFile.toLowerCase().endsWith('.gz');
         
-        if (isZipFile) {
-            // Load as zip file
+        if (isCompressedFile) {
+            // Load as compressed gzip file
             this.loadZipWorld(scenePath, sceneFile, scene);
         } else {
             // Load as traditional single file
@@ -45,69 +45,67 @@ export class LoadManager {
     }
 
     /**
-     * Load world from zip file containing Vishva.json and Scene.babylon
+     * Load world from gzip compressed TAR archive
      * First tries to load from IndexedDB, then falls back to server
      */
     private async loadZipWorld(scenePath: string, sceneFile: string, scene: Scene) {
         try {
             // Show progress
             this.vishva.progressManager.show("Loading World", "Checking browser storage...");
-            this.vishva.progressManager.setProgress(5);
+            await this.vishva.progressManager.update(undefined, 5);
             
             // Try to load from IndexedDB first
-            // const worldName = sceneFile.replace(/\.zip$/i, '');
             const indexedDBData = await this._loadWorldFromIndexedDB(sceneFile);
             
             if (indexedDBData) {
                 const { vishvaData, sceneData } = indexedDBData;
-                this.vishva.progressManager.update("Processing world data...", 60);
                 this.loadVishvaPartFromObjects(vishvaData, sceneData);
                 return;
             }
 
-           
             // If not in IndexedDB, fetch from server
-            this.vishva.progressManager.update("Fetching world file from server...", 10);
+            await this.vishva.progressManager.update("Fetching world file from server...", 10);
             
             const response = await fetch(scenePath + sceneFile);
             if (!response.ok) {
                 throw new Error(`Failed to load ${sceneFile}: ${response.statusText}`);
             }
             
-            this.vishva.progressManager.update("Extracting archive...", 30);
+            await this.vishva.progressManager.update("Decompressing world file...", 30);
             
-            const zipBlob = await response.blob();
-            const JSZip = (await import('jszip')).default;
-            const zip = await JSZip.loadAsync(zipBlob);
+            const compressedBlob = await response.blob();
+            const decompressedData = await this._decompressGzip(compressedBlob);
             
-            this.vishva.progressManager.update("Reading world data...", 50);
+            await this.vishva.progressManager.update("Extracting world data...", 50);
             
-            // Extract Vishva.json
-            const vishvaFile = zip.file("Vishva.json");
-            if (!vishvaFile) {
-                throw new Error("Vishva.json not found in zip file");
+            const files = await this._extractTarArchive(decompressedData);
+            
+            // Extract Vishva.json and Scene.babylon
+            const vishvaData = files.get("Vishva.json");
+            const sceneData = files.get("Scene.babylon");
+            
+            if (!vishvaData) {
+                throw new Error("Vishva.json not found in archive");
             }
-            const vishvaText = await vishvaFile.async("text");
-            const vishvaData = JSON.parse(vishvaText);
-            
-            this.vishva.progressManager.update("Reading scene data...", 70);
-            
-            // Extract Scene.babylon
-            const sceneFileInZip = zip.file("Scene.babylon");
-            if (!sceneFileInZip) {
-                throw new Error("Scene.babylon not found in zip file");
+            if (!sceneData) {
+                throw new Error("Scene.babylon not found in archive");
             }
-            const sceneText = await sceneFileInZip.async("text");
-            const sceneData = JSON.parse(sceneText);
             
-            this.vishva.progressManager.update("Loading scene...", 85);
+            const vishvaText = new TextDecoder().decode(vishvaData);
+            const sceneText = new TextDecoder().decode(sceneData);
+            const vishvaObj = JSON.parse(vishvaText);
+            const sceneObj = JSON.parse(sceneText);
+            
+            await this.vishva.progressManager.update("Loading scene...", 85);
             
             // Process the loaded data
-            this.loadVishvaPartFromObjects(vishvaData, sceneData);
+            this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
+
+            await this.vishva.progressManager.update(undefined, 100);
             
         } catch (e) {
             this.vishva.progressManager.hide();
-            console.error("Error loading zip world:", e);
+            console.error("Error loading compressed world:", e);
             const errorMessage = e instanceof Error ? e.message : String(e);
             alert("Failed to load world: " + errorMessage);
         }
@@ -148,26 +146,32 @@ export class LoadManager {
                             db.close();
 
                             if (result && result.data) {
-                                this.vishva.progressManager.update("Loading and unzipping from browser storage...", 20);
+                                await this.vishva.progressManager.update("Loading and decompressing from browser storage...", 20);
                                 try {
-                                    const JSZip = (await import('jszip')).default;
-                                    const zip = await JSZip.loadAsync(result.data);
+                                    const decompressedData = await this._decompressGzip(result.data);
+                                    
+                                    await this.vishva.progressManager.update("Extracting world data...", 35);
+                                    
+                                    const files = await this._extractTarArchive(decompressedData);
+                                    
+                                    const vishvaData = files.get("Vishva.json");
+                                    const sceneData = files.get("Scene.babylon");
+                                    
+                                    if (!vishvaData || !sceneData) {
+                                        resolve(null);
+                                        return;
+                                    }
+                                    
+                                    await this.vishva.progressManager.update("Parsing data...", 40);
 
-                                    this.vishva.progressManager.update("Parsing data...", 40);
+                                    const vishvaText = new TextDecoder().decode(vishvaData);
+                                    const sceneText = new TextDecoder().decode(sceneData);
+                                    const vishvaObj = JSON.parse(vishvaText);
+                                    const sceneObj = JSON.parse(sceneText);
 
-                                    // Extract Vishva.json
-                                    const vishvaFile = zip.file("Vishva.json");
-                                    const vishvaText = await vishvaFile.async("text");
-                                    const vishvaData = JSON.parse(vishvaText);
-
-                                    // Extract Scene.babylon
-                                    const sceneFileInZip = zip.file("Scene.babylon");
-                                    const sceneText = await sceneFileInZip.async("text");
-                                    const sceneData = JSON.parse(sceneText);
-
-                                    resolve({ vishvaData, sceneData });
+                                    resolve({ vishvaData: vishvaObj, sceneData: sceneObj });
                                 } catch (e) {
-                                    console.error("Error extracting world from IndexedDB:", e);
+                                    console.error("Error decompressing world from IndexedDB:", e);
                                     resolve(null);
                                 }
                             } else {
@@ -200,10 +204,123 @@ export class LoadManager {
     }
 
     /**
-     * Load Vishva data from separate objects (used for zip format)
+     * Decompress gzip data using the Compression Streams API
+     */
+    private async _decompressGzip(compressedBlob: Blob): Promise<Uint8Array> {
+        const arrayBuffer = await compressedBlob.arrayBuffer();
+        const stream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(new Uint8Array(arrayBuffer));
+                controller.close();
+            }
+        });
+
+        const decompressedStream = stream.pipeThrough(
+            new DecompressionStream('gzip') as any
+        );
+
+        const reader = decompressedStream.getReader();
+        const chunks: Uint8Array[] = [];
+
+        let result = await reader.read();
+        while (!result.done) {
+            chunks.push(result.value as Uint8Array);
+            result = await reader.read();
+        }
+
+        const totalLength = chunks.reduce((acc, curr) => acc + curr.length, 0);
+        const decompressedData = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+            decompressedData.set(chunk, offset);
+            offset += chunk.length;
+        }
+
+        return decompressedData;
+    }
+
+    /**
+     * Extract files from TAR archive
+     */
+    private async _extractTarArchive(tarData: Uint8Array): Promise<Map<string, Uint8Array>> {
+        const files = new Map<string, Uint8Array>();
+        let offset = 0;
+
+        while (offset < tarData.length) {
+            // Check for end of archive (two consecutive 512-byte blocks of zeros)
+            if (offset + 512 <= tarData.length) {
+                const header = tarData.slice(offset, offset + 512);
+                let isAllZeros = true;
+                for (let i = 0; i < 512; i++) {
+                    if (header[i] !== 0) {
+                        isAllZeros = false;
+                        break;
+                    }
+                }
+                if (isAllZeros) {
+                    // Check the next block too
+                    if (offset + 1024 <= tarData.length) {
+                        const nextHeader = tarData.slice(offset + 512, offset + 1024);
+                        let nextIsAllZeros = true;
+                        for (let i = 0; i < 512; i++) {
+                            if (nextHeader[i] !== 0) {
+                                nextIsAllZeros = false;
+                                break;
+                            }
+                        }
+                        if (nextIsAllZeros) {
+                            break; // End of archive
+                        }
+                    }
+                }
+            }
+
+            if (offset + 512 > tarData.length) break;
+
+            const header = tarData.slice(offset, offset + 512);
+            offset += 512;
+
+            // Parse TAR header
+            const decoder = new TextDecoder();
+            const headerStr = decoder.decode(header);
+
+            // Extract filename (0-99)
+            let filenameBytesLen = 0;
+            for (let i = 0; i < 100 && header[i] !== 0; i++) {
+                filenameBytesLen++;
+            }
+            const filename = decoder.decode(header.slice(0, filenameBytesLen));
+
+            // Extract file size (124-135)
+            const sizeStr = decoder.decode(header.slice(124, 135)).trim();
+            const fileSize = parseInt(sizeStr, 8);
+
+            if (isNaN(fileSize) || fileSize < 0) {
+                break;
+            }
+
+            // Extract file data
+            if (offset + fileSize <= tarData.length) {
+                const fileData = tarData.slice(offset, offset + fileSize);
+                files.set(filename, fileData);
+                offset += fileSize;
+
+                // Align to 512-byte boundary
+                const padding = (512 - (fileSize % 512)) % 512;
+                offset += padding;
+            } else {
+                break;
+            }
+        }
+
+        return files;
+    }
+
+    /**
+     * Load Vishva data from separate objects (used for gzip format)
      */
     private loadVishvaPartFromObjects(vishvaData: any, sceneData: any) {
-        this.vishva.progressManager.update("Processing world data...", 90);
+        this.vishva.progressManager.update("Processing vishva data...", 90);
         
         this.vishva.vishvaSerialized = vishvaData;
 
@@ -239,8 +356,7 @@ export class LoadManager {
             this.vishva.vishvaSerialized = new VishvaSerialized();
         }
 
-        this.vishva.progressManager.setProgress(95);
-
+        this.vishva.progressManager.update("Processing scene data...", 95);
         var sceneDataStr: string = "data:" + JSON.stringify(sceneData);
         SceneLoader.ShowLoadingScreen = false;
         SceneLoader.Append("", sceneDataStr, this.vishva.scene, (scene) => { 

@@ -1,6 +1,6 @@
 {
         "name": "vishva",
-        "version": "0.4.0-alpha.28",
+        "version": "0.4.0-alpha.29",
         "keywords": [
                 "babylonjs",
                 "editor"
@@ -17,7 +17,6 @@
                 "babylonjs-materials": "^8.47.0",
                 "babylonjs-serializers": "^8.47.0",
                 "cannon": "^0.6.2",
-                "jszip": "^3.10.1",
                 "oimo": "^1.0.9"
         },
         "devDependencies": {

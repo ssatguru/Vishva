@@ -188,7 +188,7 @@ export class VishvaGUI {
             if (downloadURL == null) return true;
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
-            this._downloadLink.download = Vishva.worldName + ".zip";
+            this._downloadLink.download = Vishva.worldName + ".tar.gz";
             this._downloadDialog.show();
             return false;
         };

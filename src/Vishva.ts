@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.28";
+    static version: string = "0.4.0-alpha.29";
 
     public static worldName: string;
 

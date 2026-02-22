@@ -1,3 +1,6 @@
+### 02/17/2026 0.4.0-alpha.29
+- updated to compression stream api intead of jszip to compress and decompress world file. this is native api feature , so no externa library required. world is now stored as a tar gzip file.
+- progress manager updated and refactored. Now the all statuses of task are displayed instead of just the last status. More refinement needed.
 ### 02/17/2026 0.4.0-alpha.28
 - upgraded CharacterController 0.4.4-alpha.13 which no longer requires character rotation be in euler. removed code which converted rotation to euler.
 ### 02/16/2026 0.4.0-alpha.27

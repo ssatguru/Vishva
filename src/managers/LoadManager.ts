@@ -107,24 +107,47 @@ export class LoadManager {
                 // For glTF, we need to load it differently
                 await this.vishva.progressManager.update("Loading glTF scene...", 70);
                 
-                // Create a blob from the gltf data - cast to avoid SharedArrayBuffer type issue
-                const gltfBlob = new Blob([sceneData as any], { type: 'model/gltf+json' });
-                const gltfUrl = URL.createObjectURL(gltfBlob);
+                // Parse the glTF JSON to handle bin file reference
+                const gltfText = new TextDecoder().decode(sceneData);
+                const gltfJson = JSON.parse(gltfText);
                 
                 // Check if there's a bin file
                 const binData = files.get("Scene.bin");
-                if (binData) {
-                    // We need to handle the bin file reference
-                    // For now, we'll use SceneLoader with the blob
+                let gltfUrl: string;
+                
+                if (binData && gltfJson.buffers && gltfJson.buffers.length > 0) {
+                    // Convert bin data to base64 data URI to avoid blob URL path issues
+                    const binArray = new Uint8Array(binData.buffer, binData.byteOffset, binData.byteLength);
+                    let binaryString = '';
+                    for (let i = 0; i < binArray.length; i++) {
+                        binaryString += String.fromCharCode(binArray[i]);
+                    }
+                    const base64 = btoa(binaryString);
+                    const dataUri = `data:application/octet-stream;base64,${base64}`;
+                    
+                    // Update the glTF JSON to use data URI
+                    gltfJson.buffers[0].uri = dataUri;
+                    
+                    // Create new glTF blob with updated JSON
+                    const updatedGltfText = JSON.stringify(gltfJson);
+                    const gltfBlob = new Blob([updatedGltfText], { type: 'model/gltf+json' });
+                    gltfUrl = URL.createObjectURL(gltfBlob);
+                    
+                    // Clean up blob URL after loading
+                    setTimeout(() => URL.revokeObjectURL(gltfUrl), 5000);
+                } else {
+                    // No bin file, just create blob from glTF
+                    const gltfBlob = new Blob([sceneData as any], { type: 'model/gltf+json' });
+                    gltfUrl = URL.createObjectURL(gltfBlob);
+                    
+                    // Clean up blob URL after loading
+                    setTimeout(() => URL.revokeObjectURL(gltfUrl), 5000);
                 }
                 
                 await this.vishva.progressManager.update("Parsing glTF data...", 85);
                 
                 // Load the glTF scene
                 this.loadVishvaPartFromGltf(vishvaObj, gltfUrl);
-                
-                // Clean up the blob URL after loading
-                setTimeout(() => URL.revokeObjectURL(gltfUrl), 1000);
             } else {
                 // Load babylon format as before
                 const sceneText = new TextDecoder().decode(sceneData);
@@ -458,13 +481,14 @@ export class LoadManager {
 
         this.vishva.progressManager.update("Loading glTF scene...", 95);
         SceneLoader.ShowLoadingScreen = false;
+        // Specify .gltf extension so Babylon.js knows which loader to use
         SceneLoader.Append("", gltfUrl, this.vishva.scene, (scene) => { 
             // Hide progress when scene is loaded
             setTimeout(() => {
                 this.vishva.progressManager.hide();
             }, 500);
             return this.vishva.loadBabylonjsPart(scene);
-        });
+        }, undefined, undefined, ".gltf");
     }
 
     private umarshalVec3(obj: Object): void {

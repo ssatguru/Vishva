@@ -80,26 +80,61 @@ export class LoadManager {
             
             const files = await this._extractTarArchive(decompressedData);
             
-            // Extract Vishva.json and Scene.babylon
+            // Extract Vishva.json and Scene file (babylon or gltf)
             const vishvaData = files.get("Vishva.json");
-            const sceneData = files.get("Scene.babylon");
+            let sceneData = files.get("Scene.babylon");
+            let isGltf = false;
+            
+            // Check for glTF format if babylon not found
+            if (!sceneData) {
+                sceneData = files.get("Scene.gltf");
+                if (sceneData) {
+                    isGltf = true;
+                }
+            }
             
             if (!vishvaData) {
                 throw new Error("Vishva.json not found in archive");
             }
             if (!sceneData) {
-                throw new Error("Scene.babylon not found in archive");
+                throw new Error("Scene file (babylon or gltf) not found in archive");
             }
             
             const vishvaText = new TextDecoder().decode(vishvaData);
-            const sceneText = new TextDecoder().decode(sceneData);
             const vishvaObj = JSON.parse(vishvaText);
-            const sceneObj = JSON.parse(sceneText);
             
-            await this.vishva.progressManager.update("Loading scene...", 85);
-            
-            // Process the loaded data
-            this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
+            if (isGltf) {
+                // For glTF, we need to load it differently
+                await this.vishva.progressManager.update("Loading glTF scene...", 70);
+                
+                // Create a blob from the gltf data - cast to avoid SharedArrayBuffer type issue
+                const gltfBlob = new Blob([sceneData as any], { type: 'model/gltf+json' });
+                const gltfUrl = URL.createObjectURL(gltfBlob);
+                
+                // Check if there's a bin file
+                const binData = files.get("Scene.bin");
+                if (binData) {
+                    // We need to handle the bin file reference
+                    // For now, we'll use SceneLoader with the blob
+                }
+                
+                await this.vishva.progressManager.update("Parsing glTF data...", 85);
+                
+                // Load the glTF scene
+                this.loadVishvaPartFromGltf(vishvaObj, gltfUrl);
+                
+                // Clean up the blob URL after loading
+                setTimeout(() => URL.revokeObjectURL(gltfUrl), 1000);
+            } else {
+                // Load babylon format as before
+                const sceneText = new TextDecoder().decode(sceneData);
+                const sceneObj = JSON.parse(sceneText);
+                
+                await this.vishva.progressManager.update("Loading scene...", 85);
+                
+                // Process the loaded data
+                this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
+            }
 
             await this.vishva.progressManager.update(undefined, 100);
             
@@ -155,7 +190,12 @@ export class LoadManager {
                                     const files = await this._extractTarArchive(decompressedData);
                                     
                                     const vishvaData = files.get("Vishva.json");
-                                    const sceneData = files.get("Scene.babylon");
+                                    let sceneData = files.get("Scene.babylon");
+                                    
+                                    // Check for glTF format if babylon not found
+                                    if (!sceneData) {
+                                        sceneData = files.get("Scene.gltf");
+                                    }
                                     
                                     if (!vishvaData || !sceneData) {
                                         resolve(null);
@@ -364,6 +404,61 @@ export class LoadManager {
         var sceneDataStr: string = "data:" + JSON.stringify(sceneData);
         SceneLoader.ShowLoadingScreen = false;
         SceneLoader.Append("", sceneDataStr, this.vishva.scene, (scene) => { 
+            // Hide progress when scene is loaded
+            setTimeout(() => {
+                this.vishva.progressManager.hide();
+            }, 500);
+            return this.vishva.loadBabylonjsPart(scene);
+        });
+    }
+
+    /**
+     * Load Vishva data from glTF format
+     */
+    private loadVishvaPartFromGltf(vishvaData: any, gltfUrl: string) {
+        this.vishva.progressManager.update("Processing vishva data...", 90);
+        
+        this.vishva.vishvaSerialized = vishvaData;
+
+        this.umarshalVec3(this.vishva.vishvaSerialized);
+
+        if (!this.vishva.vishvaSerialized.avSerialized.settings.ellipsoid) {
+            this.vishva.vishvaSerialized.avSerialized.settings.ellipsoid = new Vector3(0.15, 0.8, 0.15);
+            this.vishva.vishvaSerialized.avSerialized.settings.ellipsoidOffset = new Vector3(0.0, 0.8, 0.0);
+        }
+
+        if (!(this.vishva.vishvaSerialized === undefined)) {
+            console.log("world babylon version : " + this.vishva.vishvaSerialized.bVer);
+            console.log("world vishva version : " + this.vishva.vishvaSerialized.vVer);
+
+            this.vishva.snas = this.vishva.vishvaSerialized.snas;
+            this.vishva._cameraCollision = this.vishva.vishvaSerialized.settings.cameraCollision;
+            this.vishva.autoEditMenu = this.vishva.vishvaSerialized.settings.autoEditMenu;
+            if (this.vishva.vishvaSerialized.misc.skyColor) {
+                this.vishva.skyColor.r = this.vishva.vishvaSerialized.misc.skyColor.r;
+                this.vishva.skyColor.g = this.vishva.vishvaSerialized.misc.skyColor.g;
+                this.vishva.skyColor.b = this.vishva.vishvaSerialized.misc.skyColor.b;
+                this.vishva.skyColor.a = this.vishva.vishvaSerialized.misc.skyColor.a;
+            }
+
+            if (typeof this.vishva.vishvaSerialized.misc.skyBright !== "undefined") {
+                this.vishva.skyBright = this.vishva.vishvaSerialized.misc.skyBright;
+            }
+
+            if (typeof this.vishva.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
+                this.vishva.scene.shadowsEnabled = this.vishva.vishvaSerialized.misc.sceneShadowsEnabled;
+            }
+
+            // Store object IDs and metadata for later use in loadBabylonjsPart
+            this.vishva._objectIds = this.vishva.vishvaSerialized.objectIds || null;
+            this.vishva._meshMetadata = this.vishva.vishvaSerialized.meshMetadata || {};
+        } else {
+            this.vishva.vishvaSerialized = new VishvaSerialized();
+        }
+
+        this.vishva.progressManager.update("Loading glTF scene...", 95);
+        SceneLoader.ShowLoadingScreen = false;
+        SceneLoader.Append("", gltfUrl, this.vishva.scene, (scene) => { 
             // Hide progress when scene is loaded
             setTimeout(() => {
                 this.vishva.progressManager.hide();

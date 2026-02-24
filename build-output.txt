@@ -1,0 +1,67 @@
+
+> vishva@0.4.0-alpha.30 build
+> webpack --mode production ; cat build-output.txt
+
+assets by status 11.6 MiB [1m[32m[cached][39m[22m 23 assets
+runtime modules 2.18 KiB 7 modules
+modules by path [1m./src/[39m[22m 634 KiB 94 modules
+modules by path [1m./node_modules/[39m[22m 8.7 MiB
+  modules by path [1m./node_modules/style-loader/dist/runtime/*.js[39m[22m 5.84 KiB
+    [1m./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js[39m[22m 2.42 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    + 5 modules
+  modules by path [1m./node_modules/css-loader/dist/runtime/*.js[39m[22m 2.74 KiB
+    [1m./node_modules/css-loader/dist/runtime/sourceMaps.js[39m[22m 505 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1m./node_modules/css-loader/dist/runtime/api.js[39m[22m 2.25 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  + 7 modules
+
+[1m[31mERROR[39m[22m in [1m[32mmain[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve ';' in 'C:\0-Projects\babylonjs\Vishva'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m[32mmain[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'build-output.txt' in 'C:\0-Projects\babylonjs\Vishva'
+[1m[32mDid you mean './build-output.txt'?[39m[22m[1m
+Requests that should resolve in the current directory need to start with './'.
+Requests that start with a name are treated as module requests and resolve within module directories (node_modules).
+If changing the source code is not an option there is also a resolve options called 'preferRelative' which tries to resolve these kind of requests in the current directory too.[39m[22m
+
+[1m[31mERROR[39m[22m in [1m[32mmain[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'cat' in 'C:\0-Projects\babylonjs\Vishva'[39m[22m
+
+[1m[31mERROR[39m[22m in [1mC:\0-Projects\babylonjs\Vishva\src\managers\LoadManager.ts[39m[22m
+[1m./src/managers/LoadManager.ts[39m[22m [1m[32m111:43-75[39m[22m
+[1m[tsl] [1m[31mERROR[39m[22m[1m in C:\0-Projects\babylonjs\Vishva\src\managers\LoadManager.ts(111,44)
+      TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'.
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+          Types of property '[Symbol.toStringTag]' are incompatible.
+            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.[39m[22m
+ @ ./src/Vishva.ts 23:22-55
+ @ ./src/index.ts 3:17-36
+
+[1m[31mERROR[39m[22m in [1mC:\0-Projects\babylonjs\Vishva\src\managers\SaveManager.ts[39m[22m
+[1m./src/managers/SaveManager.ts[39m[22m [1m[32m333:51-57[39m[22m
+[1m[tsl] [1m[31mERROR[39m[22m[1m in C:\0-Projects\babylonjs\Vishva\src\managers\SaveManager.ts(333,52)
+      TS2339: Property 'buffer' does not exist on type 'never'.[39m[22m
+ @ ./src/Vishva.ts 22:22-55
+ @ ./src/index.ts 3:17-36
+
+[1m[31mERROR[39m[22m in [1mC:\0-Projects\babylonjs\Vishva\src\managers\SaveManager.ts[39m[22m
+[1m./src/managers/SaveManager.ts[39m[22m [1m[32m333:67-77[39m[22m
+[1m[tsl] [1m[31mERROR[39m[22m[1m in C:\0-Projects\babylonjs\Vishva\src\managers\SaveManager.ts(333,68)
+      TS2339: Property 'byteOffset' does not exist on type 'never'.[39m[22m
+ @ ./src/Vishva.ts 22:22-55
+ @ ./src/index.ts 3:17-36
+
+[1m[31mERROR[39m[22m in [1mC:\0-Projects\babylonjs\Vishva\src\managers\SaveManager.ts[39m[22m
+[1m./src/managers/SaveManager.ts[39m[22m [1m[32m333:87-97[39m[22m
+[1m[tsl] [1m[31mERROR[39m[22m[1m in C:\0-Projects\babylonjs\Vishva\src\managers\SaveManager.ts(333,88)
+      TS2339: Property 'byteLength' does not exist on type 'never'.[39m[22m
+ @ ./src/Vishva.ts 22:22-55
+ @ ./src/index.ts 3:17-36
+
+[1m[33m7 errors have detailed information that is not shown.
+Use 'stats.errorDetails: true' resp. '--stats-error-details' to show it.[39m[22m
+
+webpack 5.104.1 compiled with [1m[31m7 errors[39m[22m in 30845 ms

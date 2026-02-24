@@ -2,6 +2,7 @@ import {
     AbstractMesh, BaseTexture, Camera, Engine, InstancedMesh, Material, Mesh, MultiMaterial,
     Quaternion, Scene, SceneSerializer, Skeleton, StandardMaterial, Tags, Texture, TransformNode, Vector3
 } from "babylonjs";
+import { GLTF2Export } from "babylonjs-serializers";
 import { VishvaSerialized, ObjectIdMap, MeshMetadata } from "../VishvaSerialized";
 import { SNAManager, SNAserialized } from "../sna/SNA";
 import { DialogMgr } from "../gui/DialogMgr";
@@ -50,6 +51,32 @@ export class SaveManager {
         await this.vishva.progressManager.update(undefined, 0);
 
         const zipBlob = await this._getWorldZipBlob();
+        
+        await this.vishva.progressManager.update(undefined, 100);
+        
+        // Hide progress after a short delay
+        setTimeout(() => {
+            this.vishva.progressManager.hide();
+        }, 500);
+        
+        return URL.createObjectURL(zipBlob);
+    }
+
+    public async saveWorldAsGltf(): Promise<string> {
+        if (this.vishva.editControl != null) {
+            DialogMgr.showAlertDiag("cannot save during edit");
+            return null;
+        }
+
+        if (!this.vishva.isFocusOnAv) {
+            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to switch focus to avatar and try again");
+            return null;
+        }
+
+        this.vishva.progressManager.show("Saving World as glTF", "Preparing scene...");
+        await this.vishva.progressManager.update(undefined, 0);
+
+        const zipBlob = await this._getWorldGltfZipBlob();
         
         await this.vishva.progressManager.update(undefined, 100);
         
@@ -194,6 +221,132 @@ export class SaveManager {
         ]);
         
         // Compress TAR archive using gzip with Compression Streams API
+        const gzipBlob = await this._compressWithGzip(tarBuffer);
+        
+        this.addInstancesToShadow();
+        
+        return gzipBlob;
+    }
+
+    private async _getWorldGltfZipBlob(): Promise<Blob> {
+        this.removeRedundantCameras();
+        this.removeInstancesFromShadow();
+        this.renameMeshIds();
+        this.cleanupSkels();
+        this.resetSkels(this.vishva.scene);
+        this.cleanupMats();
+
+        await this.vishva.progressManager.update("Creating world data...", 30);
+
+        // Create VishvaSerialized object
+        let vishvaSerialzed = new VishvaSerialized(this.vishva);
+        vishvaSerialzed.bVer = Engine.Version;
+        vishvaSerialzed.vVer = this.vishva.constructor.version;
+
+        vishvaSerialzed.settings.cameraCollision = this.vishva._cameraCollision;
+        vishvaSerialzed.settings.autoEditMenu = this.vishva.autoEditMenu;
+        vishvaSerialzed.guiSettings = this.vishva.vishvaGUI.guiSettings;
+        vishvaSerialzed.misc.activeCameraTarget = this.vishva.arcCamera.target;
+        vishvaSerialzed.misc.skyColor = this.vishva.skyColor;
+        vishvaSerialzed.misc.skyBright = this.vishva.skyBright;
+        vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
+
+        vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+
+        // Capture object IDs from special Vishva objects
+        vishvaSerialzed.objectIds = new ObjectIdMap();
+        if (this.vishva.avatar) vishvaSerialzed.objectIds.avatarId = this.vishva.avatar.id;
+        if (this.vishva.avatarSkeleton) vishvaSerialzed.objectIds.skeletonId = this.vishva.avatarSkeleton.id;
+        if (this.vishva.skybox) vishvaSerialzed.objectIds.skyboxId = this.vishva.skybox.id;
+        if (this.vishva.ground) vishvaSerialzed.objectIds.groundId = this.vishva.ground.id;
+        if (this.vishva.sun) vishvaSerialzed.objectIds.sunId = this.vishva.sun.id;
+        if (this.vishva.arcCamera) vishvaSerialzed.objectIds.cameraId = this.vishva.arcCamera.id;
+
+        // Capture spawn point ID if it exists
+        for (let mesh of this.vishva.scene.meshes) {
+            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                vishvaSerialzed.objectIds.spawnPointId = mesh.id;
+                break;
+            }
+        }
+
+        // Capture mesh metadata from tags
+        vishvaSerialzed.meshMetadata = {};
+        for (let mesh of this.vishva.scene.meshes) {
+            if (Tags.HasTags(mesh)) {
+                const tags = Tags.GetTags(mesh, true).split(" ");
+                const metadata = new MeshMetadata();
+                metadata.meshId = mesh.id;
+                
+                for (let tag of tags) {
+                    if (tag === "Vishva.prim") metadata.isPrimitive = true;
+                    if (tag === "Vishva.internal") metadata.isInternal = true;
+                    if (tag === "invisible") metadata.isInvisible = true;
+                    if (tag.startsWith("Vishva.uid.")) metadata.vishvaUid = tag;
+                }
+                
+                // Only store metadata if at least one property is set
+                if (metadata.isPrimitive || metadata.isInternal || 
+                    metadata.isInvisible || metadata.vishvaUid) {
+                    vishvaSerialzed.meshMetadata[mesh.id] = metadata;
+                }
+            }
+        }
+
+        await this.vishva.progressManager.update("Exporting scene as glTF...", 50);
+
+        // Export scene as glTF
+        const gltfData = await GLTF2Export.GLTFAsync(this.vishva.scene, "Scene", {
+            shouldExportNode: () => true,
+            exportWithoutWaitingForScene: false
+        });
+
+        await this.vishva.progressManager.update("Compressing world data...", 85);
+
+        // Get glTF files
+        const gltfJson = gltfData.glTFFiles["Scene.gltf"];
+        const gltfBin = gltfData.glTFFiles["Scene.bin"];
+
+        // Create buffers
+        const vishvaString = JSON.stringify(vishvaSerialzed);
+        const vishvaBuffer = new TextEncoder().encode(vishvaString);
+        
+        const gltfBuffer = typeof gltfJson === 'string' 
+            ? new TextEncoder().encode(gltfJson)
+            : new Uint8Array(await (gltfJson as Blob).arrayBuffer());
+        
+        // Prepare files for TAR archive
+        const files: Array<{ filename: string; data: Uint8Array }> = [
+            { filename: "Vishva.json", data: vishvaBuffer },
+            { filename: "Scene.gltf", data: gltfBuffer }
+        ];
+
+        // Add binary file if it exists
+        if (gltfBin) {
+            let binBuffer: Uint8Array;
+            if (gltfBin instanceof Blob) {
+                binBuffer = new Uint8Array(await gltfBin.arrayBuffer());
+            } else if (typeof gltfBin === 'string') {
+                binBuffer = new TextEncoder().encode(gltfBin);
+            } else {
+                // Handle ArrayBuffer, Uint8Array, or any other binary format
+                // Cast to any to handle various possible types from glTF export
+                const anyBin = gltfBin as any;
+                if (anyBin.buffer) {
+                    // It's a typed array
+                    binBuffer = new Uint8Array(anyBin.buffer, anyBin.byteOffset || 0, anyBin.byteLength || anyBin.buffer.byteLength);
+                } else {
+                    // It's an ArrayBuffer or similar
+                    binBuffer = new Uint8Array(anyBin);
+                }
+            }
+            files.push({ filename: "Scene.bin", data: binBuffer });
+        }
+
+        // Create TAR archive
+        const tarBuffer = await this._createTarArchive(files);
+        
+        // Compress TAR archive using gzip
         const gzipBlob = await this._compressWithGzip(tarBuffer);
         
         this.addInstancesToShadow();

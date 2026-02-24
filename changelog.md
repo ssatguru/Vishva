@@ -1,3 +1,11 @@
+### 02/23/2026 0.4.0-alpha.31
+- added glTF export support - users can now export worlds in glTF format alongside Babylon format
+- added dropdown menu to download button in navbar with "Babylon Format" and "glTF Format" options
+- glTF export creates tar.gz archive with Vishva.json + Scene.gltf + Scene.bin (binary data)
+- LoadManager updated to auto-detect and load both Babylon and glTF format worlds
+- all Vishva metadata (objectIds, meshMetadata, SNAs, settings) preserved in both export formats
+- enabled babylonjs-serializers import for glTF export functionality
+- maintains full backward compatibility with existing Babylon format worlds
 ### 02/23/2026 0.4.0-alpha.30
 - migrated Vishva meta information from Babylon.js Tags API to structured metadata in VishvaSerialized
 - added ObjectIdMap and MeshMetadata classes to VishvaSerialized for tracking object IDs and mesh properties

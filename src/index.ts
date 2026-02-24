@@ -8,9 +8,7 @@ import "./style.css";
 // import "babylonjs-inspector";
 import "babylonjs-loaders";
 import "babylonjs-materials";
-
-//add this when GLTF export is needed
-//import "babylonjs-serializers";
+import "babylonjs-serializers";
 
 //import "oimo";
 //import "cannon";

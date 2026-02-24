@@ -10,7 +10,10 @@ let navHTML = `
 
         <nav id="navMenubar" style="display: inline-block;">
 
-                <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
+                <div style="display:inline-block;">
+                        <button id="downWorld" title="download scene"><span class="material-icons-outlined" >cloud_download</span></button>
+                        <div id="DownloadMenu" style="display: none; position:absolute; z-index:1000;"></div>
+                </div>
 
                 <button id="saveWorld" title="save world to browser"><span class="material-icons-outlined">save</span></button>
 

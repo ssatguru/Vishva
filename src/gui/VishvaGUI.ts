@@ -181,14 +181,60 @@ export class VishvaGUI {
         let nm = document.getElementById("navMenubar");
         nm.style.visibility = "visible";
 
-        // button to download world
+        // button to download world with format submenu
         var downWorld: HTMLElement = document.getElementById("downWorld");
-        downWorld.onclick = async (e) => {
+        var downloadMenu: HTMLElement = document.getElementById("DownloadMenu");
+        
+        // Create submenu buttons
+        downloadMenu.innerHTML = `
+            <button id="downWorldBabylon" class="w3-button w3-block w3-left-align" style="white-space: nowrap;">Babylon Format</button>
+            <button id="downWorldGltf" class="w3-button w3-block w3-left-align" style="white-space: nowrap;">glTF Format</button>
+        `;
+        
+        // Style submenu
+        downloadMenu.style.backgroundColor = "var(--theme-bg)";
+        downloadMenu.style.border = "1px solid var(--theme-border)";
+        downloadMenu.style.borderRadius = "0.25em";
+        downloadMenu.style.marginTop = "0.25em";
+        
+        // Toggle submenu on click
+        downWorld.onclick = (e) => {
+            e.stopPropagation();
+            if (downloadMenu.style.display === "none") {
+                downloadMenu.style.display = "block";
+            } else {
+                downloadMenu.style.display = "none";
+            }
+            return false;
+        };
+        
+        // Close submenu when clicking outside
+        document.addEventListener("click", () => {
+            downloadMenu.style.display = "none";
+        });
+        
+        // Download as Babylon format
+        document.getElementById("downWorldBabylon").onclick = async (e) => {
+            e.stopPropagation();
+            downloadMenu.style.display = "none";
             var downloadURL: string = await this._vishva.saveWorld();
             if (downloadURL == null) return true;
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
             this._downloadLink.download = Vishva.worldName + ".tar.gz";
+            this._downloadDialog.show();
+            return false;
+        };
+        
+        // Download as glTF format
+        document.getElementById("downWorldGltf").onclick = async (e) => {
+            e.stopPropagation();
+            downloadMenu.style.display = "none";
+            var downloadURL: string = await this._vishva.saveWorldAsGltf();
+            if (downloadURL == null) return true;
+            if (this._downloadDialog == null) this._createDownloadDiag();
+            this._downloadLink.href = downloadURL;
+            this._downloadLink.download = Vishva.worldName + "-gltf.tar.gz";
             this._downloadDialog.show();
             return false;
         };

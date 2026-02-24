@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.30";
+    static version: string = "0.4.0-alpha.31";
 
     public static worldName: string;
 
@@ -3737,6 +3737,10 @@ export class Vishva {
     }
     public async saveWorld(): Promise<string> {
         return await this.saveManager.saveWorld();
+    }
+
+    public async saveWorldAsGltf(): Promise<string> {
+        return await this.saveManager.saveWorldAsGltf();
     }
 
 

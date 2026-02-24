@@ -1,1 +1,0 @@
-node updateAssets.js userAssets ./assets userAssets.js

@@ -18,6 +18,12 @@ export class VishvaSerialized {
     public avSerialized: AvSerialized;
     public meshCCs: MeshCCSerialized[];
 
+    // NEW: Object identification map - stores IDs of special Vishva objects
+    public objectIds: ObjectIdMap;
+    
+    // NEW: Mesh metadata - stores metadata previously stored in tags
+    public meshMetadata: MeshMetadataMap;
+
     
 
     public constructor(vishva?: Vishva) {
@@ -176,3 +182,37 @@ export class MeshCCSerialized {
         }
     }
 }
+
+/**
+ * Object identification map
+ * Stores IDs of special Vishva objects that were previously identified using tags
+ * Replaces tags: Vishva.avatar, Vishva.skeleton, Vishva.sky, Vishva.ground, 
+ *                Vishva.spawnPoint, Vishva.sun, Vishva.camera
+ */
+export class ObjectIdMap {
+    public avatarId?: string;          // ID of avatar mesh (was tag "Vishva.avatar")
+    public skeletonId?: string;        // ID of avatar skeleton (was tag "Vishva.skeleton")
+    public skyboxId?: string;          // ID of skybox mesh (was tag "Vishva.sky")
+    public groundId?: string;          // ID of ground mesh (was tag "Vishva.ground")
+    public spawnPointId?: string;      // ID of spawn point mesh (was tag "Vishva.spawnPoint")
+    public sunId?: string;             // ID of sun light (was tag "Vishva.sun")
+    public cameraId?: string;          // ID of main camera (was tag "Vishva.camera")
+}
+
+/**
+ * Mesh metadata
+ * Stores per-mesh metadata that was previously stored in tags
+ * Replaces tags: Vishva.prim, Vishva.internal, invisible, Vishva.uid.<timestamp>
+ */
+export class MeshMetadata {
+    public meshId: string;             // The mesh ID this metadata belongs to
+    public isPrimitive?: boolean;      // Was tagged "Vishva.prim"
+    public isInternal?: boolean;       // Was tagged "Vishva.internal"
+    public isInvisible?: boolean;      // Was tagged "invisible"
+    public vishvaUid?: string;         // Was tagged "Vishva.uid.<timestamp>"
+}
+
+/**
+ * Map of mesh IDs to their metadata
+ */
+export type MeshMetadataMap = { [meshId: string]: MeshMetadata };

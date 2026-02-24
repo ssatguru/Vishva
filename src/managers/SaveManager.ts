@@ -1,8 +1,8 @@
 import {
     AbstractMesh, BaseTexture, Camera, Engine, InstancedMesh, Material, Mesh, MultiMaterial,
-    Quaternion, Scene, SceneSerializer, Skeleton, StandardMaterial, Texture, TransformNode, Vector3
+    Quaternion, Scene, SceneSerializer, Skeleton, StandardMaterial, Tags, Texture, TransformNode, Vector3
 } from "babylonjs";
-import { VishvaSerialized } from "../VishvaSerialized";
+import { VishvaSerialized, ObjectIdMap, MeshMetadata } from "../VishvaSerialized";
 import { SNAManager, SNAserialized } from "../sna/SNA";
 import { DialogMgr } from "../gui/DialogMgr";
 
@@ -129,6 +129,46 @@ export class SaveManager {
         vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
         vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+
+        // NEW: Capture object IDs from special Vishva objects
+        vishvaSerialzed.objectIds = new ObjectIdMap();
+        if (this.vishva.avatar) vishvaSerialzed.objectIds.avatarId = this.vishva.avatar.id;
+        if (this.vishva.avatarSkeleton) vishvaSerialzed.objectIds.skeletonId = this.vishva.avatarSkeleton.id;
+        if (this.vishva.skybox) vishvaSerialzed.objectIds.skyboxId = this.vishva.skybox.id;
+        if (this.vishva.ground) vishvaSerialzed.objectIds.groundId = this.vishva.ground.id;
+        if (this.vishva.sun) vishvaSerialzed.objectIds.sunId = this.vishva.sun.id;
+        if (this.vishva.arcCamera) vishvaSerialzed.objectIds.cameraId = this.vishva.arcCamera.id;
+
+        // NEW: Capture spawn point ID if it exists (search for mesh with spawnPoint tag)
+        for (let mesh of this.vishva.scene.meshes) {
+            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                vishvaSerialzed.objectIds.spawnPointId = mesh.id;
+                break;
+            }
+        }
+
+        // NEW: Capture mesh metadata from tags
+        vishvaSerialzed.meshMetadata = {};
+        for (let mesh of this.vishva.scene.meshes) {
+            if (Tags.HasTags(mesh)) {
+                const tags = Tags.GetTags(mesh, true).split(" ");
+                const metadata = new MeshMetadata();
+                metadata.meshId = mesh.id;
+                
+                for (let tag of tags) {
+                    if (tag === "Vishva.prim") metadata.isPrimitive = true;
+                    if (tag === "Vishva.internal") metadata.isInternal = true;
+                    if (tag === "invisible") metadata.isInvisible = true;
+                    if (tag.startsWith("Vishva.uid.")) metadata.vishvaUid = tag;
+                }
+                
+                // Only store metadata if at least one property is set
+                if (metadata.isPrimitive || metadata.isInternal || 
+                    metadata.isInvisible || metadata.vishvaUid) {
+                    vishvaSerialzed.meshMetadata[mesh.id] = metadata;
+                }
+            }
+        }
 
         await this.vishva.progressManager.update("Serializing scene...", 50);
 

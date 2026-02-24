@@ -3,7 +3,7 @@ import {
     InstancedMesh, IParticleSystem, Material, Matrix, Mesh, MultiMaterial, Quaternion, Scene,
     SceneLoader, Skeleton, StandardMaterial, Tags, TextFileAssetTask, Tools, TransformNode, Vector3, VertexBuffer, Color3
 } from "babylonjs";
-import { VishvaSerialized } from "../VishvaSerialized";
+import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSerialized";
 import { SNAManager } from "../sna/SNA";
 import { VEvent } from "../eventing/VEvent";
 import { EventManager } from "../eventing/EventManager";
@@ -352,6 +352,10 @@ export class LoadManager {
             if (typeof this.vishva.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
                 this.vishva.scene.shadowsEnabled = this.vishva.vishvaSerialized.misc.sceneShadowsEnabled;
             }
+
+            // NEW: Store object IDs and metadata for later use in loadBabylonjsPart
+            this.vishva._objectIds = this.vishva.vishvaSerialized.objectIds || null;
+            this.vishva._meshMetadata = this.vishva.vishvaSerialized.meshMetadata || {};
         } else {
             this.vishva.vishvaSerialized = new VishvaSerialized();
         }
@@ -418,6 +422,10 @@ export class LoadManager {
             if (typeof this.vishva.vishvaSerialized.misc.sceneShadowsEnabled !== "undefined") {
                 this.vishva.scene.shadowsEnabled = this.vishva.vishvaSerialized.misc.sceneShadowsEnabled;
             }
+
+            // NEW: Store object IDs and metadata for later use in loadBabylonjsPart
+            this.vishva._objectIds = this.vishva.vishvaSerialized.objectIds || null;
+            this.vishva._meshMetadata = this.vishva.vishvaSerialized.meshMetadata || {};
         } else {
             this.vishva.vishvaSerialized = new VishvaSerialized();
         }

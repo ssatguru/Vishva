@@ -1,3 +1,13 @@
+### 02/23/2026 0.4.0-alpha.30
+- migrated Vishva meta information from Babylon.js Tags API to structured metadata in VishvaSerialized
+- added ObjectIdMap and MeshMetadata classes to VishvaSerialized for tracking object IDs and mesh properties
+- updated SaveManager to capture objectIds (avatar, skybox, ground, camera, sun, skeleton, spawnPoint) and meshMetadata (isPrimitive, isInternal, isInvisible, vishvaUid) during save
+- updated LoadManager to restore metadata from VishvaSerialized during load
+- refactored object finding throughout codebase to use ID-based lookups with tag fallback for backward compatibility
+- updated all object creation methods (ground, skybox, camera, sun, avatar, primitives) to set objectIds and metadata
+- improved performance with O(1) ID lookups instead of O(n) tag iterations
+- maintained full backward compatibility with old world files through dual write strategy (metadata + tags)
+- affected components: Vishva core, SaveManager, LoadManager, SNA system, AvManager, ground creation, skybox, camera, lighting
 ### 02/17/2026 0.4.0-alpha.29
 - updated to compression stream api intead of jszip to compress and decompress world file. this is native api feature , so no externa library required. world is now stored as a tar gzip file.
 - progress manager updated and refactored. Now the all statuses of task are displayed instead of just the last status. More refinement needed.

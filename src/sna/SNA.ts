@@ -2,6 +2,7 @@
  * Sensors and Actuators
  */
 import { Vishva } from "../Vishva";
+import { MeshMetadata } from "../VishvaSerialized";
 import {
     AbstractMesh,
     Action,
@@ -414,6 +415,13 @@ export class SNAManager {
      */
     private getMeshVishvaUid(mesh: TransformNode): string {
 
+        // NEW: Check metadata first
+        if (Vishva.vishva._meshMetadata && Vishva.vishva._meshMetadata[mesh.id]) {
+            const uid = Vishva.vishva._meshMetadata[mesh.id].vishvaUid;
+            if (uid) return uid;
+        }
+
+        // FALLBACK: Check tags for backward compatibility
         if (!(mesh instanceof BABYLON.InstancedMesh) && (Tags.HasTags(mesh))) {
             var tags: string[] = (<string>Tags.GetTags(mesh, true)).split(" ");
             for (let tag of tags) {
@@ -421,16 +429,28 @@ export class SNAManager {
                 if (i >= 0) return tag;
             }
         }
+        
+        // Generate new UID
         var uid: string;
         uid = "Vishva.uid." + (<number>new Number(Date.now())).toString();
         while ((uid === this.prevUID)) {
             uid = "Vishva.uid." + (<number>new Number(Date.now())).toString();
         };
         this.prevUID = uid;
+        
+        // NEW: Store in metadata
+        if (!Vishva.vishva._meshMetadata) Vishva.vishva._meshMetadata = {};
+        if (!Vishva.vishva._meshMetadata[mesh.id]) {
+            Vishva.vishva._meshMetadata[mesh.id] = new MeshMetadata();
+            Vishva.vishva._meshMetadata[mesh.id].meshId = mesh.id;
+        }
+        Vishva.vishva._meshMetadata[mesh.id].vishvaUid = uid;
+        
         if (mesh instanceof InstancedMesh) {
             mesh.name = mesh.name + "." + uid;
             return mesh.name;
         } else {
+            // Keep tag for backward compatibility
             Tags.AddTagsTo(mesh, uid);
             return uid;
         }

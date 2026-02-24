@@ -5,6 +5,7 @@ import { VEvent } from "../eventing/VEvent";
 import { SNAManager } from "../sna/SNA";
 import { AnimUtils } from "../util/AnimUtils";
 import { Vishva } from "../Vishva";
+import { ObjectIdMap } from "../VishvaSerialized";
 
 
 export class AvManager {
@@ -91,9 +92,16 @@ export class AvManager {
         avatar.ellipsoid = this._avEllipsoid
         avatar.ellipsoidOffset = this._avEllipsoidOffset;
         avatar.isPickable = false;
+        
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(avatar, "Vishva.avatar");
         Tags.AddTagsTo(avatarSkeleton, "Vishva.skeleton");
         avatarSkeleton.name = "Vishva.skeleton";
+
+        // NEW: Update objectIds
+        if (!Vishva.vishva._objectIds) Vishva.vishva._objectIds = new ObjectIdMap();
+        Vishva.vishva._objectIds.avatarId = avatar.id;
+        Vishva.vishva._objectIds.skeletonId = avatarSkeleton.id;
 
         this.mainCamera.alpha = avatar.rotation.y - 4.69;
 
@@ -203,10 +211,18 @@ export class AvManager {
         //now that this mesh is not the avatar anymore, we can make it and its children pickable and remove the avatar tags
         this._makeAllUnPickable(this.avatar,false);
         this.avatar.visibility = 1;
+        
+        // Remove tags from old avatar
         Tags.RemoveTagsFrom(this.avatar, "Vishva.avatar");
         if (this.avatarSkeleton != null) {
             Tags.RemoveTagsFrom(this.avatarSkeleton, "Vishva.skeleton");
             this.avatarSkeleton.name = "";
+        }
+
+        // NEW: Clear old avatar/skeleton IDs from objectIds
+        if (Vishva.vishva._objectIds) {
+            Vishva.vishva._objectIds.avatarId = null;
+            Vishva.vishva._objectIds.skeletonId = null;
         }
 
         //new avatar
@@ -214,11 +230,20 @@ export class AvManager {
         this.isAg = AnimUtils.containsAG(mesh, this.scene.animationGroups, true);
         let sm = AnimUtils.getMeshSkel(mesh, true);
         this.avatarSkeleton = (sm === null) ? null : sm.skel;
+        
+        // Add tags to new avatar
         Tags.AddTagsTo(this.avatar, "Vishva.avatar");
         if (this.avatarSkeleton != null) {
             Tags.AddTagsTo(this.avatarSkeleton, "Vishva.skeleton");
             this.avatarSkeleton.name = "Vishva.skeleton";
             this.avatarSkeleton.enableBlending(this._animBlend);
+        }
+
+        // NEW: Update objectIds with new avatar/skeleton IDs
+        if (!Vishva.vishva._objectIds) Vishva.vishva._objectIds = new ObjectIdMap();
+        Vishva.vishva._objectIds.avatarId = this.avatar.id;
+        if (this.avatarSkeleton) {
+            Vishva.vishva._objectIds.skeletonId = this.avatarSkeleton.id;
         }
 
         this.avatar.checkCollisions = true;

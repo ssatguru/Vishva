@@ -90,7 +90,7 @@ import { ActuatorRotator } from "./sna/ActuatorRotator";
 import { ActRotatorParm } from "./sna/ActuatorRotator";
 import { ActuatorMover } from "./sna/ActuatorMover";
 import { ActMoverParm } from "./sna/ActuatorMover";
-import { AvSerialized, VishvaSerialized } from "./VishvaSerialized";
+import { AvSerialized, VishvaSerialized, ObjectIdMap, MeshMetadataMap, MeshMetadata } from "./VishvaSerialized";
 import { VishvaGUI } from "./gui/VishvaGUI";
 
 import { AvManager } from "./avatar/AvManager";
@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.29";
+    static version: string = "0.4.0-alpha.30";
 
     public static worldName: string;
 
@@ -176,6 +176,11 @@ export class Vishva {
     public saveManager: SaveManager;
     public loadManager: LoadManager;
     public progressManager: ProgressManager;
+
+    // NEW: Object IDs and mesh metadata loaded from VishvaSerialized
+    // Used to find objects by ID instead of tags during scene load
+    public _objectIds: ObjectIdMap;
+    public _meshMetadata: MeshMetadataMap;
 
 
     //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -403,29 +408,90 @@ export class Vishva {
             var cameraFound: boolean = false;
             var spawnPointFound: boolean = false;
 
-            for (let mesh of scene.meshes) {
-
-                if (Tags.HasTags(mesh)) {
-                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+            // NEW: Try to find objects by ID first (if objectIds available)
+            if (this._objectIds) {
+                // Find avatar by ID
+                if (this._objectIds.avatarId) {
+                    this.avatar = <Mesh>scene.getMeshByID(this._objectIds.avatarId);
+                    if (this.avatar) {
+                        console.log("av found");
                         avFound = true;
-                        this.avatar = <Mesh>mesh;
-                        //TODO ellipsoidOffset not serialized?
                         this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
-                        //TODO override ellipsoid ?
                         this.avatar.ellipsoid = this._avEllipsoid;
-                    } else if (Tags.MatchesQuery(mesh, "Vishva.sky")) {
+                    }
+                }
+                
+                // Find skybox by ID
+                if (this._objectIds.skyboxId) {
+                    
+                    this.skybox = <Mesh>scene.getMeshByID(this._objectIds.skyboxId);
+                    if (this.skybox) {
+                        console.log("skybox found");
                         skyFound = true;
-                        this.skybox = <Mesh>mesh;
                         this.skybox.isPickable = false;
-                    } else if (Tags.MatchesQuery(mesh, "Vishva.ground")) {
-                        if (!groundFound) {
+                    }
+                }
+                
+                // Find ground by ID
+                if (this._objectIds.groundId) {
+                    this.ground = <Mesh>scene.getMeshByID(this._objectIds.groundId);
+                    if (this.ground) {
+                        console.log("gnd found");
+                        groundFound = true;
+                        this.ground.isPickable = true;
+                    }
+                }
+                
+                // Find spawn point by ID
+                if (this._objectIds.spawnPointId) {
+                    const spawnMesh = scene.getMeshByID(this._objectIds.spawnPointId);
+                    if (spawnMesh) {
+                        spawnPointFound = true;
+                        this.spawnPosition = spawnMesh.position.clone();
+                    }
+                }
+            }
+
+            // FALLBACK: If not found by ID, search by tags (backward compatibility)
+            if (!avFound || !skyFound || !groundFound || !spawnPointFound) {
+                for (let mesh of scene.meshes) {
+                    if (Tags.HasTags(mesh)) {
+                        if (!avFound && Tags.MatchesQuery(mesh, "Vishva.avatar")) {
+                            avFound = true;
+                            this.avatar = <Mesh>mesh;
+                            this.avatar.ellipsoidOffset = this._avEllipsoidOffset;
+                            this.avatar.ellipsoid = this._avEllipsoid;
+                        } else if (!skyFound && Tags.MatchesQuery(mesh, "Vishva.sky")) {
+                            skyFound = true;
+                            this.skybox = <Mesh>mesh;
+                            this.skybox.isPickable = false;
+                        } else if (!groundFound && Tags.MatchesQuery(mesh, "Vishva.ground")) {
                             groundFound = true;
                             this.ground = <Mesh>mesh;
                             this.ground.isPickable = true;
+                        } else if (!spawnPointFound && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                            spawnPointFound = true;
+                            this.spawnPosition = mesh.position.clone();
                         }
-                    }else if (Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
-                        spawnPointFound = true;
-                        this.spawnPosition = mesh.position.clone();
+                    }
+                }
+            }
+
+            // NEW: Restore mesh metadata (tags) for backward compatibility
+            if (this._meshMetadata) {
+                for (let meshId in this._meshMetadata) {
+                    const mesh = scene.getMeshByID(meshId);
+                    if (mesh) {
+                        const metadata = this._meshMetadata[meshId];
+                        
+                        // Restore tags for backward compatibility
+                        if (metadata.isPrimitive) Tags.AddTagsTo(mesh, "Vishva.prim");
+                        if (metadata.isInternal) Tags.AddTagsTo(mesh, "Vishva.internal");
+                        if (metadata.isInvisible) {
+                            Tags.AddTagsTo(mesh, "invisible");
+                            mesh.isVisible = false;
+                        }
+                        if (metadata.vishvaUid) Tags.AddTagsTo(mesh, metadata.vishvaUid);
                     }
                 }
             }
@@ -433,22 +499,46 @@ export class Vishva {
 
             // console.log("loadBabylonjsPart skesls");
 
-            for (let skeleton of scene.skeletons) {
-                if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
+            // NEW: Try to find skeleton by ID first
+            if (this._objectIds && this._objectIds.skeletonId) {
+                this.avatarSkeleton = scene.getSkeletonById(this._objectIds.skeletonId);
+                if (this.avatarSkeleton) {
                     skelFound = true;
-                    this.avatarSkeleton = skeleton;
                 }
             }
+
+            // FALLBACK: If not found by ID, search by tag
+            if (!skelFound) {
+                for (let skeleton of scene.skeletons) {
+                    if (Tags.MatchesQuery(skeleton, "Vishva.skeleton") || (skeleton.name === "Vishva.skeleton")) {
+                        skelFound = true;
+                        this.avatarSkeleton = skeleton;
+                        break;
+                    }
+                }
+            }
+            
             if (!skelFound) {
                 console.log("No Skeleton found");
             }
 
             //lets look for the sun- a hemispherical light
-            for (let light of scene.lights) {
-                if (Tags.MatchesQuery(light, "Vishva.sun")) {
+            // NEW: Try to find sun by ID first
+            if (this._objectIds && this._objectIds.sunId) {
+                this.sun = <HemisphericLight>scene.getLightByID(this._objectIds.sunId);
+                if (this.sun) {
                     sunFound = true;
-                    this.sun = <HemisphericLight>light;
-                    break;
+                }
+            }
+
+            // FALLBACK: If not found by ID, search by tag
+            if (!sunFound) {
+                for (let light of scene.lights) {
+                    if (Tags.MatchesQuery(light, "Vishva.sun")) {
+                        sunFound = true;
+                        this.sun = <HemisphericLight>light;
+                        break;
+                    }
                 }
             }
 
@@ -483,7 +573,13 @@ export class Vishva {
                 this.sun = new HemisphericLight("Vishva.hl01", new Vector3(1, 1, 0), this.scene);
                 this.sun.diffuse = new Color3(1, 1, 1);
                 this.sun.groundColor = new Color3(0.5, 0.5, 0.5);
+                
+                // Keep tags for backward compatibility
                 Tags.AddTagsTo(this.sun, "Vishva.sun");
+                
+                // NEW: Update objectIds
+                if (!this._objectIds) this._objectIds = new ObjectIdMap();
+                this._objectIds.sunId = this.sun.id;
 
                 this.sunDR = new DirectionalLight("Vishva.dl01", new Vector3(-1, -1, 0), this.scene);
                 this.sunDR.position = new Vector3(0, 128, 0);
@@ -520,14 +616,26 @@ export class Vishva {
 
             // console.log("loadBabylonjsPart cameras");
 
-            for (let camera of scene.cameras) {
-                if (Tags.MatchesQuery(camera, "Vishva.camera")) {
+            // NEW: Try to find camera by ID first
+            if (this._objectIds && this._objectIds.cameraId) {
+                this.arcCamera = <ArcRotateCamera>scene.getCameraByID(this._objectIds.cameraId);
+                if (this.arcCamera) {
                     cameraFound = true;
-                    this.arcCamera = <ArcRotateCamera>camera;
                     this.setCameraSettings(this.arcCamera);
                     this.arcCamera.attachControl(true, false, 2);
+                }
+            }
 
-                    //this.mainCamera.target = this.vishvaSerialized.misc.activeCameraTarget;
+            // FALLBACK: If not found by ID, search by tag
+            if (!cameraFound) {
+                for (let camera of scene.cameras) {
+                    if (Tags.MatchesQuery(camera, "Vishva.camera")) {
+                        cameraFound = true;
+                        this.arcCamera = <ArcRotateCamera>camera;
+                        this.setCameraSettings(this.arcCamera);
+                        this.arcCamera.attachControl(true, false, 2);
+                        break;
+                    }
                 }
             }
 
@@ -1462,9 +1570,20 @@ export class Vishva {
         this._addToShadowCasters(mesh);
         //sat TODO remove comment
         mesh.receiveShadows = this._recShadowFlag;
+        
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(mesh, "Vishva.prim Vishva.internal");
+        
         mesh.id = this.uid(mesh.name);//(<number>new Number(Date.now())).toString();
         mesh.name = mesh.id;
+        
+        // NEW: Store in metadata
+        if (!this._meshMetadata) this._meshMetadata = {};
+        this._meshMetadata[mesh.id] = new MeshMetadata();
+        this._meshMetadata[mesh.id].meshId = mesh.id;
+        this._meshMetadata[mesh.id].isPrimitive = true;
+        this._meshMetadata[mesh.id].isInternal = true;
+        
         mesh.material = this.primMaterial.clone("m" + mesh.name);
         // mesh.material = this.primPBRMaterial.clone("m" + mesh.name);
     }
@@ -1540,13 +1659,27 @@ export class Vishva {
             return "no mesh selected";
         }
         if (this.ground != null) {
+            // Remove tag from old ground
             Tags.RemoveTagsFrom(this.ground, "Vishva.ground");
             this.ground.isPickable = true;
+            
+            // NEW: Clear old ground ID from objectIds
+            if (this._objectIds) {
+                this._objectIds.groundId = null;
+            }
         }
+        
         this.ground = <Mesh>this.meshSelected;
         this.ground.isPickable = false;
         this.ground.receiveShadows = true;
+        
+        // Keep tag for backward compatibility
         Tags.AddTagsTo(this.ground, "Vishva.ground");
+        
+        // NEW: Update objectIds with new ground ID
+        if (!this._objectIds) this._objectIds = new ObjectIdMap();
+        this._objectIds.groundId = this.ground.id;
+        
         this.removeEditControl();
         return null;
     }
@@ -1750,6 +1883,12 @@ export class Vishva {
     }
 
     public isVisible(): boolean {
+        // NEW: Check metadata first
+        if (this._meshMetadata && this._meshMetadata[this.meshSelected.id]) {
+            return !this._meshMetadata[this.meshSelected.id].isInvisible;
+        }
+        
+        // FALLBACK: Check tags for backward compatibility
         if (Tags.HasTags(this.meshSelected)) {
             if (Tags.MatchesQuery(this.meshSelected, "invisible")) {
                 return false;
@@ -1766,17 +1905,35 @@ export class Vishva {
             return "not a mesh. just a transformnode";
         }
         var mesh = this.meshSelected;
+        
+        // NEW: Initialize metadata if needed
+        if (!this._meshMetadata) this._meshMetadata = {};
+        if (!this._meshMetadata[mesh.id]) {
+            this._meshMetadata[mesh.id] = new MeshMetadata();
+            this._meshMetadata[mesh.id].meshId = mesh.id;
+        }
+        
         if (yes) {
+            // NEW: Update metadata
+            this._meshMetadata[mesh.id].isInvisible = false;
+            
+            // Also update tag for backward compatibility
             if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "invisible")) {
                 Tags.RemoveTagsFrom(this.meshSelected, "invisible")
-                this.meshSelected.isVisible = true;
-                this.meshSelected.isPickable = true;
-                if (this.revealingInvisibles)
-                    this.unHighLight(mesh);
             }
+            
+            this.meshSelected.isVisible = true;
+            this.meshSelected.isPickable = true;
+            if (this.revealingInvisibles)
+                this.unHighLight(mesh);
         }
         else {
+            // NEW: Update metadata
+            this._meshMetadata[mesh.id].isInvisible = true;
+            
+            // Also update tag for backward compatibility
             Tags.AddTagsTo(this.meshSelected, "invisible");
+            
             //if settings to reveal invisibe is on then
             //we cannot hide the object
             //we will just highlight it to indicate
@@ -1798,13 +1955,29 @@ export class Vishva {
     revealingInvisibles: boolean = false;
     public revealInvisibles() {
         this.revealingInvisibles = true;
-        for (var i = 0; i < this.scene.meshes.length; i++) {
-            var mesh = this.scene.meshes[i];
-            if (Tags.HasTags(mesh)) {
-                if (Tags.MatchesQuery(mesh, "invisible")) {
-                    mesh.isVisible = true;
-                    this.highLight(mesh, this._revelColor);
-                    mesh.isPickable = true;
+        
+        // NEW: Use metadata if available
+        if (this._meshMetadata) {
+            for (let meshId in this._meshMetadata) {
+                if (this._meshMetadata[meshId].isInvisible) {
+                    const mesh = this.scene.getMeshByID(meshId);
+                    if (mesh) {
+                        mesh.isVisible = true;
+                        this.highLight(mesh, this._revelColor);
+                        mesh.isPickable = true;
+                    }
+                }
+            }
+        } else {
+            // FALLBACK: Use tags for backward compatibility
+            for (var i = 0; i < this.scene.meshes.length; i++) {
+                var mesh = this.scene.meshes[i];
+                if (Tags.HasTags(mesh)) {
+                    if (Tags.MatchesQuery(mesh, "invisible")) {
+                        mesh.isVisible = true;
+                        this.highLight(mesh, this._revelColor);
+                        mesh.isPickable = true;
+                    }
                 }
             }
         }
@@ -1812,7 +1985,21 @@ export class Vishva {
 
     public hideInvisibles() {
         this.revealingInvisibles = false;
-        for (var i = 0; i < this.scene.meshes.length; i++) {
+        
+        // NEW: Use metadata if available
+        if (this._meshMetadata) {
+            for (let meshId in this._meshMetadata) {
+                if (this._meshMetadata[meshId].isInvisible) {
+                    const mesh = this.scene.getMeshByID(meshId);
+                    if (mesh) {
+                        mesh.isVisible = false;
+                        this.unHighLight(mesh);
+                        mesh.isPickable = false;
+                    }
+                }
+            }
+        } else {
+            // FALLBACK: Use tags for backward compatibility
             for (var i = 0; i < this.scene.meshes.length; i++) {
                 var mesh = this.scene.meshes[i];
                 if (Tags.HasTags(mesh)) {
@@ -3874,7 +4061,19 @@ export class Vishva {
         grnd.material = groundMaterial;
         grnd.checkCollisions = true;
         grnd.isPickable = false;
+        
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+        
+        // NEW: Update objectIds and metadata
+        if (!this._objectIds) this._objectIds = new ObjectIdMap();
+        this._objectIds.groundId = grnd.id;
+        
+        if (!this._meshMetadata) this._meshMetadata = {};
+        this._meshMetadata[grnd.id] = new MeshMetadata();
+        this._meshMetadata[grnd.id].meshId = grnd.id;
+        this._meshMetadata[grnd.id].isInternal = true;
+        
         grnd.freezeWorldMatrix();
         grnd.receiveShadows = true;
         if (this.enablePhysics) {
@@ -3893,7 +4092,19 @@ export class Vishva {
         grnd.material = groundMaterial;
         grnd.checkCollisions = true;
         //grnd.isPickable = false;
+        
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+        
+        // NEW: Update objectIds and metadata
+        if (!this._objectIds) this._objectIds = new ObjectIdMap();
+        this._objectIds.groundId = grnd.id;
+        
+        if (!this._meshMetadata) this._meshMetadata = {};
+        this._meshMetadata[grnd.id] = new MeshMetadata();
+        this._meshMetadata[grnd.id].meshId = grnd.id;
+        this._meshMetadata[grnd.id].isInternal = true;
+        
         grnd.freezeWorldMatrix();
         grnd.receiveShadows = true;
         if (this.enablePhysics) {
@@ -3921,7 +4132,18 @@ export class Vishva {
                 grnd.material = groundMaterial;
                 grnd.checkCollisions = true;
                 grnd.isPickable = false;
+                
+                // Keep tags for backward compatibility
                 Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+                
+                // NEW: Update objectIds and metadata
+                if (!this._objectIds) this._objectIds = new ObjectIdMap();
+                this._objectIds.groundId = grnd.id;
+                
+                if (!this._meshMetadata) this._meshMetadata = {};
+                this._meshMetadata[grnd.id] = new MeshMetadata();
+                this._meshMetadata[grnd.id].meshId = grnd.id;
+                this._meshMetadata[grnd.id].isInternal = true;
 
                 grnd.receiveShadows = true;
 
@@ -3988,7 +4210,18 @@ export class Vishva {
         terrain.update(true);
         terrain.mesh.checkCollisions = true;
         this.ground = <any>terrain.mesh;
+        
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(this.ground, "Vishva.ground Vishva.internal");
+        
+        // NEW: Update objectIds and metadata
+        if (!this._objectIds) this._objectIds = new ObjectIdMap();
+        this._objectIds.groundId = this.ground.id;
+        
+        if (!this._meshMetadata) this._meshMetadata = {};
+        this._meshMetadata[this.ground.id] = new MeshMetadata();
+        this._meshMetadata[this.ground.id].meshId = this.ground.id;
+        this._meshMetadata[this.ground.id].isInternal = true;
     }
 
     private creatDynamicTerrain() {
@@ -4035,7 +4268,18 @@ export class Vishva {
         //show the sky's "clear color" which also becomes darker as the light dims
         skybox.visibility = this.sun.intensity;
 
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(skybox, "Vishva.sky Vishva.internal");
+        
+        // NEW: Update objectIds and metadata
+        if (!this._objectIds) this._objectIds = new ObjectIdMap();
+        this._objectIds.skyboxId = skybox.id;
+        
+        if (!this._meshMetadata) this._meshMetadata = {};
+        this._meshMetadata[skybox.id] = new MeshMetadata();
+        this._meshMetadata[skybox.id].meshId = skybox.id;
+        this._meshMetadata[skybox.id].isInternal = true;
+        
         return skybox;
     }
 
@@ -4273,8 +4517,13 @@ export class Vishva {
         camera.checkCollisions = this._cameraCollision;
         camera.collisionRadius = this._cameraEllipsoid;
 
-
+        // Keep tags for backward compatibility
         Tags.AddTagsTo(camera, "Vishva.camera");
+        
+        // NEW: Update objectIds
+        if (!this._objectIds) this._objectIds = new ObjectIdMap();
+        this._objectIds.cameraId = camera.id;
+        
         return camera;
     }
 

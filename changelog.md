@@ -1,3 +1,29 @@
+### 05/10/2026 0.4.0-alpha.31
+
+#### Standalone World Archive
+- world archives are now fully self-contained — all referenced assets (textures, meshes, particle textures, environment maps) are bundled into the archive under an `assets/` folder
+- added AssetCollector (`src/managers/AssetCollector.ts`) — scans serialized scene JSON to discover all external asset URLs, resolves relative paths, decodes data URIs, deduplicates entries, and generates disambiguated archive filenames
+- added PathRewriter (`src/managers/PathRewriter.ts`) — rewrites all asset URLs in the scene JSON from server-relative paths to archive-relative paths (`assets/<filename>`)
+- added AssetResolver (`src/managers/AssetResolver.ts`) — intercepts BabylonJS file requests during load and serves matching assets from the extracted archive via Blob URLs, with cleanup after scene load
+- added TarUtils (`src/managers/TarUtils.ts`) — tar archive creation/extraction utilities
+- updated SaveManager to collect assets, rewrite paths, fetch asset binaries, and bundle them into the tar archive during save
+- updated LoadManager to detect bundled assets in archives and activate AssetResolver for self-contained loading
+- IndexedDB save/load also supports bundled assets
+- legacy archives without `assets/` folder continue to load via existing server-fetch behavior (backward compatible)
+- graceful degradation on asset fetch failure — save continues with a warning, skipping unfetchable assets
+- added test framework: vitest + fast-check for property-based testing
+- added property tests for asset collection completeness, URL resolution, data URI round-trip, deduplication, filename uniqueness, path rewriting completeness, TAR round-trip, asset resolver routing, and asset presence detection
+
+#### Menu Bar Upload Button
+- added "Upload" button to the navigation bar with `upload_file` Material Icon, providing an alternative to drag-and-drop for loading 3D assets
+- upload button shows a dropdown menu with "Upload File(s)" and "Upload Folder" options
+- file upload supports multiple file selection with format filtering (gltf, glb, obj, babylon, stl)
+- folder upload uses `webkitdirectory` attribute for selecting entire folders with dependencies
+- upload feeds files into the existing `processDroppedFiles` pipeline — identical behavior to drag-and-drop (format validation, dependency resolution, asset positioning, event firing)
+- made `processDroppedFiles` public in LoadManager to support the upload integration
+- added browser compatibility detection for `webkitdirectory` — folder option hidden if unsupported
+- added property tests for file format classification partition and supported format identification
+
 ### 02/23/2026 0.4.0-alpha.30
 - migrated Vishva meta information from Babylon.js Tags API to structured metadata in VishvaSerialized
 - added ObjectIdMap and MeshMetadata classes to VishvaSerialized for tracking object IDs and mesh properties

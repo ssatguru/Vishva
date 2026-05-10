@@ -16,6 +16,7 @@ import { VDiag } from "./components/VDiag";
 import { TransformNode } from "babylonjs";
 import { CCUI } from "./CCUI";
 import { SNAManager } from "../sna/SNA";
+import { UploadUI } from "./UploadUI";
 
 
 export class GuiSettings {
@@ -145,6 +146,7 @@ export class VishvaGUI {
      */
 
     private _addInternalAssetUI: InternalAssetsUI;
+    private _uploadUI: UploadUI;
     private _allAssetsVTDiag: VTreeDialog;
     private _items: ItemListUI;
     public showItemList(): ItemListUI {
@@ -197,6 +199,14 @@ export class VishvaGUI {
         var saveWorld: HTMLElement = document.getElementById("saveWorld");
         saveWorld.onclick = async (e) => {
             var saved: boolean = await this._vishva.saveManager.saveWorldToIndexedDB();
+            return false;
+        };
+
+        // button to upload file/folder to scene
+        this._uploadUI = new UploadUI(this._vishva);
+        var uploadAsset: HTMLElement = document.getElementById("uploadAsset");
+        uploadAsset.onclick = (e) => {
+            this._uploadUI.handleUploadClick();
             return false;
         };
 

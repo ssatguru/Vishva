@@ -1,6 +1,6 @@
 {
         "name": "vishva",
-        "version": "0.4.0-alpha.30",
+        "version": "0.4.0-alpha.31",
         "keywords": [
                 "babylonjs",
                 "editor"
@@ -20,20 +20,24 @@
                 "oimo": "^1.0.9"
         },
         "devDependencies": {
+                "@types/node": "^25.6.2",
                 "copy-webpack-plugin": "^13.0.1",
                 "css-loader": "^7.1.2",
+                "fast-check": "^4.7.0",
                 "file-loader": "^6.2.0",
                 "style-loader": "^4.0.0",
                 "terser-webpack-plugin": "^5.3.16",
                 "ts-loader": "^9.5.4",
                 "typescript": "^5.9.3",
                 "uglify-js": "^3.19.3",
+                "vitest": "^4.1.5",
                 "webpack": "^5.104.1",
                 "webpack-cli": "^6.0.1",
                 "webpack-dev-server": "^5.2.3"
         },
         "scripts": {
                 "dev": "webpack-dev-server --open",
-                "build": "webpack --mode production "
+                "build": "webpack --mode production ",
+                "test": "vitest --run"
         }
 }

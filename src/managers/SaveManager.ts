@@ -5,6 +5,8 @@ import {
 import { VishvaSerialized, ObjectIdMap, MeshMetadata } from "../VishvaSerialized";
 import { SNAManager, SNAserialized } from "../sna/SNA";
 import { DialogMgr } from "../gui/DialogMgr";
+import { AssetCollector, AssetEntry, EmbeddedTextureEntry } from "./AssetCollector";
+import { PathRewriter } from "./PathRewriter";
 
 export class SaveManager {
     private vishva: any;
@@ -30,7 +32,7 @@ export class SaveManager {
         this.vishva.meshSelected.rotation = re;
         this.vishva.meshSelected.rotationQuaternion = rq;
 
-        var meshString: string = JSON.stringify(meshObj, null, 1);
+        var meshString: string = SaveManager._stringifyWithPrecision(meshObj, 1);
         var file: File = new File([meshString], "AssetFile.babylon");
         return URL.createObjectURL(file);
     }
@@ -106,6 +108,9 @@ export class SaveManager {
     }
 
     private async _getWorldZipBlob(): Promise<Blob> {
+        const assetCollector = new AssetCollector();
+        const pathRewriter = new PathRewriter();
+
         this.removeRedundantCameras();
         this.removeInstancesFromShadow();
         this.renameMeshIds();
@@ -178,20 +183,87 @@ export class SaveManager {
         this.removeSounds(sceneObj);
         this.removeActuatorTextBarMat(sceneObj);
 
-        await this.vishva.progressManager.update("Compressing world data...", 85);
+        await this.vishva.progressManager.update("Collecting assets...", 55);
+
+        // Extract embedded textures (base64String fields from GLB imports)
+        const embeddedEntries = assetCollector.collectEmbeddedTextures(sceneObj);
+
+        // Re-encode PNG textures as JPEG to reduce file size (when alpha is not needed)
+        await this._reencodeEmbeddedTextures(embeddedEntries);
+
+        assetCollector.stripEmbeddedTextures(embeddedEntries);
+
+        // Collect external asset URLs and rewrite paths to assets/<archiveFilename>
+        const baseUrl = window.location.href;
+        const externalEntries = assetCollector.collect(sceneObj, baseUrl);
+        pathRewriter.rewrite(sceneObj, externalEntries);
+
+        await this.vishva.progressManager.update("Fetching assets...", 65);
+
+        // Fetch binary data for external assets that don't already have decoded data
+        const fetchedAssetFiles: Array<{ filename: string; data: Uint8Array }> = [];
+        for (const entry of externalEntries) {
+            if (entry.decodedData) {
+                // Data URI assets are already decoded — skip fetching
+                continue;
+            }
+            try {
+                const response = await fetch(entry.fetchUrl);
+                const arrayBuffer = await response.arrayBuffer();
+                fetchedAssetFiles.push({
+                    filename: "assets/" + entry.archiveFilename,
+                    data: new Uint8Array(arrayBuffer)
+                });
+            } catch (err) {
+                console.warn(`Failed to fetch asset "${entry.fetchUrl}", skipping:`, err);
+            }
+        }
+
+        await this.vishva.progressManager.update("Building archive...", 80);
 
         // Create separate JSON strings for Vishva and Scene
-        const vishvaString = JSON.stringify(vishvaSerialzed);
-        const sceneString = JSON.stringify(sceneObj);
+        // Round floating point numbers to reduce file size (4 decimal places)
+        // Precision reduction is applied AFTER the asset pipeline completes
+        const vishvaString = SaveManager._stringifyWithPrecision(vishvaSerialzed);
+        const sceneString = SaveManager._stringifyWithPrecision(sceneObj);
         
         const vishvaBuffer = new TextEncoder().encode(vishvaString);
         const sceneBuffer = new TextEncoder().encode(sceneString);
+
+        // Build archive file list with all assets
+        const archiveFiles: Array<{ filename: string; data: Uint8Array }> = [];
+
+        // Add embedded texture files
+        for (const entry of embeddedEntries) {
+            archiveFiles.push({
+                filename: "assets/" + entry.archiveFilename,
+                data: entry.decodedData
+            });
+        }
+
+        // Add fetched external asset files
+        for (const file of fetchedAssetFiles) {
+            archiveFiles.push(file);
+        }
+
+        // Add data URI assets from external entries that have decodedData
+        for (const entry of externalEntries) {
+            if (entry.decodedData) {
+                archiveFiles.push({
+                    filename: "assets/" + entry.archiveFilename,
+                    data: entry.decodedData
+                });
+            }
+        }
+
+        // Add Vishva.json and Scene.babylon (with precision reduction already applied)
+        archiveFiles.push({ filename: "Vishva.json", data: vishvaBuffer });
+        archiveFiles.push({ filename: "Scene.babylon", data: sceneBuffer });
+
+        await this.vishva.progressManager.update("Compressing world data...", 90);
         
-        // Create TAR archive with both files
-        const tarBuffer = await this._createTarArchive([
-            { filename: "Vishva.json", data: vishvaBuffer },
-            { filename: "Scene.babylon", data: sceneBuffer }
-        ]);
+        // Create TAR archive with all files
+        const tarBuffer = await this._createTarArchive(archiveFiles);
         
         // Compress TAR archive using gzip with Compression Streams API
         const gzipBlob = await this._compressWithGzip(tarBuffer);
@@ -519,5 +591,132 @@ export class SaveManager {
                 allSkels[(<number>i | 0)].dispose();
             }
         }
+    }
+
+    /**
+     * Re-encode PNG embedded textures as JPEG to reduce file size.
+     * Only converts textures that don't require alpha transparency.
+     * Modifies entries in-place: updates decodedData and archiveFilename.
+     */
+    private static readonly JPEG_QUALITY = 0.85;
+
+    private async _reencodeEmbeddedTextures(entries: EmbeddedTextureEntry[]): Promise<void> {
+        for (const entry of entries) {
+            // Only re-encode PNG textures
+            if (!entry.dataUri.startsWith("data:image/png")) {
+                continue;
+            }
+
+            try {
+                const jpegData = await this._pngToJpeg(entry.decodedData);
+                if (jpegData && jpegData.length < entry.decodedData.length) {
+                    // JPEG is smaller — use it
+                    entry.decodedData = jpegData;
+                    // Update filename extension from .png to .jpg
+                    entry.archiveFilename = entry.archiveFilename.replace(/\.png$/i, ".jpg");
+                }
+            } catch (err) {
+                // If re-encoding fails, keep the original PNG
+                console.warn(`Failed to re-encode texture "${entry.archiveFilename}" as JPEG, keeping PNG:`, err);
+            }
+        }
+    }
+
+    /**
+     * Convert PNG binary data to JPEG using an offscreen canvas.
+     * Returns null if the image has meaningful alpha (transparency).
+     */
+    private _pngToJpeg(pngData: Uint8Array): Promise<Uint8Array | null> {
+        return new Promise((resolve, reject) => {
+            const blob = new Blob([pngData.buffer as ArrayBuffer], { type: "image/png" });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+
+            img.onload = () => {
+                URL.revokeObjectURL(url);
+
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) {
+                    resolve(null);
+                    return;
+                }
+
+                // Draw image and check for alpha usage
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                if (this._hasAlpha(imageData)) {
+                    // Image uses transparency — keep as PNG
+                    resolve(null);
+                    return;
+                }
+
+                // Re-encode as JPEG
+                canvas.toBlob(
+                    (jpegBlob) => {
+                        if (!jpegBlob) {
+                            resolve(null);
+                            return;
+                        }
+                        jpegBlob.arrayBuffer().then(buf => {
+                            resolve(new Uint8Array(buf));
+                        }).catch(() => resolve(null));
+                    },
+                    "image/jpeg",
+                    SaveManager.JPEG_QUALITY
+                );
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error("Failed to load PNG image for re-encoding"));
+            };
+
+            img.src = url;
+        });
+    }
+
+    /**
+     * Check if an image has any meaningful alpha (non-opaque pixels).
+     * Samples pixels to avoid scanning every pixel of large images.
+     */
+    private _hasAlpha(imageData: ImageData): boolean {
+        const data = imageData.data;
+        const totalPixels = data.length / 4;
+
+        // For small images, check all pixels
+        if (totalPixels <= 4096) {
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] < 250) return true;
+            }
+            return false;
+        }
+
+        // For larger images, sample ~4096 pixels evenly distributed
+        const step = Math.max(1, Math.floor(totalPixels / 4096));
+        for (let p = 0; p < totalPixels; p += step) {
+            if (data[p * 4 + 3] < 250) return true;
+        }
+        return false;
+    }
+
+    /**
+     * JSON.stringify with floating point precision control.
+     * Rounds all numbers to the specified number of decimal places.
+     * Uses a two-pass approach to avoid interactions with toJSON/getters.
+     */
+    private static readonly PRECISION = 4;
+
+    private static _stringifyWithPrecision(obj: any, space?: number): string {
+        const json = JSON.stringify(obj);
+        const plain = JSON.parse(json);
+        return JSON.stringify(plain, (key, value) => {
+            if (typeof value === 'number' && !Number.isInteger(value)) {
+                return parseFloat(value.toFixed(SaveManager.PRECISION));
+            }
+            return value;
+        }, space);
     }
 }

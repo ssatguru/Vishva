@@ -7,6 +7,8 @@ import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSeriali
 import { SNAManager } from "../sna/SNA";
 import { VEvent } from "../eventing/VEvent";
 import { EventManager } from "../eventing/EventManager";
+import { AssetResolver } from "./AssetResolver";
+import { extractTarArchive } from "./TarUtils";
 
 declare var curatedConfig: Object;
 
@@ -58,8 +60,30 @@ export class LoadManager {
             const indexedDBData = await this._loadWorldFromIndexedDB(sceneFile);
             
             if (indexedDBData) {
-                const { vishvaData, sceneData } = indexedDBData;
-                this.loadVishvaPartFromObjects(vishvaData, sceneData);
+                const { vishvaData, sceneData, files } = indexedDBData;
+                
+                // Check for bundled assets in the IndexedDB-loaded archive
+                const hasAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
+                
+                if (hasAssets) {
+                    // Build asset map from extracted files
+                    const assetMap = new Map<string, Uint8Array>();
+                    for (const [key, data] of files.entries()) {
+                        if (key.startsWith("assets/")) {
+                            assetMap.set(key, data);
+                        }
+                    }
+                    
+                    // Activate AssetResolver before scene load
+                    const assetResolver = new AssetResolver();
+                    assetResolver.activate(assetMap);
+                    
+                    // Process the loaded data with asset resolver (deactivated after scene load)
+                    this.loadVishvaPartFromObjects(vishvaData, sceneData, assetResolver);
+                } else {
+                    // No assets: use existing behavior (backward compatibility)
+                    this.loadVishvaPartFromObjects(vishvaData, sceneData);
+                }
                 return;
             }
 
@@ -98,8 +122,28 @@ export class LoadManager {
             
             await this.vishva.progressManager.update("Loading scene...", 85);
             
-            // Process the loaded data
-            this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
+            // Check if archive contains bundled assets
+            const hasAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
+            
+            if (hasAssets) {
+                // Build asset map from extracted files
+                const assetMap = new Map<string, Uint8Array>();
+                for (const [key, data] of files.entries()) {
+                    if (key.startsWith("assets/")) {
+                        assetMap.set(key, data);
+                    }
+                }
+                
+                // Activate AssetResolver before scene load
+                const assetResolver = new AssetResolver();
+                assetResolver.activate(assetMap);
+                
+                // Process the loaded data with asset resolver
+                this.loadVishvaPartFromObjects(vishvaObj, sceneObj, assetResolver);
+            } else {
+                // No assets: use existing behavior (backward compatibility)
+                this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
+            }
 
             await this.vishva.progressManager.update(undefined, 100);
             
@@ -113,9 +157,9 @@ export class LoadManager {
 
     /**
      * Try to load world from IndexedDB
-     * Returns { vishvaData, sceneData } if found, null otherwise
+     * Returns { vishvaData, sceneData, files } if found, null otherwise
      */
-    private _loadWorldFromIndexedDB(worldName: string): Promise<{ vishvaData: any; sceneData: any } | null> {
+    private _loadWorldFromIndexedDB(worldName: string): Promise<{ vishvaData: any; sceneData: any; files: Map<string, Uint8Array> } | null> {
         return new Promise((resolve) => {
             try {
                 const dbName = "VishvaWorlds";
@@ -169,7 +213,7 @@ export class LoadManager {
                                     const vishvaObj = JSON.parse(vishvaText);
                                     const sceneObj = JSON.parse(sceneText);
 
-                                    resolve({ vishvaData: vishvaObj, sceneData: sceneObj });
+                                    resolve({ vishvaData: vishvaObj, sceneData: sceneObj, files });
                                 } catch (e) {
                                     console.error("Error decompressing world from IndexedDB:", e);
                                     resolve(null);
@@ -243,83 +287,16 @@ export class LoadManager {
      * Extract files from TAR archive
      */
     private async _extractTarArchive(tarData: Uint8Array): Promise<Map<string, Uint8Array>> {
-        const files = new Map<string, Uint8Array>();
-        let offset = 0;
-
-        while (offset < tarData.length) {
-            // Check for end of archive (two consecutive 512-byte blocks of zeros)
-            if (offset + 512 <= tarData.length) {
-                const header = tarData.slice(offset, offset + 512);
-                let isAllZeros = true;
-                for (let i = 0; i < 512; i++) {
-                    if (header[i] !== 0) {
-                        isAllZeros = false;
-                        break;
-                    }
-                }
-                if (isAllZeros) {
-                    // Check the next block too
-                    if (offset + 1024 <= tarData.length) {
-                        const nextHeader = tarData.slice(offset + 512, offset + 1024);
-                        let nextIsAllZeros = true;
-                        for (let i = 0; i < 512; i++) {
-                            if (nextHeader[i] !== 0) {
-                                nextIsAllZeros = false;
-                                break;
-                            }
-                        }
-                        if (nextIsAllZeros) {
-                            break; // End of archive
-                        }
-                    }
-                }
-            }
-
-            if (offset + 512 > tarData.length) break;
-
-            const header = tarData.slice(offset, offset + 512);
-            offset += 512;
-
-            // Parse TAR header
-            const decoder = new TextDecoder();
-            const headerStr = decoder.decode(header);
-
-            // Extract filename (0-99)
-            let filenameBytesLen = 0;
-            for (let i = 0; i < 100 && header[i] !== 0; i++) {
-                filenameBytesLen++;
-            }
-            const filename = decoder.decode(header.slice(0, filenameBytesLen));
-
-            // Extract file size (124-135)
-            const sizeStr = decoder.decode(header.slice(124, 135)).trim();
-            const fileSize = parseInt(sizeStr, 8);
-
-            if (isNaN(fileSize) || fileSize < 0) {
-                break;
-            }
-
-            // Extract file data
-            if (offset + fileSize <= tarData.length) {
-                const fileData = tarData.slice(offset, offset + fileSize);
-                files.set(filename, fileData);
-                offset += fileSize;
-
-                // Align to 512-byte boundary
-                const padding = (512 - (fileSize % 512)) % 512;
-                offset += padding;
-            } else {
-                break;
-            }
-        }
-
-        return files;
+        return extractTarArchive(tarData);
     }
 
     /**
      * Load Vishva data from separate objects (used for gzip format)
+     * @param vishvaData The parsed Vishva.json object
+     * @param sceneData The parsed Scene.babylon object
+     * @param assetResolver Optional AssetResolver to deactivate after scene load
      */
-    private loadVishvaPartFromObjects(vishvaData: any, sceneData: any) {
+    private loadVishvaPartFromObjects(vishvaData: any, sceneData: any, assetResolver?: AssetResolver) {
         this.vishva.progressManager.update("Processing vishva data...", 90);
         
         this.vishva.vishvaSerialized = vishvaData;
@@ -364,6 +341,14 @@ export class LoadManager {
         var sceneDataStr: string = "data:" + JSON.stringify(sceneData);
         SceneLoader.ShowLoadingScreen = false;
         SceneLoader.Append("", sceneDataStr, this.vishva.scene, (scene) => { 
+            // Deactivate asset resolver AFTER all textures have finished loading.
+            // The SceneLoader.Append callback fires when meshes are created, but
+            // texture images are still loading asynchronously at this point.
+            if (assetResolver) {
+                scene.executeWhenReady(() => {
+                    assetResolver.deactivate();
+                });
+            }
             // Hide progress when scene is loaded
             setTimeout(() => {
                 this.vishva.progressManager.hide();
@@ -862,13 +847,41 @@ export class LoadManager {
         });
     }
     /**
-     * Setup custom file handler to intercept file requests for dropped files
+     * Setup custom file handler to intercept file requests for dropped files.
+     * Overrides both Tools.LoadFile (for text/binary files like .mtl) and
+     * Tools.PreprocessUrl (for texture images like .tga, .png, .jpg) so that
+     * ALL dependency files uploaded alongside a model are resolved from blob URLs.
      */
     private setupCustomFileHandler() {
-        // Store the original LoadFile function
+        // Store the original functions
         const originalLoadFile = Tools.LoadFile;
+        const originalPreprocessUrl = Tools.PreprocessUrl;
+        const self = this;
 
-        // Override Tools.LoadFile to intercept requests
+        // Override Tools.PreprocessUrl to intercept texture/image loading
+        // BabylonJS calls this for EVERY URL (including texture images) before loading.
+        Tools.PreprocessUrl = function (url: string): string {
+            const fileMap = (self.vishva.scene as any)._droppedFileMap as Map<string, string> | undefined;
+
+            if (fileMap && typeof url === 'string') {
+                // Extract filename from the URL
+                const cleanUrl = url.split('?')[0].split('#')[0];
+                const urlParts = cleanUrl.split('/');
+                const filename = urlParts[urlParts.length - 1];
+
+                // Check if this file is in our dropped files map
+                if (fileMap.has(filename)) {
+                    const blobUrl = fileMap.get(filename)!;
+                    console.log(`PreprocessUrl intercepted request for ${filename}, using blob URL`);
+                    return blobUrl;
+                }
+            }
+
+            // Fall through to original behavior
+            return originalPreprocessUrl(url);
+        };
+
+        // Override Tools.LoadFile to intercept text/binary file requests (e.g. .mtl)
         (Tools as any).LoadFile = (
             fileOrUrl: any,
             onSuccess: (data: string | ArrayBuffer, responseURL?: string) => void,
@@ -888,7 +901,7 @@ export class LoadManager {
                 // Check if this file is in our dropped files map
                 if (fileMap.has(filename)) {
                     const blobUrl = fileMap.get(filename)!;
-                    console.log(`Intercepted request for ${filename}, using blob URL`);
+                    console.log(`LoadFile intercepted request for ${filename}, using blob URL`);
 
                     // Use the blob URL instead
                     return originalLoadFile(blobUrl, onSuccess, onProgress, offlineProvider, useArrayBuffer, onError);
@@ -946,7 +959,7 @@ export class LoadManager {
     /**
      * Process dropped files and load the main asset
      */
-    private processDroppedFiles(files: File[]) {
+    public processDroppedFiles(files: File[]) {
         if (files.length === 0) return;
         
         console.log(`Processing ${files.length} dropped file(s)`);

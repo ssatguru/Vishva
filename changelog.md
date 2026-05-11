@@ -1,3 +1,40 @@
+### 05/10/2026 0.4.0-alpha.32
+
+#### World Launcher Chooser
+- added a launcher/chooser UI that appears when no `?world=` query parameter is provided and no `defaultWorld` config is set
+- launcher presents three world-loading options: "Load from Server", "Load from Browser Storage", and "Upload a File", plus an "Empty World" fallback button
+- "Load from Server" fetches a static `vishva/worlds/index.json` file listing available `.tar.gz` worlds, displays them as clickable items
+- "Load from Browser Storage" queries IndexedDB for previously saved worlds and displays them as clickable items
+- "Upload a File" validates and stores a `.tar.gz` world file in IndexedDB, then reloads with `?world=__uploaded`
+- every selection triggers a page reload with the appropriate `?world=` parameter, ensuring a clean WebGL context
+- launcher is completely decoupled from Vishva — it runs before the 3D engine is instantiated
+- added `WorldLauncherLogic.ts` with pure testable functions: `shouldShowLauncher`, `buildWorldQueryString`, `processServerWorldList`, `storeUploadedWorld`
+- added `WorldLauncher.ts` UI class using W3.CSS styling consistent with the editor
+- modified `index.ts` to show the launcher instead of loading an empty world when no world is specified
+- created `vishva/worlds/index.json` static index of available server worlds
+- added property-based tests for launcher display decision, server world list processing, and query string round-trip
+- added unit tests for DOM structure, panel behaviors, and upload validation
+
+#### World Load via Page Reload
+- replaced in-place world loading from local files with a page-reload strategy to eliminate scene accumulation bugs caused by stale WebGL state
+- upload and drag-and-drop of `.tar.gz` world files now stores the file in IndexedDB and reloads the page with `?world=__uploaded`
+- on reload, Vishva constructor detects the `__uploaded` flag, retrieves the file from IndexedDB, and loads it through the standard initialization pipeline
+- added lightweight pre-reload validation: decompresses gzip and checks tar headers for `Vishva.json` and `Scene.babylon` before storing
+- added `LoadManager.validateWorldFile()` for archive validation and `LoadManager.loadWorldFromFile()` for the store-and-reload flow
+- added `LoadManager.loadUploadedWorld()` for post-reload retrieval, decompression, extraction, and loading
+- added IndexedDB helper methods (`_storeInIndexedDB`, `_getFromIndexedDB`, `_deleteFromIndexedDB`) for temporary upload storage
+- added `FileValidator.ts` utility with `isTarGzFile()` and `normalizeTarGzExtension()` for reliable `.tar.gz` detection (case-insensitive)
+- Vishva constructor now routes `__uploaded` to the dedicated uploaded-world loading path alongside existing `empty` and server-fetch paths
+- cleanup guarantees: IndexedDB `__uploaded` entry is always deleted and URL is cleaned via `history.replaceState` after load attempt (success or failure)
+- graceful fallback: if `?world=__uploaded` is visited without stored data, loads an empty world with a console warning
+- drag-and-drop of non-`.tar.gz` asset files (GLB, glTF, OBJ, etc.) continues to append to the current scene unchanged
+- progress feedback shown during both pre-reload validation/storage and post-reload decompression/loading phases
+- added property-based tests for archive validation, scene file routing, tar round-trip, and file type classification
+- added unit tests for the full upload-reload-load-cleanup flow
+
+#### Save World Name prompt when saving to browser
+- allows user to change the file name before saving
+
 ### 05/10/2026 0.4.0-alpha.31
 
 #### Standalone World Archive

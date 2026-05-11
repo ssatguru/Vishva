@@ -5,7 +5,7 @@ import {
 import { VishvaSerialized, ObjectIdMap, MeshMetadata } from "../VishvaSerialized";
 import { SNAManager, SNAserialized } from "../sna/SNA";
 import { DialogMgr } from "../gui/DialogMgr";
-import { AssetCollector, AssetEntry, EmbeddedTextureEntry } from "./AssetCollector";
+import { AssetCollector, AssetEntry, BlobTextureEntry, EmbeddedTextureEntry } from "./AssetCollector";
 import { PathRewriter } from "./PathRewriter";
 
 export class SaveManager {
@@ -63,7 +63,7 @@ export class SaveManager {
         return URL.createObjectURL(zipBlob);
     }
 
-    public async saveWorldToIndexedDB(): Promise<boolean> {
+    public async saveWorldToIndexedDB(worldName?: string): Promise<boolean> {
         if (this.vishva.editControl != null) {
             DialogMgr.showAlertDiag("cannot save during edit");
             return false;
@@ -85,9 +85,9 @@ export class SaveManager {
             
             await this.vishva.progressManager.update("Saving to browser storage...", 95);
 
-            // Save to IndexedDB
-            const worldName = this.vishva.constructor.worldName || "world";
-            await this._saveZipBlobToIndexedDB(worldName, zipBlob);
+            // Save to IndexedDB — use provided name or fall back to existing behavior
+            const name = worldName || this.vishva.constructor.worldName || "world";
+            await this._saveZipBlobToIndexedDB(name, zipBlob);
 
             await this.vishva.progressManager.update(undefined, 100);
             
@@ -96,7 +96,7 @@ export class SaveManager {
                 this.vishva.progressManager.hide();
             }, 500);
 
-            DialogMgr.showAlertDiag(`World saved to browser as "${worldName}"`);
+            DialogMgr.showAlertDiag(`World saved to browser as "${name}"`);
             return true;
         } catch (error) {
             console.error("Error saving world to IndexedDB:", error);
@@ -193,6 +193,26 @@ export class SaveManager {
 
         assetCollector.stripEmbeddedTextures(embeddedEntries);
 
+        // Collect and process blob URL textures (must happen BEFORE collect() to rewrite blob URLs)
+        const blobEntries = assetCollector.collectBlobTextures(sceneObj);
+        const blobAssetFiles: Array<{ filename: string; data: Uint8Array }> = [];
+        for (const entry of blobEntries) {
+            try {
+                const response = await fetch(entry.blobUrl);
+                const arrayBuffer = await response.arrayBuffer();
+                blobAssetFiles.push({
+                    filename: "assets/" + entry.archiveFilename,
+                    data: new Uint8Array(arrayBuffer)
+                });
+                // Rewrite texture object to reference the archive path
+                const archivePath = `assets/${entry.archiveFilename}`;
+                entry.textureObj.name = archivePath;
+                entry.textureObj.url = archivePath;
+            } catch (err) {
+                console.warn(`Failed to fetch blob texture "${entry.blobUrl}", skipping:`, err);
+            }
+        }
+
         // Collect external asset URLs and rewrite paths to assets/<archiveFilename>
         const baseUrl = window.location.href;
         const externalEntries = assetCollector.collect(sceneObj, baseUrl);
@@ -221,6 +241,32 @@ export class SaveManager {
 
         await this.vishva.progressManager.update("Building archive...", 80);
 
+        // Carry forward assets from the loaded archive that are still referenced in the scene.
+        // When a world is loaded from an archive, textures keep their "assets/..." names.
+        // On re-save, these need their binary data carried forward from the original archive.
+        const carryForwardFiles: Array<{ filename: string; data: Uint8Array }> = [];
+        const loadedAssetMap: Map<string, Uint8Array> | undefined = this.vishva._loadedAssetMap;
+        if (loadedAssetMap && loadedAssetMap.size > 0) {
+            // Collect all assets/ references from the scene that need carrying forward
+            const referencedAssets = this._collectAssetsReferences(sceneObj);
+            const alreadyIncluded = new Set<string>();
+            // Track filenames already included from other pipelines
+            for (const entry of embeddedEntries) alreadyIncluded.add("assets/" + entry.archiveFilename);
+            for (const file of fetchedAssetFiles) alreadyIncluded.add(file.filename);
+            for (const file of blobAssetFiles) alreadyIncluded.add(file.filename);
+            for (const entry of externalEntries) {
+                if (entry.decodedData) alreadyIncluded.add("assets/" + entry.archiveFilename);
+            }
+
+            for (const assetPath of referencedAssets) {
+                if (alreadyIncluded.has(assetPath)) continue;
+                const data = loadedAssetMap.get(assetPath);
+                if (data) {
+                    carryForwardFiles.push({ filename: assetPath, data });
+                }
+            }
+        }
+
         // Create separate JSON strings for Vishva and Scene
         // Round floating point numbers to reduce file size (4 decimal places)
         // Precision reduction is applied AFTER the asset pipeline completes
@@ -243,6 +289,16 @@ export class SaveManager {
 
         // Add fetched external asset files
         for (const file of fetchedAssetFiles) {
+            archiveFiles.push(file);
+        }
+
+        // Add fetched blob texture files
+        for (const file of blobAssetFiles) {
+            archiveFiles.push(file);
+        }
+
+        // Add carried-forward assets from the loaded archive
+        for (const file of carryForwardFiles) {
             archiveFiles.push(file);
         }
 
@@ -271,6 +327,38 @@ export class SaveManager {
         this.addInstancesToShadow();
         
         return gzipBlob;
+    }
+
+    /**
+     * Scan the serialized scene object for all string values that start with "assets/".
+     * Returns a deduplicated set of asset paths referenced by the scene.
+     */
+    private _collectAssetsReferences(sceneObj: object): Set<string> {
+        const refs = new Set<string>();
+        this._findAssetStrings(sceneObj, refs);
+        return refs;
+    }
+
+    private _findAssetStrings(obj: any, refs: Set<string>): void {
+        if (obj === null || obj === undefined) return;
+        if (Array.isArray(obj)) {
+            for (const item of obj) {
+                if (typeof item === "string" && item.startsWith("assets/")) {
+                    refs.add(item);
+                } else if (typeof item === "object" && item !== null) {
+                    this._findAssetStrings(item, refs);
+                }
+            }
+        } else if (typeof obj === "object") {
+            for (const key of Object.keys(obj)) {
+                const value = obj[key];
+                if (typeof value === "string" && value.startsWith("assets/")) {
+                    refs.add(value);
+                } else if (typeof value === "object" && value !== null) {
+                    this._findAssetStrings(value, refs);
+                }
+            }
+        }
     }
 
     private async _createTarArchive(files: Array<{ filename: string; data: Uint8Array }>): Promise<Uint8Array> {

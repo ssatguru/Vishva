@@ -1,4 +1,5 @@
 import { Vishva } from "./Vishva";
+import { WorldLauncher } from "./gui/WorldLauncher";
 
 import "./w3.css";
 //import "./w3-theme-eggplant.css";
@@ -83,7 +84,9 @@ function main() {
         if (typeof (defaultWorld) !== "undefined" && defaultWorld !== "") {
             scene = defaultWorld;
         } else {
-            scene = "empty";
+            // No world specified — show launcher instead of Vishva
+            new WorldLauncher();
+            return;
         }
     }
 

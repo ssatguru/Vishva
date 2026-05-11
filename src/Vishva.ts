@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.31";
+    static version: string = "0.4.0-alpha.32";
 
     public static worldName: string;
 
@@ -372,6 +372,8 @@ export class Vishva {
 
         if (sceneFile == "empty") {
             this.loadBabylonjsPart(this.scene, true);
+        } else if (sceneFile == "__uploaded") {
+            this.loadManager.loadUploadedWorld();
         } else {
             this.loadManager.sceneLoad1(scenePath, sceneFile, this.scene);
         }

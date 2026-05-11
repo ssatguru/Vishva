@@ -1,4 +1,5 @@
 import { VButton } from "./components/VButton";
+import { isTarGzFile } from "../managers/FileValidator";
 
 /**
  * Handles file/folder upload via hidden <input type="file"> elements.
@@ -104,12 +105,28 @@ export class UploadUI {
     private _onFilesSelected(files: FileList): void {
         if (!files || files.length === 0) return;
         let fileArray: File[] = Array.from(files);
+
+        // Check if any selected file is a .tar.gz world file
+        let worldFile = fileArray.find(f => isTarGzFile(f.name));
+        if (worldFile) {
+            this._vishva.loadManager.loadWorldFromFile(worldFile);
+            return;
+        }
+
         this._vishva.loadManager.processDroppedFiles(fileArray);
     }
 
     private _onFolderSelected(files: FileList): void {
         if (!files || files.length === 0) return;
         let fileArray: File[] = Array.from(files);
+
+        // Check if any file in the folder is a .tar.gz world file
+        let worldFile = fileArray.find(f => isTarGzFile(f.name));
+        if (worldFile) {
+            this._vishva.loadManager.loadWorldFromFile(worldFile);
+            return;
+        }
+
         this._vishva.loadManager.processDroppedFiles(fileArray);
     }
 }

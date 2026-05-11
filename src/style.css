@@ -170,6 +170,13 @@ li {
 }
 
 
+/* World file drag-and-drop visual feedback */
+#vCanvas.world-drop-target {
+  outline: 3px dashed #4fc3f7;
+  outline-offset: -3px;
+  background-color: rgba(79, 195, 247, 0.08);
+}
+
 @keyframes scaleIn {
   0% {
     scale: 0%;

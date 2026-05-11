@@ -16,6 +16,7 @@ import { VDiag } from "./components/VDiag";
 import { TransformNode } from "babylonjs";
 import { CCUI } from "./CCUI";
 import { SNAManager } from "../sna/SNA";
+import { SavePromptUI } from "./SavePromptUI";
 import { UploadUI } from "./UploadUI";
 
 
@@ -146,6 +147,7 @@ export class VishvaGUI {
      */
 
     private _addInternalAssetUI: InternalAssetsUI;
+    private _savePromptUI: SavePromptUI;
     private _uploadUI: UploadUI;
     private _allAssetsVTDiag: VTreeDialog;
     private _items: ItemListUI;
@@ -190,15 +192,18 @@ export class VishvaGUI {
             if (downloadURL == null) return true;
             if (this._downloadDialog == null) this._createDownloadDiag();
             this._downloadLink.href = downloadURL;
-            this._downloadLink.download = Vishva.worldName + ".tar.gz";
+            this._downloadLink.download = Vishva.worldName.replace(".tar.gz","")+".tar.gz";
             this._downloadDialog.show();
             return false;
         };
 
         // button to save world to browser IndexedDB
         var saveWorld: HTMLElement = document.getElementById("saveWorld");
-        saveWorld.onclick = async (e) => {
-            var saved: boolean = await this._vishva.saveManager.saveWorldToIndexedDB();
+        saveWorld.onclick = (e) => {
+            if (this._savePromptUI == null) {
+                this._savePromptUI = new SavePromptUI();
+            }
+            this._savePromptUI.show(Vishva.worldName);
             return false;
         };
 

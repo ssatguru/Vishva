@@ -18,6 +18,20 @@ export interface AssetEntry {
 }
 
 /**
+ * Represents a texture whose name/url is a blob URL (created by AssetResolver
+ * during load via URL.createObjectURL). These need to be fetched, archived,
+ * and the scene JSON rewritten to reference the archive path.
+ */
+export interface BlobTextureEntry {
+    /** The original blob URL (e.g., blob:http://localhost:8080/<uuid>) */
+    blobUrl: string;
+    /** Target filename in the assets/ folder */
+    archiveFilename: string;
+    /** Reference to the texture object so we can mutate it after fetching */
+    textureObj: Record<string, any>;
+}
+
+/**
  * Represents an embedded texture (base64String field) found in a material's
  * texture object. These need to be extracted to separate files and the
  * base64String field removed from the scene JSON.
@@ -121,6 +135,129 @@ export class AssetCollector {
         }
     }
 
+    /**
+     * Collect blob URL textures from the serialized scene.
+     * These are textures whose name/url starts with "blob:" — created by
+     * AssetResolver during load via URL.createObjectURL(). The blob URLs are
+     * still valid during the save session and can be fetched for their binary data.
+     *
+     * @param sceneObj The serialized scene JSON object
+     * @returns Deduplicated list of blob texture entries
+     */
+    collectBlobTextures(sceneObj: object): BlobTextureEntry[] {
+        const entries: BlobTextureEntry[] = [];
+        const scene = sceneObj as Record<string, any>;
+        const seenBlobUrls = new Set<string>();
+        const usedFilenames = new Map<string, number>();
+
+        // Scan top-level textures[]
+        this._scanTextureArrayForBlob(scene["textures"], entries, seenBlobUrls, usedFilenames);
+
+        // Scan reflectionTextures[]
+        this._scanTextureArrayForBlob(scene["reflectionTextures"], entries, seenBlobUrls, usedFilenames);
+
+        // Scan materials[] for nested texture objects with blob URLs
+        this._scanMaterialsForBlob(scene["materials"], entries, seenBlobUrls, usedFilenames);
+
+        return entries;
+    }
+
+    private _scanTextureArrayForBlob(
+        textures: any[] | undefined,
+        entries: BlobTextureEntry[],
+        seenBlobUrls: Set<string>,
+        usedFilenames: Map<string, number>
+    ): void {
+        if (!Array.isArray(textures)) return;
+        for (const tex of textures) {
+            if (!tex || typeof tex !== "object") continue;
+            // Skip textures with base64String (handled by collectEmbeddedTextures)
+            if (typeof tex.base64String === "string" && tex.base64String.startsWith("data:")) {
+                continue;
+            }
+            // Skip already-archived textures
+            if (typeof tex.name === "string" && tex.name.startsWith("assets/")) {
+                continue;
+            }
+            this._maybeAddBlobEntry(tex, entries, seenBlobUrls, usedFilenames);
+        }
+    }
+
+    private _scanMaterialsForBlob(
+        materials: any[] | undefined,
+        entries: BlobTextureEntry[],
+        seenBlobUrls: Set<string>,
+        usedFilenames: Map<string, number>
+    ): void {
+        if (!Array.isArray(materials)) return;
+        for (const mat of materials) {
+            if (!mat || typeof mat !== "object") continue;
+            for (const key of Object.keys(mat)) {
+                const value = mat[key];
+                if (value && typeof value === "object" && !Array.isArray(value)) {
+                    // Skip textures with base64String
+                    if (typeof value.base64String === "string" && value.base64String.startsWith("data:")) {
+                        continue;
+                    }
+                    // Skip already-archived textures
+                    if (typeof value.name === "string" && value.name.startsWith("assets/")) {
+                        continue;
+                    }
+                    this._maybeAddBlobEntry(value, entries, seenBlobUrls, usedFilenames);
+                }
+            }
+        }
+    }
+
+    private _maybeAddBlobEntry(
+        textureObj: Record<string, any>,
+        entries: BlobTextureEntry[],
+        seenBlobUrls: Set<string>,
+        usedFilenames: Map<string, number>
+    ): void {
+        // Determine the blob URL from name or url fields
+        let blobUrl: string | null = null;
+        if (typeof textureObj.name === "string" && this._isBlobUrl(textureObj.name)) {
+            blobUrl = textureObj.name;
+        } else if (typeof textureObj.url === "string" && this._isBlobUrl(textureObj.url)) {
+            blobUrl = textureObj.url;
+        }
+
+        if (!blobUrl) return;
+
+        // Deduplicate by blob URL
+        if (seenBlobUrls.has(blobUrl)) return;
+        seenBlobUrls.add(blobUrl);
+
+        const archiveFilename = this._generateBlobFilename(blobUrl, usedFilenames);
+        entries.push({ blobUrl, archiveFilename, textureObj });
+    }
+
+    /**
+     * Generate a clean archive filename from a blob URL.
+     * Extracts the UUID portion from the blob URL (the part after the last `/`)
+     * and uses it as the filename with a `.bin` extension.
+     *
+     * Example: blob:http://localhost:8080/a1b2c3d4-e5f6-7890-abcd-ef1234567890
+     *        → a1b2c3d4-e5f6-7890-abcd-ef1234567890.bin
+     */
+    private _generateBlobFilename(blobUrl: string, usedFilenames: Map<string, number>): string {
+        // Extract the UUID portion — the part after the last "/"
+        const lastSlashIdx = blobUrl.lastIndexOf("/");
+        let uuidPart = lastSlashIdx >= 0 ? blobUrl.substring(lastSlashIdx + 1) : blobUrl;
+
+        // Clean up: remove any non-filename-safe characters (shouldn't be any in a UUID, but be safe)
+        uuidPart = uuidPart.replace(/[^a-zA-Z0-9_\-]/g, "");
+
+        // Fallback if extraction produced nothing meaningful
+        if (!uuidPart) {
+            uuidPart = "blob_texture";
+        }
+
+        const basename = `${uuidPart}.bin`;
+        return this._disambiguateFilename(basename, usedFilenames);
+    }
+
     private _scanMaterialsForEmbedded(
         materials: any[] | undefined,
         entries: EmbeddedTextureEntry[],
@@ -197,6 +334,10 @@ export class AssetCollector {
         return this._disambiguateFilename(basename, usedFilenames);
     }
 
+    private _isBlobUrl(url: string): boolean {
+        return url.startsWith("blob:");
+    }
+
     private _scanTextureArray(textures: any[] | undefined, urls: Set<string>): void {
         if (!Array.isArray(textures)) return;
         for (const tex of textures) {
@@ -206,10 +347,14 @@ export class AssetCollector {
                 continue;
             }
             if (typeof tex.name === "string" && tex.name && !tex.name.startsWith("assets/")) {
-                urls.add(tex.name);
+                if (!this._isBlobUrl(tex.name)) {
+                    urls.add(tex.name);
+                }
             }
             if (typeof tex.url === "string" && tex.url && !tex.url.startsWith("assets/")) {
-                urls.add(tex.url);
+                if (!this._isBlobUrl(tex.url)) {
+                    urls.add(tex.url);
+                }
             }
         }
     }
@@ -227,7 +372,9 @@ export class AssetCollector {
                         continue;
                     }
                     if (typeof value.name === "string" && value.name && !value.name.startsWith("assets/")) {
-                        urls.add(value.name);
+                        if (!this._isBlobUrl(value.name)) {
+                            urls.add(value.name);
+                        }
                     }
                 }
             }

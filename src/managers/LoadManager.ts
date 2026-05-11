@@ -9,6 +9,7 @@ import { VEvent } from "../eventing/VEvent";
 import { EventManager } from "../eventing/EventManager";
 import { AssetResolver } from "./AssetResolver";
 import { extractTarArchive } from "./TarUtils";
+import { isTarGzFile } from "./FileValidator";
 
 declare var curatedConfig: Object;
 
@@ -73,6 +74,9 @@ export class LoadManager {
                             assetMap.set(key, data);
                         }
                     }
+
+                    // Store asset map for re-save (SaveManager needs it to carry forward assets)
+                    this.vishva._loadedAssetMap = assetMap;
                     
                     // Activate AssetResolver before scene load
                     const assetResolver = new AssetResolver();
@@ -133,6 +137,9 @@ export class LoadManager {
                         assetMap.set(key, data);
                     }
                 }
+
+                // Store asset map for re-save (SaveManager needs it to carry forward assets)
+                this.vishva._loadedAssetMap = assetMap;
                 
                 // Activate AssetResolver before scene load
                 const assetResolver = new AssetResolver();
@@ -152,6 +159,136 @@ export class LoadManager {
             console.error("Error loading compressed world:", e);
             const errorMessage = e instanceof Error ? e.message : String(e);
             alert("Failed to load world: " + errorMessage);
+        }
+    }
+
+    /**
+     * Validate a .tar.gz world file by decompressing and checking for required entries.
+     * Returns { valid: true } or { valid: false, error: string }.
+     * This is the lightweight pre-reload validation.
+     */
+    public async validateWorldFile(data: ArrayBuffer): Promise<{ valid: boolean; error?: string }> {
+        try {
+            const compressedBlob = new Blob([data]);
+            const decompressedData = await this._decompressGzip(compressedBlob);
+            const files = await this._extractTarArchive(decompressedData);
+            return this.validateWorldArchive(files);
+        } catch (e) {
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            return { valid: false, error: "Not a valid Vishva world file: " + errorMessage };
+        }
+    }
+
+    /**
+     * Validate, store in IndexedDB, and trigger page reload to load the world
+     * in a fresh WebGL context.
+     */
+    public async loadWorldFromFile(file: File): Promise<void> {
+        try {
+            // Show progress
+            this.vishva.progressManager.show("Preparing world for reload...");
+
+            // Read file as ArrayBuffer
+            const arrayBuffer = await file.arrayBuffer();
+
+            // Validate the world file
+            const validation = await this.validateWorldFile(arrayBuffer);
+            if (!validation.valid) {
+                this.vishva.progressManager.hide();
+                alert(validation.error);
+                return;
+            }
+
+            // Store in IndexedDB
+            try {
+                await this._storeInIndexedDB("__uploaded", arrayBuffer);
+            } catch (e) {
+                this.vishva.progressManager.hide();
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                alert("Failed to save world for reload: " + errorMessage);
+                return;
+            }
+
+            // Trigger page reload with the __uploaded flag
+            window.location.search = "?world=__uploaded";
+
+        } catch (e) {
+            this.vishva.progressManager.hide();
+            console.error("Error preparing world for reload:", e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            alert("Failed to load world: " + errorMessage);
+        }
+    }
+
+    /**
+     * Load a world from IndexedDB after page reload.
+     * Called by Vishva constructor when sceneFile === "__uploaded".
+     * Retrieves, decompresses, extracts, validates, and loads the world.
+     * Falls back to empty world if data is missing or invalid.
+     * Always cleans up IndexedDB entry and URL parameter.
+     */
+    public async loadUploadedWorld(): Promise<void> {
+        this.vishva.progressManager.show("Loading World");
+        try {
+            const data = await this._getFromIndexedDB("__uploaded");
+
+            if (data === null) {
+                console.warn("No uploaded world found in storage");
+                this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                return;
+            }
+
+            try {
+                const compressedBlob = new Blob([data]);
+                const decompressedData = await this._decompressGzip(compressedBlob);
+                const files = await this._extractTarArchive(decompressedData);
+
+                const validation = this.validateWorldArchive(files);
+                if (!validation.valid) {
+                    alert(validation.error);
+                    this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                    return;
+                }
+
+                const vishvaData = files.get("Vishva.json");
+                const sceneData = files.get("Scene.babylon");
+
+                const vishvaText = new TextDecoder().decode(vishvaData!);
+                const sceneText = new TextDecoder().decode(sceneData!);
+                const vishvaObj = JSON.parse(vishvaText);
+                const sceneObj = JSON.parse(sceneText);
+
+                // Check for bundled assets
+                const hasAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
+
+                if (hasAssets) {
+                    const assetMap = new Map<string, Uint8Array>();
+                    for (const [key, fileData] of files.entries()) {
+                        if (key.startsWith("assets/")) {
+                            assetMap.set(key, fileData);
+                        }
+                    }
+                    // Store asset map for re-save (SaveManager needs it to carry forward assets)
+                    this.vishva._loadedAssetMap = assetMap;
+                    const assetResolver = new AssetResolver();
+                    assetResolver.activate(assetMap);
+                    this.loadVishvaPartFromObjects(vishvaObj, sceneObj, assetResolver);
+                } else {
+                    this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
+                }
+            } catch (e) {
+                console.error("Error loading uploaded world:", e);
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                alert("Uploaded world data is corrupted: " + errorMessage);
+                this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+            }
+        } finally {
+            try {
+                await this._deleteFromIndexedDB("__uploaded");
+            } catch (e) {
+                console.error("Failed to delete uploaded world from IndexedDB:", e);
+            }
+            history.replaceState({}, "", window.location.pathname);
         }
     }
 
@@ -248,6 +385,149 @@ export class LoadManager {
     }
 
     /**
+     * Store raw ArrayBuffer in IndexedDB under the given key.
+     * Uses the existing "VishvaWorlds" database and "worlds" object store.
+     */
+    private _storeInIndexedDB(key: string, data: ArrayBuffer): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const dbName = "VishvaWorlds";
+            const storeName = "worlds";
+
+            const request = indexedDB.open(dbName, 1);
+
+            request.onerror = () => {
+                reject(new Error("Failed to open IndexedDB"));
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "name" });
+                }
+            };
+
+            request.onsuccess = () => {
+                const db = request.result;
+                try {
+                    const transaction = db.transaction([storeName], "readwrite");
+                    const store = transaction.objectStore(storeName);
+                    const putRequest = store.put({ name: key, data: data, timestamp: Date.now() });
+
+                    putRequest.onsuccess = () => {
+                        db.close();
+                        resolve();
+                    };
+
+                    putRequest.onerror = () => {
+                        db.close();
+                        reject(new Error("Failed to store data in IndexedDB"));
+                    };
+                } catch (e) {
+                    db.close();
+                    reject(e);
+                }
+            };
+        });
+    }
+
+    /**
+     * Retrieve raw ArrayBuffer from IndexedDB by key.
+     * Returns the data field if found, or null if not found.
+     */
+    private _getFromIndexedDB(key: string): Promise<ArrayBuffer | null> {
+        return new Promise((resolve, reject) => {
+            const dbName = "VishvaWorlds";
+            const storeName = "worlds";
+
+            const request = indexedDB.open(dbName, 1);
+
+            request.onerror = () => {
+                reject(new Error("Failed to open IndexedDB"));
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "name" });
+                }
+            };
+
+            request.onsuccess = () => {
+                const db = request.result;
+                try {
+                    const transaction = db.transaction([storeName], "readonly");
+                    const store = transaction.objectStore(storeName);
+                    const getRequest = store.get(key);
+
+                    getRequest.onsuccess = () => {
+                        db.close();
+                        const result = getRequest.result;
+                        if (result && result.data) {
+                            resolve(result.data);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+
+                    getRequest.onerror = () => {
+                        db.close();
+                        reject(new Error("Failed to retrieve data from IndexedDB"));
+                    };
+                } catch (e) {
+                    db.close();
+                    reject(e);
+                }
+            };
+        });
+    }
+
+    /**
+     * Delete an entry from IndexedDB by key.
+     * Resolves on success (no-op if key doesn't exist).
+     */
+    private _deleteFromIndexedDB(key: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const dbName = "VishvaWorlds";
+            const storeName = "worlds";
+
+            const request = indexedDB.open(dbName, 1);
+
+            request.onerror = () => {
+                reject(new Error("Failed to open IndexedDB"));
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "name" });
+                }
+            };
+
+            request.onsuccess = () => {
+                const db = request.result;
+                try {
+                    const transaction = db.transaction([storeName], "readwrite");
+                    const store = transaction.objectStore(storeName);
+                    const deleteRequest = store.delete(key);
+
+                    deleteRequest.onsuccess = () => {
+                        db.close();
+                        resolve();
+                    };
+
+                    deleteRequest.onerror = () => {
+                        db.close();
+                        reject(new Error("Failed to delete data from IndexedDB"));
+                    };
+                } catch (e) {
+                    db.close();
+                    reject(e);
+                }
+            };
+        });
+    }
+
+    /**
      * Decompress gzip data using the Compression Streams API
      */
     private async _decompressGzip(compressedBlob: Blob): Promise<Uint8Array> {
@@ -288,6 +568,21 @@ export class LoadManager {
      */
     private async _extractTarArchive(tarData: Uint8Array): Promise<Map<string, Uint8Array>> {
         return extractTarArchive(tarData);
+    }
+
+    /**
+     * Validate that a tar archive contains the required world entries.
+     * Returns { valid: true } if the map contains both Vishva.json and Scene.babylon keys.
+     * Returns { valid: false, error: string } with a descriptive message if either is missing.
+     */
+    public validateWorldArchive(files: Map<string, Uint8Array>): { valid: boolean; error?: string } {
+        if (!files.has("Vishva.json")) {
+            return { valid: false, error: "Not a valid Vishva world file: missing Vishva.json" };
+        }
+        if (!files.has("Scene.babylon")) {
+            return { valid: false, error: "Not a valid Vishva world file: missing Scene.babylon" };
+        }
+        return { valid: true };
     }
 
     /**
@@ -807,6 +1102,7 @@ export class LoadManager {
         canvas.addEventListener('drop', async (e: DragEvent) => {
             e.preventDefault();
             e.stopPropagation();
+            canvas.classList.remove('world-drop-target');
 
             if (e.dataTransfer && e.dataTransfer.items) {
                 const items = Array.from(e.dataTransfer.items);
@@ -828,22 +1124,49 @@ export class LoadManager {
                     }
                 }
                 
-                // Process the files
-                this.processDroppedFiles(files);
+                // Check if any dropped file is a .tar.gz world file
+                const worldFile = files.find(f => isTarGzFile(f.name));
+                if (worldFile) {
+                    this.loadWorldFromFile(worldFile);
+                } else {
+                    this.processDroppedFiles(files);
+                }
             } else if (e.dataTransfer && e.dataTransfer.files.length > 0) {
                 const files = Array.from(e.dataTransfer.files);
-                this.processDroppedFiles(files);
+                
+                // Check if any dropped file is a .tar.gz world file
+                const worldFile = files.find(f => isTarGzFile(f.name));
+                if (worldFile) {
+                    this.loadWorldFromFile(worldFile);
+                } else {
+                    this.processDroppedFiles(files);
+                }
             }
         });
 
         canvas.addEventListener('dragenter', (e: DragEvent) => {
             e.preventDefault();
             e.stopPropagation();
+            if (e.dataTransfer && e.dataTransfer.items) {
+                // During dragenter, filenames aren't available — check MIME types
+                // that commonly correspond to .tar.gz files
+                const gzipTypes = ['application/gzip', 'application/x-gzip', 'application/x-compressed-tar'];
+                const hasWorldFile = Array.from(e.dataTransfer.items).some(
+                    item => item.kind === 'file' && gzipTypes.includes(item.type)
+                );
+                if (hasWorldFile) {
+                    canvas.classList.add('world-drop-target');
+                }
+            }
         });
 
         canvas.addEventListener('dragleave', (e: DragEvent) => {
             e.preventDefault();
             e.stopPropagation();
+            // Only remove if leaving the canvas (not entering a child element)
+            if (e.relatedTarget === null || !canvas.contains(e.relatedTarget as Node)) {
+                canvas.classList.remove('world-drop-target');
+            }
         });
     }
     /**

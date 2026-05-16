@@ -148,7 +148,7 @@ describe("AssetCollector", () => {
                 textures: [{ name: dataUri }],
             };
             const entries = collector.collect(scene, baseUrl);
-            expect(entries[0].archiveFilename).toBe("data_asset.png");
+            expect(entries[0].archiveFilename).toBe("vishva/assets/data/data_asset.png");
         });
     });
 

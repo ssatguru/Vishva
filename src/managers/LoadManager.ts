@@ -8,6 +8,7 @@ import { SNAManager } from "../sna/SNA";
 import { VEvent } from "../eventing/VEvent";
 import { EventManager } from "../eventing/EventManager";
 import { AssetResolver } from "./AssetResolver";
+import { AssetStore } from "./AssetStore";
 import { extractTarArchive } from "./TarUtils";
 import { isTarGzFile } from "./FileValidator";
 
@@ -49,49 +50,16 @@ export class LoadManager {
 
     /**
      * Load world from gzip compressed TAR archive
-     * First tries to load from IndexedDB, then falls back to server
+     * First tries to load from IndexedDB, then falls back to server.
+     * Assets are stored in AssetStore (IndexedDB) rather than held in memory.
      */
     private async loadZipWorld(scenePath: string, sceneFile: string, scene: Scene) {
         try {
             // Show progress
-            this.vishva.progressManager.show("Loading World", "Checking browser storage...");
+            this.vishva.progressManager.show("Loading World", "Fetching world file from server...");
             await this.vishva.progressManager.update(undefined, 5);
-            
-            // Try to load from IndexedDB first
-            const indexedDBData = await this._loadWorldFromIndexedDB(sceneFile);
-            
-            if (indexedDBData) {
-                const { vishvaData, sceneData, files } = indexedDBData;
-                
-                // Check for bundled assets in the IndexedDB-loaded archive
-                const hasAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
-                
-                if (hasAssets) {
-                    // Build asset map from extracted files
-                    const assetMap = new Map<string, Uint8Array>();
-                    for (const [key, data] of files.entries()) {
-                        if (key.startsWith("assets/")) {
-                            assetMap.set(key, data);
-                        }
-                    }
 
-                    // Store asset map for re-save (SaveManager needs it to carry forward assets)
-                    this.vishva._loadedAssetMap = assetMap;
-                    
-                    // Activate AssetResolver before scene load
-                    const assetResolver = new AssetResolver();
-                    assetResolver.activate(assetMap);
-                    
-                    // Process the loaded data with asset resolver (deactivated after scene load)
-                    this.loadVishvaPartFromObjects(vishvaData, sceneData, assetResolver);
-                } else {
-                    // No assets: use existing behavior (backward compatibility)
-                    this.loadVishvaPartFromObjects(vishvaData, sceneData);
-                }
-                return;
-            }
-
-            // If not in IndexedDB, fetch from server
+            // Fetch from server
             await this.vishva.progressManager.update("Fetching world file from server...", 10);
             
             const response = await fetch(scenePath + sceneFile);
@@ -106,7 +74,7 @@ export class LoadManager {
             
             await this.vishva.progressManager.update("Extracting world data...", 50);
             
-            const files = await this._extractTarArchive(decompressedData);
+            let files = await this._extractTarArchive(decompressedData);
             
             // Extract Vishva.json and Scene.babylon
             const vishvaData = files.get("Vishva.json");
@@ -124,26 +92,53 @@ export class LoadManager {
             const vishvaObj = JSON.parse(vishvaText);
             const sceneObj = JSON.parse(sceneText);
             
-            await this.vishva.progressManager.update("Loading scene...", 85);
+            await this.vishva.progressManager.update("Loading scene...", 70);
             
-            // Check if archive contains bundled assets
-            const hasAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
+            // Check if archive contains bundled assets (support both formats)
+            const hasStructuredAssets = Array.from(files.keys()).some(key => key.startsWith("vishva/assets/"));
+            const hasLegacyAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
             
-            if (hasAssets) {
-                // Build asset map from extracted files
-                const assetMap = new Map<string, Uint8Array>();
+            if (hasStructuredAssets || hasLegacyAssets) {
+                // Open AssetStore and ingest assets into IndexedDB
+                const assetStore = new AssetStore();
+                try {
+                    await assetStore.open();
+                } catch (e) {
+                    this.vishva.progressManager.hide();
+                    const errorMessage = e instanceof Error ? e.message : String(e);
+                    alert(errorMessage);
+                    return;
+                }
+                
+                await this.vishva.progressManager.update("Storing assets in browser...", 75);
+                
+                await assetStore.clearSession();
+                
+                // Build entries for batch insert, remapping legacy paths to structured format
+                const entries: Array<{ key: string; data: Uint8Array }> = [];
                 for (const [key, data] of files.entries()) {
-                    if (key.startsWith("assets/")) {
-                        assetMap.set(key, data);
+                    if (key.startsWith("vishva/assets/")) {
+                        entries.push({ key, data });
+                    } else if (key.startsWith("assets/")) {
+                        // Remap old format: "assets/foo.png" → "vishva/assets/foo.png"
+                        const remappedKey = "vishva/" + key;
+                        entries.push({ key: remappedKey, data });
                     }
                 }
-
-                // Store asset map for re-save (SaveManager needs it to carry forward assets)
-                this.vishva._loadedAssetMap = assetMap;
                 
-                // Activate AssetResolver before scene load
+                await assetStore.putBatch(entries);
+                
+                // Release in-memory tar data — assets are now in IndexedDB
+                files = null as any;
+                
+                // Store AssetStore reference for SaveManager
+                this.vishva._assetStore = assetStore;
+                
+                await this.vishva.progressManager.update("Activating asset resolver...", 85);
+                
+                // Activate AssetResolver with AssetStore (async)
                 const assetResolver = new AssetResolver();
-                assetResolver.activate(assetMap);
+                await assetResolver.activate(assetStore);
                 
                 // Process the loaded data with asset resolver
                 this.loadVishvaPartFromObjects(vishvaObj, sceneObj, assetResolver);
@@ -224,6 +219,7 @@ export class LoadManager {
      * Load a world from IndexedDB after page reload.
      * Called by Vishva constructor when sceneFile === "__uploaded".
      * Retrieves, decompresses, extracts, validates, and loads the world.
+     * Assets are stored in AssetStore (IndexedDB) rather than held in memory.
      * Falls back to empty world if data is missing or invalid.
      * Always cleans up IndexedDB entry and URL parameter.
      */
@@ -241,7 +237,7 @@ export class LoadManager {
             try {
                 const compressedBlob = new Blob([data]);
                 const decompressedData = await this._decompressGzip(compressedBlob);
-                const files = await this._extractTarArchive(decompressedData);
+                let files = await this._extractTarArchive(decompressedData);
 
                 const validation = this.validateWorldArchive(files);
                 if (!validation.valid) {
@@ -258,20 +254,48 @@ export class LoadManager {
                 const vishvaObj = JSON.parse(vishvaText);
                 const sceneObj = JSON.parse(sceneText);
 
-                // Check for bundled assets
-                const hasAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
+                // Check for bundled assets (support both old "assets/" and new "vishva/assets/" format)
+                const hasStructuredAssets = Array.from(files.keys()).some(key => key.startsWith("vishva/assets/"));
+                const hasLegacyAssets = Array.from(files.keys()).some(key => key.startsWith("assets/"));
 
-                if (hasAssets) {
-                    const assetMap = new Map<string, Uint8Array>();
+                if (hasStructuredAssets || hasLegacyAssets) {
+                    // Open AssetStore and ingest assets into IndexedDB
+                    const assetStore = new AssetStore();
+                    try {
+                        await assetStore.open();
+                    } catch (e) {
+                        const errorMessage = e instanceof Error ? e.message : String(e);
+                        alert(errorMessage);
+                        this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                        return;
+                    }
+                    
+                    await assetStore.clearSession();
+                    
+                    // Build entries for batch insert, remapping legacy paths to structured format
+                    const entries: Array<{ key: string; data: Uint8Array }> = [];
                     for (const [key, fileData] of files.entries()) {
-                        if (key.startsWith("assets/")) {
-                            assetMap.set(key, fileData);
+                        if (key.startsWith("vishva/assets/")) {
+                            entries.push({ key, data: fileData });
+                        } else if (key.startsWith("assets/")) {
+                            // Remap old format: "assets/foo.png" → "vishva/assets/foo.png"
+                            const remappedKey = "vishva/" + key;
+                            entries.push({ key: remappedKey, data: fileData });
                         }
                     }
-                    // Store asset map for re-save (SaveManager needs it to carry forward assets)
-                    this.vishva._loadedAssetMap = assetMap;
+                    
+                    await assetStore.putBatch(entries);
+                    
+                    // Release in-memory tar data — assets are now in IndexedDB
+                    files = null as any;
+                    
+                    // Store AssetStore reference for SaveManager
+                    this.vishva._assetStore = assetStore;
+                    
+                    // Activate AssetResolver with AssetStore (async)
                     const assetResolver = new AssetResolver();
-                    assetResolver.activate(assetMap);
+                    await assetResolver.activate(assetStore);
+                    
                     this.loadVishvaPartFromObjects(vishvaObj, sceneObj, assetResolver);
                 } else {
                     this.loadVishvaPartFromObjects(vishvaObj, sceneObj);
@@ -293,95 +317,92 @@ export class LoadManager {
     }
 
     /**
-     * Try to load world from IndexedDB
-     * Returns { vishvaData, sceneData, files } if found, null otherwise
+     * Load a saved world directly from IndexedDB (no tar.gz decompression needed).
+     * Reads assets from the "saved" store, copies them into the "session" store,
+     * then activates AssetResolver with the AssetStore reference.
+     * @param worldName The name of the saved world to load
      */
-    private _loadWorldFromIndexedDB(worldName: string): Promise<{ vishvaData: any; sceneData: any; files: Map<string, Uint8Array> } | null> {
-        return new Promise((resolve) => {
+    public async loadSavedWorld(worldName: string): Promise<void> {
+        this.vishva.progressManager.show("Loading World", "Reading saved world from browser...");
+        try {
+            // Open AssetStore
+            const assetStore = new AssetStore();
             try {
-                const dbName = "VishvaWorlds";
-                const storeName = "worlds";
-                
-                const request = indexedDB.open(dbName, 1);
-
-                request.onerror = () => {
-                    resolve(null);
-                };
-
-                request.onsuccess = () => {
-                    const db = request.result;
-
-                    // Check if object store exists
-                    if (!db.objectStoreNames.contains(storeName)) {
-                        db.close();
-                        resolve(null);
-                        return;
-                    }
-                    try {
-                        const transaction = db.transaction([storeName], "readonly");
-                        const store = transaction.objectStore(storeName);
-                        const getRequest = store.get(worldName);
-
-                        getRequest.onsuccess = async () => {
-                            const result = getRequest.result;
-                            db.close();
-
-                            if (result && result.data) {
-                                await this.vishva.progressManager.update("Loading and decompressing from browser storage...", 20);
-                                try {
-                                    const decompressedData = await this._decompressGzip(result.data);
-                                    
-                                    await this.vishva.progressManager.update("Extracting world data...", 35);
-                                    
-                                    const files = await this._extractTarArchive(decompressedData);
-                                    
-                                    const vishvaData = files.get("Vishva.json");
-                                    const sceneData = files.get("Scene.babylon");
-                                    
-                                    if (!vishvaData || !sceneData) {
-                                        resolve(null);
-                                        return;
-                                    }
-                                    
-                                    await this.vishva.progressManager.update("Parsing data...", 40);
-
-                                    const vishvaText = new TextDecoder().decode(vishvaData);
-                                    const sceneText = new TextDecoder().decode(sceneData);
-                                    const vishvaObj = JSON.parse(vishvaText);
-                                    const sceneObj = JSON.parse(sceneText);
-
-                                    resolve({ vishvaData: vishvaObj, sceneData: sceneObj, files });
-                                } catch (e) {
-                                    console.error("Error decompressing world from IndexedDB:", e);
-                                    resolve(null);
-                                }
-                            } else {
-                                resolve(null);
-                            }
-                        };
-
-                        getRequest.onerror = () => {
-                            db.close();
-                            resolve(null);
-                        };
-                    } catch (e) {
-                        console.error("Error accessing IndexedDB:", e);
-                        db.close();
-                        resolve(null);
-                    }
-                };
-
-                request.onupgradeneeded = (event) => {
-                    const db = (event.target as IDBOpenDBRequest).result;
-                    if (!db.objectStoreNames.contains(storeName)) {
-                        db.createObjectStore(storeName, { keyPath: "name" });
-                    }
-                };
+                await assetStore.open();
             } catch (e) {
-                console.error("Error checking IndexedDB:", e);
-                resolve(null);
+                this.vishva.progressManager.hide();
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                alert(errorMessage);
+                return;
             }
-        });
+
+            // Clear previous session
+            await assetStore.clearSession();
+
+            await this.vishva.progressManager.update("Reading saved assets...", 20);
+
+            // Get all saved keys for this world
+            const savedKeys = await assetStore.listSavedKeys(worldName);
+
+            // Separate metadata files from asset files
+            const vishvaKey = savedKeys.find(k => k === "Vishva.json");
+            const sceneKey = savedKeys.find(k => k === "Scene.babylon");
+
+            if (!vishvaKey || !sceneKey) {
+                this.vishva.progressManager.hide();
+                alert("Saved world is incomplete: missing Vishva.json or Scene.babylon");
+                this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                return;
+            }
+
+            // Read Vishva.json and Scene.babylon from saved store
+            const vishvaRaw = await assetStore.getSavedAsset(worldName, "Vishva.json");
+            const sceneRaw = await assetStore.getSavedAsset(worldName, "Scene.babylon");
+
+            if (!vishvaRaw || !sceneRaw) {
+                this.vishva.progressManager.hide();
+                alert("Saved world data is missing or corrupted");
+                this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                return;
+            }
+
+            const vishvaText = new TextDecoder().decode(vishvaRaw);
+            const sceneText = new TextDecoder().decode(sceneRaw);
+            const vishvaObj = JSON.parse(vishvaText);
+            const sceneObj = JSON.parse(sceneText);
+
+            await this.vishva.progressManager.update("Copying assets to session...", 50);
+
+            // Copy all asset files from saved store into session store
+            const assetKeys = savedKeys.filter(k => k !== "Vishva.json" && k !== "Scene.babylon");
+            for (const key of assetKeys) {
+                const data = await assetStore.getSavedAsset(worldName, key);
+                if (data) {
+                    await assetStore.put(key, data);
+                }
+            }
+
+            await this.vishva.progressManager.update("Activating asset resolver...", 80);
+
+            // Store AssetStore reference for SaveManager
+            this.vishva._assetStore = assetStore;
+
+            // Activate AssetResolver with AssetStore
+            const assetResolver = new AssetResolver();
+            await assetResolver.activate(assetStore);
+
+            await this.vishva.progressManager.update("Loading scene...", 90);
+
+            // Load the world
+            this.loadVishvaPartFromObjects(vishvaObj, sceneObj, assetResolver);
+
+        } catch (e) {
+            this.vishva.progressManager.hide();
+            console.error("Error loading saved world:", e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            alert("Failed to load saved world: " + errorMessage);
+            this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+        }
     }
 
     /**
@@ -594,6 +615,13 @@ export class LoadManager {
     private loadVishvaPartFromObjects(vishvaData: any, sceneData: any, assetResolver?: AssetResolver) {
         this.vishva.progressManager.update("Processing vishva data...", 90);
         
+        // Resolve assets/ paths in VishvaSerialized to blob URLs before use.
+        // This handles sound files and other assets referenced in Vishva.json that
+        // are not loaded through BabylonJS's Tools.LoadFile/PreprocessUrl pipeline.
+        if (assetResolver) {
+            assetResolver.resolveAssetPaths(vishvaData);
+        }
+
         this.vishva.vishvaSerialized = vishvaData;
 
         this.umarshalVec3(this.vishva.vishvaSerialized);

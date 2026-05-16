@@ -76,13 +76,18 @@ function flushAsync(ms = 50): Promise<void> {
 }
 
 /**
- * Helper to clear the VishvaWorlds IndexedDB database between tests.
+ * Helper to clear the VishvaWorlds and VishvaAssetStore IndexedDB databases between tests.
  */
 async function clearIndexedDB(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
         const req = indexedDB.deleteDatabase("VishvaWorlds");
         req.onsuccess = () => resolve();
         req.onerror = () => reject(new Error("Failed to delete VishvaWorlds DB"));
+    });
+    await new Promise<void>((resolve, reject) => {
+        const req = indexedDB.deleteDatabase("VishvaAssetStore");
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(new Error("Failed to delete VishvaAssetStore DB"));
     });
 }
 
@@ -306,7 +311,7 @@ describe("WorldLauncher - Browser Storage panel", () => {
         // Wait for IndexedDB query to complete
         await flushAsync(100);
 
-        const msgEl = findElementWithText(overlay, "No saved worlds found");
+        const msgEl = findElementWithText(overlay, "No saved worlds available");
         expect(msgEl).not.toBeNull();
     });
 
@@ -330,26 +335,14 @@ describe("WorldLauncher - Browser Storage panel", () => {
     });
 
     it("displays saved worlds from IndexedDB", async () => {
-        // Pre-populate IndexedDB with some worlds
-        await new Promise<void>((resolve, reject) => {
-            const request = indexedDB.open("VishvaWorlds", 1);
-            request.onupgradeneeded = (event) => {
-                const db = (event.target as IDBOpenDBRequest).result;
-                if (!db.objectStoreNames.contains("worlds")) {
-                    db.createObjectStore("worlds", { keyPath: "name" });
-                }
-            };
-            request.onsuccess = () => {
-                const db = request.result;
-                const tx = db.transaction(["worlds"], "readwrite");
-                const store = tx.objectStore("worlds");
-                store.put({ name: "myworld", data: new ArrayBuffer(10), timestamp: Date.now() });
-                store.put({ name: "testworld", data: new ArrayBuffer(10), timestamp: Date.now() });
-                tx.oncomplete = () => { db.close(); resolve(); };
-                tx.onerror = () => { db.close(); reject(new Error("Failed to populate")); };
-            };
-            request.onerror = () => reject(new Error("Failed to open DB"));
-        });
+        // Pre-populate VishvaAssetStore/saved with some worlds using AssetStore
+        const { AssetStore } = await import("../managers/AssetStore.js");
+        const store = new AssetStore();
+        await store.open();
+        // Save dummy assets under two different world names
+        await store.saveWorldAsset("myworld", "Vishva.json", new Uint8Array([1, 2, 3]));
+        await store.saveWorldAsset("testworld", "Vishva.json", new Uint8Array([4, 5, 6]));
+        store.close();
 
         launcher = new WorldLauncher();
         const overlay = document.getElementById("worldLauncherOverlay")!;

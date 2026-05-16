@@ -1,28 +1,46 @@
 /**
  * AssetResolver — Intercepts BabylonJS file requests during scene load and
- * serves matching assets from the extracted archive via Blob URLs.
+ * serves matching assets from the AssetStore (IndexedDB) via Blob URLs.
  *
  * Overrides both Tools.LoadFile (for binary/text files) and Tools.PreprocessUrl
  * (for texture images) so that ALL asset types bundled in the archive are
- * resolved from memory rather than fetched from the server.
+ * resolved from IndexedDB rather than fetched from the server.
+ *
+ * On activate(), all session assets are loaded from IndexedDB into a local map
+ * to satisfy the synchronous PreprocessUrl contract. Memory is freed on deactivate().
  */
 
 import { Tools } from "babylonjs";
+import { AssetStore } from "./AssetStore.js";
 
 export class AssetResolver {
     private blobUrls: string[] = [];
+    private assetStore: AssetStore | null = null;
     private assetMap: Map<string, Uint8Array> | null = null;
     private originalLoadFile: typeof Tools.LoadFile | null = null;
     private originalPreprocessUrl: ((url: string) => string) | null = null;
 
     /**
-     * Activate the resolver with extracted archive assets.
-     * Overrides Tools.LoadFile and Tools.PreprocessUrl to intercept matching requests.
-     * @param assets Map of archive paths (e.g. "assets/ground.jpg") to binary data
+     * Activate the resolver with an IndexedDB-backed AssetStore.
+     * Loads all session assets from IDB into a local map for synchronous access,
+     * then overrides Tools.LoadFile and Tools.PreprocessUrl to intercept matching requests.
+     * @param store The AssetStore instance (must already be open)
      */
-    activate(assets: Map<string, Uint8Array>): void {
-        this.assetMap = assets;
+    async activate(store: AssetStore): Promise<void> {
+        this.assetStore = store;
         this.blobUrls = [];
+
+        // Pre-load all session assets from IDB into local map for synchronous access
+        // (PreprocessUrl is synchronous, so we cannot do async IDB reads there)
+        const keys = await store.listKeys();
+        const localMap = new Map<string, Uint8Array>();
+        for (const key of keys) {
+            const data = await store.get(key);
+            if (data) {
+                localMap.set(key, data);
+            }
+        }
+        this.assetMap = localMap;
 
         // --- Override Tools.PreprocessUrl ---
         // BabylonJS calls this for EVERY URL (including texture images) before loading.
@@ -31,14 +49,9 @@ export class AssetResolver {
 
         Tools.PreprocessUrl = function (url: string): string {
             if (self.assetMap && self.assetMap.size > 0 && typeof url === "string") {
-                const filename = self.extractFilename(url);
-                const decodedFilename = decodeURIComponent(filename);
-
-                const assetKey = `assets/${decodedFilename}`;
-                const assetKeyRaw = `assets/${filename}`;
-                const matchedKey = self.assetMap.has(assetKey) ? assetKey
-                    : self.assetMap.has(assetKeyRaw) ? assetKeyRaw
-                    : null;
+                // Full structured path matching: the URL IS the key
+                // (e.g., "vishva/assets/audio/footstep.ogg")
+                const matchedKey = self._findMatchingKey(url);
 
                 if (matchedKey) {
                     const blobUrl = self.createBlobUrl(matchedKey);
@@ -67,14 +80,8 @@ export class AssetResolver {
             onError?: (request?: any, exception?: any) => void
         ) {
             if (self.assetMap && typeof fileOrUrl === "string") {
-                const filename = self.extractFilename(fileOrUrl);
-                const decodedFilename = decodeURIComponent(filename);
-
-                const assetKey = `assets/${decodedFilename}`;
-                const assetKeyRaw = `assets/${filename}`;
-                const matchedKey = self.assetMap.has(assetKey) ? assetKey
-                    : self.assetMap.has(assetKeyRaw) ? assetKeyRaw
-                    : null;
+                // Full structured path matching
+                const matchedKey = self._findMatchingKey(fileOrUrl);
 
                 if (matchedKey) {
                     const blobUrl = self.createBlobUrl(matchedKey);
@@ -104,6 +111,49 @@ export class AssetResolver {
     }
 
     /**
+     * Resolve all `vishva/assets/`-prefixed string values in an object tree to blob URLs.
+     * This handles paths in VishvaSerialized (sounds, SNA actuator assets) that are
+     * not loaded through BabylonJS's Tools.LoadFile/PreprocessUrl pipeline.
+     *
+     * Mutates the object in-place, replacing matching strings with blob URLs.
+     * @param obj The object to traverse (typically VishvaSerialized)
+     */
+    resolveAssetPaths(obj: any): void {
+        if (!this.assetMap || this.assetMap.size === 0) return;
+        this._resolvePathsRecursive(obj);
+    }
+
+    private _resolvePathsRecursive(obj: any): void {
+        if (obj === null || obj === undefined) return;
+
+        if (Array.isArray(obj)) {
+            for (let i = 0; i < obj.length; i++) {
+                const value = obj[i];
+                if (typeof value === "string" && value.startsWith("vishva/assets/")) {
+                    const blobUrl = this.createBlobUrl(value);
+                    if (blobUrl) {
+                        obj[i] = blobUrl;
+                    }
+                } else if (typeof value === "object" && value !== null) {
+                    this._resolvePathsRecursive(value);
+                }
+            }
+        } else if (typeof obj === "object") {
+            for (const key of Object.keys(obj)) {
+                const value = obj[key];
+                if (typeof value === "string" && value.startsWith("vishva/assets/")) {
+                    const blobUrl = this.createBlobUrl(value);
+                    if (blobUrl) {
+                        obj[key] = blobUrl;
+                    }
+                } else if (typeof value === "object" && value !== null) {
+                    this._resolvePathsRecursive(value);
+                }
+            }
+        }
+    }
+
+    /**
      * Deactivate the resolver and revoke all Blob URLs.
      * Restores original Tools.LoadFile and Tools.PreprocessUrl behavior.
      */
@@ -126,6 +176,45 @@ export class AssetResolver {
         }
         this.blobUrls = [];
         this.assetMap = null;
+        this.assetStore = null;
+    }
+
+    /**
+     * Find a matching asset key for the given URL.
+     * Uses full structured path matching: the URL itself (or a suffix of it)
+     * should match a key in the asset map (e.g., "vishva/assets/audio/footstep.ogg").
+     */
+    private _findMatchingKey(url: string): string | null {
+        if (!this.assetMap) return null;
+
+        // Remove query string and fragment
+        const cleanUrl = url.split("?")[0].split("#")[0];
+
+        // Direct match: URL is exactly the key (most common case after PathRewriter)
+        if (this.assetMap.has(cleanUrl)) {
+            return cleanUrl;
+        }
+
+        // URL-decoded match
+        const decodedUrl = decodeURIComponent(cleanUrl);
+        if (decodedUrl !== cleanUrl && this.assetMap.has(decodedUrl)) {
+            return decodedUrl;
+        }
+
+        // Suffix match: URL ends with the structured path
+        // e.g., "http://localhost:8080/bin/vishva/assets/audio/footstep.ogg"
+        // should match key "vishva/assets/audio/footstep.ogg"
+        for (const key of this.assetMap.keys()) {
+            if (cleanUrl.endsWith("/" + key) || cleanUrl === key) {
+                return key;
+            }
+            // Also check decoded
+            if (decodedUrl.endsWith("/" + key) || decodedUrl === key) {
+                return key;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -137,7 +226,7 @@ export class AssetResolver {
             return null;
         }
         const data = this.assetMap.get(assetKey)!;
-        const filename = assetKey.startsWith("assets/") ? assetKey.substring("assets/".length) : assetKey;
+        const filename = this._extractFilenameFromKey(assetKey);
         const mimeType = this.getMimeType(filename);
         const blob = new Blob([new Uint8Array(data)], { type: mimeType });
         const blobUrl = URL.createObjectURL(blob);
@@ -146,14 +235,11 @@ export class AssetResolver {
     }
 
     /**
-     * Extract the filename from a URL string.
-     * Strips path, query strings, and fragments.
+     * Extract the filename portion from a structured path key.
+     * e.g., "vishva/assets/audio/footstep.ogg" → "footstep.ogg"
      */
-    private extractFilename(url: string): string {
-        // Remove query string and fragment
-        const cleanUrl = url.split("?")[0].split("#")[0];
-        // Get the last path segment
-        const parts = cleanUrl.split("/");
+    private _extractFilenameFromKey(key: string): string {
+        const parts = key.split("/");
         return parts[parts.length - 1];
     }
 

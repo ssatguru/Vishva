@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.32";
+    static version: string = "0.4.0-alpha.33";
 
     public static worldName: string;
 
@@ -279,6 +279,12 @@ export class Vishva {
      */
     public switchDisabled: boolean = false;
 
+    /**
+     * Tracks whether the scene has unsaved changes.
+     * Set to true once the scene is loaded and the user can make edits.
+     */
+    private _dirty: boolean = false;
+
     public key: Key;
 
     private keysDisabled: boolean = false;
@@ -374,6 +380,10 @@ export class Vishva {
             this.loadBabylonjsPart(this.scene, true);
         } else if (sceneFile == "__uploaded") {
             this.loadManager.loadUploadedWorld();
+        } else if (sceneFile.startsWith("__saved:")) {
+            const savedWorldName = sceneFile.substring("__saved:".length);
+            Vishva.worldName = savedWorldName;
+            this.loadManager.loadSavedWorld(savedWorldName);
         } else {
             this.loadManager.sceneLoad1(scenePath, sceneFile, this.scene);
         }
@@ -785,6 +795,7 @@ export class Vishva {
 
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
+        this._dirty = true;
         this.render();
     }
 
@@ -1621,7 +1632,6 @@ export class Vishva {
     private addBox(): AbstractMesh {
         let mesh: Mesh = Mesh.CreateBox("box", 1, this.scene);
         this.setPrimProperties(mesh);
-        console.log(mesh.rotationQuaternion);
         return mesh;
     }
 
@@ -2904,6 +2914,20 @@ export class Vishva {
 
     public anyMeshSelected(): boolean {
         return this.isMeshSelected;
+    }
+
+    /**
+     * Returns whether the scene has unsaved changes.
+     */
+    public isDirty(): boolean {
+        return this._dirty;
+    }
+
+    /**
+     * Marks the scene as having unsaved changes.
+     */
+    public setDirty(): void {
+        this._dirty = true;
     }
 
     public getName(): string {

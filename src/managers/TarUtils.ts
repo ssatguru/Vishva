@@ -5,9 +5,59 @@
  */
 
 /**
+ * Split a long filename into UStar prefix and name fields.
+ * The prefix field (bytes 345-499) holds up to 155 bytes of directory path,
+ * and the name field (bytes 0-99) holds up to 100 bytes of the remaining path.
+ *
+ * @param filename The full path to split
+ * @returns Object with prefix and name portions
+ * @throws Error if the path exceeds 255 bytes or cannot be split
+ */
+function splitUStarPath(filename: string): { prefix: string; name: string } {
+    const encoder = new TextEncoder();
+    const fullBytes = encoder.encode(filename);
+
+    if (fullBytes.length <= 100) {
+        return { prefix: '', name: filename };
+    }
+
+    if (fullBytes.length > 255) {
+        throw new Error(`Path exceeds maximum TAR UStar length of 255 bytes: ${filename} (${fullBytes.length} bytes)`);
+    }
+
+    // Find the last '/' that allows the name portion to fit in 100 bytes.
+    // We search from the end of the string for a '/' such that the part after it
+    // is <= 100 bytes and the part before it is <= 155 bytes.
+    let splitIndex = -1;
+    for (let i = filename.length - 1; i >= 0; i--) {
+        if (filename[i] === '/') {
+            const namePart = filename.substring(i + 1);
+            const prefixPart = filename.substring(0, i);
+            const nameBytes = encoder.encode(namePart);
+            const prefixBytes = encoder.encode(prefixPart);
+            if (nameBytes.length <= 100 && prefixBytes.length <= 155) {
+                splitIndex = i;
+                break;
+            }
+        }
+    }
+
+    if (splitIndex === -1) {
+        throw new Error(`Cannot split path into prefix/name for TAR UStar format: ${filename}`);
+    }
+
+    return {
+        prefix: filename.substring(0, splitIndex),
+        name: filename.substring(splitIndex + 1)
+    };
+}
+
+/**
  * Create a TAR archive from a set of files.
+ * Supports UStar prefix field for paths between 101 and 255 bytes.
  * @param files Array of filename/data pairs to include in the archive
  * @returns The TAR archive as a Uint8Array
+ * @throws Error if any filename exceeds 255 bytes or cannot be split into prefix/name
  */
 export async function createTarArchive(files: Array<{ filename: string; data: Uint8Array }>): Promise<Uint8Array> {
     const blocks: Uint8Array[] = [];
@@ -17,8 +67,11 @@ export async function createTarArchive(files: Array<{ filename: string; data: Ui
         const header = new Uint8Array(512);
         const encoder = new TextEncoder();
 
+        // Split filename into prefix and name if needed
+        const { prefix, name } = splitUStarPath(file.filename);
+
         // File name (0-99)
-        const nameBytes = encoder.encode(file.filename);
+        const nameBytes = encoder.encode(name);
         header.set(nameBytes.slice(0, Math.min(100, nameBytes.length)), 0);
 
         // File mode (100-107) - default: 644 (octal)
@@ -51,6 +104,15 @@ export async function createTarArchive(files: Array<{ filename: string; data: Ui
 
         // UStar indicator (257-262)
         header.set(encoder.encode('ustar\0'), 257);
+
+        // UStar version (263-264)
+        header.set(encoder.encode('00'), 263);
+
+        // Prefix field (345-499) - for long paths
+        if (prefix.length > 0) {
+            const prefixBytes = encoder.encode(prefix);
+            header.set(prefixBytes.slice(0, Math.min(155, prefixBytes.length)), 345);
+        }
 
         // Calculate and set checksum
         let checksum = 0;
@@ -88,6 +150,7 @@ export async function createTarArchive(files: Array<{ filename: string; data: Ui
 
 /**
  * Extract files from a TAR archive.
+ * Supports UStar prefix field for paths between 101 and 255 bytes.
  * @param tarData The TAR archive as a Uint8Array
  * @returns Map from filename to file data
  */
@@ -137,7 +200,17 @@ export async function extractTarArchive(tarData: Uint8Array): Promise<Map<string
         for (let i = 0; i < 100 && header[i] !== 0; i++) {
             filenameBytesLen++;
         }
-        const filename = decoder.decode(header.slice(0, filenameBytesLen));
+        let filename = decoder.decode(header.slice(0, filenameBytesLen));
+
+        // Extract prefix field (345-499) for UStar long paths
+        let prefixBytesLen = 0;
+        for (let i = 345; i < 500 && header[i] !== 0; i++) {
+            prefixBytesLen++;
+        }
+        if (prefixBytesLen > 0) {
+            const prefix = decoder.decode(header.slice(345, 345 + prefixBytesLen));
+            filename = prefix + '/' + filename;
+        }
 
         // Extract file size (124-135)
         const sizeStr = decoder.decode(header.slice(124, 135)).trim();

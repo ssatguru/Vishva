@@ -4,16 +4,12 @@
  */
 
 /**
- * Ensures the name ends with ".tar.gz".
- * Case-insensitive check — if the name already ends with any case variant
- * of ".tar.gz", it is returned as-is.
- * Otherwise, ".tar.gz" is appended.
+ * Normalizes the world name for saving.
+ * Trims whitespace. Does not append any file extension since
+ * browser-saved worlds are stored directly in IndexedDB (not as tar.gz files).
  */
 export function normalizeWorldName(name: string): string {
-    if (name.toLowerCase().endsWith(".tar.gz")) {
-        return name;
-    }
-    return name + ".tar.gz";
+    return name.trim();
 }
 
 /**
@@ -27,11 +23,16 @@ export function isValidWorldName(name: string): boolean {
 /**
  * Returns the default world name to pre-fill when the current name is
  * empty or undefined.
- * Returns "empty" for falsy/empty values, otherwise returns the input.
+ * Strips ".tar.gz" suffix if present (server-loaded worlds have this suffix).
+ * Returns "world" for falsy/empty values, otherwise returns the cleaned input.
  */
 export function getDefaultWorldName(currentName: string | undefined | null): string {
-    if (!currentName || currentName.length === 0) {
-        return "empty";
+    if (!currentName || currentName.length === 0 || currentName === "empty") {
+        return "world";
+    }
+    // Strip .tar.gz suffix for display
+    if (currentName.toLowerCase().endsWith(".tar.gz")) {
+        return currentName.slice(0, -7);
     }
     return currentName;
 }

@@ -473,7 +473,7 @@ export class SnaUI {
             this._assetTDiag.addTreeListener((f, p, l) => {
                 if (l) {
                     if (fit.filter.indexOf(f.substring(f.length - 4)) >= 0) {
-                        fibL.textContent = p + f
+                        fibL.textContent = Vishva.vHome + "assets/" +  p + f
                         fit.value = fibL.textContent;
                     }
                 }

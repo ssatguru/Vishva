@@ -1,6 +1,7 @@
 /**
  * PathRewriter — Rewrites all asset URLs in a serialized BabylonJS scene JSON
- * from their original paths to archive-relative paths (`assets/<archiveFilename>`).
+ * from their original paths to the full structured archive path (the archiveFilename
+ * from AssetCollector, e.g., `vishva/assets/audio/footstep.ogg`).
  *
  * This is a pure logic component with NO DOM or BabylonJS runtime dependency.
  */
@@ -17,10 +18,11 @@ export class PathRewriter {
     rewrite(sceneObj: object, assetEntries: AssetEntry[]): void {
         if (!assetEntries || assetEntries.length === 0) return;
 
-        // Build map from originalUrl → assets/<archiveFilename>
+        // Build map from originalUrl → archiveFilename (full structured path)
+        // The archiveFilename already contains the full path (e.g., vishva/assets/audio/footstep.ogg)
         const urlMap = new Map<string, string>();
         for (const entry of assetEntries) {
-            urlMap.set(entry.originalUrl, `assets/${entry.archiveFilename}`);
+            urlMap.set(entry.originalUrl, entry.archiveFilename);
         }
 
         // Deep-traverse the scene object and replace matching string values

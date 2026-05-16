@@ -185,6 +185,18 @@ export class VishvaGUI {
         let nm = document.getElementById("navMenubar");
         nm.style.visibility = "visible";
 
+        // button to navigate to world launcher
+        const worldLauncherBtn = document.getElementById("worldLauncher");
+        worldLauncherBtn.onclick = (e) => {
+            if (this._vishva.isDirty()) {
+                if (!confirm("You have unsaved changes. Leave this world?")) {
+                    return false;
+                }
+            }
+            window.location.href = window.location.pathname;
+            return false;
+        };
+
         // button to download world
         var downWorld: HTMLElement = document.getElementById("downWorld");
         downWorld.onclick = async (e) => {

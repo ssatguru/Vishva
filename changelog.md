@@ -1,3 +1,57 @@
+### 05/15/2026 0.4.0-alpha.33
+
+#### Asset Storage Overhaul — IndexedDB-native Save/Load
+- browser save no longer creates an intermediate tar.gz blob — assets are stored individually in IndexedDB (`VishvaAssetStore` database, `saved` object store) keyed by `{worldName}/{assetPath}`
+- loading a saved world reads assets directly from IndexedDB into the session store, eliminating decompression overhead
+- AssetResolver now activates from the AssetStore (IndexedDB) instead of an in-memory Map — pre-loads session keys on activate for synchronous PreprocessUrl compatibility
+- AssetResolver gains `resolveAssetPaths()` which deep-traverses VishvaSerialized to resolve `vishva/assets/` paths to blob URLs (handles sounds, dialog HTML, and other non-BabylonJS-pipeline assets)
+- SaveManager browser-save path rewritten: collects assets, resolves from session store or fetches from server, and writes all entries in a single `saveWorldBatch` call
+- legacy tar.gz fallback retained if AssetStore cannot be opened
+- `_loadedAssetMap` (in-memory Map) replaced by `_assetStore` (IndexedDB reference) on Vishva instance — eliminates large in-memory asset retention
+
+#### Structured Asset Paths (`vishva/assets/...`)
+- all archive and IndexedDB asset paths now use a structured prefix: `vishva/assets/` instead of flat `assets/`
+- embedded textures stored under `vishva/assets/data/`, blob textures under `vishva/assets/blob/`
+- server-relative assets (skyboxes, curated content, sounds) collected via new `AssetCollector.collectServerAssets()` deep-scan and stored under their original `vishva/...` path
+- PathRewriter updated to write the full structured path directly (no longer prepends `assets/`)
+- backward compatibility: LoadManager remaps old `assets/` paths to `vishva/assets/` on import
+
+#### World Launcher Enhancements
+- added "World Launcher" globe button (`public` icon) to the navbar for quick access to the launcher from within a loaded world
+- unsaved-changes guard: clicking the launcher button shows a confirmation dialog if the scene is dirty
+- browser storage panel now reads saved worlds from `VishvaAssetStore` (via `AssetStore.listSavedWorlds()`) instead of the old `VishvaWorlds` database
+- each saved world row now shows export (download) and delete (trash) action buttons alongside the world name
+- delete action: confirmation prompt → `AssetStore.deleteSavedWorld()` → row removal → empty state if no worlds remain
+- export action: reads all assets from the saved store → creates tar archive (with UStar long-path support) → gzip compresses → triggers browser download as `{worldName}.tar.gz`
+- inline error display for failed delete/export operations
+
+#### TarUtils — UStar Long Path Support
+- `createTarArchive` now supports filenames up to 255 bytes using the UStar prefix field (bytes 345–499)
+- `extractTarArchive` reads the prefix field and reconstructs full paths on extraction
+- SaveManager's inline `_createTarArchive` removed in favor of the shared `TarUtils.createTarArchive`
+
+#### Save Prompt & World Name Improvements
+- `normalizeWorldName` no longer appends `.tar.gz` — browser-saved worlds are stored by plain name
+- `getDefaultWorldName` strips `.tar.gz` suffix from server-loaded world names for cleaner display; defaults to "world" instead of "empty"
+- `HREFsearch.getParm()` now URL-decodes parameter values (fixes `__saved:` names with special characters)
+
+#### Saved World Loading via `?world=__saved:<name>`
+- Vishva constructor recognizes `__saved:` prefix and routes to `LoadManager.loadSavedWorld()`
+- `loadSavedWorld` reads from the `saved` store, copies assets into the `session` store, activates AssetResolver, and loads the scene — no decompression step
+
+#### SNA Actuator Path Fixes
+- ActuatorSound and ActuatorDialog no longer prepend `Vishva.vHome + "assets/"` — asset paths are now fully qualified (either server-relative or blob URLs resolved by AssetResolver)
+- SnaUI asset tree selection now prepends `Vishva.vHome + "assets/"` at selection time so the stored path is correct for both server and archive contexts
+
+#### Dirty State Tracking
+- added `Vishva._dirty` flag, `isDirty()` and `setDirty()` methods
+- scene marked dirty after SNA unmarshal completes (i.e., after world load finishes and user can edit)
+- used by the World Launcher navbar button to warn about unsaved changes
+
+#### Misc
+- removed stray `console.log` in `addBox()`
+- AssetCollector skips CubeTexture base paths (no file extension) from the external URL collection — only actual face images are collected via `collectServerAssets`
+
 ### 05/10/2026 0.4.0-alpha.32
 
 #### World Launcher Chooser

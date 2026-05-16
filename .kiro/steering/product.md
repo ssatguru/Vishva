@@ -7,7 +7,7 @@ Vishva (Hindi for "World") is a browser-based live 3D scene editor built on Baby
 - Attach behaviors to objects via a Sensor/Actuator (SNA) system — sensors detect events, actuators perform actions
 - Third-person avatar with character controller for navigating scenes
 - Environment controls: skybox, lighting, fog, shadows, weather (rain/snow), water, terrain
-- Save/load worlds as serialized BabylonJS scenes (JSON + assets), including to browser IndexedDB
+- Save/load worlds as serialized BabylonJS scenes (JSON + assets), including direct browser save/load via IndexedDB (`VishvaAssetStore`) which stores individual assets without tar.gz intermediary
 - Export standalone world archives (tar-based) for portable distribution
 - Physics support via Oimo.js
 - Theming system for the editor UI (W3.CSS-based, multiple theme variants)

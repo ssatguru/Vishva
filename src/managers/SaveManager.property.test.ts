@@ -37,19 +37,33 @@ function currentSavePipeline(sceneObj: object): Array<{ filename: string; data: 
     const embeddedEntries = assetCollector.collectEmbeddedTextures(workingScene);
     assetCollector.stripEmbeddedTextures(embeddedEntries);
 
-    // Step 2: Collect external asset URLs and rewrite paths to assets/<archiveFilename>
+    // Step 1.5: Collect server assets (vishva/assets/ prefixed) and rewrite paths
     const baseUrl = "http://localhost:8080/bin/";
+    const serverAssetEntries = assetCollector.collectServerAssets(workingScene, baseUrl);
+    pathRewriter.rewrite(workingScene, serverAssetEntries);
+
+    // Step 2: Collect external asset URLs and rewrite paths
     const externalEntries = assetCollector.collect(workingScene, baseUrl);
     pathRewriter.rewrite(workingScene, externalEntries);
 
     // Step 3: Build archive file list with all assets
+    // archiveFilename now contains the full structured path (e.g., vishva/assets/data/...)
     const archiveFiles: Array<{ filename: string; data: Uint8Array }> = [];
 
     // Add embedded texture files
     for (const entry of embeddedEntries) {
         archiveFiles.push({
-            filename: "assets/" + entry.archiveFilename,
+            filename: entry.archiveFilename,
             data: entry.decodedData
+        });
+    }
+
+    // Add server asset files (simulated fetch)
+    for (const entry of serverAssetEntries) {
+        const placeholderData = new TextEncoder().encode("fetched_server_asset");
+        archiveFiles.push({
+            filename: entry.archiveFilename,
+            data: placeholderData
         });
     }
 
@@ -60,14 +74,14 @@ function currentSavePipeline(sceneObj: object): Array<{ filename: string; data: 
     for (const entry of externalEntries) {
         if (entry.decodedData) {
             archiveFiles.push({
-                filename: "assets/" + entry.archiveFilename,
+                filename: entry.archiveFilename,
                 data: entry.decodedData
             });
         } else {
             // Simulate a successful fetch — in real code this would be fetched from the network
             const placeholderData = new TextEncoder().encode("fetched_asset_data");
             archiveFiles.push({
-                filename: "assets/" + entry.archiveFilename,
+                filename: entry.archiveFilename,
                 data: placeholderData
             });
         }
@@ -179,9 +193,9 @@ const dataUriArb = fc.tuple(
 // Generate a texture name (for embedded textures)
 const textureNameArb = fc.stringMatching(/^[A-Za-z][A-Za-z0-9_-]{1,12}$/).filter(s => s.length > 0);
 
-// Generate an external URL path
+// Generate an external URL path (server assets use vishva/assets/ prefix)
 const externalUrlArb = fc.tuple(
-    fc.constantFrom("http://localhost:8080/assets/", "http://server.com/textures/"),
+    fc.constantFrom("vishva/assets/textures/", "vishva/assets/audio/", "vishva/assets/models/"),
     fc.stringMatching(/^[a-z][a-z0-9_-]{1,8}$/),
     fc.constantFrom(".jpg", ".png", ".webp", ".glb")
 ).map(([base, name, ext]) => `${base}${name}${ext}`);
@@ -277,10 +291,9 @@ describe("Property 1: Bug Condition - Asset Pipeline Missing From Save", () => {
                 // There should be at least one embedded texture
                 expect(embeddedEntries.length).toBeGreaterThan(0);
 
-                // Assert: archive MUST contain assets/<archiveFilename> for each embedded texture
+                // Assert: archive MUST contain the structured archiveFilename for each embedded texture
                 for (const entry of embeddedEntries) {
-                    const expectedPath = `assets/${entry.archiveFilename}`;
-                    expect(filenames).toContain(expectedPath);
+                    expect(filenames).toContain(entry.archiveFilename);
                 }
             }),
             { numRuns: 50 }
@@ -298,17 +311,17 @@ describe("Property 1: Bug Condition - Asset Pipeline Missing From Save", () => {
                 const filenames = archiveFiles.map(f => f.filename);
 
                 // Use AssetCollector to determine what SHOULD be in the archive
+                // Server assets (vishva/assets/ prefixed) are collected by collectServerAssets
                 const collector = new AssetCollector();
                 const baseUrl = "http://localhost:8080/bin/";
-                const externalEntries = collector.collect(sceneObj, baseUrl);
+                const serverEntries = collector.collectServerAssets(sceneObj, baseUrl);
 
-                // There should be at least one external asset
-                expect(externalEntries.length).toBeGreaterThan(0);
+                // There should be at least one server asset
+                expect(serverEntries.length).toBeGreaterThan(0);
 
-                // Assert: archive MUST contain assets/<archiveFilename> for each external asset
-                for (const entry of externalEntries) {
-                    const expectedPath = `assets/${entry.archiveFilename}`;
-                    expect(filenames).toContain(expectedPath);
+                // Assert: archive MUST contain the structured archiveFilename for each server asset
+                for (const entry of serverEntries) {
+                    expect(filenames).toContain(entry.archiveFilename);
                 }
             }),
             { numRuns: 50 }
@@ -339,7 +352,7 @@ describe("Property 1: Bug Condition - Asset Pipeline Missing From Save", () => {
         );
     });
 
-    it("all texture name/url fields in Scene.babylon MUST start with assets/", () => {
+    it("all texture name/url fields in Scene.babylon MUST start with vishva/assets/", () => {
         fc.assert(
             fc.property(bugConditionSceneArb, (sceneObj) => {
                 // Verify bug condition holds
@@ -356,14 +369,14 @@ describe("Property 1: Bug Condition - Asset Pipeline Missing From Save", () => {
                 const decoder = new TextDecoder();
                 const sceneBabylonContent = JSON.parse(decoder.decode(sceneBabylonFile!.data));
 
-                // Check all texture name/url fields start with "assets/"
+                // Check all texture name/url fields start with "vishva/assets/"
                 if (Array.isArray(sceneBabylonContent.textures)) {
                     for (const tex of sceneBabylonContent.textures) {
                         if (tex && typeof tex.name === "string" && tex.name) {
-                            expect(tex.name.startsWith("assets/")).toBe(true);
+                            expect(tex.name.startsWith("vishva/assets/")).toBe(true);
                         }
                         if (tex && typeof tex.url === "string" && tex.url) {
-                            expect(tex.url.startsWith("assets/")).toBe(true);
+                            expect(tex.url.startsWith("vishva/assets/")).toBe(true);
                         }
                     }
                 }
@@ -376,10 +389,10 @@ describe("Property 1: Bug Condition - Asset Pipeline Missing From Save", () => {
                             const value = mat[key];
                             if (value && typeof value === "object" && !Array.isArray(value)) {
                                 if (typeof value.name === "string" && value.name) {
-                                    expect(value.name.startsWith("assets/")).toBe(true);
+                                    expect(value.name.startsWith("vishva/assets/")).toBe(true);
                                 }
                                 if (typeof value.url === "string" && value.url) {
-                                    expect(value.url.startsWith("assets/")).toBe(true);
+                                    expect(value.url.startsWith("vishva/assets/")).toBe(true);
                                 }
                             }
                         }
@@ -677,8 +690,8 @@ describe("Property 2: Preservation - Non-Asset Worlds Produce Unchanged Output",
                 const archiveFiles = currentSavePipelineWithPrecision(sceneObj);
                 const filenames = archiveFiles.map(f => f.filename);
 
-                // Assert: no filenames start with "assets/"
-                const assetFiles = filenames.filter(f => f.startsWith("assets/"));
+                // Assert: no filenames start with "assets/" or "vishva/assets/"
+                const assetFiles = filenames.filter(f => f.startsWith("assets/") || f.startsWith("vishva/assets/"));
                 expect(assetFiles).toHaveLength(0);
             }),
             { numRuns: 100 }

@@ -9,9 +9,9 @@ import { AssetEntry } from "./AssetCollector.js";
  * For any serialized scene JSON and a set of asset entries with original-to-archive
  * filename mappings, after the Path Rewriter processes the JSON, no original asset URL
  * (including data URIs) SHALL remain in the output — every occurrence SHALL be replaced
- * with the corresponding `assets/<archiveFilename>` path.
+ * with the corresponding full structured archive path (archiveFilename).
  *
- * **Validates: Requirements 3.1, 3.2, 3.4**
+ * **Validates: Requirements 3.1, 3.2, 3.4, 5.1**
  */
 describe("Property 5: Path Rewriting Completeness", () => {
     const rewriter = new PathRewriter();
@@ -69,13 +69,14 @@ describe("Property 5: Path Rewriting Completeness", () => {
         { weight: 1, arbitrary: dataUriArb }
     );
 
-    // Generator for archive filenames (unique per entry)
+    // Generator for structured archive filenames (full path under vishva/assets/)
     const archiveFilenameArb = fc
         .tuple(
+            fc.constantFrom("textures", "audio", "data", "blob", "models", "curated"),
             fc.stringMatching(/^[a-z][a-z0-9_-]{0,7}$/),
             fc.constantFrom(".jpg", ".png", ".env", ".babylon", ".glb", ".ogg")
         )
-        .map(([name, ext]) => name + ext);
+        .map(([subdir, name, ext]) => `vishva/assets/${subdir}/${name}${ext}`);
 
     // Generator for a scene JSON with asset URLs placed in various locations
     const sceneWithAssetsArb = fc
@@ -228,7 +229,7 @@ describe("Property 5: Path Rewriting Completeness", () => {
         );
     });
 
-    it("all replaced values start with 'assets/'", () => {
+    it("all replaced values are the archiveFilename directly (full structured path)", () => {
         fc.assert(
             fc.property(sceneWithAssetsArb, ({ scene, assetEntries, originalUrls }) => {
                 // Run PathRewriter
@@ -237,18 +238,19 @@ describe("Property 5: Path Rewriting Completeness", () => {
                 // Build expected replacement map
                 const expectedReplacements = new Map<string, string>();
                 for (const entry of assetEntries) {
-                    expectedReplacements.set(entry.originalUrl, `assets/${entry.archiveFilename}`);
+                    expectedReplacements.set(entry.originalUrl, entry.archiveFilename);
                 }
 
                 // Deep-traverse the resulting scene and collect all string values
                 const allStrings = collectAllStrings(scene);
 
-                // Every string that was an asset path should now start with "assets/"
+                // Every string that was an asset path should now be the archiveFilename
+                // (which starts with "vishva/assets/")
                 const replacementValues = new Set(expectedReplacements.values());
                 for (const str of allStrings) {
-                    // If this string is one of the replacement values, verify it starts with "assets/"
+                    // If this string is one of the replacement values, verify it starts with "vishva/assets/"
                     if (replacementValues.has(str)) {
-                        expect(str.startsWith("assets/")).toBe(true);
+                        expect(str.startsWith("vishva/assets/")).toBe(true);
                     }
                 }
 

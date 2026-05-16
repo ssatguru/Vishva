@@ -108,8 +108,9 @@ describe("Property 1: Bug Condition - Blob URLs Produce Mangled Filenames in Ass
                 expect(blobEntries.length).toBeGreaterThan(0);
 
                 for (const entry of blobEntries) {
-                    // archiveFilename should NOT contain blob URL artifacts
-                    expect(entry.archiveFilename).not.toMatch(/blob/i);
+                    // archiveFilename should be under vishva/assets/blob/ prefix
+                    expect(entry.archiveFilename).toMatch(/^vishva\/assets\/blob\//);
+                    // archiveFilename should NOT contain http/localhost artifacts
                     expect(entry.archiveFilename).not.toMatch(/http/i);
                     expect(entry.archiveFilename).not.toMatch(/localhost/i);
                     expect(entry.archiveFilename).not.toMatch(/127\.0\.0\.1/i);
@@ -117,10 +118,8 @@ describe("Property 1: Bug Condition - Blob URLs Produce Mangled Filenames in Ass
                     // blobUrl should start with "blob:"
                     expect(entry.blobUrl.startsWith("blob:")).toBe(true);
 
-                    // archiveFilename should be a valid filename (non-empty, no path separators)
+                    // archiveFilename should be non-empty
                     expect(entry.archiveFilename.length).toBeGreaterThan(0);
-                    expect(entry.archiveFilename).not.toContain("/");
-                    expect(entry.archiveFilename).not.toContain("\\");
                 }
             }),
             { numRuns: 100 }
@@ -361,10 +360,9 @@ describe("Property 2: Preservation - Non-Blob-URL Asset Collection Unchanged", (
                         // decodedData should be non-empty
                         expect(entry.decodedData.length).toBeGreaterThan(0);
 
-                        // archiveFilename should be a valid filename (non-empty, no path separators)
+                        // archiveFilename should be under vishva/assets/data/ prefix
                         expect(entry.archiveFilename.length).toBeGreaterThan(0);
-                        expect(entry.archiveFilename).not.toContain("/");
-                        expect(entry.archiveFilename).not.toContain("\\");
+                        expect(entry.archiveFilename).toMatch(/^vishva\/assets\/data\//);
 
                         // textureObj should reference one of the input textures
                         expect(entry.textureObj).toBeDefined();
@@ -400,8 +398,8 @@ describe("Property 2: Preservation - Non-Blob-URL Asset Collection Unchanged", (
                         expect(entry.decodedData).toBeDefined();
                         expect(entry.decodedData!.length).toBeGreaterThan(0);
 
-                        // archiveFilename should be generated (data_asset.ext pattern)
-                        expect(entry.archiveFilename).toMatch(/^data_asset/);
+                        // archiveFilename should be under vishva/assets/data/ with data_asset pattern
+                        expect(entry.archiveFilename).toMatch(/^vishva\/assets\/data\/data_asset/);
                         expect(entry.archiveFilename).toMatch(/\.\w+$/);
 
                         // fetchUrl for data URIs is the data URI itself

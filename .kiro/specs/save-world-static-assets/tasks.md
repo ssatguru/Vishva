@@ -1,0 +1,96 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Bug Condition** - Server Asset Collection Incompleteness
+  - **IMPORTANT**: Write this property-based test BEFORE implementing the fix
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the bug exists — specifically that `vishva/`-prefixed strings in CubeTexture `files` arrays and VishvaSerialized objects are NOT collected by the current `AssetCollector.collect()` method
+  - **Scoped PBT Approach**: Scope the property to concrete failing cases:
+    - Case 1: Scene with `materials[].reflectionTexture.files = ["vishva/assets/skybox_px.jpg", ...]` — the `files` array strings are never collected because `_scanMaterials` only reads `value.name`
+    - Case 2: Scene with deeply nested arrays containing `vishva/`-prefixed strings (e.g., CubeTexture with `isCube: true` and `files` array of 6 face URLs)
+    - Case 3: VishvaSerialized-like object with `avSerialized.settings.sound.name = "vishva/assets/audio/footstep.ogg"` — VishvaSerialized is never passed to `collect()` at all
+  - **Test file**: `src/managers/AssetCollector.serverAssets.property.test.ts`
+  - **Test structure**: Use fast-check to generate scene objects containing `vishva/`-prefixed strings in `files` arrays and nested locations. Call `AssetCollector.collect()` and assert that ALL `vishva/`-prefixed strings appear in the returned entries' `originalUrl` values
+  - **Generator strategy**: Generate random `vishva/assets/...` paths with valid extensions, place them in `materials[].reflectionTexture.files` arrays (6 face URLs per CubeTexture), and in arbitrary nested object positions. Use `fc.constantFrom` for extensions like `.jpg`, `.png`, `.ogg`, `.env`
+  - **Assertion**: For all `vishva/`-prefixed strings placed in the scene, they MUST be a subset of `collect()` results — this will FAIL on unfixed code because `_scanMaterials` never iterates into arrays
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the bug exists: `collect()` only returns entries for `textures[].name`, `materials[].*.name`, etc. — never for strings in `files` arrays)
+  - Document counterexamples found (e.g., `materials[0].reflectionTexture.files[0] = "vishva/assets/skybox_px.jpg"` is not in collected entries)
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 1.2, 2.1_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Non-Server-Asset Behavior Unchanged
+  - **IMPORTANT**: Follow observation-first methodology
+  - **Test file**: `src/managers/AssetCollector.serverAssets.preservation.property.test.ts`
+  - **Observation phase** (run on UNFIXED code):
+    - Observe: `collect()` on a scene with only embedded textures (base64String) returns entries with `decodedData` — embedded pipeline is unaffected
+    - Observe: `collect()` on a scene with only blob URL textures (`blob:http://...`) returns NO entries (blob URLs are skipped by `collect()`, handled separately by `collectBlobTextures()`)
+    - Observe: `collect()` on a scene with paths already starting with `assets/` returns NO entries for those paths (they are skipped)
+    - Observe: `collect()` on a scene with no external assets returns an empty array
+    - Observe: `PathRewriter.rewrite()` on a scene with no matching URLs leaves the scene unchanged
+  - **Property-based tests to write**:
+    - Property 2a: For all scene objects containing ONLY embedded textures (base64String data URIs), blob URLs, already-archived paths (`assets/` prefix), or plain non-URL strings — `collectServerAssets()` (the new method) returns an empty array
+    - Property 2b: For all scene objects with no `vishva/`-prefixed strings, the existing `collect()` method returns the same results before and after the fix (generate scenes with `textures[].name`, `materials[].*.name`, `particleSystems[].textureName` using non-`vishva/` paths)
+    - Property 2c: For all scene objects, `PathRewriter.rewrite()` with an empty entries list leaves the object unchanged (deep equality)
+  - **Generator strategy**: Use fast-check to generate scenes with:
+    - `data:image/png;base64,...` strings (embedded textures)
+    - `blob:http://localhost:8080/uuid` strings (blob URLs)
+    - `assets/filename.jpg` strings (already-archived)
+    - Random alphanumeric paths NOT starting with `vishva/` (regular external assets)
+  - Verify all tests PASS on UNFIXED code (confirms baseline behavior to preserve)
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [x] 3. Implement the fix — Add `collectServerAssets` and integrate into save pipeline
+
+  - [x] 3.1 Add `collectServerAssets` method to `AssetCollector`
+    - Add new public method `collectServerAssets(obj: object, baseUrl: string): AssetEntry[]` to `src/managers/AssetCollector.ts`
+    - Implement deep-traversal of any object/array structure collecting all unique string values starting with `vishva/`
+    - Skip strings starting with `assets/` (already rewritten), `data:` (data URIs), or `blob:` (blob URLs)
+    - Use a `Set<string>` for deduplication during traversal
+    - After collection, call `_buildEntries()` to produce `AssetEntry[]` with resolved `fetchUrl` (using baseUrl) and deduplicated `archiveFilename`
+    - The deep-traversal pattern already exists in `_findAssetStrings` (SaveManager) and `_traverse` (PathRewriter) — follow the same recursive object/array pattern
+    - _Bug_Condition: isBugCondition(input) where serialized objects contain `vishva/`-prefixed strings not in known fields_
+    - _Expected_Behavior: All `vishva/`-prefixed strings are collected with valid fetchUrl and unique archiveFilename_
+    - _Preservation: Strings starting with `assets/`, `data:`, `blob:` are skipped; existing `collect()` method unchanged_
+    - _Requirements: 2.1, 2.2, 2.3_
+
+  - [x] 3.2 Update `SaveManager._getWorldZipBlob()` to collect and archive server assets
+    - In `src/managers/SaveManager.ts`, after serialization and BEFORE path rewriting, call `assetCollector.collectServerAssets(sceneObj, baseUrl)` and `assetCollector.collectServerAssets(vishvaSerialzed, baseUrl)`
+    - Merge results into a single deduplicated array (deduplicate by `originalUrl`)
+    - Fetch each server asset URL; on success, add to `fetchedAssetFiles` array; on failure, accumulate error messages
+    - After fetching, use `pathRewriter.rewrite(sceneObj, serverAssetEntries)` and `pathRewriter.rewrite(vishvaSerialzed, serverAssetEntries)` to rewrite paths in BOTH objects
+    - Report accumulated fetch failures to user via `DialogMgr.showAlertDiag()` after save completes (e.g., "N assets could not be fetched: [list]")
+    - Ensure server asset files are included in the `archiveFiles` array alongside embedded, blob, and carry-forward assets
+    - _Bug_Condition: Scene/VishvaSerialized contain `vishva/`-prefixed strings that are not collected by field-specific scanning_
+    - _Expected_Behavior: All server assets are fetched, archived in `assets/` folder, paths rewritten in both JSON files_
+    - _Preservation: Existing embedded texture, blob URL, and carry-forward pipelines remain unchanged_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5_
+
+  - [x] 3.3 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Server Asset Collection Completeness
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior (all `vishva/`-prefixed strings are collected)
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1: `npm test -- --run src/managers/AssetCollector.serverAssets.property.test.ts`
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed — `collectServerAssets` now finds all `vishva/`-prefixed strings regardless of nesting)
+    - _Requirements: 2.1, 2.2_
+
+  - [x] 3.4 Verify preservation tests still pass
+    - **Property 2: Preservation** - Non-Server-Asset Behavior Unchanged
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2: `npm test -- --run src/managers/AssetCollector.serverAssets.preservation.property.test.ts`
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions — embedded textures, blob URLs, already-archived paths, and empty scenes all behave identically)
+    - Confirm all tests still pass after fix (no regressions)
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run full test suite: `npm test`
+  - Verify all existing property tests still pass (AssetCollector, PathRewriter, AssetResolver, SaveManager, TarRoundTrip)
+  - Verify new bug condition test passes (Property 1)
+  - Verify new preservation tests pass (Property 2)
+  - Ensure no TypeScript compilation errors
+  - Ask the user if questions arise

@@ -7,8 +7,9 @@
  * Vishva is instantiated.
  */
 
-import { buildWorldQueryString, processServerWorldList, storeUploadedWorld } from "./WorldLauncherLogic";
+import { buildWorldQueryString, processServerWorldList, storeUploadedWorld, deleteWorldFromStore, exportWorldAsTarGz } from "./WorldLauncherLogic";
 import { VThemes } from "./components/VTheme";
+import { AssetStore } from "../managers/AssetStore";
 
 export class WorldLauncher {
     private _overlay: HTMLDivElement;
@@ -205,21 +206,22 @@ export class WorldLauncher {
                 this._contentArea.innerHTML = "";
 
                 if (worldNames.length === 0) {
-                    const msg = document.createElement("div");
-                    msg.className = "w3-center w3-padding";
-                    msg.textContent = "No saved worlds found";
-                    msg.style.color = VThemes.CurrentTheme.darkColors.f;
-                    this._contentArea.appendChild(msg);
+                    this._showEmptyState();
                     return;
                 }
 
-                const list = this._createWorldList(worldNames.map(name => ({
-                    name: name,
-                    onClick: () => {
-                        window.location.search = buildWorldQueryString(name);
-                    }
-                })));
-                this._contentArea.appendChild(list);
+                const listContainer = document.createElement("div");
+                for (const name of worldNames) {
+                    const row = this._createBrowserWorldRow(
+                        name,
+                        listContainer,
+                        () => {
+                            window.location.search = buildWorldQueryString("__saved:" + name);
+                        }
+                    );
+                    listContainer.appendChild(row);
+                }
+                this._contentArea.appendChild(listContainer);
             })
             .catch(() => {
                 this._contentArea.innerHTML = "";
@@ -231,54 +233,18 @@ export class WorldLauncher {
             });
     }
 
-    private _loadBrowserWorlds(): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            const dbName = "VishvaWorlds";
-            const storeName = "worlds";
-
-            let request: IDBOpenDBRequest;
-            try {
-                request = indexedDB.open(dbName, 1);
-            } catch (e) {
-                reject(e);
-                return;
-            }
-
-            request.onerror = () => {
-                reject(new Error("Failed to open IndexedDB"));
-            };
-
-            request.onupgradeneeded = (event) => {
-                const db = (event.target as IDBOpenDBRequest).result;
-                if (!db.objectStoreNames.contains(storeName)) {
-                    db.createObjectStore(storeName, { keyPath: "name" });
-                }
-            };
-
-            request.onsuccess = () => {
-                const db = request.result;
-                try {
-                    const transaction = db.transaction([storeName], "readonly");
-                    const store = transaction.objectStore(storeName);
-                    const getAllRequest = store.getAll();
-
-                    getAllRequest.onsuccess = () => {
-                        db.close();
-                        const entries = getAllRequest.result || [];
-                        const names = entries.map((entry: any) => entry.name as string);
-                        resolve(names);
-                    };
-
-                    getAllRequest.onerror = () => {
-                        db.close();
-                        reject(new Error("Failed to read from IndexedDB"));
-                    };
-                } catch (e) {
-                    db.close();
-                    reject(e);
-                }
-            };
-        });
+    private async _loadBrowserWorlds(): Promise<string[]> {
+        if (!AssetStore.isAvailable()) {
+            throw new Error("IndexedDB is not available");
+        }
+        const store = new AssetStore();
+        try {
+            await store.open();
+            const worlds = await store.listSavedWorlds();
+            return worlds;
+        } finally {
+            store.close();
+        }
     }
 
     // ─── Upload a File ──────────────────────────────────────────────────
@@ -325,6 +291,133 @@ export class WorldLauncher {
         uploadContainer.appendChild(fileInput);
         uploadContainer.appendChild(statusMsg);
         this._contentArea.appendChild(uploadContainer);
+    }
+
+    // ─── Browser Storage Row ────────────────────────────────────────────
+
+    private _createBrowserWorldRow(
+        worldName: string,
+        listContainer: HTMLDivElement,
+        onLoad: () => void
+    ): HTMLDivElement {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
+
+        // World name (clickable to load)
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "w3-button w3-hover-dark-grey";
+        nameSpan.style.flex = "1";
+        nameSpan.style.color = VThemes.CurrentTheme.darkColors.f;
+        nameSpan.style.padding = "10px 16px";
+        nameSpan.style.textAlign = "left";
+        nameSpan.textContent = worldName;
+        nameSpan.onclick = onLoad;
+
+        // Export button
+        const exportBtn = document.createElement("button");
+        exportBtn.className = "w3-button w3-hover-dark-grey";
+        exportBtn.title = "export as tar.gz";
+        exportBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">download</span>';
+        exportBtn.style.color = VThemes.CurrentTheme.darkColors.f;
+        exportBtn.onclick = (e) => {
+            e.stopPropagation();
+            this._exportWorld(worldName, exportBtn, row);
+        };
+
+        // Delete button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "w3-button w3-hover-dark-grey";
+        deleteBtn.title = "delete world";
+        deleteBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">delete</span>';
+        deleteBtn.style.color = "#ff6b6b";
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            this._deleteWorld(worldName, row, listContainer);
+        };
+
+        row.appendChild(nameSpan);
+        row.appendChild(exportBtn);
+        row.appendChild(deleteBtn);
+        return row;
+    }
+
+    private async _deleteWorld(
+        worldName: string,
+        row: HTMLDivElement,
+        listContainer: HTMLDivElement
+    ): Promise<void> {
+        if (!confirm(`Delete world "${worldName}"? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            await deleteWorldFromStore(worldName);
+            row.remove();
+
+            // Show empty state if no worlds remain
+            if (listContainer.children.length === 0) {
+                this._showEmptyState();
+            }
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this._showInlineError(`Failed to delete "${worldName}": ${msg}`);
+        }
+    }
+
+    private async _exportWorld(
+        worldName: string,
+        exportBtn: HTMLButtonElement,
+        row: HTMLDivElement
+    ): Promise<void> {
+        exportBtn.disabled = true;
+        exportBtn.style.opacity = "0.5";
+
+        try {
+            await exportWorldAsTarGz(worldName);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this._showInlineError(`Export failed: ${msg}`);
+        } finally {
+            exportBtn.disabled = false;
+            exportBtn.style.opacity = "1";
+        }
+    }
+
+    // ─── Inline feedback ────────────────────────────────────────────────
+
+    /**
+     * Display a styled red error message in the browser storage panel content area.
+     * If an error div already exists, update its text instead of creating a new one.
+     */
+    private _showInlineError(message: string): void {
+        const existingError = this._contentArea.querySelector("[data-inline-error]") as HTMLDivElement | null;
+        if (existingError) {
+            existingError.textContent = message;
+            return;
+        }
+
+        const errorDiv = document.createElement("div");
+        errorDiv.setAttribute("data-inline-error", "true");
+        errorDiv.className = "w3-panel w3-padding";
+        errorDiv.style.color = "#ff6b6b";
+        errorDiv.textContent = message;
+        this._contentArea.appendChild(errorDiv);
+    }
+
+    /**
+     * Display an empty state message indicating no saved worlds are available.
+     * Replaces the content area contents.
+     */
+    private _showEmptyState(): void {
+        this._contentArea.innerHTML = "";
+
+        const msg = document.createElement("div");
+        msg.className = "w3-center w3-padding";
+        msg.textContent = "No saved worlds available";
+        msg.style.color = VThemes.CurrentTheme.darkColors.f;
+        this._contentArea.appendChild(msg);
     }
 
     // ─── Shared helpers ─────────────────────────────────────────────────

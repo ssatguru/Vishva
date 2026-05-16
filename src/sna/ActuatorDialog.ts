@@ -163,7 +163,8 @@ export class ActuatorDialog extends ActuatorAbstract {
                     this._div.innerHTML = xhttp.responseText;
                 }
             };
-            xhttp.open("GET", Vishva.vHome + "assets/" + props.htmlFile.value, true);
+            //props.htmlFile.value = Vishva.vHome + "assets/" + props.htmlFile.value;
+            xhttp.open("GET", props.htmlFile.value, true);
             xhttp.send();
         } else {
             this._div.innerHTML = props.msg;

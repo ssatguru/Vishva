@@ -24,7 +24,7 @@ export class HREFsearch {
     public getParm(parm: string): string {
         var i: number = this.names.indexOf(parm);
         if (i !== -1) {
-            return <string>this.values[i];
+            return decodeURIComponent(<string>this.values[i]);
         }
         return null;
     }

@@ -5,7 +5,8 @@
  */
 
 import { isTarGzFile } from "../managers/FileValidator";
-import { extractTarArchive } from "../managers/TarUtils";
+import { extractTarArchive, createTarArchive } from "../managers/TarUtils";
+import { AssetStore } from "../managers/AssetStore";
 
 /**
  * Determines whether the launcher overlay should be displayed.
@@ -102,6 +103,55 @@ export async function storeUploadedWorld(file: File): Promise<{ success: boolean
 }
 
 /**
+ * Compress data using the Compression Streams API (gzip).
+ */
+export async function compressGzip(data: Uint8Array): Promise<Blob> {
+    const stream = new ReadableStream({
+        start(controller) {
+            controller.enqueue(data);
+            controller.close();
+        }
+    });
+
+    const compressedStream = stream.pipeThrough(
+        new CompressionStream("gzip") as any
+    );
+
+    const reader = compressedStream.getReader();
+    const chunks: Uint8Array[] = [];
+
+    let result = await reader.read();
+    while (!result.done) {
+        chunks.push(result.value as Uint8Array);
+        result = await reader.read();
+    }
+
+    const totalLength = chunks.reduce((acc, curr) => acc + curr.length, 0);
+    const compressedData = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+        compressedData.set(chunk, offset);
+        offset += chunk.length;
+    }
+
+    return new Blob([compressedData], { type: "application/gzip" });
+}
+
+/**
+ * Trigger a browser file download for a Blob.
+ */
+export function triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/**
  * Decompress gzip data using the Compression Streams API.
  * Mirrors LoadManager._decompressGzip.
  */
@@ -183,4 +233,76 @@ function storeInIndexedDB(key: string, data: ArrayBuffer): Promise<void> {
             }
         };
     });
+}
+
+
+/**
+ * Delete a saved world from the AssetStore.
+ * Opens a new AssetStore connection, deletes, and closes.
+ */
+export async function deleteWorldFromStore(worldName: string): Promise<void> {
+    const store = new AssetStore();
+    try {
+        await store.open();
+        await store.deleteSavedWorld(worldName);
+    } finally {
+        store.close();
+    }
+}
+
+/**
+ * Export a saved world as a tar.gz file download.
+ *
+ * Steps:
+ * 1. Open AssetStore, list all keys for the world
+ * 2. Retrieve each asset's data
+ * 3. Build tar archive with TarUtils.createTarArchive
+ * 4. Compress with gzip via CompressionStream
+ * 5. Trigger browser download as {worldName}.tar.gz
+ *
+ * @throws Error with descriptive message on failure at any step
+ */
+export async function exportWorldAsTarGz(worldName: string): Promise<void> {
+    const store = new AssetStore();
+    try {
+        await store.open();
+
+        // Step 1: List all asset keys for this world
+        const keys = await store.listSavedKeys(worldName);
+        if (keys.length === 0) {
+            throw new Error("No assets found for this world");
+        }
+
+        // Step 2: Retrieve all asset data
+        const files: Array<{ filename: string; data: Uint8Array }> = [];
+        for (const key of keys) {
+            const data = await store.getSavedAsset(worldName, key);
+            if (data !== null) {
+                files.push({ filename: key, data });
+            }
+        }
+
+        // Step 3: Create tar archive
+        let tarData: Uint8Array;
+        try {
+            tarData = await createTarArchive(files);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            throw new Error("Archive creation failed: " + msg);
+        }
+
+        // Step 4: Compress with gzip
+        let gzipBlob: Blob;
+        try {
+            gzipBlob = await compressGzip(tarData);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            throw new Error("Compression failed: " + msg);
+        }
+
+        // Step 5: Trigger download
+        triggerDownload(gzipBlob, `${worldName}.tar.gz`);
+    } finally {
+        store.close();
+    }
 }

@@ -49,6 +49,86 @@ export interface EmbeddedTextureEntry {
 
 export class AssetCollector {
     /**
+     * Deep-scan any object/array structure and collect all unique string values
+     * starting with `vishva/` as server asset entries.
+     *
+     * This is a generic deep-traversal that finds server-relative asset URLs
+     * regardless of where they appear in the object tree (CubeTexture files arrays,
+     * VishvaSerialized sound references, etc.).
+     *
+     * Skips strings starting with `assets/` (already rewritten), `data:` (data URIs),
+     * or `blob:` (blob URLs).
+     *
+     * @param obj Any object or array to deep-scan (scene JSON, VishvaSerialized, etc.)
+     * @param baseUrl The base URL for resolving relative paths to absolute fetch URLs
+     * @returns Deduplicated list of asset entries with resolved fetchUrl and unique archiveFilename
+     */
+    collectServerAssets(obj: object, baseUrl: string): AssetEntry[] {
+        const urls = new Set<string>();
+        this._deepCollectVishvaPaths(obj, urls);
+        return this._buildEntries(urls, baseUrl);
+    }
+
+    /**
+     * Recursively traverse an object/array structure, collecting all string values
+     * that start with `vishva/` into the provided Set for deduplication.
+     * Skips strings starting with `assets/`, `data:`, or `blob:`.
+     */
+    private _deepCollectVishvaPaths(obj: any, urls: Set<string>): void {
+        if (obj === null || obj === undefined) return;
+
+        if (Array.isArray(obj)) {
+            for (let i = 0; i < obj.length; i++) {
+                const value = obj[i];
+                if (typeof value === "string") {
+                    if (this._isServerAssetString(value)) {
+                        urls.add(value);
+                    }
+                } else if (typeof value === "object" && value !== null) {
+                    this._deepCollectVishvaPaths(value, urls);
+                }
+            }
+        } else if (typeof obj === "object") {
+            for (const key of Object.keys(obj)) {
+                const value = obj[key];
+                if (typeof value === "string") {
+                    if (this._isServerAssetString(value)) {
+                        urls.add(value);
+                    }
+                } else if (typeof value === "object" && value !== null) {
+                    this._deepCollectVishvaPaths(value, urls);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determine if a string value is a server asset path that should be collected.
+     * Must start with `vishva/` and NOT start with `assets/`, `data:`, or `blob:`.
+     * Must NOT be under `vishva/assets/data/` or `vishva/assets/blob/` (those are
+     * generated archive paths for embedded/blob textures, not server-fetchable URLs).
+     * Must have a file extension (last path segment contains a dot) — paths without
+     * extensions are CubeTexture base paths that aren't actual fetchable files.
+     */
+    private _isServerAssetString(value: string): boolean {
+        if (!value.startsWith("vishva/") ||
+            value.startsWith("assets/") ||
+            value.startsWith("data:") ||
+            value.startsWith("blob:")) {
+            return false;
+        }
+        // Skip generated archive paths — these are not on the server
+        if (value.startsWith("vishva/assets/data/") ||
+            value.startsWith("vishva/assets/blob/")) {
+            return false;
+        }
+        // Require a file extension — skip CubeTexture base paths like
+        // "vishva/assets/curated/skyboxes/TropicalSunnyDay/TropicalSunnyDay"
+        const lastSegment = value.substring(value.lastIndexOf("/") + 1);
+        return lastSegment.includes(".");
+    }
+
+    /**
      * Scan the serialized scene object and collect all asset references.
      * @param sceneObj The serialized scene JSON object
      * @param baseUrl The base URL for resolving relative paths
@@ -128,10 +208,9 @@ export class AssetCollector {
             const tex = entry.textureObj;
             // Remove the base64String field
             delete tex.base64String;
-            // Set name and url to the archive-relative path
-            const archivePath = `assets/${entry.archiveFilename}`;
-            tex.name = archivePath;
-            tex.url = archivePath;
+            // Set name and url to the structured archive path
+            tex.name = entry.archiveFilename;
+            tex.url = entry.archiveFilename;
         }
     }
 
@@ -175,8 +254,8 @@ export class AssetCollector {
             if (typeof tex.base64String === "string" && tex.base64String.startsWith("data:")) {
                 continue;
             }
-            // Skip already-archived textures
-            if (typeof tex.name === "string" && tex.name.startsWith("assets/")) {
+            // Skip already-archived textures (old flat format or new structured format)
+            if (typeof tex.name === "string" && (tex.name.startsWith("assets/") || tex.name.startsWith("vishva/assets/"))) {
                 continue;
             }
             this._maybeAddBlobEntry(tex, entries, seenBlobUrls, usedFilenames);
@@ -199,8 +278,8 @@ export class AssetCollector {
                     if (typeof value.base64String === "string" && value.base64String.startsWith("data:")) {
                         continue;
                     }
-                    // Skip already-archived textures
-                    if (typeof value.name === "string" && value.name.startsWith("assets/")) {
+                    // Skip already-archived textures (old flat format or new structured format)
+                    if (typeof value.name === "string" && (value.name.startsWith("assets/") || value.name.startsWith("vishva/assets/"))) {
                         continue;
                     }
                     this._maybeAddBlobEntry(value, entries, seenBlobUrls, usedFilenames);
@@ -236,10 +315,10 @@ export class AssetCollector {
     /**
      * Generate a clean archive filename from a blob URL.
      * Extracts the UUID portion from the blob URL (the part after the last `/`)
-     * and uses it as the filename with a `.bin` extension.
+     * and uses it as the filename with a `.bin` extension under vishva/assets/blob/.
      *
      * Example: blob:http://localhost:8080/a1b2c3d4-e5f6-7890-abcd-ef1234567890
-     *        → a1b2c3d4-e5f6-7890-abcd-ef1234567890.bin
+     *        → vishva/assets/blob/a1b2c3d4-e5f6-7890-abcd-ef1234567890.bin
      */
     private _generateBlobFilename(blobUrl: string, usedFilenames: Map<string, number>): string {
         // Extract the UUID portion — the part after the last "/"
@@ -254,7 +333,7 @@ export class AssetCollector {
             uuidPart = "blob_texture";
         }
 
-        const basename = `${uuidPart}.bin`;
+        const basename = `vishva/assets/blob/${uuidPart}.bin`;
         return this._disambiguateFilename(basename, usedFilenames);
     }
 
@@ -306,6 +385,7 @@ export class AssetCollector {
 
     /**
      * Generate a filename for an embedded texture based on its name and MIME type.
+     * Places embedded textures under vishva/assets/data/ subdirectory.
      */
     private _generateEmbeddedFilename(
         texName: string,
@@ -318,8 +398,8 @@ export class AssetCollector {
         const ext = this._mimeToExtension(mimeType);
 
         // Clean up the texture name to make a valid filename
-        // Strip any existing path prefix (e.g., "assets/")
-        let cleanName = texName.replace(/^assets\//, "");
+        // Strip any existing path prefix (e.g., "assets/", "vishva/assets/data/")
+        let cleanName = texName.replace(/^(vishva\/assets\/data\/|assets\/)/, "");
         // Remove any existing extension
         const dotIdx = cleanName.lastIndexOf(".");
         if (dotIdx > 0) {
@@ -330,7 +410,7 @@ export class AssetCollector {
         // Trim and ensure non-empty
         cleanName = cleanName.trim() || "embedded_texture";
 
-        const basename = `${cleanName}${ext}`;
+        const basename = `vishva/assets/data/${cleanName}${ext}`;
         return this._disambiguateFilename(basename, usedFilenames);
     }
 
@@ -346,12 +426,12 @@ export class AssetCollector {
             if (typeof tex.base64String === "string" && tex.base64String.startsWith("data:")) {
                 continue;
             }
-            if (typeof tex.name === "string" && tex.name && !tex.name.startsWith("assets/")) {
+            if (typeof tex.name === "string" && tex.name && !tex.name.startsWith("assets/") && !tex.name.startsWith("vishva/assets/")) {
                 if (!this._isBlobUrl(tex.name)) {
                     urls.add(tex.name);
                 }
             }
-            if (typeof tex.url === "string" && tex.url && !tex.url.startsWith("assets/")) {
+            if (typeof tex.url === "string" && tex.url && !tex.url.startsWith("assets/") && !tex.url.startsWith("vishva/assets/")) {
                 if (!this._isBlobUrl(tex.url)) {
                     urls.add(tex.url);
                 }
@@ -371,8 +451,15 @@ export class AssetCollector {
                     if (typeof value.base64String === "string" && value.base64String.startsWith("data:")) {
                         continue;
                     }
-                    if (typeof value.name === "string" && value.name && !value.name.startsWith("assets/")) {
+                    if (typeof value.name === "string" && value.name && !value.name.startsWith("assets/") && !value.name.startsWith("vishva/assets/")) {
                         if (!this._isBlobUrl(value.name)) {
+                            // Skip CubeTexture base paths (no file extension) — these are not
+                            // fetchable files. The actual face images come from the files[] array
+                            // and are collected by collectServerAssets().
+                            const lastSeg = value.name.substring(value.name.lastIndexOf("/") + 1);
+                            if (!lastSeg.includes(".")) {
+                                continue;
+                            }
                             urls.add(value.name);
                         }
                     }
@@ -489,6 +576,11 @@ export class AssetCollector {
         // Strip query strings and fragments
         let cleanUrl = originalUrl.split("?")[0].split("#")[0];
 
+        // Server assets with vishva/assets/ prefix: preserve the full structured path
+        if (cleanUrl.startsWith("vishva/assets/")) {
+            return this._disambiguateFilename(cleanUrl, usedFilenames);
+        }
+
         // Extract basename (last segment after /)
         const segments = cleanUrl.split("/");
         let basename = segments[segments.length - 1] || "asset";
@@ -507,7 +599,7 @@ export class AssetCollector {
         const mimeType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
 
         const ext = this._mimeToExtension(mimeType);
-        const basename = `data_asset${ext}`;
+        const basename = `vishva/assets/data/data_asset${ext}`;
 
         return this._disambiguateFilename(basename, usedFilenames);
     }

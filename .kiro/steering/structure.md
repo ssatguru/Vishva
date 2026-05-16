@@ -47,6 +47,10 @@ src/
     SnaML.ts / SnaUI.ts     # SNA behavior editor UI
     SoundML.ts / SoundUI.ts # Sound management UI
     TextureML.ts / TextureUI.ts          # Texture management UI
+    WorldLauncher.ts        # World browser UI (lists saved worlds from AssetStore)
+    WorldLauncherLogic.ts   # World launcher logic (reads VishvaAssetStore/saved)
+    SavePromptUI.ts         # Save prompt dialog UI
+    SavePromptLogic.ts      # Save prompt logic (world name normalization, defaults)
     HelpML.ts               # Help dialog markup
     InternalAssetsUI.ts     # Internal asset browser
     ItemListUI.ts           # Item list management
@@ -61,6 +65,7 @@ src/
     SaveManager.ts          # World save (download, IndexedDB, standalone archive)
     LoadManager.ts          # World/asset loading, drag-and-drop
     ProgressManager.ts      # Loading progress tracking
+    AssetStore.ts           # IndexedDB-backed asset storage (VishvaAssetStore database, session + saved stores)
     AssetCollector.ts       # Collects assets referenced by the scene for archiving
     AssetResolver.ts        # Resolves asset paths and URLs
     PathRewriter.ts         # Rewrites asset paths for portability (e.g., archive export)
@@ -95,13 +100,19 @@ Test files live alongside their source files using these conventions:
 - `*.property.test.ts` — Property-based tests (fast-check + Vitest)
 
 Current test coverage:
+- `managers/AssetStore.test.ts`
 - `managers/AssetCollector.test.ts`, `managers/AssetCollector.property.test.ts`
+- `managers/AssetCollector.serverAssets.property.test.ts`, `managers/AssetCollector.serverAssets.preservation.property.test.ts`
+- `managers/AssetCollector.blobfix.property.test.ts`
 - `managers/AssetResolver.test.ts`, `managers/AssetResolver.property.test.ts`
 - `managers/PathRewriter.test.ts`, `managers/PathRewriter.property.test.ts`
 - `managers/AssetPresenceDetection.property.test.ts`
 - `managers/SaveManager.property.test.ts`
 - `managers/TarRoundTrip.property.test.ts`
+- `managers/LoadManager.preservation.property.test.ts`, `managers/LoadManager.clearScene.property.test.ts`
+- `managers/LoadManager.pageReload.test.ts`
 - `gui/UploadUI.property.test.ts`
+- `gui/WorldLauncher.test.ts`, `gui/WorldLauncher.property.test.ts`
 
 ## Architecture Patterns
 
@@ -110,4 +121,4 @@ Current test coverage:
 - **Serialization**: Vishva extends BabylonJS scene serialization with `VishvaSerialized` for SNA data, avatar state, ground spreads, GUI settings, and object IDs. Backward compatibility with tag-based object identification is maintained alongside the newer `ObjectIdMap` approach.
 - **Singleton access**: `Vishva.vishva` is a static reference to the single Vishva instance. `SNAManager.getSNAManager()` is a singleton accessor.
 - **No framework**: The UI is built with vanilla DOM manipulation and W3.CSS classes. No component framework.
-- **Asset pipeline**: `AssetCollector` gathers scene assets → `AssetResolver` resolves URLs → `PathRewriter` normalizes paths → `TarUtils` packages into archives for standalone export.
+- **Asset pipeline**: `AssetCollector` gathers scene assets → `AssetResolver` resolves URLs → `PathRewriter` normalizes paths → `TarUtils` packages into archives for standalone export. For IndexedDB saves, `AssetStore` (`VishvaAssetStore` database) provides persistent browser storage with two object stores: `session` (active world working set, cleared on each load) and `saved` (explicitly-saved worlds, keyed by `{worldName}/{assetPath}`). The `WorldLauncher` reads from the `saved` store and routes via `?world=__saved:<name>` URL parameters.

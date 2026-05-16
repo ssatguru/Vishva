@@ -1,12 +1,13 @@
 /**
- * Utility functions for detecting and normalizing .tar.gz file extensions.
+ * Utility functions for detecting and normalizing world file extensions.
  * Used to route world files through the world loading pipeline.
  */
 
 const TAR_GZ_REGEX = /\.tar\.gz$/i;
+const JSON_REGEX = /\.json$/i;
 
 /**
- * Determines if a filename represents a world file (.tar.gz).
+ * Determines if a filename represents a compressed world archive (.tar.gz).
  * Case-insensitive check for the compound extension.
  *
  * Returns true iff the filename ends with `.tar.gz` (any case).
@@ -14,6 +15,22 @@ const TAR_GZ_REGEX = /\.tar\.gz$/i;
  */
 export function isTarGzFile(filename: string): boolean {
     return TAR_GZ_REGEX.test(filename);
+}
+
+/**
+ * Determines if a filename represents a JSON world file (.json).
+ * Case-insensitive check.
+ */
+export function isJsonWorldFile(filename: string): boolean {
+    return JSON_REGEX.test(filename);
+}
+
+/**
+ * Determines if a filename represents any kind of world file
+ * (.tar.gz archive or .json scene file). Case-insensitive.
+ */
+export function isWorldFile(filename: string): boolean {
+    return isTarGzFile(filename) || isJsonWorldFile(filename);
 }
 
 /**

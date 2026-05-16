@@ -10,7 +10,7 @@ import { EventManager } from "../eventing/EventManager";
 import { AssetResolver } from "./AssetResolver";
 import { AssetStore } from "./AssetStore";
 import { extractTarArchive } from "./TarUtils";
-import { isTarGzFile } from "./FileValidator";
+import { isTarGzFile, isJsonWorldFile } from "./FileValidator";
 
 declare var curatedConfig: Object;
 
@@ -216,6 +216,104 @@ export class LoadManager {
     }
 
     /**
+     * Validate, store a JSON world file in IndexedDB, and trigger page reload.
+     * Similar to loadWorldFromFile but for legacy .json scene files.
+     */
+    public async loadWorldFromJsonFile(file: File): Promise<void> {
+        try {
+            this.vishva.progressManager.show("Preparing world for reload...");
+
+            const text = await file.text();
+
+            // Basic validation: must be valid JSON with a VishvaSerialized key
+            let parsed: any;
+            try {
+                parsed = JSON.parse(text);
+            } catch (e) {
+                this.vishva.progressManager.hide();
+                alert("Not a valid Vishva world file: invalid JSON");
+                return;
+            }
+
+            if (!parsed["VishvaSerialized"]) {
+                this.vishva.progressManager.hide();
+                alert("Not a valid Vishva world file: missing VishvaSerialized data");
+                return;
+            }
+
+            // Store the raw text as ArrayBuffer in IndexedDB
+            const encoder = new TextEncoder();
+            const arrayBuffer = encoder.encode(text).buffer;
+
+            try {
+                await this._storeInIndexedDB("__uploaded_json", arrayBuffer);
+            } catch (e) {
+                this.vishva.progressManager.hide();
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                alert("Failed to save world for reload: " + errorMessage);
+                return;
+            }
+
+            // Trigger page reload with the __uploaded_json flag
+            window.location.search = "?world=__uploaded_json";
+
+        } catch (e) {
+            this.vishva.progressManager.hide();
+            console.error("Error preparing JSON world for reload:", e);
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            alert("Failed to load world: " + errorMessage);
+        }
+    }
+
+    /**
+     * Load a JSON world from IndexedDB after page reload.
+     * Called by Vishva constructor when sceneFile === "__uploaded_json".
+     * Retrieves the stored JSON text, extracts VishvaSerialized, and loads the scene.
+     * Falls back to empty world if data is missing or invalid.
+     * Always cleans up IndexedDB entry and URL parameter.
+     */
+    public async loadUploadedJsonWorld(): Promise<void> {
+        this.vishva.progressManager.show("Loading World");
+        try {
+            const data = await this._getFromIndexedDB("__uploaded_json");
+
+            if (data === null) {
+                console.warn("No uploaded JSON world found in storage");
+                this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                return;
+            }
+
+            try {
+                const text = new TextDecoder().decode(data);
+                const sceneObj = JSON.parse(text);
+
+                // Extract VishvaSerialized from the merged JSON
+                const vishvaData = sceneObj["VishvaSerialized"];
+                if (!vishvaData) {
+                    alert("Not a valid Vishva world file: missing VishvaSerialized data");
+                    this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                    return;
+                }
+
+                // Load using the same path as loadVishvaPartFromObjects
+                this.loadVishvaPartFromObjects(vishvaData, sceneObj);
+            } catch (e) {
+                console.error("Error loading uploaded JSON world:", e);
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                alert("Uploaded world data is corrupted: " + errorMessage);
+                this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+            }
+        } finally {
+            try {
+                await this._deleteFromIndexedDB("__uploaded_json");
+            } catch (e) {
+                console.error("Failed to delete uploaded JSON world from IndexedDB:", e);
+            }
+            history.replaceState({}, "", window.location.pathname);
+        }
+    }
+
+    /**
      * Load a world from IndexedDB after page reload.
      * Called by Vishva constructor when sceneFile === "__uploaded".
      * Retrieves, decompresses, extracts, validates, and loads the world.
@@ -343,6 +441,38 @@ export class LoadManager {
 
             // Get all saved keys for this world
             const savedKeys = await assetStore.listSavedKeys(worldName);
+
+            // Check if this is a JSON-only world (legacy format stored with __world.json)
+            const jsonWorldKey = savedKeys.find(k => k === "__world.json");
+            if (jsonWorldKey) {
+                const jsonRaw = await assetStore.getSavedAsset(worldName, "__world.json");
+                if (!jsonRaw) {
+                    this.vishva.progressManager.hide();
+                    alert("Saved world data is missing or corrupted");
+                    this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                    return;
+                }
+
+                const jsonText = new TextDecoder().decode(jsonRaw);
+                const sceneObj = JSON.parse(jsonText);
+                const vishvaData = sceneObj["VishvaSerialized"];
+
+                if (!vishvaData) {
+                    this.vishva.progressManager.hide();
+                    alert("Saved world is invalid: missing VishvaSerialized data");
+                    this.vishva.loadBabylonjsPart(this.vishva.scene, true);
+                    return;
+                }
+
+                // Store AssetStore reference for SaveManager
+                this.vishva._assetStore = assetStore;
+
+                await this.vishva.progressManager.update("Loading scene...", 90);
+
+                // Load without asset resolver — assets come from server
+                this.loadVishvaPartFromObjects(vishvaData, sceneObj);
+                return;
+            }
 
             // Separate metadata files from asset files
             const vishvaKey = savedKeys.find(k => k === "Vishva.json");
@@ -1157,7 +1287,13 @@ export class LoadManager {
                 if (worldFile) {
                     this.loadWorldFromFile(worldFile);
                 } else {
-                    this.processDroppedFiles(files);
+                    // Check if any dropped file is a .json world file
+                    const jsonWorldFile = files.find(f => isJsonWorldFile(f.name));
+                    if (jsonWorldFile) {
+                        this.loadWorldFromJsonFile(jsonWorldFile);
+                    } else {
+                        this.processDroppedFiles(files);
+                    }
                 }
             } else if (e.dataTransfer && e.dataTransfer.files.length > 0) {
                 const files = Array.from(e.dataTransfer.files);
@@ -1167,7 +1303,13 @@ export class LoadManager {
                 if (worldFile) {
                     this.loadWorldFromFile(worldFile);
                 } else {
-                    this.processDroppedFiles(files);
+                    // Check if any dropped file is a .json world file
+                    const jsonWorldFile = files.find(f => isJsonWorldFile(f.name));
+                    if (jsonWorldFile) {
+                        this.loadWorldFromJsonFile(jsonWorldFile);
+                    } else {
+                        this.processDroppedFiles(files);
+                    }
                 }
             }
         });

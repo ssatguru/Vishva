@@ -49,16 +49,16 @@ describe("Property 1: Launcher display decision is a complete partition", () => 
 });
 
 /**
- * Feature: world-launcher-chooser, Property 2: Server world list processing preserves all .tar.gz entries
+ * Feature: world-launcher-chooser, Property 2: Server world list processing preserves all world file entries
  *
  * For any array of filenames, processServerWorldList returns an entry for every filename
- * that ends with .tar.gz (case-insensitive) and excludes all filenames that do not.
- * The returned entries are sorted alphabetically by display name, and each entry's
- * filename field exactly matches the original input filename.
+ * that ends with .tar.gz (case-insensitive) or .json (case-insensitive) and excludes all
+ * filenames that do not. The returned entries are sorted alphabetically by display name,
+ * and each entry's display field is the full filename.
  *
  * **Validates: Requirements 3.2**
  */
-describe("Property 2: Server world list processing preserves all .tar.gz entries", () => {
+describe("Property 2: Server world list processing preserves all world file entries", () => {
     // Generator for a base name (alphanumeric with dashes/underscores)
     const baseNameArb = fc.stringMatching(/^[a-zA-Z0-9_-]{1,20}$/);
 
@@ -68,10 +68,19 @@ describe("Property 2: Server world list processing preserves all .tar.gz entries
         fc.constantFrom(".tar.gz", ".TAR.GZ", ".Tar.Gz", ".tar.GZ", ".TAR.gz")
     ).map(([name, ext]) => `${name}${ext}`);
 
-    // Generator for non-.tar.gz filenames
-    const nonTarGzFilenameArb = fc.oneof(
+    // Generator for .json filenames with various casings
+    const jsonFilenameArb = fc.tuple(
+        baseNameArb,
+        fc.constantFrom(".json", ".JSON", ".Json")
+    ).map(([name, ext]) => `${name}${ext}`);
+
+    // Generator for world filenames (either .tar.gz or .json)
+    const worldFilenameArb = fc.oneof(tarGzFilenameArb, jsonFilenameArb);
+
+    // Generator for non-world filenames (not .tar.gz and not .json)
+    const nonWorldFilenameArb = fc.oneof(
         // Plain filenames with other extensions
-        fc.tuple(baseNameArb, fc.constantFrom(".txt", ".json", ".zip", ".gz", ".tar", ".png", ".babylon"))
+        fc.tuple(baseNameArb, fc.constantFrom(".txt", ".zip", ".gz", ".tar", ".png", ".babylon"))
             .map(([name, ext]) => `${name}${ext}`),
         // Filenames with no extension
         baseNameArb,
@@ -82,28 +91,28 @@ describe("Property 2: Server world list processing preserves all .tar.gz entries
 
     // Generator for mixed arrays of filenames
     const filenameArrayArb = fc.array(
-        fc.oneof(tarGzFilenameArb, nonTarGzFilenameArb),
+        fc.oneof(worldFilenameArb, nonWorldFilenameArb),
         { minLength: 0, maxLength: 30 }
     );
 
-    it("output contains exactly the .tar.gz entries from input", () => {
+    it("output contains exactly the .tar.gz and .json entries from input", () => {
         fc.assert(
             fc.property(filenameArrayArb, (filenames) => {
                 const result = processServerWorldList(filenames);
 
-                // Count expected .tar.gz entries (case-insensitive)
-                const expectedTarGz = filenames.filter(f => /\.tar\.gz$/i.test(f));
+                // Count expected world entries (case-insensitive)
+                const expectedWorlds = filenames.filter(f => /\.tar\.gz$/i.test(f) || /\.json$/i.test(f));
 
-                // Result should have exactly as many entries as .tar.gz files in input
-                expect(result.length).toBe(expectedTarGz.length);
+                // Result should have exactly as many entries as world files in input
+                expect(result.length).toBe(expectedWorlds.length);
 
-                // Every result filename should be from the original .tar.gz set
+                // Every result filename should be from the original world set
                 for (const entry of result) {
-                    expect(expectedTarGz).toContain(entry.filename);
+                    expect(expectedWorlds).toContain(entry.filename);
                 }
 
-                // Every .tar.gz input should appear in the result
-                for (const f of expectedTarGz) {
+                // Every world input should appear in the result
+                for (const f of expectedWorlds) {
                     expect(result.some(entry => entry.filename === f)).toBe(true);
                 }
             }),
@@ -124,23 +133,22 @@ describe("Property 2: Server world list processing preserves all .tar.gz entries
         );
     });
 
-    it("display name is the filename with .tar.gz extension stripped", () => {
+    it("display name is the full filename", () => {
         fc.assert(
-            fc.property(fc.array(tarGzFilenameArb, { minLength: 1, maxLength: 20 }), (filenames) => {
+            fc.property(fc.array(worldFilenameArb, { minLength: 1, maxLength: 20 }), (filenames) => {
                 const result = processServerWorldList(filenames);
 
                 for (const entry of result) {
-                    const expectedDisplay = entry.filename.replace(/\.tar\.gz$/i, "");
-                    expect(entry.display).toBe(expectedDisplay);
+                    expect(entry.display).toBe(entry.filename);
                 }
             }),
             { numRuns: 100 }
         );
     });
 
-    it("non-.tar.gz entries are never included in output", () => {
+    it("non-world entries are never included in output", () => {
         fc.assert(
-            fc.property(fc.array(nonTarGzFilenameArb, { minLength: 1, maxLength: 20 }), (filenames) => {
+            fc.property(fc.array(nonWorldFilenameArb, { minLength: 1, maxLength: 20 }), (filenames) => {
                 const result = processServerWorldList(filenames);
                 expect(result.length).toBe(0);
             }),

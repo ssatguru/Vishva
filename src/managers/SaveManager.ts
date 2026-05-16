@@ -65,6 +65,246 @@ export class SaveManager {
         return URL.createObjectURL(zipBlob);
     }
 
+    /**
+     * Save the world as a single JSON file (legacy format).
+     * Produces a BabylonJS scene serialization with VishvaSerialized merged
+     * as a top-level key. No assets are bundled.
+     * Returns an object URL for the JSON blob, or null on failure.
+     */
+    public async saveWorldAsJson(): Promise<string> {
+        if (this.vishva.editControl != null) {
+            DialogMgr.showAlertDiag("cannot save during edit");
+            return null;
+        }
+
+        if (!this.vishva.isFocusOnAv) {
+            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to switch focus to avatar and try again");
+            return null;
+        }
+
+        this.vishva.progressManager.show("Saving World (JSON)", "Preparing scene...");
+        await this.vishva.progressManager.update(undefined, 0);
+
+        this.removeRedundantCameras();
+        this.removeInstancesFromShadow();
+        this.renameMeshIds();
+        this.cleanupSkels();
+        this.resetSkels(this.vishva.scene);
+        this.cleanupMats();
+
+        await this.vishva.progressManager.update("Creating world data...", 30);
+
+        // Build VishvaSerialized
+        let vishvaSerialized = new VishvaSerialized(this.vishva);
+        vishvaSerialized.bVer = Engine.Version;
+        vishvaSerialized.vVer = this.vishva.constructor.version;
+        vishvaSerialized.settings.cameraCollision = this.vishva._cameraCollision;
+        vishvaSerialized.settings.autoEditMenu = this.vishva.autoEditMenu;
+        vishvaSerialized.guiSettings = this.vishva.vishvaGUI.guiSettings;
+        vishvaSerialized.misc.activeCameraTarget = this.vishva.arcCamera.target;
+        vishvaSerialized.misc.skyColor = this.vishva.skyColor;
+        vishvaSerialized.misc.skyBright = this.vishva.skyBright;
+        vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
+        vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+
+        // Capture object IDs
+        vishvaSerialized.objectIds = new ObjectIdMap();
+        if (this.vishva.avatar) vishvaSerialized.objectIds.avatarId = this.vishva.avatar.id;
+        if (this.vishva.avatarSkeleton) vishvaSerialized.objectIds.skeletonId = this.vishva.avatarSkeleton.id;
+        if (this.vishva.skybox) vishvaSerialized.objectIds.skyboxId = this.vishva.skybox.id;
+        if (this.vishva.ground) vishvaSerialized.objectIds.groundId = this.vishva.ground.id;
+        if (this.vishva.sun) vishvaSerialized.objectIds.sunId = this.vishva.sun.id;
+        if (this.vishva.arcCamera) vishvaSerialized.objectIds.cameraId = this.vishva.arcCamera.id;
+
+        for (let mesh of this.vishva.scene.meshes) {
+            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                vishvaSerialized.objectIds.spawnPointId = mesh.id;
+                break;
+            }
+        }
+
+        // Capture mesh metadata
+        vishvaSerialized.meshMetadata = {};
+        for (let mesh of this.vishva.scene.meshes) {
+            if (Tags.HasTags(mesh)) {
+                const tags = Tags.GetTags(mesh, true).split(" ");
+                const metadata = new MeshMetadata();
+                metadata.meshId = mesh.id;
+                for (let tag of tags) {
+                    if (tag === "Vishva.prim") metadata.isPrimitive = true;
+                    if (tag === "Vishva.internal") metadata.isInternal = true;
+                    if (tag === "invisible") metadata.isInvisible = true;
+                    if (tag.startsWith("Vishva.uid.")) metadata.vishvaUid = tag;
+                }
+                if (metadata.isPrimitive || metadata.isInternal ||
+                    metadata.isInvisible || metadata.vishvaUid) {
+                    vishvaSerialized.meshMetadata[mesh.id] = metadata;
+                }
+            }
+        }
+
+        await this.vishva.progressManager.update("Serializing scene...", 60);
+
+        // Serialize the BabylonJS scene
+        Texture.ForceSerializeBuffers = false;
+        let sceneObj: any = SceneSerializer.Serialize(this.vishva.scene);
+        this.removeSounds(sceneObj);
+        this.removeActuatorTextBarMat(sceneObj);
+
+        // Merge VishvaSerialized into the scene object (legacy format)
+        sceneObj["VishvaSerialized"] = vishvaSerialized;
+
+        await this.vishva.progressManager.update("Generating file...", 90);
+
+        const jsonString = SaveManager._stringifyWithPrecision(sceneObj);
+        const blob = new Blob([jsonString], { type: "application/json" });
+
+        this.addInstancesToShadow();
+
+        await this.vishva.progressManager.update(undefined, 100);
+        setTimeout(() => {
+            this.vishva.progressManager.hide();
+        }, 500);
+
+        return URL.createObjectURL(blob);
+    }
+
+    /**
+     * Save the world as a single JSON file (legacy format) to browser IndexedDB.
+     * No assets are bundled — they are expected to be loaded from the server.
+     * Stores a single entry with key "__world.json" under the world name.
+     */
+    public async saveWorldToIndexedDBAsJson(worldName?: string): Promise<boolean> {
+        if (this.vishva.editControl != null) {
+            DialogMgr.showAlertDiag("cannot save during edit");
+            return false;
+        }
+
+        if (!this.vishva.isFocusOnAv) {
+            DialogMgr.showAlertDiag("cannot save. focus is not on avatar. press esc to switch focus to avatar and try again");
+            return false;
+        }
+
+        this.vishva.progressManager.show("Saving World (JSON) to Browser", "Preparing scene...");
+        await this.vishva.progressManager.update(undefined, 10);
+
+        try {
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const name = worldName || this.vishva.constructor.worldName || "world";
+            let assetStore: AssetStore | undefined = this.vishva._assetStore;
+
+            if (!assetStore) {
+                assetStore = new AssetStore();
+                try {
+                    await assetStore.open();
+                    this.vishva._assetStore = assetStore;
+                } catch (e) {
+                    console.error("AssetStore unavailable:", e);
+                    DialogMgr.showAlertDiag("Browser storage is unavailable");
+                    this.vishva.progressManager.hide();
+                    return false;
+                }
+            }
+
+            this.removeRedundantCameras();
+            this.removeInstancesFromShadow();
+            this.renameMeshIds();
+            this.cleanupSkels();
+            this.resetSkels(this.vishva.scene);
+            this.cleanupMats();
+
+            await this.vishva.progressManager.update("Creating world data...", 30);
+
+            // Build VishvaSerialized
+            let vishvaSerialized = new VishvaSerialized(this.vishva);
+            vishvaSerialized.bVer = Engine.Version;
+            vishvaSerialized.vVer = this.vishva.constructor.version;
+            vishvaSerialized.settings.cameraCollision = this.vishva._cameraCollision;
+            vishvaSerialized.settings.autoEditMenu = this.vishva.autoEditMenu;
+            vishvaSerialized.guiSettings = this.vishva.vishvaGUI.guiSettings;
+            vishvaSerialized.misc.activeCameraTarget = this.vishva.arcCamera.target;
+            vishvaSerialized.misc.skyColor = this.vishva.skyColor;
+            vishvaSerialized.misc.skyBright = this.vishva.skyBright;
+            vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
+            vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+
+            vishvaSerialized.objectIds = new ObjectIdMap();
+            if (this.vishva.avatar) vishvaSerialized.objectIds.avatarId = this.vishva.avatar.id;
+            if (this.vishva.avatarSkeleton) vishvaSerialized.objectIds.skeletonId = this.vishva.avatarSkeleton.id;
+            if (this.vishva.skybox) vishvaSerialized.objectIds.skyboxId = this.vishva.skybox.id;
+            if (this.vishva.ground) vishvaSerialized.objectIds.groundId = this.vishva.ground.id;
+            if (this.vishva.sun) vishvaSerialized.objectIds.sunId = this.vishva.sun.id;
+            if (this.vishva.arcCamera) vishvaSerialized.objectIds.cameraId = this.vishva.arcCamera.id;
+
+            for (let mesh of this.vishva.scene.meshes) {
+                if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                    vishvaSerialized.objectIds.spawnPointId = mesh.id;
+                    break;
+                }
+            }
+
+            vishvaSerialized.meshMetadata = {};
+            for (let mesh of this.vishva.scene.meshes) {
+                if (Tags.HasTags(mesh)) {
+                    const tags = Tags.GetTags(mesh, true).split(" ");
+                    const metadata = new MeshMetadata();
+                    metadata.meshId = mesh.id;
+                    for (let tag of tags) {
+                        if (tag === "Vishva.prim") metadata.isPrimitive = true;
+                        if (tag === "Vishva.internal") metadata.isInternal = true;
+                        if (tag === "invisible") metadata.isInvisible = true;
+                        if (tag.startsWith("Vishva.uid.")) metadata.vishvaUid = tag;
+                    }
+                    if (metadata.isPrimitive || metadata.isInternal ||
+                        metadata.isInvisible || metadata.vishvaUid) {
+                        vishvaSerialized.meshMetadata[mesh.id] = metadata;
+                    }
+                }
+            }
+
+            await this.vishva.progressManager.update("Serializing scene...", 60);
+
+            // Serialize the BabylonJS scene
+            Texture.ForceSerializeBuffers = false;
+            let sceneObj: any = SceneSerializer.Serialize(this.vishva.scene);
+            this.removeSounds(sceneObj);
+            this.removeActuatorTextBarMat(sceneObj);
+
+            // Merge VishvaSerialized into the scene object (legacy format)
+            sceneObj["VishvaSerialized"] = vishvaSerialized;
+
+            const jsonString = SaveManager._stringifyWithPrecision(sceneObj);
+            const jsonBuffer = new TextEncoder().encode(jsonString);
+
+            await this.vishva.progressManager.update("Saving to browser storage...", 80);
+
+            // Delete any existing world with this name first (to avoid leftover asset entries)
+            await assetStore.deleteSavedWorld(name);
+
+            // Save as a single entry with the special key "__world.json"
+            await assetStore.saveWorldBatch(name, [
+                { key: "__world.json", data: jsonBuffer }
+            ]);
+
+            this.addInstancesToShadow();
+
+            await this.vishva.progressManager.update(undefined, 100);
+            setTimeout(() => {
+                this.vishva.progressManager.hide();
+            }, 500);
+
+            DialogMgr.showAlertDiag(`World saved to browser as "${name}" (JSON only)`);
+            return true;
+        } catch (error) {
+            console.error("Error saving JSON world to IndexedDB:", error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            DialogMgr.showAlertDiag("Error saving world to browser: " + errorMessage);
+            this.vishva.progressManager.hide();
+            return false;
+        }
+    }
+
     public async saveWorldToIndexedDB(worldName?: string): Promise<boolean> {
         if (this.vishva.editControl != null) {
             DialogMgr.showAlertDiag("cannot save during edit");

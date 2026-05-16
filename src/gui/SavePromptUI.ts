@@ -7,7 +7,9 @@ import { getDefaultWorldName, isValidWorldName, normalizeWorldName } from "./Sav
 /**
  * UI class for the Save World Name Prompt dialog.
  * Displays a modal dialog that lets the user confirm or edit the world name
- * before saving to IndexedDB.
+ * before saving to IndexedDB. Offers two save formats:
+ * - Full (with assets) — stores scene + all assets in IndexedDB
+ * - JSON only — stores just the scene JSON (assets loaded from server)
  */
 export class SavePromptUI {
     private _dialog: VDiag;
@@ -44,36 +46,39 @@ export class SavePromptUI {
         container.appendChild(this._errorMsg);
 
         // Create modal dialog
-        this._dialog = new VDiag(container, "Save World", VDiag.center, "22em", "auto", "18em", true);
+        this._dialog = new VDiag(container, "Save World", VDiag.center, "24em", "auto", "18em", true);
 
-        // Add Save and Cancel buttons via VDiag's addButton (they appear in the footer)
+        // Add Cancel, Save JSON, and Save Full buttons via VDiag's addButton
         const cancelBtn = this._dialog.addButton("Cancel");
-        const saveBtn = this._dialog.addButton("Save");
+        const saveJsonBtn = this._dialog.addButton("Save (JSON only)");
+        const saveBtn = this._dialog.addButton("Save (with assets)");
 
         // Clear error when user modifies input
         this._nameInput.addEventListener("input", () => {
             this._errorMsg.innerText = "";
         });
 
-        // Save button click handler
+        // Save (with assets) button click handler
         saveBtn.onclick = async () => {
-            const rawValue = this._nameInput.value;
+            const name = this._validateAndGetName();
+            if (!name) return;
 
-            if (!isValidWorldName(rawValue)) {
-                this._errorMsg.innerText = "Name cannot be empty.";
-                return;
-            }
-
-            const normalizedName = normalizeWorldName(rawValue.trim());
-
-            // Hide dialog before starting save
             this.hide();
-
-            // Perform save
-            const success = await Vishva.vishva.saveManager.saveWorldToIndexedDB(normalizedName);
-
+            const success = await Vishva.vishva.saveManager.saveWorldToIndexedDB(name);
             if (success) {
-                Vishva.worldName = normalizedName;
+                Vishva.worldName = name;
+            }
+        };
+
+        // Save (JSON only) button click handler
+        saveJsonBtn.onclick = async () => {
+            const name = this._validateAndGetName();
+            if (!name) return;
+
+            this.hide();
+            const success = await Vishva.vishva.saveManager.saveWorldToIndexedDBAsJson(name);
+            if (success) {
+                Vishva.worldName = name;
             }
         };
 
@@ -84,12 +89,25 @@ export class SavePromptUI {
 
         // Also handle dialog close via the X button
         this._dialog.onHide(() => {
-            // No side effects on close — just ensure error is cleared for next open
             this._errorMsg.innerText = "";
         });
 
         // Start hidden
         this._dialog.hide(false);
+    }
+
+    /**
+     * Validate the name input and return the normalized name, or null if invalid.
+     */
+    private _validateAndGetName(): string | null {
+        const rawValue = this._nameInput.value;
+
+        if (!isValidWorldName(rawValue)) {
+            this._errorMsg.innerText = "Name cannot be empty.";
+            return null;
+        }
+
+        return normalizeWorldName(rawValue.trim());
     }
 
     /**

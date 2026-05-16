@@ -47,10 +47,10 @@ src/
     SnaML.ts / SnaUI.ts     # SNA behavior editor UI
     SoundML.ts / SoundUI.ts # Sound management UI
     TextureML.ts / TextureUI.ts          # Texture management UI
-    WorldLauncher.ts        # World browser UI (lists saved worlds from AssetStore)
-    WorldLauncherLogic.ts   # World launcher logic (reads VishvaAssetStore/saved)
-    SavePromptUI.ts         # Save prompt dialog UI
-    SavePromptLogic.ts      # Save prompt logic (world name normalization, defaults)
+    WorldLauncher.ts        # World browser UI (lists saved worlds from AssetStore, shows format type)
+    WorldLauncherLogic.ts   # World launcher logic (reads VishvaAssetStore/saved, processes server world list for .tar.gz and .json)
+    SavePromptUI.ts         # Save prompt dialog UI (world name + format choice: with assets or JSON only)
+    SavePromptLogic.ts      # Save prompt logic (world name normalization, strips .tar.gz/.json suffixes)
     HelpML.ts               # Help dialog markup
     InternalAssetsUI.ts     # Internal asset browser
     ItemListUI.ts           # Item list management
@@ -62,13 +62,14 @@ src/
     propspanel/             # Properties panel for selected mesh (General, Material, Physics, Animation, Lights, SNA)
 
   managers/                 # Subsystem managers
-    SaveManager.ts          # World save (download, IndexedDB, standalone archive)
-    LoadManager.ts          # World/asset loading, drag-and-drop
+    SaveManager.ts          # World save (download as tar.gz or JSON, browser IndexedDB save with or without assets, standalone archive)
+    LoadManager.ts          # World/asset loading, drag-and-drop, supports .tar.gz and .json world files
     ProgressManager.ts      # Loading progress tracking
     AssetStore.ts           # IndexedDB-backed asset storage (VishvaAssetStore database, session + saved stores)
     AssetCollector.ts       # Collects assets referenced by the scene for archiving
     AssetResolver.ts        # Resolves asset paths and URLs
     PathRewriter.ts         # Rewrites asset paths for portability (e.g., archive export)
+    FileValidator.ts        # File type detection (isTarGzFile, isJsonWorldFile, isWorldFile, normalizeTarGzExtension)
     TarUtils.ts             # Tar archive creation/extraction utilities
 
   eventing/                 # Simple pub/sub event system
@@ -122,3 +123,5 @@ Current test coverage:
 - **Singleton access**: `Vishva.vishva` is a static reference to the single Vishva instance. `SNAManager.getSNAManager()` is a singleton accessor.
 - **No framework**: The UI is built with vanilla DOM manipulation and W3.CSS classes. No component framework.
 - **Asset pipeline**: `AssetCollector` gathers scene assets → `AssetResolver` resolves URLs → `PathRewriter` normalizes paths → `TarUtils` packages into archives for standalone export. For IndexedDB saves, `AssetStore` (`VishvaAssetStore` database) provides persistent browser storage with two object stores: `session` (active world working set, cleared on each load) and `saved` (explicitly-saved worlds, keyed by `{worldName}/{assetPath}`). The `WorldLauncher` reads from the `saved` store and routes via `?world=__saved:<name>` URL parameters.
+- **Dual save formats**: Worlds can be saved/downloaded in two formats: (1) full archive with assets (tar.gz / IndexedDB with Vishva.json + Scene.babylon + asset entries), or (2) JSON-only legacy format (single merged scene JSON with VishvaSerialized as a top-level key, stored as `__world.json` in IndexedDB). JSON-only worlds rely on the server for assets.
+- **World file routing**: `FileValidator` provides `isTarGzFile()`, `isJsonWorldFile()`, and `isWorldFile()` for routing uploaded/dropped files. Upload and drag-and-drop detect both formats and route to the appropriate loader (`loadWorldFromFile` for tar.gz, `loadWorldFromJsonFile` for JSON). Both use a store-in-IndexedDB-then-reload pattern (`__uploaded` / `__uploaded_json`).

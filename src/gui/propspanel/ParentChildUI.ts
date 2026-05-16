@@ -20,7 +20,6 @@ export class ParentChildUI {
         let parentMesh: HTMLElement = document.getElementById("parentMesh");
         let removeParent: HTMLElement = document.getElementById("removeParent");
         let removeChildren: HTMLElement = document.getElementById("removeChildren");
-        let showTree: HTMLElement = document.getElementById("showTree");
 
         parentMesh.onclick = (e) => {
             let err: string = this._vishva.makeParent();
@@ -43,16 +42,6 @@ export class ParentChildUI {
             }
             return false;
         };
-        showTree.onclick = (e) => {
-            let il = this._vishvaGUI.showItemList();
-            il.onOpen(il._highlightSelected);
-            il.open();
-            //il._highlightSelected();
-
-        }
-
-
-
     }
 
 }

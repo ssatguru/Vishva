@@ -17,13 +17,13 @@ export class ItemListUI {
     //see search() for an explanation of this
     private _donotSearch: boolean = false;
 
-    constructor(vishva: Vishva) {
+    constructor(vishva: Vishva, modal:boolean=true) {
 
         this._vishva = vishva;
 
         this._updateTreeData();
 
-        this._itemsDiag = new VTreeDialog(this._vishva, "world", VDiag.leftCenter, this.treeData);
+        this._itemsDiag = new VTreeDialog(this._vishva, "world", VDiag.leftCenter, this.treeData,null,null,modal);
         this._itemsDiag.addTreeListener((f, p, l) => {
             let i: number = f.indexOf(",");
             f = f.substring(0, i);

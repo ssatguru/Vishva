@@ -153,7 +153,7 @@ export class VishvaGUI {
     private _items: ItemListUI;
     public showItemList(): ItemListUI {
         if (this._items == null) {
-            this._items = new ItemListUI(this._vishva);
+            this._items = new ItemListUI(this._vishva,false);
         }
         return this._items;
     }
@@ -200,12 +200,8 @@ export class VishvaGUI {
         // button to download world
         var downWorld: HTMLElement = document.getElementById("downWorld");
         downWorld.onclick = async (e) => {
-            var downloadURL: string = await this._vishva.saveWorld();
-            if (downloadURL == null) return true;
-            if (this._downloadDialog == null) this._createDownloadDiag();
-            this._downloadLink.href = downloadURL;
-            this._downloadLink.download = Vishva.worldName.replace(".tar.gz","")+".tar.gz";
-            this._downloadDialog.show();
+            if (this._downloadFormatDialog == null) this._createDownloadFormatDiag();
+            this._downloadFormatDialog.show();
             return false;
         };
 
@@ -243,7 +239,7 @@ export class VishvaGUI {
         let _navWorldAssets: HTMLElement = document.getElementById("navWorldAssets");
         _navWorldAssets.onclick = (e) => {
             if (this._items == null) {
-                this._items = new ItemListUI(this._vishva);
+                this._items = new ItemListUI(this._vishva,false);
             } else {
                 this._items.toggle();
             }
@@ -415,6 +411,58 @@ export class VishvaGUI {
 
     _downloadLink: HTMLAnchorElement;
     _downloadDialog: VDiag;
+    _downloadFormatDialog: VDiag;
+
+    private _createDownloadFormatDiag() {
+        const container = document.createElement("div");
+        container.style.padding = "1em";
+        container.style.textAlign = "center";
+
+        const msg = document.createElement("p");
+        msg.textContent = "Choose download format:";
+        container.appendChild(msg);
+
+        const btnContainer = document.createElement("div");
+        btnContainer.style.display = "flex";
+        btnContainer.style.justifyContent = "center";
+        btnContainer.style.gap = "1em";
+        btnContainer.style.marginTop = "1em";
+
+        const tarBtn = document.createElement("button");
+        tarBtn.className = "w3-button w3-round w3-dark-grey";
+        tarBtn.textContent = "Archive (.tar.gz)";
+        tarBtn.title = "Full world with all assets bundled";
+        tarBtn.onclick = async () => {
+            this._downloadFormatDialog.hide();
+            var downloadURL: string = await this._vishva.saveWorld();
+            if (downloadURL == null) return;
+            if (this._downloadDialog == null) this._createDownloadDiag();
+            this._downloadLink.href = downloadURL;
+            this._downloadLink.download = Vishva.worldName.replace(".tar.gz", "").replace(".json", "") + ".tar.gz";
+            this._downloadDialog.show();
+        };
+
+        const jsonBtn = document.createElement("button");
+        jsonBtn.className = "w3-button w3-round w3-dark-grey";
+        jsonBtn.textContent = "Scene only (.json)";
+        jsonBtn.title = "Scene data without assets (legacy format)";
+        jsonBtn.onclick = async () => {
+            this._downloadFormatDialog.hide();
+            var downloadURL: string = await this._vishva.saveWorldAsJson();
+            if (downloadURL == null) return;
+            if (this._downloadDialog == null) this._createDownloadDiag();
+            this._downloadLink.href = downloadURL;
+            this._downloadLink.download = Vishva.worldName.replace(".tar.gz", "").replace(".json", "") + ".json";
+            this._downloadDialog.show();
+        };
+
+        btnContainer.appendChild(tarBtn);
+        btnContainer.appendChild(jsonBtn);
+        container.appendChild(btnContainer);
+
+        this._downloadFormatDialog = new VDiag(container, "Download World", VDiag.center, "24em", "auto");
+    }
+
     private _createDownloadDiag() {
         this._downloadLink = <HTMLAnchorElement>document.getElementById("downloadLink");
         this._downloadDialog = new VDiag(document.getElementById("saveDiv"), "Download World", VDiag.center, "20em", "auto");

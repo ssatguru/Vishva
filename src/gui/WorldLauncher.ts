@@ -11,6 +11,9 @@ import { buildWorldQueryString, processServerWorldList, storeUploadedWorld, dele
 import { VThemes } from "./components/VTheme";
 import { AssetStore } from "../managers/AssetStore";
 
+/* global variable from userAssets.js script loaded during startup */
+declare var worlds: Array<any>;
+
 export class WorldLauncher {
     private _overlay: HTMLDivElement;
     private _contentArea: HTMLDivElement;
@@ -146,48 +149,37 @@ export class WorldLauncher {
     private _showServerPanel(): void {
         this._contentArea.innerHTML = "";
 
-        const loading = document.createElement("div");
-        loading.className = "w3-center w3-padding";
-        loading.textContent = "Loading...";
-        loading.style.color = VThemes.CurrentTheme.darkColors.f;
-        this._contentArea.appendChild(loading);
+        // Use the worlds global variable (populated by updateAssets.js) instead of fetching index.json
+        if (typeof worlds === "undefined" || !Array.isArray(worlds)) {
+            const errMsg = document.createElement("div");
+            errMsg.className = "w3-panel w3-padding";
+            errMsg.style.color = "#ff6b6b";
+            errMsg.textContent = "No server world list available";
+            this._contentArea.appendChild(errMsg);
+            return;
+        }
 
-        fetch("vishva/worlds/index.json")
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Server returned " + response.status);
-                }
-                return response.json();
-            })
-            .then((filenames: string[]) => {
-                this._contentArea.innerHTML = "";
-                const worlds = processServerWorldList(filenames);
+        // worlds is an array of strings (filenames) and objects (directories).
+        // Extract just the string filenames at the top level for the world list.
+        const filenames: string[] = worlds.filter(item => typeof item === "string");
+        const serverWorlds = processServerWorldList(filenames);
 
-                if (worlds.length === 0) {
-                    const msg = document.createElement("div");
-                    msg.className = "w3-center w3-padding";
-                    msg.textContent = "No worlds available on server";
-                    msg.style.color = VThemes.CurrentTheme.darkColors.f;
-                    this._contentArea.appendChild(msg);
-                    return;
-                }
+        if (serverWorlds.length === 0) {
+            const msg = document.createElement("div");
+            msg.className = "w3-center w3-padding";
+            msg.textContent = "No worlds available on server";
+            msg.style.color = VThemes.CurrentTheme.darkColors.f;
+            this._contentArea.appendChild(msg);
+            return;
+        }
 
-                const list = this._createWorldList(worlds.map(w => ({
-                    name: w.display,
-                    onClick: () => {
-                        window.location.search = buildWorldQueryString(w.filename);
-                    }
-                })));
-                this._contentArea.appendChild(list);
-            })
-            .catch((err) => {
-                this._contentArea.innerHTML = "";
-                const errMsg = document.createElement("div");
-                errMsg.className = "w3-panel w3-padding";
-                errMsg.style.color = "#ff6b6b";
-                errMsg.textContent = "Failed to load server world list: " + err.message;
-                this._contentArea.appendChild(errMsg);
-            });
+        const list = this._createWorldList(serverWorlds.map(w => ({
+            name: w.display,
+            onClick: () => {
+                window.location.search = buildWorldQueryString(w.filename);
+            }
+        })));
+        this._contentArea.appendChild(list);
     }
 
     // ─── Load from Browser Storage ──────────────────────────────────────
@@ -201,23 +193,27 @@ export class WorldLauncher {
         loading.style.color = VThemes.CurrentTheme.darkColors.f;
         this._contentArea.appendChild(loading);
 
-        this._loadBrowserWorlds()
-            .then(worldNames => {
+        this._loadBrowserWorldsWithType()
+            .then(worlds => {
                 this._contentArea.innerHTML = "";
 
-                if (worldNames.length === 0) {
+                if (worlds.length === 0) {
                     this._showEmptyState();
                     return;
                 }
 
                 const listContainer = document.createElement("div");
-                for (const name of worldNames) {
+                for (const world of worlds) {
+                    const displayName = world.type === "json"
+                        ? world.name + " (Scene without assets)"
+                        : world.name + " (Scene with assets)";
                     const row = this._createBrowserWorldRow(
-                        name,
+                        world.name,
                         listContainer,
                         () => {
-                            window.location.search = buildWorldQueryString("__saved:" + name);
-                        }
+                            window.location.search = buildWorldQueryString("__saved:" + world.name);
+                        },
+                        displayName
                     );
                     listContainer.appendChild(row);
                 }
@@ -242,6 +238,26 @@ export class WorldLauncher {
             await store.open();
             const worlds = await store.listSavedWorlds();
             return worlds;
+        } finally {
+            store.close();
+        }
+    }
+
+    private async _loadBrowserWorldsWithType(): Promise<Array<{ name: string; type: "json" | "full" }>> {
+        if (!AssetStore.isAvailable()) {
+            throw new Error("IndexedDB is not available");
+        }
+        const store = new AssetStore();
+        try {
+            await store.open();
+            const worldNames = await store.listSavedWorlds();
+            const results: Array<{ name: string; type: "json" | "full" }> = [];
+            for (const name of worldNames) {
+                const keys = await store.listSavedKeys(name);
+                const isJson = keys.length === 1 && keys[0] === "__world.json";
+                results.push({ name, type: isJson ? "json" : "full" });
+            }
+            return results;
         } finally {
             store.close();
         }
@@ -298,7 +314,8 @@ export class WorldLauncher {
     private _createBrowserWorldRow(
         worldName: string,
         listContainer: HTMLDivElement,
-        onLoad: () => void
+        onLoad: () => void,
+        displayName?: string
     ): HTMLDivElement {
         const row = document.createElement("div");
         row.style.display = "flex";
@@ -312,13 +329,13 @@ export class WorldLauncher {
         nameSpan.style.color = VThemes.CurrentTheme.darkColors.f;
         nameSpan.style.padding = "10px 16px";
         nameSpan.style.textAlign = "left";
-        nameSpan.textContent = worldName;
+        nameSpan.textContent = displayName || worldName;
         nameSpan.onclick = onLoad;
 
         // Export button
         const exportBtn = document.createElement("button");
         exportBtn.className = "w3-button w3-hover-dark-grey";
-        exportBtn.title = "export as tar.gz";
+        exportBtn.title = "export world";
         exportBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">download</span>';
         exportBtn.style.color = VThemes.CurrentTheme.darkColors.f;
         exportBtn.onclick = (e) => {

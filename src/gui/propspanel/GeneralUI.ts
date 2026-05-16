@@ -26,6 +26,7 @@ export class GeneralUI {
 
     private _genID: HTMLInputElement;
     private _genName: HTMLInputElement;
+    private _showTree:HTMLElement;
 
     private _genSpace: HTMLSelectElement;
 
@@ -70,6 +71,15 @@ export class GeneralUI {
         this._genName.onchange = () => {
             this._vishva.setName(this._genName.value);
             EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
+        }
+
+        //show asset in the asset in world dialog
+        this._showTree = document.getElementById("showTree");
+        this._showTree.onclick = (e) => {
+            let il = this._vishvaGUI.showItemList();
+            il.onOpen(il._highlightSelected);
+            il.open();
+            //il._highlightSelected();
         }
 
         //space

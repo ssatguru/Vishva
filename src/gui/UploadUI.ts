@@ -1,5 +1,5 @@
 import { VButton } from "./components/VButton";
-import { isTarGzFile } from "../managers/FileValidator";
+import { isTarGzFile, isJsonWorldFile } from "../managers/FileValidator";
 
 /**
  * Handles file/folder upload via hidden <input type="file"> elements.
@@ -113,6 +113,13 @@ export class UploadUI {
             return;
         }
 
+        // Check if any selected file is a .json world file
+        let jsonWorldFile = fileArray.find(f => isJsonWorldFile(f.name));
+        if (jsonWorldFile) {
+            this._vishva.loadManager.loadWorldFromJsonFile(jsonWorldFile);
+            return;
+        }
+
         this._vishva.loadManager.processDroppedFiles(fileArray);
     }
 
@@ -124,6 +131,13 @@ export class UploadUI {
         let worldFile = fileArray.find(f => isTarGzFile(f.name));
         if (worldFile) {
             this._vishva.loadManager.loadWorldFromFile(worldFile);
+            return;
+        }
+
+        // Check if any file in the folder is a .json world file
+        let jsonWorldFile = fileArray.find(f => isJsonWorldFile(f.name));
+        if (jsonWorldFile) {
+            this._vishva.loadManager.loadWorldFromJsonFile(jsonWorldFile);
             return;
         }
 

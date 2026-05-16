@@ -23,7 +23,7 @@ export function isValidWorldName(name: string): boolean {
 /**
  * Returns the default world name to pre-fill when the current name is
  * empty or undefined.
- * Strips ".tar.gz" suffix if present (server-loaded worlds have this suffix).
+ * Strips ".tar.gz" or ".json" suffix if present (server-loaded worlds have these suffixes).
  * Returns "world" for falsy/empty values, otherwise returns the cleaned input.
  */
 export function getDefaultWorldName(currentName: string | undefined | null): string {
@@ -33,6 +33,10 @@ export function getDefaultWorldName(currentName: string | undefined | null): str
     // Strip .tar.gz suffix for display
     if (currentName.toLowerCase().endsWith(".tar.gz")) {
         return currentName.slice(0, -7);
+    }
+    // Strip .json suffix for display
+    if (currentName.toLowerCase().endsWith(".json")) {
+        return currentName.slice(0, -5);
     }
     return currentName;
 }

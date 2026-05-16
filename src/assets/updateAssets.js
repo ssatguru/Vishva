@@ -1,55 +1,64 @@
 /**
-Takes three args
+ * Scans vishva/assets and vishva/worlds folders and writes the results
+ * to vishva/userAssets.js as global variables:
+ *   userAssets = [...] — files and folders under vishva/assets
+ *   worlds = [...]     — files and folders under vishva/worlds
+ *
+ * Run from the project root:
+ *   node vishva/updateAssets.js
+ */
 
-varName - variable name to use in the output file
-path - the path to be scanned for file
-fn - name of the output file
+let fs = require("fs");
+let path = require("path");
 
-*/
-let fs = require('fs');
+function printDir(stream, dirPath, tab) {
+  let items = fs.readdirSync(dirPath);
+  let last = items.length - 1;
+  let line = "";
+  for (let i = 0; i < items.length; i++) {
+    let p = path.join(dirPath, items[i]);
+    let stats = fs.statSync(p);
+    if (stats.isFile()) {
+      if (i < last) {
+        line = tab + '"' + items[i] + '",';
+      } else {
+        line = tab + '"' + items[i] + '"';
+      }
+      stream.write(line + "\n");
+    } else if (stats.isDirectory()) {
+      line = tab + '{"d":"' + items[i] + '",';
+      stream.write(line + "\n");
+      line = tab + ' "f":[';
+      stream.write(line + "\n");
+      printDir(stream, p, tab + _tab);
+      if (i < last) {
+        line = tab + "]},";
+      } else {
+        line = tab + "]}";
+      }
+      stream.write(line + "\n");
+    }
+  }
+}
 
-let varName = process.argv[2]
-let path = process.argv[3];
-let fn = process.argv[4];
+let scriptDir = path.dirname(__filename);
+let assetsPath = path.join(scriptDir, "assets");
+let worldsPath = path.join(scriptDir, "worlds");
+let outputFile = path.join(scriptDir, "userAssets.js");
 
 let _tab = "  ";
 
-function printDir(path,tab){
-    let items = fs.readdirSync(path);
-    let last=items.length-1;
-    let line="";
-    for(let i = 0;i<items.length;i++){
-        let p = path+"/"+items[i];
-        let stats = fs.statSync(p);
-        if(stats.isFile()){
-            if(i<last){
-                line=(tab+'"'+items[i]+'",');
-            }else{
-                line=(tab+'"'+items[i]+'"');
-            }
-            stream.write(line+"\n");
-        }else if(stats.isDirectory()){
-            //line=(tab+'{"'+items[i]+'":[');
-            line=(tab+'{"d":"'+items[i]+'",');
-            stream.write(line+"\n");
-            line=(tab+' "f":[');
-            stream.write(line+"\n");
-            printDir(p,tab+_tab);
-            if(i<last){
-                line=(tab+']},');
-            }else{
-                line=(tab+']}');
-            }
-            stream.write(line+"\n");
-        }
-    }
+// Write userAssets from vishva/assets
+fs.writeFileSync(outputFile, "userAssets=[\n");
+let stream = fs.createWriteStream(outputFile, { flags: "a" });
+printDir(stream, assetsPath, _tab);
+stream.write("]\n");
+
+// Write worlds from vishva/worlds
+if (fs.existsSync(worldsPath)) {
+  stream.write("worlds=[\n");
+  printDir(stream, worldsPath, _tab);
+  stream.write("]\n");
 }
 
-//fs.unlinkSync(fn);
-fs.writeFileSync(fn,varName+"=[" +"\n");
-let stream = fs.createWriteStream(fn, {flags:'a'});
-printDir(path,_tab);
-stream.write("]");
 stream.end();
-
-

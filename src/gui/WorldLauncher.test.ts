@@ -207,77 +207,54 @@ describe("WorldLauncher - Server panel", () => {
         document.body.innerHTML = "";
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
+        // Clean up the worlds global
+        delete (globalThis as any).worlds;
     });
 
-    it("shows loading indicator during fetch", async () => {
-        // Create a fetch that never resolves (to check loading state)
-        let resolveFetch!: (value: any) => void;
-        const fetchPromise = new Promise((resolve) => { resolveFetch = resolve; });
-        vi.stubGlobal("fetch", vi.fn(() => fetchPromise));
-
-        // Click "Load from Server" button
-        const overlay = document.getElementById("worldLauncherOverlay")!;
-        const buttons = overlay.querySelectorAll("button");
-        const serverBtn = Array.from(buttons).find(b => b.textContent === "Load from Server")!;
-        serverBtn.click();
-
-        // Check loading indicator is shown
-        const loadingEl = findElementWithText(overlay, "Loading...");
-        expect(loadingEl).not.toBeNull();
-        expect(loadingEl!.textContent).toBe("Loading...");
-
-        // Cleanup: resolve the fetch to avoid hanging
-        resolveFetch(new Response(JSON.stringify([]), { status: 200 }));
-    });
-
-    it("shows error on fetch failure", async () => {
-        vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("Network error"))));
+    it("shows error when worlds global is undefined", async () => {
+        // Ensure worlds is not defined
+        delete (globalThis as any).worlds;
 
         const overlay = document.getElementById("worldLauncherOverlay")!;
         const buttons = overlay.querySelectorAll("button");
         const serverBtn = Array.from(buttons).find(b => b.textContent === "Load from Server")!;
         serverBtn.click();
 
-        // Wait for the fetch to reject and DOM to update
-        await flushAsync();
-
-        const errorEl = findElementWithText(overlay, "Failed to load server world list");
-        expect(errorEl).not.toBeNull();
-        expect(errorEl!.textContent).toContain("Network error");
-    });
-
-    it("shows error when server returns non-200 status", async () => {
-        vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("", { status: 404 }))));
-
-        const overlay = document.getElementById("worldLauncherOverlay")!;
-        const buttons = overlay.querySelectorAll("button");
-        const serverBtn = Array.from(buttons).find(b => b.textContent === "Load from Server")!;
-        serverBtn.click();
-
-        await flushAsync();
-
-        const errorEl = findElementWithText(overlay, "Failed to load server world list");
+        const errorEl = findElementWithText(overlay, "No server world list available");
         expect(errorEl).not.toBeNull();
     });
 
-    it("displays world list on successful fetch", async () => {
-        const worldList = ["fantasy-town.tar.gz", "new-world.tar.gz"];
-        vi.stubGlobal("fetch", vi.fn(() =>
-            Promise.resolve(new Response(JSON.stringify(worldList), { status: 200 }))
-        ));
+    it("shows 'No worlds available' when worlds array has no .tar.gz or .json files", async () => {
+        (globalThis as any).worlds = ["readme.txt", "notes.md"];
 
         const overlay = document.getElementById("worldLauncherOverlay")!;
         const buttons = overlay.querySelectorAll("button");
         const serverBtn = Array.from(buttons).find(b => b.textContent === "Load from Server")!;
         serverBtn.click();
 
-        await flushAsync();
+        const msgEl = findElementWithText(overlay, "No worlds available on server");
+        expect(msgEl).not.toBeNull();
+    });
 
-        // Should display world names (without .tar.gz extension)
-        const fantasyEl = findElementWithText(overlay, "fantasy-town");
-        const newWorldEl = findElementWithText(overlay, "new-world");
+    it("displays world list from worlds global variable (tar.gz and json files)", async () => {
+        (globalThis as any).worlds = ["fantasy-town.tar.gz", "new-world.tar.gz", "myworld.json", "readme.txt"];
+
+        const overlay = document.getElementById("worldLauncherOverlay")!;
+        const buttons = overlay.querySelectorAll("button");
+        const serverBtn = Array.from(buttons).find(b => b.textContent === "Load from Server")!;
+        serverBtn.click();
+
+        // Should display full filenames for .tar.gz and .json files
+        const fantasyEl = findElementWithText(overlay, "fantasy-town.tar.gz");
+        const newWorldEl = findElementWithText(overlay, "new-world.tar.gz");
+        const jsonEl = findElementWithText(overlay, "myworld.json");
         expect(fantasyEl).not.toBeNull();
         expect(newWorldEl).not.toBeNull();
+        expect(jsonEl).not.toBeNull();
+
+        // Should NOT display non-world files
+        const readmeEl = findElementWithText(overlay, "readme.txt");
+        expect(readmeEl).toBeNull();
     });
 });
 

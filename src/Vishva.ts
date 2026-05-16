@@ -110,7 +110,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.33";
+    static version: string = "0.4.0-alpha.34";
 
     public static worldName: string;
 
@@ -380,6 +380,8 @@ export class Vishva {
             this.loadBabylonjsPart(this.scene, true);
         } else if (sceneFile == "__uploaded") {
             this.loadManager.loadUploadedWorld();
+        } else if (sceneFile == "__uploaded_json") {
+            this.loadManager.loadUploadedJsonWorld();
         } else if (sceneFile.startsWith("__saved:")) {
             const savedWorldName = sceneFile.substring("__saved:".length);
             Vishva.worldName = savedWorldName;
@@ -3763,6 +3765,10 @@ export class Vishva {
     }
     public async saveWorld(): Promise<string> {
         return await this.saveManager.saveWorld();
+    }
+
+    public async saveWorldAsJson(): Promise<string> {
+        return await this.saveManager.saveWorldAsJson();
     }
 
 

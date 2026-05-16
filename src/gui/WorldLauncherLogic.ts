@@ -31,17 +31,17 @@ export function buildWorldQueryString(worldName: string): string {
 
 /**
  * Processes a raw list of filenames from the server world index.
- * Filters to only .tar.gz entries (case-insensitive), strips the extension
- * for the display name, and sorts alphabetically by display name.
+ * Filters to .tar.gz and .json entries (case-insensitive), uses the full
+ * filename as the display name, and sorts alphabetically.
  *
  * @param filenames - Array of filenames from the server index
- * @returns Sorted array of { display, filename } objects for .tar.gz worlds
+ * @returns Sorted array of { display, filename } objects for world files
  */
 export function processServerWorldList(filenames: string[]): Array<{ display: string; filename: string }> {
     return filenames
-        .filter(f => isTarGzFile(f))
+        .filter(f => isTarGzFile(f) || /\.json$/i.test(f))
         .map(f => ({
-            display: f.replace(/\.tar\.gz$/i, ""),
+            display: f,
             filename: f
         }))
         .sort((a, b) => a.display.localeCompare(b.display));
@@ -271,6 +271,18 @@ export async function exportWorldAsTarGz(worldName: string): Promise<void> {
         const keys = await store.listSavedKeys(worldName);
         if (keys.length === 0) {
             throw new Error("No assets found for this world");
+        }
+
+        // Check if this is a JSON-only world
+        if (keys.length === 1 && keys[0] === "__world.json") {
+            // Export as plain JSON file
+            const data = await store.getSavedAsset(worldName, "__world.json");
+            if (!data) {
+                throw new Error("World data is missing");
+            }
+            const blob = new Blob([data as any], { type: "application/json" });
+            triggerDownload(blob, `${worldName}.json`);
+            return;
         }
 
         // Step 2: Retrieve all asset data

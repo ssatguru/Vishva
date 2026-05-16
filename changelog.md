@@ -1,3 +1,23 @@
+### 05/16/2026 0.4.0-alpha.34
+
+#### JSON World Format Support (Legacy Format)
+- World Launcher "Load from Server" now shows both `.tar.gz` and `.json` files with full filenames displayed
+- added "Download World" format chooser dialog: "Archive (.tar.gz)" for full world with assets, "Scene only (.json)" for legacy format without assets
+- added `SaveManager.saveWorldAsJson()` — serializes scene + VishvaSerialized as a single merged JSON (legacy format), no assets bundled
+- added `SaveManager.saveWorldToIndexedDBAsJson()` — saves JSON-only world to browser IndexedDB under a single `__world.json` key
+- Save to Browser prompt now offers two buttons: "Save (with assets)" and "Save (JSON only)"
+- `SavePromptLogic.getDefaultWorldName()` now strips both `.tar.gz` and `.json` suffixes from the pre-filled name
+- "Load from Browser Storage" panel now shows format indicator: `worldname (Scene with assets)` or `worldname (Scene without assets)`
+- export from browser storage auto-detects format: JSON-only worlds export as `.json`, full worlds export as `.tar.gz`
+
+#### JSON World File Upload & Drag-and-Drop
+- "Upload File" button and drag-and-drop now accept `.json` world files (in addition to `.tar.gz`)
+- added `FileValidator.isJsonWorldFile()` and `FileValidator.isWorldFile()` helpers
+- added `LoadManager.loadWorldFromJsonFile()` — validates JSON has `VishvaSerialized` key, stores in IndexedDB, triggers page reload
+- added `LoadManager.loadUploadedJsonWorld()` — retrieves stored JSON after reload, extracts VishvaSerialized, loads scene
+- Vishva constructor routes `__uploaded_json` to the new JSON world loading path
+- `LoadManager.loadSavedWorld()` detects JSON-only worlds (single `__world.json` entry) and loads without AssetResolver — assets resolve from server
+
 ### 05/15/2026 0.4.0-alpha.33
 
 #### Asset Storage Overhaul — IndexedDB-native Save/Load

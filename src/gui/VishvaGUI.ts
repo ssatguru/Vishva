@@ -18,6 +18,7 @@ import { CCUI } from "./CCUI";
 import { SNAManager } from "../sna/SNA";
 import { SavePromptUI } from "./SavePromptUI";
 import { UploadUI } from "./UploadUI";
+import { MeshMetadata } from "../VishvaSerialized";
 
 
 export class GuiSettings {
@@ -305,6 +306,80 @@ export class VishvaGUI {
                 this._environment = new EnvironmentUI(this._vishva, this._addInternalAssetUI, this);
             } else
                 this._environment.toggle();
+            return false;
+        };
+
+        // button for adding spawner
+        var navAddSpawner: HTMLElement = document.getElementById("navAddSpawner");
+        navAddSpawner.onclick = (e) => {
+            // Camera focus guard
+            if (!this._vishva.isFocusOnAv) {
+                DialogMgr.showAlertDiag("cannot create spawner. focus is not on avatar. press esc to switch focus to avatar and try again");
+                return false;
+            }
+
+            const avatar = this._vishva.avatar;
+            const camera = this._vishva.arcCamera;
+            const avatarPosition = avatar.position.clone();
+            // Read rotation from rotationQuaternion if set (after scene reload), otherwise euler rotation.y
+            const avatarRotationY = avatar.rotationQuaternion
+                ? avatar.rotationQuaternion.toEulerAngles().y
+                : avatar.rotation.y;
+            const avatarEllipsoidHeight = avatar.ellipsoidOffset.y;
+            const faceForward = this._vishva.avManager.cc.getSettings().faceForward;
+
+            // Check if a spawner mesh is currently selected (must be actively selected, not just referenced)
+            const selected = this._vishva.isMeshSelected ? this._vishva.meshSelected : null;
+            if (selected && selected.metadata && selected.metadata.isInternal &&
+                selected.name && selected.name.startsWith("spawner_")) {
+                // Update existing spawner
+                const spawners = this._vishva.spawnerManager.getSpawners();
+                const existingSpawner = spawners.find(s => s.mesh === selected);
+                if (existingSpawner) {
+                    this._vishva.spawnerManager.updateSpawner(
+                        existingSpawner,
+                        avatarPosition,
+                        avatarRotationY,
+                        avatarEllipsoidHeight,
+                        camera.alpha,
+                        camera.beta,
+                        camera.radius,
+                        camera.target.clone(),
+                        faceForward
+                    );
+                    // Mesh is already selected — no need to re-select
+                }
+            } else {
+                // Create new spawner
+                const spawner = this._vishva.spawnerManager.createSpawner(
+                    avatarPosition,
+                    avatarRotationY,
+                    avatarEllipsoidHeight,
+                    camera.alpha,
+                    camera.beta,
+                    camera.radius,
+                    camera.target.clone(),
+                    faceForward
+                );
+
+                // Make the spawner mesh visible and pickable so the user can see it
+                spawner.mesh.isVisible = true;
+                spawner.mesh.isPickable = true;
+
+                // Register spawner mesh in _meshMetadata so reveal-invisibles system can find it
+                if (!this._vishva._meshMetadata) this._vishva._meshMetadata = {};
+                this._vishva._meshMetadata[spawner.mesh.id] = new MeshMetadata();
+                this._vishva._meshMetadata[spawner.mesh.id].meshId = spawner.mesh.id;
+                this._vishva._meshMetadata[spawner.mesh.id].isInternal = true;
+                this._vishva._meshMetadata[spawner.mesh.id].isInvisible = true;
+
+                // Switch edit control to the new spawner mesh
+                if (this._vishva.editControl != null) {
+                    this._vishva.switchEditControl(spawner.mesh);
+                } else {
+                    this._vishva.selectForEdit(spawner.mesh);
+                }
+            }
             return false;
         };
 

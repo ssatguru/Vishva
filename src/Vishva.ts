@@ -102,6 +102,7 @@ import { VDiag } from "./gui/components/VDiag";
 import { SaveManager } from "./managers/SaveManager";
 import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
+import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 
 
 
@@ -110,7 +111,7 @@ import { ProgressManager } from "./managers/ProgressManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.34";
+    static version: string = "0.4.0-alpha.35";
 
     public static worldName: string;
 
@@ -176,6 +177,7 @@ export class Vishva {
     public saveManager: SaveManager;
     public loadManager: LoadManager;
     public progressManager: ProgressManager;
+    public spawnerManager: SpawnerManager;
 
     // NEW: Object IDs and mesh metadata loaded from VishvaSerialized
     // Used to find objects by ID instead of tags during scene load
@@ -456,8 +458,9 @@ export class Vishva {
                     }
                 }
                 
-                // Find spawn point by ID
-                if (this._objectIds.spawnPointId) {
+                // Find spawn point by ID (legacy fallback — only if no spawners exist)
+                if (this._objectIds.spawnPointId &&
+                    (!this.vishvaSerialized || !this.vishvaSerialized.spawners || this.vishvaSerialized.spawners.length === 0)) {
                     const spawnMesh = scene.getMeshByID(this._objectIds.spawnPointId);
                     if (spawnMesh) {
                         spawnPointFound = true;
@@ -483,7 +486,8 @@ export class Vishva {
                             groundFound = true;
                             this.ground = <Mesh>mesh;
                             this.ground.isPickable = true;
-                        } else if (!spawnPointFound && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
+                        } else if (!spawnPointFound && Tags.MatchesQuery(mesh, "Vishva.spawnPoint") &&
+                            (!this.vishvaSerialized || !this.vishvaSerialized.spawners || this.vishvaSerialized.spawners.length === 0)) {
                             spawnPointFound = true;
                             this.spawnPosition = mesh.position.clone();
                         }
@@ -726,6 +730,8 @@ export class Vishva {
                 this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(<PointerEvent>evt, pickResult) };
             }
 
+            this.spawnerManager = new SpawnerManager(scene);
+
             this.avManager = new AvManager(
                 this.avatar,
                 this.avatarFolder,
@@ -792,6 +798,24 @@ export class Vishva {
                         mesh["_originalEllipsoid"] = meshCC.originalEllipsoid;
                     }
                 }
+            }
+        }
+
+        // Deserialize and apply spawners
+        if (this.vishvaSerialized && this.vishvaSerialized.spawners && this.vishvaSerialized.spawners.length > 0) {
+            this.spawnerManager.deserialize(this.vishvaSerialized.spawners, this.scene);
+            const selectedSpawner = this.spawnerManager.selectRandom();
+            if (selectedSpawner) {
+                const spawnResult = this.spawnerManager.computeSpawnTransform(selectedSpawner);
+                // Apply to avatar — use rotation.y (not quaternion) since the CC uses euler rotation
+                this.avatar.position.copyFrom(spawnResult.avatarPosition);
+                this.avatar.rotationQuaternion = null;
+                this.avatar.rotation.y = spawnResult.avatarRotationY;
+                // Apply to camera
+                this.arcCamera.alpha = spawnResult.cameraAlpha;
+                this.arcCamera.beta = spawnResult.cameraBeta;
+                this.arcCamera.radius = spawnResult.cameraRadius;
+                this.arcCamera.target.copyFrom(spawnResult.cameraTarget);
             }
         }
 

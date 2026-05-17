@@ -35,6 +35,8 @@ let navHTML = `
 
                 <button id="navEnv" title="environment"><span class="material-icons-outlined" >terrain</span></button>
 
+                <button id="navAddSpawner" title="add spawner"><span class="material-icons-outlined">my_location</span></button>
+
                 <button id="navSettings" title="settings"><span class="material-icons-outlined" >settings</span></button>
 
                 <button id="debugLink" title="inspector"><span class="material-icons-outlined" >info</span></button>

@@ -71,6 +71,13 @@ src/
     PathRewriter.ts         # Rewrites asset paths for portability (e.g., archive export)
     FileValidator.ts        # File type detection (isTarGzFile, isJsonWorldFile, isWorldFile, normalizeTarGzExtension)
     TarUtils.ts             # Tar archive creation/extraction utilities
+    spawner/                # Spawner system — avatar/camera placement on scene load
+      Spawner.ts            # Spawner interface (mesh + relative transforms + camera params)
+      SpawnerSerialized.ts  # Serialization format for VishvaSerialized
+      SpawnResult.ts        # Computed world-space transforms returned on spawn application
+      SpawnerMeshFactory.ts # Creates flat arrow-shaped indicator mesh (≤20 tris, renders on top)
+      SpawnerManager.ts     # Lifecycle manager: create, update, serialize, deserialize, apply
+      SpawnerManager.test.ts # Unit tests
 
   eventing/                 # Simple pub/sub event system
     EventManager.ts         # Static publish/subscribe event bus
@@ -112,6 +119,7 @@ Current test coverage:
 - `managers/TarRoundTrip.property.test.ts`
 - `managers/LoadManager.preservation.property.test.ts`, `managers/LoadManager.clearScene.property.test.ts`
 - `managers/LoadManager.pageReload.test.ts`
+- `managers/spawner/SpawnerManager.test.ts`
 - `gui/UploadUI.property.test.ts`
 - `gui/WorldLauncher.test.ts`, `gui/WorldLauncher.property.test.ts`
 
@@ -125,3 +133,4 @@ Current test coverage:
 - **Asset pipeline**: `AssetCollector` gathers scene assets → `AssetResolver` resolves URLs → `PathRewriter` normalizes paths → `TarUtils` packages into archives for standalone export. For IndexedDB saves, `AssetStore` (`VishvaAssetStore` database) provides persistent browser storage with two object stores: `session` (active world working set, cleared on each load) and `saved` (explicitly-saved worlds, keyed by `{worldName}/{assetPath}`). The `WorldLauncher` reads from the `saved` store and routes via `?world=__saved:<name>` URL parameters.
 - **Dual save formats**: Worlds can be saved/downloaded in two formats: (1) full archive with assets (tar.gz / IndexedDB with Vishva.json + Scene.babylon + asset entries), or (2) JSON-only legacy format (single merged scene JSON with VishvaSerialized as a top-level key, stored as `__world.json` in IndexedDB). JSON-only worlds rely on the server for assets.
 - **World file routing**: `FileValidator` provides `isTarGzFile()`, `isJsonWorldFile()`, and `isWorldFile()` for routing uploaded/dropped files. Upload and drag-and-drop detect both formats and route to the appropriate loader (`loadWorldFromFile` for tar.gz, `loadWorldFromJsonFile` for JSON). Both use a store-in-IndexedDB-then-reload pattern (`__uploaded` / `__uploaded_json`).
+- **Spawner system**: `SpawnerManager` manages spawn points for avatar/camera placement on scene load. Spawners store transforms *relative* to a visual arrow mesh, so moving the mesh in the editor adjusts the spawn location. Multiple spawners supported with uniform random selection at load time. Spawner meshes render on top of other geometry (`renderingGroupId=1`, `disableDepthWrite`), are invisible/non-pickable by default (participate in "reveal invisibles"), and are serialized via `VishvaSerialized.spawners[]`. The system replaces the legacy `spawnPointId` mechanism. The CharacterController's `faceForward` setting is accounted for when orienting the arrow mesh.

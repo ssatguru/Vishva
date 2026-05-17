@@ -2,6 +2,7 @@ import { Vector3, AnimationGroup, Scene, Tags, Sound, ISoundOptions } from "baby
 import { ActionData, ActionMap, CCSettings } from "babylonjs-charactercontroller";
 import { Color4 } from "babylonjs/Maths/math.color";
 import { GrndSpread_Serializeable } from "./GrndSpread";
+import { SpawnerSerialized } from "./managers/spawner/SpawnerSerialized";
 import { SNAserialized } from "./sna/SNA";
 import { Vishva } from "./Vishva";
 
@@ -15,6 +16,7 @@ export class VishvaSerialized {
     public guiSettings: Object;
     public misc: MiscSerialized;
     public grndSpreadArray: GrndSpread_Serializeable[];
+    public spawners: SpawnerSerialized[] = [];
     public avSerialized: AvSerialized;
     public meshCCs: MeshCCSerialized[];
 

@@ -1,3 +1,22 @@
+### 05/17/2026 0.4.0-alpha.35
+
+#### Spawner System — Avatar/Camera Placement on Scene Load
+- added `SpawnerManager` (`src/managers/spawner/`) — full lifecycle management for spawn points
+- NavBar "add spawner" button (`my_location` icon) creates a flat arrow-shaped mesh at the avatar's feet pointing in the avatar's forward direction
+- spawner stores avatar position, rotation, and camera params (alpha, beta, radius, target offset) relative to the spawner mesh — moving/rotating the mesh in the editor automatically adjusts the spawn location
+- multiple spawners supported: uniform random selection at load time
+- spawner meshes render on top of other geometry (`renderingGroupId=1`, `disableDepthWrite`) so they're never hidden
+- spawner meshes are invisible/non-pickable by default; participate in the "reveal invisibles" system
+- serialized via `VishvaSerialized.spawners[]` array; deserialized and applied in `sceneLoad4` after avatar and CharacterController initialization
+- camera focus guard: spawner creation/update blocked when camera is not focused on avatar (shows alert dialog)
+- clicking spawner button with another mesh selected uses `switchEditControl` to transfer selection
+- clicking spawner button with a spawner selected updates that spawner's transforms in-place
+- accounts for CharacterController `faceForward` setting when orienting the arrow mesh
+- uses `rotation.y` (not `rotationQuaternion`) when applying spawn transforms to preserve CC rotation system
+- legacy `spawnPointId` handling: ignored when spawners exist, used as fallback for old worlds without spawners
+- removed legacy spawnPoint tag-based search from all SaveManager serialization paths
+- added 17 unit tests (`SpawnerManager.test.ts`) covering mesh geometry, metadata, serialization, collection management, and legacy fallback
+
 ### 05/16/2026 0.4.0-alpha.34
 
 #### JSON World Format Support (Legacy Format)

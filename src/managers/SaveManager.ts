@@ -106,6 +106,7 @@ export class SaveManager {
         vishvaSerialized.misc.skyBright = this.vishva.skyBright;
         vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
         vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+        vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
 
         // Capture object IDs
         vishvaSerialized.objectIds = new ObjectIdMap();
@@ -115,13 +116,6 @@ export class SaveManager {
         if (this.vishva.ground) vishvaSerialized.objectIds.groundId = this.vishva.ground.id;
         if (this.vishva.sun) vishvaSerialized.objectIds.sunId = this.vishva.sun.id;
         if (this.vishva.arcCamera) vishvaSerialized.objectIds.cameraId = this.vishva.arcCamera.id;
-
-        for (let mesh of this.vishva.scene.meshes) {
-            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
-                vishvaSerialized.objectIds.spawnPointId = mesh.id;
-                break;
-            }
-        }
 
         // Capture mesh metadata
         vishvaSerialized.meshMetadata = {};
@@ -228,6 +222,7 @@ export class SaveManager {
             vishvaSerialized.misc.skyBright = this.vishva.skyBright;
             vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
             vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+            vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
 
             vishvaSerialized.objectIds = new ObjectIdMap();
             if (this.vishva.avatar) vishvaSerialized.objectIds.avatarId = this.vishva.avatar.id;
@@ -236,13 +231,6 @@ export class SaveManager {
             if (this.vishva.ground) vishvaSerialized.objectIds.groundId = this.vishva.ground.id;
             if (this.vishva.sun) vishvaSerialized.objectIds.sunId = this.vishva.sun.id;
             if (this.vishva.arcCamera) vishvaSerialized.objectIds.cameraId = this.vishva.arcCamera.id;
-
-            for (let mesh of this.vishva.scene.meshes) {
-                if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
-                    vishvaSerialized.objectIds.spawnPointId = mesh.id;
-                    break;
-                }
-            }
 
             vishvaSerialized.meshMetadata = {};
             for (let mesh of this.vishva.scene.meshes) {
@@ -372,6 +360,7 @@ export class SaveManager {
             vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
             vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+            vishvaSerialzed.spawners = this.vishva.spawnerManager.serialize();
 
             vishvaSerialzed.objectIds = new ObjectIdMap();
             if (this.vishva.avatar) vishvaSerialzed.objectIds.avatarId = this.vishva.avatar.id;
@@ -380,13 +369,6 @@ export class SaveManager {
             if (this.vishva.ground) vishvaSerialzed.objectIds.groundId = this.vishva.ground.id;
             if (this.vishva.sun) vishvaSerialzed.objectIds.sunId = this.vishva.sun.id;
             if (this.vishva.arcCamera) vishvaSerialzed.objectIds.cameraId = this.vishva.arcCamera.id;
-
-            for (let mesh of this.vishva.scene.meshes) {
-                if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
-                    vishvaSerialzed.objectIds.spawnPointId = mesh.id;
-                    break;
-                }
-            }
 
             vishvaSerialzed.meshMetadata = {};
             for (let mesh of this.vishva.scene.meshes) {
@@ -603,6 +585,7 @@ export class SaveManager {
         vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
         vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+        vishvaSerialzed.spawners = this.vishva.spawnerManager.serialize();
 
         // NEW: Capture object IDs from special Vishva objects
         vishvaSerialzed.objectIds = new ObjectIdMap();
@@ -612,14 +595,6 @@ export class SaveManager {
         if (this.vishva.ground) vishvaSerialzed.objectIds.groundId = this.vishva.ground.id;
         if (this.vishva.sun) vishvaSerialzed.objectIds.sunId = this.vishva.sun.id;
         if (this.vishva.arcCamera) vishvaSerialzed.objectIds.cameraId = this.vishva.arcCamera.id;
-
-        // NEW: Capture spawn point ID if it exists (search for mesh with spawnPoint tag)
-        for (let mesh of this.vishva.scene.meshes) {
-            if (Tags.HasTags(mesh) && Tags.MatchesQuery(mesh, "Vishva.spawnPoint")) {
-                vishvaSerialzed.objectIds.spawnPointId = mesh.id;
-                break;
-            }
-        }
 
         // NEW: Capture mesh metadata from tags
         vishvaSerialzed.meshMetadata = {};

@@ -5,10 +5,16 @@ import { animElement } from "./AnimationML";
 import {
     Skeleton,
     AnimationRange,
-    AnimationGroup
+    AnimationGroup,
+    MeshBuilder,
+    StandardMaterial,
+    Color3,
+    Mesh,
+    Bone
 } from "babylonjs";
 import { AnimUtils } from "../../util/AnimUtils";
 import { AbstractMesh } from "babylonjs/Meshes/abstractMesh";
+import { VTreeDialog } from "../components/VTreeDialog";
 
 /**
  * Provides UI for the Animation (Skeleton) tab of mesh properties
@@ -16,6 +22,11 @@ import { AbstractMesh } from "babylonjs/Meshes/abstractMesh";
 export class AnimationUI {
 
     private _vishva: Vishva;
+
+    private _boneSelectorDialog: VTreeDialog | null = null;
+    private _boneMarker: Mesh | null = null;
+    private _selectedBoneIndex: number = -1;
+    private _skelShownByBoneSelector: boolean = false;
 
     private _arSelect: HTMLSelectElement = null;
     private _animRate: HTMLInputElement;
@@ -47,7 +58,6 @@ export class AnimationUI {
         let animRest: HTMLInputElement = <HTMLInputElement>document.getElementById("animRest");
 
         let animSBS: HTMLInputElement = <HTMLInputElement>document.getElementById("animSBS");
-        let animDBS: HTMLInputElement = <HTMLInputElement>document.getElementById("animDBS");
         let animAttach: HTMLInputElement = <HTMLInputElement>document.getElementById("animAttach");
         let animDetach: HTMLInputElement = <HTMLInputElement>document.getElementById("animDetach");
 
@@ -72,25 +82,20 @@ export class AnimationUI {
         }
 
         animSBS.onclick = (e) => {
-            this._vishva._addBoneSelectors(this._skel);
-            //this._vishva._debugBoneChilds(this._skel);
+            this._toggleBoneSelectorDialog();
         }
 
-        animDBS.onclick = (e) => {
-            this._vishva._delBoneSelectors(this._skel);
-        }
-
-        animAttach.onclick = (e) => {
-            this._vishva._delBoneSelectors(this._skel);
-        }
 
         //attach items to bone
         animAttach.onclick = (e) => {
-            let err: string = this._vishva._attach2Bone(this._skel);
+            if (this._selectedBoneIndex < 0) {
+                DialogMgr.showAlertDiag("please select a bone first using the bone selector");
+                return;
+            }
+            let err: string = this._vishva._attach2Bone(this._skel, this._selectedBoneIndex, this._skelMesh);
             if (err != null) {
                 DialogMgr.showAlertDiag(err);
             }
-
         }
 
         //attach items to bone
@@ -243,6 +248,20 @@ export class AnimationUI {
 
 
     public update() {
+        // Clean up bone selector state when mesh selection changes
+        this._disposeBoneMarker();
+        if (this._boneSelectorDialog != null && this._boneSelectorDialog.isOpen()) {
+            this._boneSelectorDialog.close();
+        }
+
+        // Hide skeleton viewer if it was visible for the previous mesh
+        if (this._skelMesh != null) {
+            let sv = this._vishva.findSkelViewer(this._vishva.skelViewerArr, this._skelMesh);
+            if (sv != null) {
+                this._vishva.toggleSkelView(this._skel, this._skelMesh);
+            }
+        }
+
         //this.vishva.switchDisabled = true;
         let sm = AnimUtils.getMeshSkel(this._vishva.getMeshSelected(), this._vishva.isRootSelected());
         this._skel = (sm === null) ? null : sm.skel;
@@ -372,6 +391,149 @@ export class AnimationUI {
         } else return false;
     }
 
+
+    /**
+     * Builds VTreeDialog-compatible tree data from a skeleton's bone hierarchy.
+     * Root bones (no parent) become top-level entries.
+     * Bones with children become { d: boneName, f: [...childNodes] }.
+     * Leaf bones become plain strings.
+     */
+    private _buildBoneTreeData(skel: Skeleton): Array<string | { d: string; f: any[] }> {
+        const roots = skel.bones.filter(b => b.getParent() == null);
+        return roots.map(b => this._buildBoneNode(b));
+    }
+
+    private _buildBoneNode(bone: Bone): string | { d: string; f: any[] } {
+        if (bone.children.length === 0) {
+            return bone.name;
+        }
+        return {
+            d: bone.name,
+            f: bone.children.map(child => this._buildBoneNode(child))
+        };
+    }
+
+    /**
+     * Callback fired when a bone is clicked in the VTreeDialog tree.
+     * Creates a marker sphere at the bone's position, or moves the existing marker.
+     */
+    private _onBoneSelected(boneName: string, path: string, isLeaf: boolean): void {
+        if (this._skel == null) return;
+
+        const boneIndex = this._skel.bones.findIndex(b => b.name === boneName);
+        if (boneIndex === -1) {
+            console.warn(`[AnimationUI] Bone not found in skeleton: "${boneName}"`);
+            return;
+        }
+
+        // Same bone already selected — no-op
+        if (boneIndex === this._selectedBoneIndex) {
+            return;
+        }
+
+        const bone = this._skel.bones[boneIndex];
+        const skelMesh = this._skelMesh;
+
+        if (this._boneMarker == null) {
+            // Create a new marker sphere
+            const marker = MeshBuilder.CreateSphere("boneSelector-marker", { diameter: 0.05 }, this._vishva.scene);
+            const mat = new StandardMaterial("boneSelector-mat", this._vishva.scene);
+            mat.emissiveColor = new Color3(0, 1, 0);
+            mat.disableLighting = true;
+            marker.material = mat;
+            marker.renderingGroupId = 1;
+            marker.isPickable = false;
+
+            try {
+                marker.attachToBone(bone, skelMesh);
+            } catch (e) {
+                console.error("[AnimationUI] Failed to attach marker to bone:", e);
+                mat.dispose();
+                marker.dispose();
+                return;
+            }
+
+            this._boneMarker = marker;
+        } else {
+            // Move existing marker to the new bone
+            this._boneMarker.detachFromBone();
+            try {
+                this._boneMarker.attachToBone(bone, skelMesh);
+            } catch (e) {
+                console.error("[AnimationUI] Failed to attach marker to bone:", e);
+                this._boneMarker.material.dispose();
+                this._boneMarker.dispose();
+                this._boneMarker = null;
+                this._selectedBoneIndex = -1;
+                return;
+            }
+        }
+
+        this._selectedBoneIndex = boneIndex;
+    }
+
+    /**
+     * Locks mesh selection by setting Vishva.switchDisabled = true.
+     * Prevents selection of other meshes and deselection of the current mesh
+     * while the bone selector dialog is open.
+     */
+    private _lockMeshSelection(): void {
+        this._vishva.switchDisabled = true;
+    }
+
+    /**
+     * Unlocks mesh selection by setting Vishva.switchDisabled = false.
+     * Restores normal mesh selection behavior when the dialog closes.
+     */
+    private _unlockMeshSelection(): void {
+        this._vishva.switchDisabled = false;
+    }
+
+    /**
+     * Disposes the bone marker sphere, its material, and resets selection state.
+     * No-op if no marker exists.
+     */
+    private _disposeBoneMarker(): void {
+        if (this._boneMarker == null) return;
+        this._boneMarker.detachFromBone();
+        this._boneMarker.material.dispose();
+        this._boneMarker.dispose();
+        this._boneMarker = null;
+        this._selectedBoneIndex = -1;
+    }
+
+    /**
+     * Toggles the bone selector dialog open/closed.
+     * If open, closes it. If closed or null, creates and opens a new one.
+     */
+    private _toggleBoneSelectorDialog(): void {
+        if (this._boneSelectorDialog != null && this._boneSelectorDialog.isOpen()) {
+            this._boneSelectorDialog.close();
+            return;
+        }
+
+        // Show skeleton viewer if not already visible
+        this._skelShownByBoneSelector = false;
+        if (this._vishva.findSkelViewer(this._vishva.skelViewerArr, this._skelMesh) == null) {
+            this._vishva.toggleSkelView(this._skel, this._skelMesh);
+            this._skelShownByBoneSelector = true;
+        }
+
+        const treeData = this._buildBoneTreeData(this._skel);
+        this._boneSelectorDialog = new VTreeDialog(this._vishva, "Bone Selector", "top:100px;left:100px", treeData, undefined, true, false);
+        this._boneSelectorDialog.addTreeListener((boneName, path, isLeaf) => this._onBoneSelected(boneName, path, isLeaf));
+        this._boneSelectorDialog.onClose(() => {
+            this._disposeBoneMarker();
+            if (this._skelShownByBoneSelector) {
+                this._vishva.toggleSkelView(this._skel, this._skelMesh);
+                this._skelShownByBoneSelector = false;
+            }
+            this._unlockMeshSelection();
+            this._boneSelectorDialog = null;
+        });
+        this._boneSelectorDialog.open();
+        this._lockMeshSelection();
+    }
 
     /**
      * refresh list of skeletons shown in animation tab

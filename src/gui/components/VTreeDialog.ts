@@ -112,6 +112,10 @@ export class VTreeDialog {
     public close() {
         this._treeDiag.hide();
     }
+
+    public onClose(f: () => void) {
+        this._treeDiag.onHide(f);
+    }
     public refresh(treeData: Array<string | object>) {
         this._tree.refresh(treeData);
     }

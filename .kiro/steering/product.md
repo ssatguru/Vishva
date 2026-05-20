@@ -4,6 +4,7 @@ Vishva (Hindi for "World") is a browser-based live 3D scene editor built on Baby
 
 ## Core Capabilities
 - Load, place, and manipulate 3D meshes (primitives, imported models, curated assets)
+- Attach meshes to skeleton bones via a tree-based bone selector dialog — items follow bone movement during animation
 - Attach behaviors to objects via a Sensor/Actuator (SNA) system — sensors detect events, actuators perform actions
 - Third-person avatar with character controller for navigating scenes
 - Environment controls: skybox, lighting, fog, shadows, weather (rain/snow), water, terrain

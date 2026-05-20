@@ -1,3 +1,26 @@
+### 05/20/2026 0.4.0-alpha.36
+
+#### Bone Selector Tree Dialog & Bone Attachment
+- replaced the old "show all bone markers" behavior with a VTreeDialog-based bone selector
+- clicking "show bone selector" opens a tree dialog showing the skeleton's bone hierarchy (fully expanded) and automatically shows the skeleton viewer
+- clicking a bone in the tree places a single green sphere marker at that bone's position (renders on top via `renderingGroupId=1`)
+- clicking a different bone moves the marker; clicking the same bone is a no-op
+- closing the dialog disposes the marker and hides the skeleton viewer (if it was shown by the bone selector)
+- mesh selection is locked (`switchDisabled`) while the bone selector dialog is open — prevents accidental deselection
+- escape key respects `switchDisabled` — blocked while bone selector is open
+- removed the "hide bone selector" button (no longer needed — dialog close handles cleanup)
+- added `VTreeDialog.onClose()` method for registering cleanup callbacks
+- "attach item to bone" now uses the selected bone from the dialog — user only needs to CTL-click one mesh (the item to attach)
+- skeleton viewer is automatically disposed when a mesh is deselected (via escape key or `removeEditControl`)
+
+#### Bone Attachment Serialization
+- bone attachments now persist across save/load via `VishvaSerialized.boneAttachments[]`
+- added `BoneAttachmentSerialized` class to `VishvaSerialized.ts` (stores attacher node ID, bone index, skeleton mesh ID)
+- `Vishva.serializeBoneAttachments()` scans "attacher-" TransformNodes and matches parent node name to bone names (works after `resetSkels()` nulls transform node references)
+- `Vishva._reattachBoneAttachments()` re-calls `attachToBone()` on load using the serialized data
+- attacher TransformNodes get unique IDs (`attacher-{boneIndex}-{timestamp}`) to avoid collisions
+- both JSON and archive save formats include bone attachment data
+
 ### 05/17/2026 0.4.0-alpha.35
 
 #### Spawner System — Avatar/Camera Placement on Scene Load

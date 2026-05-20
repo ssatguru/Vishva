@@ -90,7 +90,7 @@ import { ActuatorRotator } from "./sna/ActuatorRotator";
 import { ActRotatorParm } from "./sna/ActuatorRotator";
 import { ActuatorMover } from "./sna/ActuatorMover";
 import { ActMoverParm } from "./sna/ActuatorMover";
-import { AvSerialized, VishvaSerialized, ObjectIdMap, MeshMetadataMap, MeshMetadata } from "./VishvaSerialized";
+import { AvSerialized, VishvaSerialized, ObjectIdMap, MeshMetadataMap, MeshMetadata, BoneAttachmentSerialized } from "./VishvaSerialized";
 import { VishvaGUI } from "./gui/VishvaGUI";
 
 import { AvManager } from "./avatar/AvManager";
@@ -111,7 +111,7 @@ import { SpawnerManager } from "./managers/spawner/SpawnerManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.35";
+    static version: string = "0.4.0-alpha.36";
 
     public static worldName: string;
 
@@ -819,6 +819,9 @@ export class Vishva {
             }
         }
 
+        // Re-attach TransformNodes to bones after scene load
+        this._reattachBoneAttachments();
+
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
         this._dirty = true;
@@ -894,7 +897,7 @@ export class Vishva {
                 }
                 if (this.key.esc) {
                     this.key.esc = false;
-                    if (!VDiag._modalOn){
+                    if (!VDiag._modalOn && !this.switchDisabled){
                         this.animateMesh(this.meshSelected, 1.1);
                         this.removeEditControl();
                         if (!this.isFocusOnAv) {
@@ -1373,9 +1376,13 @@ export class Vishva {
     public removeEditControl() {
         this.multiUnSelectAll();
         this.isMeshSelected = false;
-        //            if (!this.focusOnAv) {
-        //                this.switchFocusToAV();
-        //            }
+
+        // Hide skeleton viewer if visible for the deselected mesh
+        for (let i = this.skelViewerArr.length - 1; i >= 0; i--) {
+            let sv = this.skelViewerArr[i];
+            sv.dispose();
+        }
+        this.skelViewerArr.length = 0;
 
         //if scaling is on then we might have changed space to local            
         //restore space to what is was before scaling
@@ -3186,7 +3193,7 @@ export class Vishva {
         }
     }
 
-    private findSkelViewer(sva: SkeletonViewer[], mesh: AbstractMesh): SkeletonViewer {
+    public findSkelViewer(sva: SkeletonViewer[], mesh: AbstractMesh): SkeletonViewer {
         for (let sv of sva) {
             if (sv.mesh === mesh) return sv;
         }
@@ -3245,7 +3252,7 @@ export class Vishva {
     public _addBoneSelectors(skel: Skeleton) {
 
         let bones: Bone[] = skel.bones;
-        let mesh: Mesh = Mesh.CreateBox("box", 0.1, this.scene);
+        let mesh: Mesh = Mesh.CreateBox("box", 0.01, this.scene);
         this.createPrimMaterial();
         mesh.material = this.primMaterial
         let i = 0;
@@ -3274,41 +3281,65 @@ export class Vishva {
         if (sm != null) sm.dispose();
     }
 
-    public _attach2Bone(skel: Skeleton): string {
-        if (this.meshesPicked == null) {
-            return "please select (CTL-MouseLeftClick) two mesh - a) bone selector b) item to attach to the bone";
-        }
-        if (this.meshesPicked.length > 2) {
-            return "please select only two mesh";
-        }
+    /**
+     * Serializes all bone attachments (attacher- TransformNodes) for VishvaSerialized.
+     */
+    public serializeBoneAttachments(): BoneAttachmentSerialized[] {
+        let result: BoneAttachmentSerialized[] = [];
+        for (let tn of this.scene.transformNodes) {
+            if (!tn.name.startsWith("attacher-")) continue;
+            let boneIndex = Number(tn.name.split("-")[1]);
+            if (isNaN(boneIndex)) continue;
 
-        let bm: AbstractMesh = null;
-        let att: AbstractMesh = null;
+            // The attacher's parent is the bone's transform node.
+            // After resetSkels(), bone.getTransformNode() may return null,
+            // so we match by name instead.
+            let parentNode = tn.parent;
+            if (parentNode == null) continue;
+            let parentName = parentNode.name;
 
-        for (let mesh of this.meshesPicked) {
-            if (mesh.id.startsWith("boneMarker")) {
-                bm = <AbstractMesh>mesh;
-            } else {
-                att = <AbstractMesh>mesh;
+            let skeletonMeshId: string = null;
+            for (let mesh of this.scene.meshes) {
+                if (mesh.skeleton == null) continue;
+                for (let i = 0; i < mesh.skeleton.bones.length; i++) {
+                    let bone = mesh.skeleton.bones[i];
+                    if (bone.name === parentName) {
+                        skeletonMeshId = mesh.id;
+                        boneIndex = i;
+                        break;
+                    }
+                }
+                if (skeletonMeshId != null) break;
             }
-        }
-        if (bm == null) {
-            return "no bone selector selected";
-        }
-        if (att == null) {
-            return "no item selected for attachment";
-        }
-        let boneIndex = Number(bm.id.split("-")[1]);
-        let bone = skel.bones[boneIndex];
-        let tn: TransformNode = new TransformNode("attacher-" + boneIndex);
-        console.log(att);
-        tn.attachToBone(bone, this.meshSelected);
-        att.setParent(tn);
-        //att.attachToBone(bone, bone.getTransformNode());
-        //att.position = Vector3.Zero();
-        this.multiUnSelectAll();
-        this._delBoneSelectors(skel);
 
+            if (skeletonMeshId == null) continue;
+
+            let ba = new BoneAttachmentSerialized();
+            ba.attacherNodeId = tn.id;
+            ba.boneIndex = boneIndex;
+            ba.skeletonMeshId = skeletonMeshId;
+            result.push(ba);
+        }
+        return result;
+    }
+
+    public _attach2Bone(skel: Skeleton, boneIndex: number, skelMesh: AbstractMesh): string {
+        if (this.meshesPicked == null || this.meshesPicked.length === 0) {
+            return "please select (CTL-MouseLeftClick) the item to attach to the bone";
+        }
+        if (this.meshesPicked.length > 1) {
+            return "please select only one mesh to attach";
+        }
+        let att: AbstractMesh = <AbstractMesh>this.meshesPicked[0];
+        let bone = skel.bones[boneIndex];
+        if (bone == null) {
+            return "bone not found at index " + boneIndex;
+        }
+        let tn: TransformNode = new TransformNode("attacher-" + boneIndex);
+        tn.id = "attacher-" + boneIndex + "-" + Date.now();
+        tn.attachToBone(bone, skelMesh);
+        att.setParent(tn);
+        this.multiUnSelectAll();
         return null;
     }
 
@@ -3340,6 +3371,43 @@ export class Vishva {
         this.multiUnSelectAll();
 
         return null;
+    }
+
+    /**
+     * Re-attaches "attacher-" TransformNodes to their bones after scene load.
+     * Uses boneAttachments data from VishvaSerialized.
+     */
+    private _reattachBoneAttachments() {
+        if (this.vishvaSerialized == null || this.vishvaSerialized.boneAttachments == null) return;
+        if (this.vishvaSerialized.boneAttachments.length === 0) return;
+
+        for (let ba of this.vishvaSerialized.boneAttachments) {
+            let tn = this.scene.getTransformNodeByID(ba.attacherNodeId);
+            if (tn == null) {
+                console.warn(`[Vishva] Bone attachment: attacher node "${ba.attacherNodeId}" not found`);
+                continue;
+            }
+            let mesh = this.scene.getMeshByID(ba.skeletonMeshId);
+            if (mesh == null) {
+                console.warn(`[Vishva] Bone attachment: mesh "${ba.skeletonMeshId}" not found`);
+                continue;
+            }
+            let skel = mesh.skeleton;
+            if (skel == null) {
+                console.warn(`[Vishva] Bone attachment: mesh "${ba.skeletonMeshId}" has no skeleton`);
+                continue;
+            }
+            let bone = skel.bones[ba.boneIndex];
+            if (bone == null) {
+                console.warn(`[Vishva] Bone attachment: bone index ${ba.boneIndex} not found`);
+                continue;
+            }
+            try {
+                tn.attachToBone(bone, mesh);
+            } catch (e) {
+                console.error(`[Vishva] Failed to re-attach "${tn.name}" to bone:`, e);
+            }
+        }
     }
 
     public playAnimation(animName: string, animRate: string, loop: boolean) {

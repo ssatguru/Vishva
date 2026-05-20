@@ -6,16 +6,16 @@ body {
   margin: 0;
   /* overflow: hidden; */
   /* font-size: 85%; */
-  /* font-size: .75em; */
+  /* font-size: 1em; */
   /* font-size: 14px; */
-  font-family: "Lucida Grande", sans-serif;
+  /* font-family: "Lucida Grande", sans-serif; */
   font-weight: lighter;
   /* font-family: "Comic Sans"; */
   /* font-family: "Lucida Console", Monaco, monospace; */
   /* font-family: sans-serif; */
   /* font-family: "Courier New", "Trebuchet MS", sans-serif; */
   /* font-family: "Courier New Bold"; */
-  /* font-family: "Segoe UI", "Helvetica Neue", "Helvetica", Arial, sans-serif; */
+  font-family: "Segoe UI", "Helvetica Neue", "Helvetica", Arial, sans-serif;
   background-color: #000000;
   color: #ffffff;
 }

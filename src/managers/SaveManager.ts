@@ -107,6 +107,7 @@ export class SaveManager {
         vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
         vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
         vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
+        vishvaSerialized.boneAttachments = this.vishva.serializeBoneAttachments();
 
         // Capture object IDs
         vishvaSerialized.objectIds = new ObjectIdMap();
@@ -223,6 +224,7 @@ export class SaveManager {
             vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
             vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
             vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
+            vishvaSerialized.boneAttachments = this.vishva.serializeBoneAttachments();
 
             vishvaSerialized.objectIds = new ObjectIdMap();
             if (this.vishva.avatar) vishvaSerialized.objectIds.avatarId = this.vishva.avatar.id;

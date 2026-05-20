@@ -26,6 +26,9 @@ export class VishvaSerialized {
     // NEW: Mesh metadata - stores metadata previously stored in tags
     public meshMetadata: MeshMetadataMap;
 
+    // Bone attachments - stores which TransformNodes are attached to which bones
+    public boneAttachments: BoneAttachmentSerialized[] = [];
+
     
 
     public constructor(vishva?: Vishva) {
@@ -218,3 +221,16 @@ export class MeshMetadata {
  * Map of mesh IDs to their metadata
  */
 export type MeshMetadataMap = { [meshId: string]: MeshMetadata };
+
+/**
+ * Serialized bone attachment data.
+ * Stores the info needed to re-attach a TransformNode to a bone after scene load.
+ */
+export class BoneAttachmentSerialized {
+    /** ID of the "attacher-" TransformNode */
+    public attacherNodeId: string;
+    /** Index of the bone in the skeleton's bones array */
+    public boneIndex: number;
+    /** ID of the mesh whose skeleton owns the bone */
+    public skeletonMeshId: string;
+}

@@ -6,7 +6,7 @@ src/
   index.ts                  # Entry point — bootstraps Vishva, imports SNA modules
   index.html                # HTML shell with canvas and GUI container
   Vishva.ts                 # Core class — scene management, mesh operations, serialization, avatar setup
-  VishvaSerialized.ts       # Serialization models (VishvaSerialized, ObjectIdMap, MeshMetadata, AvSerialized)
+  VishvaSerialized.ts       # Serialization models (VishvaSerialized, ObjectIdMap, MeshMetadata, BoneAttachmentSerialized, AvSerialized)
   Game.ts                   # Placeholder for game logic
   CameraController.ts       # Custom camera controller (UniCamController)
   GrndSpread.ts             # Ground spreading / SPS vegetation system
@@ -122,12 +122,14 @@ Current test coverage:
 - `managers/spawner/SpawnerManager.test.ts`
 - `gui/UploadUI.property.test.ts`
 - `gui/WorldLauncher.test.ts`, `gui/WorldLauncher.property.test.ts`
+- `gui/propspanel/AnimationUI.test.ts`
 
 ## Architecture Patterns
 
 - **GUI convention**: `*ML.ts` files generate HTML markup, `*UI.ts` files handle logic and events. They come in pairs.
 - **SNA registration**: Each Sensor/Actuator self-registers with `SNAManager` at import time (side-effect imports in `index.ts`).
-- **Serialization**: Vishva extends BabylonJS scene serialization with `VishvaSerialized` for SNA data, avatar state, ground spreads, GUI settings, and object IDs. Backward compatibility with tag-based object identification is maintained alongside the newer `ObjectIdMap` approach.
+- **Serialization**: Vishva extends BabylonJS scene serialization with `VishvaSerialized` for SNA data, avatar state, ground spreads, GUI settings, object IDs, and bone attachments. Backward compatibility with tag-based object identification is maintained alongside the newer `ObjectIdMap` approach.
+- **Bone attachment system**: Meshes can be attached to skeleton bones via "attacher-" TransformNodes. `Vishva._attach2Bone()` creates the node and calls `attachToBone()`. Attachments are serialized in `VishvaSerialized.boneAttachments[]` (bone name matching against parent node) and re-attached on load via `_reattachBoneAttachments()`. The bone selector UI in AnimationUI provides a VTreeDialog for browsing the skeleton hierarchy and selecting bones.
 - **Singleton access**: `Vishva.vishva` is a static reference to the single Vishva instance. `SNAManager.getSNAManager()` is a singleton accessor.
 - **No framework**: The UI is built with vanilla DOM manipulation and W3.CSS classes. No component framework.
 - **Asset pipeline**: `AssetCollector` gathers scene assets → `AssetResolver` resolves URLs → `PathRewriter` normalizes paths → `TarUtils` packages into archives for standalone export. For IndexedDB saves, `AssetStore` (`VishvaAssetStore` database) provides persistent browser storage with two object stores: `session` (active world working set, cleared on each load) and `saved` (explicitly-saved worlds, keyed by `{worldName}/{assetPath}`). The `WorldLauncher` reads from the `saved` store and routes via `?world=__saved:<name>` URL parameters.

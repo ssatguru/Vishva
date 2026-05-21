@@ -1,3 +1,26 @@
+### 05/20/2026 0.4.0-alpha.37
+
+#### Navbar to Menu Bar
+- converted the floating navbar (absolutely-positioned over the canvas) into a fixed menu bar at the top of the viewport
+- menu bar uses `position:fixed; top:0; width:100%; height:48px` with theme colors (`darkColors.b` background, `darkColors.f` foreground, `lightColors.b` bottom border)
+- menu bar is prepended to `<body>` as the first child (before `#vGUI` and `#vCanvas`)
+- `#vGUI` and `#vCanvas` offset by 48px from top (`top:48px; height:calc(100% - 48px)`) to make room for the menu bar
+- VishvaGUI dynamically syncs canvas/GUI offset with actual `menuBar.offsetHeight` on resize (fallback to `UIConst.MENU_BAR_HEIGHT = 48`)
+- all 16 action buttons preserved in order with their IDs and title attributes
+- hamburger button toggles `#navMenubar` between `display:inline-flex` and `display:none`
+- curated assets submenu (`#AddMenu`) uses `position:absolute; top:100%; left:0; z-index:1000` relative to its wrapper
+- added `gap:0.25em` between nav buttons and `margin-right:0.5em` after the hamburger button
+- removed `VDiag.leftTop1` position (no longer needed — menu bar is outside `#vGUI`)
+- `VDiag.leftTop2` now uses `top:0px` instead of `UIConst._buttonHeight`
+
+#### Dialog Positioning Fixes
+- fixed VDiag `_moveIt` clamping: changed from `Vishva.gui.offsetTop` / `Vishva.gui.offsetLeft` to `0` — dialogs are children of `#vGUI` so their coordinates are relative to it, not the viewport
+- added `ResizeObserver` on each VDiag window element to re-clamp position when content grows (e.g., expanding a `<details>` section near the bottom of the canvas pushes the dialog upward instead of spilling below)
+
+#### Tests
+- added `NavBarML.test.ts` — 13 unit tests for DOM structure, button order, theme colors, hamburger toggle, z-index layering
+- added `NavBarML.property.test.ts` — property-based test verifying dialog clamping invariant (top >= 0 for all random positions)
+
 ### 05/20/2026 0.4.0-alpha.36
 
 #### Bone Selector Tree Dialog & Bone Attachment

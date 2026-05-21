@@ -35,12 +35,12 @@ src/
     ActuatorTextBar.ts      # Text bar display actuator
 
   gui/                      # Editor UI (vanilla DOM, W3.CSS)
-    VishvaGUI.ts            # Main GUI controller, navigation menu, dialog management
+    VishvaGUI.ts            # Main GUI controller, navigation menu, dialog management, layout sync
     VishvaML.ts             # HTML markup generation
-    NavBarML.ts             # Navigation bar markup
+    NavBarML.ts             # Menu bar markup (fixed position, top of viewport)
     DialogMgr.ts            # Dialog manager
     GuiUtils.ts             # GUI utility functions
-    UIConst.ts              # UI constants
+    UIConst.ts              # UI constants (MENU_BAR_HEIGHT, dialog dimensions)
     CCML.ts / CCUI.ts       # Character controller UI
     EnvironmentML.ts / EnvironmentUI.ts  # Environment settings UI
     SettingsML.ts / SettingsUI.ts        # General settings UI
@@ -122,6 +122,7 @@ Current test coverage:
 - `managers/spawner/SpawnerManager.test.ts`
 - `gui/UploadUI.property.test.ts`
 - `gui/WorldLauncher.test.ts`, `gui/WorldLauncher.property.test.ts`
+- `gui/NavBarML.test.ts`, `gui/NavBarML.property.test.ts`
 - `gui/propspanel/AnimationUI.test.ts`
 
 ## Architecture Patterns
@@ -132,6 +133,7 @@ Current test coverage:
 - **Bone attachment system**: Meshes can be attached to skeleton bones via "attacher-" TransformNodes. `Vishva._attach2Bone()` creates the node and calls `attachToBone()`. Attachments are serialized in `VishvaSerialized.boneAttachments[]` (bone name matching against parent node) and re-attached on load via `_reattachBoneAttachments()`. The bone selector UI in AnimationUI provides a VTreeDialog for browsing the skeleton hierarchy and selecting bones.
 - **Singleton access**: `Vishva.vishva` is a static reference to the single Vishva instance. `SNAManager.getSNAManager()` is a singleton accessor.
 - **No framework**: The UI is built with vanilla DOM manipulation and W3.CSS classes. No component framework.
+- **Menu bar layout**: The editor uses a stacked layout — a fixed menu bar (`#menuBar`, 48px max height, `position:fixed; top:0`) sits above the canvas. `#vGUI` and `#vCanvas` are offset by the menu bar height (`top:48px; height:calc(100% - 48px)`). VishvaGUI syncs the offset dynamically via `menuBar.offsetHeight` on resize. VDiag dialogs are children of `#vGUI` and clamped to its bounds (top >= 0), so they never overlap the menu bar. A `ResizeObserver` on each VDiag re-clamps position when content grows (e.g., `<details>` expansion).
 - **Asset pipeline**: `AssetCollector` gathers scene assets → `AssetResolver` resolves URLs → `PathRewriter` normalizes paths → `TarUtils` packages into archives for standalone export. For IndexedDB saves, `AssetStore` (`VishvaAssetStore` database) provides persistent browser storage with two object stores: `session` (active world working set, cleared on each load) and `saved` (explicitly-saved worlds, keyed by `{worldName}/{assetPath}`). The `WorldLauncher` reads from the `saved` store and routes via `?world=__saved:<name>` URL parameters.
 - **Dual save formats**: Worlds can be saved/downloaded in two formats: (1) full archive with assets (tar.gz / IndexedDB with Vishva.json + Scene.babylon + asset entries), or (2) JSON-only legacy format (single merged scene JSON with VishvaSerialized as a top-level key, stored as `__world.json` in IndexedDB). JSON-only worlds rely on the server for assets.
 - **World file routing**: `FileValidator` provides `isTarGzFile()`, `isJsonWorldFile()`, and `isWorldFile()` for routing uploaded/dropped files. Upload and drag-and-drop detect both formats and route to the appropriate loader (`loadWorldFromFile` for tar.gz, `loadWorldFromJsonFile` for JSON). Both use a store-in-IndexedDB-then-reload pattern (`__uploaded` / `__uploaded_json`).

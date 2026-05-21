@@ -35,7 +35,7 @@ export class ActDialogParm extends ActProperties {
         this.openEffect.value = "scale";
         this.closeEffect.values = this.openEffect.values;
         this.closeEffect.value = this.openEffect.value;
-        this.position.values = [VDiag.leftTop, VDiag.leftTop1, VDiag.leftTop2, VDiag.leftCenter, VDiag.leftBottom, VDiag.centerTop, VDiag.center, VDiag.centerBottom, VDiag.rightTop, VDiag.rightCenter, VDiag.rightBottom];
+        this.position.values = [VDiag.leftTop, VDiag.leftCenter, VDiag.leftBottom, VDiag.centerTop, VDiag.center, VDiag.centerBottom, VDiag.rightTop, VDiag.rightCenter, VDiag.rightBottom];
     }
 }
 
@@ -106,7 +106,7 @@ export class ActuatorDialog extends ActuatorAbstract {
         //should be removed when old worlds have been upgraded
         if (!props.position){
             props.position = new SelectType();
-            props.position.values = [VDiag.leftTop, VDiag.leftTop1, VDiag.leftTop2, VDiag.leftCenter, VDiag.leftBottom, VDiag.centerTop, VDiag.center, VDiag.centerBottom, VDiag.rightTop, VDiag.rightCenter, VDiag.rightBottom];
+            props.position.values = [VDiag.leftTop, VDiag.leftTop2, VDiag.leftCenter, VDiag.leftBottom, VDiag.centerTop, VDiag.center, VDiag.centerBottom, VDiag.rightTop, VDiag.rightCenter, VDiag.rightBottom];
             props.position.value = VDiag.center;
         }
         this._dialog = new VDiag(this._div, props.title, props.position.value, this._w, this._h, "350px", props.modal,props.resizable,props.draggable);

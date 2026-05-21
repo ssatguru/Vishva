@@ -64,7 +64,6 @@ export class VDiag {
                         background-color: white;`;
 
         public static leftTop: string = "leftTop";
-        public static leftTop1: string = "leftTop1";
         public static leftTop2: string = "leftTop2";
         public static leftCenter: string = "leftCenter";
         public static leftBottom: string = "leftBottom";
@@ -155,21 +154,14 @@ export class VDiag {
 
         public position(pos: string): void {
                 switch (pos) {
-
                         case VDiag.leftTop:
                                 this.w.style.top = "0px";
                                 this.w.style.left = "0px";
                                 this.w.style.bottom = 'auto';
                                 this.w.style.right = 'auto';
                                 break;
-                        case VDiag.leftTop1:
-                                this.w.style.top = UIConst._buttonHeight + "px";
-                                this.w.style.left = "0px";
-                                this.w.style.bottom = 'auto';
-                                this.w.style.right = 'auto';
-                                break;
                         case VDiag.leftTop2:
-                                this.w.style.top = UIConst._buttonHeight + "px";
+                                this.w.style.top = "0px";
                                 this.w.style.left = UIConst._diagWidthS;
                                 this.w.style.bottom = 'auto';
                                 this.w.style.right = 'auto';
@@ -260,10 +252,10 @@ export class VDiag {
                 //Clamp the Top Position (t):
                 //-1 is to prevent vertical scroll bar in body from showing up
                 let newT = Math.min(t, Vishva.gui.offsetHeight -1 - this.w.offsetHeight);
-                newT = Math.max(newT, Vishva.gui.offsetTop);
+                newT = Math.max(newT, 0);
                 //Clamp the Left Position (l):
                 let newL = Math.min(l, Vishva.gui.offsetWidth - this.w.offsetWidth);
-                newL = Math.max(newL, Vishva.gui.offsetLeft);
+                newL = Math.max(newL, 0);
                 if (!force) if ((newT == t-1) && (newL==l)) return;
                 //Set the New Position of the Dialog:
                 this.w.style.top = newT + 'px';
@@ -839,6 +831,15 @@ export class VDiag {
 
                 this.position(pos);
                 DialogMgr.vdiags.push(this);
+
+                // Re-clamp position when dialog content causes it to grow
+                // (e.g., expanding a <details> section near the bottom of the canvas)
+                const resizeObserver = new ResizeObserver(() => {
+                        if (!this.isHidden && !this.isResizing) {
+                                this._moveIt(this.w.offsetTop, this.w.offsetLeft);
+                        }
+                });
+                resizeObserver.observe(this.w);
 
                 // Focus management
                 this.w.addEventListener('mouseleave', () => {

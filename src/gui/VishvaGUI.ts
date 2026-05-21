@@ -11,6 +11,7 @@ import { PropsPanelUI } from "./propspanel/PropsPanelUI";
 import { VButton } from "./components/VButton";
 import { hlpElement } from "./HelpML";
 import { NavBar } from "./NavBarML";
+import { UIConst } from "./UIConst";
 import { saveElement } from "./VishvaML";
 import { VDiag } from "./components/VDiag";
 import { TransformNode } from "babylonjs";
@@ -45,7 +46,22 @@ export class VishvaGUI {
         this._vishva = vishva;
         this._vishvaFiles = Vishva.userAssets;
 
-        Vishva.gui.append(new NavBar().navElement);
+        new NavBar();
+
+        // Sync canvas/GUI offset with menu bar height
+        const menuBar = document.getElementById("menuBar");
+        if (menuBar) {
+            const updateLayout = () => {
+                const h = menuBar.offsetHeight || UIConst.MENU_BAR_HEIGHT;
+                Vishva.gui.style.top = h + "px";
+                Vishva.gui.style.height = `calc(100% - ${h}px)`;
+                const canvas = Vishva.vishva.canvas;
+                canvas.style.top = h + "px";
+                canvas.style.height = `calc(100% - ${h}px)`;
+            };
+            updateLayout();
+            window.addEventListener("resize", updateLayout);
+        }
 
         Vishva.gui.append(saveElement);
 
@@ -175,10 +191,10 @@ export class VishvaGUI {
         let showNavMenu: HTMLButtonElement = <HTMLButtonElement>document.getElementById("showNavMenu");
         showNavMenu.style.display = "inline-block";
         showNavMenu.onclick = (e) => {
-            if (nm.style.display == "inline-block") {
+            if (nm.style.display == "inline-flex") {
                 nm.style.display = "none";
             } else {
-                nm.style.display = "inline-block";
+                nm.style.display = "inline-flex";
             }
         }
 
@@ -253,7 +269,7 @@ export class VishvaGUI {
 
             if (this._allAssetsVTDiag == null) {
 
-                this._allAssetsVTDiag = new VTreeDialog(this._vishva, "files", VDiag.leftTop2, Vishva.userAssets, "", false);
+                this._allAssetsVTDiag = new VTreeDialog(this._vishva, "files", VDiag.leftTop2, Vishva.userAssets, "", false,false);
 
                 this._allAssetsVTDiag.addTreeListener((f, p, l) => {
                     if (l) {

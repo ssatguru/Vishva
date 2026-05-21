@@ -15,6 +15,7 @@ import {
 import { AnimUtils } from "../../util/AnimUtils";
 import { AbstractMesh } from "babylonjs/Meshes/abstractMesh";
 import { VTreeDialog } from "../components/VTreeDialog";
+import { VDiag } from "../components/VDiag";
 
 /**
  * Provides UI for the Animation (Skeleton) tab of mesh properties
@@ -520,7 +521,7 @@ export class AnimationUI {
         }
 
         const treeData = this._buildBoneTreeData(this._skel);
-        this._boneSelectorDialog = new VTreeDialog(this._vishva, "Bone Selector", "top:100px;left:100px", treeData, undefined, true, false);
+        this._boneSelectorDialog = new VTreeDialog(this._vishva, "Bone Selector",  VDiag.leftTop, treeData, undefined, true, false);
         this._boneSelectorDialog.addTreeListener((boneName, path, isLeaf) => this._onBoneSelected(boneName, path, isLeaf));
         this._boneSelectorDialog.onClose(() => {
             this._disposeBoneMarker();

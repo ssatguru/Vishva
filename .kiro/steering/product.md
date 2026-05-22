@@ -14,7 +14,7 @@ Vishva (Hindi for "World") is a browser-based live 3D scene editor built on Baby
 - Browser save/load via IndexedDB (`VishvaAssetStore`) — supports both formats, stores individual assets without tar.gz intermediary for full worlds, or a single `__world.json` entry for JSON-only worlds
 - Export standalone world archives (tar-based) for portable distribution
 - Physics support via Oimo.js
-- Theming system for the editor UI (W3.CSS-based, multiple theme variants)
+- Theming system for the editor UI (CSS custom properties, 11 presets across 5 color families, live switching via Settings, persisted in localStorage)
 - Upload and manage custom 3D assets (GLB, glTF, Babylon files)
 - Drag-and-drop or upload `.tar.gz` and `.json` world files to load them
 

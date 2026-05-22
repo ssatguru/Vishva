@@ -5,6 +5,7 @@ import { DialogMgr } from "./DialogMgr";
 import { settingHTML } from "./SettingsML";
 import { VButton } from "./components/VButton";
 import { VDiag } from "./components/VDiag";
+import { VThemes } from "./components/VTheme";
 /**
  * provide ui to manage world/user settings/preferences
  */
@@ -20,6 +21,7 @@ export class SettingsUI {
     private _revealInvis: HTMLInputElement;
     private _showDisa: HTMLInputElement;
     private _snapper: HTMLInputElement;
+    private _themeSelect: HTMLSelectElement;
 
     private _redoShadows: HTMLButtonElement;
 
@@ -42,6 +44,20 @@ export class SettingsUI {
         this._revealInvis = <HTMLInputElement>document.getElementById("revealInvis");
         this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
         this._snapper = <HTMLInputElement>document.getElementById("snapper");
+
+        this._themeSelect = <HTMLSelectElement>document.getElementById("themeSelect");
+        // Populate theme dropdown
+        VThemes.presets.forEach((preset, index) => {
+            const opt = document.createElement("option");
+            opt.value = index.toString();
+            opt.textContent = preset.name;
+            this._themeSelect.appendChild(opt);
+        });
+        this._themeSelect.value = VThemes.getActivePresetIndex().toString();
+        // Live preview on change
+        this._themeSelect.onchange = () => {
+            VThemes.applyPreset(parseInt(this._themeSelect.value, 10));
+        };
 
         this._redoShadows = <HTMLButtonElement>document.getElementById("redoShadow");
 
@@ -114,6 +130,8 @@ export class SettingsUI {
         this._autoEditMenu.checked = this._vishva.isAutoEditMenuOn();
 
         this._showToolTips.checked = this.enableToolTips;
+
+        this._themeSelect.value = VThemes.getActivePresetIndex().toString();
     }
 
     public toggle() {

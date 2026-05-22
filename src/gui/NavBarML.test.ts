@@ -156,17 +156,17 @@ describe("NavBarML - DOM Structure", () => {
 
     it("should use darkColors.b as background and darkColors.f as foreground", () => {
         const menuBar = document.getElementById("menuBar")!;
-        // jsdom normalizes hex colors to rgb() format
-        expect(menuBar.style.backgroundColor).toBe("rgb(51, 51, 51)");
-        expect(menuBar.style.color).toBe("rgb(255, 255, 255)");
+        // Now uses CSS custom properties for dynamic theming
+        expect(menuBar.style.backgroundColor).toBe("var(--v-dark-bg)");
+        expect(menuBar.style.color).toBe("var(--v-dark-fg)");
     });
 
     // ─── Requirement 2.3: Menu bar has 1px bottom border with lightColors.b ─
 
     it("should have 1px bottom border with lightColors.b color", () => {
         const menuBar = document.getElementById("menuBar")!;
-        // jsdom normalizes hex colors to rgb() format
-        expect(menuBar.style.borderBottom).toBe("1px solid rgb(204, 204, 204)");
+        // Now uses CSS custom properties for dynamic theming
+        expect(menuBar.style.borderBottom).toBe("1px solid var(--v-light-bg)");
     });
 
     // ─── Requirement 4.1: Hamburger button is first interactive element ──

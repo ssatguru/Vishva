@@ -18,6 +18,7 @@ import { TransformNode } from "babylonjs";
 import { CCUI } from "./CCUI";
 import { SNAManager } from "../sna/SNA";
 import { SavePromptUI } from "./SavePromptUI";
+import { WorldLauncher } from "./WorldLauncher";
 import { UploadUI } from "./UploadUI";
 import { MeshMetadata } from "../VishvaSerialized";
 
@@ -202,15 +203,15 @@ export class VishvaGUI {
         let nm = document.getElementById("navMenubar");
         nm.style.visibility = "visible";
 
-        // button to navigate to world launcher
+        // button to open world launcher overlay (without closing the current scene)
         const worldLauncherBtn = document.getElementById("worldLauncher");
         worldLauncherBtn.onclick = (e) => {
-            if (this._vishva.isDirty()) {
-                if (!confirm("You have unsaved changes. Leave this world?")) {
-                    return false;
+            new WorldLauncher(() => {
+                if (this._vishva.isDirty()) {
+                    return confirm("You have unsaved changes. Leave this world?");
                 }
-            }
-            window.location.href = window.location.pathname;
+                return true;
+            });
             return false;
         };
 

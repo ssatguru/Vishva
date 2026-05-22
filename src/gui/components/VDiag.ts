@@ -626,8 +626,8 @@ export class VDiag {
         }
         public showTitleBar() {
                 this.wb.setAttribute("style", this._barStyle);
-                this.wb.style.backgroundColor = Vishva.theme.colors.b;
-                this.wb.style.color = Vishva.theme.colors.f;
+                this.wb.style.backgroundColor = "var(--v-color-bg)";
+                this.wb.style.color = "var(--v-color-fg)";
         }
 
         public setTitle(title: string) {
@@ -643,8 +643,8 @@ export class VDiag {
                 if (this.f == null) {
                         this.f = document.createElement('div');
                         this.w.appendChild(this.f);
-                        this.f.style.backgroundColor = Vishva.theme.colors.b;
-                        this.f.style.color = Vishva.theme.colors.f;
+                        this.f.style.backgroundColor = "var(--v-color-bg)";
+                        this.f.style.color = "var(--v-color-fg)";
                 }
 
                 let button: HTMLButtonElement = VButton.create(txt, txt);
@@ -737,7 +737,7 @@ export class VDiag {
                 this.w.style.minWidth = minWidth;
                 // this.w.style.color = Vishva.theme.darkColors.f;
                 // this.w.style.backgroundColor == Vishva.theme.darkColors.b;
-                this.w.style.borderColor = Vishva.theme.lightColors.b;
+                this.w.style.borderColor = "var(--v-light-bg)";
 
                 this._isModal = modal;
                 if (modal) {
@@ -810,8 +810,8 @@ export class VDiag {
                 //diag body ===========================================
                 this.b = <HTMLElement>this.w.getElementsByClassName('bdy')[0];
                 this.b.appendChild(this.bc);
-                this.b.style.color = Vishva.theme.darkColors.f;
-                this.b.style.backgroundColor = Vishva.theme.darkColors.b;
+                this.b.style.color = "var(--v-dark-fg)";
+                this.b.style.backgroundColor = "var(--v-dark-bg)";
                 if (height == null || height == "") height = "auto";
                 else this.b.style.height = <string>height;
 

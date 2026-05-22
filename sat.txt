@@ -35,4 +35,4 @@ Instead the color values fromthe css needs to be copied to sr/gui/components/VTh
 a) create a new class say EggPlantTheme which extends VTheme.
 b) copy the 10 foreground and background colors from the css to this class
 c) set the CurretTheme  to an instance of this new class.
-See VTheme.ts for more instructions.
+See "VTheme.ts" under "components" for more instructions.

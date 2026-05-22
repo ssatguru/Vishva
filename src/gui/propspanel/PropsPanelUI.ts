@@ -19,7 +19,6 @@ import { gsElement } from "./GrndSPSML";
 import { UIConst } from "../UIConst";
 import { VDiag } from "../components/VDiag";
 import { GuiUtils } from "../GuiUtils";
-import { VThemes } from "../components/VTheme";
 import { InstancedMesh, Mesh, TransformNode } from "babylonjs";
 /**
  * Provides UI to manage an Item(mesh) properties
@@ -63,7 +62,7 @@ export class PropsPanelUI {
         //set event handler for each summary tag
         let sms: HTMLCollectionOf<HTMLElement> = ppElement.getElementsByTagName("summary");
         for (let i = 0; i < sms.length; i++) {
-            sms.item(i).style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
+            sms.item(i).style.backgroundColor = "var(--v-light-bg)";
             sms.item(i).style.margin = "0.2em";
             sms.item(i).onclick = (e) => {
                 let dtl: HTMLDetailsElement = <HTMLDetailsElement>(<HTMLElement>e.target).parentElement;

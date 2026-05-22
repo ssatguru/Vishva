@@ -8,7 +8,6 @@
  */
 
 import { buildWorldQueryString, processServerWorldList, storeUploadedWorld, deleteWorldFromStore, exportWorldAsTarGz } from "./WorldLauncherLogic";
-import { VThemes } from "./components/VTheme";
 import { AssetStore } from "../managers/AssetStore";
 
 /* global variable from userAssets.js script loaded during startup */
@@ -18,10 +17,25 @@ export class WorldLauncher {
     private _overlay: HTMLDivElement;
     private _contentArea: HTMLDivElement;
     private _panelButtons: HTMLButtonElement[] = [];
+    private _onBeforeNavigate: (() => boolean) | null;
 
-    constructor() {
+    /**
+     * @param onBeforeNavigate Optional callback invoked before navigating to a new world.
+     *   Return true to allow navigation, false to cancel it.
+     *   If not provided, navigation always proceeds.
+     */
+    constructor(onBeforeNavigate?: () => boolean) {
+        this._onBeforeNavigate = onBeforeNavigate || null;
         this._overlay = this._createOverlay();
         document.body.appendChild(this._overlay);
+    }
+
+    /** Attempt navigation — checks onBeforeNavigate first */
+    private _navigate(queryString: string): void {
+        if (this._onBeforeNavigate && !this._onBeforeNavigate()) {
+            return;
+        }
+        window.location.search = queryString;
     }
 
     /** Remove the launcher DOM from the page */
@@ -55,30 +69,50 @@ export class WorldLauncher {
     private _createContainer(): HTMLDivElement {
         const container = document.createElement("div");
         container.className = "w3-card-4";
-        container.style.backgroundColor = VThemes.CurrentTheme.darkColors.b;
-        container.style.color = VThemes.CurrentTheme.darkColors.f;
+        container.style.backgroundColor = "var(--v-dark-bg)";
+        container.style.color = "var(--v-dark-fg)";
         container.style.width = "90%";
         container.style.maxWidth = "600px";
         container.style.borderRadius = "8px";
         container.style.overflow = "hidden";
 
-        // Title
+        // Title bar (with close button)
         const titleBar = document.createElement("div");
         titleBar.className = "w3-container w3-padding";
-        titleBar.style.backgroundColor = VThemes.CurrentTheme.colors.b;
-        titleBar.style.color = VThemes.CurrentTheme.colors.f;
+        titleBar.style.backgroundColor = "var(--v-color-bg)";
+        titleBar.style.color = "var(--v-color-fg)";
         titleBar.style.textAlign = "center";
+        titleBar.style.position = "relative";
 
         const title = document.createElement("h2");
         title.textContent = "Vishva - World Launcher";
         title.style.margin = "8px 0";
         titleBar.appendChild(title);
+
+        // Close button (top-right corner) — only shown when opened over an existing scene
+        if (this._onBeforeNavigate) {
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "w3-button w3-hover-red w3-round";
+            closeBtn.innerHTML = '<span class="material-icons-outlined">close</span>';
+            closeBtn.title = "Close";
+            closeBtn.style.position = "absolute";
+            closeBtn.style.top = "8px";
+            closeBtn.style.right = "8px";
+            closeBtn.style.color = "var(--v-color-fg)";
+            closeBtn.style.padding = "4px 8px";
+            closeBtn.style.lineHeight = "1";
+            closeBtn.onclick = () => {
+                this.dispose();
+            };
+            titleBar.appendChild(closeBtn);
+        }
+
         container.appendChild(titleBar);
 
         // Panel buttons row
         const btnRow = document.createElement("div");
         btnRow.className = "w3-bar w3-padding";
-        btnRow.style.backgroundColor = VThemes.CurrentTheme.darkColors.b;
+        btnRow.style.backgroundColor = "var(--v-dark-bg)";
         btnRow.style.display = "flex";
         btnRow.style.justifyContent = "center";
         btnRow.style.gap = "8px";
@@ -104,18 +138,18 @@ export class WorldLauncher {
         // Empty World button (always visible)
         const emptyBtnContainer = document.createElement("div");
         emptyBtnContainer.className = "w3-container w3-padding w3-center";
-        emptyBtnContainer.style.borderTop = "1px solid " + VThemes.CurrentTheme.lightColors.b;
+        emptyBtnContainer.style.borderTop = "1px solid var(--v-light-bg)";
 
         const emptyBtn = document.createElement("button");
         emptyBtn.className = "w3-button w3-round";
         emptyBtn.textContent = "Empty World";
-        emptyBtn.style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
-        emptyBtn.style.color = VThemes.CurrentTheme.lightColors.f;
+        emptyBtn.style.backgroundColor = "var(--v-light-bg)";
+        emptyBtn.style.color = "var(--v-light-fg)";
         emptyBtn.style.padding = "10px 32px";
         emptyBtn.style.marginTop = "4px";
         emptyBtn.style.marginBottom = "4px";
         emptyBtn.onclick = () => {
-            window.location.search = buildWorldQueryString("empty");
+            this._navigate(buildWorldQueryString("empty"));
         };
         emptyBtnContainer.appendChild(emptyBtn);
         container.appendChild(emptyBtnContainer);
@@ -127,17 +161,17 @@ export class WorldLauncher {
         const btn = document.createElement("button");
         btn.className = "w3-button w3-round";
         btn.textContent = label;
-        btn.style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
-        btn.style.color = VThemes.CurrentTheme.lightColors.f;
+        btn.style.backgroundColor = "var(--v-light-bg)";
+        btn.style.color = "var(--v-light-fg)";
         btn.style.padding = "8px 16px";
         btn.onclick = () => {
             // Highlight active button
             this._panelButtons.forEach(b => {
-                b.style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
-                b.style.color = VThemes.CurrentTheme.lightColors.f;
+                b.style.backgroundColor = "var(--v-light-bg)";
+                b.style.color = "var(--v-light-fg)";
             });
-            btn.style.backgroundColor = VThemes.CurrentTheme.colors.b;
-            btn.style.color = VThemes.CurrentTheme.colors.f;
+            btn.style.backgroundColor = "var(--v-color-bg)";
+            btn.style.color = "var(--v-color-fg)";
             onClick();
         };
         this._panelButtons.push(btn);
@@ -168,7 +202,7 @@ export class WorldLauncher {
             const msg = document.createElement("div");
             msg.className = "w3-center w3-padding";
             msg.textContent = "No worlds available on server";
-            msg.style.color = VThemes.CurrentTheme.darkColors.f;
+            msg.style.color = "var(--v-dark-fg)";
             this._contentArea.appendChild(msg);
             return;
         }
@@ -176,7 +210,7 @@ export class WorldLauncher {
         const list = this._createWorldList(serverWorlds.map(w => ({
             name: w.display,
             onClick: () => {
-                window.location.search = buildWorldQueryString(w.filename);
+                this._navigate(buildWorldQueryString(w.filename));
             }
         })));
         this._contentArea.appendChild(list);
@@ -190,7 +224,7 @@ export class WorldLauncher {
         const loading = document.createElement("div");
         loading.className = "w3-center w3-padding";
         loading.textContent = "Loading...";
-        loading.style.color = VThemes.CurrentTheme.darkColors.f;
+        loading.style.color = "var(--v-dark-fg)";
         this._contentArea.appendChild(loading);
 
         this._loadBrowserWorldsWithType()
@@ -211,7 +245,7 @@ export class WorldLauncher {
                         world.name,
                         listContainer,
                         () => {
-                            window.location.search = buildWorldQueryString("__saved:" + world.name);
+                            this._navigate(buildWorldQueryString("__saved:" + world.name));
                         },
                         displayName
                     );
@@ -273,13 +307,13 @@ export class WorldLauncher {
 
         const label = document.createElement("p");
         label.textContent = "Select a .tar.gz world file to upload:";
-        label.style.color = VThemes.CurrentTheme.darkColors.f;
+        label.style.color = "var(--v-dark-fg)";
         uploadContainer.appendChild(label);
 
         const fileInput = document.createElement("input");
         fileInput.type = "file";
         fileInput.accept = ".tar.gz";
-        fileInput.style.color = VThemes.CurrentTheme.darkColors.f;
+        fileInput.style.color = "var(--v-dark-fg)";
         fileInput.style.margin = "8px 0";
 
         const statusMsg = document.createElement("div");
@@ -292,11 +326,11 @@ export class WorldLauncher {
 
             // Show processing indicator
             statusMsg.textContent = "Processing...";
-            statusMsg.style.color = VThemes.CurrentTheme.darkColors.f;
+            statusMsg.style.color = "var(--v-dark-fg)";
 
             storeUploadedWorld(file).then(result => {
                 if (result.success) {
-                    window.location.search = "?world=__uploaded";
+                    this._navigate("?world=__uploaded");
                 } else {
                     statusMsg.textContent = result.error || "Upload failed";
                     statusMsg.style.color = "#ff6b6b";
@@ -326,7 +360,7 @@ export class WorldLauncher {
         const nameSpan = document.createElement("span");
         nameSpan.className = "w3-button w3-hover-dark-grey";
         nameSpan.style.flex = "1";
-        nameSpan.style.color = VThemes.CurrentTheme.darkColors.f;
+        nameSpan.style.color = "var(--v-dark-fg)";
         nameSpan.style.padding = "10px 16px";
         nameSpan.style.textAlign = "left";
         nameSpan.textContent = displayName || worldName;
@@ -337,7 +371,7 @@ export class WorldLauncher {
         exportBtn.className = "w3-button w3-hover-dark-grey";
         exportBtn.title = "export world";
         exportBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">download</span>';
-        exportBtn.style.color = VThemes.CurrentTheme.darkColors.f;
+        exportBtn.style.color = "var(--v-dark-fg)";
         exportBtn.onclick = (e) => {
             e.stopPropagation();
             this._exportWorld(worldName, exportBtn, row);
@@ -433,7 +467,7 @@ export class WorldLauncher {
         const msg = document.createElement("div");
         msg.className = "w3-center w3-padding";
         msg.textContent = "No saved worlds available";
-        msg.style.color = VThemes.CurrentTheme.darkColors.f;
+        msg.style.color = "var(--v-dark-fg)";
         this._contentArea.appendChild(msg);
     }
 
@@ -445,7 +479,7 @@ export class WorldLauncher {
         for (const item of items) {
             const row = document.createElement("div");
             row.className = "w3-button w3-block w3-left-align w3-hover-dark-grey";
-            row.style.color = VThemes.CurrentTheme.darkColors.f;
+            row.style.color = "var(--v-dark-fg)";
             row.style.padding = "10px 16px";
             row.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
             row.style.cursor = "pointer";

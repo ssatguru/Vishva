@@ -1,3 +1,23 @@
+### 05/22/2026 0.4.0-alpha.39
+
+#### World Launcher opens as overlay instead of navigating away
+- clicking the "World Launcher" navbar button no longer closes the current scene
+- the launcher now opens as a modal overlay on top of the running world
+- added a close button (×) in the top-right corner to dismiss the launcher and continue in the current world
+- unsaved-changes confirmation only triggers when the user actually selects a world to load, not when opening the launcher
+- initial launcher (no world specified on page load) remains unchanged — no close button since there's no scene behind it
+
+#### Dynamic Theme Switching (CSS Custom Properties)
+- migrated the entire UI theming system from hardcoded inline color values to CSS custom properties (`--v-light-fg`, `--v-light-bg`, `--v-color-fg`, `--v-color-bg`, `--v-dark-fg`, `--v-dark-bg`)
+- themes now switch instantly at runtime — no page reload or rebuild required
+- added `VThemes.applyTheme()`, `VThemes.applyPreset()`, `VThemes.restoreTheme()` API
+- added 11 theme presets: Eggplant (dark/normal/light), Grey (dark/normal), Black (dark), Dark Grey (dark/normal), Brown (dark/normal/light)
+- active theme persisted in `localStorage` and restored on page load
+- added theme picker dropdown in Settings dialog (live preview on selection)
+- updated all themed components to use `var(--v-*)` references: VButton, VDiag, VTab, NavBarML, SnaUI, WorldLauncher, PropsPanelUI
+- removed direct `Vishva.theme.*` and `VThemes.CurrentTheme.*` color reads from UI components
+- updated NavBarML tests to assert CSS variable strings instead of resolved color values
+
 ### 05/21/2026 0.4.0-alpha.38
 
 #### New Sensor: Keyboard

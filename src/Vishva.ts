@@ -111,7 +111,7 @@ import { SpawnerManager } from "./managers/spawner/SpawnerManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.38";
+    static version: string = "0.4.0-alpha.39";
 
     public static worldName: string;
 
@@ -136,6 +136,9 @@ export class Vishva {
     canvas: HTMLCanvasElement;
     public static gui: HTMLElement;
     public static theme: VTheme = VThemes.CurrentTheme;
+
+    /** Apply the persisted theme (CSS variables) early so all UI picks it up */
+    private static _themeInitialized = (() => { VThemes.restoreTheme(); return true; })();
 
     editEnabled: boolean;
 

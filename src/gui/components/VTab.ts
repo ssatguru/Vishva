@@ -1,6 +1,3 @@
-import { DivideBlock } from "babylonjs/Materials/Node/Blocks/divideBlock";
-import { Vishva } from "../../Vishva";
-
 export class VTab {
 
         // <div  style="padding-top:0.5em">
@@ -26,7 +23,7 @@ export class VTab {
 
                 let rootDiv: HTMLDivElement = document.createElement("div");
                 rootDiv.style.paddingTop = "0.5em";
-                rootDiv.style.backgroundColor = Vishva.theme.lightColors.b;
+                rootDiv.style.backgroundColor = "var(--v-light-bg)";
 
                 let tabDiv: HTMLDivElement = document.createElement("div");
                 tabDiv.className = "w3-bar";
@@ -41,13 +38,13 @@ export class VTab {
                         if (firstTab) {
                                 button.style.marginRight = "1em";
                                 //darken the first tab link - on opening the first one is assumed to be selected
-                                button.style.backgroundColor = Vishva.theme.darkColors.b;
-                                button.style.color = Vishva.theme.darkColors.f;
+                                button.style.backgroundColor = "var(--v-dark-bg)";
+                                button.style.color = "var(--v-dark-fg)";
                                 button.style.boxShadow = "0 8px 16px 0 rgba(0, 0, 0, 1)";
                         } else {
                                 //lighten the others
-                                button.style.backgroundColor = Vishva.theme.lightColors.b;
-                                button.style.color = Vishva.theme.lightColors.f;
+                                button.style.backgroundColor = "var(--v-light-bg)";
+                                button.style.color = "var(--v-light-fg)";
                                 button.style.boxShadow = "none";
                         }
                         button.onclick = (e) => this.openTab(<HTMLButtonElement>e.target, rootDiv);
@@ -57,8 +54,8 @@ export class VTab {
                         //div for each tab content
                         let contentDiv = document.createElement("div");
                         contentDiv.className = "w3-card  w3-padding vtab";
-                        contentDiv.style.backgroundColor = Vishva.theme.darkColors.b;
-                        contentDiv.style.color = Vishva.theme.darkColors.f;
+                        contentDiv.style.backgroundColor = "var(--v-dark-bg)";
+                        contentDiv.style.color = "var(--v-dark-fg)";
                         if (firstTab) firstTab = false; else contentDiv.style.display = "none";
                         this.mapTab2Div[tab] = contentDiv;
                         rootDiv.appendChild(contentDiv);
@@ -84,12 +81,12 @@ export class VTab {
                 x = ele.getElementsByClassName("vtablink");
                 for (let i = 0; i < x.length; i++) {
                         if (x[i] === btn) {
-                                (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.darkColors.b;
-                                (<HTMLElement>x[i]).style.color = Vishva.theme.darkColors.f;
+                                (<HTMLElement>x[i]).style.backgroundColor = "var(--v-dark-bg)";
+                                (<HTMLElement>x[i]).style.color = "var(--v-dark-fg)";
                                 (<HTMLElement>x[i]).style.boxShadow = "0 8px 16px 0 rgba(0, 0, 0, 1)";
                         } else {
-                                (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.lightColors.b;
-                                (<HTMLElement>x[i]).style.color = Vishva.theme.lightColors.f;
+                                (<HTMLElement>x[i]).style.backgroundColor = "var(--v-light-bg)";
+                                (<HTMLElement>x[i]).style.color = "var(--v-light-fg)";
                                 (<HTMLElement>x[i]).style.boxShadow = "none";
                         }
 

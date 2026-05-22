@@ -38,21 +38,21 @@ export class SnaUI {
         //set the background of tab body to dark color
         let x: HTMLCollectionOf<Element> = snaElement.getElementsByClassName("vtab");
         for (let i = 0; i < x.length; i++) {
-            (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.darkColors.b;
-            (<HTMLElement>x[i]).style.color = Vishva.theme.darkColors.f;
+            (<HTMLElement>x[i]).style.backgroundColor = "var(--v-dark-bg)";
+            (<HTMLElement>x[i]).style.color = "var(--v-dark-fg)";
 
         }
 
         //darken the first tab link - on opening the first one is assumed to be selected
         x = snaElement.getElementsByClassName("vtablink");
-        (<HTMLElement>x[0]).style.backgroundColor = Vishva.theme.darkColors.b;
-        (<HTMLElement>x[0]).style.color = Vishva.theme.darkColors.f;
+        (<HTMLElement>x[0]).style.backgroundColor = "var(--v-dark-bg)";
+        (<HTMLElement>x[0]).style.color = "var(--v-dark-fg)";
         (<HTMLElement>x[0]).style.boxShadow = "0 8px 16px 0 rgba(0, 0, 0, 1)";
 
         //lighten the others
         for (let i = 1; i < x.length; i++) {
-            (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.lightColors.b;
-            (<HTMLElement>x[i]).style.color = Vishva.theme.lightColors.f;
+            (<HTMLElement>x[i]).style.backgroundColor = "var(--v-light-bg)";
+            (<HTMLElement>x[i]).style.color = "var(--v-light-fg)";
             (<HTMLElement>x[i]).style.boxShadow = "none";
 
         }
@@ -91,12 +91,12 @@ export class SnaUI {
         x = ele.getElementsByClassName("vtablink");
         for (let i = 0; i < x.length; i++) {
             if (x[i] == btn) {
-                (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.darkColors.b;
-                (<HTMLElement>x[i]).style.color = Vishva.theme.darkColors.f;
+                (<HTMLElement>x[i]).style.backgroundColor = "var(--v-dark-bg)";
+                (<HTMLElement>x[i]).style.color = "var(--v-dark-fg)";
                 (<HTMLElement>x[i]).style.boxShadow = "0 8px 16px 0 rgba(0, 0, 0, 1)";
             } else {
-                (<HTMLElement>x[i]).style.backgroundColor = Vishva.theme.lightColors.b;
-                (<HTMLElement>x[i]).style.color = Vishva.theme.lightColors.f;
+                (<HTMLElement>x[i]).style.backgroundColor = "var(--v-light-bg)";
+                (<HTMLElement>x[i]).style.color = "var(--v-light-fg)";
                 (<HTMLElement>x[i]).style.boxShadow = "none";
             }
 
@@ -186,8 +186,8 @@ export class SnaUI {
         if (this.sNaDialog == null) {
             //this.sNaDialog = new VDiag(sNaDetails, "Sensors and Actuators", VDiag.center, "", "", "19em", false);
             this.sNaDialog = new VDiag(snaElement, "Sensors and Actuators", VDiag.center, "", "", "19em", true);
-            this.sNaDialog.setBackGround(Vishva.theme.lightColors.b);
-            this.sNaDialog.setForeGround(Vishva.theme.lightColors.f);
+            this.sNaDialog.setBackGround("var(--v-light-bg)");
+            this.sNaDialog.setForeGround("var(--v-light-fg)");
         } else this.sNaDialog.show();
 
     }

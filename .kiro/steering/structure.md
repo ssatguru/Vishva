@@ -10,7 +10,7 @@ src/
   Game.ts                   # Placeholder for game logic
   CameraController.ts       # Custom camera controller (UniCamController)
   GrndSpread.ts             # Ground spreading / SPS vegetation system
-  style.css                 # Custom styles
+  style.css                 # Custom styles + CSS custom properties for theming (--v-light-*, --v-color-*, --v-dark-*)
   w3.css                    # W3.CSS framework
   w3-theme-*.css            # W3.CSS theme variants (black, brown, dark-grey, eggplant, grey)
 
@@ -45,7 +45,7 @@ src/
     UIConst.ts              # UI constants (MENU_BAR_HEIGHT, dialog dimensions)
     CCML.ts / CCUI.ts       # Character controller UI
     EnvironmentML.ts / EnvironmentUI.ts  # Environment settings UI
-    SettingsML.ts / SettingsUI.ts        # General settings UI
+    SettingsML.ts / SettingsUI.ts        # General settings UI (includes theme picker)
     SnaML.ts / SnaUI.ts     # SNA behavior editor UI
     SoundML.ts / SoundUI.ts # Sound management UI
     TextureML.ts / TextureUI.ts          # Texture management UI
@@ -145,3 +145,4 @@ Current test coverage:
 - **Dual save formats**: Worlds can be saved/downloaded in two formats: (1) full archive with assets (tar.gz / IndexedDB with Vishva.json + Scene.babylon + asset entries), or (2) JSON-only legacy format (single merged scene JSON with VishvaSerialized as a top-level key, stored as `__world.json` in IndexedDB). JSON-only worlds rely on the server for assets.
 - **World file routing**: `FileValidator` provides `isTarGzFile()`, `isJsonWorldFile()`, and `isWorldFile()` for routing uploaded/dropped files. Upload and drag-and-drop detect both formats and route to the appropriate loader (`loadWorldFromFile` for tar.gz, `loadWorldFromJsonFile` for JSON). Both use a store-in-IndexedDB-then-reload pattern (`__uploaded` / `__uploaded_json`).
 - **Spawner system**: `SpawnerManager` manages spawn points for avatar/camera placement on scene load. Spawners store transforms *relative* to a visual arrow mesh, so moving the mesh in the editor adjusts the spawn location. Multiple spawners supported with uniform random selection at load time. Spawner meshes render on top of other geometry (`renderingGroupId=1`, `disableDepthWrite`), are invisible/non-pickable by default (participate in "reveal invisibles"), and are serialized via `VishvaSerialized.spawners[]`. The system replaces the legacy `spawnPointId` mechanism. The CharacterController's `faceForward` setting is accounted for when orienting the arrow mesh.
+- **Theming system**: The editor UI uses CSS custom properties (`--v-light-fg`, `--v-light-bg`, `--v-color-fg`, `--v-color-bg`, `--v-dark-fg`, `--v-dark-bg`) for dynamic theme switching. `VThemes.applyTheme()` writes these variables to `:root`; all UI components reference them via `var(--v-*)` inline styles. Theme presets are defined in `VThemes.presets[]` (11 combinations across 5 color families × light/normal/dark). The active preset is persisted in `localStorage` and restored on page load via `VThemes.restoreTheme()`. The theme picker lives in SettingsUI as a `<select>` dropdown with live preview.

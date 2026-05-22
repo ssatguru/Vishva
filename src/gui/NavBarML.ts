@@ -1,4 +1,3 @@
-import { Vishva } from "../Vishva";
 import { VButton } from "./components/VButton";
 
 
@@ -61,9 +60,9 @@ export class NavBar {
                 this.navElement.style.padding = "0 0.5em";
                 this.navElement.style.height = "48px";
                 this.navElement.style.boxSizing = "border-box";
-                this.navElement.style.backgroundColor = Vishva.theme.darkColors.b;
-                this.navElement.style.color = Vishva.theme.darkColors.f;
-                this.navElement.style.borderBottom = `1px solid ${Vishva.theme.lightColors.b}`;
+                this.navElement.style.backgroundColor = "var(--v-dark-bg)";
+                this.navElement.style.color = "var(--v-dark-fg)";
+                this.navElement.style.borderBottom = "1px solid var(--v-light-bg)";
                 this.navElement.innerHTML = navHTML;
                 VButton.styleThem(this.navElement.getElementsByTagName("button"));
                 document.body.prepend(this.navElement);

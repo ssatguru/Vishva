@@ -265,24 +265,92 @@ export class BrownTheme extends VTheme {
 
 
 
+export interface ThemePreset {
+        name: string;
+        theme: VTheme;
+        l: number;
+        c: number;
+        d: number;
+}
+
 export class VThemes {
 
-        //dark
-        //public static CurrentTheme: VTheme = new EggPlantTheme(4, 5, 6);
-        //public static CurrentTheme: VTheme = new GreyTheme(4, 5, 6);
-        // public static CurrentTheme: VTheme = new BlackTheme(4, 5, 6);
         public static CurrentTheme: VTheme = new DarkGreyTheme(6, 7, 8);
-        //public static CurrentTheme: VTheme = new BrownTheme(4, 5, 6);
 
-        //normal
-        //public static CurrentTheme: VTheme = new EggPlantTheme(2, 3, 4);
-        //public static CurrentTheme: VTheme = new GreyTheme(2, 3, 4);
-        // public static CurrentTheme: VTheme = new BrownTheme(2, 3, 4);
+        /** All available theme presets */
+        public static presets: ThemePreset[] = [
+                { name: "Eggplant Dark", theme: new EggPlantTheme(4, 5, 6), l: 4, c: 5, d: 6 },
+                { name: "Eggplant Normal", theme: new EggPlantTheme(2, 3, 4), l: 2, c: 3, d: 4 },
+                { name: "Eggplant Light", theme: new EggPlantTheme(0, 1, 2), l: 0, c: 1, d: 2 },
+                { name: "Grey Dark", theme: new GreyTheme(4, 5, 6), l: 4, c: 5, d: 6 },
+                { name: "Grey Normal", theme: new GreyTheme(2, 3, 4), l: 2, c: 3, d: 4 },
+                { name: "Black Dark", theme: new BlackTheme(4, 5, 6), l: 4, c: 5, d: 6 },
+                { name: "Dark Grey Dark", theme: new DarkGreyTheme(6, 7, 8), l: 6, c: 7, d: 8 },
+                { name: "Dark Grey Normal", theme: new DarkGreyTheme(4, 5, 6), l: 4, c: 5, d: 6 },
+                { name: "Brown Dark", theme: new BrownTheme(4, 5, 6), l: 4, c: 5, d: 6 },
+                { name: "Brown Normal", theme: new BrownTheme(2, 3, 4), l: 2, c: 3, d: 4 },
+                { name: "Brown Light", theme: new BrownTheme(0, 1, 2), l: 0, c: 1, d: 2 },
+        ];
 
+        private static readonly STORAGE_KEY = "vishva-theme";
 
-        //light
-        //public static CurrentTheme: VTheme = new EggPlantTheme(0, 1, 2);
-        //public static CurrentTheme: VTheme = new BrownTheme(0, 1, 2);
+        /**
+         * Apply a theme by writing CSS custom properties to :root.
+         * Also updates CurrentTheme so any code that still reads it directly stays in sync.
+         */
+        public static applyTheme(theme: VTheme): void {
+                VThemes.CurrentTheme = theme;
+                const root = document.documentElement;
+                root.style.setProperty("--v-light-fg", theme.lightColors.f);
+                root.style.setProperty("--v-light-bg", theme.lightColors.b);
+                root.style.setProperty("--v-color-fg", theme.colors.f);
+                root.style.setProperty("--v-color-bg", theme.colors.b);
+                root.style.setProperty("--v-dark-fg", theme.darkColors.f);
+                root.style.setProperty("--v-dark-bg", theme.darkColors.b);
+        }
 
+        /**
+         * Apply a preset by index and persist the choice.
+         */
+        public static applyPreset(index: number): void {
+                if (index < 0 || index >= VThemes.presets.length) return;
+                const preset = VThemes.presets[index];
+                VThemes.applyTheme(preset.theme);
+                try {
+                        localStorage.setItem(VThemes.STORAGE_KEY, index.toString());
+                } catch (e) { /* localStorage unavailable */ }
+        }
 
+        /**
+         * Restore persisted theme or apply default.
+         */
+        public static restoreTheme(): void {
+                let index = 6; // default: "Dark Grey Dark"
+                try {
+                        const stored = localStorage.getItem(VThemes.STORAGE_KEY);
+                        if (stored != null) {
+                                const parsed = parseInt(stored, 10);
+                                if (!isNaN(parsed) && parsed >= 0 && parsed < VThemes.presets.length) {
+                                        index = parsed;
+                                }
+                        }
+                } catch (e) { /* localStorage unavailable */ }
+                VThemes.applyPreset(index);
+        }
+
+        /**
+         * Get the currently persisted preset index (or default).
+         */
+        public static getActivePresetIndex(): number {
+                try {
+                        const stored = localStorage.getItem(VThemes.STORAGE_KEY);
+                        if (stored != null) {
+                                const parsed = parseInt(stored, 10);
+                                if (!isNaN(parsed) && parsed >= 0 && parsed < VThemes.presets.length) {
+                                        return parsed;
+                                }
+                        }
+                } catch (e) { /* localStorage unavailable */ }
+                return 6; // default
+        }
 }

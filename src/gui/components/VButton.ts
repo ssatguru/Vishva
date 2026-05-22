@@ -1,6 +1,3 @@
-import { Vishva } from "../../Vishva";
-import { VThemes } from "./VTheme";
-
 export class VButton {
         public static create(id: string, label: string): HTMLButtonElement {
                 let btn: HTMLButtonElement = <HTMLButtonElement>document.createElement("BUTTON");
@@ -12,8 +9,8 @@ export class VButton {
 
         public static styleIt(btn: HTMLButtonElement) {
                 btn.classList.add("w3-btn");
-                btn.style.color = VThemes.CurrentTheme.lightColors.f;
-                btn.style.backgroundColor = VThemes.CurrentTheme.lightColors.b;
+                btn.style.color = "var(--v-light-fg)";
+                btn.style.backgroundColor = "var(--v-light-bg)";
         }
 
         public static styleThem(btns: HTMLCollectionOf<HTMLButtonElement>) {

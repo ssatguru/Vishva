@@ -1,3 +1,13 @@
+/* ─── Theme CSS Variables ─── */
+:root {
+  --v-light-fg: #000;
+  --v-light-bg: #c0c0c0;
+  --v-color-fg: #fff;
+  --v-color-bg: #444444;
+  --v-dark-fg: #fff;
+  --v-dark-bg: #303030;
+}
+
 html,
 body {
   width: 100%;

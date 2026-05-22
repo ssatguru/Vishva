@@ -32,7 +32,9 @@ import "./sna/ActuatorSignalEmitter";
 import "./sna/ActuatorSound";
 import "./sna/ActuatorTextBar";
 import "./sna/SensorClick";
+import "./sna/SensorAvContact";
 import "./sna/SensorContact";
+import "./sna/SensorKeyboard";
 import "./sna/SensorTimer";
 
 import { HREFsearch } from "./util/HREFsearch";

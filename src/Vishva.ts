@@ -111,7 +111,7 @@ import { SpawnerManager } from "./managers/spawner/SpawnerManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.37";
+    static version: string = "0.4.0-alpha.38";
 
     public static worldName: string;
 

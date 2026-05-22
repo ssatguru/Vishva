@@ -1,33 +1,27 @@
-import { AnimUtils } from "../util/AnimUtils";
-import { Vishva } from "../Vishva";
-import { SNAproperties } from "./SNA";
-import { SensorAbstract } from "./SNA";
-import { SNAManager } from "./SNA";
+import { MeshPickerType } from "../gui/VishvaGUI";
+import { SNAproperties, SensorAbstract, SNAManager } from "./SNA";
 import {
     AbstractMesh,
-    Action,
     ActionManager,
     ExecuteCodeAction,
-    Mesh,
-    Scene,
-    Tags
+    Scene
 } from "babylonjs";
 
 export class SenContactProp extends SNAproperties {
     onEnter: boolean = false;
     onExit: boolean = false;
+    targetMesh: MeshPickerType = new MeshPickerType();
 }
 
 export class SensorContact extends SensorAbstract {
 
-
-    override init(){}
+    override init() {}
 
     override getName(): string {
         return "Contact";
     }
 
-    override getPropertiesType() : typeof SNAproperties {
+    override getPropertiesType(): typeof SNAproperties {
         return SenContactProp;
     }
 
@@ -39,54 +33,58 @@ export class SensorContact extends SensorAbstract {
         this.properties = <SenContactProp>properties;
     }
 
-    override cleanUp() {
-    }
+    override cleanUp() {}
 
     override onPropertiesChange() {
         let properties: SenContactProp = <SenContactProp>this.properties;
-        var scene: Scene = this.mesh.getScene();
+        let scene: Scene = this.mesh.getScene();
 
-        if (this.mesh.actionManager == null) {
+        if (!this.mesh.actionManager) {
             this.mesh.actionManager = new ActionManager(scene);
         }
 
-        //find the mesh which has the skeleton attached to it
-        //this mesh will have a some size, which is needed for IntersectionMeshTrigger to happen
-        let otherMesh=AnimUtils.getMeshSkel(Vishva.vishva.avManager.avatar, true).mesh;
-        if (otherMesh == null) {
-            console.log("Cannot use this sensor as unable to find a mesh which as non zero size. The AV maynot have a skeleton");
+        // Resolve target mesh by uniqueId
+        let targetMeshId = properties.targetMesh.value;
+        if (!targetMeshId || targetMeshId === "") {
+            console.warn("SensorContact: no target mesh selected");
+            return;
+        }
+
+        let otherMesh: AbstractMesh = null;
+        for (let m of scene.meshes) {
+            if (m.uniqueId.toString() === targetMeshId) {
+                otherMesh = m;
+                break;
+            }
+        }
+
+        if (!otherMesh) {
+            console.warn("SensorContact: target mesh not found in scene (id: " + targetMeshId + ")");
+            return;
+        }
+
+        if (!(otherMesh instanceof AbstractMesh)) {
+            console.warn("SensorContact: target node is not an AbstractMesh (id: " + targetMeshId + ")");
             return;
         }
 
         if (properties.onEnter) {
-            let action: Action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
+            let action = new ExecuteCodeAction(
+                { trigger: ActionManager.OnIntersectionEnterTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } },
+                (e) => this.emitSignal(e)
+            );
             this.mesh.actionManager.registerAction(action);
             this.actions.push(action);
-
         }
+
         if (properties.onExit) {
-            let action: Action = new ExecuteCodeAction({ trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } }, (e) => { return this.emitSignal(e) });
+            let action = new ExecuteCodeAction(
+                { trigger: ActionManager.OnIntersectionExitTrigger, parameter: { mesh: otherMesh, usePreciseIntersection: false } },
+                (e) => this.emitSignal(e)
+            );
             this.mesh.actionManager.registerAction(action);
             this.actions.push(action);
         }
-    }
-
-
-
-    private findAV(scene: Scene): AbstractMesh {
-
-        for (var index140 = 0; index140 < scene.meshes.length; index140++) {
-            var mesh = scene.meshes[index140];
-            {
-                if (Tags.HasTags(mesh)) {
-
-                    if (Tags.MatchesQuery(mesh, "Vishva.avatar")) {
-                        return mesh;
-                    }
-                }
-            }
-        }
-        return null;
     }
 }
 

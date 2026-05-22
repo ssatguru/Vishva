@@ -278,6 +278,12 @@ export class VTree {
                 txt = document.createElement("span");
                 txt.className = "txt";
                 txt.innerText = node["d"];
+                // Detect parenthesized folder labels — greyed-out text (but expand/collapse still works)
+                let isFolderParenthesized = (node["d"] as string).startsWith("(") && (node["d"] as string).endsWith(")");
+                if (isFolderParenthesized) {
+                    txt.style.opacity = "0.5";
+                    txt.style.pointerEvents = "none";
+                }
                 li.appendChild(txt);
 
                 ul = document.createElement("ul");
@@ -291,6 +297,13 @@ export class VTree {
                 li.setAttribute("class", "treeFile");
                 if ((this._re != null) && (!this._re.test(node))) {
                     li.style.display = "none";
+                }
+
+                // Detect parenthesized labels — greyed-out and non-clickable
+                let isParenthesized = node.startsWith("(") && node.endsWith(")");
+                if (isParenthesized) {
+                    li.style.opacity = "0.5";
+                    li.style.pointerEvents = "none";
                 }
 
                 span.setAttribute("class", this._leafIcon);
@@ -372,6 +385,10 @@ export class VTree {
                     pe = pe.parentElement;
 
                 }
+            }
+            // Skip click listener for parenthesized labels (both leaf and folder)
+            if (node && node.startsWith("(") && node.endsWith(")")) {
+                return;
             }
             if (this._clickListener != null) {
                 this._clickListener(node, path, isLeaf);

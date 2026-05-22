@@ -1,3 +1,38 @@
+### 05/21/2026 0.4.0-alpha.38
+
+#### New Sensor: Keyboard
+- added `SensorKeyboard` — detects keyboard key presses/releases and emits a signal
+- uses window-level keyboard listeners (not BabylonJS ActionManager) for reliable key detection regardless of canvas focus
+- configurable key from 62 options: A–Z, 0–9, F1–F12, arrow keys, Space, Enter, Escape, Tab, Backspace, Delete, Home, End, PageUp, PageDown
+- modifier key support: ctrl, alt, shift (exact match required — all three must match)
+- event type selection: onKeyDown, onKeyUp (both can be enabled simultaneously)
+- optional `onlyOnPointerOver` gating — signal only emits when pointer is hovering over the mesh (uses ActionManager pointer-over/out tracking)
+- guard conditions: filters key repeats, respects `keysDisabled` flag (edit mode), skips when focus is on text inputs/textareas/selects/contentEditable elements
+- registered as "Keyboard" sensor in SNAManager
+
+#### Sensor Contact renamed to Sensor AvContact 
+
+
+#### New Sensor: Contact → Mesh-to-Mesh
+- `SensorContact` now uses `MeshPickerType` for target mesh selection — user picks any mesh in the scene via a modal ItemListUI dialog
+- resolves target mesh by `uniqueId` at runtime
+- no longer hardcoded to avatar — works with any mesh pair
+- backward compatibility: old serialized "Contact" sensors (without `targetMesh` property) automatically deserialize as "AvContact"
+
+#### MeshPickerType — New SNA Property Type
+- added `MeshPickerType` class to `VishvaGUI.ts` — stores mesh `uniqueId` (value) and display name (meshName)
+- SnaUI generates a "Choose Mesh" button that opens ItemListUI in modal mode with an optional filter function
+- `ItemListUI` now accepts a filter callback; non-matching nodes are shown with parenthesized labels (greyed out, non-clickable)
+- `VTree` parenthesized label behavior: leaf nodes wrapped in `(...)` get `opacity:0.5` and `pointer-events:none`; folder labels can also be parenthesized (greyed text, expand/collapse still works)
+- `SNA.ts` `unMarshalProps` updated to reconstruct `MeshPickerType` instances during deserialization
+
+#### Tests
+- added `SensorKeyboard.test.ts` — unit tests for defaults, registration, listener setup, pointer-over actions, guard conditions
+- added `SensorKeyboard.property.test.ts` — property tests for exact key/modifier match, guard conditions, trigger registration, pointer-over gating
+- added `SNA.property.test.ts` — property tests for MeshPickerType serialization round-trip and backward-compat name resolution (Contact → AvContact)
+- added `VTree.property.test.ts` — property tests for parenthesized label styling and click behavior
+- added `ItemListUI.property.test.ts` — property tests for filter label wrapping logic
+
 ### 05/20/2026 0.4.0-alpha.37
 
 #### Navbar to Menu Bar

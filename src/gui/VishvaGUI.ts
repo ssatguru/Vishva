@@ -625,4 +625,15 @@ export class FileInputType {
     }
 }
 
+export class MeshPickerType {
+    public type: string = "MeshPickerType";
+    public value: string = "";      // mesh uniqueId as string
+    public meshName: string = "";   // display name
+
+    constructor(value: string = "", meshName: string = "") {
+        this.value = value;
+        this.meshName = meshName;
+    }
+}
+
 

@@ -13,13 +13,15 @@ export class ItemListUI {
 
     private _vishva: Vishva;
     private _itemsDiag: VTreeDialog;
+    private _filter?: (node: TransformNode) => boolean;
 
     //see search() for an explanation of this
     private _donotSearch: boolean = false;
 
-    constructor(vishva: Vishva, modal:boolean=true) {
+    constructor(vishva: Vishva, modal: boolean = true, filter?: (node: TransformNode) => boolean) {
 
         this._vishva = vishva;
+        this._filter = filter;
 
         this._updateTreeData();
 
@@ -75,6 +77,10 @@ export class ItemListUI {
 
     public filter(filter: string) {
         this._itemsDiag.filter(filter);
+    }
+
+    public addTreeListener(listener: (leaf: string, path: string, isLeaf: boolean) => void) {
+        this._itemsDiag.addTreeListener(listener);
     }
 
     private _refreshNeeded = false;
@@ -150,15 +156,22 @@ export class ItemListUI {
             if (child == this._vishva.ground || child == this._vishva.avatar || child == this._vishva.skybox) continue;
             if (this._vishva.editControl != null && (child == this._vishva.editControl.getRoot())) continue;
 
+            let label: string;
+            if (this._filter && !this._filter(child)) {
+                label = "(" + Number(child.uniqueId).toString() + ", " + child.name + ")";
+            } else {
+                label = Number(child.uniqueId).toString() + ", " + child.name;
+            }
+
             let childs: Array<Node> = child.getChildren();
             if (childs.length > 0) {
                 let obj: object = {};
-                obj["d"] = Number(child.uniqueId).toString() + ", " + child.name;
+                obj["d"] = label;
                 obj["f"] = new Array<string | object>();
                 treeData.push(obj);
                 this._addChildren(childs, obj["f"]);
             } else {
-                treeData.push(Number(child.uniqueId).toString() + ", " + child.name);
+                treeData.push(label);
             }
         }
     }

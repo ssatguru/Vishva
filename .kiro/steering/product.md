@@ -20,7 +20,7 @@ Vishva (Hindi for "World") is a browser-based live 3D scene editor built on Baby
 
 ## Key Concepts
 - **World**: A serialized BabylonJS scene plus Vishva-specific metadata (`VishvaSerialized`)
-- **SNA (Sensors & Actuators)**: The behavior system. Sensors emit signals on events (click, contact, timer). Actuators respond to signals (animate, move, rotate, play sound, emit signals, show dialogs, control visibility, etc.)
+- **SNA (Sensors & Actuators)**: The behavior system. Sensors emit signals on events (click, contact, avatar contact, keyboard, timer). Actuators respond to signals (animate, move, rotate, play sound, emit signals, show dialogs, control visibility, etc.)
 - **Avatar**: A controllable character mesh with skeleton animations, managed by `AvManager` and `CharacterController`
 - **Edit Mode**: When enabled, users can select meshes, transform them with EditControl, and configure properties/behaviors via the GUI
 - **Standalone Archive**: A self-contained tar package of a world and all its assets, enabling offline sharing and portability

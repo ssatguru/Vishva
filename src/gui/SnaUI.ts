@@ -1,7 +1,7 @@
 
-import { Vector3 } from "babylonjs";
+import { Vector3, AbstractMesh } from "babylonjs";
 import { Vishva } from "../Vishva";
-import { SelectType, FileInputType, Range } from "./VishvaGUI";
+import { SelectType, FileInputType, Range, MeshPickerType } from "./VishvaGUI";
 import { DialogMgr } from "./DialogMgr";
 import { SensorActuator, Sensor, Actuator, SNAproperties } from "../sna/SNA";
 import { VTreeDialog } from "./components/VTreeDialog";
@@ -11,6 +11,7 @@ import { snaElement } from "./SnaML";
 import { UIConst } from "./UIConst";
 import { VDiag } from "./components/VDiag";
 import { GuiUtils } from "./GuiUtils";
+import { ItemListUI } from "./ItemListUI";
 /**
  * Provides a UI to manage sensors and actuators
  */
@@ -385,6 +386,11 @@ export class SnaUI {
                     let h: HTMLElement = this._createFileInput(snaP[key]);
                     this.mapKey2Ele[key] = h;
                     cell.appendChild(h);
+                } else if (snaP[key] instanceof MeshPickerType) {
+                    let mpt: MeshPickerType = snaP[key];
+                    let h: HTMLElement = this._createMeshPicker(mpt);
+                    this.mapKey2Ele[key] = h;
+                    cell.appendChild(h);
                 } else if (snaP[key] instanceof Range) {
                     let inp: HTMLInputElement = document.createElement("input");
                     this.mapKey2Ele[key] = inp;
@@ -435,6 +441,8 @@ export class SnaUI {
                     let ie: HTMLInputElement = this.mapKey2Ele[key];
                     let r: Range = <Range>snaP[key];
                     r.value = parseFloat(ie.value);
+                } else if (snaP[key] instanceof MeshPickerType) {
+                    // MeshPickerType is already updated in-place by _createMeshPicker, no action needed
                 }
             } else {
                 //let ie: HTMLInputElement=<HTMLInputElement>document.getElementById(idPrefix+key);
@@ -484,6 +492,41 @@ export class SnaUI {
         div.appendChild(fibL);
         div.appendChild(document.createElement("br"));
         div.appendChild(fib);
+        return div;
+    }
+
+    private _meshPickerItemList: ItemListUI;
+    private _createMeshPicker(mpt: MeshPickerType): HTMLElement {
+        let label: HTMLLabelElement = document.createElement("label");
+        if (mpt.meshName && mpt.meshName !== "") {
+            label.textContent = mpt.meshName;
+        } else {
+            label.textContent = "No mesh chosen";
+        }
+
+        let btn: HTMLButtonElement = document.createElement("button");
+        btn.innerText = "Choose Mesh";
+
+        btn.onclick = (e) => {
+            this._meshPickerItemList = new ItemListUI(this._vishva, true, (node) => node instanceof AbstractMesh);
+            this._meshPickerItemList.addTreeListener((leaf: string, path: string, isLeaf: boolean) => {
+                if (isLeaf) {
+                    let commaIdx: number = leaf.indexOf(",");
+                    if (commaIdx > 0) {
+                        let uniqueId: string = leaf.substring(0, commaIdx).trim();
+                        let meshName: string = leaf.substring(commaIdx + 1).trim();
+                        mpt.value = uniqueId;
+                        mpt.meshName = meshName;
+                        label.textContent = meshName;
+                    }
+                }
+            });
+        }
+
+        let div: HTMLDivElement = document.createElement("div");
+        div.appendChild(label);
+        div.appendChild(document.createElement("br"));
+        div.appendChild(btn);
         return div;
     }
 }

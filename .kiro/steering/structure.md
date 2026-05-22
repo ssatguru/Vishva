@@ -16,8 +16,10 @@ src/
 
   sna/                      # Sensor & Actuator behavior system
     SNA.ts                  # Core SNA framework: SNAManager, SensorAbstract, ActuatorAbstract, interfaces, serialization
+    SensorAvContact.ts      # Avatar-specific intersection sensor (onEnter/onExit with avatar mesh)
     SensorClick.ts          # Click/pointer sensor
-    SensorContact.ts        # Collision/contact sensor
+    SensorContact.ts        # Mesh-to-mesh intersection sensor (user picks target mesh via MeshPickerType)
+    SensorKeyboard.ts       # Keyboard key sensor (window-level listener, modifier keys, pointer-over gating)
     SensorTimer.ts          # Timer-based sensor
     ActuatorAnimator.ts     # Mesh animation actuator
     ActuatorAvAnimator.ts   # Avatar animation actuator
@@ -120,15 +122,20 @@ Current test coverage:
 - `managers/LoadManager.preservation.property.test.ts`, `managers/LoadManager.clearScene.property.test.ts`
 - `managers/LoadManager.pageReload.test.ts`
 - `managers/spawner/SpawnerManager.test.ts`
+- `sna/SNA.property.test.ts`
+- `sna/SensorKeyboard.test.ts`, `sna/SensorKeyboard.property.test.ts`
 - `gui/UploadUI.property.test.ts`
 - `gui/WorldLauncher.test.ts`, `gui/WorldLauncher.property.test.ts`
 - `gui/NavBarML.test.ts`, `gui/NavBarML.property.test.ts`
+- `gui/ItemListUI.property.test.ts`
+- `gui/components/VTree.property.test.ts`
 - `gui/propspanel/AnimationUI.test.ts`
 
 ## Architecture Patterns
 
 - **GUI convention**: `*ML.ts` files generate HTML markup, `*UI.ts` files handle logic and events. They come in pairs.
-- **SNA registration**: Each Sensor/Actuator self-registers with `SNAManager` at import time (side-effect imports in `index.ts`).
+- **SNA registration**: Each Sensor/Actuator self-registers with `SNAManager` at import time (side-effect imports in `index.ts`). Backward compatibility: old serialized "Contact" sensors (without `targetMesh`) are automatically deserialized as "AvContact".
+- **MeshPickerType**: A property type for SNA sensors/actuators that lets the user pick a mesh from the scene via a modal ItemListUI dialog. Serialized with `type`, `value` (uniqueId), and `meshName`. Used by SensorContact for target mesh selection. SnaUI renders a "Choose Mesh" button that opens ItemListUI with an optional filter function.
 - **Serialization**: Vishva extends BabylonJS scene serialization with `VishvaSerialized` for SNA data, avatar state, ground spreads, GUI settings, object IDs, and bone attachments. Backward compatibility with tag-based object identification is maintained alongside the newer `ObjectIdMap` approach.
 - **Bone attachment system**: Meshes can be attached to skeleton bones via "attacher-" TransformNodes. `Vishva._attach2Bone()` creates the node and calls `attachToBone()`. Attachments are serialized in `VishvaSerialized.boneAttachments[]` (bone name matching against parent node) and re-attached on load via `_reattachBoneAttachments()`. The bone selector UI in AnimationUI provides a VTreeDialog for browsing the skeleton hierarchy and selecting bones.
 - **Singleton access**: `Vishva.vishva` is a static reference to the single Vishva instance. `SNAManager.getSNAManager()` is a singleton accessor.

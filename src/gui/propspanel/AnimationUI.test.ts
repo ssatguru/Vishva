@@ -135,6 +135,8 @@ function createMockVishva(): any {
         meshSelected: { name: "testMesh" },
         getMeshSelected: vi.fn().mockReturnValue({ name: "testMesh" }),
         isRootSelected: vi.fn().mockReturnValue(false),
+        skelViewerArr: [],
+        findSkelViewer: vi.fn().mockReturnValue(null),
         toggleSkelView: vi.fn(),
         animRest: vi.fn(),
         _addBoneSelectors: vi.fn(),
@@ -308,7 +310,7 @@ describe("AnimationUI - Bone Selector", () => {
 
             // VTreeDialog constructor args: (vishva, title, pos, treeData, filter?, openAll?, modal?)
             // openAll is the 6th argument (index 5)
-            expect(mockTreeDialogConstructorArgs[5]).toBe(false);
+            expect(mockTreeDialogConstructorArgs[5]).toBe(true);
         });
     });
 

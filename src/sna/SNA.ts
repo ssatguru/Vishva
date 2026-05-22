@@ -26,7 +26,7 @@ import {
 // import Tags = BABYLON.Tags;
 // import Vector3 = BABYLON.Vector3;
 // import Vector2 = BABYLON.Vector2;
-import { FileInputType, SelectType, Range } from "../gui/VishvaGUI";
+import { FileInputType, SelectType, Range, MeshPickerType } from "../gui/VishvaGUI";
 
 //import FileInputType=org.ssatguru.babylonjs.vishva.gui.FileInputType;
 //import Range = org.ssatguru.babylonjs.vishva.gui.Range;
@@ -331,7 +331,12 @@ export class SNAManager {
             if (mesh != null) {
                 this.unMarshalProps(sna.properties);
                 if (sna.type === "SENSOR") {
-                    this.createSensorByName(sna.name, <Mesh>mesh, sna.properties);
+                    let name = sna.name;
+                    // Backward compat: old "Contact" sensors without targetMesh → AvContact
+                    if (name === "Contact" && !sna.properties["targetMesh"]) {
+                        name = "AvContact";
+                    }
+                    this.createSensorByName(name, <Mesh>mesh, sna.properties);
                 } else if (sna.type === "ACTUATOR") {
                     this.createActuatorByName(sna.name, <Mesh>mesh, sna.properties);
                 }
@@ -394,6 +399,9 @@ export class SNAManager {
                         st.values = o["values"];
                         st.value = o["value"];
                         obj[pName] = st;
+                    } else if (o["type"] === "MeshPickerType") {
+                        let mpt: MeshPickerType = new MeshPickerType(o["value"], o["meshName"]);
+                        obj[pName] = mpt;
                     }
                 }
             }

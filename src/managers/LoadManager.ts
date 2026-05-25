@@ -5,6 +5,7 @@ import {
 } from "babylonjs";
 import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSerialized";
 import { RuntimeSharingEntry, getRootMesh } from "../util/AnimGroupDedup";
+import { deduplicateRangesAtRuntime } from "../util/AnimRangeDedup";
 import { SNAManager } from "../sna/SNA";
 import { VEvent } from "../eventing/VEvent";
 import { EventManager } from "../eventing/EventManager";
@@ -968,6 +969,11 @@ export class LoadManager {
                 }
             }
         }
+
+        // Deduplicate skeleton bone animations (animation ranges) for newly loaded assets.
+        // deduplicateRangesAtRuntime is idempotent and returns the complete set of sharing
+        // relationships for the entire scene, so we replace rather than append.
+        this.vishva._animationRangeSharing = deduplicateRangesAtRuntime(this.vishva.scene);
 
         if (file.split(".")[1] == "obj") {
             this.fixObj(meshes);

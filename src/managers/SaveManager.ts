@@ -10,6 +10,7 @@ import { PathRewriter } from "./PathRewriter";
 import { AssetStore } from "./AssetStore";
 import { createTarArchive } from "./TarUtils";
 import { stripSharedAnimationGroups, AnimationSharingEntry, RuntimeSharingEntry, resolveRuntimeEntries } from "../util/AnimGroupDedup";
+import { stripSharedSkeletonAnimations, resolveRuntimeRangeEntries } from "../util/AnimRangeDedup";
 
 export class SaveManager {
     private vishva: any;
@@ -155,6 +156,16 @@ export class SaveManager {
             vishvaSerialized.animationSharing = resolveRuntimeEntries(runtimeEntries);
         }
 
+        // Strip shared skeleton bone animations if range sharing metadata exists
+        const rangeEntries = this.vishva._animationRangeSharing;
+        if (rangeEntries && rangeEntries.length > 0) {
+            const rangeStrippedCount = stripSharedSkeletonAnimations(sceneObj, rangeEntries, this.vishva.scene);
+            if (rangeStrippedCount > 0) {
+                console.log(`[SaveManager] Stripped bone animations from ${rangeStrippedCount} sharing skeleton(s).`);
+            }
+        }
+        vishvaSerialized.animationRangeSharing = resolveRuntimeRangeEntries(this.vishva._animationRangeSharing);
+
         // Merge VishvaSerialized into the scene object (legacy format)
         sceneObj["VishvaSerialized"] = vishvaSerialized;
 
@@ -277,6 +288,16 @@ export class SaveManager {
                 console.log(`[SaveManager] Stripped ${removedCount} shared animation groups (IndexedDB JSON save)`);
                 vishvaSerialized.animationSharing = resolveRuntimeEntries(runtimeEntries);
             }
+
+            // Strip shared skeleton bone animations if range sharing metadata exists
+            const rangeEntries = this.vishva._animationRangeSharing;
+            if (rangeEntries && rangeEntries.length > 0) {
+                const rangeStrippedCount = stripSharedSkeletonAnimations(sceneObj, rangeEntries, this.vishva.scene);
+                if (rangeStrippedCount > 0) {
+                    console.log(`[SaveManager] Stripped bone animations from ${rangeStrippedCount} sharing skeleton(s).`);
+                }
+            }
+            vishvaSerialized.animationRangeSharing = resolveRuntimeRangeEntries(this.vishva._animationRangeSharing);
 
             // Merge VishvaSerialized into the scene object (legacy format)
             sceneObj["VishvaSerialized"] = vishvaSerialized;
@@ -423,6 +444,16 @@ export class SaveManager {
                 console.log(`[SaveManager] Stripped ${removedCount} shared animation groups from serialized scene`);
                 vishvaSerialzed.animationSharing = resolveRuntimeEntries(runtimeEntries);
             }
+
+            // Strip shared skeleton bone animations if range sharing metadata exists
+            const rangeEntries = this.vishva._animationRangeSharing;
+            if (rangeEntries && rangeEntries.length > 0) {
+                const rangeStrippedCount = stripSharedSkeletonAnimations(sceneObj as any, rangeEntries, this.vishva.scene);
+                if (rangeStrippedCount > 0) {
+                    console.log(`[SaveManager] Stripped bone animations from ${rangeStrippedCount} sharing skeleton(s).`);
+                }
+            }
+            vishvaSerialzed.animationRangeSharing = resolveRuntimeRangeEntries(this.vishva._animationRangeSharing);
 
             await this.vishva.progressManager.update("Collecting assets...", 45);
 
@@ -661,6 +692,16 @@ export class SaveManager {
             console.log(`[AnimGroupDedup] Stripped ${removedCount} animation groups from shared characters`);
             vishvaSerialzed.animationSharing = resolveRuntimeEntries(runtimeEntries);
         }
+
+        // Strip shared skeleton bone animations if range sharing metadata exists
+        const rangeEntries = this.vishva._animationRangeSharing;
+        if (rangeEntries && rangeEntries.length > 0) {
+            const rangeStrippedCount = stripSharedSkeletonAnimations(sceneObj as any, rangeEntries, this.vishva.scene);
+            if (rangeStrippedCount > 0) {
+                console.log(`[SaveManager] Stripped bone animations from ${rangeStrippedCount} sharing skeleton(s).`);
+            }
+        }
+        vishvaSerialzed.animationRangeSharing = resolveRuntimeRangeEntries(this.vishva._animationRangeSharing);
 
         await this.vishva.progressManager.update("Collecting assets...", 55);
 

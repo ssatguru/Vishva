@@ -5,6 +5,7 @@ import { GrndSpread_Serializeable } from "./GrndSpread";
 import { SpawnerSerialized } from "./managers/spawner/SpawnerSerialized";
 import { SNAserialized } from "./sna/SNA";
 import { AnimationSharingEntry } from "./util/AnimGroupDedup";
+import { AnimRangeSharingEntry } from "./util/AnimRangeDedup";
 import { Vishva } from "./Vishva";
 
 export class VishvaSerialized {
@@ -32,6 +33,9 @@ export class VishvaSerialized {
 
     // Animation sharing metadata - records which characters share animation groups with a source
     public animationSharing?: AnimationSharingEntry[];
+
+    // Animation range sharing metadata - records which characters share skeleton bone animations with a source
+    public animationRangeSharing?: AnimRangeSharingEntry[];
 
     
 

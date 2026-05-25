@@ -1,3 +1,21 @@
+### 05/22/2026 0.4.0-alpha.41
+
+#### Animation Range Sharing (save-file size reduction + memory optimization for skeleton-based characters)
+- added `src/util/AnimRangeDedup.ts` — standalone utility module for skeleton bone animation deduplication, stripping, and restoration
+- **runtime deduplication**: on scene load or asset import, detects skeletons with duplicate bone animations (same bone names + same per-bone animation names) and shares Animation object references across them for memory savings
+- **save-time stripping**: removes bone animation data and animation ranges from sharing characters' serialized skeletons, reducing save file size proportionally to the number of duplicate characters
+- **load-time restoration**: on loading a stripped save, copies bone Animation references from source skeleton and recreates animation ranges on sharing skeletons; applies `fixAnimationRanges` (Blender exporter workaround)
+- **backward compatible**: legacy saves (without `animationRangeSharing` metadata) load normally; runtime dedup still shares bone Animation objects
+- uses `RuntimeRangeSharingEntry` (Skeleton references) at runtime to avoid stale IDs after skeleton renames; resolves to string IDs at save time via `resolveRuntimeRangeEntries()`
+- excludes animation-group-driven skeletons from range dedup (coexists with animation group sharing)
+- integrated into all 4 save paths: `_getWorldZipBlob`, `saveWorldAsJson`, `saveWorldToIndexedDB`, `saveWorldToIndexedDBAsJson`
+- `LoadManager.onMeshLoaded` re-runs full scene dedup (replace, not append) when importing new assets with skeletons
+- `VishvaSerialized.animationRangeSharing` field persists sharing relationships across save/load cycles
+- execution order on load: AG restore → AG dedup → Range restore → Range dedup → AvManager
+- idempotent: applying dedup multiple times produces the same result
+- 8 property-based tests (fast-check) covering duplicate detection, AG exclusion, reference sharing, idempotence, strip correctness, restoration, ID resolution, and fixAnimationRanges application
+- 40 unit tests covering all functions, edge cases, and error handling
+
 ### 05/22/2026 0.4.0-alpha.40
 
 #### Animation Group Sharing (save-file size reduction + memory optimization)

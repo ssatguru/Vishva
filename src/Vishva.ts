@@ -104,6 +104,7 @@ import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime } from "./util/AnimGroupDedup";
+import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime } from "./util/AnimRangeDedup";
 
 
 
@@ -112,7 +113,7 @@ import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.40";
+    static version: string = "0.4.0-alpha.41";
 
     public static worldName: string;
 
@@ -190,6 +191,9 @@ export class Vishva {
 
     // Animation sharing metadata: records which characters share animations with which source
     public _animationSharing: RuntimeSharingEntry[];
+
+    // Animation range sharing metadata: skeleton-level bone animation sharing
+    public _animationRangeSharing: RuntimeRangeSharingEntry[] = [];
 
 
     //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -746,6 +750,22 @@ export class Vishva {
             // Runtime dedup: share Animation objects across duplicate groups (works for both restored and legacy saves)
             this._animationSharing = deduplicateAtRuntime(scene);
             console.log(`[AnimGroupDedup] Runtime dedup found ${this._animationSharing.length} sharing entries`);
+
+            // Restore shared skeleton bone animations from metadata (if saved with stripping)
+            if (this.vishvaSerialized && this.vishvaSerialized.animationRangeSharing && this.vishvaSerialized.animationRangeSharing.length > 0) {
+                const fixAnimationRanges = (skel: Skeleton) => {
+                    const ranges = skel.getAnimationRanges();
+                    for (const range of ranges) {
+                        range.from++;
+                    }
+                };
+                const restoredCount = restoreSharedSkeletonAnimations(scene, this.vishvaSerialized.animationRangeSharing, fixAnimationRanges);
+                console.log(`[Vishva] Restored ${restoredCount} skeleton bone animations for sharing characters`);
+            }
+
+            // Runtime dedup: share bone Animation references across duplicate skeletons (works for both restored and legacy saves)
+            this._animationRangeSharing = deduplicateRangesAtRuntime(scene);
+            console.log(`[Vishva] Range dedup found ${this._animationRangeSharing.length} sharing entries`);
 
             this.spawnerManager = new SpawnerManager(scene);
 

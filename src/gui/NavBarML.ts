@@ -20,7 +20,7 @@ let navHTML = `
                 <button id="navAllAssets" title="all files"><span class="material-icons-outlined">folder</span></button>
 
                 <div style="position:relative; display:inline-block;">
-                        <button id="navCAssets" title="assets"><span class="material-icons-outlined">storefront</span></button>
+                        <button id="navCAssets" title="curated assets"><span class="material-icons-outlined">storefront</span></button>
                         <div id="AddMenu" style="display:none; position:absolute; top:100%; left:0; z-index:1000;"></div>
                 </div>
 

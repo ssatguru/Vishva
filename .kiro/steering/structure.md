@@ -96,6 +96,7 @@ src/
 
   util/                     # Utility classes
     AnimUtils.ts            # Animation helper utilities
+    AnimGroupDedup.ts       # Animation group sharing: dedup, strip, restore, RuntimeSharingEntry/AnimationSharingEntry
     HREFsearch.ts           # URL/query string parsing
     Random.ts               # Random number utilities
   lib/                      # Vendored JS libraries (Oimo.js)
@@ -130,6 +131,7 @@ Current test coverage:
 - `gui/ItemListUI.property.test.ts`
 - `gui/components/VTree.property.test.ts`
 - `gui/propspanel/AnimationUI.test.ts`
+- `util/AnimGroupDedup.property.test.ts`
 
 ## Architecture Patterns
 
@@ -146,3 +148,4 @@ Current test coverage:
 - **World file routing**: `FileValidator` provides `isTarGzFile()`, `isJsonWorldFile()`, and `isWorldFile()` for routing uploaded/dropped files. Upload and drag-and-drop detect both formats and route to the appropriate loader (`loadWorldFromFile` for tar.gz, `loadWorldFromJsonFile` for JSON). Both use a store-in-IndexedDB-then-reload pattern (`__uploaded` / `__uploaded_json`).
 - **Spawner system**: `SpawnerManager` manages spawn points for avatar/camera placement on scene load. Spawners store transforms *relative* to a visual arrow mesh, so moving the mesh in the editor adjusts the spawn location. Multiple spawners supported with uniform random selection at load time. Spawner meshes render on top of other geometry (`renderingGroupId=1`, `disableDepthWrite`), are invisible/non-pickable by default (participate in "reveal invisibles"), and are serialized via `VishvaSerialized.spawners[]`. The system replaces the legacy `spawnPointId` mechanism. The CharacterController's `faceForward` setting is accounted for when orienting the arrow mesh.
 - **Theming system**: The editor UI uses CSS custom properties (`--v-light-fg`, `--v-light-bg`, `--v-color-fg`, `--v-color-bg`, `--v-dark-fg`, `--v-dark-bg`) for dynamic theme switching. `VThemes.applyTheme()` writes these variables to `:root`; all UI components reference them via `var(--v-*)` inline styles. Theme presets are defined in `VThemes.presets[]` (11 combinations across 5 color families × light/normal/dark). The active preset is persisted in `localStorage` and restored on page load via `VThemes.restoreTheme()`. The theme picker lives in SettingsUI as a `<select>` dropdown with live preview.
+- **Animation group sharing**: When multiple characters of the same type exist, their animation groups share Animation objects (keyframe data) via `AnimGroupDedup`. At runtime, `deduplicateAtRuntime()` detects duplicates and shares Animation references, returning `RuntimeSharingEntry[]` (Node references, not string IDs — immune to `renameMeshIds()`). At save time, `stripSharedAnimationGroups()` removes sharing characters' groups from the serialized scene using live hierarchy checks, and `resolveRuntimeEntries()` converts Node refs to string IDs for `VishvaSerialized.animationSharing`. On load, `restoreSharedAnimationGroups()` shallow-clones source groups for sharing characters. The system is backward-compatible with legacy saves (no metadata → dedup still shares at runtime).

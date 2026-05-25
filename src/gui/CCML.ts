@@ -97,7 +97,7 @@ const mapFormHTML: string = `
 <form  class="av-map-form" style="padding:0.5em; display:grid; grid-template-columns:min-content min-content; grid-gap:0.5em;">
 
         <div class="av-map"  style="padding:0.5em; display:grid;  grid-auto-rows: min-content; grid-template-columns:min-content min-content min-content min-content min-content; grid-gap:0.5em;align-items: center;">
-                <h5>motion</h5>
+                <h5>action</h5>
                 <h5>speed</h5>
                 <h5>animation</h5>
                 <h5>rate</h5>

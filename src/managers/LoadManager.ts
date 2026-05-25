@@ -4,6 +4,7 @@ import {
     SceneLoader, Skeleton, StandardMaterial, Tags, TextFileAssetTask, Tools, TransformNode, Vector3, VertexBuffer, Color3
 } from "babylonjs";
 import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSerialized";
+import { RuntimeSharingEntry, getRootMesh } from "../util/AnimGroupDedup";
 import { SNAManager } from "../sna/SNA";
 import { VEvent } from "../eventing/VEvent";
 import { EventManager } from "../eventing/EventManager";
@@ -911,17 +912,29 @@ export class LoadManager {
             });
     }
 
-    private reuseAnimationGroup(ag: AnimationGroup) {
-        let existingAG = this.vishva.scene.getAnimationGroupByName(ag.name);
-        if (existingAG && existingAG !== ag) {
-            console.log("reusing animation group " + ag.name);
-            for (let targetedAnim of ag.targetedAnimations) {
-                let existingTargetedAnim = existingAG.targetedAnimations.find(ta => ta.animation.name === targetedAnim.animation.name);
-                if (existingTargetedAnim) {
-                    targetedAnim.animation = existingTargetedAnim.animation;
+    private reuseAnimationGroup(destAG: AnimationGroup): RuntimeSharingEntry | null {
+        let sourceAG = this.vishva.scene.getAnimationGroupByName(destAG.name);
+        if (sourceAG && sourceAG !== destAG) {
+            for (let destTA of destAG.targetedAnimations) {
+                let sourceTA = sourceAG.targetedAnimations.find(srcTA => srcTA.animation.name === destTA.animation.name);
+                if (sourceTA) {
+                    destTA.animation = sourceTA.animation;
                 }
             }
+
+            // Determine root meshes for sharing metadata
+            const destFirstTarget = destAG.targetedAnimations?.[0]?.target;
+            const sourceFirstTarget = sourceAG.targetedAnimations?.[0]?.target;
+            if (destFirstTarget && sourceFirstTarget) {
+                const destRoot = getRootMesh(destFirstTarget);
+                const sourceRoot = getRootMesh(sourceFirstTarget);
+                return {
+                    mesh: destRoot,
+                    sourceMesh: sourceRoot,
+                };
+            }
         }
+        return null;
     }
 
     public onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string, folder?: string) {
@@ -931,9 +944,29 @@ export class LoadManager {
             this.vishva.scene.stopAnimation(s);
         }
 
+        const newSharingEntries: RuntimeSharingEntry[] = [];
         for (let ag of animationGroups) {
             ag.stop();
-            this.reuseAnimationGroup(ag);
+            const entry = this.reuseAnimationGroup(ag);
+            if (entry) {
+                newSharingEntries.push(entry);
+            }
+        }
+
+
+        // Merge new sharing entries into this.vishva._animationSharing, avoiding duplicates
+        if (newSharingEntries.length > 0) {
+            if (!this.vishva._animationSharing) {
+                this.vishva._animationSharing = [];
+            }
+            for (const entry of newSharingEntries) {
+                const alreadyExists = this.vishva._animationSharing.some(
+                    (e: RuntimeSharingEntry) => e.mesh === entry.mesh && e.sourceMesh === entry.sourceMesh
+                );
+                if (!alreadyExists) {
+                    this.vishva._animationSharing.push(entry);
+                }
+            }
         }
 
         if (file.split(".")[1] == "obj") {
@@ -1050,7 +1083,7 @@ export class LoadManager {
         if (this.vishva.avManager.cc.getSettings().faceForward) {
             dist = -2;
         }
-        let placementLocal: Vector3 = new Vector3(0, 0, -(scaleNum * dist));
+        let placementLocal: Vector3 = new Vector3(0, 0, -dist);
         //in global space
         let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.vishva.avatar.getWorldMatrix());
 

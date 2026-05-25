@@ -1,3 +1,18 @@
+### 05/22/2026 0.4.0-alpha.40
+
+#### Animation Group Sharing (save-file size reduction + memory optimization)
+- added `src/util/AnimGroupDedup.ts` — standalone utility module for animation group deduplication, stripping, and restoration
+- **runtime deduplication**: on scene load or asset import, detects duplicate animation groups across characters and shares Animation object references (keyframe data) for memory savings
+- **save-time stripping**: removes sharing characters' animation groups from the serialized scene, reducing save file size proportionally to the number of duplicate characters
+- **load-time restoration**: on loading a stripped save, shallow-clones source character's animation groups for sharing characters (new AnimationGroup + TargetedAnimation objects, shared Animation data)
+- **backward compatible**: legacy saves (without sharing metadata) load normally; runtime dedup still shares Animation objects
+- uses `RuntimeSharingEntry` (Node references) at runtime to avoid stale IDs after `renameMeshIds()`; resolves to string IDs at save time via `resolveRuntimeEntries()`
+- `stripSharedAnimationGroups` uses live hierarchy checks + index-based removal (not serialized targetId lookups)
+- integrated into all 4 save paths: `_getWorldZipBlob`, `saveWorldAsJson`, `saveWorldToIndexedDB`, `saveWorldToIndexedDBAsJson`
+- `LoadManager.reuseAnimationGroup` now records `RuntimeSharingEntry` when sharing Animation objects on import
+- `VishvaSerialized.animationSharing` field persists sharing relationships across save/load cycles
+- 8 property-based tests (fast-check) covering symmetry, correctness, preservation, sharing, round-trip, source preservation, backward compatibility, and idempotence
+
 ### 05/22/2026 0.4.0-alpha.39
 
 #### World Launcher opens as overlay instead of navigating away

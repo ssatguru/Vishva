@@ -4,6 +4,7 @@ import { Color4 } from "babylonjs/Maths/math.color";
 import { GrndSpread_Serializeable } from "./GrndSpread";
 import { SpawnerSerialized } from "./managers/spawner/SpawnerSerialized";
 import { SNAserialized } from "./sna/SNA";
+import { AnimationSharingEntry } from "./util/AnimGroupDedup";
 import { Vishva } from "./Vishva";
 
 export class VishvaSerialized {
@@ -28,6 +29,9 @@ export class VishvaSerialized {
 
     // Bone attachments - stores which TransformNodes are attached to which bones
     public boneAttachments: BoneAttachmentSerialized[] = [];
+
+    // Animation sharing metadata - records which characters share animation groups with a source
+    public animationSharing?: AnimationSharingEntry[];
 
     
 

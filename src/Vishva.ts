@@ -103,6 +103,7 @@ import { SaveManager } from "./managers/SaveManager";
 import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
+import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime } from "./util/AnimGroupDedup";
 
 
 
@@ -111,7 +112,7 @@ import { SpawnerManager } from "./managers/spawner/SpawnerManager";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.39";
+    static version: string = "0.4.0-alpha.40";
 
     public static worldName: string;
 
@@ -186,6 +187,9 @@ export class Vishva {
     // Used to find objects by ID instead of tags during scene load
     public _objectIds: ObjectIdMap;
     public _meshMetadata: MeshMetadataMap;
+
+    // Animation sharing metadata: records which characters share animations with which source
+    public _animationSharing: RuntimeSharingEntry[];
 
 
     //spawnPosition:Vector3=new Vector3(-360,620,225);
@@ -732,6 +736,16 @@ export class Vishva {
             if (this.editEnabled) {
                 this.scene.onPointerDown = (evt, pickResult) => { return this.pickObject(<PointerEvent>evt, pickResult) };
             }
+
+            // Restore shared animation groups from metadata (if saved with stripping)
+            if (this.vishvaSerialized && this.vishvaSerialized.animationSharing && this.vishvaSerialized.animationSharing.length > 0) {
+                const createdCount = restoreSharedAnimationGroups(scene, this.vishvaSerialized.animationSharing);
+                console.log(`[AnimGroupDedup] Restored ${createdCount} animation groups for sharing characters`);
+            }
+
+            // Runtime dedup: share Animation objects across duplicate groups (works for both restored and legacy saves)
+            this._animationSharing = deduplicateAtRuntime(scene);
+            console.log(`[AnimGroupDedup] Runtime dedup found ${this._animationSharing.length} sharing entries`);
 
             this.spawnerManager = new SpawnerManager(scene);
 

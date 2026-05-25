@@ -55,7 +55,7 @@ const EXPECTED_TITLES = [
     "load assets or world",
     "list items in world",
     "all files",
-    "assets",
+    "curated assets",
     "add primitives",
     "edit",
     "character controller",

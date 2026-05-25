@@ -9,6 +9,7 @@ import { AssetCollector, AssetEntry, BlobTextureEntry, EmbeddedTextureEntry } fr
 import { PathRewriter } from "./PathRewriter";
 import { AssetStore } from "./AssetStore";
 import { createTarArchive } from "./TarUtils";
+import { stripSharedAnimationGroups, AnimationSharingEntry, RuntimeSharingEntry, resolveRuntimeEntries } from "../util/AnimGroupDedup";
 
 export class SaveManager {
     private vishva: any;
@@ -146,6 +147,14 @@ export class SaveManager {
         this.removeSounds(sceneObj);
         this.removeActuatorTextBarMat(sceneObj);
 
+        // Strip shared animation groups if sharing metadata exists
+        const runtimeEntries = this.vishva._animationSharing;
+        if (runtimeEntries && runtimeEntries.length > 0) {
+            const removedCount = stripSharedAnimationGroups(sceneObj, runtimeEntries, this.vishva.scene);
+            console.log(`[SaveManager] saveWorldAsJson: stripped ${removedCount} shared animation groups`);
+            vishvaSerialized.animationSharing = resolveRuntimeEntries(runtimeEntries);
+        }
+
         // Merge VishvaSerialized into the scene object (legacy format)
         sceneObj["VishvaSerialized"] = vishvaSerialized;
 
@@ -260,6 +269,14 @@ export class SaveManager {
             let sceneObj: any = SceneSerializer.Serialize(this.vishva.scene);
             this.removeSounds(sceneObj);
             this.removeActuatorTextBarMat(sceneObj);
+
+            // Strip shared animation groups if sharing metadata exists
+            const runtimeEntries = this.vishva._animationSharing;
+            if (runtimeEntries && runtimeEntries.length > 0) {
+                const removedCount = stripSharedAnimationGroups(sceneObj, runtimeEntries, this.vishva.scene);
+                console.log(`[SaveManager] Stripped ${removedCount} shared animation groups (IndexedDB JSON save)`);
+                vishvaSerialized.animationSharing = resolveRuntimeEntries(runtimeEntries);
+            }
 
             // Merge VishvaSerialized into the scene object (legacy format)
             sceneObj["VishvaSerialized"] = vishvaSerialized;
@@ -398,6 +415,14 @@ export class SaveManager {
             let sceneObj: Object = <Object>SceneSerializer.Serialize(this.vishva.scene);
             this.removeSounds(sceneObj);
             this.removeActuatorTextBarMat(sceneObj);
+
+            // Strip shared animation groups if sharing metadata exists
+            const runtimeEntries = this.vishva._animationSharing;
+            if (runtimeEntries && runtimeEntries.length > 0) {
+                const removedCount = stripSharedAnimationGroups(sceneObj as any, runtimeEntries, this.vishva.scene);
+                console.log(`[SaveManager] Stripped ${removedCount} shared animation groups from serialized scene`);
+                vishvaSerialzed.animationSharing = resolveRuntimeEntries(runtimeEntries);
+            }
 
             await this.vishva.progressManager.update("Collecting assets...", 45);
 
@@ -628,6 +653,14 @@ export class SaveManager {
         let sceneObj: Object = <Object>SceneSerializer.Serialize(this.vishva.scene);
         this.removeSounds(sceneObj);
         this.removeActuatorTextBarMat(sceneObj);
+
+        // Strip shared animation groups if sharing metadata exists
+        const runtimeEntries = this.vishva._animationSharing;
+        if (runtimeEntries && runtimeEntries.length > 0) {
+            const removedCount = stripSharedAnimationGroups(sceneObj as any, runtimeEntries, this.vishva.scene);
+            console.log(`[AnimGroupDedup] Stripped ${removedCount} animation groups from shared characters`);
+            vishvaSerialzed.animationSharing = resolveRuntimeEntries(runtimeEntries);
+        }
 
         await this.vishva.progressManager.update("Collecting assets...", 55);
 

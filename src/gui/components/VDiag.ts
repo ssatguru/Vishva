@@ -33,7 +33,7 @@ export class VDiag {
 
 
         _style: string = ` 
-                border-radius: 0.5em;
+                border-radius: 0.25em;
                 overflow:hidden;
                 display:grid;
                 grid-template-columns:auto;
@@ -41,7 +41,7 @@ export class VDiag {
                 z-index: 2;
                 position: absolute;
                 border-style:solid;
-                border-width:5px;
+                border-width:2px;
                 scale:100%;
                 animation-name:scaleUpAnim;
                 animation-duration:0.5s; 

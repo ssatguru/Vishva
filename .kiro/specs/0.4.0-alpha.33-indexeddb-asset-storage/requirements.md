@@ -118,3 +118,16 @@ The two changes work together: structured paths in the archive become structured
 2. WHEN saving directly to IndexedDB, THE Save_Manager SHALL store the serialized Vishva.json and Scene.babylon alongside the assets in the Asset_Store
 3. WHEN saving directly to IndexedDB, THE Save_Manager SHALL collect and fetch any new assets (embedded textures, blob textures, server assets) and store them individually in the Asset_Store
 4. WHEN loading a world from IndexedDB, THE Load_Manager SHALL read assets directly from the Asset_Store without decompressing a tar.gz blob
+
+## Known Issues
+
+### Blob URL Leak in VishvaSerialized on Re-Save (Fixed in 0.4.0-alpha.42)
+
+**Spec:** `.kiro/specs/0.4.0-alpha.42-blob-url-resave-fix/`
+
+Requirement 8 (`resolveAssetPaths`) mutates VishvaSerialized in-place, replacing `"vishva/assets/..."` strings with blob URLs for runtime use. However, when the world is subsequently re-saved, the SNA serialization captures these blob URLs verbatim because the original path information was destroyed. This causes:
+- Asset references in Vishva.json to contain invalid blob URLs on re-save
+- Referenced asset binary data to be silently dropped from the saved archive/IndexedDB entries
+- Actuators (e.g., Dialog with HTML files) to fail on subsequent loads
+
+The fix (spec `0.4.0-alpha.42-blob-url-resave-fix`) adds a reverse mapping in AssetResolver to restore original paths at save time and ensures asset binary data is sourced from the session store or active blob URL rather than relying on the server.

@@ -19,6 +19,8 @@ export class AssetResolver {
     private assetMap: Map<string, Uint8Array> | null = null;
     private originalLoadFile: typeof Tools.LoadFile | null = null;
     private originalPreprocessUrl: ((url: string) => string) | null = null;
+    /** Reverse map: blobUrl → original vishva/assets/... path. Survives deactivate(). */
+    private _reverseMap: Map<string, string> = new Map();
 
     /**
      * Activate the resolver with an IndexedDB-backed AssetStore.
@@ -132,6 +134,7 @@ export class AssetResolver {
                 if (typeof value === "string" && value.startsWith("vishva/assets/")) {
                     const blobUrl = this.createBlobUrl(value);
                     if (blobUrl) {
+                        this._reverseMap.set(blobUrl, value);
                         obj[i] = blobUrl;
                     }
                 } else if (typeof value === "object" && value !== null) {
@@ -144,6 +147,7 @@ export class AssetResolver {
                 if (typeof value === "string" && value.startsWith("vishva/assets/")) {
                     const blobUrl = this.createBlobUrl(value);
                     if (blobUrl) {
+                        this._reverseMap.set(blobUrl, value);
                         obj[key] = blobUrl;
                     }
                 } else if (typeof value === "object" && value !== null) {
@@ -156,6 +160,7 @@ export class AssetResolver {
     /**
      * Deactivate the resolver and revoke all Blob URLs.
      * Restores original Tools.LoadFile and Tools.PreprocessUrl behavior.
+     * NOTE: The _reverseMap is intentionally NOT cleared — it persists for save-time lookup.
      */
     deactivate(): void {
         // Restore original Tools.PreprocessUrl
@@ -177,6 +182,57 @@ export class AssetResolver {
         this.blobUrls = [];
         this.assetMap = null;
         this.assetStore = null;
+    }
+
+    /**
+     * Look up the original vishva/assets/... path for a blob URL produced by resolveAssetPaths().
+     * Returns the original path, or null if the blob URL is not recognized.
+     */
+    reverseBlobUrl(blobUrl: string): string | null {
+        return this._reverseMap.get(blobUrl) ?? null;
+    }
+
+    /**
+     * Deep-traverse an object tree and replace any blob URL strings found in the
+     * reverse map with their original vishva/assets/... paths.
+     * This is the inverse operation of resolveAssetPaths().
+     * Strings NOT in the reverse map (foreign blob URLs, non-blob strings) are left unchanged.
+     * Mutates the object in-place.
+     * @param obj The object to traverse (typically VishvaSerialized.snas)
+     */
+    reverseAllBlobUrls(obj: any): void {
+        if (this._reverseMap.size === 0) return;
+        this._reverseBlobUrlsRecursive(obj);
+    }
+
+    private _reverseBlobUrlsRecursive(obj: any): void {
+        if (obj === null || obj === undefined) return;
+
+        if (Array.isArray(obj)) {
+            for (let i = 0; i < obj.length; i++) {
+                const value = obj[i];
+                if (typeof value === "string") {
+                    const originalPath = this._reverseMap.get(value);
+                    if (originalPath) {
+                        obj[i] = originalPath;
+                    }
+                } else if (typeof value === "object" && value !== null) {
+                    this._reverseBlobUrlsRecursive(value);
+                }
+            }
+        } else if (typeof obj === "object") {
+            for (const key of Object.keys(obj)) {
+                const value = obj[key];
+                if (typeof value === "string") {
+                    const originalPath = this._reverseMap.get(value);
+                    if (originalPath) {
+                        obj[key] = originalPath;
+                    }
+                } else if (typeof value === "object" && value !== null) {
+                    this._reverseBlobUrlsRecursive(value);
+                }
+            }
+        }
     }
 
     /**

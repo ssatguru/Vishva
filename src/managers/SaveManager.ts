@@ -108,6 +108,8 @@ export class SaveManager {
         vishvaSerialized.misc.skyBright = this.vishva.skyBright;
         vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
         vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+        // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
+        this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialized.snas);
         vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
         vishvaSerialized.boneAttachments = this.vishva.serializeBoneAttachments();
 
@@ -243,6 +245,8 @@ export class SaveManager {
             vishvaSerialized.misc.skyBright = this.vishva.skyBright;
             vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
             vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+            // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
+            this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialized.snas);
             vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
             vishvaSerialized.boneAttachments = this.vishva.serializeBoneAttachments();
 
@@ -400,6 +404,8 @@ export class SaveManager {
             vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
             vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+            // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
+            this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialzed.snas);
             vishvaSerialzed.spawners = this.vishva.spawnerManager.serialize();
 
             vishvaSerialzed.objectIds = new ObjectIdMap();
@@ -643,6 +649,8 @@ export class SaveManager {
         vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
         vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
+        // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
+        this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialzed.snas);
         vishvaSerialzed.spawners = this.vishva.spawnerManager.serialize();
 
         // NEW: Capture object IDs from special Vishva objects

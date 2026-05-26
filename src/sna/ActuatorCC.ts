@@ -41,12 +41,18 @@ export class ActuatorCC extends ActuatorAbstract {
             let action = props.action.value;
             console.log(action,this._do);
             cc[action](this._do);
+            this.actuating = true;
         }
-        this.onActuateEnd()
+        //this.onActuateEnd()
 
     }
 
     public stop() {
+        let cc:CharacterController = this.mesh["characterController"];
+        if (cc !== undefined){
+            cc.idle();
+            this.onActuateEnd();
+        }
     }
 
     public isReady(): boolean {

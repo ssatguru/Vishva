@@ -1,4 +1,15 @@
-### 05/22/2026 0.4.0-alpha.41
+### 05/25/2026 0.4.0-alpha.42
+
+#### Bugfix: Blob URL Leak in VishvaSerialized on Re-Save
+- **Bug:** When a world was saved to IndexedDB, loaded, and re-saved, SNA actuator asset references (e.g., Dialog `htmlFile.value`) were serialized as blob URLs instead of original asset paths — breaking actuators on subsequent loads
+- **Root cause:** `AssetResolver.resolveAssetPaths()` destructively mutated VishvaSerialized in-place, replacing `"vishva/assets/..."` paths with blob URLs for runtime use; on re-save, the original paths were lost and asset binary data was silently dropped
+- **Fix:** AssetResolver now maintains a reverse mapping (blob URL → original asset path); SaveManager uses this mapping to restore original paths before serialization and sources asset binary data from the session store or active blob URL (not the server, since assets may be user-uploaded or the server file may have been deleted/moved)
+- Affects both IndexedDB save (`saveWorldToIndexedDB`) and archive download (`_getWorldZipBlob`) paths
+- Scene.babylon textures are unaffected — `Tools.PreprocessUrl` intercepts at fetch time only and does not modify stored texture `name`/`url` properties
+- Spec: `.kiro/specs/0.4.0-alpha.42-blob-url-resave-fix/`
+
+
+### 05/25/2026 0.4.0-alpha.41
 
 #### Animation Range Sharing (save-file size reduction + memory optimization for skeleton-based characters)
 - added `src/util/AnimRangeDedup.ts` — standalone utility module for skeleton bone animation deduplication, stripping, and restoration

@@ -470,3 +470,16 @@ Additionally, `_scanTextureArray()` and `_scanMaterials()` now skip texture name
 ### URL Decoding Fix
 
 `src/util/HREFsearch.ts` — `getParm()` now calls `decodeURIComponent()` on URL parameter values. This ensures world names containing special characters (spaces, colons, etc.) are correctly decoded from the URL query string.
+
+
+## Known Issues
+
+### Blob URL Leak in VishvaSerialized on Re-Save
+
+**Fixed in:** `.kiro/specs/0.4.0-alpha.42-blob-url-resave-fix/`
+
+The `resolveAssetPaths()` method (Property 11) destructively mutates VishvaSerialized, replacing `"vishva/assets/..."` strings with blob URLs. This works correctly for runtime asset serving, but creates a bug on re-save: `SNAManager.serializeSnAs()` captures the blob URLs because the original paths are lost. The `AssetCollector` correctly rejects blob URLs (they aren't server-fetchable), so the blob URL is serialized as-is into Vishva.json, and the asset binary data is not included in the archive.
+
+**Impact:** Save-load-save cycle breaks SNA actuator asset references (Dialog HTML files, Sound files, etc.)
+
+**Fix approach:** AssetResolver maintains a reverse mapping (blob URL → original asset path). At save time, SaveManager uses this mapping to restore original paths in VishvaSerialized before serialization, and sources asset binary data from the session store or active blob URL.

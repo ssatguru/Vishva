@@ -103,6 +103,7 @@ import { SaveManager } from "./managers/SaveManager";
 import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
+import { AssetResolver } from "./managers/AssetResolver";
 import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime } from "./util/AnimGroupDedup";
 import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime } from "./util/AnimRangeDedup";
 
@@ -113,7 +114,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.41";
+    static version: string = "0.4.0-alpha.42";
 
     public static worldName: string;
 
@@ -183,6 +184,11 @@ export class Vishva {
     public loadManager: LoadManager;
     public progressManager: ProgressManager;
     public spawnerManager: SpawnerManager;
+
+    // AssetResolver reference — persists after deactivate() so the reverse map
+    // is accessible at save time for blob URL → original path reversal.
+    // Null when world was loaded from server (no AssetResolver activation).
+    public _assetResolver: AssetResolver | null = null;
 
     // NEW: Object IDs and mesh metadata loaded from VishvaSerialized
     // Used to find objects by ID instead of tags during scene load

@@ -752,6 +752,9 @@ export class LoadManager {
         // are not loaded through BabylonJS's Tools.LoadFile/PreprocessUrl pipeline.
         if (assetResolver) {
             assetResolver.resolveAssetPaths(vishvaData);
+            // Store AssetResolver reference so SaveManager can access the reverse map
+            // at save time to convert blob URLs back to original vishva/assets/ paths.
+            this.vishva._assetResolver = assetResolver;
         }
 
         this.vishva.vishvaSerialized = vishvaData;

@@ -29,6 +29,11 @@
 #### InternalAssetsUI: filter curated items without thumbnails
 - When creating the asset dialog for curated (non-internal) items, only folders containing a `thumbnail.png` file are displayed — prevents broken image icons for incomplete asset folders
 
+#### click to move
+- replaced customer click-to-move logic with the new moveTo() method provided by Character Controller
+- clik to move set via setting dialog
+
+
 ### 05/25/2026 0.4.0-alpha.42
 
 #### Bugfix: Blob URL Leak in VishvaSerialized on Re-Save

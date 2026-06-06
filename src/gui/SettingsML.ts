@@ -19,6 +19,9 @@ const settingHTML: string = `
         <div>enable snapper</div>
         <div><input type="checkbox" id="snapper"></div>
 
+        <div>use click to move</div>
+        <div><input type="checkbox" id="clickToMove"></div>
+
         <div>theme</div>
         <div><select id="themeSelect" style="width:100%"></select></div>
 

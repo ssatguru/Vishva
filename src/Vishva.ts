@@ -905,25 +905,6 @@ export class Vishva {
             // this.sunDR.position.y = this.avatar.position.y + 100;
             // this.sunDR.position.z = this.avatar.position.z + 0;
 
-            if (this._clickMove) {
-                let d = Vector3.Distance(this._clickMoveTarget, this.avatar.position);
-
-                //every cycle the distance should be decreasing
-                //the previous distance should be less than the current distance
-                //if we have reached the destination or if the distance has started increasing instead of decreasing or remains the same then then stop
-                //if same means the avatar is stuck and cannot move forward.
-                if (d < 0.5 || d >= this._prevClickMoveDist) {
-                    this.cc.walk(false);
-                    this._clickMove = false;
-                    this._marker.isVisible = false;
-                    // this._markerLine.isVisible = false;
-                    this.cc.setMode(0);
-                    this._prevClickMoveDist = 0;
-                } else {
-                    this._prevClickMoveDist = d;
-                }
-            }
-
             if (this.cameraAnimating) return;
 
             //sometime (example - when gui dialogs is on and user is typing into it) we donot want to interpret keys
@@ -1132,7 +1113,7 @@ export class Vishva {
 
     public editControl: EditControl;
 
-    private _clickMove: boolean = false;
+    public _clickMove: boolean = false;
     private _clickMoveTarget: Vector3;
     private _prevClickMoveDist: number = 0;
 
@@ -1164,28 +1145,13 @@ export class Vishva {
         if (!pickResult.hit) return
 
         //move av using click
-        // if (pickResult.pickedMesh == this.ground) {
-        //if (this.key.shift && evt.button == 0) {
+        
 
-        if ((evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
-            // console.log("click move");
-            let diffX = pickResult.pickedPoint.x - this.avatar.position.x;
-            let diffY = pickResult.pickedPoint.z - this.avatar.position.z;
-            //this.avatar.rotation.y = Math.PI + Math.atan2(diffX, diffY);
-            this.avatar.rotation.y =  Math.atan2(diffX, diffY);
-            if (!this.avManager.cc.getSettings().faceForward) this.avatar.rotation.y += Math.PI;
-            this._clickMove = true;
+        if (this._clickMove && (evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
             this._clickMoveTarget = pickResult.pickedPoint.clone();
-
-
-            //every cycle the distance should be decreasing
-            //the previous distance should be less than the current distance
-            //lets start with some arbitrary large number for previous distance
-            this._prevClickMoveDist = 10000;
 
             if (this._marker == null) this._createMarker();
             this._marker.position = this._clickMoveTarget.clone();
-            //this._marker.position.y += 0.125;
             this._marker.isVisible = true;
 
             // this._lineOptions.points[0] = this.avatar.position;
@@ -1195,10 +1161,11 @@ export class Vishva {
 
             // this._markerLine.isVisible = true;
 
-            this.cc.setMode(1);
-            this.cc.walk(true);
+            this.cc.moveTo(this._clickMoveTarget,{onComplete : ()=>{this._marker.isVisible=false}})
+
             return;
         }
+
 
 
 

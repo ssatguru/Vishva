@@ -21,6 +21,7 @@ export class SettingsUI {
     private _revealInvis: HTMLInputElement;
     private _showDisa: HTMLInputElement;
     private _snapper: HTMLInputElement;
+    private _clickToMove: HTMLInputElement;
     private _themeSelect: HTMLSelectElement;
 
     private _redoShadows: HTMLButtonElement;
@@ -44,6 +45,7 @@ export class SettingsUI {
         this._revealInvis = <HTMLInputElement>document.getElementById("revealInvis");
         this._showDisa = <HTMLInputElement>document.getElementById("showDisa");
         this._snapper = <HTMLInputElement>document.getElementById("snapper");
+        this._clickToMove = <HTMLInputElement>document.getElementById("clickToMove");
 
         this._themeSelect = <HTMLSelectElement>document.getElementById("themeSelect");
         // Populate theme dropdown
@@ -99,6 +101,8 @@ export class SettingsUI {
                 return false;
             }
 
+            this._vishva._clickMove = this._clickToMove.checked;
+
             this._settingDiag.hide();
             //DialogMgr.showAlertDiag("Saved");
             //refresh the property dialog in case something changed here
@@ -130,6 +134,8 @@ export class SettingsUI {
         this._autoEditMenu.checked = this._vishva.isAutoEditMenuOn();
 
         this._showToolTips.checked = this.enableToolTips;
+
+        this._clickToMove.checked = this._vishva._clickMove;
 
         this._themeSelect.value = VThemes.getActivePresetIndex().toString();
     }

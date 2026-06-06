@@ -23,7 +23,7 @@ export class CCUI {
 
     private _ccDiag: VDiag;
     private ccElement: HTMLElement;
-    private _actions: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "run", "runJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
+    private _actions: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "preIdleJump", "postIdleJump", "run", "runJump", "preRunJump", "postRunJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
 
     private _cc: CharacterController;
     private _onCancelCallback: () => void;
@@ -251,6 +251,7 @@ export class CCUI {
         let actions: string[] = Object.keys(actionMap);
         for (let action of actions) {
             let actData: ActionData = actionMap[action];
+            console.log(action);
             form[action + "-speed"].value = actData.speed === undefined ? "" : actData.speed;
 
             if ((actData.ag === undefined) && (actData.name === undefined)) {

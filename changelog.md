@@ -1,3 +1,9 @@
+### 06/06/2026 0.4.0-alpha.44
+
+#### Character Controller UI: new jump phase actions
+- Added `preIdleJump`, `postIdleJump`, `preRunJump`, and `postRunJump` to the CC action mappings UI
+- Users can now map animations to the pre/post phases of idle and run jumps in the Mappings tab
+
 ### 06/05/2026 0.4.0-alpha.43
 
 #### Inspector V2 upgrade (dynamic CDN load)

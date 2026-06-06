@@ -1,3 +1,34 @@
+### 06/06/2026 0.4.0-alpha.44
+
+#### Character Controller UI: new jump phase actions
+- Added `preIdleJump`, `postIdleJump`, `preRunJump`, and `postRunJump` to the CC action mappings UI
+- Users can now map animations to the pre/post phases of idle and run jumps in the Mappings tab
+
+### 06/05/2026 0.4.0-alpha.43
+
+#### Inspector V2 upgrade (dynamic CDN load)
+- Switched from legacy Inspector V1 to Inspector V2 UMD bundle loaded dynamically from jsDelivr
+- Inspector version auto-matches the runtime BabylonJS version via `Engine.Version` — no hardcoded version in code
+- CDN URL: `https://cdn.jsdelivr.net/npm/babylonjs-inspector@{version}/babylon.inspector-v2.bundle.js`
+- Set `globalRoot` to `#vGUI` so the inspector renders within the canvas area, below the navigation bar (fixes inspector being partially covered by the nav bar)
+- Not bundled with the app — loaded on-demand when the inspector button is clicked, keeping bundle size unchanged
+
+#### Character Controller UI: rotation/turning speed settings
+- Added `rotationSpeed` and `turningSpeed` fields to the CC settings form (`CCML.ts`)
+- `CCUI.ts` reads/writes these values: `turningSpeed` maps to `ccSettings.smoothTurnSpeed`, `rotationSpeed` sets turn action speed via `setTurnSpeed()` (displayed in degrees, stored in radians)
+- Renamed label from "turning off" to "rotation off" for clarity
+
+#### Curated asset loading: material reuse fix
+- `LoadManager.postLoad()` now correctly disposes replaced materials after all meshes are processed (avoids disposing a material that another mesh in the same load still references)
+- `reuseMaterial()` uses `getLastMaterialById()` (corrected casing) and handles the case where `@cur` suffix was already appended in a prior iteration within the same load
+- `processMaterial()` now collects replaced materials into a `removeMat` array for deferred disposal
+
+#### Snapper: null-safe rotation quaternion
+- `_snapToGrid()` now checks if `rotationQuaternion` exists before calling `toEulerAngles()`; falls back to `mesh.rotation` for meshes that use Euler angles directly
+
+#### InternalAssetsUI: filter curated items without thumbnails
+- When creating the asset dialog for curated (non-internal) items, only folders containing a `thumbnail.png` file are displayed — prevents broken image icons for incomplete asset folders
+
 ### 05/25/2026 0.4.0-alpha.42
 
 #### Bugfix: Blob URL Leak in VishvaSerialized on Re-Save

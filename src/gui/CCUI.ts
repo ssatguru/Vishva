@@ -23,7 +23,7 @@ export class CCUI {
 
     private _ccDiag: VDiag;
     private ccElement: HTMLElement;
-    private _actions: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "run", "runJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
+    private _actions: string[] = ["walk", "walkBack", "walkBackFast", "idle", "idleJump", "preIdleJump", "postIdleJump", "run", "runJump", "preRunJump", "postRunJump", "fall", "turnLeft", "turnLeftFast", "turnRight", "turnRightFast", "strafeLeft", "strafeLeftFast", "strafeRight", "strafeRightFast", "slideBack"];
 
     private _cc: CharacterController;
     private _onCancelCallback: () => void;
@@ -183,6 +183,8 @@ export class CCUI {
     private _buildSetUI(setTab: HTMLElement) {
         let form: HTMLFormElement = <HTMLFormElement>setTab.getElementsByClassName("av-settings")[0];
         new VInputNumber(form.elasticSteps);
+        new VInputNumber(form.turningSpeed);
+        new VInputNumber(form.rotationSpeed);
         new VInputNumber(form.gravity);
         new VInputNumber(form.minSlopeLimit);
         new VInputNumber(form.maxSlopeLimit);
@@ -222,6 +224,13 @@ export class CCUI {
         form.stepOffset.value = ccSettings.stepOffset;
         form.animBlend.value = ccSettings.animBlend;
         form.turningOff.checked = ccSettings.turningOff;
+        form.turningSpeed.value = ccSettings.smoothTurnSpeed;
+
+        // rotation speed is stored in actionMap turnLeft/turnRight speed (radians), display as degrees
+        let actionMap: ActionMap = this._cc.getActionMap();
+        let turnSpeedRad = actionMap.turnLeft.speed || 0;
+        form.rotationSpeed.value = Math.round(turnSpeedRad * 180 / Math.PI);
+
         form.x.value = ccSettings.cameraTarget.x;
         form.y.value = ccSettings.cameraTarget.y;
         form.z.value = ccSettings.cameraTarget.z;
@@ -242,6 +251,7 @@ export class CCUI {
         let actions: string[] = Object.keys(actionMap);
         for (let action of actions) {
             let actData: ActionData = actionMap[action];
+            console.log(action);
             form[action + "-speed"].value = actData.speed === undefined ? "" : actData.speed;
 
             if ((actData.ag === undefined) && (actData.name === undefined)) {
@@ -323,6 +333,8 @@ export class CCUI {
         ccSettings.stepOffset = Number(form["stepOffset"].value);
         ccSettings.cameraTarget = new Vector3(Number(form["x"].value), Number(form["y"].value), Number(form["z"].value));
         ccSettings.turningOff = form["turningOff"].checked;
+        ccSettings.smoothTurnSpeed = Number(form["turningSpeed"].value);
+        this._cc.setTurnSpeed(Number(form["rotationSpeed"].value));
         ccSettings.faceForward = form["faceForward"].checked;
         ccSettings.sound = this._sndUI.getSound();
         ccSettings.animBlend = Number(form["animBlend"].value);

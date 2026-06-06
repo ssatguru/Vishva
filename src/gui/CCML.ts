@@ -33,8 +33,14 @@ const settingFormHtml: string = `
         <label>topDown</label>
         <input name="topDown" type="checkbox"/>
 
-        <label>turning off</label>
+        <label>rotation off</label>
         <input name="turningOff" type="checkbox"/>
+
+        <label>rotation speed</label>
+        <input name="rotationSpeed" type="text"/>
+
+        <label>turning speed</label>
+        <input name="turningSpeed" type="text"/>
         
         <label>disable firstperson</label>
         <input name="noFirstPerson" type="checkbox"/>

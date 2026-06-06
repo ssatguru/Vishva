@@ -63,6 +63,19 @@ export class InternalAssetsUI {
             return null;
         }
 
+        // For curated assets, only include folders that have a thumbnail.png
+        if (topFolder !== "internal") {
+            items = items.filter(item => {
+                if (!(item instanceof Object)) return false;
+                let files: Array<string | object> = item["f"];
+                if (!files) return false;
+                return files.some(f => typeof f === "string" && f === "thumbnail.png");
+            });
+            if (items.length === 0) {
+                return null;
+            }
+        }
+
         //create a table to display the asset pictures
         let table: HTMLTableElement = document.createElement("table");
         table.id = assetCat + "Tbl";
@@ -164,7 +177,7 @@ export class InternalAssetsUI {
 
     /**
      * returns a list of items (files/folders) under a folder
-     * @param path list of all parent folders and the folder itself
+     * @param path list of all parent folders and the folder itself (a full path to the folder)
      * @param fileList all the files in vishva
      */
     private _getFiles(path: string[], fileList: Array<string | object>): Array<string | object> {

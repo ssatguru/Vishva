@@ -1148,21 +1148,28 @@ export class LoadManager {
         }
     }
 
-    private postLoad(meshes: AbstractMesh[], assetType: string, folder: string, file: string) {
+    private postLoad(meshes: AbstractMesh[], assetType: string, folder: string, file: string)
+    {
         let reuseMaterials = false;
-        if (meshes.length > 0) {
-            for (let mesh of meshes) {
+        let removeMat: Material[] = [];
+        if (meshes.length > 0)
+        {
+            for (let mesh of meshes)
+            {
                 if (!(mesh instanceof Mesh)) continue;
                 reuseMaterials = false;
-                if (assetType == "curated" && curatedConfig) {
+                if (assetType == "curated" && curatedConfig)
+                {
                     if ('collision' in curatedConfig) mesh.checkCollisions = true;
-                    if ('reuseMaterial' in curatedConfig) reuseMaterials = true;
-                    if (folder in curatedConfig) {
+                    if ('reuseMaterial' in curatedConfig) reuseMaterials = <boolean>curatedConfig.reuseMaterial;
+                    if (folder in curatedConfig)
+                    {
                         if ('collision' in curatedConfig[folder])
                             mesh.checkCollisions = curatedConfig[folder]['collision'];
                         if ('reuseMaterial' in curatedConfig[folder])
                             reuseMaterials = curatedConfig[folder]['reuseMaterial'];
-                        if (file in curatedConfig[folder]) {
+                        if (file in curatedConfig[folder])
+                        {
                             if ('collision' in curatedConfig[folder][file])
                                 mesh.checkCollisions = curatedConfig[folder][file]['collision'];
                             if ('reuseMaterial' in curatedConfig[folder][file])
@@ -1170,23 +1177,61 @@ export class LoadManager {
                         }
                     }
                 }
-                if (reuseMaterials) {
-                    this.processMaterial(mesh, m => this.reuseMaterial(m));
-                } else {
-                    this.processMaterial(mesh, m => this.makeMatIdUnique(m));
+                if (reuseMaterials)
+                {
+                    this.processMaterial(mesh, removeMat, m => this.reuseMaterial(m));
+                } else
+                {
+                    this.processMaterial(mesh, removeMat, m => this.makeMatIdUnique(m));
                 }
-                this.processMaterial(mesh, m => this.removeSpecular(m));
+                this.processMaterial(mesh, removeMat, m => this.removeSpecular(m));
+            }
+        }
+        if (removeMat.length > 0)
+        {
+            removeMat.forEach(mat =>
+            {
+                this.vishva.scene.removeMaterial(mat);
+                mat.dispose();
+            })
+        }
+    }
+
+    private processMaterial(mesh: AbstractMesh, removeMat:Material[], f: (mat: Material) => Material) {
+        if (mesh.material != null) {
+            if (mesh.material instanceof MultiMaterial) {
+                var mm: MultiMaterial = <MultiMaterial>mesh.material;
+                var mats: Material[] = mm.subMaterials;
+                for (let i = 0; i < mats.length; i++) {
+                    let m = f(mats[i]);
+                    if (mats[i] !== m){
+                        // after all meshes from this load have been processed then
+                        // remove these material
+                        removeMat.push(mats[i]);
+                        mats[i] = m;
+                    }
+                }
+            } else {
+                mesh.material = f(mesh.material);
             }
         }
     }
 
-    private reuseMaterial(mat: Material): Material {
-        let m = this.vishva.scene.getLastMaterialByID(mat.id + "@cur");
-        if (m != null) {
-            mat.dispose();
+    //@cur indicates that this is a curated item material
+    //it is possible that in this load the meshes were already reusing material
+    //which means we might have already added @cur to some of their materials 
+    //during a previous check 
+    private reuseMaterial(mat: Material): Material
+    {
+        let checkFor = mat.id;
+        if (!mat.id.endsWith("@cur")) checkFor = mat.id + "@cur";
+        let m = this.vishva.scene.getLastMaterialById(checkFor, true);
+        if (m != null)
+        {
             return m;
-        } else {
-            mat.id = mat.id + "@cur";
+        } else
+        {
+            mat.id=checkFor;
             return mat;
         }
     }
@@ -1203,19 +1248,7 @@ export class LoadManager {
         return m;
     }
 
-    private processMaterial(mesh: AbstractMesh, f: (mat: Material) => Material) {
-        if (mesh.material != null) {
-            if (mesh.material instanceof MultiMaterial) {
-                var mm: MultiMaterial = <MultiMaterial>mesh.material;
-                var mats: Material[] = mm.subMaterials;
-                for (let i = 0; i < mats.length; i++) {
-                    mats[i] = f(mats[i]);
-                }
-            } else {
-                mesh.material = f(mesh.material);
-            }
-        }
-    }
+    
 
 
     /**

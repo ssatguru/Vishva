@@ -73,7 +73,8 @@ import {
     Camera,
     CascadedShadowGenerator,
     DepthRenderer,
-    SSAO2RenderingPipeline
+    SSAO2RenderingPipeline,
+    DebugLayer
 } from "babylonjs";
 import WaterMaterial = BABYLON.WaterMaterial;
 import DynamicTerrain = BABYLON.DynamicTerrain;
@@ -114,7 +115,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.42";
+    static version: string = "0.4.0-alpha.43";
 
     public static worldName: string;
 
@@ -2970,7 +2971,14 @@ export class Vishva {
             let tz: number = Math.round(this.meshSelected.position.z / this.snapTransValue) * this.snapTransValue;
             this.meshSelected.position = new Vector3(tx, ty, tz);
 
-            var eulerRotation: Vector3 = this.meshSelected.rotationQuaternion.toEulerAngles();
+            let eulerRotation: Vector3;
+            if (this.meshSelected.rotationQuaternion) 
+            {
+                eulerRotation = this.meshSelected.rotationQuaternion.toEulerAngles();
+            }else
+            {
+                eulerRotation = this.meshSelected.rotation;
+            }
             let rx: number = Math.round(eulerRotation.x / this.snapRotValue) * this.snapRotValue;
             let ry: number = Math.round(eulerRotation.y / this.snapRotValue) * this.snapRotValue;
             let rz: number = Math.round(eulerRotation.z / this.snapRotValue) * this.snapRotValue;
@@ -3859,16 +3867,14 @@ export class Vishva {
 
     debugVisible: boolean = false;
     public toggleDebug() {
-        //if (this.scene.debugLayer.isVisible()) {
         if (this.debugVisible) {
             this.scene.debugLayer.hide();
         } else {
-            //let win = window.open("", "inpsector", "width=200,height=800");
-            //this.scene.debugLayer.show({ globalRoot: win.document.body, showExplorer: true, embedMode: true, overlay: false, enablePopup: true });
-            this.scene.debugLayer.show({ showExplorer: true, embedMode: true, overlay: false, enablePopup: true });
+            // Point to Inspector V2 UMD bundle on jsDelivr, matching the runtime BabylonJS version
+            DebugLayer.InspectorURL = `https://cdn.jsdelivr.net/npm/babylonjs-inspector@${Engine.Version}/babylon.inspector-v2.bundle.js`;
+            this.scene.debugLayer.show({ globalRoot: Vishva.gui, showExplorer: true, embedMode: true, overlay: false, enablePopup: true });
         }
         this.debugVisible = !this.debugVisible;
-
     }
 
     /**

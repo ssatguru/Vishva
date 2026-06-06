@@ -6,7 +6,7 @@ import "./w3.css";
 import "./style.css";
 
 
-// import "babylonjs-inspector";
+// babylonjs-inspector loaded dynamically from CDN (not bundled)
 import "babylonjs-loaders";
 import "babylonjs-materials";
 

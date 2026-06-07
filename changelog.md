@@ -1,5 +1,8 @@
 ### 06/07/2026 0.4.0-alpha.44
 
+#### skeleton-change-ag-support
+-This feature extends the **Change Skeleton** operation in Vishva's Animation tab to support animation-group (AG) driven skeletons, in addition to the existing animation-range (AR) driven skeleton support.
+
 #### Animation: Copy Animations — now handles both animation ranges and animation groups
 - `linkAnimationsToSkeleton()` in `Vishva.ts` extended to retarget animation groups from the source skeleton's character hierarchy to the selected character's hierarchy
 - for each source animation group, a new `AnimationGroup` is created sharing the same `Animation` keyframe data objects, but with targets remapped to nodes of the same name in the destination hierarchy

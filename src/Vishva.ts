@@ -3103,32 +3103,64 @@ export class Vishva {
 
 
     public changeSkeleton(skelId: string): boolean {
-        if (!(this.meshSelected instanceof AbstractMesh)) return false;
+        // --- resolve current skeleton ---
+        const currentSkelResult = AnimUtils.getMeshSkel(this.meshSelected);
+        if (currentSkelResult == null) return false;
+        const currentSkel = currentSkelResult.skel;
 
-        this.meshSelected.skeleton = this.scene.getSkeletonByUniqueId(Number(skelId));
+        // --- resolve replacement skeleton ---
+        const replacementSkel = this.scene.getSkeletonByUniqueId(parseInt(skelId));
+        if (replacementSkel == null) return false;
 
-        // if the source skeleton had an overrideMesh, in otherwords was setup
-        // for playing animation groups, then set the override mesh of the
-        // cloned skeleton to the mesh selected.
-        //TODO overrideMesh has been removed from 5.0.0
-        // if (this.meshSelected.skeleton.overrideMesh) {
-        //     this.meshSelected.skeleton.overrideMesh = this.meshSelected;
-        // }
+        // --- type-mismatch guard: reject AR↔AG swaps ---
+        const currentIsAG = AnimUtils.isAGDrivenSkeleton(currentSkel);
+        const replacementIsAG = AnimUtils.isAGDrivenSkeleton(replacementSkel);
+        if (currentIsAG !== replacementIsAG) return false;
 
+        // --- local helper: find the first AbstractMesh whose .skeleton === skel ---
+        const findHostMesh = (skel: Skeleton): Node | null => {
+            for (const bone of skel.bones){
+                if (bone.getTransformNode()) return  AnimUtils.getRoot(bone.getTransformNode())
+            }
+            // for (const mesh of this.scene.meshes) {
+            //     if (mesh.skeleton === skel) return AnimUtils.getRoot(mesh);
+            // }
+            return null;
+        };
 
-        console.log(this.meshSelected.skeleton.bones);
-        for (let b of this.meshSelected.skeleton.bones) {
-            console.log(b.id);
+        // --- AR-to-AR branch ---
+        if (!currentIsAG) {
+            if (!(this.meshSelected instanceof AbstractMesh)) return false;
+            (this.meshSelected as AbstractMesh).skeleton = replacementSkel;
+            return true;
         }
-        let tns: TransformNode[] = this.meshSelected.getChildTransformNodes(false, (node) => {
-            return !(node instanceof AbstractMesh);
-        })
-        console.log(tns);
-        for (let tn of tns) {
-            console.log(tn.id);
+
+        // --- AG-to-AG: TransformNode selected ---
+        if (!(this.meshSelected instanceof Mesh)||!(this.meshSelected.geometry)) {
+            const tn = this.meshSelected as TransformNode;
+            const childMeshes = tn.getChildMeshes(false).filter(m => m instanceof Mesh) as Mesh[];
+            if (childMeshes.length === 0) return false;
+            const hostMesh = findHostMesh(replacementSkel);
+            if (hostMesh == null) return false;
+            for (const m of childMeshes) {
+                m.skeleton = replacementSkel;
+                m.setParent(hostMesh);
+            }
+            tn.dispose();
+            currentSkel.dispose();
+            return true;
         }
 
-        return true;
+        // --- AG-to-AG: Mesh selected ---
+        if (this.meshSelected instanceof Mesh) {
+            const hostMesh = findHostMesh(replacementSkel);
+            if (hostMesh == null) return false;
+            (this.meshSelected as Mesh).skeleton = replacementSkel;
+            (this.meshSelected as Mesh).setParent(hostMesh);
+            return true;
+        }
+
+        return false;
     }
 
     /**

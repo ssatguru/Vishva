@@ -113,6 +113,18 @@ export class AnimUtils {
         }
 
 
+        /**
+         * Returns true if the skeleton is driven by AnimationGroups — i.e., at least
+         * one bone has a linked TransformNode (bone.getLinkedTransformNode() != null).
+         * Returns false for null/undefined skeletons, null/empty bone arrays, or
+         * skeletons where no bone has a linked TransformNode.
+         */
+        public static isAGDrivenSkeleton(skel: Skeleton): boolean {
+                if (skel == null) return false;
+                if (skel.bones == null || skel.bones.length === 0) return false;
+                return skel.bones.some(b => b.getTransformNode() != null);
+        }
+
         //get the root of Node
         public static getRoot(tn: Node): Node {
                 if (tn.parent == null) return tn;

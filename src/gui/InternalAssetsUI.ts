@@ -63,13 +63,22 @@ export class InternalAssetsUI {
             return null;
         }
 
-        // For curated assets, only include folders that have a thumbnail.png
+        // For curated assets, include:
+        //   1. Subfolders that have a thumbnail.png inside them (existing behaviour)
+        //   2. Flat image files with a double extension like "Bush_Common_Flowers.gltf.png"
+        //      — the image itself is the thumbnail, and the corresponding asset file is loaded on click
         if (topFolder !== "internal") {
             items = items.filter(item => {
-                if (!(item instanceof Object)) return false;
-                let files: Array<string | object> = item["f"];
-                if (!files) return false;
-                return files.some(f => typeof f === "string" && f === "thumbnail.png");
+                if (item instanceof Object) {
+                    // Subfolder: keep only those with a thumbnail.png
+                    let files: Array<string | object> = item["f"];
+                    if (!files) return false;
+                    return files.some(f => typeof f === "string" && f === "thumbnail.png");
+                } else if (typeof item === "string") {
+                    // Flat file: keep double-extension asset-image files, e.g. "Name.gltf.png"
+                    return InternalAssetsUI._isDoubleExtAssetImage(item);
+                }
+                return false;
             });
             if (items.length === 0) {
                 return null;
@@ -111,45 +120,60 @@ export class InternalAssetsUI {
 
         var f: (p1: MouseEvent) => any = (e) => { return this._onAssetImgClick(e) };
         var row: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
+        var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
+
         for (let item of items) {
-            if (!(item instanceof Object)) continue;
-
             let img: HTMLImageElement = document.createElement("img");
-            let name: string = item["d"];
+            let label: string;
 
-            //check if special type of categories
-            if ("skyboxes primitives particles".search(assetCat) > -1) {
-                img.id = name;
-            } else {
-                let files: Array<string | object> = item["f"];
-                for (let file of files) {
-                    if (!(file instanceof Object)) {
-                        if (file.search(name) > -1 && this._isAsset(file)) {
-                            img.id = file;
-                            break;
+            if (typeof item === "string" && InternalAssetsUI._isDoubleExtAssetImage(item)) {
+                // Flat double-extension file: e.g. "Bush_Common_Flowers.gltf.png"
+                // img.id = the actual asset filename ("Bush_Common_Flowers.gltf")
+                // thumbnail = the image file itself
+                const assetFileName = item.slice(0, item.lastIndexOf(".")); // strip trailing .png
+                img.id = assetFileName;
+                img.src = Vishva.vHome + "assets/" + topFolder + "/" + assetCat + "/" + item;
+                label = assetFileName.split(".")[0]; // display name without any extension
+                img.className = assetCat + "_flat"; // distinct class to route click differently
+            } else if (item instanceof Object) {
+                let name: string = item["d"];
+                label = name;
+
+                //check if special type of categories
+                if ("skyboxes primitives particles".search(assetCat) > -1) {
+                    img.id = name;
+                } else {
+                    let files: Array<string | object> = item["f"];
+                    for (let file of files) {
+                        if (!(file instanceof Object)) {
+                            if (file.search(name) > -1 && this._isAsset(file)) {
+                                img.id = file;
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            let imgURL = "assets/" + topFolder + "/" + assetCat + "/" + name + "/thumbnail.png";
-            if (topFolder == "internal") {
-                img.src = Vishva.vBinHome + imgURL;
+                let imgURL = "assets/" + topFolder + "/" + assetCat + "/" + name + "/thumbnail.png";
+                if (topFolder == "internal") {
+                    img.src = Vishva.vBinHome + imgURL;
+                } else {
+                    img.src = Vishva.vHome + imgURL;
+                }
+                img.className = assetCat;
             } else {
-                img.src = Vishva.vHome + imgURL;
+                continue;
             }
+
             img.setAttribute("style", VishvaGUI.LARGE_ICON_SIZE + "cursor:pointer;");
-            img.className = assetCat;
             img.onclick = f;
-            img.title = item["d"];
+            img.title = label;
+
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.appendChild(img);
-        }
-        var row2: HTMLTableRowElement = <HTMLTableRowElement>tbl.insertRow();
-        for (let item of items) {
-            if (!(item instanceof Object)) continue;
-            let cell: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
-            cell.innerText = item["d"];
-            cell.style.textAlign="center";
+
+            var cell2: HTMLTableCellElement = <HTMLTableCellElement>row2.insertCell();
+            cell2.innerText = label;
+            cell2.style.textAlign = "center";
         }
     }
     private _isAsset(fileName: String): boolean {
@@ -168,11 +192,29 @@ export class InternalAssetsUI {
             this._vishva.addPrim(i.id);
         } else if (i.className === "particles") {
             this._vishva.createParticles(i.id);
+        } else if (i.className.endsWith("_flat")) {
+            // Double-extension flat asset: className is "<assetCat>_flat", id is the asset filename (e.g. "Bush_Common_Flowers.gltf")
+            const category = i.className.slice(0, -"_flat".length);
+            this._vishva.loadManager.loadCurAsset(category, i.id, true);
         } else {
             this._vishva.loadManager.loadCurAsset(i.className, i.id);
         }
         return true;
-        //this._vishva.createWater();
+    }
+
+    /**
+     * Returns true if the filename has a double extension where the inner extension
+     * is a known 3D asset type and the outer extension is an image type.
+     * e.g. "Bush_Common_Flowers.gltf.png" → true
+     */
+    private static _isDoubleExtAssetImage(fileName: string): boolean {
+        const parts = fileName.split(".");
+        if (parts.length < 3) return false;
+        const imgExt = parts[parts.length - 1].toLowerCase();
+        const assetExt = parts[parts.length - 2].toLowerCase();
+        const imageExts = ["png", "jpg", "jpeg", "webp"];
+        const assetExts = ["gltf", "glb", "babylon", "obj"];
+        return imageExts.includes(imgExt) && assetExts.includes(assetExt);
     }
 
     /**

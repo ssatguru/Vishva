@@ -119,4 +119,14 @@ export class AnimUtils {
                 return AnimUtils.getRoot(tn.parent);
         }
 
+        /** Depth-first search for a node by name within a hierarchy (inclusive of root). */
+        public static findNodeInHierarchy(root: Node, name: string): Node | null {
+                if (root.name === name) return root;
+                for (const child of root.getChildren(null, false)) {
+                        const found = AnimUtils.findNodeInHierarchy(child, name);
+                        if (found != null) return found;
+                }
+                return null;
+        }
+
 }

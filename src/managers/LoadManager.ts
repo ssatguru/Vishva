@@ -883,15 +883,18 @@ export class LoadManager {
      * 
      * @param category 
      * @param asset 
+     * @param flat  if true the asset sits directly in the category folder (no subfolder)
      */
-    public loadCurAsset(category: string, asset: string) {
+    public loadCurAsset(category: string, asset: string, flat: boolean = false) {
         console.log("loading curated ", category, asset);
         this.vishva.filePath = category;
         this.vishva.file = asset;
-        let folder: string = asset.split(".")[0];
+
+        const basePath = this.vishva.constructor.vHome + "assets/curated/" + category + "/";
+        const assetPath = flat ? basePath : basePath + asset.split(".")[0] + "/";
 
         SceneLoader.ImportMesh("",
-            this.vishva.constructor.vHome + "assets/curated/" + category + "/" + folder + "/",
+            assetPath,
             asset,
             this.vishva.scene,
             (meshes, particleSystems, skeletons, animationGroups) => { return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, asset, "curated", category) });

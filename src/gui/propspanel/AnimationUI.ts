@@ -118,7 +118,7 @@ export class AnimationUI {
         }
 
 
-        //clone the selected skeleton and switch to it
+        //clone the animations from selected skeleton and link to the skeleton of the selected character
         animSkelLinkAnims.onclick = (e) => {
 
             // if (this._vishva.cloneChangeSkeleton(this._animSkelList.selectedOptions[0].value))
@@ -550,6 +550,8 @@ export class AnimationUI {
         var opt: HTMLOptionElement;
         //NOTE:skel id is not unique
         for (let skel of skels) {
+            // exclude the skeleton belonging to the currently selected mesh
+            if (skel === this._skel) continue;
             opt = document.createElement("option");
             opt.innerText = skel.name + ", " + skel.id + ", " + skel.uniqueId;
             opt.value = skel.uniqueId.toString();

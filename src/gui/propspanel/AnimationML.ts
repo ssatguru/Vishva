@@ -80,7 +80,7 @@ let animHTML = `
         <button id="animRangeMake" style="margin-top:0.5em">create/update</button>
 </div>
 
-<h5>Skeletons in scene </h5>
+<h5>Other Skeletons in scene </h5>
 <select id="animSkelList" class="w3-select"></select>
 <div style="margin-top:0.5em">
         <button id="animSkelClone">clone skeleton</button>

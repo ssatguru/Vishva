@@ -95,6 +95,7 @@ import { AvSerialized, VishvaSerialized, ObjectIdMap, MeshMetadataMap, MeshMetad
 import { VishvaGUI } from "./gui/VishvaGUI";
 
 import { AvManager } from "./avatar/AvManager";
+import { AnimUtils } from "./util/AnimUtils";
 import { DialogMgr } from "./gui/DialogMgr";
 import { VTheme, VThemes } from "./gui/components/VTheme";
 import { VEvent } from "./eventing/VEvent";
@@ -3173,27 +3174,103 @@ export class Vishva {
      */
     public linkAnimationsToSkeleton(skelId: string): boolean {
 
-        if (!(this.meshSelected instanceof AbstractMesh)) return false;
+        if (this.meshSelected == null) return false;
 
         let skel = this.scene.getSkeletonByUniqueId(Number(skelId));
         if (skel == null) return false;
         let fromBones: Bone[] = skel.bones;
 
-        //link animations
-        let toBones: Bone[] = this.meshSelected.skeleton.bones;
+        // meshSelected may be the root TransformNode — use AnimUtils to find the
+        // actual skinned mesh (with a skeleton) anywhere in the hierarchy.
+        const sm = AnimUtils.getMeshSkel(this.meshSelected, true);
+        if (sm == null) {
+            console.error("[linkAnimationsToSkeleton] FAIL: no skinned mesh found in selected hierarchy");
+            return false;
+        }
+        const targetMesh = sm.mesh;
+        const targetSkel = sm.skel;
+
+        // Build a set of target bone names for fast lookup
+        const targetBoneNames = new Set<string>(targetSkel.bones.map(b => b.name));
+
+        // Check that the two skeletons share at least some bone names — if none match,
+        // the animation data won't make sense on the target.
+        const sharedBoneCount = fromBones.filter(b => targetBoneNames.has(b.name)).length;
+        if (sharedBoneCount === 0) {
+            console.warn("[linkAnimationsToSkeleton] FAIL: source and target skeletons share no bone names.");
+            console.log("  source bones:", fromBones.map(b => b.name));
+            console.log("  target bones:", targetSkel.bones.map(b => b.name));
+            return false;
+        }
+
+        //link animations (animation ranges path — bone-index-based link)
+        let toBones: Bone[] = targetSkel.bones;
         for (let i = 0; i < fromBones.length; i++) {
-            console.log(fromBones[i].name, fromBones[i].animations);
             toBones[i].animations = fromBones[i].animations;
         }
 
-        //create animation range
+        //create animation ranges
         let fromAnimRanges: AnimationRange[] = skel.getAnimationRanges();
         for (let fromAnimRange of fromAnimRanges) {
-            this.meshSelected.skeleton.createAnimationRange(fromAnimRange.name, fromAnimRange.from, fromAnimRange.to);
+            targetSkel.createAnimationRange(fromAnimRange.name, fromAnimRange.from, fromAnimRange.to);
         }
+
+        // --- Animation Groups ---
+        // Find animation groups that belong to the source skeleton's mesh hierarchy.
+        // An AG belongs to the source if any of its targeted animation targets live
+        // in the source mesh's hierarchy.
+        const sourceMesh = this.scene.meshes.find(m => m instanceof AbstractMesh && (m as AbstractMesh).skeleton === skel) as AbstractMesh;
+        if (sourceMesh != null) {
+            const sourceRoot = AnimUtils.getRoot(sourceMesh);
+            const sourceNodes = sourceRoot.getChildren(n => n instanceof TransformNode, false) as Node[];
+            if (sourceRoot instanceof TransformNode) sourceNodes.push(sourceRoot);
+
+            const targetRoot = AnimUtils.getRoot(targetMesh);
+            const targetNodes = targetRoot.getChildren(n => n instanceof TransformNode, false) as Node[];
+            if (targetRoot instanceof TransformNode) targetNodes.push(targetRoot);
+
+            // Collect AGs that target nodes within the source hierarchy
+            const sourceAGs: AnimationGroup[] = [];
+            for (const ag of this.scene.animationGroups) {
+                for (const ta of ag.targetedAnimations) {
+                    if (ta.target && sourceNodes.indexOf(ta.target as Node) > -1) {
+                        sourceAGs.push(ag);
+                        break;
+                    }
+                }
+            }
+
+            // For each source AG, create a new one retargeted to the matching nodes
+            // in the destination character hierarchy (matched by node name).
+            for (const sourceAG of sourceAGs) {
+                // Skip if an AG with this name already targets the destination hierarchy
+                const alreadyLinked = this.scene.animationGroups.some(
+                    ag => ag.name === sourceAG.name &&
+                        ag.targetedAnimations.some(ta => ta.target && targetNodes.indexOf(ta.target as Node) > -1)
+                );
+                if (alreadyLinked) continue;
+
+                const newAG = new AnimationGroup(sourceAG.name, this.scene);
+                newAG.loopAnimation = sourceAG.loopAnimation;
+                newAG.speedRatio = sourceAG.speedRatio;
+
+                for (const ta of sourceAG.targetedAnimations) {
+                    if (!ta.target) continue;
+                    const targetNodeName = (ta.target as Node).name;
+                    // Find node with same name in target hierarchy
+                    const destNode = AnimUtils.findNodeInHierarchy(targetRoot, targetNodeName);
+                    if (destNode == null) {
+                        console.warn(`[Vishva] linkAnimationsToSkeleton: node "${targetNodeName}" not found in target hierarchy — skipping.`);
+                        continue;
+                    }
+                    // Share the Animation object (same keyframe data, different target)
+                    newAG.addTargetedAnimation(ta.animation, destNode);
+                }
+            }
+        }
+
         return true;
     }
-
 
     skelViewerArr: SkeletonViewer[] = [];
     public toggleSkelView(skel: Skeleton, mesh: AbstractMesh) {

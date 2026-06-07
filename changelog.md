@@ -1,4 +1,23 @@
-### 06/06/2026 0.4.0-alpha.44
+### 06/07/2026 0.4.0-alpha.44
+
+#### Animation: Copy Animations — now handles both animation ranges and animation groups
+- `linkAnimationsToSkeleton()` in `Vishva.ts` extended to retarget animation groups from the source skeleton's character hierarchy to the selected character's hierarchy
+- for each source animation group, a new `AnimationGroup` is created sharing the same `Animation` keyframe data objects, but with targets remapped to nodes of the same name in the destination hierarchy
+- guard: skips copy if source and target skeletons share no bone names (avoids nonsensical retargeting)
+- guard: skips creating an animation group if one with the same name already targets the destination hierarchy (idempotent)
+- fixed root cause of "unable to clone and switch" error: `meshSelected` is the root `TransformNode` of a glTF hierarchy, not the skinned mesh — the method now uses `AnimUtils.getMeshSkel()` to locate the actual skinned mesh (with a `.skeleton`) anywhere in the selected hierarchy
+- added `AnimUtils.findNodeInHierarchy()` static helper — depth-first node lookup by name; used for AG retargeting; previously inlined in `AnimGroupDedup`
+- added `import { AnimUtils }` to `Vishva.ts` — no more duplicated hierarchy-walking code
+
+#### Animation UI: "Other Skeletons in scene" list
+- heading renamed from "Skeletons in scene" to "Other Skeletons in scene"
+- the skeleton list now excludes the skeleton belonging to the currently selected mesh — prevents copying a skeleton's animations onto itself
+
+#### InternalAssetsUI: flat double-extension curated assets
+- curated asset dialogs now also display assets that live directly in the category folder (no subfolder), identified by a double extension like `Bush_Common_Flowers.gltf.png`
+- the double-extension image file is used as the thumbnail; clicking it loads the corresponding asset file (e.g. `Bush_Common_Flowers.gltf`)
+- `_isDoubleExtAssetImage()` static helper detects valid combinations: inner extension must be a 3D asset type (`gltf`, `glb`, `babylon`, `obj`), outer must be an image type (`png`, `jpg`, `jpeg`, `webp`)
+- `loadCurAsset()` in `LoadManager` gains an optional `flat` parameter (default `false`); when `true` the asset is loaded directly from the category folder instead of a named subfolder — no separate method needed
 
 #### Character Controller UI: new jump phase actions
 - Added `preIdleJump`, `postIdleJump`, `preRunJump`, and `postRunJump` to the CC action mappings UI

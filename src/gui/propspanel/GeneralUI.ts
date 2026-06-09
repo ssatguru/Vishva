@@ -1,5 +1,5 @@
 
-import { Mesh, Vector3 } from "babylonjs";
+import { AbstractMesh, InstancedMesh, Mesh, TransformNode, Vector3 } from "babylonjs";
 import { Vishva } from "../../Vishva";
 import { VishvaGUI } from "../VishvaGUI";
 import { DialogMgr } from "../DialogMgr";
@@ -57,6 +57,8 @@ export class GeneralUI {
     private _genColl: HTMLInputElement;
     private _genVisi: HTMLInputElement;
     private _genBBox: HTMLInputElement;
+    private _genStatic: HTMLInputElement;
+    private _genMeshType: HTMLElement;
 
     constructor(vishva: Vishva, vishvaGUI: VishvaGUI) {
         this._vishva = vishva;
@@ -223,6 +225,34 @@ export class GeneralUI {
         this._genBBox.onchange = () => {
             this._vishva.toggleBoundingBox();
         }
+
+        this._genStatic = <HTMLInputElement>document.getElementById("genStatic");
+        this._genStatic.onchange = () => {
+            const node = this._vishva.meshSelected;
+            if (this._genStatic.checked) {
+                node.freezeWorldMatrix();
+                for (const child of node.getChildTransformNodes(false)) {
+                    child.freezeWorldMatrix();
+                }
+                // Disable edit control transform modes
+                this._vishva.editControl.disableTranslation();
+                this._vishva.editControl.disableRotation();
+                this._vishva.editControl.disableScaling();
+            } else {
+                node.unfreezeWorldMatrix();
+                for (const child of node.getChildTransformNodes(false)) {
+                    child.unfreezeWorldMatrix();
+                }
+                // Re-enable translation by default
+                this._vishva.editControl.enableTranslation();
+            }
+            // Toggle readonly on position, rotation, scaling fields
+            this._genLoc.setReadOnly(this._genStatic.checked);
+            this._genRot.setReadOnly(this._genStatic.checked);
+            this._genScale.setReadOnly(this._genStatic.checked);
+        }
+
+        this._genMeshType = document.getElementById("genMeshType");
 
         let undo: HTMLElement = document.getElementById("undo");
         let redo: HTMLElement = document.getElementById("redo");
@@ -423,6 +453,31 @@ export class GeneralUI {
         this._genColl.checked = this._vishva.isCollideable();
         this._genVisi.checked = this._vishva.isVisible();
 
+        // static (frozen world matrix)
+        const node = this._vishva.meshSelected;
+        this._genStatic.checked = node.isWorldMatrixFrozen;
+
+        // Set transform fields readonly when static
+        this._genLoc.setReadOnly(node.isWorldMatrixFrozen);
+        this._genRot.setReadOnly(node.isWorldMatrixFrozen);
+        this._genScale.setReadOnly(node.isWorldMatrixFrozen);
+
+        // mesh type label
+        this._genMeshType.textContent = this._getMeshTypeLabel(node);
+    }
+
+    private _getMeshTypeLabel(node: TransformNode): string {
+        if (node instanceof InstancedMesh) {
+            return "instance";
+        }
+        if (node instanceof Mesh) {
+            const geom = node.geometry;
+            if (!geom || geom.getTotalVertices() === 0) {
+                return "mesh (no geometry)";
+            }
+            return "mesh";
+        }
+        return "transform node";
     }
 
     private _updateTransform() {

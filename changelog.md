@@ -1,3 +1,17 @@
+### 06/08/2026 0.4.0-alpha.45
+
+#### General panel: Static toggle
+- added "static" checkbox in the General properties panel — freezes the world matrix for the selected mesh and all its children
+- unchecking unfreezes the entire hierarchy
+- when a mesh is static (frozen), the edit control gizmo remains visible (indicating selection) but translation, rotation, and scaling modes are disabled
+- `setTransOn()`, `setRotOn()`, `setScaleOn()` in `Vishva.ts` now early-return if the mesh's world matrix is frozen
+- `selectForEdit()` skips enabling translation on a frozen mesh; `switchEditControl()` disables all transform modes when switching to a frozen mesh
+- position, rotation, and scaling input fields become readonly when static is checked
+- added `setReadOnly()` method to `VInputVector3`
+
+#### General panel: Mesh type label
+- added a "type" label below the checkboxes showing the nature of the selected node: "transform node", "mesh (no geometry)", "mesh", or "instance"
+
 ### 06/07/2026 0.4.0-alpha.44
 
 #### skeleton-change-ag-support

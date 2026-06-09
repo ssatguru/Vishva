@@ -46,6 +46,12 @@ export class VInputVector3 {
         return this._v;
     }
 
+    public setReadOnly(readOnly: boolean) {
+        this._x._e.readOnly = readOnly;
+        this._y._e.readOnly = readOnly;
+        this._z._e.readOnly = readOnly;
+    }
+
     public setValue(v: Vector3) {
 
         this._v.x = v.x;

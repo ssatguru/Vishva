@@ -83,7 +83,13 @@ let genHTML = `
                 disable <input  type="checkbox" id="genDisable">&nbsp;&nbsp;&nbsp;&nbsp;
                 collision <input type="checkbox" id="genColl">&nbsp;&nbsp;&nbsp;&nbsp;
                 visible <input type="checkbox" id="genVisi">&nbsp;&nbsp;&nbsp;&nbsp;
-                bounding box <input type="checkbox" id="genBBox">
+                bounding box <input type="checkbox" id="genBBox">&nbsp;&nbsp;&nbsp;&nbsp;
+                static <input type="checkbox" id="genStatic">
+        </div>
+        
+        
+        <div>
+                <label style="vertical-align:middle;">type: </label><span id="genMeshType" style="vertical-align:middle;font-style:italic;"></span>
         </div>
         
         

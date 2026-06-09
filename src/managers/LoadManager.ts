@@ -1163,7 +1163,7 @@ export class LoadManager {
                 reuseMaterials = false;
                 if (assetType == "curated" && curatedConfig)
                 {
-                    if ('collision' in curatedConfig) mesh.checkCollisions = true;
+                    if ('collision' in curatedConfig) mesh.checkCollisions = <boolean> curatedConfig.collision;
                     if ('reuseMaterial' in curatedConfig) reuseMaterials = <boolean>curatedConfig.reuseMaterial;
                     if (folder in curatedConfig)
                     {

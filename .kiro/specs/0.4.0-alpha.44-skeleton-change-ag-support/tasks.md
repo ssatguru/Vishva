@@ -97,7 +97,7 @@ Extend `Vishva.changeSkeleton()` to support AG-driven skeletons alongside the ex
     - Verify `this.update()` is called on `true` return and `DialogMgr.showAlertDiag("Error: unable to switch")` is called on `false` return
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 5. Final checkpoint — Ensure all tests pass
+- [x] 5. Final checkpoint — Ensure all tests pass
   - Run `npm test` and verify all tests pass; ask the user if any questions arise.
 
 ## Notes

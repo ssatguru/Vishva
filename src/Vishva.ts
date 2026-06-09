@@ -371,6 +371,7 @@ export class Vishva {
         //let pOn = this.scene.enablePhysics(new Vector3(0, -9.8, 0));
         let pOn = this.scene.enablePhysics(new Vector3(0, -9.81, 0), new OimoJSPlugin());
         this.scene.useRightHandedSystem = true;
+        this.scene.autoClear= false;
 
         Engine.CollisionsEpsilon = 0.01;
 
@@ -1242,7 +1243,9 @@ export class Vishva {
         this.editControl.addActionEndListener((actionType: number) => {
             this.vishvaGUI.handleTransChange();
         })
-        this.editControl.enableTranslation();
+        if (!this.meshSelected.isWorldMatrixFrozen) {
+            this.editControl.enableTranslation();
+        }
         if (this.spaceWorld) {
             this.editControl.setLocal(false);
         }
@@ -1278,6 +1281,15 @@ export class Vishva {
         this.editControl.switchTo(this.meshSelected);
         if (this.meshSelected instanceof AbstractMesh) {
             SNAManager.getSNAManager().disableSnAs(<Mesh>this.meshSelected);
+        }
+
+        // If switching to a frozen mesh, disable all transform modes
+        if (this.meshSelected.isWorldMatrixFrozen) {
+            this.editControl.disableTranslation();
+            this.editControl.disableRotation();
+            this.editControl.disableScaling();
+        }else{
+            this.editControl.enableTranslation();
         }
 
         this._managesnapping();
@@ -2692,6 +2704,7 @@ export class Vishva {
     }
 
     public setTransOn() {
+        if (this.meshSelected && this.meshSelected.isWorldMatrixFrozen) return;
         //if scaling is on then we might have changed space to local            
         //restore space to what is was before scaling
         //            if (this.editControl.isScalingEnabled()) {
@@ -2704,6 +2717,7 @@ export class Vishva {
         return this.editControl.isTranslationEnabled();
     }
     public setRotOn() {
+        if (this.meshSelected && this.meshSelected.isWorldMatrixFrozen) return;
         //if scaling is on then we might have changed space to local            
         //restore space to what is was before scaling
         //            if (this.editControl.isScalingEnabled()) {
@@ -2718,6 +2732,7 @@ export class Vishva {
 
     //wasSpaceLocal: boolean;
     public setScaleOn() {
+        if (this.meshSelected && this.meshSelected.isWorldMatrixFrozen) return;
         //make space local for scaling
         //remember what the space was so we can restore it back later on
         //            if (!this.isSpaceLocal()) {

@@ -41,6 +41,9 @@ const settingFormHtml: string = `
 
         <label>turning speed</label>
         <input name="turningSpeed" type="text"/>
+
+        <label>turn in place</label>
+        <input name="turnInPlace" type="checkbox"/>
         
         <label>disable firstperson</label>
         <input name="noFirstPerson" type="checkbox"/>

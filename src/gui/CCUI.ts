@@ -32,7 +32,7 @@ export class CCUI {
     setTab: HTMLDivElement;
     mapTab: HTMLDivElement;
 
-    constructor(cc: CharacterController, onCancelCallback?: () => void, onSaveCallback?: () => void) {
+    constructor(cc: CharacterController, onCancelCallback?: () => void, onSaveCallback?: () => void, modal: boolean = true) {
         this._cc = cc;
         this._onCancelCallback = onCancelCallback;
         this._onSaveCallback = onSaveCallback;
@@ -51,15 +51,30 @@ export class CCUI {
         this._buildMapUI(this.mapTab);
         this._updateUI();
 
-        let dboSave: HTMLButtonElement = VButton.create("save", "save");
-        let dboCancel: HTMLButtonElement = VButton.create("cancel", "cancel");
+        let dboApply: HTMLButtonElement = VButton.create("apply", "Apply");
+        let dboSave: HTMLButtonElement = VButton.create("save", "Save");
+        let dboExport: HTMLButtonElement = VButton.create("export", "Export");
+        let dboCancel: HTMLButtonElement = VButton.create("cancel", "Cancel");
 
+        dboApply.style.margin = "1em";
         dboSave.style.margin = "1em";
+        dboExport.style.margin = "1em";
         dboCancel.style.margin = "1em";
 
+        this.ccElement.appendChild(dboApply);
         this.ccElement.appendChild(dboSave);
+        this.ccElement.appendChild(dboExport);
         this.ccElement.appendChild(dboCancel);
 
+        dboApply.onclick = (e) => {
+            this._saveCC();
+            this._updateUI();
+            return true;
+        };
+        dboExport.onclick = (e) => {
+            this._exportCC();
+            return true;
+        };
         dboSave.onclick = (e) => {
             this._saved = true;
             this._saveCC();
@@ -77,7 +92,7 @@ export class CCUI {
             return true;
         }
 
-        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.centerTop, "", "", "12em",true);
+        this._ccDiag = new VDiag(this.ccElement, "Character Controller Settings", VDiag.centerTop, "", "", "12em", modal);
         this._ccDiag.onHide ( () => {
             if (!this._saved && this._onCancelCallback) {
                 this._onCancelCallback();
@@ -199,7 +214,8 @@ export class CCUI {
         new VInputNumber(form.eox);
         new VInputNumber(form.eoy);
         new VInputNumber(form.eoz);
-        this._sndUI = new SoundUI(this._cc.getSettings().sound);
+        new SoundUI(this._cc.getSettings().sound);
+        this._sndUI = SoundUI.getInstance();
         (<HTMLButtonElement>form.stepSnd).onclick = () => {
             this._sndUI.toggle();
         }
@@ -225,6 +241,7 @@ export class CCUI {
         form.animBlend.value = ccSettings.animBlend;
         form.turningOff.checked = ccSettings.turningOff;
         form.turningSpeed.value = ccSettings.smoothTurnSpeed;
+        form.turnInPlace.checked = this._cc.isTurnInPlace();
 
         // rotation speed is stored in actionMap turnLeft/turnRight speed (radians), display as degrees
         let actionMap: ActionMap = this._cc.getActionMap();
@@ -275,7 +292,7 @@ export class CCUI {
         for (var i: number = l - 1; i >= 0; i--) {
             c[i].remove();
         }
-
+        
         if (this._cc.isAg()) {
             let groups: AnimationGroup[] = AnimUtils.getMeshAg(this._cc.getAvatar(), this._cc.getScene().animationGroups);
             for (let g of groups) {
@@ -334,7 +351,6 @@ export class CCUI {
         ccSettings.cameraTarget = new Vector3(Number(form["x"].value), Number(form["y"].value), Number(form["z"].value));
         ccSettings.turningOff = form["turningOff"].checked;
         ccSettings.smoothTurnSpeed = Number(form["turningSpeed"].value);
-        this._cc.setTurnSpeed(Number(form["rotationSpeed"].value));
         ccSettings.faceForward = form["faceForward"].checked;
         ccSettings.sound = this._sndUI.getSound();
         ccSettings.animBlend = Number(form["animBlend"].value);
@@ -342,6 +358,8 @@ export class CCUI {
         ccSettings.ellipsoidOffset = new Vector3(Number(form["eox"].value), Number(form["eoy"].value), Number(form["eoz"].value));
 
         this._cc.setSettings(ccSettings);
+        this._cc.setTurnInPlace(form["turnInPlace"].checked);
+        this._cc.setTurnSpeed(Number(form["rotationSpeed"].value));
         this._cc.enableBlending(Number(form["animBlend"].value));
 
         if (form["elipsoid"].checked) {
@@ -387,6 +405,46 @@ export class CCUI {
         else this._cc.setAnimationRanges(_actMap);
     }
 
+    private _exportCC() {
+        // 1. Capture settings (clone via getSettings)
+        let settings: CCSettings = this._cc.getSettings();
+
+        // 2. Serialize sound as filename string only
+        if (settings.sound) {
+            (settings as any).sound = settings.sound.name;
+        }
+
+        // 3. Capture action map
+        let actionMap: ActionMap = this._cc.getActionMap();
+
+        // 4. Replace AG instances with name strings, null out sounds
+        let keys = Object.keys(actionMap);
+        for (let key of keys) {
+            let ad: ActionData = actionMap[key];
+            ad.sound = null;
+            if (ad.ag instanceof AnimationGroup) {
+                actionMap[key]["ag"] = actionMap[key]["ag"].name;
+            }
+        }
+
+        // 5. Build export object
+        let exportObj = {
+            settings: settings,
+            actionMap: actionMap
+        };
+
+        // 6. Trigger download
+        let json = JSON.stringify(exportObj, null, 2);
+        let blob = new Blob([json], { type: "application/json" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = "cc-settings.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 
 
 

@@ -1,5 +1,39 @@
 ### 06/08/2026 0.4.0-alpha.45
 
+#### CC Dialog: Turn In Place toggle
+- added "turn in place" checkbox in the CC Settings form, positioned after "turning speed"
+- reads from `CharacterController.isTurnInPlace()` and writes via `setTurnInPlace()`
+
+#### CC Dialog: Apply button
+- added "Apply" button that saves CC settings without closing the dialog
+- calls `_saveCC()` then `_updateUI()` so changes take effect immediately while keeping the dialog open for further adjustments
+
+#### CC Dialog: Export button
+- added "Export" button that downloads CC configuration as `cc-settings.json`
+- serializes settings and actionMap following the MeshCCSerialized pattern (AG → name string, Sound → filename string, ActionData sounds → null)
+
+#### CC Dialog: Button order
+- buttons now appear in order: Apply, Save, Export, Cancel (all with 1em margin)
+
+#### CC Dialog: Modal control
+- CC dialog opened from the navbar is now non-modal (can interact with the scene while open)
+- CC dialog opened from the General properties panel remains modal
+
+#### CC Dialog: Bug fixes
+- fixed turnInPlace re-selecting after Apply — `setTurnInPlace()` and `setTurnSpeed()` are now called after `setSettings()` to prevent overwrite
+- fixed SoundUI crash ("Cannot read properties of undefined reading 'isShown'") — singleton instance is now properly reused via `SoundUI.getInstance()`
+
+#### Avatar switching: CC settings preservation
+- when switching to a new avatar, if the old avatar has no CC attached, a new CC (camera=null) is created and the current settings/actionMap are copied to it and attached to the mesh
+- when switching to a mesh that already has a CC, its settings and actionMap are copied to the AvManager's active CC
+- fixes topDown setting always showing as selected after switch — camera-less CCs always report topDown=true due to `setMode()` guard; the real value is now stored in `mesh["_ccTopDown"]` and used during copy
+
+#### Property tests
+- added `src/gui/CCUI.property.test.ts` with 3 properties:
+  - Turn In Place UI reflects CC state (100 iterations)
+  - Turn In Place save round-trip (100 iterations)
+  - Export produces valid structure with correct serialization (100 iterations × 4 sub-properties)
+
 #### General panel: Static toggle
 - added "static" checkbox in the General properties panel — freezes the world matrix for the selected mesh and all its children
 - unchecking unfreezes the entire hierarchy

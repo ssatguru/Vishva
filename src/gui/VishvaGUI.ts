@@ -310,7 +310,7 @@ export class VishvaGUI {
         // button for character controller
         var navAV: HTMLElement = document.getElementById("navAV");
         navAV.onclick = (e) => {
-           new CCUI(this._vishva.avManager.cc);
+           new CCUI(this._vishva.avManager.cc, null, null, false);
         }
 
         // button for environment

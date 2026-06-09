@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.44";
+    static version: string = "0.4.0-alpha.45";
 
     public static worldName: string;
 
@@ -840,6 +840,8 @@ export class Vishva {
                     cc.setActionMap(ac);
                     cc.start();
                     mesh["characterController"] = cc;
+                    // Store topDown from serialized data — camera-less CC can't report it correctly
+                    mesh["_ccTopDown"] = meshCC.settings.topDown || false;
                     if (meshCC.originalEllipsoid) {
                         mesh["_originalEllipsoid"] = meshCC.originalEllipsoid;
                     }

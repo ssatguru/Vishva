@@ -205,7 +205,17 @@ export class AvManager {
         }
 
         this.cc.stop();
-        //old avatar
+        //old avatar — preserve current CC config on the old avatar mesh
+        if (!this.avatar["characterController"]) {
+            let oldCC = new CharacterController(<Mesh>this.avatar, null, this.scene);
+            oldCC.setSettings(this.cc.getSettings());
+            if (this.isAg) oldCC.setAnimationGroups(this.cc.getActionMap());
+            else oldCC.setAnimationRanges(this.cc.getActionMap());
+            oldCC.enableKeyBoard(false);
+            this.avatar["characterController"] = oldCC;
+            // Store topDown separately — camera-less CC always reports topDown=true
+            this.avatar["_ccTopDown"] = this.cc.getSettings().topDown;
+        }
         SNAManager.getSNAManager().enableSnAs(this.avatar);
         //TODO Remove this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
         //now that this mesh is not the avatar anymore, we can make it and its children pickable and remove the avatar tags
@@ -260,9 +270,22 @@ export class AvManager {
 
         //make character control to use the new avatar
         this.cc.setAvatar(this.avatar);
-        //this.cc.setAvatarSkeleton(this.avatarSkeleton);
 
-        //this.cc.setAnims(this.anims);
+        // If the new mesh has a pre-configured CC, copy its settings/actionMap to the active CC
+        let meshCC: CharacterController = this.avatar["characterController"];
+        if (meshCC) {
+            meshCC.stop();
+            let meshSettings = meshCC.getSettings();
+            // Camera-less CCs always report topDown=true; use stored value if available
+            if (this.avatar["_ccTopDown"] !== undefined) {
+                meshSettings.topDown = this.avatar["_ccTopDown"];
+            }
+            this.cc.setSettings(meshSettings);
+            if (this.isAg) this.cc.setAnimationGroups(meshCC.getActionMap());
+            else this.cc.setAnimationRanges(meshCC.getActionMap());
+            this.cc.enableKeyBoard(true);
+        }
+
         this.cc.start();
 
         this._ff = false;

@@ -21,12 +21,16 @@ export class SoundUI {
 
     private static instance: SoundUI = null;
 
+    public static getInstance(): SoundUI {
+        return SoundUI.instance;
+    }
+
     constructor(snd: Sound) {
 
         this._snd = snd;
 
         if (SoundUI.instance != null) {
-            // SoundUI.instance.toggle();
+            SoundUI.instance._snd = snd;
             return;
 
         }

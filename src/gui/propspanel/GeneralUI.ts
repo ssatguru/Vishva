@@ -382,12 +382,15 @@ export class GeneralUI {
                 cc.enableKeyBoard(false);
                 this._vishva.meshSelected["characterController"] = cc;
             }
-            let ccui = new CCUI(cc, isNew ? () => {
-                (<Mesh>this._vishva.meshSelected).ellipsoid = originalEllipsoid;
-                delete this._vishva.meshSelected["characterController"];
-            } : null, isNew ? () => {
-                cc.start();
-            } : null);
+            //if user clicks cancel button then delete the new charactercontroller
+            //if user clicks save button then start the new charactercontroller
+            let ccui = new CCUI(
+                cc, 
+                isNew ? () => {
+                        (<Mesh>this._vishva.meshSelected).ellipsoid = originalEllipsoid;
+                        delete this._vishva.meshSelected["characterController"];
+                    } : null, 
+                isNew ? () => {cc.start();} : null);
             return true;
         };
 

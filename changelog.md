@@ -1,3 +1,30 @@
+### 06/09/2026 0.4.0-alpha.46
+
+#### Smart Asset Placement
+- replaced the old "2m in front of avatar" placement strategy with context-aware placement
+- new `PlacementCalculator` module (pure math, no BabylonJS dependency) drives all placement logic
+- **camera-direction mode** (avatar-focused, dialog click): places asset in the camera look direction, 2m from avatar, using bounding-box corner alignment
+- **ground-raycast mode** (not avatar-focused, dialog click): casts ray from camera to ground and places asset at intersection
+- **cursor mode** (drag-and-drop): places asset at the cursor pick point on ground
+- **fallback mode**: when ground is absent or too far (>5× asset height), asset is placed in front of camera at a distance that ensures full visibility (max dimension × 1.25, minimum 2 units), centered vertically
+- all placement modes rotate the asset to face the camera (Y-axis rotation via atan2)
+- asset dialog thumbnails are now draggable — drag from dialog to canvas places asset at cursor location
+- internal drag-and-drop from the asset dialog no longer triggers "unsupported format" error
+- camera forward direction obtained via `camera.getForwardRay().direction` (reliable for ArcRotateCamera)
+- camera position obtained via `camera.globalPosition` (correct for orbital cameras)
+- screen coordinates properly converted to canvas-relative for scene picking
+- new files: `src/managers/PlacementCalculator.ts` (interfaces + calculator), `src/managers/PlacementCalculator.test.ts` (23 unit tests), `src/managers/PlacementCalculator.property.test.ts` (11 property tests), `src/managers/LoadManager.placement.test.ts` (23 integration tests)
+- `LoadManager.ts` refactored: `postionAsset` now uses PlacementCalculator with mode dispatch; new `buildPlacementContext`, `pickGround`, `pickGroundAtScreenPoint` methods; canvas pointer tracking for dialog-initiated drops
+- `InternalAssetsUI.ts`: asset thumbnails made draggable with `vishva/asset` dataTransfer type
+
+#### JSON save: strip unnecessary base64 texture embedding
+- textures from server-hosted assets (e.g., curated glTF packs) are no longer embedded as base64 in JSON-only saves
+- the JSON file now references server textures by their fetchable `vishva/` path instead
+- textures without a server source (user uploads, GLB-embedded) are still kept as base64
+- handles BabylonJS glTF loader's `data:<path>` URL format — rewrites to the actual server path
+- applies to both `saveWorldAsJson()` (download) and `saveWorldToIndexedDBAsJson()` (browser save)
+- new `AssetCollector.stripServerAssetBase64()` method drives the stripping logic
+
 ### 06/08/2026 0.4.0-alpha.45
 
 #### CC Dialog: Turn In Place toggle

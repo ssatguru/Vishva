@@ -630,6 +630,135 @@ export class AssetCollector {
         }
     }
 
+    /**
+     * Strip base64String fields from textures that reference server assets.
+     * Server assets (those with names starting with "vishva/") are available on
+     * the server and don't need to be embedded in a JSON-only save. This keeps
+     * the JSON file small by only embedding data for textures that have no
+     * server source (GLB-embedded textures, user uploads).
+     *
+     * @param sceneObj The serialized scene JSON object (mutated in place)
+     * @returns The number of base64String fields stripped
+     */
+    stripServerAssetBase64(sceneObj: object): number {
+        const scene = sceneObj as Record<string, any>;
+        let strippedCount = 0;
+
+        // Process top-level textures[]
+        if (Array.isArray(scene["textures"])) {
+            for (const tex of scene["textures"]) {
+                if (this._stripBase64AndFixUrl(tex)) {
+                    strippedCount++;
+                }
+            }
+        }
+
+        // Process reflectionTextures[]
+        if (Array.isArray(scene["reflectionTextures"])) {
+            for (const tex of scene["reflectionTextures"]) {
+                if (this._stripBase64AndFixUrl(tex)) {
+                    strippedCount++;
+                }
+            }
+        }
+
+        // Process materials[] — nested texture objects
+        if (Array.isArray(scene["materials"])) {
+            for (const mat of scene["materials"]) {
+                if (!mat || typeof mat !== "object") continue;
+                for (const key of Object.keys(mat)) {
+                    const value = mat[key];
+                    if (value && typeof value === "object" && !Array.isArray(value)) {
+                        if (this._stripBase64AndFixUrl(value)) {
+                            strippedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return strippedCount;
+    }
+
+    /**
+     * Strip base64String from a texture object and fix its url to be a fetchable
+     * server path. Returns true if the texture was modified.
+     *
+     * BabylonJS's glTF loader stores the original server path in a "data:<path>"
+     * format (e.g., "data:vishva/assets/curated/village/texture.png"). When we
+     * remove the base64String, we also need to rewrite the url to the actual
+     * fetchable server path so BabylonJS can load the texture from the server.
+     */
+    private _stripBase64AndFixUrl(tex: any): boolean {
+        if (!this._shouldStripBase64ForJsonSave(tex)) return false;
+
+        delete tex.base64String;
+
+        // Fix the url field: strip "data:" prefix if present to make it a fetchable path
+        if (typeof tex.url === "string" && tex.url.startsWith("data:")) {
+            const serverPath = tex.url.substring(5);
+            if (this._isServerPath(serverPath)) {
+                tex.url = serverPath;
+            }
+        }
+
+        // Also fix the name field to match the server path if url was fixed,
+        // so BabylonJS can locate the texture consistently
+        if (typeof tex.url === "string" && this._isServerPath(tex.url)) {
+            tex.name = tex.url;
+        }
+
+        return true;
+    }
+
+    /**
+     * Determine if a texture object's base64String should be stripped for JSON-only save.
+     * Returns true if the texture references a server asset (name or url resolves to
+     * a vishva/ path) AND has a base64String field — meaning it was unnecessarily embedded.
+     *
+     * Textures that should KEEP their base64String (returns false):
+     * - Textures with blob: URLs (user uploads, not on server)
+     * - Textures with no vishva/ prefix in name or url (GLB-embedded textures with internal names)
+     * - Textures without a base64String field
+     * - Textures under vishva/assets/data/ or vishva/assets/blob/ (archive-generated, not on server)
+     */
+    private _shouldStripBase64ForJsonSave(tex: any): boolean {
+        if (!tex || typeof tex !== "object") return false;
+        if (typeof tex.base64String !== "string" || !tex.base64String.startsWith("data:")) return false;
+
+        // Check if the texture name points to a server asset
+        const name = typeof tex.name === "string" ? tex.name : "";
+        if (this._isServerPath(name)) {
+            return true;
+        }
+
+        // Check URL field — BabylonJS glTF loader uses "data:<server-path>" format
+        // (e.g., "data:vishva/assets/curated/village/texture.png") as an internal marker.
+        // This is NOT a valid data URI (which would be "data:image/...;base64,...").
+        const url = typeof tex.url === "string" ? tex.url : "";
+        if (url.startsWith("data:")) {
+            const pathAfterData = url.substring(5); // strip "data:" prefix
+            if (this._isServerPath(pathAfterData)) {
+                return true;
+            }
+        } else if (this._isServerPath(url)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a path is a fetchable server asset path.
+     * Must start with "vishva/" but NOT be under "vishva/assets/data/" or "vishva/assets/blob/"
+     * (those are archive-generated paths that don't exist on the server).
+     */
+    private _isServerPath(path: string): boolean {
+        return path.startsWith("vishva/") &&
+            !path.startsWith("vishva/assets/data/") &&
+            !path.startsWith("vishva/assets/blob/");
+    }
+
     private _mimeToExtension(mimeType: string): string {
         const map: Record<string, string> = {
             "image/png": ".png",

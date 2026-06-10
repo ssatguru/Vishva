@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.45";
+    static version: string = "0.4.0-alpha.46";
 
     public static worldName: string;
 

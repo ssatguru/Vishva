@@ -167,6 +167,13 @@ export class InternalAssetsUI {
             img.setAttribute("style", VishvaGUI.LARGE_ICON_SIZE + "cursor:pointer;");
             img.onclick = f;
             img.title = label;
+            img.draggable = true;
+            img.addEventListener('dragstart', (ev: DragEvent) => {
+                if (ev.dataTransfer) {
+                    ev.dataTransfer.setData('vishva/asset', JSON.stringify({ className: img.className, id: img.id }));
+                    ev.dataTransfer.effectAllowed = 'copy';
+                }
+            });
 
             var cell: HTMLTableCellElement = <HTMLTableCellElement>row.insertCell();
             cell.appendChild(img);

@@ -1,8 +1,9 @@
 import {
-    AbstractMesh, AnimationGroup, AnimationRange, AssetContainer, AssetsManager, BoundingInfo,
-    InstancedMesh, IParticleSystem, Material, Matrix, Mesh, MultiMaterial, Quaternion, Scene,
+    AbstractMesh, AnimationGroup, AnimationRange, ArcRotateCamera, AssetContainer, AssetsManager, BoundingInfo,
+    InstancedMesh, IParticleSystem, Material, Matrix, Mesh, MultiMaterial, Quaternion, Ray, Scene,
     SceneLoader, Skeleton, StandardMaterial, Tags, TextFileAssetTask, Tools, TransformNode, Vector3, VertexBuffer, Color3
 } from "babylonjs";
+import { PlacementCalculator, PlacementContext, PlacementMode, Vector3 as PlacementVector3 } from "./PlacementCalculator";
 import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSerialized";
 import { RuntimeSharingEntry, getRootMesh } from "../util/AnimGroupDedup";
 import { deduplicateRangesAtRuntime } from "../util/AnimRangeDedup";
@@ -18,6 +19,8 @@ declare var curatedConfig: Object;
 
 export class LoadManager {
     private vishva: any;
+    private _lastCanvasPointerPosition: { x: number; y: number } | null = null;
+    private _pendingDropEvent: DragEvent | null = null;
 
     constructor(vishva: any) {
         this.vishva = vishva;
@@ -944,7 +947,7 @@ export class LoadManager {
         return null;
     }
 
-    public onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string, folder?: string) {
+    public onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string, folder?: string, loadType?: 'dialog' | 'drop', dropEvent?: DragEvent) {
         console.log("loading meshes from file " + file + " from folder " + folder + " of type " + assetType + " mesh count " + meshes.length);
 
         for (let s of skeletons) {
@@ -1052,7 +1055,12 @@ export class LoadManager {
             scaleNum = sf.x;
         }
         
-        this.postionAsset(rootMesh, scaleNum);
+        // Check if this load was triggered by an internal asset drag-and-drop
+        const effectiveLoadType = this._pendingDropEvent ? 'drop' : (loadType || 'dialog');
+        const effectiveDropEvent = this._pendingDropEvent || dropEvent;
+        this._pendingDropEvent = null;
+        
+        this.postionAsset(rootMesh, scaleNum, effectiveLoadType, effectiveDropEvent);
 
         EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
     }
@@ -1087,56 +1095,190 @@ export class LoadManager {
             });
     }
 
-    private postionAsset(rootMesh: TransformNode, scaleNum: number) {
-        let bb: { max, min } = rootMesh.getHierarchyBoundingVectors()
+    /**
+     * Cast a ray against the ground mesh and return the hit point or null.
+     * Respects RAY_MAX_DISTANCE (100 units) limit.
+     */
+    private pickGround(ray: Ray): PlacementVector3 | null {
+        if (!this.vishva.ground) return null;
 
-        // 2 m in front of av. also check if AV is forward facing
-        let dist = 2;
-        if (this.vishva.avManager.cc.getSettings().faceForward) {
-            dist = -2;
+        const hit = this.vishva.ground.intersects(ray, false);
+        if (hit.hit && hit.distance <= PlacementCalculator.RAY_MAX_DISTANCE && hit.pickedPoint) {
+            return { x: hit.pickedPoint.x, y: hit.pickedPoint.y, z: hit.pickedPoint.z };
         }
-        let placementLocal: Vector3 = new Vector3(0, 0, -dist);
-        //in global space
-        let placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.vishva.avatar.getWorldMatrix());
+        return null;
+    }
 
-        //vector from av to placementGlobal
-        let v: Vector3 = placementGlobal.subtract(this.vishva.avatar.position);
-        //now find which co-ordinate quadrant is this v in, that will give the quadrant the AV is facing
-        //quadrant 1 to 4 anti clockwise
-        let q: number = 0;
-        if (v.x >= 0 && v.z >= 0) {
-            q = 1;
-        } else if (v.x <= 0 && v.z >= 0) {
-            q = 2;
-        } else if (v.x <= 0 && v.z <= 0) {
-            q = 3;
-        } else q = 4;
+    /**
+     * Create a picking ray from screen coordinates and pick the ground mesh.
+     * Coordinates should be clientX/clientY from browser events.
+     */
+    private pickGroundAtScreenPoint(x: number, y: number): PlacementVector3 | null {
+        if (!this.vishva.ground) return null;
 
-        //now find bounding box corner closest to AV
-        //this is the corner which will be placed on placementGlobal
-        let corner: Vector3;
-        if (q == 1) {
-            corner = bb.min;
-        } else if (q == 2) {
-            corner = new Vector3(bb.max.x, bb.min.y, bb.min.z);
-        } else if (q == 3) {
-            corner = new Vector3(bb.max.x, bb.min.y, bb.max.z);
-        } else corner = new Vector3(bb.min.x, bb.min.y, bb.max.z);
+        const scene: Scene = this.vishva.scene;
+        const canvas = scene.getEngine().getRenderingCanvas();
+        // Convert client coordinates to canvas-relative coordinates
+        let canvasX = x;
+        let canvasY = y;
+        if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            canvasX = x - rect.left;
+            canvasY = y - rect.top;
+        }
+        const ray = scene.createPickingRay(canvasX, canvasY, Matrix.Identity(), scene.activeCamera);
+        return this.pickGround(ray);
+    }
 
-        //now place the bb corner on the placementGobalPoint
-        if (rootMesh != null) {
-            //rootmesh location wrt corner = - corner vector
-            rootMesh.position.subtractInPlace(corner);
-            rootMesh.position.addInPlace(placementGlobal);
-            
-            if (!this.vishva.isMeshSelected) {
-                this.vishva.selectForEdit(rootMesh);
-            } else {
-                this.vishva.switchEditControl(rootMesh);
+    /**
+     * Build a PlacementContext from current scene state for use by PlacementCalculator.
+     * Reads camera, avatar, ground, and bounding box information into a plain data structure.
+     */
+    private buildPlacementContext(rootMesh: TransformNode, loadType: 'dialog' | 'drop', dropEvent?: DragEvent): PlacementContext {
+        // 1. Determine placement mode
+        let mode: PlacementMode;
+        if (loadType === 'drop') {
+            mode = 'cursor';
+        } else if (this.vishva.isFocusOnAv === true) {
+            mode = 'camera-direction';
+        } else {
+            mode = 'ground-raycast';
+        }
+
+        // 2. Read camera state
+        const camera = this.vishva.scene.activeCamera;
+        // Use globalPosition for actual world position (reliable for ArcRotateCamera)
+        const camWorldPos = camera.globalPosition || camera.position;
+        const cameraPosition: PlacementVector3 = {
+            x: camWorldPos.x,
+            y: camWorldPos.y,
+            z: camWorldPos.z
+        };
+
+        // Get camera forward direction via getForwardRay (works reliably for all camera types)
+        const forwardDir = camera.getForwardRay().direction;
+        const cameraDirection: PlacementVector3 = {
+            x: forwardDir.x,
+            y: forwardDir.y,
+            z: forwardDir.z
+        };
+
+        // Get camera target — ArcRotateCamera has a .target property; otherwise use position + direction
+        let cameraTarget: PlacementVector3;
+        if (camera instanceof ArcRotateCamera) {
+            const t = camera.target;
+            cameraTarget = { x: t.x, y: t.y, z: t.z };
+        } else {
+            cameraTarget = {
+                x: cameraPosition.x + cameraDirection.x,
+                y: cameraPosition.y + cameraDirection.y,
+                z: cameraPosition.z + cameraDirection.z
+            };
+        }
+
+        // 3. Read avatar state
+        let avatarPosition: PlacementVector3 | undefined;
+        let avatarForward: PlacementVector3 | undefined;
+        if (this.vishva.avatar) {
+            const avPos = this.vishva.avatar.position;
+            avatarPosition = { x: avPos.x, y: avPos.y, z: avPos.z };
+
+            // Compute avatar forward direction based on faceForward setting
+            let dist = 1;
+            if (this.vishva.avManager.cc.getSettings().faceForward) {
+                dist = -1;
             }
-            this.vishva.rootSelected = true;
-            this.vishva.animateMesh(rootMesh);
+            const fwd = this.vishva.avatar.getDirection(new Vector3(0, 0, dist));
+            avatarForward = { x: fwd.x, y: fwd.y, z: fwd.z };
         }
+
+        // 4. Check ground existence
+        const groundExists = this.vishva.ground != null;
+
+        // 5. Compute bounding box after scaling
+        const bb = rootMesh.getHierarchyBoundingVectors();
+        const boundingBox = {
+            min: { x: bb.min.x, y: bb.min.y, z: bb.min.z } as PlacementVector3,
+            max: { x: bb.max.x, y: bb.max.y, z: bb.max.z } as PlacementVector3
+        };
+
+        // 6. Compute pick point for cursor mode
+        let pickPoint: PlacementVector3 | null | undefined;
+        if (mode === 'cursor') {
+            if (dropEvent) {
+                // For drop events: use clientX/clientY from the DragEvent
+                pickPoint = this.pickGroundAtScreenPoint(dropEvent.clientX, dropEvent.clientY);
+            } else if (this._lastCanvasPointerPosition) {
+                // For dialog loads with drop: use last tracked pointer position
+                pickPoint = this.pickGroundAtScreenPoint(
+                    this._lastCanvasPointerPosition.x,
+                    this._lastCanvasPointerPosition.y
+                );
+            } else {
+                pickPoint = null;
+            }
+        }
+
+        // 7. Return fully populated PlacementContext
+        return {
+            mode,
+            cameraPosition,
+            cameraDirection,
+            cameraTarget,
+            avatarPosition,
+            avatarForward,
+            isFocusOnAv: this.vishva.isFocusOnAv === true,
+            groundMesh: { exists: groundExists },
+            pickPoint,
+            boundingBox
+        };
+    }
+
+    private postionAsset(rootMesh: TransformNode, scaleNum: number, loadType: 'dialog' | 'drop' = 'dialog', dropEvent?: DragEvent) {
+        if (rootMesh == null) return;
+
+        // Build placement context from current scene state
+        const ctx = this.buildPlacementContext(rootMesh, loadType, dropEvent);
+
+        // Create calculator and dispatch based on mode
+        const calc = new PlacementCalculator();
+        let result;
+
+        switch (ctx.mode) {
+            case 'camera-direction':
+                result = calc.computeCameraDirectionPlacement(ctx);
+                break;
+            case 'ground-raycast': {
+                const ray = new Ray(
+                    new Vector3(ctx.cameraPosition.x, ctx.cameraPosition.y, ctx.cameraPosition.z),
+                    new Vector3(ctx.cameraDirection.x, ctx.cameraDirection.y, ctx.cameraDirection.z),
+                    PlacementCalculator.RAY_MAX_DISTANCE
+                );
+                const hitPoint = this.pickGround(ray);
+                result = calc.computeGroundRaycastPlacement(ctx, hitPoint);
+                break;
+            }
+            case 'cursor':
+                result = calc.computeCursorPlacement(ctx);
+                break;
+        }
+
+        // Apply position
+        rootMesh.position = new Vector3(result.position.x, result.position.y, result.position.z);
+
+        // Apply Y rotation if provided (fallback face-camera rotation)
+        if (result.rotationY !== undefined) {
+            rootMesh.rotation = new Vector3(0, result.rotationY, 0);
+        }
+
+        // Post-placement logic: select/edit and animate
+        if (!this.vishva.isMeshSelected) {
+            this.vishva.selectForEdit(rootMesh);
+        } else {
+            this.vishva.switchEditControl(rootMesh);
+        }
+        this.vishva.rootSelected = true;
+        this.vishva.animateMesh(rootMesh);
     }
 
     private fixObj(meshes: AbstractMesh[]) {
@@ -1301,7 +1443,7 @@ export class LoadManager {
                     delete (this.vishva.scene as any)._droppedFileMap;
                 }
                 
-                return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file.name, "dropped");
+                return this.onMeshLoaded(meshes, particleSystems, skeletons, animationGroups, file.name, "dropped", undefined, 'drop');
             },
             undefined,
             (scene, message, exception) => {
@@ -1324,6 +1466,10 @@ export class LoadManager {
      * Initialize drag and drop handlers on the canvas
      */
     public setupDragAndDrop(canvas: HTMLCanvasElement) {
+        canvas.addEventListener('pointermove', (e: PointerEvent) => {
+            this._lastCanvasPointerPosition = { x: e.clientX, y: e.clientY };
+        });
+
         // Set up custom file request handler for dropped files
         this.setupCustomFileHandler();
         
@@ -1339,6 +1485,30 @@ export class LoadManager {
             e.preventDefault();
             e.stopPropagation();
             canvas.classList.remove('world-drop-target');
+
+            // Check if this is an internal asset drag from the asset dialog
+            if (e.dataTransfer && e.dataTransfer.getData('vishva/asset')) {
+                const assetData = JSON.parse(e.dataTransfer.getData('vishva/asset'));
+                // Store the drop position for cursor placement
+                this._lastCanvasPointerPosition = { x: e.clientX, y: e.clientY };
+                this._pendingDropEvent = e;
+                // Route the load the same way _onAssetImgClick does
+                const className: string = assetData.className;
+                const id: string = assetData.id;
+                if (className === "skyboxes") {
+                    this.vishva.setSky(id);
+                } else if (className === "primitives") {
+                    this.vishva.addPrim(id);
+                } else if (className === "particles") {
+                    this.vishva.createParticles(id);
+                } else if (className.endsWith("_flat")) {
+                    const category = className.slice(0, -"_flat".length);
+                    this.loadCurAsset(category, id, true);
+                } else {
+                    this.loadCurAsset(className, id);
+                }
+                return;
+            }
 
             if (e.dataTransfer && e.dataTransfer.items) {
                 const items = Array.from(e.dataTransfer.items);
@@ -1359,6 +1529,9 @@ export class LoadManager {
                         }
                     }
                 }
+                
+                // If no files found, this is likely an internal drag (e.g. from asset dialog) — ignore
+                if (files.length === 0) return;
                 
                 // Check if any dropped file is a .tar.gz world file
                 const worldFile = files.find(f => isTarGzFile(f.name));

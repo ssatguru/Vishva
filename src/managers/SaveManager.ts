@@ -72,6 +72,10 @@ export class SaveManager {
      * Produces a BabylonJS scene serialization with VishvaSerialized merged
      * as a top-level key. No assets are bundled.
      * Returns an object URL for the JSON blob, or null on failure.
+     *
+     * Server assets (vishva/ paths) are referenced by URL, not embedded as base64.
+     * Only textures without a server source (GLB-embedded, user uploads) are kept
+     * as base64 in the output.
      */
     public async saveWorldAsJson(): Promise<string> {
         if (this.vishva.editControl != null) {
@@ -86,6 +90,8 @@ export class SaveManager {
 
         this.vishva.progressManager.show("Saving World (JSON)", "Preparing scene...");
         await this.vishva.progressManager.update(undefined, 0);
+
+        const assetCollector = new AssetCollector();
 
         this.removeRedundantCameras();
         this.removeInstancesFromShadow();
@@ -149,6 +155,13 @@ export class SaveManager {
         let sceneObj: any = SceneSerializer.Serialize(this.vishva.scene);
         this.removeSounds(sceneObj);
         this.removeActuatorTextBarMat(sceneObj);
+
+        // Strip base64String from textures that reference server assets.
+        // These are available on the server and don't need embedding in JSON-only saves.
+        const strippedCount = assetCollector.stripServerAssetBase64(sceneObj);
+        if (strippedCount > 0) {
+            console.log(`[SaveManager] saveWorldAsJson: stripped base64 from ${strippedCount} server-available texture(s)`);
+        }
 
         // Strip shared animation groups if sharing metadata exists
         const runtimeEntries = this.vishva._animationSharing;
@@ -284,6 +297,14 @@ export class SaveManager {
             let sceneObj: any = SceneSerializer.Serialize(this.vishva.scene);
             this.removeSounds(sceneObj);
             this.removeActuatorTextBarMat(sceneObj);
+
+            // Strip base64String from textures that reference server assets.
+            // These are available on the server and don't need embedding in JSON-only saves.
+            const assetCollector = new AssetCollector();
+            const strippedCount = assetCollector.stripServerAssetBase64(sceneObj);
+            if (strippedCount > 0) {
+                console.log(`[SaveManager] saveWorldToIndexedDBAsJson: stripped base64 from ${strippedCount} server-available texture(s)`);
+            }
 
             // Strip shared animation groups if sharing metadata exists
             const runtimeEntries = this.vishva._animationSharing;

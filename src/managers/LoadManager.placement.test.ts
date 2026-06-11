@@ -483,8 +483,8 @@ describe("LoadManager placement orchestration", () => {
             expect(rootMesh.position.x).toBe(0);
             expect(rootMesh.position.y).toBeCloseTo(9.5, 4);
             expect(rootMesh.position.z).toBe(-8);
-            // Fallback should also set rotation
-            expect(rootMesh.rotation.y).toBeDefined();
+            // No rotation is applied (assets are not rotated on placement)
+            expect(rootMesh.rotation.y).toBe(0);
         });
 
         it("does nothing when rootMesh is null", () => {

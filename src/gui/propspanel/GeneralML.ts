@@ -21,6 +21,7 @@ let genHTML = `
                         <button id="operFocus" title="focus"><span class="material-icons-outlined">center_focus_strong</span></button>
                         <button id="undo" title="undo"><span class="material-icons-outlined">undo</span></button>
                         <button id="redo" title="redo"><span class="material-icons-outlined">redo</span></button>
+                        <label style="vertical-align:middle;"> type: </label><span id="genMeshType" style="vertical-align:middle;"></span>
                 </div>
         </div>
         
@@ -85,11 +86,6 @@ let genHTML = `
                 visible <input type="checkbox" id="genVisi">&nbsp;&nbsp;&nbsp;&nbsp;
                 bounding box <input type="checkbox" id="genBBox">&nbsp;&nbsp;&nbsp;&nbsp;
                 static <input type="checkbox" id="genStatic">
-        </div>
-        
-        
-        <div>
-                <label style="vertical-align:middle;">type: </label><span id="genMeshType" style="vertical-align:middle;font-style:italic;"></span>
         </div>
         
         

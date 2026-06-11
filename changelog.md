@@ -1,3 +1,36 @@
+### 06/10/2026 0.4.0-alpha.47
+
+#### LoadManager refactoring — eliminate duplicate code
+- extracted `_openWorldsDB()` helper — single IndexedDB open logic replaces identical boilerplate in `_storeInIndexedDB`, `_getFromIndexedDB`, `_deleteFromIndexedDB`
+- extracted `_ingestArchiveAssets(files)` — consolidates the archive asset ingestion block (prefix check, AssetStore open, session clear, legacy path remapping, batch insert, AssetResolver activation) previously duplicated in `loadZipWorld` and `loadUploadedWorld`
+- extracted `applyVishvaSettings(vishvaSerialized)` — shared settings application (ellipsoid defaults, version logging, snas, camera, sky color, objectIds, meshMetadata) previously copy-pasted between `loadVishvaPartFromObjects` and `loadVishvaPart`
+- extracted `_decompressAndExtract(data)` — combines gzip decompression + tar extraction into a single call
+- extracted `_parseWorldFiles(files)` — parses Vishva.json + Scene.babylon from a tar file map
+- extracted `routeDroppedFiles(files)` — eliminates duplicated tar.gz/json/asset routing in the drop event handler
+- file reduced from ~1733 lines to ~890 lines with no behavioral changes
+
+#### Remove face-camera rotation on placement
+- assets are no longer rotated to face the camera when placed (all modes: camera-direction, ground-raycast, cursor, and fallback)
+- placement is now more predictable — assets keep their default orientation
+- removed `rotationY` from all `PlacementCalculator` method return values
+- removed rotation application in `LoadManager.postionAsset`
+- removed Property 6 (face-camera rotation) from property tests
+- updated unit and integration tests to reflect no-rotation behavior
+
+#### Primitives use smart placement
+- primitives (box, sphere, cylinder, cone, torus, plane, disc) now use the same smart placement system as other assets
+- previously, primitives were always placed 2m in front of the avatar using the old avatar-forward logic
+- now supports all placement modes: camera-direction, ground-raycast (free camera), and cursor (drag-and-drop from dialog)
+- removed old `placementLocal`/`placementGlobal` positioning code from `setPrimProperties`
+- `LoadManager.postionAsset` made public; `_pendingDropEvent` made public for primitive drop routing
+
+#### UI: mesh type label moved inline with toolbar
+- moved the "type:" label/span from its own row into the toolbar row (next to undo/redo) in the General properties panel
+
+#### Deprecation cleanup: Mesh.Create* → MeshBuilder
+- replaced all deprecated `Mesh.CreatePlane`, `Mesh.CreateBox`, `Mesh.CreateSphere`, `Mesh.CreateDisc`, `Mesh.CreateCylinder`, `Mesh.CreateTorus`, `Mesh.CreateGround` calls with their `MeshBuilder` equivalents using options objects
+- affects: all primitive creation methods, bone selector box, water mesh, and ground creation
+
 ### 06/09/2026 0.4.0-alpha.46
 
 #### Smart Asset Placement

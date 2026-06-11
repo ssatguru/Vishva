@@ -124,10 +124,7 @@ export class PlacementCalculator {
 
         const position: Vector3 = { x: posX, y: posY, z: posZ };
 
-        // Rotate asset to face camera
-        const rotationY = this.computeFaceCameraRotation(position, ctx.cameraPosition);
-
-        return { position, rotationY, usedFallback: false };
+        return { position, usedFallback: false };
     }
 
     /**
@@ -160,12 +157,8 @@ export class PlacementCalculator {
             z: groundHitPoint.z,
         };
 
-        // Rotate asset to face camera
-        const rotationY = this.computeFaceCameraRotation(position, ctx.cameraPosition);
-
         return {
             position,
-            rotationY,
             usedFallback: false,
         };
     }
@@ -186,10 +179,7 @@ export class PlacementCalculator {
             z: ctx.pickPoint.z,
         };
 
-        // Rotate asset to face camera
-        const rotationY = this.computeFaceCameraRotation(position, ctx.cameraPosition);
-
-        return { position, rotationY, usedFallback: false };
+        return { position, usedFallback: false };
     }
 
     /**
@@ -221,10 +211,7 @@ export class PlacementCalculator {
             z: cameraPosition.z + cameraDirection.z * distance,
         };
 
-        // Compute Y rotation so asset faces the camera
-        const rotationY = this.computeFaceCameraRotation(position, cameraPosition);
-
-        return { position, rotationY, usedFallback: true };
+        return { position, usedFallback: true };
     }
 
     /**

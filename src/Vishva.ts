@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.46";
+    static version: string = "0.4.0-alpha.47";
 
     public static worldName: string;
 
@@ -1630,13 +1630,6 @@ export class Vishva {
     private setPrimProperties(mesh: Mesh) {
         if (this.primMaterial == null) this.createPrimMaterial();
         // if (this.primPBRMaterial == null) this.createPrimPBRMaterial();
-        var r: number = mesh.getBoundingInfo().boundingSphere.radiusWorld;
-        //2 meter in front of av
-        let d = -(r+2)
-        if (this.avManager.cc.getSettings().faceForward) d=-d;
-        var placementLocal: Vector3 = new Vector3(0, r, d);
-        var placementGlobal: Vector3 = Vector3.TransformCoordinates(placementLocal, this.avatar.getWorldMatrix());
-        mesh.position.addInPlace(placementGlobal);
 
         mesh.checkCollisions = true;
         this._addToShadowCasters(mesh);
@@ -1670,18 +1663,17 @@ export class Vishva {
         else if (primType === "cone") mesh = this.addCone();
         else if (primType === "torus") mesh = this.addTorus();
         if (mesh !== null) {
-            if (!this.isMeshSelected) {
-                this.selectForEdit(mesh);
-            } else {
-                this.switchEditControl(mesh);
-            }
-            this.animateMesh(mesh);
+            // Use smart placement system — determine if this was a drop or dialog click
+            const effectiveLoadType = this.loadManager._pendingDropEvent ? 'drop' : 'dialog';
+            const effectiveDropEvent = this.loadManager._pendingDropEvent || undefined;
+            this.loadManager._pendingDropEvent = null;
+            this.loadManager.postionAsset(mesh, 1, effectiveLoadType as 'dialog' | 'drop', effectiveDropEvent);
         }
         EventManager.publish(VEvent._WORLD_ITEMS_CHANGED);
     }
 
     private addPlane(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreatePlane("plane", 1.0, this.scene);
+        let mesh: Mesh = MeshBuilder.CreatePlane("plane", { size: 1.0 }, this.scene);
         this.setPrimProperties(mesh);
         mesh.material.backFaceCulling = false;
         return mesh;
@@ -1689,38 +1681,38 @@ export class Vishva {
     }
 
     private addBox(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateBox("box", 1, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateBox("box", { size: 1 }, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addSphere(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateSphere("sphere", 10, 1, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateSphere("sphere", { segments: 10, diameter: 1 }, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addDisc(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateDisc("disc", 0.5, 20, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateDisc("disc", { radius: 0.5, tessellation: 20 }, this.scene);
         this.setPrimProperties(mesh);
         mesh.material.backFaceCulling = false;
         return mesh;
     }
 
     private addCylinder(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateCylinder("cyl", 1, 1, 1, 20, 1, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateCylinder("cyl", { height: 1, diameterTop: 1, diameterBottom: 1, tessellation: 20, subdivisions: 1 }, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addCone(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateCylinder("cone", 1, 0, 1, 20, 1, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateCylinder("cone", { height: 1, diameterTop: 0, diameterBottom: 1, tessellation: 20, subdivisions: 1 }, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
 
     private addTorus(): AbstractMesh {
-        let mesh: Mesh = Mesh.CreateTorus("torus", 1, 0.25, 20, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateTorus("torus", { diameter: 1, thickness: 0.25, tessellation: 20 }, this.scene);
         this.setPrimProperties(mesh);
         return mesh;
     }
@@ -3396,7 +3388,7 @@ export class Vishva {
     public _addBoneSelectors(skel: Skeleton) {
 
         let bones: Bone[] = skel.bones;
-        let mesh: Mesh = Mesh.CreateBox("box", 0.01, this.scene);
+        let mesh: Mesh = MeshBuilder.CreateBox("box", { size: 0.01 }, this.scene);
         this.createPrimMaterial();
         mesh.material = this.primMaterial
         let i = 0;
@@ -4284,7 +4276,7 @@ export class Vishva {
         water.addToRenderList(this.skybox);
         //water.addToRenderList(this.ground);
 
-        this.waterMesh = Mesh.CreateGround("waterMesh", 1024, 1024, 32, this.scene, false);
+        this.waterMesh = MeshBuilder.CreateGround("waterMesh", { width: 1024, height: 1024, subdivisions: 32 }, this.scene);
         //waterMesh.position.y = 1;
         this.waterMesh.material = <any>water;
 
@@ -4323,7 +4315,7 @@ export class Vishva {
 
         groundMaterial.diffuseColor = new Color3(0.9, 0.6, 0.4);
         groundMaterial.specularColor = new Color3(0, 0, 0);
-        var grnd: Mesh = Mesh.CreateGround("ground", 256, 256, 1, scene);
+        var grnd: Mesh = MeshBuilder.CreateGround("ground", { width: 256, height: 256, subdivisions: 1 }, scene);
         grnd.material = groundMaterial;
         grnd.checkCollisions = true;
         grnd.isPickable = false;
@@ -4354,7 +4346,7 @@ export class Vishva {
         groundMaterial.diffuseColor = new Color3(0.25, 0.45, 0.18);
         groundMaterial.specularColor = new Color3(0, 0, 0);
 
-        var grnd: Mesh = Mesh.CreateGround("ground", 256, 256, 1, scene);
+        var grnd: Mesh = MeshBuilder.CreateGround("ground", { width: 256, height: 256, subdivisions: 1 }, scene);
         grnd.material = groundMaterial;
         grnd.checkCollisions = true;
         //grnd.isPickable = false;

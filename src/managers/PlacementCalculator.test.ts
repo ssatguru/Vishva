@@ -148,19 +148,17 @@ describe('PlacementCalculator', () => {
             );
             expect(result.position).toEqual({ x: 5, y: 8, z: 3 });
             expect(result.usedFallback).toBe(true);
-            // rotation: dx = 5-5=0, dz = 3-3=0, atan2(0,0)=0
-            expect(result.rotationY).toBe(0);
+            expect(result.rotationY).toBeUndefined();
         });
 
-        it('camera at (0,0,0) direction (0,0,1) produces fallback at (0,0,2) with rotation π', () => {
+        it('camera at (0,0,0) direction (0,0,1) produces fallback at (0,0,2)', () => {
             const result = calc.computeFallbackPosition(
                 { x: 0, y: 0, z: 0 },
                 { x: 0, y: 0, z: 1 }
             );
             expect(result.position).toEqual({ x: 0, y: 0, z: 2 });
             expect(result.usedFallback).toBe(true);
-            // rotation: dx = 0-0=0, dz = 0-2=-2, atan2(0,-2)= π
-            expect(result.rotationY).toBeCloseTo(Math.PI, 5);
+            expect(result.rotationY).toBeUndefined();
         });
 
         it('camera at (3,4,5) direction (1,0,0) produces fallback at (5,4,5)', () => {
@@ -170,8 +168,7 @@ describe('PlacementCalculator', () => {
             );
             expect(result.position).toEqual({ x: 5, y: 4, z: 5 });
             expect(result.usedFallback).toBe(true);
-            // rotation: dx = 3-5=-2, dz = 5-5=0, atan2(-2,0) = -π/2
-            expect(result.rotationY).toBeCloseTo(-Math.PI / 2, 5);
+            expect(result.rotationY).toBeUndefined();
         });
     });
 

@@ -340,7 +340,7 @@ describe('Property 5: Fallback position places asset in front of camera centered
             expect(result.position.y).toBeCloseTo(camPos.y + camDir.y * 2, 5);
             expect(result.position.z).toBeCloseTo(camPos.z + camDir.z * 2, 5);
             expect(result.usedFallback).toBe(true);
-            expect(result.rotationY).toBeDefined();
+            expect(result.rotationY).toBeUndefined();
         }), { numRuns: 200 });
     });
 
@@ -372,52 +372,4 @@ describe('Property 5: Fallback position places asset in front of camera centered
     });
 });
 
-/**
- * Property 6: Fallback rotation orients asset toward camera
- * Validates: Requirements 4.3
- */
-describe('Property 6: Fallback rotation orients asset toward camera', () => {
-    const calc = new PlacementCalculator();
 
-    const arbPosition = fc.tuple(
-        fc.float({ min: -100, max: 100, noNaN: true, noDefaultInfinity: true }),
-        fc.float({ min: -100, max: 100, noNaN: true, noDefaultInfinity: true }),
-        fc.float({ min: -100, max: 100, noNaN: true, noDefaultInfinity: true })
-    ).map(([x, y, z]) => ({ x, y, z }));
-
-    const arbNormalizedDir = fc.tuple(
-        fc.float({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true }),
-        fc.float({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true }),
-        fc.float({ min: -10, max: 10, noNaN: true, noDefaultInfinity: true })
-    ).filter(([x, y, z]) => x * x + y * y + z * z > 0.01)
-        .map(([x, y, z]) => {
-            const len = Math.sqrt(x * x + y * y + z * z);
-            return { x: x / len, y: y / len, z: z / len };
-        });
-
-    it('forward direction after rotation points toward camera in XZ plane', () => {
-        fc.assert(fc.property(arbPosition, arbNormalizedDir, (camPos, camDir) => {
-            const result = calc.computeFallbackPosition(camPos, camDir);
-            const pos = result.position;
-            const rotY = result.rotationY!;
-
-            // rotationY = atan2(dx, dz) where dx = camPos.x - pos.x, dz = camPos.z - pos.z
-            // The forward direction pointing toward camera is (sin(rotY), cos(rotY))
-            const fwdX = Math.sin(rotY);
-            const fwdZ = Math.cos(rotY);
-
-            // Expected direction: position → camera in XZ
-            const toCamX = camPos.x - pos.x;
-            const toCamZ = camPos.z - pos.z;
-            const toCamLen = Math.sqrt(toCamX * toCamX + toCamZ * toCamZ);
-
-            if (toCamLen < 1e-9) return; // degenerate case
-
-            const expectedX = toCamX / toCamLen;
-            const expectedZ = toCamZ / toCamLen;
-
-            expect(fwdX).toBeCloseTo(expectedX, 4);
-            expect(fwdZ).toBeCloseTo(expectedZ, 4);
-        }), { numRuns: 200 });
-    });
-});

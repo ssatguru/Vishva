@@ -73,24 +73,27 @@ export class AnimUtils {
 
         }
 
-        public static getMeshSkel(node: Node, fromRoot = true): { "skel": Skeleton, "mesh": AbstractMesh } {
-
-                if (fromRoot) {
-
+        public static getMeshSkel(node: Node, fromRoot = true): { "skel": Skeleton, "mesh": AbstractMesh } 
+        {
+                if (fromRoot) 
+                {
                         //if the root itself has a skeleton then return that
-                        if (node instanceof AbstractMesh) {
+                        if (node instanceof AbstractMesh) 
+                        {
                                 if (node.skeleton != null) return { "skel": node.skeleton, "mesh": node };
                         }
 
                         let r: Node = AnimUtils.getRoot(node);
                         let ns: AbstractMesh[] = <AbstractMesh[]>r.getChildren((n) => { return (n instanceof AbstractMesh) }, false);
-                        for (let n of ns) {
+                        for (let n of ns) 
+                        {
                                 if (n.skeleton != null) return { "skel": n.skeleton, "mesh": n };
                         }
                         return null;
-
-                } else {
-                        if (node instanceof AbstractMesh) {
+                } else 
+                {
+                        if (node instanceof AbstractMesh) 
+                        {
                                 if (node.skeleton == null) return null; else return { "skel": node.skeleton, "mesh": node };
                         } else return null;
                 }

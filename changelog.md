@@ -1,3 +1,16 @@
+### 06/17/2026 0.4.0-alpha.48
+
+#### Fix bone attachment for glTF/AG-based skeletons
+- `_attach2Bone`: for AG-based skeletons (glTF), the attacher TransformNode is now parented directly to the bone's linked transform node instead of using `attachToBone`
+- this fixes the deserialization bug where bone-attached items appeared at x=0, z=0 after save/reload — `attachToBone` relies on the skeleton mesh's world matrix which may be stale at reattachment time
+- for AR-based skeletons (legacy `.babylon` files without linked nodes), falls back to the original `attachToBone` behavior
+- `_reattachBoneAttachments`: skips bones already correctly parented via native serialization (AG path); uses direct parenting for AG-based skeletons on legacy saves, falls back to `attachToBone` for AR-based
+- `_detach4Bone`: simplified — `detachFromBone()` handles both cases cleanly
+- approach confirmed by BabylonJS team (Evgeni_Popov, bghgary): direct parenting to `bone.getTransformNode()` is the recommended method for glTF skeletons
+
+#### Fix Animation UI in properties dialogbox not updating when a new character is loaded
+- if the properties dialog box is opened and the aniamtion panel is active then if a character with skeleton is loaded into scene the aniamtion panel wasnot getting updated. The reason was the check for skeleton was only made on the root pf the character not the childs. This was because the checking method was passed the rootpicked parm which was as false. updated the load asset method to set rootpicked to true if root was indeed picked.
+
 ### 06/10/2026 0.4.0-alpha.47
 
 #### LoadManager refactoring — eliminate duplicate code

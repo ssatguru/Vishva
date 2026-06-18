@@ -246,19 +246,21 @@ export class AnimationUI {
 
     }
 
-
-
-    public update() {
+    public update() 
+    {
         // Clean up bone selector state when mesh selection changes
         this._disposeBoneMarker();
-        if (this._boneSelectorDialog != null && this._boneSelectorDialog.isOpen()) {
+        if (this._boneSelectorDialog != null && this._boneSelectorDialog.isOpen()) 
+        {
             this._boneSelectorDialog.close();
         }
 
         // Hide skeleton viewer if it was visible for the previous mesh
-        if (this._skelMesh != null) {
+        if (this._skelMesh != null) 
+        {
             let sv = this._vishva.findSkelViewer(this._vishva.skelViewerArr, this._skelMesh);
-            if (sv != null) {
+            if (sv != null) 
+            {
                 this._vishva.toggleSkelView(this._skel, this._skelMesh);
             }
         }
@@ -269,18 +271,24 @@ export class AnimationUI {
         this._skelMesh = (sm === null) ? null : sm.mesh;
 
         var skelName: string;
-        if (this._skel == null) {
+        if (this._skel == null) 
+        {
             skelName = "NO SKELETON";
             this._skelFound.style.display = "none";
             //check if we have character animation groups without skeleton
-            if (this._refreshAgSelect()) {
+            if (this._refreshAgSelect()) 
+            {
                 this._agFound.style.display = "inherit";
                 this._arFound.style.display = "none";
-            } else {
+            } 
+            else 
+            {
                 this._agFound.style.display = "none";
                 this._arFound.style.display = "none";
             }
-        } else {
+        } 
+        else 
+        {
             skelName = this._skel.name.trim();
             if (skelName === "") skelName = "NO NAME";
             skelName = skelName + ", " + this._skel.id + ", " + this._skel.uniqueId;
@@ -288,20 +296,26 @@ export class AnimationUI {
             console.log(this._skel.animations);
 
             //if (AnimUtils.skelDrivenByAG(this._skel, this._vishva.scene)) {
-            if (this._refreshAgSelect()) {
+            if (this._refreshAgSelect()) 
+            {
                 this._agFound.style.display = "inherit";
                 this._arFound.style.display = "none";
-            } else if (this._refreshArSelect()) {
-                this._agFound.style.display = "none";
-                this._arFound.style.display = "inherit";
-            } else {
-                this._agFound.style.display = "none";
-                this._arFound.style.display = "none";
+            } 
+            else
+            {
+                 if (this._refreshArSelect()) 
+                {
+                    this._agFound.style.display = "none";
+                    this._arFound.style.display = "inherit";
+                } 
+                else 
+                {
+                    this._agFound.style.display = "none";
+                    this._arFound.style.display = "none";
+                }
             }
         }
         document.getElementById("skelName").innerText = skelName;
-
-
         this._refreshAnimSkelList();
     }
     /**

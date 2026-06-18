@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.47";
+    static version: string = "0.4.0-alpha.48";
 
     public static worldName: string;
 
@@ -3473,7 +3473,17 @@ export class Vishva {
         }
         let tn: TransformNode = new TransformNode("attacher-" + boneIndex);
         tn.id = "attacher-" + boneIndex + "-" + Date.now();
-        tn.attachToBone(bone, skelMesh);
+
+        // Prefer direct parenting to bone's linked node (AG-based skeletons / glTF).
+        // This survives serialization natively — no manual reattachment needed on load.
+        // Fall back to attachToBone for AR-based skeletons without linked nodes.
+        let linkedNode = bone.getTransformNode();
+        if (linkedNode) {
+            tn.parent = linkedNode;
+        } else {
+            tn.attachToBone(bone, skelMesh);
+        }
+
         att.setParent(tn);
         this.multiUnSelectAll();
         return null;
@@ -3501,6 +3511,9 @@ export class Vishva {
         m.decompose(att.scaling, att.rotationQuaternion, att.position);
         att.parent = null;
 
+        // detachFromBone handles both cases:
+        // - if attached via attachToBone, it clears the bone referal and resets parent
+        // - if directly parented to a linked node, it just sets parent to null
         tn.detachFromBone();
         tn.dispose();
 
@@ -3512,6 +3525,10 @@ export class Vishva {
     /**
      * Re-attaches "attacher-" TransformNodes to their bones after scene load.
      * Uses boneAttachments data from VishvaSerialized.
+     * 
+     * For AG-based skeletons (bones with linked nodes), the parent-child relationship
+     * is typically restored natively by BabylonJS serialization. This method handles
+     * the fallback for AR-based skeletons and legacy saves where native restoration failed.
      */
     private _reattachBoneAttachments() {
         if (this.vishvaSerialized == null || this.vishvaSerialized.boneAttachments == null) return;
@@ -3538,8 +3555,22 @@ export class Vishva {
                 console.warn(`[Vishva] Bone attachment: bone index ${ba.boneIndex} not found`);
                 continue;
             }
+
+            // Check if already correctly parented (AG-based: native serialization restored it)
+            let linkedNode = bone.getTransformNode();
+            if (linkedNode && tn.parent === linkedNode) {
+                // Already correctly attached via native parent-child serialization
+                continue;
+            }
+
             try {
-                tn.attachToBone(bone, mesh);
+                // Prefer direct parenting for AG-based skeletons (linked node exists)
+                if (linkedNode) {
+                    tn.parent = linkedNode;
+                } else {
+                    // AR-based fallback
+                    tn.attachToBone(bone, mesh);
+                }
             } catch (e) {
                 console.error(`[Vishva] Failed to re-attach "${tn.name}" to bone:`, e);
             }

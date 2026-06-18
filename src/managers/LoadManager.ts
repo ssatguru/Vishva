@@ -963,8 +963,10 @@ export class LoadManager {
                     mesh.parent = rootMesh;
                 }
             }
+            this.vishva.rootSelected = true;
         } else {
             if (rootMesh != null) {
+                 this.vishva.rootSelected = true;
                 if (rootMesh.name === "__root__") {
                     rootMesh.name = file;
                 }

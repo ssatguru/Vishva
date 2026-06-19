@@ -474,3 +474,25 @@ function findSkeletonById(scene: Scene, id: string): Skeleton | null {
     }
     return null;
 }
+
+// ─── Cleanup ───
+
+/**
+ * Removes sharing entries that reference a deleted skeleton.
+ * Returns a new array with entries filtered out where `entry.skeleton` or
+ * `entry.sourceSkeleton` is the deleted skeleton (reference equality).
+ * Does not mutate the original array.
+ *
+ * Returns [] for null/undefined/empty input.
+ */
+export function cleanupRangeSharingEntries(
+    entries: RuntimeRangeSharingEntry[],
+    deletedSkeleton: Skeleton
+): RuntimeRangeSharingEntry[] {
+    if (!entries || entries.length === 0) {
+        return [];
+    }
+    return entries.filter(
+        entry => entry.skeleton !== deletedSkeleton && entry.sourceSkeleton !== deletedSkeleton
+    );
+}

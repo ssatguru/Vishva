@@ -11,6 +11,7 @@ export class SenContactProp extends SNAproperties {
     onEnter: boolean = false;
     onExit: boolean = false;
     targetMesh: MeshPickerType = new MeshPickerType();
+    state_mesh: AbstractMesh = null;
 }
 
 export class SensorContact extends SensorAbstract {
@@ -26,7 +27,17 @@ export class SensorContact extends SensorAbstract {
     }
 
     override getProperties(): SNAproperties {
-        return this.properties;
+        // Sync the current uniqueId from the live mesh before returning,
+        // and return a plain object without state_mesh to avoid circular
+        // references during deep traversal (AssetCollector).
+        let props = this.properties as SenContactProp;
+        if (props.state_mesh) {
+            props.targetMesh.value = props.state_mesh.uniqueId.toString();
+        }
+        return {
+            ...props,
+            state_mesh: undefined
+        } as any;
     }
 
     override setProperties(properties: SNAproperties) {
@@ -54,6 +65,7 @@ export class SensorContact extends SensorAbstract {
         for (let m of scene.meshes) {
             if (m.uniqueId.toString() === targetMeshId) {
                 otherMesh = m;
+                properties.state_mesh = m;
                 break;
             }
         }

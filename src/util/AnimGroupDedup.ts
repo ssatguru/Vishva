@@ -352,6 +352,26 @@ export function deduplicateAtRuntime(scene: Scene): RuntimeSharingEntry[] {
 }
 
 /**
+ * Removes sharing entries that reference a deleted mesh/node.
+ * Returns a new array with entries filtered out where `entry.mesh` or
+ * `entry.sourceMesh` is the deleted node (reference equality).
+ * Does not mutate the original array.
+ *
+ * Returns [] for null/undefined/empty input.
+ */
+export function cleanupGroupSharingEntries(
+    entries: RuntimeSharingEntry[],
+    deletedMesh: Node
+): RuntimeSharingEntry[] {
+    if (!entries || entries.length === 0) {
+        return [];
+    }
+    return entries.filter(
+        entry => entry.mesh !== deletedMesh && entry.sourceMesh !== deletedMesh
+    );
+}
+
+/**
  * Load-time restoration: Given a scene and sharing metadata from VishvaSerialized,
  * shallow-clone the source character's animation groups for each sharing character.
  *

@@ -1,3 +1,27 @@
+### 06/18/2026 0.4.0-alpha.49
+
+#### Made avatar editable just like any other character
+
+#### Fix SensorContact causing stack overflow on world save
+- Saving a world with a SensorContact behavior caused `RangeError: Maximum call stack size exceeded` in `AssetCollector._deepCollectVishvaPaths`
+- Root cause: `SenContactProp.state_mesh` stored a live `AbstractMesh` reference as a regular enumerable property. When `serializeSnAs()` returned the properties object and `_deepCollectVishvaPaths` traversed `vishvaSerialized`, it recursed into the mesh object which has circular references (mesh → scene → meshes → mesh…)
+- Fix: `SensorContact.getProperties()` now syncs the current `uniqueId` from the live mesh into `targetMesh.value` and returns a spread copy with `state_mesh: undefined` — the live reference stays on the internal properties instance for runtime use but never leaks into the serialization/traversal path
+
+#### Allow bone attachment of multi-selected meshes from a single hierarchy
+- `_attach2Bone` no longer rejects when multiple meshes are selected
+- if all selected meshes share the same root (belong to a single hierarchy), the root is used as the attachment to the bone
+- if the selected meshes belong to different hierarchies, an error message is returned
+- single-mesh selection continues to work as before
+
+#### Fix animation duplication/loss on save-load when source character is deleted
+- When animations are copied from Character B to Character A via "link animations" and Character B is subsequently deleted, saving and reloading the world would double all animations on A (first cycle) and then delete them entirely (second cycle)
+- Root cause 1: `deleteTheMesh` did not dispose Animation Groups targeting the deleted character's hierarchy — orphaned AGs persisted in `scene.animationGroups` and got serialized on save, causing duplication on load (same node names resolved to the remaining character)
+- Root cause 2: `deleteTheMesh` did not clean up stale entries in `_animationRangeSharing` and `_animationSharing` arrays referencing the disposed skeleton/mesh
+- Fix: added `AnimUtils.getMeshAg()` + `ag.dispose()` to remove orphaned AGs before mesh disposal
+- Fix: added `cleanupRangeSharingEntries()` to `AnimRangeDedup.ts` and `cleanupGroupSharingEntries()` to `AnimGroupDedup.ts` — filter out entries referencing a deleted skeleton/mesh
+- Fix: integrated both cleanup functions into `deleteTheMesh()` before `mesh.dispose()`
+- Also excluded `*.test.ts` from `tsconfig.json` to prevent webpack build errors from test-only syntax (top-level await)
+
 ### 06/17/2026 0.4.0-alpha.48
 
 #### Fix bone attachment for glTF/AG-based skeletons

@@ -363,11 +363,16 @@ export class GeneralUI {
             return true;
         };
         addCC.onclick = (e) => {
+            if (this._vishva.meshSelected == this._vishva.avatar)
+            {
+                new CCUI(this._vishva.avManager.cc, null, null, false);
+                return true;
+            }
             let cc:CharacterController = this._vishva.meshSelected["characterController"];
             let isNew = cc === undefined;
             let originalEllipsoid: Vector3;
             if(isNew){
-                let m:Mesh = <Mesh>this._vishva.meshSelected;
+                 let m:Mesh = <Mesh>this._vishva.meshSelected;
                 originalEllipsoid = m.ellipsoid.clone();
                 m["_originalEllipsoid"] = originalEllipsoid;
                 m.ellipsoid =  new Vector3(0.5, 1, 0.5);
@@ -375,8 +380,6 @@ export class GeneralUI {
                 // let boundingInfo = m.getBoundingInfo();
                 // let size = boundingInfo.boundingBox.extendSize;
                 // m.ellipsoid = new Vector3(size.x, size.y, size.z);
-                
-
                 cc =new CharacterController(<Mesh>this._vishva.meshSelected,null,this._vishva.scene);
                 cc.setTurnSpeed(45);
                 cc.enableKeyBoard(false);

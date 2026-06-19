@@ -91,7 +91,7 @@ export class AvManager {
         avatar.checkCollisions = true;
         avatar.ellipsoid = this._avEllipsoid
         avatar.ellipsoidOffset = this._avEllipsoidOffset;
-        avatar.isPickable = false;
+        // avatar.isPickable = false;
         
         // Keep tags for backward compatibility
         Tags.AddTagsTo(avatar, "Vishva.avatar");
@@ -215,6 +215,7 @@ export class AvManager {
             this.avatar["characterController"] = oldCC;
             // Store topDown separately — camera-less CC always reports topDown=true
             this.avatar["_ccTopDown"] = this.cc.getSettings().topDown;
+            oldCC.stop();
         }
         SNAManager.getSNAManager().enableSnAs(this.avatar);
         //TODO Remove this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
@@ -259,7 +260,7 @@ export class AvManager {
         this.avatar.checkCollisions = true;
         this.avatar.ellipsoid = this._avEllipsoid
         this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-        this._makeAllUnPickable(this.avatar,true);
+        this._makeAllUnPickable(this.avatar,false);
         // the camera might have been moved around and to/from this mesh
         // we should use the new position as the camera position for the avatar.
         // we shouldnot be moving the camera back to its old postion around the old avatar

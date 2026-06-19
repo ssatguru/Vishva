@@ -106,8 +106,8 @@ import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 import { AssetResolver } from "./managers/AssetResolver";
-import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime } from "./util/AnimGroupDedup";
-import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime } from "./util/AnimRangeDedup";
+import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime, cleanupGroupSharingEntries, getRootMesh } from "./util/AnimGroupDedup";
+import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime, cleanupRangeSharingEntries } from "./util/AnimRangeDedup";
 
 
 
@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.48";
+    static version: string = "0.4.0-alpha.49";
 
     public static worldName: string;
 
@@ -928,6 +928,9 @@ export class Vishva {
                     this.key.esc = false;
                     if (!VDiag._modalOn && !this.switchDisabled){
                         this.animateMesh(this.meshSelected, 1.1);
+                        if (this.meshSelected == this.avatar){
+                            this.avManager.cc.start();
+                        }
                         this.removeEditControl();
                         if (!this.isFocusOnAv) {
                             this.setFocusOnNothing();
@@ -1150,8 +1153,6 @@ export class Vishva {
         if (!pickResult.hit) return
 
         //move av using click
-        
-
         if (this._clickMove && (evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
             this._clickMoveTarget = pickResult.pickedPoint.clone();
 
@@ -1174,7 +1175,10 @@ export class Vishva {
 
 
 
-        // pick the hit or its root ancestor or multi select the hit or its root ancestor
+        // if alt - right click pick just the object which was hit 
+        // if alt - left click pick the root ancestor of the object hit
+        // if ctl - right click then multi select the object which was hit 
+        // if ctl - left click then multi select all objects in that object hierarchy
         let _pickHit: boolean = (this.key.alt) && (evt.button == 2);
         let _pickRoot: boolean = (this.key.alt) && (evt.button == 0);
         this.rootSelected = _pickRoot;
@@ -1189,6 +1193,11 @@ export class Vishva {
         let pm: TransformNode = pickResult.pickedMesh;
         if (pm == this.ground) return;
         if (_pickRoot || _pickMultiRoot) pm = this._getRootMesh(pm, pm);
+        if (pm === this.avatar){
+            this.avManager.cc.stop();
+            //this.avManager.cc.enableKeyBoard(false);
+
+        }
 
         if (_pickHit || _pickRoot) {
             if (!this.isMeshSelected) {
@@ -2279,6 +2288,33 @@ export class Vishva {
             //check if this mesh is an SPS mesh.
             //if yes then delete the sps
             this.deleteSPS(mesh);
+        }
+
+        // Cleanup animation sharing entries before disposal
+        const root = getRootMesh(mesh);
+
+        // Cleanup skeleton-level range sharing entries
+        if (mesh instanceof AbstractMesh && mesh.skeleton) {
+            this._animationRangeSharing = cleanupRangeSharingEntries(this._animationRangeSharing, mesh.skeleton);
+        }
+        // Also check children for skeletons (mesh might be a parent TransformNode)
+        const childMeshes = mesh.getChildMeshes();
+        if (childMeshes) {
+            for (const child of childMeshes) {
+                if (child.skeleton) {
+                    this._animationRangeSharing = cleanupRangeSharingEntries(this._animationRangeSharing, child.skeleton);
+                }
+            }
+        }
+        // Cleanup animation group sharing entries
+        this._animationSharing = cleanupGroupSharingEntries(this._animationSharing, root);
+
+        // Dispose animation groups that target the deleted mesh's hierarchy.
+        // Without this, orphaned AGs persist in scene.animationGroups and get
+        // serialized on save, causing animation duplication on load.
+        const meshAgs = AnimUtils.getMeshAg(mesh, this.scene.animationGroups, true);
+        for (const ag of meshAgs) {
+            ag.dispose();
         }
 
         mesh.dispose();
@@ -3463,10 +3499,29 @@ export class Vishva {
         if (this.meshesPicked == null || this.meshesPicked.length === 0) {
             return "please select (CTL-MouseLeftClick) the item to attach to the bone";
         }
-        if (this.meshesPicked.length > 1) {
-            return "please select only one mesh to attach";
+
+        let att: TransformNode;
+        if (this.meshesPicked.length === 1) {
+            att = this.meshesPicked[0];
+        } else {
+            // Multiple meshes selected — check if they all share a single root.
+            // If so, use that root as the attachment.
+            let root: TransformNode = this._getRootMesh(this.meshesPicked[0], this.meshesPicked[0]);
+            let allSameRoot = true;
+            for (let i = 1; i < this.meshesPicked.length; i++) {
+                let r = this._getRootMesh(this.meshesPicked[i], this.meshesPicked[i]);
+                if (r !== root) {
+                    allSameRoot = false;
+                    break;
+                }
+            }
+            if (allSameRoot) {
+                att = root;
+            } else {
+                return "multiple meshes selected belong to different hierarchies. select meshes from a single hierarchy or select only one mesh";
+            }
         }
-        let att: AbstractMesh = <AbstractMesh>this.meshesPicked[0];
+
         let bone = skel.bones[boneIndex];
         if (bone == null) {
             return "bone not found at index " + boneIndex;

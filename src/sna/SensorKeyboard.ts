@@ -4,10 +4,13 @@ import { SNAManager } from "./SNA";
 import {
     Action,
     ActionManager,
-    ExecuteCodeAction
+    ExecuteCodeAction,
+    Observer,
+    Scene
 } from "babylonjs";
 import { SelectType } from "../gui/VishvaGUI";
 import { Vishva } from "../Vishva";
+import { shouldEmitByProximity } from "./proximityCheck";
 
 export class SenKeyboardProp extends SNAproperties {
     key: SelectType = new SelectType();
@@ -17,6 +20,7 @@ export class SenKeyboardProp extends SNAproperties {
     onKeyDown: boolean = true;
     onKeyUp: boolean = false;
     onlyOnPointerOver: boolean = false;
+    avProximity: number = 0;
 
     constructor() {
         super();
@@ -42,6 +46,7 @@ export class SensorKeyboard extends SensorAbstract {
     private _pointerOver: boolean = false;
     private _keyDownHandler: ((e: KeyboardEvent) => void) | null = null;
     private _keyUpHandler: ((e: KeyboardEvent) => void) | null = null;
+    private _renderObserver: Observer<Scene> | null = null;
 
     override init() {}
 
@@ -66,8 +71,8 @@ export class SensorKeyboard extends SensorAbstract {
     }
 
     /**
-     * Override removeActions to remove window keyboard listeners
-     * and pointer-over actions from mesh.actionManager.
+     * Override removeActions to remove window keyboard listeners,
+     * render observer, and pointer-over actions from mesh.actionManager.
      */
     public removeActions() {
         // Remove window keyboard listeners
@@ -78,6 +83,12 @@ export class SensorKeyboard extends SensorAbstract {
         if (this._keyUpHandler) {
             window.removeEventListener("keyup", this._keyUpHandler);
             this._keyUpHandler = null;
+        }
+
+        // Remove render observer
+        if (this._renderObserver) {
+            this.mesh.getScene().onBeforeRenderObservable.remove(this._renderObserver);
+            this._renderObserver = null;
         }
 
         // Remove pointer-over actions from mesh.actionManager
@@ -98,8 +109,6 @@ export class SensorKeyboard extends SensorAbstract {
         let props = this.properties as SenKeyboardProp;
 
         // Register window-level keyboard listeners
-        // BabylonJS ActionManager keyboard triggers require canvas focus which is unreliable.
-        // Using window listeners (same pattern as Vishva's own key handling) is more robust.
         if (props.onKeyDown) {
             this._keyDownHandler = (e: KeyboardEvent) => this._handleKeyEvent(e);
             window.addEventListener("keydown", this._keyDownHandler);
@@ -130,8 +139,21 @@ export class SensorKeyboard extends SensorAbstract {
             this.mesh.actionManager.registerAction(outAction);
             this.actions.push(outAction);
 
-            // Set hand cursor for interactivity feedback
-            this.mesh.actionManager.hoverCursor = "pointer";
+            // Dynamic cursor: update every frame while hovering
+            if (props.avProximity > 0) {
+                let scene = this.mesh.getScene();
+                this._renderObserver = scene.onBeforeRenderObservable.add(() => {
+                    if (!this._pointerOver) return;
+                    const inRange = shouldEmitByProximity(
+                        (this.properties as SenKeyboardProp).avProximity,
+                        this.mesh.absolutePosition,
+                        SNAManager.getSNAManager().getAV()
+                    );
+                    this.mesh.actionManager.hoverCursor = inRange ? "pointer" : "default";
+                });
+            } else {
+                this.mesh.actionManager.hoverCursor = "pointer";
+            }
         }
     }
 
@@ -166,6 +188,13 @@ export class SensorKeyboard extends SensorAbstract {
         if (e.ctrlKey !== props.ctrl) return;
         if (e.altKey !== props.alt) return;
         if (e.shiftKey !== props.shift) return;
+
+        // Proximity guard
+        if (!shouldEmitByProximity(
+            (this.properties as SenKeyboardProp).avProximity,
+            this.mesh.absolutePosition,
+            SNAManager.getSNAManager().getAV()
+        )) return;
 
         // All checks passed — emit signal
         this.emitSignal();

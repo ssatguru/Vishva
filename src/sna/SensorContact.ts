@@ -12,6 +12,14 @@ export class SenContactProp extends SNAproperties {
     onExit: boolean = false;
     targetMesh: MeshPickerType = new MeshPickerType();
     state_mesh: AbstractMesh = null;
+
+    toJSON() {
+        if (this.state_mesh) {
+            this.targetMesh.value = this.state_mesh.uniqueId.toString();
+        }
+        const { state_mesh, ...rest } = this as any;
+        return rest;
+    }
 }
 
 export class SensorContact extends SensorAbstract {
@@ -27,17 +35,7 @@ export class SensorContact extends SensorAbstract {
     }
 
     override getProperties(): SNAproperties {
-        // Sync the current uniqueId from the live mesh before returning,
-        // and return a plain object without state_mesh to avoid circular
-        // references during deep traversal (AssetCollector).
-        let props = this.properties as SenContactProp;
-        if (props.state_mesh) {
-            props.targetMesh.value = props.state_mesh.uniqueId.toString();
-        }
-        return {
-            ...props,
-            state_mesh: undefined
-        } as any;
+        return this.properties;
     }
 
     override setProperties(properties: SNAproperties) {

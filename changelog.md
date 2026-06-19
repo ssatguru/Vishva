@@ -1,3 +1,26 @@
+### 06/19/2026 0.4.0-alpha.50
+
+#### Added new Actuator called ActuatorCCMoveToTurnTo
+- This actuator uses the CharacterController attached to the NPC to make the it MoveTo or TurnTo a target
+
+#### Add avProximity property to SensorClick and SensorKeyboard
+- New `avProximity: number` property on `SenClickProp` and `SenKeyboardProp` (default 0 = disabled)
+- When `avProximity > 0`, the sensor only emits a signal if the avatar is within that distance (world units) of the sensor's mesh
+- When `avProximity` is 0, sensors emit unconditionally (backward compatible)
+- If no avatar is present in the scene, the proximity check passes (signal emits)
+- Shared proximity logic in new `src/sna/proximityCheck.ts` (`shouldEmitByProximity` pure function)
+- Dynamic hover cursor: when `avProximity > 0`, a per-frame render observer updates `actionManager.hoverCursor` to "pointer" or "default" based on real-time avatar distance while hovering
+- Serialization: `avProximity` persists automatically as a plain number; legacy saves without the field default to 0
+- Unit tests in `src/sna/proximityCheck.test.ts` covering defaults, boundaries, and legacy deserialization
+
+#### Fix SNA serialization stripping state_ keys
+- `SNAManager.serializeSnAs()` now uses a private `_serializeProps()` helper that strips `state_` prefixed keys (internal runtime state with live BabylonJS object references) before serialization
+- If a properties object implements `toJSON()`, that method is used instead
+- `SensorContact` moved its uniqueId sync logic into a `toJSON()` method on `SenContactProp` — `getProperties()` now returns the raw properties object directly
+
+#### Fix AssetCollector circular reference crash
+- `_deepCollectVishvaPaths` now uses a `WeakSet` for cycle detection, preventing infinite recursion on objects with circular references
+
 ### 06/18/2026 0.4.0-alpha.49
 
 #### Made avatar editable just like any other character

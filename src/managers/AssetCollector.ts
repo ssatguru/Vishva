@@ -65,7 +65,7 @@ export class AssetCollector {
      */
     collectServerAssets(obj: object, baseUrl: string): AssetEntry[] {
         const urls = new Set<string>();
-        this._deepCollectVishvaPaths(obj, urls);
+        this._deepCollectVishvaPaths(obj, urls, new WeakSet());
         return this._buildEntries(urls, baseUrl);
     }
 
@@ -73,9 +73,16 @@ export class AssetCollector {
      * Recursively traverse an object/array structure, collecting all string values
      * that start with `vishva/` into the provided Set for deduplication.
      * Skips strings starting with `assets/`, `data:`, or `blob:`.
+     * Uses a WeakSet to detect and skip circular references.
      */
-    private _deepCollectVishvaPaths(obj: any, urls: Set<string>): void {
+    private _deepCollectVishvaPaths(obj: any, urls: Set<string>, visited: WeakSet<object>): void {
         if (obj === null || obj === undefined) return;
+
+        if (typeof obj !== "object") return;
+
+        // Cycle detection: skip objects we've already visited
+        if (visited.has(obj)) return;
+        visited.add(obj);
 
         if (Array.isArray(obj)) {
             for (let i = 0; i < obj.length; i++) {
@@ -85,10 +92,10 @@ export class AssetCollector {
                         urls.add(value);
                     }
                 } else if (typeof value === "object" && value !== null) {
-                    this._deepCollectVishvaPaths(value, urls);
+                    this._deepCollectVishvaPaths(value, urls, visited);
                 }
             }
-        } else if (typeof obj === "object") {
+        } else {
             for (const key of Object.keys(obj)) {
                 const value = obj[key];
                 if (typeof value === "string") {
@@ -96,7 +103,7 @@ export class AssetCollector {
                         urls.add(value);
                     }
                 } else if (typeof value === "object" && value !== null) {
-                    this._deepCollectVishvaPaths(value, urls);
+                    this._deepCollectVishvaPaths(value, urls, visited);
                 }
             }
         }

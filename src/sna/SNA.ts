@@ -292,7 +292,7 @@ export class SNAManager {
                     sna.name = actuator.getName();
                     sna.type = actuator.getType();
                     sna.meshId = meshId;
-                    sna.properties = actuator.getProperties();
+                    sna.properties = this._serializeProps(actuator);
                     snas.push(sna);
                 }
             }
@@ -306,12 +306,33 @@ export class SNAManager {
                     sna.name = sensor.getName();
                     sna.type = sensor.getType();
                     sna.meshId = meshId;
-                    sna.properties = sensor.getProperties();
+                    sna.properties = this._serializeProps(sensor);
                     snas.push(sna);
                 }
             }
         }
         return snas;
+    }
+
+    /**
+     * Get a serialization-safe copy of sensor/actuator properties.
+     * If the properties object has toJSON(), use it.
+     * Otherwise strip state_ prefixed keys (internal runtime state,
+     * may contain live BabylonJS object references with circular refs).
+     */
+    private _serializeProps(sa: SensorActuator): SNAproperties {
+        let props = sa.getProperties();
+        if (props && typeof (props as any).toJSON === "function") {
+            return (props as any).toJSON();
+        }
+        // Plain object from deserialization — strip state_ keys
+        let clean: any = {};
+        for (let key of Object.keys(props)) {
+            if (!key.startsWith("state_")) {
+                clean[key] = (props as any)[key];
+            }
+        }
+        return clean;
     }
 
     public unMarshal(snas: SNAserialized[], scene: Scene) {

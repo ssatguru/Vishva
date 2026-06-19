@@ -22,6 +22,7 @@ import "babylonjs-materials";
 import "./sna/ActuatorAnimator";
 import "./sna/ActuatorAvAnimator";
 import "./sna/ActuatorCC";
+import "./sna/ActuatorCCMoveToTurnTo";
 import "./sna/ActuatorCloaker";
 import "./sna/ActuatorDialog";
 import "./sna/ActuatorDisabler";

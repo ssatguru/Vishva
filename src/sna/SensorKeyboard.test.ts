@@ -39,7 +39,8 @@ vi.mock("babylonjs", () => {
         ActionManager: MockActionManager,
         ExecuteCodeAction: MockExecuteCodeAction,
         Action: class {},
-        ActionEvent: class {},
+        Observer: class {},
+        Scene: class {},
     };
 });
 
@@ -136,6 +137,8 @@ vi.mock("./SNA", () => {
         getSensorList(): string[] {
             return this.sensorList;
         }
+
+        getAV(): any { return null; }
     }
 
     return { SNAproperties, SensorAbstract, SNAManager };
@@ -169,15 +172,28 @@ import { SNAManager } from "./SNA";
 
 // ─── Helper ─────────────────────────────────────────────────────────────────
 
-function createMockMesh(): any {
+function createMockScene(): any {
     return {
-        actionManager: null,
-        getScene: () => ({}),
+        onBeforeRenderObservable: {
+            _observers: [] as any[],
+            add(cb: any) { const o = { callback: cb }; this._observers.push(o); return o; },
+            remove(o: any) { const i = this._observers.indexOf(o); if (i >= 0) this._observers.splice(i, 1); },
+        },
     };
 }
 
-function createSensor(props?: SenKeyboardProp): { sensor: any; mesh: any } {
-    const mesh = createMockMesh();
+function createMockMesh(scene?: any): any {
+    const s = scene || createMockScene();
+    return {
+        actionManager: null,
+        absolutePosition: { x: 0, y: 0, z: 0 },
+        getScene: () => s,
+    };
+}
+
+function createSensor(props?: SenKeyboardProp, scene?: any): { sensor: any; mesh: any; scene: any } {
+    const s = scene || createMockScene();
+    const mesh = createMockMesh(s);
     const p = props ?? new SenKeyboardProp();
 
     const sensor = Object.create(SensorKeyboard.prototype);
@@ -188,8 +204,9 @@ function createSensor(props?: SenKeyboardProp): { sensor: any; mesh: any } {
     sensor._pointerOver = false;
     sensor._keyDownHandler = null;
     sensor._keyUpHandler = null;
+    sensor._renderObserver = null;
 
-    return { sensor, mesh };
+    return { sensor, mesh, scene: s };
 }
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
@@ -291,7 +308,6 @@ describe("SensorKeyboard pointer-over actions", () => {
 
         sensor.onPropertiesChange();
 
-        // Only pointer-over/out actions go to mesh.actionManager (stored in this.actions)
         const pointerOverActions = sensor.actions.filter(
             (a: any) => a.trigger === OnPointerOverTrigger
         );
@@ -313,10 +329,11 @@ describe("SensorKeyboard pointer-over actions", () => {
         expect(sensor.actions.length).toBe(0);
     });
 
-    it("sets hoverCursor to 'pointer' when onlyOnPointerOver is true", () => {
+    it("sets hoverCursor to 'pointer' when onlyOnPointerOver is true and avProximity is 0", () => {
         clearWindowListeners();
         const props = new SenKeyboardProp();
         props.onlyOnPointerOver = true;
+        props.avProximity = 0;
         const { sensor, mesh } = createSensor(props);
 
         sensor.onPropertiesChange();

@@ -39,7 +39,8 @@ vi.mock("babylonjs", () => {
         ActionManager: MockActionManager,
         ExecuteCodeAction: MockExecuteCodeAction,
         Action: class {},
-        ActionEvent: class {},
+        Observer: class {},
+        Scene: class {},
     };
 });
 
@@ -129,6 +130,8 @@ vi.mock("./SNA", () => {
             this.sensorList.push(name);
             this.sensorMap[name] = sensor;
         }
+
+        getAV(): any { return null; }
     }
 
     return { SNAproperties, SensorAbstract, SNAManager };
@@ -196,9 +199,18 @@ function createSensor(config: {
     onKeyUp?: boolean;
     onlyOnPointerOver?: boolean;
 }) {
+    const mockScene = {
+        onBeforeRenderObservable: {
+            _observers: [] as any[],
+            add(cb: any) { const o = { callback: cb }; this._observers.push(o); return o; },
+            remove(o: any) { const i = this._observers.indexOf(o); if (i >= 0) this._observers.splice(i, 1); },
+        },
+    };
+
     const mesh: any = {
         actionManager: null,
-        getScene: () => ({}),
+        absolutePosition: { x: 0, y: 0, z: 0 },
+        getScene: () => mockScene,
     };
 
     const props = new SenKeyboardProp();
@@ -218,6 +230,7 @@ function createSensor(config: {
     sensor._pointerOver = false;
     sensor._keyDownHandler = null;
     sensor._keyUpHandler = null;
+    sensor._renderObserver = null;
 
     return { sensor, mesh };
 }

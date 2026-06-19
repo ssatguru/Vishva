@@ -1,10 +1,7 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import { AnimationRange, Animatable, ArcRotateCamera, Mesh, Skeleton, Scene, Vector3, AnimationGroup } from "babylonjs";
 import { SelectType } from "../gui/VishvaGUI";
-import { AnimUtils } from "../util/AnimUtils";
-import { Vishva } from "../Vishva";
 import { CharacterController,Actions } from "babylonjs-charactercontroller";
 
 export class CCProp extends ActProperties {

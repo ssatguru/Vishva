@@ -1,3 +1,14 @@
+### 06/20/2026 0.4.0-alpha.51
+
+#### Fixed issue where CharacterController of avatar or npc was picking up wrong AnimationGroups during load.
+- Vishva serialization stores just AG name and during load Vishva was just picking up the first animation group by that name. Now it checks if the AG is associated with the character
+
+#### Fixed issue where ActuatorCCMOveToTurnTo and SensorContact were not picking up the correct target mesh.
+- SNA serialization was stroing target mesh.uniqueId during save. Unique id gets replaced by babylonjs during load. Now vishav stores mesh.id and replaces that by uniqueId during load. 
+  See MeshMickerType for detailed explanation. "toJSON" method has been removed. It wasn't being invoked. On serialize and deseialized the toJSON method would disappear. 
+
+### In world itemlist now shows Avatar mesh too
+
 ### 06/19/2026 0.4.0-alpha.50
 
 #### Added new Actuator called ActuatorCCMoveToTurnTo

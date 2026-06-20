@@ -628,7 +628,25 @@ export class FileInputType {
 
 export class MeshPickerType {
     public type: string = "MeshPickerType";
-    public value: string = "";      // mesh uniqueId as string
+
+    // value
+    // even though we lookup a mesh by its unique id
+    // we cannot use this during save.
+    // The reason being everytime a scene is loaded by babylon, it will replace this
+    // mesh.uniqueId with a new uniqueId. 
+    // uniqueIds are quranteed to be unqiue during a session but not across saves.
+    // But unlike mesh.uniqueId the mesh's mesh.id is left alone by babylon during load
+    // As such Vishva uses this to track a mesh across saves.
+    // During save Vishva replaces the mesh.id, which may not be unqiue, with a unique number.
+    // and during serialization, called when saving, Vishva looks up the mesh by its unique id and
+    // replaces this value by the meshs new unique mesh.id.
+    // The save and thus serializatio happens after Vishva has replaced the mesh.id with unqiue id.
+    // See SNA._serializeProps() to understand how MeshPickerType are marshalled.
+    // During load Vishva uses this mesh.id to lookup a mesh and then replaces the below value with the mesh's mesh.uniqueId.
+    // serialization/marshalling of all SNA's properties is done after Vishva has loaded the babylonjs scene and replaced the unique ids.
+    // see SNA.unMarshalProps() to understand how MeshPickerType are unMarshalled.
+    public value:  string  = "";      // mesh uniqueId as string, during serialization this will store mesh id , which is a string
+
     public meshName: string = "";   // display name
 
     constructor(value: string = "", meshName: string = "") {

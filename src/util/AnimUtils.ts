@@ -3,38 +3,41 @@ import { AnimationGroup, TargetedAnimation } from "babylonjs/Animations/animatio
 import { Skeleton } from "babylonjs/Bones/skeleton";
 
 
-
-
-export class AnimUtils {
+export class AnimUtils 
+{
 
         // finds all animation groups which can be played on a node
         // if node is part of a hierarchy it can check if an animation group
         // can be played on any nodes in that hierarchy
-
-        public static getMeshAg(node: Node, ags: AnimationGroup[], fromRoot = true): AnimationGroup[] {
-
-
+        // the second arg could be all animation groups in the scene
+        public static getMeshAg(node: Node, ags: AnimationGroup[], fromRoot = true): AnimationGroup[] 
+        {
                 let r: Node;
                 let ns: Node[];
 
-                if (fromRoot) {
+                if (fromRoot) 
+                {
                         r = AnimUtils.getRoot(node);
                         ns = r.getChildren((n) => { return (n instanceof TransformNode) }, false);
 
                         //if the root itself is a transform node then lets check it too
                         if (r instanceof TransformNode) ns.push(r);
-
-                } else {
+                } 
+                else 
+                {
                         r = node;
                         ns = [r];
                 }
 
 
                 let mags: AnimationGroup[] = new Array();
-                for (let ag of ags) {
+                for (let ag of ags) 
+                {
                         let tas: TargetedAnimation[] = ag.targetedAnimations;
-                        for (let ta of tas) {
-                                if (ns.indexOf(ta.target) > -1) {
+                        for (let ta of tas) 
+                        {
+                                if (ns.indexOf(ta.target) > -1) 
+                                {
                                         mags.push(ag);
                                         break;
                                 }

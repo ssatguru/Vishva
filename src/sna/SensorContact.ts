@@ -11,15 +11,6 @@ export class SenContactProp extends SNAproperties {
     onEnter: boolean = false;
     onExit: boolean = false;
     targetMesh: MeshPickerType = new MeshPickerType();
-    state_mesh: AbstractMesh = null;
-
-    toJSON() {
-        if (this.state_mesh) {
-            this.targetMesh.value = this.state_mesh.uniqueId.toString();
-        }
-        const { state_mesh, ...rest } = this as any;
-        return rest;
-    }
 }
 
 export class SensorContact extends SensorAbstract {
@@ -59,17 +50,10 @@ export class SensorContact extends SensorAbstract {
             return;
         }
 
-        let otherMesh: AbstractMesh = null;
-        for (let m of scene.meshes) {
-            if (m.uniqueId.toString() === targetMeshId) {
-                otherMesh = m;
-                properties.state_mesh = m;
-                break;
-            }
-        }
+        let otherMesh: AbstractMesh = scene.getMeshByUniqueId(Number(targetMeshId));
 
         if (!otherMesh) {
-            console.warn("SensorContact: target mesh not found in scene (id: " + targetMeshId + ")");
+            console.error("SensorContact: target mesh not found in scene (id: " + targetMeshId + ")");
             return;
         }
 

@@ -1,4 +1,7 @@
 BUGS
+- make a character an avatar. copy aniamtions to this avatar. go to cc ui. none of the anims show up.
+(6/19/2026)
+
 -stepsound in CCUi broken. second time it throws exception
 -actuatorRotator has stopped working on prims. by default rotationQuaternion for prims are set to nulls by default. (2/11/2026)
 

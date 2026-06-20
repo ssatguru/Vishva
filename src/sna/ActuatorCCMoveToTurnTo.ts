@@ -11,8 +11,6 @@ export class CCMoveToTurnToProp extends ActProperties
     targetMesh: MeshPickerType = new MeshPickerType();
     howClose : number = 2;
     run : boolean = false;
-    state_mesh: AbstractMesh = null;
-
     // loop: boolean = null;
     // toggle: boolean = null;
 
@@ -21,14 +19,7 @@ export class CCMoveToTurnToProp extends ActProperties
         super();
         this.action.values = ["MoveTo","RotateTo"];
     }
-
-    toJSON() {
-        if (this.state_mesh) {
-            this.targetMesh.value = this.state_mesh.uniqueId.toString();
-        }
-        const { state_mesh, ...rest } = this as any;
-        return rest;
-    }
+  
 }
 
 /**
@@ -49,8 +40,8 @@ export class ActuatorCCMoveToTurnTo extends ActuatorAbstract
         let properties: CCMoveToTurnToProp = <CCMoveToTurnToProp>this.properties;
         let scene: Scene = this.mesh.getScene();
 
-        properties.state_mesh = this.getTargetMesh(properties.targetMesh.value, scene);
-        if (properties.state_mesh == null){
+        let targetMesh : AbstractMesh = this.getTargetMesh(properties.targetMesh.value, scene);
+        if (targetMesh == null){
             this.onActuateEnd();
             return
         }
@@ -65,7 +56,7 @@ export class ActuatorCCMoveToTurnTo extends ActuatorAbstract
         {
             cc.moveTo
             ( 
-                properties.state_mesh,
+                targetMesh,
                 {
                     arrivalDistance:properties.howClose,
                     run:properties.run,
@@ -77,8 +68,9 @@ export class ActuatorCCMoveToTurnTo extends ActuatorAbstract
         {
             cc.turnTo
             ( 
-                properties.state_mesh,
-                {   angularTolerance:properties.howClose,
+                targetMesh,
+                {   
+                    angularTolerance:properties.howClose,
                     onComplete:() => this.stop()
                 }
             )
@@ -95,15 +87,7 @@ export class ActuatorCCMoveToTurnTo extends ActuatorAbstract
             return;
         }
 
-        let targetMesh: AbstractMesh = null;
-        for (let m of scene.meshes) 
-        {
-            if (m.uniqueId.toString() === id) 
-            {
-                targetMesh = m;
-                break;
-            }
-        }
+        let targetMesh: AbstractMesh =  scene.getMeshByUniqueId(Number(id));
 
         if (!targetMesh) 
         {

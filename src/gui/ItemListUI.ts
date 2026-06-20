@@ -153,7 +153,7 @@ export class ItemListUI {
 
             if (!(child instanceof TransformNode)) continue;
             //if (!(child instanceof Mesh)) continue;
-            if (child == this._vishva.ground || child == this._vishva.avatar || child == this._vishva.skybox) continue;
+            if (child == this._vishva.ground || child == this._vishva.skybox) continue;
             if (this._vishva.editControl != null && (child == this._vishva.editControl.getRoot())) continue;
 
             let label: string;

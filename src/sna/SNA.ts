@@ -292,7 +292,7 @@ export class SNAManager {
                     sna.name = actuator.getName();
                     sna.type = actuator.getType();
                     sna.meshId = meshId;
-                    sna.properties = this._serializeProps(actuator);
+                    sna.properties = this._serializeProps(actuator,scene);
                     snas.push(sna);
                 }
             }
@@ -306,7 +306,7 @@ export class SNAManager {
                     sna.name = sensor.getName();
                     sna.type = sensor.getType();
                     sna.meshId = meshId;
-                    sna.properties = this._serializeProps(sensor);
+                    sna.properties = this._serializeProps(sensor,scene);
                     snas.push(sna);
                 }
             }
@@ -316,19 +316,31 @@ export class SNAManager {
 
     /**
      * Get a serialization-safe copy of sensor/actuator properties.
-     * If the properties object has toJSON(), use it.
-     * Otherwise strip state_ prefixed keys (internal runtime state,
-     * may contain live BabylonJS object references with circular refs).
      */
-    private _serializeProps(sa: SensorActuator): SNAproperties {
+    private _serializeProps(sa: SensorActuator, scene:Scene): SNAproperties {
         let props = sa.getProperties();
-        if (props && typeof (props as any).toJSON === "function") {
-            return (props as any).toJSON();
-        }
+
         // Plain object from deserialization — strip state_ keys
         let clean: any = {};
         for (let key of Object.keys(props)) {
-            if (!key.startsWith("state_")) {
+            let v = props[key];
+            if (v["type"] && v["type"] === "MeshPickerType") 
+            {
+                let mesh:AbstractMesh = scene.getMeshByUniqueId(Number(v["value"]));
+                if (mesh)
+                {
+                    console.debug("_serializeProps : MeshPickerType mesh replacing unique id " + v["value"] + " with mesh id " + mesh.id);
+                    v["value"] = mesh.id;
+                }
+                else
+                {
+                    console.error("_serializeProps : unable to find MeshPickerType mesh with unique id " + v["value"] );
+                }
+            }
+            // skip any property which start with "state_" should whose value is an object
+            // "state_" with primitve value is ok. "state_" with object value can create problem
+            // downstream where they could lead to circular references during serialization
+            if (!(key.startsWith("state_") && typeof props[key] == "object")) {
                 clean[key] = (props as any)[key];
             }
         }
@@ -350,7 +362,7 @@ export class SNAManager {
                 }
             }
             if (mesh != null) {
-                this.unMarshalProps(sna.properties);
+                this.unMarshalProps(sna.properties,scene);
                 if (sna.type === "SENSOR") {
                     let name = sna.name;
                     // Backward compat: old "Contact" sensors without targetMesh → AvContact
@@ -385,7 +397,7 @@ export class SNAManager {
      * FileInputType are stored as objects too
      * 
      */
-    private unMarshalProps(obj: Object) {
+    private unMarshalProps(obj: Object,scene:Scene) {
         let pNames: string[] = Object.keys(obj);
         for (let pName of pNames) {
             let t: string = typeof obj[pName];
@@ -420,7 +432,25 @@ export class SNAManager {
                         st.values = o["values"];
                         st.value = o["value"];
                         obj[pName] = st;
-                    } else if (o["type"] === "MeshPickerType") {
+                    } 
+                    else if (o["type"] === "MeshPickerType"){
+                        // o["value"] holds a mesh id of the mesh which was picked up
+                        // when the scene is saved Vishva assigns a unique id to mesh.id.
+                        // when the scene is loaded this mesh.id will remain unique during the load 
+                        // but is not quaranteed to be unqiue afterwards during the life of the scene.
+                        // as such we should switch to using the mesh's uniqueId which is generated for each mesh
+                        // when babylon loads the mesh and is quaranteed to be unqiue during the life of the scene,
+                        let mesh:AbstractMesh = scene.getMeshById(o["value"]);
+                        if (mesh)
+                        { 
+                            console.debug("MeshPickerType: Replacing mesh with id " + o["value"] + " with unique id " + mesh.uniqueId);
+                            o["value"] = String(mesh.uniqueId);
+                        }
+                        else 
+                        {
+                            console.error("MeshPickerType: mesh with id " + o["value"] + " not found.");
+                        }
+
                         let mpt: MeshPickerType = new MeshPickerType(o["value"], o["meshName"]);
                         obj[pName] = mpt;
                     }

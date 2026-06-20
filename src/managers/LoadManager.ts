@@ -305,6 +305,7 @@ export class LoadManager {
     // ─── World loading entry points ─────────────────────────────────────────
 
     public sceneLoad1(scenePath: string, sceneFile: string, scene: Scene) {
+        console.debug("sceneLoad1");
         const isCompressedFile = sceneFile.toLowerCase().endsWith('.gz');
         
         if (isCompressedFile) {
@@ -333,6 +334,7 @@ export class LoadManager {
      * Assets are stored in AssetStore (IndexedDB) rather than held in memory.
      */
     private async loadZipWorld(scenePath: string, sceneFile: string, scene: Scene) {
+        console.debug("loadZipWorld");
         try {
             this.vishva.progressManager.show("Loading World", "Fetching world file from server...");
             await this.vishva.progressManager.update(undefined, 5);

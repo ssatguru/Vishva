@@ -753,7 +753,7 @@ export class VDiag {
                                         left: 0;
                                         width: 100%;
                                         height: 100%;
-                                        background-color: rgba(1, 1, 1, 0.1);
+                                        background-color: rgba(1, 1, 1, 0.6);
                                         z-index: ${VDiag._zIndex};
                                         display: block;`;
                                 Vishva.gui.appendChild(VDiag.backdrop);

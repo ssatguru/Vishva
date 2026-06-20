@@ -1,4 +1,4 @@
-import { Vector3, AnimationGroup, Scene, Tags, Sound, ISoundOptions } from "babylonjs";
+import { Vector3, AnimationGroup, Scene, Tags, Sound, ISoundOptions, AbstractMesh } from "babylonjs";
 import { ActionData, ActionMap, CCSettings } from "babylonjs-charactercontroller";
 import { Color4 } from "babylonjs/Maths/math.color";
 import { GrndSpread_Serializeable } from "./GrndSpread";
@@ -7,6 +7,7 @@ import { SNAserialized } from "./sna/SNA";
 import { AnimationSharingEntry } from "./util/AnimGroupDedup";
 import { AnimRangeSharingEntry } from "./util/AnimRangeDedup";
 import { Vishva } from "./Vishva";
+import { AnimUtils } from "./util/AnimUtils";
 
 export class VishvaSerialized {
     //babylon version
@@ -132,37 +133,27 @@ export class AvSerialized {
         }
     }
 
-    public static deSerializeAG(scene: Scene, actionMap: ActionMap): ActionMap {
+    public static deSerializeAG(mesh: AbstractMesh, scene: Scene, actionMap: ActionMap): ActionMap 
+    {
+        //get all animation groups associated with this character 
+        let ags:AnimationGroup[] = AnimUtils.getMeshAg(mesh, scene.animationGroups,true);
+
+        //for each ag name in the serialized object pick the ag from the above array which has the same name
         let keys = Object.keys(actionMap);
-        for (let key of keys) {
+        for (let key of keys) 
+        {
             let ad: ActionData = actionMap[key];
-            if (actionMap[key]["ag"] != null && actionMap[key]["ag"] != "") {
-                actionMap[key]["ag"] = AvSerialized.findAGbyName(scene, actionMap[key]["ag"]);
+            if (actionMap[key]["ag"] != null && actionMap[key]["ag"] != "") 
+            {
+                let agName = actionMap[key]["ag"];
+                let index:number = ags.findIndex((ag,i,ags)=>{if (ag.name == agName) return i;})
+                if (index > -1) 
+                {
+                    actionMap[key]["ag"] = ags[index];
+                }
             }
         }
         return actionMap;
-    }
-
-    private static findAGbyTag(scene: Scene, name: string): AnimationGroup {
-        let ags: AnimationGroup[] = scene.animationGroups;
-        for (let ag of ags) {
-            try {
-                if (Tags.HasTags(ag)) {
-                    if (Tags.MatchesQuery(ag, name)) return ag;
-                }
-            } catch (e) {
-                console.log(e);
-            }
-        }
-        return null;
-    }
-
-    private static findAGbyName(scene: Scene, name: string): AnimationGroup {
-        let ags: AnimationGroup[] = scene.animationGroups;
-        for (let ag of ags) {
-            if (ag.name == name) return ag;
-        }
-        return null;
     }
 
 }

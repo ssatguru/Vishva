@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.50";
+    static version: string = "0.4.0-alpha.51";
 
     public static worldName: string;
 
@@ -810,7 +810,7 @@ export class Vishva {
     // -- sceneload4 --
 
     private sceneLoad4() {
-        // console.log("sceneLaod4");
+        console.debug("sceneLaod4");
 
         this.cc = this.avManager.setCharacterController(this.avatar);
         if (this.vishvaSerialized && this.vishvaSerialized.avSerialized) {
@@ -822,7 +822,7 @@ export class Vishva {
 
             //if avatar is animated by animationgroups then we need to re-reference
             //the animation groups from the serialized data
-            let ac: ActionMap = AvSerialized.deSerializeAG(this.scene, this.vishvaSerialized.avSerialized.actionMap);
+            let ac: ActionMap = AvSerialized.deSerializeAG(this.avatar,this.scene, this.vishvaSerialized.avSerialized.actionMap);
             this.cc.setActionMap(ac);
         }
         this.cc.start();
@@ -836,7 +836,7 @@ export class Vishva {
                         meshCC.settings.sound = AvSerialized.deSerializeSound(meshCC.settings.sound);
                     let cc = new CharacterController(<Mesh>mesh, null, this.scene);
                     cc.setSettings(meshCC.settings);
-                    let ac: ActionMap = AvSerialized.deSerializeAG(this.scene, meshCC.actionMap);
+                    let ac: ActionMap = AvSerialized.deSerializeAG(mesh, this.scene, meshCC.actionMap);
                     cc.setActionMap(ac);
                     cc.start();
                     mesh["characterController"] = cc;
@@ -873,6 +873,7 @@ export class Vishva {
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
         this._dirty = true;
+        console.debug("sceneLaod4 done");
         this.render();
     }
 
@@ -2619,6 +2620,9 @@ export class Vishva {
         if (mesh == null) mesh = this.scene.getMeshByUniqueId(Number(meshId));
         if (mesh == null) {
             return;
+        }
+        if (mesh == this.avatar){
+            this.avManager.cc.stop();
         }
         if (!this.isMeshSelected) {
             this.selectForEdit(mesh);

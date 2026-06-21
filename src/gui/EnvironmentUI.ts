@@ -4,9 +4,8 @@ import { InternalAssetsUI } from "./InternalAssetsUI";
 import { ColorPickerFld } from "./ColorPickerFld";
 import { Color4 } from "babylonjs";
 import { envElement } from "./EnvironmentML";
-import { UIConst } from "./UIConst";
 import { VDiag } from "./components/VDiag";
-import { CCUI } from "./CCUI";
+
 
 /**
  * provides a ui to manage the environment in the world

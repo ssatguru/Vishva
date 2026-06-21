@@ -13,6 +13,7 @@ import { EventManager } from "../../eventing/EventManager";
 import { VEvent } from "../../eventing/VEvent";
 import { CharacterController } from "babylonjs-charactercontroller";
 import { CCUI } from "../CCUI";
+import { MeshUtils } from "../../util/MeshUtils";
 
 /**
  * Provides UI for the Genral tab of mesh properties
@@ -372,7 +373,7 @@ export class GeneralUI {
             let isNew = cc === undefined;
             let originalEllipsoid: Vector3;
             if(isNew){
-                 let m:Mesh = <Mesh>this._vishva.meshSelected;
+                let m:Mesh = <Mesh>this._vishva.meshSelected;
                 originalEllipsoid = m.ellipsoid.clone();
                 m["_originalEllipsoid"] = originalEllipsoid;
                 m.ellipsoid =  new Vector3(0.5, 1, 0.5);
@@ -393,7 +394,7 @@ export class GeneralUI {
                         (<Mesh>this._vishva.meshSelected).ellipsoid = originalEllipsoid;
                         delete this._vishva.meshSelected["characterController"];
                     } : null, 
-                isNew ? () => {cc.start();} : null);
+                isNew ? () => {MeshUtils.makeAllCollidable(this._vishva.meshSelected,false) ;cc.start();} : null);
             return true;
         };
 

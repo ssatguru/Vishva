@@ -1,3 +1,15 @@
+### 06/20/2026 0.4.0-alpha.52
+
+#### Fixed issue when aniamtion groups are added to a character after the charcatercontroller was created for the character
+- If charcaterController is created and no aniamtion exist for that character then CC isAg() returns false even if AGs are added later on. 
+  Added check to see if character has any AGs instead of just relying on CC's isAg();
+
+#### when a character becomes an AV alls its mesh's collision are set to false
+
+#### Fixed issue where the avatar or npc animBlend wasn't being set properly when the av or npc was loaded
+- during load Vishva was setting cc settings first and actionmap afterwards. animblend needs to go through each action animation group to set animblend. No action no animblend.  
+  To fix, Vishav first sets actionmap and then sets settings.
+
 ### 06/20/2026 0.4.0-alpha.51
 
 #### Fixed issue where CharacterController of avatar or npc was picking up wrong AnimationGroups during load.
@@ -7,7 +19,7 @@
 - SNA serialization was stroing target mesh.uniqueId during save. Unique id gets replaced by babylonjs during load. Now vishav stores mesh.id and replaces that by uniqueId during load. 
   See MeshMickerType for detailed explanation. "toJSON" method has been removed. It wasn't being invoked. On serialize and deseialized the toJSON method would disappear. 
 
-### In world itemlist now shows Avatar mesh too
+#### In world itemlist now shows Avatar mesh too
 
 ### 06/19/2026 0.4.0-alpha.50
 

@@ -116,7 +116,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.51";
+    static version: string = "0.4.0-alpha.52";
 
     public static worldName: string;
 
@@ -818,12 +818,14 @@ export class Vishva {
             if (this.vishvaSerialized.avSerialized.settings.sound)
                 this.vishvaSerialized.avSerialized.settings.sound = AvSerialized.deSerializeSound(this.vishvaSerialized.avSerialized.settings.sound);
 
-            this.cc.setSettings(this.vishvaSerialized.avSerialized.settings);
-
             //if avatar is animated by animationgroups then we need to re-reference
             //the animation groups from the serialized data
             let ac: ActionMap = AvSerialized.deSerializeAG(this.avatar,this.scene, this.vishvaSerialized.avSerialized.actionMap);
             this.cc.setActionMap(ac);
+
+            //make sure actionMap is loaded first before we do the settings
+            //when setting animBlend  cc needs to go thru each aniamtion in each animation group and set the blending speed.
+            this.cc.setSettings(this.vishvaSerialized.avSerialized.settings);
         }
         this.cc.start();
 

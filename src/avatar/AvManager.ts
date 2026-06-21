@@ -6,6 +6,7 @@ import { SNAManager } from "../sna/SNA";
 import { AnimUtils } from "../util/AnimUtils";
 import { Vishva } from "../Vishva";
 import { ObjectIdMap } from "../VishvaSerialized";
+import { MeshUtils } from "../util/MeshUtils";
 
 
 export class AvManager {
@@ -88,7 +89,8 @@ export class AvManager {
 
         avatar.position = this.spawnPosition;
 
-        avatar.checkCollisions = true;
+        // avatar.checkCollisions = true;
+        MeshUtils.makeAllCollidable(avatar,false);
         avatar.ellipsoid = this._avEllipsoid
         avatar.ellipsoidOffset = this._avEllipsoidOffset;
         // avatar.isPickable = false;
@@ -220,7 +222,7 @@ export class AvManager {
         SNAManager.getSNAManager().enableSnAs(this.avatar);
         //TODO Remove this.avatar.rotationQuaternion = Quaternion.RotationYawPitchRoll(this.avatar.rotation.y, this.avatar.rotation.x, this.avatar.rotation.z);
         //now that this mesh is not the avatar anymore, we can make it and its children pickable and remove the avatar tags
-        this._makeAllUnPickable(this.avatar,false);
+        MeshUtils.makeAllPickable(this.avatar,true);
         this.avatar.visibility = 1;
         
         // Remove tags from old avatar
@@ -257,10 +259,11 @@ export class AvManager {
             Vishva.vishva._objectIds.skeletonId = this.avatarSkeleton.id;
         }
 
-        this.avatar.checkCollisions = true;
+        // this.avatar.checkCollisions = true;
         this.avatar.ellipsoid = this._avEllipsoid
         this.avatar.ellipsoidOffset = this._avEllipsoidOffset
-        this._makeAllUnPickable(this.avatar,false);
+        MeshUtils.makeAllCollidable(this.avatar,false);
+        MeshUtils.makeAllPickable(this.avatar,true);
         // the camera might have been moved around and to/from this mesh
         // we should use the new position as the camera position for the avatar.
         // we shouldnot be moving the camera back to its old postion around the old avatar
@@ -297,18 +300,6 @@ export class AvManager {
 
         return null;
     }
-
-    //make all meshes in the hierarchy pickable/unpickable
-    //this is needed to prevent the avatar from being picked by the raycaster
-    private _makeAllUnPickable(node:Node,pickable:boolean){
-        if (node instanceof Mesh) {
-            node.isPickable = !pickable;
-        }
-        node.getChildren().forEach((child) => {
-            this._makeAllUnPickable(child,pickable);
-        }); 
-    }
-
 
     public setFaceForward(b: boolean) {
         this._ff = b;

@@ -29,6 +29,11 @@ export class CCUI {
     private _onCancelCallback: () => void;
     private _onSaveCallback: () => void;
     private _saved: boolean = false;
+
+    //if animations group were added to av before the cc was created then cc will not know if the av isAG and cc.isAG might return false
+    //below is initialized, later on, by checking nodes in av to see if any of them are targetted by any targetted aniamtions in any animation group
+    private _avHasAG:boolean = false;
+
     setTab: HTMLDivElement;
     mapTab: HTMLDivElement;
 
@@ -268,7 +273,6 @@ export class CCUI {
         let actions: string[] = Object.keys(actionMap);
         for (let action of actions) {
             let actData: ActionData = actionMap[action];
-            console.log(action);
             form[action + "-speed"].value = actData.speed === undefined ? "" : actData.speed;
 
             if ((actData.ag === undefined) && (actData.name === undefined)) {
@@ -293,7 +297,22 @@ export class CCUI {
             c[i].remove();
         }
         
-        if (this._cc.isAg()) {
+        //if animations group were added to av before the cc was created then cc will not know if the av isAG
+        //so check nodes in av to see if they are targetted by any targetted aniamtions in any animation group
+        if (this._cc.isAg())
+        {
+            this._avHasAG = true
+        }
+        else
+        {
+            if (AnimUtils.containsAG(this._cc.getAvatar(),Vishva.vishva.scene.animationGroups, true))
+            {
+                this._avHasAG = true;
+            }
+            else this._avHasAG = false;
+        }
+        if (this._avHasAG) {
+            console.debug("in CCUI, getting all AGs");
             let groups: AnimationGroup[] = AnimUtils.getMeshAg(this._cc.getAvatar(), this._cc.getScene().animationGroups);
             for (let g of groups) {
                 this._draggableDiv(al, g.name);
@@ -380,7 +399,7 @@ export class CCUI {
 
             let data: ActionData = _actMap[action];
 
-            if (this._cc.isAg()) {
+            if (this._cc.isAg() || this._avHasAG) {
                 data.ag = this._agByNameMap[val];
             } else {
                 data.name = val;
@@ -401,7 +420,8 @@ export class CCUI {
 
         }
 
-        if (this._cc.isAg()) this._cc.setAnimationGroups(_actMap)
+        //Note : setAnimationGroups will set cc.isAg() to true if not already
+        if (this._cc.isAg() || this._avHasAG) this._cc.setAnimationGroups(_actMap)
         else this._cc.setAnimationRanges(_actMap);
     }
 

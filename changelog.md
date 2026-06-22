@@ -1,10 +1,27 @@
+### 06/20/2026 0.4.0-alpha.53
+
+#### Refactored escape key handling. 
+- Escape key does mutiple things based on the context. cleaned up code so it is easy to understand.
+
+#### Fixed issue when escaping avatar. The avatar would not become partly transparent. 
+- previosuly escaping the avatar would make the avatar partly transparent thus providing a hint that the camera was free of avatar.  
+  transparency does not work properly with gltf meeshes which have pbr material. So now instead of making the avatar partly transparent we now highlight
+  the avatar by rendering all edges of its chid meshes
+
+#### Refactored SaveManager
+- same cleanup codes were being called from various places. consolidated them into one method
+
+#### Fixed issue  where the number of universal camera kept increasing with each save.
+- unicams were not being disposed of properly.  The camera cleanup code , called during save, was expecting the unicam name to be empty which isn't true. Now we check if the name is empty or if the    camera has no vishva tags, if so then dispose it.
+
 ### 06/20/2026 0.4.0-alpha.52
 
-#### Fixed issue when aniamtion groups are added to a character after the charcatercontroller was created for the character
-- If charcaterController is created and no aniamtion exist for that character then CC isAg() returns false even if AGs are added later on. 
-  Added check to see if character has any AGs instead of just relying on CC's isAg();
+#### Fixed issue when animation groups are added to a character after the CharacterController was created for the character
+- If charcaterController is created and no animation exists for that character then CC.isAg() returns false even if AGs are added later on. 
+  Added check to see if character has any AGs instead of just relying on CC.isAg() method.
 
-#### when a character becomes an AV alls its mesh's collision are set to false
+#### Now when a character becomes an AV alls its mesh's collision are set to false
+- The character controller uses the ellipsoid of the character root mesh to "moveWithCollision" the character around. If the character has mutiple meshes then the ellispsoid collides  with these meshes and the movement fails. As such we now turn off collisions of the all the meshes in the character. If we need other meshes, say bullets or npc etc,  to collide with avatar we might have to convert the root node which many time is a mesh node with no geometry to have some geometry, maybe a capsule or cylinder, and turn its collision on.
 
 #### Fixed issue where the avatar or npc animBlend wasn't being set properly when the av or npc was loaded
 - during load Vishva was setting cc settings first and actionmap afterwards. animblend needs to go through each action animation group to set animblend. No action no animblend.  

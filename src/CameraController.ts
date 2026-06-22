@@ -13,17 +13,15 @@ export class UniCamController {
     defaultSpeed: number;
     isFast: boolean = false;
 
-    constructor(scene: Scene, canvas: HTMLCanvasElement, csg: CascadedShadowGenerator, oldDr: DepthRenderer) {
-
-        console.log("creating new uni camera");
-
+    constructor(scene: Scene, canvas: HTMLCanvasElement, csg: CascadedShadowGenerator, oldDr: DepthRenderer) 
+    {
         this.scene = scene;
         this.canvas = canvas;
         this.active = false;
         this.csg = csg;
         this.oldDr = oldDr;
 
-       this.camera = new UniversalCamera("UniCam", Vector3.Zero(), this.scene);
+        this.camera = new UniversalCamera("UniCam", Vector3.Zero(), this.scene);
         
         this.camera.speed = this.camera.speed / 8;
         this.defaultSpeed = this.camera.speed;

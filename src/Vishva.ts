@@ -108,6 +108,7 @@ import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 import { AssetResolver } from "./managers/AssetResolver";
 import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime, cleanupGroupSharingEntries, getRootMesh } from "./util/AnimGroupDedup";
 import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime, cleanupRangeSharingEntries } from "./util/AnimRangeDedup";
+import { MeshUtils } from "./util/MeshUtils";
 
 
 
@@ -116,7 +117,7 @@ import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateR
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.52";
+    static version: string = "0.4.0-alpha.53";
 
     public static worldName: string;
 
@@ -927,24 +928,6 @@ export class Vishva {
                     //this.key.focus = false;
                     this.setFocusOnMesh();
                 }
-                if (this.key.esc) {
-                    this.key.esc = false;
-                    if (!VDiag._modalOn && !this.switchDisabled){
-                        this.animateMesh(this.meshSelected, 1.1);
-                        if (this.meshSelected == this.avatar){
-                            this.avManager.cc.start();
-                        }
-                        this.removeEditControl();
-                        if (!this.isFocusOnAv) {
-                            this.setFocusOnNothing();
-                            if (this.uniCamController == null) {
-                                this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
-                            }
-                            this.uniCamController.start();
-                            this.uniCamOn = true;
-                        }
-                    }
-                }
                 if (this.key.trans) {
                     //this.key.trans = false;
                     this.setTransOn();
@@ -966,27 +949,79 @@ export class Vishva {
                 if (this.key.redo) {
                     this.redo();
                 }
-
             }
 
-            if (!this._avDisabled) {
-                if (this.isFocusOnAv) {
-                    if (this.key.esc) {
+            // if any mesh is slected for edit then unselect it
+            // if mutli select has been done then unselect all mutli selected meshes
+            // if focus is not on av the bring focus back to av
+            // If none of the above was done and esc was pressed take focus off av
+            if (this.key.esc) {
+                //if user is trying to unselect the selected mesh and multisected meshes then do that
+                if (this.isMeshSelected) 
+                {
+                    if (!VDiag._modalOn && !this.switchDisabled && !this.editControl.isEditing()){
+                        this.key.esc = false;
+                        this.animateMesh(this.meshSelected, 1.1);
+                        //if the selected mesh is the av or part of av then restart the charcatercontroller
+                        let rootOfMs : TransformNode = this._getRootMesh(this.meshSelected, this.meshSelected);
+                        if (rootOfMs == this.avatar)
+                        {
+                            this.avManager.cc.start();
+                        }
+                        //removeEditControl will also reove any multi selected mesh
+                        this.removeEditControl();
+                        // when editing if the focus was not on AV then we donot want to switch bask to av
+                        // maybe the user wants the free camera to check other entities nearby
+                        // if the user was already using the free camera before focusing on this mesh then continue using it
+                        if (!this.isFocusOnAv) {
+                            if (!this.uniCamOn){
+                                if (this.uniCamController == null) 
+                                {
+                                    this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
+                                }
+                                this.uniCamController.start();
+                            }
+                        }
+                    }
+                }
+                // if user is trying to unselect all the mutliselected meshes then do that
+                if (this.meshesPicked){
+                    this.key.esc = false;
+                    this.multiUnSelectAll();
+                }
+                // if the user is trying to bring focus back to av then do that
+                if ((this.key.esc && !this._avDisabled && !this.isFocusOnAv) )
+                {
+                    this.key.esc = false;
+                    if (this.editControl == null) 
+                    {
+                        this.switchFocusToAV();
+                    } 
+                    else 
+                    {
+                        if (!this.editControl.isEditing()) 
+                        {
+                            this.switchFocusToAV();
+                        } 
+                        else 
+                        { 
+                            this.key.esc = true;
+                        }
+                    }
+                }
+                // if we still haven't process esc then its safe to assume user is trying to unfocus from avatar and free the camera, so lets do that
+                if (this.key.esc)
+                {
+                    if (!this._avDisabled && this.isFocusOnAv) 
+                    {
                         this.animateMesh(this.avatar, 1.1);
                         this.setFocusOnNothing();
-                        if (this.uniCamController == null) {
+                        if (this.uniCamController == null) 
+                        {
                             this.uniCamController = new UniCamController(this.scene, this.canvas, this.shadowGenerator, this.dr);
                         }
                         this.uniCamController.start();
                         this.uniCamOn = true;
-                    }
-
-                } //else if (this.key.up || this.key.down || this.key.esc) {
-                else if (this.key.esc) {
-                    if (this.editControl == null) {
-                        this.switchFocusToAV();
-                    } else if (!this.editControl.isEditing()) {
-                        this.switchFocusToAV();
                     }
                 }
             }
@@ -999,9 +1034,7 @@ export class Vishva {
                 }
             }
 
-            if (this.key.esc) {
-                this.multiUnSelectAll();
-            }
+            
 
             this.resetKeys();
         }catch(e){
@@ -1195,8 +1228,12 @@ export class Vishva {
 
         let pm: TransformNode = pickResult.pickedMesh;
         if (pm == this.ground) return;
-        if (_pickRoot || _pickMultiRoot) pm = this._getRootMesh(pm, pm);
-        if (pm === this.avatar){
+        //find the root of the picker mesh 
+        let rootOfPm : TransformNode = this._getRootMesh(pm, pm);
+        //if the user intended to select the root the set the picked mesh to the root
+        if (_pickRoot || _pickMultiRoot) pm = rootOfPm;
+        //if the user selected a mesh which is part of av then lets stop the character controller
+        if (rootOfPm === this.avatar){
             this.avManager.cc.stop();
             //this.avManager.cc.enableKeyBoard(false);
 
@@ -1330,7 +1367,7 @@ export class Vishva {
         //            am.showBoundingBox=true;
         if (am instanceof AbstractMesh) {
             am.enableEdgesRendering();
-            am.edgesWidth = 4.0;
+            am.edgesWidth = 2.0;
             if (color !== undefined) {
                 am.edgesColor = color;
             }
@@ -1479,7 +1516,8 @@ export class Vishva {
         this.f--;
         if (this.f < 0) {
             this.isFocusOnAv = true;
-            this.avatar.visibility = 1;
+            //console.log("setting marker visiblity to 0 from " + this.marker.visibility);
+            MeshUtils.displayEdges(this.avatar,false);
             this.cameraAnimating = false;
             this.scene.unregisterBeforeRender(this.animFunc);
 
@@ -2790,7 +2828,7 @@ export class Vishva {
             this.cc.stop();
             this.saveAVcameraPos.copyFrom(this.arcCamera.position);
             this.isFocusOnAv = false;
-            this.avatar.visibility = 0.5;
+            MeshUtils.displayEdges(this.avatar,true);
         }
         // if (this.cameraController != null) this.cameraController.stop();
         this.focusOnMesh(this.meshSelected, 25);
@@ -2799,15 +2837,15 @@ export class Vishva {
      * if user presses esc when focus on av then take camera off av
      * camera can be moved anywhere now
      */
+    
     public setFocusOnNothing() {
         if (this.isFocusOnAv) {
             this.cc.stop();
             this.saveAVcameraPos.copyFrom(this.arcCamera.position);
             this.isFocusOnAv = false;
-            this.avatar.visibility = 0.5;
+            MeshUtils.displayEdges(this.avatar,true);
         }
     }
-
 
     public setSpace(space: string): string {
         if (this.snapperOn) {

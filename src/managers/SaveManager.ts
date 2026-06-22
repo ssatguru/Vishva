@@ -93,12 +93,13 @@ export class SaveManager {
 
         const assetCollector = new AssetCollector();
 
-        this.removeRedundantCameras();
-        this.removeInstancesFromShadow();
-        this.renameMeshIds();
-        this.cleanupSkels();
-        this.resetSkels(this.vishva.scene);
-        this.cleanupMats();
+        this.preSaveCleanup()
+        // this.removeRedundantCameras();
+        // this.removeInstancesFromShadow();
+        // this.renameMeshIds();
+        // this.cleanupSkels();
+        // this.resetSkels(this.vishva.scene);
+        // this.cleanupMats();
 
         await this.vishva.progressManager.update("Creating world data...", 30);
 
@@ -237,12 +238,13 @@ export class SaveManager {
                 }
             }
 
-            this.removeRedundantCameras();
-            this.removeInstancesFromShadow();
-            this.renameMeshIds();
-            this.cleanupSkels();
-            this.resetSkels(this.vishva.scene);
-            this.cleanupMats();
+            this.preSaveCleanup()
+            // this.removeRedundantCameras();
+            // this.removeInstancesFromShadow();
+            // this.renameMeshIds();
+            // this.cleanupSkels();
+            // this.resetSkels(this.vishva.scene);
+            // this.cleanupMats();
 
             await this.vishva.progressManager.update("Creating world data...", 30);
 
@@ -402,12 +404,13 @@ export class SaveManager {
             const assetCollector = new AssetCollector();
             const pathRewriter = new PathRewriter();
 
-            this.removeRedundantCameras();
-            this.removeInstancesFromShadow();
-            this.renameMeshIds();
-            this.cleanupSkels();
-            this.resetSkels(this.vishva.scene);
-            this.cleanupMats();
+            this.preSaveCleanup()
+            // this.removeRedundantCameras();
+            // this.removeInstancesFromShadow();
+            // this.renameMeshIds();
+            // this.cleanupSkels();
+            // this.resetSkels(this.vishva.scene);
+            // this.cleanupMats();
 
             await this.vishva.progressManager.update("Creating world data...", 20);
 
@@ -647,12 +650,13 @@ export class SaveManager {
         const assetCollector = new AssetCollector();
         const pathRewriter = new PathRewriter();
 
-        this.removeRedundantCameras();
-        this.removeInstancesFromShadow();
-        this.renameMeshIds();
-        this.cleanupSkels();
-        this.resetSkels(this.vishva.scene);
-        this.cleanupMats();
+        this.preSaveCleanup()
+        // this.removeRedundantCameras();
+        // this.removeInstancesFromShadow();
+        // this.renameMeshIds();
+        // this.cleanupSkels();
+        // this.resetSkels(this.vishva.scene);
+        // this.cleanupMats();
 
         await this.vishva.progressManager.update("Creating world data...", 30);
 
@@ -1074,11 +1078,20 @@ export class SaveManager {
         };
     }
 
+    private preSaveCleanup(){
+        this.removeRedundantCameras();
+        this.removeInstancesFromShadow();
+        this.renameMeshIds();
+        this.cleanupSkels();
+        this.resetSkels(this.vishva.scene);
+        this.cleanupMats();
+    }
+
     private removeRedundantCameras() {
         let cameras: Camera[] = this.vishva.scene.cameras;
         let l = cameras.length;
         for (let i = l - 1; i >= 0; i--) {
-            if (cameras[i].name == "") {
+            if (cameras[i].name == "" || !Tags.MatchesQuery(cameras[i], "Vishva.camera")) {
                 cameras[i].dispose();
             }
         }

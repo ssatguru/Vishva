@@ -1,4 +1,4 @@
-import { Mesh, Node } from "babylonjs";
+import { Color3, Color4, Mesh, Node } from "babylonjs";
 
 export class MeshUtils{
      //make all meshes in the hierarchy pickable/unpickable
@@ -20,5 +20,29 @@ export class MeshUtils{
         node.getChildren().forEach((child) => {
             this.makeAllCollidable(child,collidable);
         }); 
+    }
+
+
+    //display edges around each descendant meshe in the hierarchy
+    public static displayEdges(node:Node,showEdges:boolean)
+    {
+        if (node instanceof Mesh) 
+        {
+            if (showEdges)
+            {
+                node.enableEdgesRendering();
+                node.edgesWidth=1;
+                node.edgesColor = new Color4(0,1,0,1);
+            }
+            else
+            {
+                node.disableEdgesRendering();
+            }
+        }
+        node.getChildren().forEach(
+            (child) => {
+                this.displayEdges(child,showEdges);
+            }
+        ); 
     }
 }

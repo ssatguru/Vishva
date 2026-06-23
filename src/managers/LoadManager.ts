@@ -757,7 +757,6 @@ export class LoadManager {
      * @param flat  if true the asset sits directly in the category folder (no subfolder)
      */
     public loadCurAsset(category: string, asset: string, flat: boolean = false) {
-        console.log("loading curated ", category, asset);
         this.vishva.filePath = category;
         this.vishva.file = asset;
 
@@ -880,55 +879,134 @@ export class LoadManager {
     // ─── Mesh post-load processing ──────────────────────────────────────────
 
     private reuseAnimationGroup(destAG: AnimationGroup): RuntimeSharingEntry | null {
-        let sourceAG = this.vishva.scene.getAnimationGroupByName(destAG.name);
-        if (sourceAG && sourceAG !== destAG) {
-            for (let destTA of destAG.targetedAnimations) {
-                let sourceTA = sourceAG.targetedAnimations.find(srcTA => srcTA.animation.name === destTA.animation.name);
-                if (sourceTA) {
-                    destTA.animation = sourceTA.animation;
+        let sceneAGs:AnimationGroup[] = this.vishva.scene.animationGroups;
+        let sourceAG:AnimationGroup=null;// = this.vishva.scene.getAnimationGroupByName(destAG.name);
+        
+        //seach the animation groups in scene to find all AGs with the same name as destAG
+        //the destAG would also have been loaded into the scene make sure skip ourself
+        let sameNameAGs:AnimationGroup[]=[];
+        for (let ag of sceneAGs)
+        {
+            //is this us then skip
+            if (ag === destAG) continue;
+            if (ag.name == destAG.name)
+            {
+                sameNameAGs.push(ag);
+            }
+        }
+        if (sameNameAGs.length==0) return null;
+        let compatible:boolean = false;
+        //now check if any of source found are really compatible with destination
+        for (let ag of sameNameAGs)
+        {   sourceAG = ag;
+            compatible=false;
+            let firstAnim:boolean = true;
+            for (let destTA of destAG.targetedAnimations) 
+            {
+                //from the source find the targetedAnimation which has the same "animation" name and the same "target" name
+                let sourceTA = sourceAG.targetedAnimations.find(srcTA => (srcTA.animation.name === destTA.animation.name  && srcTA.target.name === destTA.target.name ))
+                if (sourceTA) 
+                {
+                    //we will check atleast the first 5 frames of the first source , target animation if they match.
+                    //if yes then we assume they are same/compatible and continue pointing to the source animation
+                    //else we will assume the animations are different and stop trying to share.
+                    //not perfect but hopefully works for most use cases and is efficent
+                    if (firstAnim){
+                        firstAnim =false;
+                        let l:number = destTA.animation.getKeys().length;
+                        //check atleast the first 5 frames and see if value matches if not assume they donot match and lets quit
+                        for (let i=0;i<l;i++){
+                            if (destTA.animation.getKeys()[i]["frame"]== sourceTA.animation.getKeys()[i]["frame"])
+                            { 
+                                compatible = true;
+                                if (i>4 )
+                                {
+                                    break;
+                                }
+                                continue;  
+                            }
+                            else
+                            {
+                                console.log("no match");
+                                compatible=false;
+                                break;
+                            }
+                        }
+                    }
+                    //lets update each targeted animation to point to the same animation that the source targeted animation is pointing to
+                    if (compatible) destTA.animation = sourceTA.animation;
+                    else break;
+                }
+                else
+                {
+                    break;
                 }
             }
-
-            const destFirstTarget = destAG.targetedAnimations?.[0]?.target;
-            const sourceFirstTarget = sourceAG.targetedAnimations?.[0]?.target;
-            if (destFirstTarget && sourceFirstTarget) {
-                const destRoot = getRootMesh(destFirstTarget);
-                const sourceRoot = getRootMesh(sourceFirstTarget);
-                return {
-                    mesh: destRoot,
-                    sourceMesh: sourceRoot,
-                };
-            }
+            //if we found a compatible sourceAG then we are done with this AG else lets check the next sourceAG
+            if (compatible) break;
+        }
+        if (!compatible) return null;
+        const destFirstTarget = destAG.targetedAnimations?.[0]?.target;
+        const sourceFirstTarget = sourceAG.targetedAnimations?.[0]?.target;
+        if (destFirstTarget && sourceFirstTarget) 
+        {
+            const destRoot = getRootMesh(destFirstTarget);
+            const sourceRoot = getRootMesh(sourceFirstTarget);
+            console.debug(" using " + sourceRoot.name + " animation " + destAG.name );
+            return {
+                mesh: destRoot,
+                sourceMesh: sourceRoot,
+            };
         }
         return null;
     }
 
     public onMeshLoaded(meshes: AbstractMesh[], particleSystems: IParticleSystem[], skeletons: Skeleton[], animationGroups: AnimationGroup[], file: string, assetType: string, folder?: string, loadType?: 'dialog' | 'drop', dropEvent?: DragEvent) {
-        console.log("loading meshes from file " + file + " from folder " + folder + " of type " + assetType + " mesh count " + meshes.length);
+        console.log("loading meshes from file : " + file + ", from folder : " + folder + ", of type : " + assetType + ", mesh count : " + meshes.length);
 
         for (let s of skeletons) {
             this.vishva.scene.stopAnimation(s);
         }
-
-        const newSharingEntries: RuntimeSharingEntry[] = [];
-        for (let ag of animationGroups) {
+        for (let ag of animationGroups) 
+        {
             ag.stop();
+        }
+
+        //RuntimeSharingEntry is used to identify the entity whose animations we are resusing.
+        //This is used during save.
+        //Remember during serialization which is done during save each entity will end up having their own animation even though they
+        //might be pointing to each other aniamtion,
+        //This entry will be used to remove the animation of an entity if its using some other entity's animation.
+        //Only the source entity aniamtion will be preserved. This will reduce the size of the scene file considerably.
+        //During scene load the entitites will be updated to point to the source entity animation.
+        const newSharingEntries: RuntimeSharingEntry[] = [];
+        for (let ag of animationGroups) 
+        {
             const entry = this.reuseAnimationGroup(ag);
-            if (entry) {
+            if (entry) 
+            {
                 newSharingEntries.push(entry);
+            }
+            else
+            {
+                break;
             }
         }
 
         // Merge new sharing entries into this.vishva._animationSharing, avoiding duplicates
-        if (newSharingEntries.length > 0) {
-            if (!this.vishva._animationSharing) {
+        if (newSharingEntries.length > 0) 
+        {
+            if (!this.vishva._animationSharing) 
+            {
                 this.vishva._animationSharing = [];
             }
-            for (const entry of newSharingEntries) {
+            for (const entry of newSharingEntries) 
+            {
                 const alreadyExists = this.vishva._animationSharing.some(
                     (e: RuntimeSharingEntry) => e.mesh === entry.mesh && e.sourceMesh === entry.sourceMesh
                 );
-                if (!alreadyExists) {
+                if (!alreadyExists) 
+                {
                     this.vishva._animationSharing.push(entry);
                 }
             }
@@ -936,6 +1014,7 @@ export class LoadManager {
 
         // Deduplicate skeleton bone animations (animation ranges) for newly loaded assets.
         this.vishva._animationRangeSharing = deduplicateRangesAtRuntime(this.vishva.scene);
+        
 
         if (file.split(".")[1] == "obj") {
             this.fixObj(meshes);

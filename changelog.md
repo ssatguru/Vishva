@@ -14,6 +14,10 @@
 #### Fixed issue  where the number of universal camera kept increasing with each save.
 - unicams were not being disposed of properly.  The camera cleanup code , called during save, was expecting the unicam name to be empty which isn't true. Now we check if the name is empty or if the    camera has no vishva tags, if so then dispose it.
 
+#### fixed mutiple issues with sharing animation groups between characters
+- previosuly we assumed that if animationgroup name matched, the aniamtiongroups were compatible. Now we do additional check . what if scene has mutiple aniamtion groups with same name? we check each of them.
+  First we check if the aniamtion group anme is the same then we check if in the targetedAnimation  the animation name and target name are the same then we check if the first 5 key frame values of the animation are the same and only then we proceed with sharing. Not full proof but hopefully will work for most use cases.
+
 ### 06/20/2026 0.4.0-alpha.52
 
 #### Fixed issue when animation groups are added to a character after the CharacterController was created for the character

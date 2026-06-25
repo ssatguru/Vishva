@@ -1,11 +1,11 @@
 import {
-    AbstractMesh, AnimationGroup, AnimationRange, ArcRotateCamera, AssetContainer, AssetsManager, BoundingInfo,
+    AbstractMesh, Animation,AnimationGroup, AnimationRange, ArcRotateCamera, AssetContainer, AssetsManager, BoundingInfo,
     InstancedMesh, IParticleSystem, Material, Matrix, Mesh, MultiMaterial, Quaternion, Ray, Scene,
     SceneLoader, Skeleton, StandardMaterial, Tags, TextFileAssetTask, Tools, TransformNode, Vector3, VertexBuffer, Color3
 } from "babylonjs";
 import { PlacementCalculator, PlacementContext, PlacementMode, Vector3 as PlacementVector3 } from "./PlacementCalculator";
 import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSerialized";
-import { RuntimeSharingEntry, getRootMesh } from "../util/AnimGroupDedup";
+import { RuntimeSharingEntry, framesSame, getRootMesh } from "../util/AnimGroupDedup";
 import { deduplicateRangesAtRuntime } from "../util/AnimRangeDedup";
 import { SNAManager } from "../sna/SNA";
 import { VEvent } from "../eventing/VEvent";
@@ -14,6 +14,7 @@ import { AssetResolver } from "./AssetResolver";
 import { AssetStore } from "./AssetStore";
 import { extractTarArchive } from "./TarUtils";
 import { isTarGzFile, isJsonWorldFile } from "./FileValidator";
+import { SaveManager } from "./SaveManager";
 
 declare var curatedConfig: Object;
 
@@ -883,7 +884,7 @@ export class LoadManager {
         let sourceAG:AnimationGroup=null;// = this.vishva.scene.getAnimationGroupByName(destAG.name);
         
         //seach the animation groups in scene to find all AGs with the same name as destAG
-        //the destAG would also have been loaded into the scene make sure skip ourself
+        //Also as the destAG would also have been loaded into the scene make sure skip ourself
         let sameNameAGs:AnimationGroup[]=[];
         for (let ag of sceneAGs)
         {
@@ -898,52 +899,33 @@ export class LoadManager {
         let compatible:boolean = false;
         //now check if any of source found are really compatible with destination
         for (let ag of sameNameAGs)
-        {   sourceAG = ag;
-            compatible=false;
-            let firstAnim:boolean = true;
+        {   
+            sourceAG = ag;
+             //we will check atleast the first 5 frames of the first source and target animation to see if they match.
+            //if yes then we assume they are same/compatible and continue pointing to the source animation
+            //else we will assume the animations are different and stop trying to share.
+            //not perfect but hopefully works for most use cases and is efficent
+            let destTA = destAG.targetedAnimations[0];
+            let sourceTA = sourceAG.targetedAnimations.find(srcTA => (srcTA.animation.name === destTA.animation.name  && srcTA.target.name === destTA.target.name ));
+            if (!sourceTA) continue;
+            compatible = framesSame(destTA.animation,sourceTA.animation,5);
+            if (!compatible) continue;
+
             for (let destTA of destAG.targetedAnimations) 
             {
                 //from the source find the targetedAnimation which has the same "animation" name and the same "target" name
                 let sourceTA = sourceAG.targetedAnimations.find(srcTA => (srcTA.animation.name === destTA.animation.name  && srcTA.target.name === destTA.target.name ))
                 if (sourceTA) 
                 {
-                    //we will check atleast the first 5 frames of the first source , target animation if they match.
-                    //if yes then we assume they are same/compatible and continue pointing to the source animation
-                    //else we will assume the animations are different and stop trying to share.
-                    //not perfect but hopefully works for most use cases and is efficent
-                    if (firstAnim){
-                        firstAnim =false;
-                        let l:number = destTA.animation.getKeys().length;
-                        //check atleast the first 5 frames and see if value matches if not assume they donot match and lets quit
-                        for (let i=0;i<l;i++){
-                            if (destTA.animation.getKeys()[i]["frame"]== sourceTA.animation.getKeys()[i]["frame"])
-                            { 
-                                compatible = true;
-                                if (i>4 )
-                                {
-                                    break;
-                                }
-                                continue;  
-                            }
-                            else
-                            {
-                                console.log("no match");
-                                compatible=false;
-                                break;
-                            }
-                        }
-                    }
                     //lets update each targeted animation to point to the same animation that the source targeted animation is pointing to
-                    if (compatible) destTA.animation = sourceTA.animation;
-                    else break;
-                }
-                else
-                {
-                    break;
+                    //empty the keys from the destination, so they can be garbage collected
+                    destTA.animation.setKeys([]);
+                    destTA.animation.setEasingFunction(null);
+                    destTA.animation = sourceTA.animation;
                 }
             }
             //if we found a compatible sourceAG then we are done with this AG else lets check the next sourceAG
-            if (compatible) break;
+            break;
         }
         if (!compatible) return null;
         const destFirstTarget = destAG.targetedAnimations?.[0]?.target;
@@ -952,7 +934,7 @@ export class LoadManager {
         {
             const destRoot = getRootMesh(destFirstTarget);
             const sourceRoot = getRootMesh(sourceFirstTarget);
-            console.debug(" using " + sourceRoot.name + " animation " + destAG.name );
+            //console.debug(" using " + sourceRoot.name + " animation " + destAG.name );
             return {
                 mesh: destRoot,
                 sourceMesh: sourceRoot,

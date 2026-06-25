@@ -1,4 +1,5 @@
-import { AnimationGroup, Node, Scene, TransformNode } from "babylonjs";
+import { AnimationGroup,Animation, Node, Scene, TransformNode } from "babylonjs";
+import { SaveManager } from "../managers/SaveManager";
 
 /**
  * Metadata entry recording that a character shares animations with a source.
@@ -317,6 +318,14 @@ export function deduplicateAtRuntime(scene: Scene): RuntimeSharingEntry[] {
             }
             const dupRoot = getRootMesh(dupFirstTarget);
 
+            //lets make sure that atleast the first 5 frames of the first anim are the same
+            //if not move on to the next Animation Group
+            let firstTA = dupGroup.targetedAnimations[0];
+            if (!firstTA) continue;
+            if (!framesSame(firstTA.animation,canonicalAnimMap.get(firstTA.animation.name),5)){
+                continue;
+            }
+
             // Replace Animation object references with canonical ones
             for (const ta of dupGroup.targetedAnimations) {
                 if (!ta.animation) {
@@ -349,6 +358,33 @@ export function deduplicateAtRuntime(scene: Scene): RuntimeSharingEntry[] {
     }
 
     return sharingEntries;
+}
+
+export function framesSame(destAnim:Animation, srcAnim:Animation, f:number) : boolean  {
+    const factor = Math.pow(10, SaveManager.PRECISION);
+    let l:number = destAnim.getKeys().length;
+    //check atleast the first f frames and see if value matches if not assume they donot match and lets quit
+    for (let i=0;i<l;i++){
+        //when a scene is saved we are reducing the precision of float numbers to 4 digit
+        //so if the scene is a saved scene which was loaded then during comparision we should make sure both, dest and src, use the same precision 
+        let df:number = destAnim.getKeys()[i]["frame"];
+        let sf:number = srcAnim.getKeys()[i]["frame"];
+        df = Math.round(df * factor) / factor;
+        sf = Math.round(sf * factor) / factor;
+        if (df==sf)
+        { 
+            if (i>f )
+            {
+                return true;
+            }
+            continue;  
+        }
+        else
+        {
+            //console.log("no match");
+            return false;
+        }
+    }
 }
 
 /**

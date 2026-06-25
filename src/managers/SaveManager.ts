@@ -1335,14 +1335,17 @@ export class SaveManager {
      * Rounds all numbers to the specified number of decimal places.
      * Uses a two-pass approach to avoid interactions with toJSON/getters.
      */
-    private static readonly PRECISION = 4;
-
+    public static readonly PRECISION = 4;
     private static _stringifyWithPrecision(obj: any, space?: number): string {
-        const json = JSON.stringify(obj);
-        const plain = JSON.parse(json);
-        return JSON.stringify(plain, (key, value) => {
+        //as obj is already serialized we donot have to flatten it again
+        //const json = JSON.stringify(obj);
+        //const plain = JSON.parse(json);
+        const factor = Math.pow(10, SaveManager.PRECISION);
+        //return JSON.stringify(plain, (key, value) => {
+        return JSON.stringify(obj, (key, value) => {
             if (typeof value === 'number' && !Number.isInteger(value)) {
-                return parseFloat(value.toFixed(SaveManager.PRECISION));
+                //return parseFloat(value.toFixed(SaveManager.PRECISION));
+                return Math.round(value * factor) / factor;
             }
             return value;
         }, space);

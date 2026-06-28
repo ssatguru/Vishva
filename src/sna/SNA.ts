@@ -575,7 +575,7 @@ export interface Sensor extends SensorActuator {
 
 export interface Actuator extends SensorActuator {
     stop();
-    actuate();
+    actuate(signal?:string);
     isReady(): boolean;
     processQueue();
     getMesh(): Mesh;
@@ -774,7 +774,7 @@ export abstract class ActuatorAbstract implements Actuator {
      * called when actuator recieves a disable signal or is being disposed
      */
     public abstract stop(): any;
-    public abstract actuate(): any;
+    public abstract actuate(signal?:string): any;
     public abstract isReady(): any;
 
     properties: ActProperties;
@@ -855,7 +855,7 @@ export abstract class ActuatorAbstract implements Actuator {
         }
         SNAManager.getSNAManager().emitSignal(this.properties.signalStart);
         this.actuating = true;
-        queueMicrotask(()=>this.actuate());
+        queueMicrotask(()=>this.actuate(signal));
         return true;
     }
 

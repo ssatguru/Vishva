@@ -106,7 +106,7 @@ import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 import { AssetResolver } from "./managers/AssetResolver";
-import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime, cleanupGroupSharingEntries, getRootMesh } from "./util/AnimGroupDedup";
+import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime, cleanupGroupSharingEntries, getRootMesh, resolveRuntimeEntries } from "./util/AnimGroupDedup";
 import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime, cleanupRangeSharingEntries } from "./util/AnimRangeDedup";
 import { MeshUtils } from "./util/MeshUtils";
 
@@ -117,7 +117,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.53";
+    static version: string = "0.4.0-alpha.54";
 
     public static worldName: string;
 
@@ -753,13 +753,14 @@ export class Vishva {
 
             // Restore shared animation groups from metadata (if saved with stripping)
             if (this.vishvaSerialized && this.vishvaSerialized.animationSharing && this.vishvaSerialized.animationSharing.length > 0) {
-                const createdCount = restoreSharedAnimationGroups(scene, this.vishvaSerialized.animationSharing);
+                if (!this._animationSharing) this._animationSharing = [];
+                const createdCount = restoreSharedAnimationGroups(scene, this.vishvaSerialized.animationSharing, this._animationSharing);
                 console.log(`[AnimGroupDedup] Restored ${createdCount} animation groups for sharing characters`);
             }
 
             // Runtime dedup: share Animation objects across duplicate groups (works for both restored and legacy saves)
-            this._animationSharing = deduplicateAtRuntime(scene);
-            console.log(`[AnimGroupDedup] Runtime dedup found ${this._animationSharing.length} sharing entries`);
+            //this._animationSharing = deduplicateAtRuntime(scene);
+            //console.log(`[AnimGroupDedup] Runtime dedup found ${this._animationSharing.length} sharing entries`);
 
             // Restore shared skeleton bone animations from metadata (if saved with stripping)
             if (this.vishvaSerialized && this.vishvaSerialized.animationRangeSharing && this.vishvaSerialized.animationRangeSharing.length > 0) {
@@ -769,7 +770,7 @@ export class Vishva {
                         range.from++;
                     }
                 };
-                const restoredCount = restoreSharedSkeletonAnimations(scene, this.vishvaSerialized.animationRangeSharing, fixAnimationRanges);
+                const restoredCount = restoreSharedSkeletonAnimations(scene, this.vishvaSerialized.animationRangeSharing, fixAnimationRanges, this._animationRangeSharing);
                 console.log(`[Vishva] Restored ${restoredCount} skeleton bone animations for sharing characters`);
             }
 
@@ -811,7 +812,7 @@ export class Vishva {
     // -- sceneload4 --
 
     private sceneLoad4() {
-        console.debug("sceneLaod4");
+        console.debug("sceneLoad4");
 
         this.cc = this.avManager.setCharacterController(this.avatar);
         if (this.vishvaSerialized && this.vishvaSerialized.avSerialized) {
@@ -3297,6 +3298,9 @@ export class Vishva {
 
         if (this.meshSelected == null) return false;
 
+
+        // --- Animation Ranges ---
+        // TODO Animation ranges need to be tested
         let skel = this.scene.getSkeletonByUniqueId(Number(skelId));
         if (skel == null) return false;
         let fromBones: Bone[] = skel.bones;
@@ -3336,11 +3340,27 @@ export class Vishva {
             targetSkel.createAnimationRange(fromAnimRange.name, fromAnimRange.from, fromAnimRange.to);
         }
 
+        //TODO
+        //entries should b made into AnimationRangeSharing
+
+        if (!this._animationRangeSharing) this._animationRangeSharing = [];
+        const alreadyExists = this._animationRangeSharing.some(
+                (e: RuntimeRangeSharingEntry) => e.skeleton === targetSkel && e.sourceSkeleton === skel
+        );
+        if (!alreadyExists) 
+        {
+            this._animationRangeSharing.push({skeleton:targetSkel, sourceSkeleton:skel});
+        }
+
         // --- Animation Groups ---
         // Find animation groups that belong to the source skeleton's mesh hierarchy.
         // An AG belongs to the source if any of its targeted animation targets live
         // in the source mesh's hierarchy.
-        const sourceMesh = this.scene.meshes.find(m => m instanceof AbstractMesh && (m as AbstractMesh).skeleton === skel) as AbstractMesh;
+
+        //const sourceMesh = this.scene.meshes.find(m => m instanceof AbstractMesh && (m as AbstractMesh).skeleton === skel) as AbstractMesh;
+        // TODO use linkTransformNode to get the associaed mesh skel.bones[0].linkTransformNode
+        const sourceMesh = skel.bones[0]._linkedTransformNode;
+
         if (sourceMesh != null) {
             const sourceRoot = AnimUtils.getRoot(sourceMesh);
             const sourceNodes = sourceRoot.getChildren(n => n instanceof TransformNode, false) as Node[];
@@ -3388,6 +3408,15 @@ export class Vishva {
                     newAG.addTargetedAnimation(ta.animation, destNode);
                 }
             }
+            if (!this._animationSharing) this._animationSharing = [];
+            const alreadyExists = this._animationSharing.some(
+                    (e: RuntimeSharingEntry) => e.mesh === targetRoot && e.sourceMesh === sourceRoot
+            );
+            if (!alreadyExists) 
+            {
+                this._animationSharing.push({mesh:targetRoot, sourceMesh:sourceRoot});
+            }
+            
         }
 
         return true;
@@ -3997,6 +4026,7 @@ export class Vishva {
 
     //private _grndSPS: GroundSPS;
     public getGrndSPSbyID(gSpsId: string): GrndSpread {
+        if (this.GrndSpreads == null) return null;
         for (let g of this.GrndSpreads) {
             if (g.id == gSpsId) {
                 return g;

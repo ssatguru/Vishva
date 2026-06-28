@@ -89,7 +89,7 @@ export class PropsPanelUI {
 
         }
 
-        //on construction open gen tab
+        //on construction open gen tab - what if ground is selected
         this._activeDtl = <HTMLDetailsElement>document.getElementById("gen");
         this._activeDtl.open = true;
 
@@ -110,8 +110,6 @@ export class PropsPanelUI {
             }
 
         });
-
-
     }
 
 
@@ -119,8 +117,11 @@ export class PropsPanelUI {
     public open() {
         let es: HTMLCollectionOf<Element>
 
-        //if ground selected show only ground related tabs or those common to both mesh and ground
-        //those common to both mesh and ground will not have a "grnd" or "mesh" class
+        //if ground selected show only 
+        // ground related panels (class is "grnd")
+        // or 
+        // panels common to both mesh and ground (class in neither "grnd" nor "mesh")
+        // see PropsPanelML for classes assigned to each panel
         if (this._vishva.isGroundPicked()) {
 
             //hide all non ground related tabs

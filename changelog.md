@@ -1,3 +1,17 @@
+### 06/27/2026 0.4.0-alpha.54
+
+#### Terrain Manger 
+- fixed issue where in when the Terrain dialog biox was opened the first time , the genral mesh propeties would also show
+- user can subdivide the ground without having to provied a height map
+
+### Added new actuator HealthActuator
+
+### Animation Sharing Issues fixed
+- when animations were copied from one character to another character using the aniamtion properties dialog, the animation sharing entries were not being updated. this was only happening during asset load. Now it happens during copy too
+
+### Actuator actuate() method signature updated
+Now the actuate method recieves as paramter the signal which resulted in it being called. An actuator can beactiavted by more than one signal. This now helps actuator figure out based on signal recieved  if it needs to behave in a differnt fashion
+
 ### 06/20/2026 0.4.0-alpha.53
 
 #### Refactored escape key handling. 
@@ -15,7 +29,7 @@
 - unicams were not being disposed of properly.  The camera cleanup code , called during save, was expecting the unicam name to be empty which isn't true. Now we check if the name is empty or if the    camera has no vishva tags, if so then dispose it.
 
 #### fixed mutiple issues with sharing animation groups between characters
-- previosuly we assumed that if animationgroup name matched, the aniamtiongroups were compatible. Now we do additional check . what if scene has mutiple aniamtion groups with same name? we check each of them.
+- previosuly we assumed that if animationgroup name matched, the aniamtiongroups were compatible. Now we do additional check . what if scene has mutiple animation groups with same name? we check each of them.
   First we check if the aniamtion group anme is the same then we check if in the targetedAnimation  the animation name and target name are the same then we check if the first 5 key frame values of the animation are the same and only then we proceed with sharing. Not full proof but hopefully will work for most use cases.
 
 ### 06/20/2026 0.4.0-alpha.52

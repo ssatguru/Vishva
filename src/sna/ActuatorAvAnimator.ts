@@ -133,9 +133,9 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
             if (this._skel != null) {
             if(this._isAG){
                 this.ag = Vishva.vishva.scene.getAnimationGroupByName(prop.animation.value).start(prop.loop, prop.rate);
-                this.ag.onAnimationGroupEndObservable.addOnce(() => { return this.onActuateEnd() });
+                this.ag.onAnimationGroupEndObservable.addOnce(() => { return this.stop() });
             }else{
-                this.anim = this.avMesh.skeleton.beginAnimation(prop.animation.value, prop.loop, prop.rate,() => { return this.onActuateEnd() });
+                this.anim = this.avMesh.skeleton.beginAnimation(prop.animation.value, prop.loop, prop.rate,() => { return this.stop() });
             }
         }
         }

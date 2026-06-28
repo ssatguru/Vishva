@@ -475,6 +475,8 @@ export class VishvaGUI {
             this._itemProps = new PropsPanelUI(this._vishva, this, node);
         }
         this._itemProps.open();
+        
+        // if the items in scene dialog box is open then highlighted this item which has been selected
         if (this._items != null && this._items.isOpen()) this._items._highlightSelected();
     }
 

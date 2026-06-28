@@ -142,27 +142,12 @@ export class EnvironmentUI {
             }
         };
 
-        var trnButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("trnButton");
-        trnButton.onclick = (e) => {
-
-            //                if (this._groundUI2==null){
-            //                    this._groundUI2=new GroundUI2(this._vishva,this._vishvaGUI);
-            //                }
-            //                this._groundUI2.toggle();
-
-            //                let r =this._vishva.spreadOnGround();
-            //                if (r!=null){
-            //                    DialogMgr.showAlertDiag(r);
-            //                }
-
+        let trnButton: HTMLButtonElement = <HTMLButtonElement>document.getElementById("trnButton");
+        trnButton.onclick = (e) => 
+        {
             if (this._vishva.selectGround()) vishvaGUI.showPropDiag(this._vishva.meshSelected);
             return true;
         };
-
-        //            
-        //            let trnColDiag: ColorPickerDiag=new ColorPickerDiag("terrain color","trnCol",this._vishva.getGroundColor(),DialogMgr.centerBottom,(hex,hsv,rgb) => {
-        //                this._vishva.setGroundColor(hex);
-        //            });
 
         this._envDiag = new VDiag("envDiv", "Environment", VDiag.rightBottom, "24em", "", "24em");
 

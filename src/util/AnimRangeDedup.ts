@@ -371,11 +371,14 @@ function isSkeletonDrivenByAG(skel: Skeleton, scene: Scene): boolean {
  * - Bone name mismatch → log warning, skip that bone, continue
  * - Count a skeleton as "restored" if at least one bone was matched
  */
-export function restoreSharedSkeletonAnimations(
+export function restoreSharedSkeletonAnimations
+(
     scene: Scene,
     sharingEntries: AnimRangeSharingEntry[],
-    fixAnimationRanges: (skel: Skeleton) => void
-): number {
+    fixAnimationRanges: (skel: Skeleton) => void,
+    rtSharingEntries:RuntimeRangeSharingEntry[]
+): number 
+{
     // Handle null/undefined/empty entries
     if (!sharingEntries || sharingEntries.length === 0) {
         return 0;
@@ -454,6 +457,20 @@ export function restoreSharedSkeletonAnimations(
         fixAnimationRanges(sharingSkeleton);
 
         restoredCount++;
+        //save the serialized sharing entry into the runtime sharing entry
+        const alreadyExists = rtSharingEntries.some
+        (
+            (e: RuntimeRangeSharingEntry) => e.skeleton === sharingSkeleton && e.sourceSkeleton === sourceSkeleton
+        );
+        if (!alreadyExists)
+        {
+            rtSharingEntries.push(
+                {
+                    skeleton:sharingSkeleton,
+                    sourceSkeleton:sourceSkeleton
+                }
+            )
+        }
     }
 
     return restoredCount;

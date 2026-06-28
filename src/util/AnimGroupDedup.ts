@@ -431,15 +431,18 @@ export function cleanupGroupSharingEntries(
  */
 export function restoreSharedAnimationGroups(
     scene: Scene,
-    sharingEntries: AnimationSharingEntry[]
-): number {
+    sharingEntries: AnimationSharingEntry[],
+    rtSharingEntries : RuntimeSharingEntry[]
+): number 
+{
     if (!sharingEntries || sharingEntries.length === 0) {
         return 0;
     }
 
     let createdCount = 0;
 
-    for (const entry of sharingEntries) {
+    for (const entry of sharingEntries) 
+    {
         // Find source character's root mesh
         const sourceRoot = scene.getMeshById(entry.sourceMeshId) || scene.getTransformNodeById(entry.sourceMeshId);
         if (!sourceRoot) {
@@ -461,11 +464,14 @@ export function restoreSharedAnimationGroups(
         // Identify animation groups belonging to the source character.
         // An animation group belongs to the source if any of its targeted animation
         // targets are nodes within the source character's hierarchy.
+
+        //get all meshes and transfor nodes in the source
         const sourceAGs: AnimationGroup[] = [];
         const allNodes = sourceRoot.getChildren((n) => n instanceof TransformNode, false) as Node[];
         // Include the root itself
         allNodes.push(sourceRoot);
 
+        //get all AGs associated with the above list of meshes
         for (const ag of scene.animationGroups) {
             const tas = ag.targetedAnimations;
             if (!tas || tas.length === 0) {
@@ -512,6 +518,21 @@ export function restoreSharedAnimationGroups(
             }
 
             createdCount++;
+            //save the serialized sharing entry into the runtime sharing entry
+            const alreadyExists = rtSharingEntries.some(
+                (e: RuntimeSharingEntry) => e.mesh === sharingRoot && e.sourceMesh === sourceRoot
+            );
+            if (!alreadyExists) 
+            {
+                rtSharingEntries.push(
+                    {
+                        mesh : sharingRoot,
+                        sourceMesh: sourceRoot
+                        
+                    }
+                )
+            }
+            
         }
     }
 

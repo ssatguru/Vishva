@@ -12,7 +12,6 @@ import { VInputText } from "../components/VInputText";
 import { VInputNumber } from "../components/VInputNumber";
 import { VInputVector2 } from "../components/VInputVector2";
 import { VInputVector3 } from "../components/VInputVector3";
-import { DialogMgr } from "../DialogMgr";
 import { VFileInput } from "../components/VFileInput";
 import { VDiag } from "../components/VDiag";
 /**
@@ -66,29 +65,66 @@ export class GrndDimUI {
 
         let v: Vector3 = this._grndFC.getValue();
         let color: Color3 = new Color3(v.x, v.y, v.z);
-        MeshBuilder.CreateGroundFromHeightMap(this._grndID.getValue(), this._grndHM.getValue(), {
-            width: this._grndW.getValue(),
-            height: this._grndL.getValue(),
-            minHeight: this._grndminH.getValue(),
-            maxHeight: this._grndmaxH.getValue(),
-            subdivisions: this._grndS.getValue(),
-            colorFilter: color,
-            updatable: false,
-            onReady: (grnd: GroundMesh) => {
-                grnd.material = _grnd_old.material;
-                grnd.checkCollisions = true;
-                grnd.isPickable = false;
-                Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
-                grnd.receiveShadows = true;
-                grnd.freezeWorldMatrix();
-                this._vishva.ground = grnd;
-                this._vishva.switchEditControl(grnd);
-                this._adjustHts(grnd, _grnd_old);
-                _grnd_old.dispose();
-                //TODO regenerate all the sps
-            }
+        //if no height map provided then just create a subdivided mesh
+        if (this._grndHM.getValue()==null)
+        {
+            let grnd:GroundMesh = MeshBuilder.CreateGround
+            (
+                this._grndID.getValue(), 
+                {
+                    width: this._grndW.getValue(),
+                    height: this._grndL.getValue(),
+                    subdivisions: this._grndS.getValue(),
+                    updatable: false,
+                }, 
+                this._vishva.scene
+            );
+            grnd.material = _grnd_old.material;
+            grnd.checkCollisions = true;
+            grnd.isPickable = false;
+            Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+            grnd.receiveShadows = true;
+            grnd.freezeWorldMatrix();
+            this._vishva.ground = grnd;
+            this._vishva.switchEditControl(grnd);
+            this._adjustHts(grnd, _grnd_old);
+            _grnd_old.dispose();
+            //TODO regenerate all the sps
 
-        }, this._vishva.scene);
+        }
+        else
+        {
+            MeshBuilder.CreateGroundFromHeightMap
+            (
+                this._grndID.getValue(), 
+                this._grndHM.getValue(), 
+                {
+                    width: this._grndW.getValue(),
+                    height: this._grndL.getValue(),
+                    minHeight: this._grndminH.getValue(),
+                    maxHeight: this._grndmaxH.getValue(),
+                    subdivisions: this._grndS.getValue(),
+                    colorFilter: color,
+                    updatable: false,
+                    onReady: (grnd: GroundMesh) => 
+                    {
+                        grnd.material = _grnd_old.material;
+                        grnd.checkCollisions = true;
+                        grnd.isPickable = false;
+                        Tags.AddTagsTo(grnd, "Vishva.ground Vishva.internal");
+                        grnd.receiveShadows = true;
+                        grnd.freezeWorldMatrix();
+                        this._vishva.ground = grnd;
+                        this._vishva.switchEditControl(grnd);
+                        this._adjustHts(grnd, _grnd_old);
+                        _grnd_old.dispose();
+                        //TODO regenerate all the sps
+                    }
+
+                }, 
+                this._vishva.scene
+            );
+        }
     }
 
     private _adjustHts(grnd: GroundMesh, grnd_old: GroundMesh) {

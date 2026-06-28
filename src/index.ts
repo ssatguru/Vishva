@@ -27,6 +27,7 @@ import "./sna/ActuatorCloaker";
 import "./sna/ActuatorDialog";
 import "./sna/ActuatorDisabler";
 import "./sna/ActuatorEnabler";
+import "./sna/ActuatorHealth";
 import "./sna/ActuatorLight";
 import "./sna/ActuatorPointerLock";
 import "./sna/ActuatorSignalEmitter";

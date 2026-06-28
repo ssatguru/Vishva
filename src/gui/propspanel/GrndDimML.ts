@@ -19,11 +19,14 @@ let gdHTML = `
         <td>subdivisions</td>
         <td id="grndS"/>
         </tr>
+        
         <tr>
         <td>height map</td>
         <td id="grndHM"/>
         </tr>
-
+        <tr>
+        <td colspan="2">If no height map selected, below would be ignored</td>
+        </tr>
         <tr>
         <td>min height</td>
         <td id="grndminH"/>

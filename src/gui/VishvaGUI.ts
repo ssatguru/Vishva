@@ -21,6 +21,7 @@ import { SavePromptUI } from "./SavePromptUI";
 import { WorldLauncher } from "./WorldLauncher";
 import { UploadUI } from "./UploadUI";
 import { MeshMetadata } from "../VishvaSerialized";
+import { detectXRSupport, computeXRButtonState, XRButtonState } from "../managers/XRSupport";
 
 
 export class GuiSettings {
@@ -427,6 +428,27 @@ export class VishvaGUI {
             return false;
         };
 
+        // buttons for entering VR/AR. Hidden by default until capability
+        // detection completes so an unsupported mode never offers an enabled
+        // Enter button (Requirements 2.2, 2.3, 2.6).
+        var navEnterVR: HTMLElement = document.getElementById("navEnterVR");
+        var navEnterAR: HTMLElement = document.getElementById("navEnterAR");
+        navEnterVR.style.display = "none";
+        navEnterAR.style.display = "none";
+        navEnterVR.onclick = (e) => {
+            this._vishva.enterXR('vr');
+            return false;
+        };
+        navEnterAR.onclick = (e) => {
+            this._vishva.enterXR('ar');
+            return false;
+        };
+        // Detect XR support on startup and gate the buttons accordingly
+        // (Requirement 1.1). detectXRSupport never throws.
+        detectXRSupport().then((support) => {
+            this._applyXRButtonState(computeXRButtonState(support));
+        });
+
         // button for help
         let helpLink: HTMLElement = document.getElementById("helpLink");
         //let helpDiag: VDialog = null;
@@ -461,6 +483,25 @@ export class VishvaGUI {
             this.isWorldPaused = !this.isWorldPaused;
             return true;
         };
+    }
+
+    /**
+     * Apply an {@link XRButtonState} to the Enter VR/AR NavBar buttons: a mode's
+     * button is shown only when visible, and disabled when not enabled. An
+     * unsupported mode maps to `{visible:false, enabled:false}` so it is hidden
+     * and can never start a session (Requirements 2.2, 2.3, 2.6).
+     */
+    private _applyXRButtonState(state: XRButtonState) {
+        const navEnterVR = document.getElementById("navEnterVR") as HTMLButtonElement;
+        const navEnterAR = document.getElementById("navEnterAR") as HTMLButtonElement;
+        if (navEnterVR != null) {
+            navEnterVR.style.display = state.vr.visible ? "" : "none";
+            navEnterVR.disabled = !state.vr.enabled;
+        }
+        if (navEnterAR != null) {
+            navEnterAR.style.display = state.ar.visible ? "" : "none";
+            navEnterAR.disabled = !state.ar.enabled;
+        }
     }
 
     isWorldPaused:boolean = false;

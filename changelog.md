@@ -1,3 +1,21 @@
+### 0.5.0 WebXR Support
+
+Added an immersive VR/AR preview mode so worlds can be experienced directly in a headset.
+
+#### Enter VR / Enter AR from the NavBar
+- Two new NavBar buttons let you jump into an immersive session. Each button only shows/enables when the device actually supports that mode, so you never see an option that can't work on your hardware.
+
+#### Two locomotion modes
+- **First-person**: move around with teleport and controller pointers.
+- **Third-person**: point a controller at a spot on the ground and the avatar walks there.
+- Switch between the two mid-session with the controller's A/X face button. First-person is unavailable when the avatar's CharacterController has `noFirstPerson` set, in which case you stay in third-person.
+
+#### SNA click interaction in XR
+- Pointing a controller at an object and selecting triggers the same SensorClick behaviors as a desktop mouse click, so your click-driven SNA logic works inside VR/AR.
+
+#### Desktop state preserved
+- Entering and exiting XR leaves your desktop editor untouched — the camera, render pipeline, and character controller are restored exactly as they were when the session ends.
+
 ### 06/27/2026 0.4.0-alpha.54
 
 #### Terrain Manger 

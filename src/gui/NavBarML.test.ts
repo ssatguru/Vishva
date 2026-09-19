@@ -5,8 +5,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 /**
  * Unit tests for NavBarML DOM structure and behavior.
  *
- * Validates: Requirements 1.1, 1.2, 2.1, 2.3, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 7.1, 7.2
+ * Validates: Requirements 1.1, 1.2, 2.1, 2.2, 2.3, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 7.1, 7.2
  */
+
+import { computeXRButtonState, XRButtonState } from "../managers/XRSupport";
 
 // ─── Mock Vishva ────────────────────────────────────────────────────────────
 
@@ -43,6 +45,8 @@ const EXPECTED_BUTTON_IDS = [
     "navEnv",
     "navAddSpawner",
     "navSettings",
+    "navEnterVR",
+    "navEnterAR",
     "debugLink",
     "helpLink",
     "pauseActuators",
@@ -62,6 +66,8 @@ const EXPECTED_TITLES = [
     "environment",
     "add spawner",
     "settings",
+    "enter VR",
+    "enter AR",
     "inspector",
     "help",
     "pause actuators",
@@ -94,9 +100,9 @@ describe("NavBarML - DOM Structure", () => {
         vi.restoreAllMocks();
     });
 
-    // ─── Requirement 3.1, 3.3: Menu bar contains all 16 buttons by ID ───
+    // ─── Requirement 3.1, 3.3: Menu bar contains all buttons by ID ───
 
-    it("should contain all 16 buttons by ID", () => {
+    it("should contain all buttons by ID", () => {
         for (const id of EXPECTED_BUTTON_IDS) {
             const btn = document.getElementById(id);
             expect(btn, `Button #${id} should exist`).not.toBeNull();
@@ -238,5 +244,113 @@ describe("NavBarML - DOM Structure", () => {
 
         expect(addMenuZIndex).toBeGreaterThanOrEqual(menuBarZIndex);
         expect(addMenuZIndex).toBe(1000);
+    });
+});
+
+// ─── XR Enter Buttons: presence + gating logic ──────────────────────────────
+
+/**
+ * Mirror of VishvaGUI._applyXRButtonState: apply an XRButtonState to the
+ * Enter VR/AR NavBar buttons. A mode's button is shown only when visible, and
+ * disabled when not enabled. This is the gating logic under test — kept in sync
+ * with the production implementation so the test reflects real behavior.
+ *
+ * Validates: Requirements 2.2, 2.3
+ */
+function applyXRButtonState(state: XRButtonState) {
+    const navEnterVR = document.getElementById("navEnterVR") as HTMLButtonElement;
+    const navEnterAR = document.getElementById("navEnterAR") as HTMLButtonElement;
+    if (navEnterVR != null) {
+        navEnterVR.style.display = state.vr.visible ? "" : "none";
+        navEnterVR.disabled = !state.vr.enabled;
+    }
+    if (navEnterAR != null) {
+        navEnterAR.style.display = state.ar.visible ? "" : "none";
+        navEnterAR.disabled = !state.ar.enabled;
+    }
+}
+
+describe("NavBarML - XR Enter Buttons", () => {
+    beforeEach(async () => {
+        document.body.innerHTML = "";
+        const { NavBar } = await import("./NavBarML");
+        new NavBar();
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = "";
+        vi.restoreAllMocks();
+    });
+
+    // ─── Requirement 2.1: Enter VR / Enter AR buttons exist with titles ──
+
+    it("should contain #navEnterVR button with title 'enter VR'", () => {
+        const btn = document.getElementById("navEnterVR");
+        expect(btn, "Button #navEnterVR should exist").not.toBeNull();
+        expect(btn!.tagName.toLowerCase()).toBe("button");
+        expect(btn!.getAttribute("title")).toBe("enter VR");
+    });
+
+    it("should contain #navEnterAR button with title 'enter AR'", () => {
+        const btn = document.getElementById("navEnterAR");
+        expect(btn, "Button #navEnterAR should exist").not.toBeNull();
+        expect(btn!.tagName.toLowerCase()).toBe("button");
+        expect(btn!.getAttribute("title")).toBe("enter AR");
+    });
+
+    // ─── Requirement 2.1: both XR buttons live inside navMenubar ─────────
+
+    it("should place both XR buttons inside navMenubar", () => {
+        const navMenubar = document.getElementById("navMenubar")!;
+        const vr = document.getElementById("navEnterVR")!;
+        const ar = document.getElementById("navEnterAR")!;
+        expect(navMenubar.contains(vr)).toBe(true);
+        expect(navMenubar.contains(ar)).toBe(true);
+    });
+
+    // ─── Requirement 2.2, 2.3: gating maps computed state to DOM ─────────
+    // computeXRButtonState makes a mode visible+enabled iff supported, so the
+    // four support combinations exercise every visibility/enabled outcome.
+
+    const cases: Array<{ vrSupported: boolean; arSupported: boolean }> = [
+        { vrSupported: true, arSupported: true },
+        { vrSupported: true, arSupported: false },
+        { vrSupported: false, arSupported: true },
+        { vrSupported: false, arSupported: false },
+    ];
+
+    for (const support of cases) {
+        it(`should gate buttons for vr=${support.vrSupported}, ar=${support.arSupported}`, () => {
+            applyXRButtonState(computeXRButtonState(support));
+
+            const vr = document.getElementById("navEnterVR") as HTMLButtonElement;
+            const ar = document.getElementById("navEnterAR") as HTMLButtonElement;
+
+            // Requirement 2.2: VR hidden + disabled when unsupported, shown + enabled otherwise.
+            expect(vr.style.display).toBe(support.vrSupported ? "" : "none");
+            expect(vr.disabled).toBe(!support.vrSupported);
+
+            // Requirement 2.3: AR hidden + disabled when unsupported, shown + enabled otherwise.
+            expect(ar.style.display).toBe(support.arSupported ? "" : "none");
+            expect(ar.disabled).toBe(!support.arSupported);
+        });
+    }
+
+    // ─── Requirement 2.2: unsupported VR is never left interactive ───────
+
+    it("should hide and disable #navEnterVR when VR is unsupported", () => {
+        applyXRButtonState(computeXRButtonState({ vrSupported: false, arSupported: true }));
+        const vr = document.getElementById("navEnterVR") as HTMLButtonElement;
+        expect(vr.style.display).toBe("none");
+        expect(vr.disabled).toBe(true);
+    });
+
+    // ─── Requirement 2.3: unsupported AR is never left interactive ───────
+
+    it("should hide and disable #navEnterAR when AR is unsupported", () => {
+        applyXRButtonState(computeXRButtonState({ vrSupported: true, arSupported: false }));
+        const ar = document.getElementById("navEnterAR") as HTMLButtonElement;
+        expect(ar.style.display).toBe("none");
+        expect(ar.disabled).toBe(true);
     });
 });

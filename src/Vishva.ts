@@ -106,6 +106,7 @@ import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 import { AssetResolver } from "./managers/AssetResolver";
+import { XRManager, XRSessionType } from "./managers/XRManager";
 import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime, cleanupGroupSharingEntries, getRootMesh, resolveRuntimeEntries } from "./util/AnimGroupDedup";
 import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime, cleanupRangeSharingEntries } from "./util/AnimRangeDedup";
 import { MeshUtils } from "./util/MeshUtils";
@@ -187,6 +188,10 @@ export class Vishva {
     public loadManager: LoadManager;
     public progressManager: ProgressManager;
     public spawnerManager: SpawnerManager;
+
+    // WebXR session manager — lazily constructed on first enterXR() call so the
+    // default XR experience is created only when VR/AR is actually requested.
+    public xrManager: XRManager;
 
     // AssetResolver reference — persists after deactivate() so the reverse map
     // is accessible at save time for blob URL → original path reversal.
@@ -423,6 +428,51 @@ export class Vishva {
         if (this.vishvaSerialized !== null)
             return this.vishvaSerialized.guiSettings;
         else return null;
+    }
+
+    /**
+     * Enter an immersive WebXR session (VR or AR).
+     *
+     * The {@link XRManager} is constructed lazily on first use so the BabylonJS
+     * default XR experience is only created when VR/AR is actually requested
+     * (Requirement 3.1). Delegates to the manager's VR/AR entry based on
+     * {@link type} (Requirements 2.4, 2.5).
+     *
+     * @param type "vr" for an immersive VR session, "ar" for immersive AR
+     */
+    public async enterXR(type: XRSessionType): Promise<void> {
+        if (this.xrManager == null) {
+            this.xrManager = new XRManager(this);
+        }
+        if (type === "vr") {
+            await this.xrManager.enterVR();
+        } else {
+            await this.xrManager.enterAR();
+        }
+    }
+
+    /**
+     * Exit the active WebXR session. Delegates to {@link XRManager.exitXR},
+     * which is a no-op when no session is active. Safe to call before any
+     * session has been started.
+     */
+    public async exitXR(): Promise<void> {
+        if (this.xrManager != null) {
+            await this.xrManager.exitXR();
+        }
+    }
+
+    /**
+     * Whether an immersive WebXR session is currently active.
+     *
+     * Delegates to {@link XRManager.isInXR}. Returns false before any session
+     * has been started (the manager is constructed lazily on first
+     * {@link enterXR}). Used by SNA interaction (e.g. {@link SensorClick}) to
+     * skip desktop-only guards — such as the alt/ctl/shift modifier gate — that
+     * are not asserted during an XR session (Requirement 8.3).
+     */
+    public isInXR(): boolean {
+        return this.xrManager != null && this.xrManager.isInXR();
     }
 
     /**
@@ -1183,6 +1233,29 @@ export class Vishva {
         this._markerLine.alwaysSelectAsActiveMesh = true;
     }
 
+    /**
+     * Move the avatar to a world-space target using the character controller.
+     * Shows the click-to-move marker at the target and hides it once the move
+     * completes. Shared by desktop click-to-move and XR third-person locomotion
+     * so both paths use one implementation.
+     */
+    public moveAvatarTo(target: Vector3): void {
+        this._clickMoveTarget = target;
+
+        if (this._marker == null) this._createMarker();
+        this._marker.position = this._clickMoveTarget.clone();
+        this._marker.isVisible = true;
+
+        // this._lineOptions.points[0] = this.avatar.position;
+        // this._lineOptions.points[1] = this._clickMoveTarget;
+        // this._lineOptions.instance = this._markerLine;
+        // MeshBuilder.CreateLines("markerlines", this._lineOptions);
+
+        // this._markerLine.isVisible = true;
+
+        this.cc.moveTo(this._clickMoveTarget, { onComplete: () => { this._marker.isVisible = false } })
+    }
+
     private pickObject(evt: PointerEvent, pickResult: PickingInfo) {
         // prevent curosr from changing to a edit caret in Chrome
         evt.preventDefault();
@@ -1191,21 +1264,7 @@ export class Vishva {
 
         //move av using click
         if (this._clickMove && (evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
-            this._clickMoveTarget = pickResult.pickedPoint.clone();
-
-            if (this._marker == null) this._createMarker();
-            this._marker.position = this._clickMoveTarget.clone();
-            this._marker.isVisible = true;
-
-            // this._lineOptions.points[0] = this.avatar.position;
-            // this._lineOptions.points[1] = this._clickMoveTarget;
-            // this._lineOptions.instance = this._markerLine;
-            // MeshBuilder.CreateLines("markerlines", this._lineOptions);
-
-            // this._markerLine.isVisible = true;
-
-            this.cc.moveTo(this._clickMoveTarget,{onComplete : ()=>{this._marker.isVisible=false}})
-
+            this.moveAvatarTo(pickResult.pickedPoint.clone());
             return;
         }
 

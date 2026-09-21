@@ -40,6 +40,18 @@ run
   - url "http://localhost:8080/bin" will also work as he default world in "config.js" is set to "empty"
   - the default character jump animations might require some speed adjustment - lower speed , maybe 0.5 instead of 1
 
+## serving over HTTPS
+
+Some browser features (e.g. certain device APIs) require a secure context. Two options are available:
+
+- npm run dev:https  
+  Runs the webpack-dev-server over HTTPS (build in memory, hot reload). webpack-dev-server auto-generates a self-signed certificate internally and caches it, so no cert files appear in the project and the cert is not regenerated on every run.
+
+- npm run https-server  
+  Serves the project root as static files over HTTPS using `http-server`. On the first run it generates a self-signed certificate into `certs/cert.pem` and `certs/key.pem` (via `scripts/gen-cert.js`, using the `selfsigned` package — no system openssl required). On later runs it detects the existing cert and reuses it, so the cert is generated only once. The cert is valid for 10 years, and the `certs/` folder is gitignored.
+
+Both certificates are self-signed, so the browser shows a one-time security warning you can accept. For `https-server`, run `npm run build` first if the `bin/` folder is empty, since it serves static files rather than compiling them.
+
 ## built using
 
 - [BabylonJS](http://www.babylonjs.com/)

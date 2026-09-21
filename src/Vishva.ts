@@ -118,7 +118,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.4.0-alpha.54";
+    static version: string = "0.5.1";
 
     public static worldName: string;
 

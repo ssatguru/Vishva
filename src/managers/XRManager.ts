@@ -82,8 +82,6 @@ interface DesktopControllerSnapshot {
     ccStarted: boolean;
     /** Whether the CharacterController had keyboard input enabled before. */
     ccKeyboardEnabled: boolean;
-    /** Whether the CC had turning OFF before the session (restored on exit). */
-    ccTurningOff: boolean;
 }
 
 /** Name the SSAO2 pipeline is registered under in `Vishva.loadBabylonjsPart`. */
@@ -147,6 +145,19 @@ const MAX_ORBIT_RATE = 0.02;
  * localStorage-load range clamp). The minimum is 0.
  */
 const MAX_RADIUS_RATE = 0.2;
+
+/**
+ * Number of follow frames over which the XR camera POSITION is eased from its
+ * on-entry pose toward the ArcRotateCamera follow pose when a session starts.
+ * On entry, BabylonJS places the XR camera at the (grounded, `local-floor`)
+ * device pose, while our per-frame follow copy targets the full ArcRotateCamera
+ * pose; applying that in one frame is the visible entry jerk. Spreading it over
+ * this many frames (≈ one second at typical headset frame rates, e.g. ~90
+ * frames at 72–90 Hz) makes the transition a gentle glide rather than a snap.
+ * Raise it for a slower ease-in, lower it for a snappier one. Consumed by
+ * {@link XRManager.updateXRCameraFollow} via {@link XRManager.entryBlendFrame}.
+ */
+const ENTRY_BLEND_FRAMES = 90;
 
 /** localStorage key persisting the alpha orbit sensitivity rate across sessions. */
 const LS_ALPHA_RATE = "vishva.xr.alphaRate";
@@ -527,6 +538,36 @@ export class XRManager {
      * normal and fast variant of the same direction active at once.
      */
     private lastFast: boolean = false;
+
+    /**
+     * Entry-blend progress counter. Reset to 0 on session start ({@link
+     * onSessionStart}) and incremented once per follow frame by {@link
+     * updateXRCameraFollow} until it reaches {@link ENTRY_BLEND_FRAMES}. While
+     * below that bound the follow copy renders the XR camera at
+     * `followPose + decayingOffset` instead of the raw follow pose — the offset
+     * is the entry gap captured once (see {@link entryBlendOffset*}) and decays
+     * smoothly to zero over the blend, so the camera GLIDES from its on-entry
+     * pose onto the live follow pose without snapping. Starts "finished" so the
+     * blend is inert until a session arms it.
+     */
+    private entryBlendFrame: number = ENTRY_BLEND_FRAMES;
+
+    /**
+     * X component of the entry-blend offset — the gap between the XR camera's
+     * on-entry position and the follow target, captured ONCE on the first blend
+     * frame. The follow copy renders at `followTarget + offset * (1 - progress)`
+     * so the offset shrinks monotonically to zero: the camera always sits a
+     * shrinking distance from the LIVE follow target, so it tracks a moving
+     * target (avatar walking, CC settling) without overshoot. See
+     * {@link updateXRCameraFollow}.
+     */
+    private entryBlendOffsetX: number = 0;
+
+    /** Y component of the entry-blend offset. See {@link entryBlendOffsetX}. */
+    private entryBlendOffsetY: number = 0;
+
+    /** Z component of the entry-blend offset. See {@link entryBlendOffsetX}. */
+    private entryBlendOffsetZ: number = 0;
 
     /* ---------------------------------------------------------------------
      * HUD OPTIONS PANEL / DEBUG DIAGNOSTICS
@@ -966,6 +1007,17 @@ export class XRManager {
         // left Y button (toggleDiagHud's show branch disables it while the HUD
         // is actually shown, and restores it when hidden / on session end).
         this.createDiagHud();
+
+        // Arm the entry blend: the first ENTRY_BLEND_FRAMES frames of the follow
+        // loop ease the XR camera's POSITION from wherever the runtime places it
+        // on entry toward the ArcRotateCamera follow pose, instead of snapping in
+        // a single frame (which is the visible entry jerk). The offset is
+        // captured on the first blend frame; clear it here so a stale offset from
+        // a prior session never leaks in. See {@link updateXRCameraFollow}.
+        this.entryBlendFrame = 0;
+        this.entryBlendOffsetX = 0;
+        this.entryBlendOffsetY = 0;
+        this.entryBlendOffsetZ = 0;
     }
 
     /**
@@ -2243,6 +2295,23 @@ export class XRManager {
         if (!xrCamera || !arcCamera) {
             return;
         }
+
+        // ENTRY BLEND: while within the first ENTRY_BLEND_FRAMES frames, remember
+        // the XR camera's CURRENT position (on the FIRST blend frame this is the
+        // on-entry pose) so we can measure the gap to the follow target below.
+        // `blending` is false once the counter reaches the bound (steady state),
+        // in which case the follow copy applies the full follow pose unmodified.
+        const blending = this.entryBlendFrame < ENTRY_BLEND_FRAMES;
+        const firstBlendFrame = this.entryBlendFrame === 0;
+        let preX = 0;
+        let preY = 0;
+        let preZ = 0;
+        if (firstBlendFrame && xrCamera.position) {
+            preX = xrCamera.position.x;
+            preY = xrCamera.position.y;
+            preZ = xrCamera.position.z;
+        }
+
         // Optional-chain the method itself so an XR camera stub without it (test
         // env) is a safe no-op rather than a throw.
         xrCamera.setTransformationFromNonVRCamera?.(arcCamera, true);
@@ -2258,6 +2327,33 @@ export class XRManager {
             typeof arcY === "number"
         ) {
             xrCamera.position.y = arcY;
+        }
+
+        // ENTRY BLEND (continued): xrCamera.position now holds the LIVE follow
+        // target. Render at `target + offset * (1 - progress)`:
+        //  - On the FIRST blend frame, capture the offset ONCE as
+        //    (on-entry pose - follow target). This is the entry gap.
+        //  - Each frame, add the offset scaled by a smoothstep-eased factor that
+        //    decays 1 -> 0 across the blend, so the camera starts at the on-entry
+        //    pose and eases onto the follow pose. Because we always add to the
+        //    LIVE target, a moving avatar / settling CC is tracked without the
+        //    overshoot ("up then down") a target-relative lerp produced.
+        if (blending && xrCamera.position) {
+            if (firstBlendFrame) {
+                this.entryBlendOffsetX = preX - xrCamera.position.x;
+                this.entryBlendOffsetY = preY - xrCamera.position.y;
+                this.entryBlendOffsetZ = preZ - xrCamera.position.z;
+            }
+            // progress goes 0 -> 1 across the blend; ease is a smoothstep of the
+            // remaining fraction (1 - progress) so the glide slows in near the
+            // end rather than stopping abruptly.
+            const progress = (this.entryBlendFrame + 1) / ENTRY_BLEND_FRAMES;
+            const remaining = 1 - progress;
+            const ease = remaining * remaining * (3 - 2 * remaining); // smoothstep
+            xrCamera.position.x += this.entryBlendOffsetX * ease;
+            xrCamera.position.y += this.entryBlendOffsetY * ease;
+            xrCamera.position.z += this.entryBlendOffsetZ * ease;
+            this.entryBlendFrame++;
         }
     }
 
@@ -2507,11 +2603,6 @@ export class XRManager {
         }
 
         const ccKeyboardEnabled = cc.isKeyBoardEnabled?.() ?? false;
-        // Capture whether the CC currently has turning OFF so it can be restored
-        // exactly on exit. During the session turning is forced ON (see below)
-        // so the right thumbstick can rotate the avatar.
-        const ccTurningOff =
-            typeof cc.isTurningOff === "function" ? cc.isTurningOff() : false;
 
         // There is no public getter for the CC's running state; infer it from
         // whether keyboard input was enabled (desktop avatar control implies a
@@ -2525,7 +2616,6 @@ export class XRManager {
         this.controllerSnapshot = {
             ccStarted: ccKeyboardEnabled,
             ccKeyboardEnabled,
-            ccTurningOff,
         };
 
         // Disable ONLY keyboard-driven desktop locomotion so window key events
@@ -2536,10 +2626,6 @@ export class XRManager {
         // calls (behavior c / Requirement 9.3). start() is idempotent.
         cc.enableKeyBoard?.(false);
         cc.start?.();
-        // Force turning ON for the duration of the session so the right
-        // thumbstick can rotate the avatar even if the user had turning off on
-        // the desktop. The prior value is restored on exit.
-        cc.setTurningOff?.(false);
     }
 
     /**
@@ -2566,9 +2652,6 @@ export class XRManager {
         if (snapshot.ccStarted) {
             cc.start?.();
         }
-        // Restore the turning-off state the CC had before the session (turning
-        // was forced ON while in XR — see disableDesktopController).
-        cc.setTurningOff?.(snapshot.ccTurningOff);
     }
 
     /** Look up the SSAO2 pipeline by its registered name, or null if absent. */

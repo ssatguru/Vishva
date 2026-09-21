@@ -2,39 +2,67 @@
 
 ## Overview
 
-WebXR Support adds an immersive VR/AR preview mode to Vishva without altering desktop editing. The design introduces three cooperating pieces in `src/managers/`:
+WebXR Support adds an immersive VR/AR preview mode to Vishva without altering desktop editing. Movement inside a session is driven by the **thumbsticks** through the existing `CharacterController`, and the headset view is a per-frame mirror of the desktop follow `ArcRotateCamera`, so the third-person follow experience carries into XR. The design introduces three cooperating pieces in `src/managers/`:
 
 - **`XRSupport`** — a thin async capability probe plus a pure mapping from capabilities to NavBar button state.
-- **`XRLocomotion`** — a pure state machine for the first/third-person sub-mode with the `noFirstPerson` guard.
-- **`XRManager`** — the BabylonJS-facing lifecycle owner: creates the default XR experience, wires teleport/pointer features, drives locomotion, routes controller select to picking, and restores desktop state on exit.
+- **`XRLocomotion`** — a pure module with (a) the first/third-person sub-mode state machine (with the `noFirstPerson` guard) and (b) the pure `mapSticksToIntent` that turns left-stick axes into a `MoveIntent`.
+- **`XRManager`** — the BabylonJS-facing lifecycle owner: creates the default XR experience, samples the sticks each frame and edge-triggers the CharacterController, orbits/dollies and follows the camera, binds controller buttons, manages controller rays, hosts the in-headset HUD, persists sensitivity settings, and restores desktop state on exit.
 
-`Vishva` gains `enterXR('vr' | 'ar')`, `exitXR()`, and delegates to `XRManager`. `VishvaGUI` adds handlers for two new NavBar buttons, gated by `XRSupport` at startup. XR reuses the existing avatar, `CharacterController`, scene picking, and SNA `ActionManager` pick triggers.
+`Vishva` gains `enterXR('vr' | 'ar')`, `exitXR()`, and delegates to `XRManager`. `VishvaGUI` adds handlers for two new NavBar buttons, gated by `XRSupport` at startup. XR reuses the existing avatar, `CharacterController`, follow camera, scene picking, and SNA `ActionManager` pick triggers.
+
+> This document was reconciled against the code as built. The implementation diverged substantially from the original teleport/point-to-move-centric plan: **thumbstick locomotion is now primary**, the camera is orbited/dollied and follows the avatar, and an in-headset HUD hosts the exit control and sensitivity settings. Teleportation and point-to-move remain in the codebase but are not the active movement path.
 
 ### Design Decisions
 
-- **Pure logic split out**: `XRSupport`'s capability→button mapping and the entire `XRLocomotion` state machine are BabylonJS-free pure logic, so they are unit- and property-testable without a scene or headset. This mirrors the existing `PlacementCalculator` pattern.
-- **Single lazily-created XR experience**: `WebXRDefaultExperience` is created once on first use and reused. Repeated enter/exit toggles the session, not the whole experience, avoiding leaks and re-init cost.
-- **Feature reconfiguration, not recreation, on mode toggle**: switching locomotion enables/disables the Teleport_Feature and swaps the select handler behavior; the pointer selection feature stays enabled for both modes so SNA interaction always works.
-- **Reuse click-to-move**: Third-person locomotion reuses the existing `_clickMove`/`_marker`/`cc.moveTo(...)` mechanism in `Vishva` rather than duplicating movement code. `XRManager` calls into a small `Vishva` entry point that performs the pick→`moveTo` (with marker) already established at `Vishva.ts:1200-1208`.
-- **Picking-based SNA**: BabylonJS's WebXR pointer selection dispatches through the scene pointer/picking system, so `ActionManager` pick triggers used by `SensorClick` fire from an XR select with minimal glue. The design verifies this rather than reimplementing SNA dispatch.
-- **Render pipeline safety**: SSAO2 + prepass are attached to the editor camera and can destabilize an XR session. `XRManager` disables them on enter and restores on exit, recording prior enabled state.
+- **Pure logic split out**: `XRSupport`'s capability→button mapping, the `XRLocomotion` state machine, and the `mapSticksToIntent` axis mapper are BabylonJS-free pure logic, so they are unit- and property-testable without a scene or headset. This mirrors the existing `PlacementCalculator` pattern.
+- **Thumbstick locomotion replaces teleport**: the left stick drives `CharacterController.walk/walkBack/strafeLeft/strafeRight` (and their fast variants), sampled per frame and edge-triggered. Teleport is never enabled by the active flow; the `disableTeleportation` path is kept only to defensively tear down any legacy-enabled feature.
+- **Dominant-axis gating**: real thumbsticks bleed onto the off-axis. `mapSticksToIntent` (left stick) and `applyCameraOrbit` (right stick) each activate only the single axis with the larger raw magnitude per frame, so backing up never drifts sideways and orbiting never changes alpha and beta together (the latter is nausea-inducing). Ties resolve to Y on the left stick (forward/back wins) and to X (alpha) on the right stick.
+- **Mode selects camera coupling, not movement**: with stick locomotion the first/third-person `LocomotionMode` only decides whether the CharacterController pulls the camera in to the avatar (`setNoFirstPerson(false)`) or holds a third-person offset (`setNoFirstPerson(true)`). The state machine and its `noFirstPerson` guard are unchanged.
+- **Follow camera mirrored onto the XR camera**: rather than reimplement the CharacterController's follow math, `updateXRCameraFollow` copies the `ArcRotateCamera` transform onto the rendered `WebXRCamera` each frame via `setTransformationFromNonVRCamera(arcCamera, true)`, then re-applies the arc camera's Y (because the copy forces `position.y = 0`).
+- **Right stick controls the camera, not the avatar**: the right stick orbits (`alpha`/`beta`) and the right B/A buttons dolly (`radius`) the follow camera; the avatar is never rotated by the camera controls.
+- **Permanent in-headset HUD (Options) + temporary Debug scaffolding**: the HUD plane hosts two modes. The **Options** panel (Exit XR + Debug buttons + three sensitivity sliders) is a permanent, world-locked feature. The **Debug** panel (live pose/controller readout + Close), the `diag*` fields, and the controller/handedness dump are temporary scaffolding added to diagnose an on-device stick bug where console logs are invisible in the headset; they are slated for removal.
+- **Sensitivity persistence**: the three orbit/dolly rates are instance fields adjustable via the Options sliders and persisted to `localStorage`, restored each session.
+- **Elasticity disabled while the HUD is shown**: the pickable HUD plane obstructs the CharacterController's camera-obstruction ray, causing a jerk; elasticity/springback are disabled while the HUD is visible and restored when hidden or on exit.
+- **Controller ray management**: the left ray is hidden (left trigger is jump), and the right ring/laser are raised above the HUD plane's rendering group so pointing stays visible over the panel.
+- **Picking-based SNA**: BabylonJS WebXR pointer selection dispatches through the scene picking system, so `ActionManager` pick triggers used by `SensorClick` fire from an XR select; pointer selection is left enabled in both modes.
+- **Render pipeline safety**: SSAO2 + prepass + depth renderer are disabled on enter (state recorded) and restored on exit.
 
 ## Architecture
 
 ```mermaid
 graph TD
-    A[NavBar: Enter VR / Enter AR buttons] --> B[VishvaGUI handlers]
+    A[NavBar: Enter VR / Enter AR] --> B[VishvaGUI handlers]
     B --> C[Vishva.enterXR / exitXR]
     C --> D[XRManager]
     D --> E[WebXRDefaultExperience]
-    D --> F[XRLocomotion state machine]
-    F -->|firstPerson| G[Teleport_Feature]
-    F -->|thirdPerson| H[Vishva click-to-move -> CharacterController.moveTo]
-    E --> I[Pointer_Selection_Feature]
-    I --> J[Scene picking -> ActionManager pick triggers]
-    J --> K[SensorClick emits signal -> actuators fire]
-    L[XRSupport probe] --> B
-    M[Controller A/X face button] --> F
+    D --> P[Desktop preserve/restore<br/>SSAO2 / prepass / depth / CC keyboard]
+
+    D --> RL[Per-frame render observer<br/>sampleSticks then HUD place then follow]
+
+    RL --> L[Left stick -> mapSticksToIntent<br/>MoveIntent + dominant-axis + deadzone]
+    L --> CC[CharacterController<br/>walk/walkBack/strafe + fast variants<br/>edge-triggered]
+    RL --> O[Right stick -> applyCameraOrbit<br/>alpha/beta, dominant-axis]
+    RL --> DO[Right B/A -> applyButtonDolly<br/>radius, continuous]
+    O --> ARC[Follow ArcRotateCamera]
+    DO --> ARC
+    RL --> F[updateXRCameraFollow<br/>mirror arc transform + Y onto XR camera]
+    ARC --> F
+
+    D --> BTN[Controller buttons]
+    BTN --> J[Left trigger -> CC.jump]
+    BTN --> Y[Left Y -> toggle HUD]
+    BTN --> X[Left X -> dolly-to-avatar toggle]
+    BTN --> T[A/X face -> handleToggleRequest<br/>first/third-person coupling]
+    T --> SM[XRLocomotion state machine<br/>noFirstPerson guard] --> CPL[CC.setNoFirstPerson]
+
+    D --> HUD[In-headset HUD plane + ADT]
+    HUD --> OPT[Options panel PERMANENT<br/>Exit XR / Debug / sensitivity sliders]
+    HUD --> DBG[Debug panel TEMPORARY<br/>live readout / Close]
+    D --> RAY[Ray mgmt: hide left ray / raise right ring]
+    E --> PS[Pointer_Selection_Feature]
+    PS --> PICK[Scene picking -> ActionManager pick triggers]
+    PICK --> SNA[SensorClick emits signal]
+    LS[XRSupport probe] --> B
 ```
 
 ### Module Boundaries
@@ -42,21 +70,17 @@ graph TD
 | Module | Responsibility |
 |--------|---------------|
 | `XRSupport` | Probe `immersive-vr` / `immersive-ar` support; pure map capabilities → button state. No session lifecycle. |
-| `XRLocomotion` | Pure sub-mode state machine with `noFirstPerson` guard. No BabylonJS. |
-| `XRManager` | Session lifecycle, feature wiring, locomotion execution, controller input, select→pick routing, desktop restore. |
-| `Vishva` | Owns `XRManager`; exposes `enterXR/exitXR`; provides the click-to-move entry point reused by third-person locomotion. |
-| `VishvaGUI` / `NavBarML` | Buttons + handlers; startup gating via `XRSupport`. |
+| `XRLocomotion` | Pure sub-mode state machine with `noFirstPerson` guard **and** the pure `mapSticksToIntent` (left-stick axes → `MoveIntent`, dominant-axis + deadzone). No BabylonJS. |
+| `XRManager` | Session lifecycle, pipeline/controller preserve+restore, per-frame stick sampling + edge-triggered CC movement/fast, camera orbit/dolly/follow, controller button binding, controller-ray management, in-headset HUD, sensitivity persistence. |
+| `Vishva` | Owns `XRManager`; exposes `enterXR/exitXR`; provides `moveAvatarTo` (marker + `cc.moveTo`) reused by the retained point-to-move helper. |
+| `VishvaGUI` / `NavBarML` | Enter VR / Enter AR buttons + handlers; startup gating via `XRSupport`. |
 
 ## Components and Interfaces
 
 ### XRSupport (thin probe + pure mapping)
 
 ```typescript
-export interface XRSupportState {
-    vrSupported: boolean;
-    arSupported: boolean;
-}
-
+export interface XRSupportState { vrSupported: boolean; arSupported: boolean; }
 export interface XRButtonState {
     vr: { visible: boolean; enabled: boolean };
     ar: { visible: boolean; enabled: boolean };
@@ -65,71 +89,107 @@ export interface XRButtonState {
 /** Thin async probe. Never throws; unsupported/erroring modes resolve to false. */
 export async function detectXRSupport(): Promise<XRSupportState>;
 
-/** Pure mapping: capabilities -> button visibility/enabled model. */
+/** Pure mapping: a mode's button is visible AND enabled iff that mode is supported. */
 export function computeXRButtonState(support: XRSupportState): XRButtonState;
 ```
 
-`detectXRSupport` uses `WebXRSessionManager.IsSessionSupportedAsync("immersive-vr")` and `("immersive-ar")`, each wrapped so rejection/absence yields `false`. If `navigator.xr` is undefined, both are `false` (Requirement 1.2, 1.3).
+`detectXRSupport` uses `WebXRSessionManager.IsSessionSupportedAsync("immersive-vr" | "immersive-ar")`, each wrapped so rejection/absence yields `false`; absent `navigator.xr` short-circuits both to `false` (Requirements 1.2, 1.3). `computeXRButtonState` is pure (Requirement 1.4).
 
-`computeXRButtonState` (pure, Requirement 1.4): a mode's button is `visible` and `enabled` iff that mode is supported; unsupported → `{ visible: false, enabled: false }`.
-
-### XRLocomotion (pure state machine)
+### XRLocomotion (pure state machine + pure stick mapper)
 
 ```typescript
 export type LocomotionMode = 'firstPerson' | 'thirdPerson';
+export const DEFAULT_STICK_DEADZONE = 0.15;
 
-export interface ToggleResult {
-    mode: LocomotionMode;   // resulting mode
-    changed: boolean;       // whether mode changed
-    blocked: boolean;       // whether a first-person request was denied
+export interface StickInput { leftX: number; leftY: number; }              // LEFT stick only
+export interface MoveIntent {
+    walk: boolean; walkBack: boolean; strafeLeft: boolean; strafeRight: boolean;
 }
+export function neutralMoveIntent(): MoveIntent;
+
+/**
+ * Pure LEFT-stick mapping. Dominant-axis: only one of {forward/back} vs {strafe}
+ * is active per call (larger raw magnitude wins; ties -> Y). Deadzone gates the
+ * winner. Sign: leftY < -dz => walk (forward), leftY > dz => walkBack;
+ * leftX > dz => strafeRight, leftX < -dz => strafeLeft. The RIGHT stick is NOT
+ * part of this mapper — it drives the camera directly in XRManager.
+ */
+export function mapSticksToIntent(input: StickInput, deadzone?: number): MoveIntent;
+
+export interface ToggleResult { mode: LocomotionMode; changed: boolean; blocked: boolean; }
 
 export class XRLocomotion {
-    constructor(initial?: LocomotionMode); // default 'thirdPerson'
+    constructor(initial?: LocomotionMode);          // default 'thirdPerson'
     getMode(): LocomotionMode;
     setMode(mode: LocomotionMode, canFirstPerson: boolean): ToggleResult;
     toggle(canFirstPerson: boolean): ToggleResult;
 }
 ```
 
-Semantics (Requirement 4):
-- `toggle(canFirstPerson)`: if current is `thirdPerson`, attempt to go `firstPerson`: allowed only when `canFirstPerson` is true (else `blocked:true, changed:false`, stays `thirdPerson`). If current is `firstPerson`, go `thirdPerson` (always allowed, never blocked).
-- `setMode('firstPerson', false)` → blocked, stays whatever non-first-person value; `setMode('thirdPerson', _)` → always succeeds.
-- Invariant: with `canFirstPerson` always false, mode never becomes `firstPerson`.
+State machine semantics (Requirement 4): a transition to `firstPerson` requires `canFirstPerson === true` (else `blocked:true, changed:false`, mode unchanged); a transition to `thirdPerson` is always allowed and never blocked; `toggle` flips between the two using that rule. Invariant: with `canFirstPerson` always false, mode never becomes `firstPerson`.
 
 ### XRManager (BabylonJS lifecycle)
 
-```typescript
-export type XRSessionType = 'vr' | 'ar';
+`XRManager` is large; its method surface is grouped by concern below. All BabylonJS/GUI/private-map access is defensively guarded so the manager never throws under the mocked test environment.
 
-export class XRManager {
-    constructor(private vishva: Vishva);
+**Lifecycle & entry**
+- `isInXR()` — true only while a session is active (Requirement 3.4).
+- `enterVR()` / `enterAR()` → `enter(type)` — guard on `XRSupport`; unsupported requests no-op leaving desktop untouched (Requirements 2.6, 3.5). Enter the session via the base experience with `local-floor` reference space (Requirement 3.8).
+- `exitXR()` — idempotent; no-op when not in session (Requirement 3.7); else calls `exitXRAsync`, and desktop restore runs from the state handler.
+- `ensureExperience()` — lazily `createDefaultXRExperienceAsync({ disableTeleportation: true })` once, wires the `WebXRState` observer and the persistent `bindControllerToggle` (Requirement 3.1); pointer selection left enabled.
+- `onSessionStart(type)` — load persisted sensitivity, disable desktop pipeline + quiesce CC keyboard, reset per-session state, set + apply default locomotion mode, start the stick sampler, build the (hidden) HUD.
+- `onSessionEnd()` — guard on `inXR`; stop movement; detach all per-session observers; clear captures; restore elasticity, pipeline, and controller (Requirements 3.3, 3.6, 19.*).
 
-    isInXR(): boolean;
+**Locomotion / sticks**
+- `canFirstPerson()` — `!cc.getSettings().noFirstPerson` (Requirement 16.2).
+- `applyLocomotionMode(mode)` — ensure teleport disabled; set CC camera coupling `setNoFirstPerson(mode !== 'firstPerson')` (Requirement 5).
+- `disableTeleportation(fm)` — defensive teardown of any legacy teleport.
+- `startStickSampler()` / `stopStickSampler()` — register/detach the per-frame `onBeforeRenderObservable` observer (Requirement 11.4).
+- `sampleSticks()` — read left/right axes; `mapSticksToIntent` → `applyIntent`; `applyCameraOrbit`; `applyButtonDolly`; refresh debug HUD when shown+enabled.
+- `applyIntent(cc, intent, fast)` — diff against `lastIntent`/`lastFast`; edge-trigger via `applyMovementDirection` (Requirement 6.6).
+- `applyMovementDirection(normal, fast, wasActive, wasFast, isActive, isFast)` — emit minimal on/off calls so a direction runs its normal or fast variant, never both (Requirement 7).
+- `stopAllMovement()` — push a neutral intent on exit (Requirement 6.7).
+- `bindMotionControllerSticks(mc)` — classify by handedness → `leftStick` (move) / `rightStick` (orbit).
 
-    enterVR(): Promise<void>;
-    enterAR(): Promise<void>;
-    exitXR(): Promise<void>;
+**Camera orbit / dolly / follow**
+- `applyCameraOrbit(rightX, rightY)` — dominant-axis (ties→alpha), deadzone-gated, analog; `alpha += alphaRate*x` OR `beta += betaRate*y` then `clampBeta()`; recompute world matrix; never turns the avatar (Requirement 9).
+- `applyButtonDolly()` — B held → `radius -= radiusRate`, A held → `radius += radiusRate`; clamp to radius limits; recompute matrix on change (Requirement 10.1–10.3).
+- `clampBeta()` — clamp `beta` to the camera's beta limits or a pole-avoiding fallback.
+- `toggleXDolly()` — left-X dolly-to-avatar toggle: snap to `lowerRadiusLimit` remembering prior radius, or restore (Requirement 10.4).
+- `getXRCamera()` — the rendered `WebXRCamera`.
+- `updateXRCameraFollow()` — `setTransformationFromNonVRCamera(arcCamera, true)` then copy arc Y onto XR camera Y (Requirement 11.1, 11.2).
 
-    // internal
-    private ensureExperience(): Promise<WebXRDefaultExperience>;
-    private onSessionStart(type: XRSessionType): void;
-    private onSessionEnd(): void;
-    private applyLocomotionMode(mode: LocomotionMode): void;
-    private handleToggleRequest(): void;      // derives canFirstPerson from CC noFirstPerson
-    private handleSelect(pickInfo): void;      // third-person: pick -> moveTo; SNA handled by picking
-    private disableDesktopPipeline(): void;    // record + disable SSAO2/prepass
-    private restoreDesktopPipeline(): void;    // restore recorded state + activeCamera
-}
-```
+**Controller binding & rays**
+- `bindControllerToggle(experience)` — persistent `onControllerAddedObservable` hook; per source track a motion-controller-init observer and call `rememberLeftControllerAndHideRay`.
+- `bindMotionController(mc)` — capture diag; `bindMotionControllerSticks`; `bindLeftControllerButtons`; `bindRightControllerHeightButtons`; bind left `x-button` → `toggleXDolly`.
+- `bindLeftControllerButtons(mc)` — LEFT only: trigger rising edge → `cc.jump()` (Requirement 8); `y-button` rising edge → `toggleDiagHud` (Requirement 13.3, 13.6).
+- `bindRightControllerHeightButtons(mc)` — RIGHT only: capture `b-button` → `radiusDownButton`, `a-button` → `radiusUpButton` (Requirement 10.5).
+- `handleToggleRequest()` — derive `canFirstPerson`, drive `XRLocomotion.toggle`, reconfigure coupling on change, emit feedback on block (Requirement 16).
+- `emitToggleBlockedFeedback()` — log + best-effort haptic pulse (Requirement 16.4).
+- `rememberLeftControllerAndHideRay` / `retryHideLeftControllerRay` / `hideLeftControllerRay` — hide the left ray + selection ring via the pointer-selection feature's private `_controllers` map, retried per frame (Requirement 15.1, 15.3).
+- `retryRaiseRightSelectionRing` / `raiseRightSelectionRingRenderingGroup` — raise pointer-selection meshes to `renderingGroupId = 2` above the HUD, retried per frame (Requirement 15.2, 15.3).
+- `detach*Observers` — tear down toggle/init/trigger/menu observers on exit (Requirement 19.4).
 
-Key behaviors:
-- `ensureExperience()` lazily calls `scene.createDefaultXRExperienceAsync({ disableTeleportation: true })` once (teleport is managed manually per locomotion mode) and caches it (Requirement 3.1). Pointer selection stays enabled for SNA.
-- `enterVR`/`enterAR` guard on `XRSupport`; if unsupported, they no-op and leave desktop untouched (Requirement 2.6, 3.5). Otherwise they enter the session for the mode via the experience's base session manager.
-- Session state is tracked from `WebXRState` changes; `onSessionStart` disables the desktop pipeline, sets the default locomotion mode from `noFirstPerson`, and applies the mode. `onSessionEnd` runs restore (Requirements 3.2, 3.3, 9.*).
-- `applyLocomotionMode`: first-person enables Teleport_Feature with floor meshes; third-person disables teleport and arms the select→`moveTo` path (Requirements 5, 6).
-- `handleToggleRequest`: bound to the controller **A/X face button** (`a-button` on the right controller, `x-button` on the left), subscribed via each motion controller's button component `onButtonStateChangedObservable` and fired on the rising edge of a press. Deliberately NOT the trigger, so trigger-driven select (point-to-move / SNA click) is never conflated with a toggle. It derives `canFirstPerson = !activeCCSettings.noFirstPerson`, calls `XRLocomotion.toggle`; on `changed` reconfigures features; on `blocked` emits feedback (Requirement 7). Falls back to no toggle binding if the connected controller profile exposes neither `a-button` nor `x-button`.
-- `handleSelect`: in third-person, if pick has a valid point, drive `vishva` click-to-move (`moveTo` + marker). SNA click still fires because selection goes through scene picking (Requirements 6, 8).
+**HUD** (Options permanent; Debug temporary)
+- `createDiagHud()` — build the world-space plane + ADT: semi-transparent panel, Exit XR button, Debug button, Close button, and the three sensitivity slider/label pairs; plane pickable, `renderingGroupId = 1`, starts hidden.
+- `toggleDiagHud()` — show/hide with the elasticity-safe ordering (Requirement 13.3, 14.3); on show returns to Options mode and world-locks the panel.
+- `applyHudMode()` — flip control visibility + placement model between Options and Debug (Requirement 13.4, 13.5).
+- `positionPlaneInFront` / `placeOptionsPanelInFront` / `updateDiagHudPlacement` — one-time world-lock for Options, per-frame head-lock for Debug.
+- `updateDiagHud` / `disposeDiagHud` — refresh/tear down (Debug scaffolding).
+- `disableCameraElasticityForHud` / `restoreCameraElasticityAfterHud` — Requirement 14.
+- `setSensitivitySlidersVisible` / `syncSensitivitySlidersFromFields` — Options slider sync.
+
+**Desktop preserve / restore**
+- `disableDesktopPipeline` / `restoreDesktopPipeline` — record + disable/restore depth renderer, SSAO2 (detach/attach `ssaopipeline`), prepass samples; restore `activeCamera` + `attachControl` (Requirements 3.2, 3.3, 19.1, 19.2).
+- `disableDesktopController` / `restoreDesktopController` — keep the CC running, disable/restore keyboard; record `ccStarted`/`ccKeyboardEnabled` (Requirement 19.3).
+- `getSSAOPipeline` — look up `ssaopipeline` by name.
+
+**Sensitivity persistence**
+- `loadSensitivityFromStorage()` — read `vishva.xr.alphaRate|betaRate|radiusRate`; apply only finite, in-range values; guarded (Requirement 12.4, 12.5).
+- `saveSensitivityToStorage()` — write all three keys; guarded (Requirement 12.3).
+
+**Retained helper**
+- `handleSelect(pickedPoint)` — retained point-to-move: in third-person with a valid pick, start the CC and `vishva.moveAvatarTo`; no valid pick → no move. Not routed by the active flow (Requirement 18).
 
 ### Vishva Changes
 
@@ -138,47 +198,69 @@ class Vishva {
     public xrManager: XRManager;                 // lazily constructed
     public enterXR(type: XRSessionType): Promise<void>;
     public exitXR(): Promise<void>;
-
-    // reused by third-person XR locomotion (extract existing click-to-move body)
-    public moveAvatarTo(target: Vector3): void;  // performs marker + cc.moveTo, mirrors Vishva.ts:1200-1208
+    public moveAvatarTo(target: Vector3): void;  // marker + cc.moveTo — shared with desktop click-to-move
 }
 ```
 
-`moveAvatarTo` factors the existing right-click move-to logic so both desktop click-to-move and XR third-person share one implementation.
-
 ### VishvaGUI / NavBar Changes
 
-- `NavBarML.ts`: add `#navEnterVR` and `#navEnterAR` buttons (Material Icons) after `navSettings`.
-- `VishvaGUI`: on startup call `detectXRSupport()`, apply `computeXRButtonState` to show/hide/disable buttons; wire click handlers to `vishva.enterXR('vr'|'ar')`.
+- `NavBarML.ts`: `#navEnterVR` and `#navEnterAR` buttons.
+- `VishvaGUI`: on startup call `detectXRSupport()`, apply `computeXRButtonState` to show/hide/disable the buttons; wire click handlers to `vishva.enterXR('vr'|'ar')`.
 
 ## Data Models
 
-### Session Type
+### Session type
 
 ```typescript
 type XRSessionType = 'vr' | 'ar';
 ```
 
-### Recorded Desktop Pipeline State
+### Stick input & move intent (pure)
+
+```typescript
+interface StickInput { leftX: number; leftY: number; }              // raw left-stick axes ~[-1,1]
+interface MoveIntent {
+    walk: boolean; walkBack: boolean; strafeLeft: boolean; strafeRight: boolean;
+}
+```
+
+`fast` (run) is not part of `MoveIntent`; it is decided in `XRManager` from `leftStick.pressed` and combined with the intent in `applyIntent`/`applyMovementDirection`.
+
+### Sensitivity rates & constants
+
+```typescript
+alphaRate  = DEFAULT_ALPHA_RATE  (0.0075)   // radians/frame at full deflection, clamp 0..MAX_ORBIT_RATE (0.02)
+betaRate   = DEFAULT_BETA_RATE   (0.003)    // radians/frame at full deflection, clamp 0..MAX_ORBIT_RATE
+radiusRate = DEFAULT_RADIUS_RATE (0.05)     // radius units/frame while B/A held, clamp 0..MAX_RADIUS_RATE (0.2)
+stickDeadzone = DEFAULT_STICK_DEADZONE (0.15)
+// localStorage keys: vishva.xr.alphaRate / vishva.xr.betaRate / vishva.xr.radiusRate
+```
+
+### Recorded desktop snapshots
 
 ```typescript
 interface DesktopPipelineSnapshot {
     depthRendererEnabled: boolean;
     ssaoAttached: boolean;
     prepassSamples?: number;
-    activeCamera: Camera;   // arcCamera reference to restore
+    activeCamera: Camera;          // arcCamera reference to restore
 }
+interface DesktopControllerSnapshot {
+    ccStarted: boolean;
+    ccKeyboardEnabled: boolean;
+}
+// HUD-only: { elastic: boolean; springback: boolean } captured while the HUD is shown.
 ```
-
-Captured on session start, restored on session end (Requirements 3.3, 9.1, 9.2).
 
 ## Correctness Properties
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system — a formal statement about what the system should do, serving as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
+The pure modules carry the machine-verifiable properties: `XRSupport`'s capability mapping, the `XRLocomotion` state machine (including the `noFirstPerson` guard that also backs the in-session toggle), the pure `mapSticksToIntent` left-stick mapper, and the retained `handleSelect` pick guard. Stateful camera and lifecycle behavior (orbit/dolly/follow, HUD, elasticity, ray management, desktop restore, jump, fast) is deterministic against mocks and validated with example/integration tests, not universal properties.
+
 ### Property 1: Capability mapping reflects support exactly
 
-*For any* `XRSupportState`, `computeXRButtonState` SHALL mark a mode's button as visible and enabled if and only if that mode is supported, and SHALL never enable a button for an unsupported mode.
+*For any* `XRSupportState`, `computeXRButtonState` SHALL mark a mode's button visible and enabled if and only if that mode is supported, and SHALL never enable a button for an unsupported mode.
 
 **Validates: Requirements 1.4, 2.2, 2.3, 2.6**
 
@@ -186,25 +268,25 @@ Captured on session start, restored on session end (Requirements 3.3, 9.1, 9.2).
 
 *For any* sequence of `toggle`/`setMode` operations in which every operation supplies `canFirstPerson = false`, the resulting `LocomotionMode` SHALL never be `firstPerson`, and every attempt to reach `firstPerson` SHALL be reported as `blocked` with `changed = false`.
 
-**Validates: Requirements 4.3, 4.6**
+**Validates: Requirements 4.3, 4.6, 16.2**
 
 ### Property 3: Toggle involution under permission
 
-*For any* starting `LocomotionMode`, applying `toggle(true)` twice SHALL return the mode to its starting value, and each permitted transition SHALL be reported with `changed = true` and `blocked = false`.
+*For any* starting `LocomotionMode`, applying `toggle(true)` twice SHALL return the mode to its starting value, and each permitted transition SHALL be reported with `changed = true` and `blocked = false`; a `thirdPerson` transition SHALL never be blocked.
 
 **Validates: Requirements 4.4, 4.5**
 
-### Property 4: Third-person move requires a valid pick
+### Property 4: Left-stick mapping is dominant-axis and deadzoned
 
-*For any* XR_Select event, `CharacterController.moveTo` SHALL be invoked with the picked point when the pick has a hit point, and SHALL NOT be invoked when the pick has no hit point.
+*For any* `StickInput`, `mapSticksToIntent` SHALL never activate both a forward/back flag and a strafe flag together, SHALL never activate both opposing flags of a single axis, SHALL select the axis of larger raw magnitude (resolving ties to forward/back), and SHALL produce a neutral intent whenever the winning axis is within the deadzone.
 
-**Validates: Requirements 6.1, 6.3**
+**Validates: Requirements 6.2, 6.3, 6.4, 6.5**
 
-### Property 5: Toggle capability derives from noFirstPerson
+### Property 5: Retained third-person move requires a valid pick
 
-*For any* value of the active Character_Controller's `noFirstPerson`, a toggle request SHALL pass `canFirstPerson` equal to the negation of `noFirstPerson`, so that a blocked toggle occurs exactly when `noFirstPerson` is true and the requested mode is `firstPerson`.
+*For any* pick input to `handleSelect` in third-person, `CharacterController.moveTo` SHALL be invoked (via `moveAvatarTo`) with the picked point when the pick has a hit point, and SHALL NOT be invoked when the pick has no hit point.
 
-**Validates: Requirements 7.2, 7.4**
+**Validates: Requirements 18.1, 18.2**
 
 ## Error Handling
 
@@ -212,46 +294,61 @@ Captured on session start, restored on session end (Requirements 3.3, 9.1, 9.2).
 |----------|----------|
 | `navigator.xr` undefined | `detectXRSupport` resolves `{vr:false, ar:false}`; no buttons enabled. |
 | `IsSessionSupportedAsync` throws/rejects | That mode treated as unsupported (false). |
-| Enter requested for unsupported mode | `enterVR/enterAR` no-op; desktop untouched. |
+| Enter requested for unsupported mode | `enter` no-op; desktop untouched. |
 | `exitXR` with no active session | Idempotent no-op. |
-| Session ends unexpectedly (headset removed) | `WebXRState` change triggers `onSessionEnd` → desktop restore. |
-| Third-person select with no pick hit | No `moveTo`; SNA also has nothing to trigger. |
-| Toggle to first-person while `noFirstPerson` | Stays third-person; feedback (log/haptic). |
-| Ground/floor mesh absent for teleport | Teleport registered with available walkable meshes; no crash if none. |
-| Re-enter after exit | Cached experience reused; features re-applied for the fresh session. |
+| Session ends unexpectedly (headset removed) | `WebXRState` change triggers `onSessionEnd` → stop movement + desktop restore + observer teardown. |
+| No CharacterController (avatar-less world) | `sampleSticks` / `disableDesktopController` no-op. |
+| Missing arc camera / non-numeric alpha/beta/radius | `applyCameraOrbit` / `applyButtonDolly` / `toggleXDolly` guarded no-op. |
+| `localStorage` absent or throws | `load`/`saveSensitivityToStorage` keep current values, no throw. |
+| GUI construction fails (mocked/node env) | `createDiagHud` try/catch leaves HUD absent; all slider/button refs null, visibility flips guarded. |
+| Pointer-selection meshes not yet created | Ray-hide / ring-raise retried each frame until present. |
+| Beta approaches poles | `clampBeta` clamps within limits or pole-avoiding fallback. |
 
 ## Testing Strategy
 
-### Property-Based Tests (fast-check + Vitest)
+### Test infrastructure
 
-**Library**: fast-check 4.7.0 · **Runner**: Vitest 4.1.5 · **Min iterations**: 100 per property.
+- **`vitest.setup.ts`** defines a `self` shim (`globalThis.self = globalThis`) so modules that reference the browser `self` at load time (e.g. `babylonjs-editcontrol`, pulled in transitively) do not throw in the node environment. Wired via `setupFiles` in `vitest.config.ts` (`include: src/**/*.test.ts`, `environment: node`).
+- **`scripts/gen-cert.js`** generates a self-signed HTTPS cert (via `selfsigned`) into `certs/`, and the `https-server` / `dev:https` package scripts serve over HTTPS so WebXR can be exercised on-device (WebXR requires a secure context).
 
-- `src/managers/XRLocomotion.property.test.ts`
-  - Property 2: first-person unreachable without permission (random toggle/setMode sequences with `canFirstPerson=false`).
-  - Property 3: toggle involution under permission.
-- `src/managers/XRSupport.property.test.ts` (optional)
-  - Property 1: capability mapping over all four `{vr,ar}` boolean combinations and random sequences.
+### Property-based tests (fast-check + Vitest)
 
-Each property test tags: `Feature: webxr-support, Property N: <description>`.
+**Library**: fast-check 4.7.0 · **Runner**: Vitest 4.1.5 · **Min iterations**: 100 per property. Each tags `Feature: webxr-support, Property N: <description>`.
 
-### Unit Tests (Vitest)
+- `src/managers/XRSupport.property.test.ts` — Property 1 across all `{vr,ar}` combinations.
+- `src/managers/XRLocomotion.property.test.ts` — Property 2 (guard invariant), Property 3 (involution), and Property 4 (`mapSticksToIntent` dominant-axis + deadzone).
+- `src/managers/XRManager.test.ts` — Property 5 (`handleSelect` pick guard) as fast-check properties over random pick points and interleaved hit/miss sequences.
 
-- `src/managers/XRSupport.test.ts` — `computeXRButtonState` for all combinations (both, VR-only, AR-only, none); `detectXRSupport` with mocked/absent `navigator.xr` resolves without throwing.
-- `src/managers/XRLocomotion.test.ts` — explicit toggle/setMode cases incl. blocked transitions and default mode.
-- `src/managers/XRManager.test.ts` — with a mocked XR experience/feature manager: enter/exit state tracking, pipeline disable→restore ordering, `applyLocomotionMode` enabling teleport only in first-person, `handleToggleRequest` deriving `canFirstPerson` from `noFirstPerson`, `handleSelect` calling `moveTo` only on valid pick, idempotent `exitXR`, and enter→exit→enter restoring expected state.
-- `src/gui/NavBarML.test.ts` (extend) — asserts `#navEnterVR` and `#navEnterAR` exist with correct titles; GUI gating logic maps button state to visibility/enabled.
+### Unit / example tests (Vitest, mocked BabylonJS)
 
-### Integration / Manual (device or WebXR emulator)
+`XRManager.test.ts` mocks the BabylonJS XR experience/feature manager and a `CharacterController`, and drives frames via a fake `onBeforeRenderObservable`:
+- Lifecycle: `isInXR` tracking, unsupported-mode no-op, idempotent exit, enter→exit→enter reuse, SSAO detach-then-attach ordering, depth/prepass restore, editor-camera reactivation.
+- Locomotion: teleport never enabled; default mode from `noFirstPerson`; CC kept running with keyboard disabled; pointer selection never toggled.
+- Stick movement: forward/back/strafe edge-triggering, deadzone, stop-on-exit, sampler detach.
+- Fast movement: `leftStick.pressed` switches normal↔fast for the active direction.
+- Camera orbit: alpha/beta changes, dominant-axis (ties→alpha), beta clamp, no avatar turn.
+- Camera dolly: continuous B/A radius delta + clamp, right-only capture, left-X dolly toggle round-trip, cleared on exit.
+- Follow: per-frame `setTransformationFromNonVRCamera` + arc-Y copy.
+- Jump: left trigger → one `cc.jump()`, right trigger → none, observers detached on exit.
+- HUD/elasticity: y-button toggles visibility, options placement deferred, elasticity disabled while shown.
+- Ray management: left ray hidden, right ring raised to group 2, flags latch.
+- Toggle binding: A/X face-button binding, trigger never bound, feedback on block.
+- Sensitivity: default when storage absent, load applies in-range values, save writes three keys.
+- Cleanup: observer add-count === remove-count across cycles.
 
-Requires HTTPS or localhost and a compatible device/emulator:
-- Enter VR/AR from NavBar; scene renders in-headset; exit returns to desktop editor intact.
-- First-person teleport onto ground; third-person point-and-move walks the avatar with animation.
-- Controller toggle switches modes; `noFirstPerson` avatar stays third-person.
-- Selecting a SensorClick object fires its actuator in XR.
-- Repeated enter/exit leaves no console errors and preserves SSAO/editing.
+Extend `src/gui/NavBarML.test.ts` for `#navEnterVR`/`#navEnterAR` presence and gating.
+
+### Integration / manual (device or WebXR emulator)
+
+Requires HTTPS/localhost and a compatible device/emulator: enter VR/AR from the NavBar; stick move + fast + jump; right-stick orbit and B/A dolly; follow camera tracks the avatar; HUD toggle, Options sliders persist, Debug readout; left ray hidden and right ring visible over the HUD; selecting a `SensorClick` object fires its actuator in XR; repeated enter/exit leaves no errors and preserves SSAO/editing.
+
+## Known Issues / Deferred
+
+- **Entry drop**: on XR entry the scene briefly renders at head height, then drops as `updateXRCameraFollow`'s first follow frame snaps the XR camera Y down to the follow camera's low Y. Mitigated by keeping the HUD hidden until the Y-press (so its world-lock reads a settled pose); root-cause fix deferred.
+- **Move + jump exclusivity**: `CharacterController.jump()` resets the movement action state, so simultaneous move-and-jump does not work. Deferred to a future CharacterController enhancement.
+- **Debug HUD scaffolding removal**: the Debug panel, the `diag*` fields, the `captureDiagController` handedness/component dump, and the `babylonjs-gui` diagnostic text are temporary and slated for removal once the on-device stick/handedness bug is resolved. The Options panel (Exit XR, Debug button, sensitivity sliders) and the sensitivity persistence are permanent and stay.
 
 ## Notes
 
-- BabylonJS 8.56.2 WebXR APIs: `scene.createDefaultXRExperienceAsync`, `WebXRDefaultExperience`, `WebXRState`, `WebXRSessionManager.IsSessionSupportedAsync`, `WebXRFeaturesManager` (teleportation, pointer selection).
-- The pure modules (`XRSupport` mapping, `XRLocomotion`) carry the machine-verifiable properties; `XRManager` is validated with mocks; headset behavior is validated manually.
-- Third-person locomotion intentionally shares `Vishva.moveAvatarTo` with the existing desktop click-to-move to avoid divergence.
+- BabylonJS 8.56.2 WebXR APIs: `scene.createDefaultXRExperienceAsync`, `WebXRDefaultExperience`, `WebXRState`, `WebXRSessionManager.IsSessionSupportedAsync`, `WebXRCamera.setTransformationFromNonVRCamera`, `WebXRFeaturesManager` (teleportation, pointer selection), and `babylonjs-gui` for the HUD.
+- The pure modules (`XRSupport` mapping, `XRLocomotion` state machine + `mapSticksToIntent`) carry the machine-verifiable properties; `XRManager` is validated with mocks; headset behavior is validated manually over HTTPS.

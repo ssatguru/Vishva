@@ -1,6 +1,6 @@
 {
 	"name": "vishva",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"keywords": [
 		"babylonjs",
 		"editor"
@@ -26,7 +26,9 @@
 		"fake-indexeddb": "^6.2.5",
 		"fast-check": "^4.7.0",
 		"file-loader": "^6.2.0",
+		"http-server": "^14.1.1",
 		"jsdom": "^29.1.1",
+		"selfsigned": "^2.4.1",
 		"style-loader": "^4.0.0",
 		"terser-webpack-plugin": "^5.3.16",
 		"ts-loader": "^9.5.4",
@@ -40,6 +42,7 @@
 	"scripts": {
 		"dev": "webpack-dev-server --open",
 		"dev:https": "webpack-dev-server --open --server-type https",
+		"https-server": "node scripts/gen-cert.js && http-server . -S -C certs/cert.pem -K certs/key.pem -o",
 		"build": "webpack --mode production ",
 		"test": "vitest --run"
 	}

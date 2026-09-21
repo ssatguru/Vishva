@@ -440,11 +440,6 @@ function createFakeVishva(opts: { noFirstPerson?: boolean; ground?: any } = {}) 
             ccKeyboardEnabled = b;
         }),
         isKeyBoardEnabled: vi.fn(() => ccKeyboardEnabled),
-        // Turning state — the manager forces turning ON (setTurningOff(false))
-        // for the session and restores the prior value on exit. Default: turning
-        // was OFF before the session (isTurningOff → true).
-        isTurningOff: vi.fn(() => true),
-        setTurningOff: vi.fn(),
         // Camera elasticity spies — the debug HUD disables elasticity while it
         // is shown and restores it when hidden / on session end.
         setCameraElasticity: vi.fn(),
@@ -1120,52 +1115,20 @@ describe("XRManager", () => {
     });
 
     // -----------------------------------------------------------------------
-    // CHANGE A: force CharacterController turning ON during the session.
-    //
-    // On session enter the manager forces turning ON (setTurningOff(false)) so
-    // the right thumbstick can rotate the avatar even when the user had turning
-    // OFF on the desktop; on exit it restores the captured prior value.
-    // -----------------------------------------------------------------------
-    describe("forces CC turning ON during the session and restores on exit", () => {
-        it("calls cc.setTurningOff(false) on enter and restores the prior value on exit", async () => {
-            const { vishva, cc } = createFakeVishva();
-            // Prior desktop state: turning was OFF (isTurningOff → true).
-            const manager = new XRManager(vishva);
-
-            await manager.enterVR();
-            // Turning forced ON for the session.
-            expect(cc.setTurningOff).toHaveBeenCalledWith(false);
-
-            await manager.exitXR();
-            // Prior value (true = turning off) restored on exit.
-            expect(cc.setTurningOff).toHaveBeenLastCalledWith(true);
-        });
-
-        it("restores turning ON when it was ON before (captured false)", async () => {
-            const { vishva, cc } = createFakeVishva();
-            // Prior desktop state: turning was ON (isTurningOff → false).
-            cc.isTurningOff.mockReturnValue(false);
-            const manager = new XRManager(vishva);
-
-            await manager.enterVR();
-            expect(cc.setTurningOff).toHaveBeenCalledWith(false);
-
-            await manager.exitXR();
-            // Restored to false (turning stays ON).
-            expect(cc.setTurningOff).toHaveBeenLastCalledWith(false);
-        });
-    });
-
-    // -----------------------------------------------------------------------
-    // CHANGE B: per-frame Y copy from the arc (follow) camera onto the XR camera.
+    // CHANGE B: per-frame Y copy from the arc (follow) camera onto the XR camera,
+    // with an ENTRY BLEND over the first frames.
     //
     // updateXRCameraFollow's copy forces the XR camera position.y = 0 each
-    // frame, then the manager sets it to the arc camera's ACTUAL Y (driven by
-    // beta). The fake copy spy does NOT modify position, so after a frame the XR
-    // camera's position.y equals the arc camera's Y (1.6).
+    // frame, then the manager copies the arc camera's ACTUAL Y (driven by beta)
+    // onto it as the follow TARGET. The fake copy spy does NOT modify position.
+    //
+    // For the first ENTRY_BLEND_FRAMES frames the target Y is eased from the
+    // camera's prior Y toward the arc Y (weight (frame+1)/N), so the FIRST frame
+    // lands only partway (removing the entry jerk). Once the blend completes the
+    // XR camera's Y equals the arc camera's Y (1.6) and stays there.
     // -----------------------------------------------------------------------
     describe("per-frame Y copy from the arc camera onto the XR camera", () => {
-        it("copies the arc camera's Y onto the XR camera Y after the follow copy each frame", async () => {
+        it("eases the arc camera's Y onto the XR camera Y over the entry blend, then holds it each frame", async () => {
             const { vishva, fakeExperience, onBeforeRenderObservable, arcCamera } =
                 createFakeVishva();
             const manager = new XRManager(vishva);
@@ -1175,13 +1138,23 @@ describe("XRManager", () => {
             const xrCam = fakeExperience.baseExperience.camera;
             expect(xrCam.position.y).toBe(0); // starts at 0
 
-            // One frame: follow copy runs (spy leaves position.y at 0), then the
-            // manager copies the arc camera's Y (1.6) onto it.
+            // FIRST frame: the follow copy runs, and the arc Y (1.6) is the blend
+            // TARGET, but the entry blend eases only partway toward it — so the
+            // XR camera does NOT jump straight to 1.6.
             onBeforeRenderObservable.notify({});
-
             expect(xrCam.setTransformationFromNonVRCamera).toHaveBeenCalled();
-            expect(xrCam.position.y).toBe(arcCamera.position.y); // 1.6
-            expect(xrCam.position.y).toBe(1.6);
+            expect(xrCam.position.y).toBeGreaterThan(0);
+            expect(xrCam.position.y).toBeLessThan(arcCamera.position.y); // < 1.6
+
+            // Run enough frames to complete the blend, then the XR camera's Y
+            // converges to the arc camera's Y and holds there on every frame.
+            for (let i = 0; i < 120; i++) {
+                onBeforeRenderObservable.notify({});
+            }
+            expect(xrCam.position.y).toBeCloseTo(arcCamera.position.y, 5); // 1.6
+
+            onBeforeRenderObservable.notify({});
+            expect(xrCam.position.y).toBeCloseTo(1.6, 5);
         });
     });
 

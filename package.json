@@ -1,45 +1,49 @@
 {
-        "name": "vishva",
-        "version": "0.4.0-alpha.54",
-        "keywords": [
-                "babylonjs",
-                "editor"
-        ],
-        "author": "satguru p srivastava",
-        "contributors": [],
-        "dependencies": {
-                "@types/jszip": "^3.4.1",
-                "babylonjs": "^8.56.2",
-                "babylonjs-charactercontroller": "^0.4.4-alpha.13",
-                "babylonjs-editcontrol": "^4.0.0",
-                "babylonjs-gui": "^8.56.2",
-                "babylonjs-loaders": "^8.56.2",
-                "babylonjs-materials": "^8.56.2",
-                "babylonjs-serializers": "^8.56.2",
-                "cannon": "^0.6.2",
-                "oimo": "^1.0.9"
-        },
-        "devDependencies": {
-                "@types/node": "^25.6.2",
-                "copy-webpack-plugin": "^13.0.1",
-                "css-loader": "^7.1.2",
-                "fake-indexeddb": "^6.2.5",
-                "fast-check": "^4.7.0",
-                "file-loader": "^6.2.0",
-                "jsdom": "^29.1.1",
-                "style-loader": "^4.0.0",
-                "terser-webpack-plugin": "^5.3.16",
-                "ts-loader": "^9.5.4",
-                "typescript": "^5.9.3",
-                "uglify-js": "^3.19.3",
-                "vitest": "^4.1.5",
-                "webpack": "^5.104.1",
-                "webpack-cli": "^6.0.1",
-                "webpack-dev-server": "^5.2.3"
-        },
-        "scripts": {
-                "dev": "webpack-dev-server --open",
-                "build": "webpack --mode production ",
-                "test": "vitest --run"
-        }
+	"name": "vishva",
+	"version": "0.5.1",
+	"keywords": [
+		"babylonjs",
+		"editor"
+	],
+	"author": "satguru p srivastava",
+	"contributors": [],
+	"dependencies": {
+		"@types/jszip": "^3.4.1",
+		"babylonjs": "^8.56.2",
+		"babylonjs-charactercontroller": "^0.4.4-alpha.13",
+		"babylonjs-editcontrol": "^4.0.0",
+		"babylonjs-gui": "^8.56.2",
+		"babylonjs-loaders": "^8.56.2",
+		"babylonjs-materials": "^8.56.2",
+		"babylonjs-serializers": "^8.56.2",
+		"cannon": "^0.6.2",
+		"oimo": "^1.0.9"
+	},
+	"devDependencies": {
+		"@types/node": "^25.6.2",
+		"copy-webpack-plugin": "^13.0.1",
+		"css-loader": "^7.1.2",
+		"fake-indexeddb": "^6.2.5",
+		"fast-check": "^4.7.0",
+		"file-loader": "^6.2.0",
+		"http-server": "^14.1.1",
+		"jsdom": "^29.1.1",
+		"selfsigned": "^2.4.1",
+		"style-loader": "^4.0.0",
+		"terser-webpack-plugin": "^5.3.16",
+		"ts-loader": "^9.5.4",
+		"typescript": "^5.9.3",
+		"uglify-js": "^3.19.3",
+		"vitest": "^4.1.5",
+		"webpack": "^5.104.1",
+		"webpack-cli": "^6.0.1",
+		"webpack-dev-server": "^5.2.3"
+	},
+	"scripts": {
+		"dev": "webpack-dev-server --open",
+		"dev:https": "webpack-dev-server --open --server-type https",
+		"https-server": "node scripts/gen-cert.js && http-server . -S -C certs/cert.pem -K certs/key.pem -o",
+		"build": "webpack --mode production ",
+		"test": "vitest --run"
+	}
 }

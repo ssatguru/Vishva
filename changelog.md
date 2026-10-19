@@ -1,3 +1,47 @@
+### 09/21/2026 0.5.1 WebXR entry camera fix
+
+#### Smooth camera transition when entering XR
+- Fixed the jerk that occurred when entering VR/AR. On entry the headset placed the XR camera at the floor-relative device pose, while the per-frame follow logic targeted the third-person ArcRotateCamera pose — the one-frame snap between the two was visible as a jolt.
+- The XR camera now glides onto the follow pose over roughly a second (a smoothstep-eased blend) instead of snapping. The blend tracks the live follow target, so a moving avatar or a settling camera no longer causes an overshoot (the earlier "up then down" wobble).
+- The blend runs only on entry and re-arms on each new session.
+
+### 09/21/2026 0.5.0 WebXR Support
+
+Added an immersive VR/AR preview mode so you can move through your worlds directly in a headset using the controllers.
+
+#### Enter VR / Enter AR from the NavBar
+- Two new NavBar buttons let you jump into an immersive session. Each button only shows/enables when the device actually supports that mode, so you never see an option that can't work on your hardware.
+
+#### Move with the thumbsticks
+- The left thumbstick moves the avatar (walk, walk-back, strafe) through the CharacterController. Dominant-axis handling means pushing mostly forward/back won't accidentally strafe — you move one direction at a time — and a small deadzone keeps a resting stick from drifting.
+- Press (click) the left thumbstick to move fast — run, fast-strafe, or fast-back — in whatever direction you're already going.
+- The left trigger jumps.
+
+#### Control the camera
+- The right thumbstick orbits the camera around the avatar: look left/right for azimuth, forward/back for the up/down angle. It moves one axis at a time to avoid a nauseating combined swing, and the avatar itself isn't turned.
+- The right B / A buttons dolly the camera in toward and out away from the avatar.
+- The left X button toggles a quick dolly-to-avatar — snap in close, press again to restore.
+- The headset view follows and orbits the avatar as you move and adjust the camera, carrying the third-person follow experience into XR.
+
+#### In-headset HUD
+- Press the left Y button to open an in-headset panel. It starts hidden when you enter a session.
+- The panel has an Exit XR button and three sensitivity sliders — camera orbit horizontal, orbit vertical, and dolly speed. Your slider settings are remembered across sessions.
+- A Debug view is available from the panel as a temporary aid for on-device diagnostics.
+
+#### First / third-person view
+- The A/X face button toggles between a pulled-in (first-person) and over-the-shoulder (third-person) camera coupling. First-person is unavailable when the avatar's CharacterController has `noFirstPerson` set, in which case you stay in third-person.
+- This now affects the camera framing only, not how you move — you always move with the sticks.
+
+#### SNA click interaction in XR
+- Pointing a controller at an object and selecting triggers the same SensorClick behaviors as a desktop mouse click, so your click-driven SNA logic works inside VR/AR.
+
+#### Desktop state preserved
+- Entering and exiting XR leaves your desktop editor untouched — the camera, render pipeline, and character controller are restored exactly as they were when the session ends.
+
+#### Known limitations
+- Jumping and moving at the same time isn't supported yet — a CharacterController limitation.
+- The HUD panel opens when you press the Y button rather than automatically on entry.
+
 ### 06/27/2026 0.4.0-alpha.54
 
 #### Terrain Manger 

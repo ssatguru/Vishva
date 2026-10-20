@@ -1,3 +1,22 @@
+### 0.6.0 — WebXR delegated to the CharacterController
+
+Vishva no longer carries its own WebXR engine. The CharacterController library now ships a complete WebXR API, so Vishva delegates the whole XR session — locomotion, camera follow/orbit/dolly, controller binding, and desktop preserve/restore — to the controller and keeps only the editor-specific pieces around it.
+
+#### What changed
+- **Removed Vishva's self-owned XR core.** Deleted `src/managers/XRManager.ts`, `src/managers/XRSupport.ts`, and `src/managers/XRLocomotion.ts` (and their tests). All of their behavior is now provided by the CharacterController's public XR API (`enableXR` / `enterXR` / `exitXR` / `isInXR` / `getXRCamera` / sensitivity setters / input mapping).
+- **New thin integration layer: `src/managers/XRIntegration.ts`.** Vishva owns and creates the `WebXRDefaultExperience`, passes it to `cc.enableXR(experience)` (the controller adopts it), and observes the experience's own state changes to toggle the editor render pipeline on session start/end — disabling SSAO2 / the depth renderer / prePass during the session and restoring them (and re-activating the editor camera) on exit.
+- **In-headset OPTIONS HUD kept, in its own module: `src/managers/XROptionsHud.ts`.** A world-space panel with an **Exit XR** button and three sensitivity sliders (orbit alpha, orbit beta, dolly radius). The sliders drive the controller's sensitivity setters and the values are persisted in `localStorage`. The panel is toggled in-headset with the **left controller Y button**.
+- **Dropped the temporary debug HUD readout.** The old live stick-axes / camera-angle / entry-blend diagnostics were internals of the removed XR engine and are not reproducible through the controller's public API; they are gone. The reusable OPTIONS panel (exit + sliders) is what remains.
+- **NavBar VR/AR buttons unchanged** for the user; their support-gating now uses the controller's `detectXRSupport`, with the small button-state mapping living in `src/gui/XRButtonState.ts`.
+- `isInXR()` now reflects the controller's session state directly.
+
+#### New CharacterController API this relies on
+- Added `CharacterController.onXRHudToggle(cb)` + `BindableAction.HudToggle` (default-bound to the left Y button) to the CharacterController library (**0.5.1**). The library owns no HUD; it simply surfaces the left-Y press so Vishva can toggle its own panel.
+
+#### Dependency / build note
+- Vishva now depends on the CharacterController via `file:../BabylonJS-CharacterController` because 0.5.1 is not yet published to npm. On this machine `npm install` created a symlink to the sibling checkout, so rebuilding the CharacterController (`npm run build` there) is picked up by Vishva without re-installing. If your package manager instead copies the dependency, re-run `npm install` in Vishva after each CharacterController rebuild. Switch back to a semver range once 0.5.1 (or later) is published.
+- Because the dependency is symlinked, `webpack.config.js` now sets `resolve.symlinks: false` and aliases the `babylonjs` family packages to Vishva's own `node_modules`. Without this, webpack followed the symlink and bundled a **second** copy of BabylonJS from the library's `node_modules`, producing two distinct `Mesh` classes — the controller's internal `instanceof Mesh` checks then failed for Vishva's avatar mesh ("root node of the mesh provided is not a mesh" + a missing skeleton). The alias guarantees a single BabylonJS instance across the app and the linked library (and also roughly halved the dev bundle size). These `resolve` settings can be removed once the dependency is a normal published package rather than a symlink.
+
 ### 09/21/2026 0.5.1 WebXR entry camera fix
 
 #### Smooth camera transition when entering XR

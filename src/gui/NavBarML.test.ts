@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
  * Validates: Requirements 1.1, 1.2, 2.1, 2.2, 2.3, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 7.1, 7.2
  */
 
-import { computeXRButtonState, XRButtonState } from "../managers/XRSupport";
+import { computeXRButtonState, XRButtonState } from "./XRButtonState";
 
 // ─── Mock Vishva ────────────────────────────────────────────────────────────
 

@@ -21,7 +21,8 @@ import { SavePromptUI } from "./SavePromptUI";
 import { WorldLauncher } from "./WorldLauncher";
 import { UploadUI } from "./UploadUI";
 import { MeshMetadata } from "../VishvaSerialized";
-import { detectXRSupport, computeXRButtonState, XRButtonState } from "../managers/XRSupport";
+import { detectXRSupport } from "babylonjs-charactercontroller";
+import { computeXRButtonState, XRButtonState } from "./XRButtonState";
 
 
 export class GuiSettings {

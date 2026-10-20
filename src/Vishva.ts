@@ -106,7 +106,8 @@ import { LoadManager } from "./managers/LoadManager";
 import { ProgressManager } from "./managers/ProgressManager";
 import { SpawnerManager } from "./managers/spawner/SpawnerManager";
 import { AssetResolver } from "./managers/AssetResolver";
-import { XRManager, XRSessionType } from "./managers/XRManager";
+import { XRSessionType } from "babylonjs-charactercontroller";
+import { XRIntegration } from "./managers/XRIntegration";
 import { RuntimeSharingEntry, restoreSharedAnimationGroups, deduplicateAtRuntime, cleanupGroupSharingEntries, getRootMesh, resolveRuntimeEntries } from "./util/AnimGroupDedup";
 import { RuntimeRangeSharingEntry, restoreSharedSkeletonAnimations, deduplicateRangesAtRuntime, cleanupRangeSharingEntries } from "./util/AnimRangeDedup";
 import { MeshUtils } from "./util/MeshUtils";
@@ -118,7 +119,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.5.1";
+    static version: string = "0.6.0";
 
     public static worldName: string;
 
@@ -189,9 +190,10 @@ export class Vishva {
     public progressManager: ProgressManager;
     public spawnerManager: SpawnerManager;
 
-    // WebXR session manager — lazily constructed on first enterXR() call so the
-    // default XR experience is created only when VR/AR is actually requested.
-    public xrManager: XRManager;
+    // WebXR integration — thin glue over the CharacterController's XR API,
+    // lazily constructed on first enterXR() call so the default XR experience is
+    // created only when VR/AR is actually requested.
+    public xrIntegration: XRIntegration;
 
     // AssetResolver reference — persists after deactivate() so the reverse map
     // is accessible at save time for blob URL → original path reversal.
@@ -433,46 +435,42 @@ export class Vishva {
     /**
      * Enter an immersive WebXR session (VR or AR).
      *
-     * The {@link XRManager} is constructed lazily on first use so the BabylonJS
-     * default XR experience is only created when VR/AR is actually requested
-     * (Requirement 3.1). Delegates to the manager's VR/AR entry based on
-     * {@link type} (Requirements 2.4, 2.5).
+     * The {@link XRIntegration} is constructed lazily on first use. It owns the
+     * BabylonJS default XR experience and delegates the session lifecycle,
+     * locomotion, and camera handling to the CharacterController's XR API; the
+     * experience is only created when VR/AR is actually requested.
      *
      * @param type "vr" for an immersive VR session, "ar" for immersive AR
      */
     public async enterXR(type: XRSessionType): Promise<void> {
-        if (this.xrManager == null) {
-            this.xrManager = new XRManager(this);
+        if (this.xrIntegration == null) {
+            this.xrIntegration = new XRIntegration(this);
         }
-        if (type === "vr") {
-            await this.xrManager.enterVR();
-        } else {
-            await this.xrManager.enterAR();
-        }
+        await this.xrIntegration.enter(type);
     }
 
     /**
-     * Exit the active WebXR session. Delegates to {@link XRManager.exitXR},
+     * Exit the active WebXR session. Delegates to {@link XRIntegration.exit},
      * which is a no-op when no session is active. Safe to call before any
      * session has been started.
      */
     public async exitXR(): Promise<void> {
-        if (this.xrManager != null) {
-            await this.xrManager.exitXR();
+        if (this.xrIntegration != null) {
+            await this.xrIntegration.exit();
         }
     }
 
     /**
      * Whether an immersive WebXR session is currently active.
      *
-     * Delegates to {@link XRManager.isInXR}. Returns false before any session
-     * has been started (the manager is constructed lazily on first
-     * {@link enterXR}). Used by SNA interaction (e.g. {@link SensorClick}) to
-     * skip desktop-only guards — such as the alt/ctl/shift modifier gate — that
-     * are not asserted during an XR session (Requirement 8.3).
+     * Delegates to the active CharacterController's {@link CharacterController.isInXR}
+     * (the CC owns XR session state). Returns false in an avatar-less world or
+     * before any session has started. Used by SNA interaction (e.g.
+     * {@link SensorClick}) to skip desktop-only guards — such as the
+     * alt/ctl/shift modifier gate — that are not asserted during an XR session.
      */
     public isInXR(): boolean {
-        return this.xrManager != null && this.xrManager.isInXR();
+        return this.avManager?.cc?.isInXR() ?? false;
     }
 
     /**

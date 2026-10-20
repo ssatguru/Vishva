@@ -1,5 +1,7 @@
 # Implementation Plan: WebXR Support
 
+> **⚠️ SUPERSEDED (Vishva 0.6.0).** This spec implemented Vishva's own WebXR engine (`XRManager` / `XRSupport` / `XRLocomotion`). That engine has been **removed** and Vishva now delegates WebXR to the BabylonJS-CharacterController library's public XR API (CharacterController 0.5.1). The thin replacement lives in `src/managers/XRIntegration.ts` (session + render-pipeline toggling) and `src/managers/XROptionsHud.ts` (in-headset OPTIONS panel: Exit XR + sensitivity sliders, toggled by the left controller Y button). The outstanding **task 25 (remove the temporary debug-HUD scaffolding)** is satisfied — the debug HUD was dropped entirely in the rollback. See `changelog.md` (0.6.0) for the full migration. The content below is retained for historical reference only.
+
 ## Overview
 
 This plan adds a VR/AR preview mode to Vishva in incremental, demoable steps. It first builds the two pure, testable modules (`XRSupport` capability mapping and the `XRLocomotion` state machine), then the BabylonJS-facing `XRManager` lifecycle, then wires NavBar entry points, then layers locomotion, the in-session toggle, SNA click interaction, and finally hardens exit/cleanup with a changelog entry. Pure logic is covered by unit + property tests; `XRManager` is covered with mocks; headset behavior is verified manually.

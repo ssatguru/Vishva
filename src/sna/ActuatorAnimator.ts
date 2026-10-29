@@ -64,10 +64,13 @@ export class ActuatorAnimator extends ActuatorAbstract {
         let prop: AnimatorProp = <AnimatorProp>this.properties;
         if (this._skel) {
             if(this._isAG){
-                Vishva.vishva.scene
-                    .getAnimationGroupByName(prop.animation.value)
-                    .start(false, prop.rate)
-                    .onAnimationGroupEndObservable.addOnce(() => {return this.onActuateEnd() });
+                let ag:AnimationGroup = AnimUtils.getAGByName4Mesh(Vishva.vishva.scene,prop.animation.value,this.mesh);
+                if (ag == null) {
+                    console.error("ActuatorAnimator : Could not find animation group '"+ prop.animation.value+ "' for this mesh");
+                }else {
+                    ag.start(false, prop.rate)
+                        .onAnimationGroupEndObservable.addOnce(() => {return this.onActuateEnd() });
+                }
             }else{
                 this.mesh.skeleton.beginAnimation(prop.animation.value, false, prop.rate, () => { return this.onActuateEnd() });
             }

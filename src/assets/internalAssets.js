@@ -1,8 +1,11 @@
-let internalAssets=[
+internalAssets=[
+  "dirUtils.js",
+  "ia.bat",
   {"d":"internal",
    "f":[
     {"d":"avatar",
      "f":[
+      "footstep.ogg",
       "starterAvatars.babylon"
     ]},
     {"d":"particles",
@@ -64,7 +67,5 @@ let internalAssets=[
     ]}
   ]},
   "internalAssets.js",
-  "u.bat",
-  "updateAssets.js",
-  "vishvaFiles.js"
+  "ua.bat"
 ]

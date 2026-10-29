@@ -1,4 +1,10 @@
-### 0.6.0 — WebXR delegated to the CharacterController
+### 10/28/2026 0.6.0-alpha.1
+- disabled fog on skybox
+- fix ActuatorAnimator issue where in the animation was playing on the wrong mesh rather than on the mesh the actuator was attached to. If the animation was an AnimationGroup the animation was being selected using function scene.getAnimationGroupByName() which returns the FIRST AG by that name if there were mora than one AG.
+- fix an issue with dialog box which listed all items in the scene. Selecting an item in the dialog box is suppose to pick the item for editing. The issue was that this wasn't happening when the item was a transformNode rather than a mesh.
+
+
+### 10/19/2026 0.6.0-alpha.0 — WebXR delegated to the CharacterController
 
 Vishva no longer carries its own WebXR engine. The CharacterController library now ships a complete WebXR API, so Vishva delegates the whole XR session — locomotion, camera follow/orbit/dolly, controller binding, and desktop preserve/restore — to the controller and keeps only the editor-specific pieces around it.
 

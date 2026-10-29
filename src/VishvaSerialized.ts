@@ -116,8 +116,21 @@ export class AvSerialized {
         sndOptions.refDistance = sndObj["refDistance"];
         sndOptions.rolloffFactor = sndObj["rolloffFactor"];
         sndOptions.volume = sndObj["volume"];
-
-        return new Sound(sndObj["name"], sndObj["name"], Vishva.vishva.scene, null, sndOptions);
+        
+        let snd:Sound = null;
+        // try{
+        //     snd = new Sound(
+        //         sndObj["name"], 
+        //         sndObj["name"], 
+        //         Vishva.vishva.scene, 
+        //         null, 
+        //         sndOptions,
+        //     );
+        // }catch(e){
+        //     console.error(e);
+        //     console.error("Unable to create sound ${sndObj['name']} for CC");
+        // }
+        return snd;
     }
 
     //replace any reference to AnimationGroup instance with just the name of the AnimationGroup

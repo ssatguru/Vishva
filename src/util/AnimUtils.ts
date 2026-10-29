@@ -131,6 +131,23 @@ export class AnimUtils
                 return skel.bones.some(b => b.getTransformNode() != null);
         }
 
+        /**
+         * given name of an AG and a mesh, finds an AG which has the given name and is for this given mesh (targets the given mesh)
+         * Note: We can have multiple AGs with the same name but "targetting" different meshes
+         * Pick the first targetted animation, gets its target and check if that target "belongs" to this mesh
+         */
+        public static getAGByName4Mesh(scene:Scene, name:String,mesh: AbstractMesh  ): AnimationGroup | null{
+                let ags:AnimationGroup[] = scene.animationGroups;
+                let root:Node = AnimUtils.getRoot(mesh);
+                for (let ag of ags) {
+                        if (ag.name !== name) continue;
+                        let ta:TargetedAnimation = ag.targetedAnimations[0];
+                        let targetNode:Node = ta.target;
+                        if (AnimUtils.isNodeInHierarchy(root,targetNode)) return ag;
+                }
+                return null;
+        }
+
         //get the root of Node
         public static getRoot(tn: Node): Node {
                 if (tn.parent == null) return tn;
@@ -140,11 +157,20 @@ export class AnimUtils
         /** Depth-first search for a node by name within a hierarchy (inclusive of root). */
         public static findNodeInHierarchy(root: Node, name: string): Node | null {
                 if (root.name === name) return root;
-                for (const child of root.getChildren(null, false)) {
+                for (const child of root.getChildren(null, true)) {
                         const found = AnimUtils.findNodeInHierarchy(child, name);
                         if (found != null) return found;
                 }
                 return null;
         }
 
+        /** checks if a node is a descendant of a root node. */
+        public static isNodeInHierarchy(root: Node, node: Node): boolean {
+                if (root === node) return true;
+                for (const child of root.getChildren(null, true)) {
+                       if (child === node) return true
+                       if ( AnimUtils.isNodeInHierarchy(child, node)) return true;
+                }
+                return false;
+        }
 }

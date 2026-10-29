@@ -1,6 +1,6 @@
 
 /* global variables from script files loaded during startup */
-declare var userAssets: Array<any>;
+declare var assets: Array<any>;
 declare var internalAssets: Array<any>;
 // TODO Below applies to all curated item.
 // should provide for mutiple curated config files, one in each of the "top folder" of curated items
@@ -119,7 +119,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.6.0";
+    static version: string = "0.6.0-alpha.1";
 
     public static worldName: string;
 
@@ -338,7 +338,7 @@ export class Vishva {
 
         Tools.LogLevels = Tools.AllLogLevel;
 
-        Vishva.userAssets = userAssets;
+        Vishva.userAssets = assets;
         Vishva.internalAssets = internalAssets;
 
         Vishva.vishva = this;
@@ -514,6 +514,7 @@ export class Vishva {
                         console.log("skybox found");
                         skyFound = true;
                         this.skybox.isPickable = false;
+                        this.skybox.applyFog = false;
                     }
                 }
                 
@@ -551,6 +552,7 @@ export class Vishva {
                             skyFound = true;
                             this.skybox = <Mesh>mesh;
                             this.skybox.isPickable = false;
+                            this.skybox.applyFog = false;
                         } else if (!groundFound && Tags.MatchesQuery(mesh, "Vishva.ground")) {
                             groundFound = true;
                             this.ground = <Mesh>mesh;
@@ -2714,9 +2716,10 @@ export class Vishva {
     }
 
     public selectMesh(meshId: string) {
-        let mesh: TransformNode = this.scene.getTransformNodeById(meshId);
+        let mesh = this.scene.getTransformNodeByUniqueId(Number(meshId));
         if (mesh == null) mesh = this.scene.getMeshByUniqueId(Number(meshId));
         if (mesh == null) {
+            console.log("mesh is null ", Number(meshId));
             return;
         }
         if (mesh == this.avatar){
@@ -4736,6 +4739,7 @@ export class Vishva {
         skybox.infiniteDistance = true;
         skybox.renderingGroupId = 0;
         skybox.isPickable = false;
+        skybox.applyFog = false;
         //skybox.position.y=-100;
       
 

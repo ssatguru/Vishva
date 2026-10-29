@@ -136,7 +136,7 @@ export function findNodeInHierarchy(root: Node, nodeName: string): Node | null {
         return root;
     }
 
-    const children = root.getChildren(null, false);
+    const children = root.getChildren(null, true);
     for (const child of children) {
         const found = findNodeInHierarchy(child, nodeName);
         if (found) {

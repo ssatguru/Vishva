@@ -208,4 +208,36 @@ describe("Property 1: Bug Condition — Blob URLs Leak Into Serialized SNA Prope
             { numRuns: 50 }
         );
     });
+
+    it("restores avatar controller sound URLs in the complete VishvaSerialized object before saving", async () => {
+        const serializedWorld = {
+            avSerialized: {
+                settings: {
+                    sound: {
+                        name: "vishva/assets/audio/step.ogg",
+                        url: "vishva/assets/audio/step.ogg",
+                    },
+                },
+            },
+        };
+        const store = createMockStore(new Map([
+            ["vishva/assets/audio/step.ogg", new Uint8Array([79, 103, 103, 83])],
+        ]));
+        const resolver = new AssetResolver();
+
+        await resolver.activate(store);
+        resolver.resolveAssetPaths(serializedWorld);
+
+        expect(serializedWorld.avSerialized.settings.sound.name).toMatch(/^blob:/);
+        expect(serializedWorld.avSerialized.settings.sound.url).toMatch(/^blob:/);
+
+        resolver.deactivate();
+        resolver.reverseAllBlobUrls(serializedWorld);
+
+        expect(serializedWorld.avSerialized.settings.sound).toEqual({
+            name: "vishva/assets/audio/step.ogg",
+            url: "vishva/assets/audio/step.ogg",
+        });
+        expect(collectBlobUrls(serializedWorld)).toHaveLength(0);
+    });
 });

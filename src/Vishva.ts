@@ -119,7 +119,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.6.0-alpha.1";
+    static version: string = "0.6.0-alpha.2";
 
     public static worldName: string;
 
@@ -127,8 +127,8 @@ export class Vishva {
     public static vHome: string = "vishva/";
 
     //location of all vishva binary files and internal assets
-    //normally "/bin/" folder. will keep it relative
-    public static vBinHome: string = "bin/";
+    //normally "/dist/" folder. will keep it relative
+    public static vBinHome: string = "dist/";
     public static NO_TEXTURE = Vishva.vBinHome + "assets/internal/textures/no-texture.jpg";
     public static TGA_IMAGE = Vishva.vBinHome + "assets/internal/textures/tga-image.jpg";
 
@@ -5165,6 +5165,5 @@ export class LightParm {
 
 
 }
-
 
 

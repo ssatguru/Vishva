@@ -1,0 +1,1 @@
+node dirUtils.js internalAssets.js ../assets:internalAssets

@@ -9,7 +9,7 @@ module.exports = {
   devtool: "source-map",
   devServer: {
     devMiddleware: {
-      publicPath: "/bin/",
+      publicPath: "/dist/",
     },
     static: {
       directory: "./",
@@ -33,7 +33,7 @@ module.exports = {
           loader: "file-loader",
           options: {
             outputPath: "images",
-            publicPath: "bin/images",
+            publicPath: "dist/images",
           },
         },
       },
@@ -83,7 +83,7 @@ module.exports = {
     },
   },
   output: {
-    path: path.resolve(__dirname, "bin"),
+    path: path.resolve(__dirname, "dist"),
   },
   // optimization: {
   //     minimizer: [

@@ -121,12 +121,12 @@ export class SoundUI {
         sndOptions.volume = Number(form["vol"].value);
         sndOptions.spatialSound = true;
 
-        
-        if (this._snd != null && this._snd.name === form["sndFile"]) {
+        if (this._snd != null && this._snd.name === form["sndFile"].value) {
             this._snd.updateOptions(sndOptions);
-        } else
+        } else{
             if (this._snd != null) this._snd.dispose();
             this._snd = new Sound(form["sndFile"].value, form["sndFile"].value, Vishva.vishva.scene, null, sndOptions);
+        }
 
         return true;
 

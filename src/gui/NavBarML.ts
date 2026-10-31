@@ -1,12 +1,10 @@
 import { VButton } from "./components/VButton";
 
-
+//
 
 let navHTML = `
         <button id="showNavMenu" title="build menu" style="margin-right:0.5em;"><span class="material-icons-outlined">menu</span></button>
-
-        <nav id="navMenubar" style="display:inline-flex; align-items:center; flex-wrap:nowrap; gap:0.25em;">
-
+        <nav id="navMenubar" style="display:inline-flex; align-items:center; flex-wrap:nowrap; gap:0.25em;">      
                 <button id="worldLauncher" title="world launcher"><span class="material-icons-outlined">public</span></button>
 
                 <button id="downWorld" title="download world"><span class="material-icons-outlined">cloud_download</span></button>
@@ -57,12 +55,10 @@ export class NavBar {
                 this.navElement.style.position = "fixed";
                 this.navElement.style.top = "0";
                 this.navElement.style.left = "0";
-                this.navElement.style.width = "100%";
                 this.navElement.style.zIndex = "999";
                 this.navElement.style.display = "flex";
                 this.navElement.style.alignItems = "center";
-                this.navElement.style.padding = "0 0.5em";
-                this.navElement.style.height = "48px";
+                this.navElement.style.padding = "0.25em";
                 this.navElement.style.boxSizing = "border-box";
                 this.navElement.style.backgroundColor = "var(--v-dark-bg)";
                 this.navElement.style.color = "var(--v-dark-fg)";

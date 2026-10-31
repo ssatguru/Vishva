@@ -1,7 +1,7 @@
 # Project Structure
 
 ```
-bin/                        # Build output (webpack bundles here)
+dist/                       # Build output (webpack bundles here)
 src/
   index.ts                  # Entry point — bootstraps Vishva, imports SNA modules
   index.html                # HTML shell with canvas and GUI container

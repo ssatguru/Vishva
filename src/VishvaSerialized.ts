@@ -118,18 +118,18 @@ export class AvSerialized {
         sndOptions.volume = sndObj["volume"];
         
         let snd:Sound = null;
-        // try{
-        //     snd = new Sound(
-        //         sndObj["name"], 
-        //         sndObj["name"], 
-        //         Vishva.vishva.scene, 
-        //         null, 
-        //         sndOptions,
-        //     );
-        // }catch(e){
-        //     console.error(e);
-        //     console.error("Unable to create sound ${sndObj['name']} for CC");
-        // }
+        try{
+            snd = new Sound(
+                sndObj["name"], 
+                sndObj["name"], 
+                Vishva.vishva.scene, 
+                null, 
+                sndOptions,
+            );
+        }catch(e){
+            console.error(e);
+            console.error("Unable to create sound ${sndObj['name']} for CC");
+        }
         return snd;
     }
 

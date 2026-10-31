@@ -1,3 +1,10 @@
+### 10/31/2026 0.6.0-alpha.2
+- I had github copilot AI fix the issue where saved world archive where still referencing assets on the server. The archive have all the assets bundled in it and thus should not be referencing any assets on the server
+- the build was previously stored in the "bin" folder. I had github copilot AI change this to "dist" folder.
+- refactored the javascript which creates the userAssets.js file. The "userAssets.js" file holds a list of all files on the server
+- the top navbar now displays within the world canvas as before, instead of showing above the world canvas.
+- fixed issue with character controller ui used to set footstep sound issue
+
 ### 10/28/2026 0.6.0-alpha.1
 - disabled fog on skybox
 - fix ActuatorAnimator issue where in the animation was playing on the wrong mesh rather than on the mesh the actuator was attached to. If the animation was an AnimationGroup the animation was being selected using function scene.getAnimationGroupByName() which returns the FIRST AG by that name if there were mora than one AG.

@@ -15,9 +15,9 @@
 ## Build System
 - **Webpack 5** with `webpack-dev-server`
 - Entry point: `src/index.ts` + `src/index.html`
-- Output: `bin/` directory (bundled `main.js` + assets)
+- Output: `dist/` directory (bundled `main.js` + assets)
 - Loaders: `ts-loader`, `css-loader`, `style-loader`, `file-loader`
-- Assets from `src/assets/` and `src/lib/` are copied to `bin/` via `copy-webpack-plugin`
+- Assets from `src/assets/` and `src/lib/` are copied to `dist/` via `copy-webpack-plugin`
 - `terser-webpack-plugin` available for production minification
 
 ## TypeScript Config
@@ -37,8 +37,8 @@
 ```bash
 npm install          # Install dependencies
 npm run dev          # Start webpack-dev-server at http://localhost:8080 (hot reload)
-npm run build        # Production build to bin/
+npm run build        # Production build to dist/
 npm test             # Run unit and property tests via Vitest
 ```
 
-To open an empty world during dev: `http://localhost:8080/bin/?world=empty`
+To open an empty world during dev: `http://localhost:8080/dist/?world=empty`

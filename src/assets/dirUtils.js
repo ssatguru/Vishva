@@ -5,7 +5,7 @@
  *                 each directory should include their path relative to the directory the script is being run from
  * 
  * example usage
- * node dirUtils.js userAssets.js assets worlds ../bin/assets/internal
+ * node dirUtils.js userAssets.js assets worlds ../dist/assets/internal
  * 
  */
 
@@ -57,7 +57,7 @@ let stream = fs.createWriteStream(outputFile, { flags: "a" });
 let _tab = "  ";
 for (i=1;i<args.length;i++){
   let [dir,name]= args[i].split(":");
-  if (name==null) name=path;
+  if (name==null) name=dir;
   let dirPath = path.join(runDir, dir);
   if (fs.existsSync(dirPath)) {
     stream.write(name+"=[\n");

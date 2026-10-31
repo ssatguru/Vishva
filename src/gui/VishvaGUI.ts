@@ -52,19 +52,19 @@ export class VishvaGUI {
         new NavBar();
 
         // Sync canvas/GUI offset with menu bar height
-        const menuBar = document.getElementById("menuBar");
-        if (menuBar) {
-            const updateLayout = () => {
-                const h = menuBar.offsetHeight || UIConst.MENU_BAR_HEIGHT;
-                Vishva.gui.style.top = h + "px";
-                Vishva.gui.style.height = `calc(100% - ${h}px)`;
-                const canvas = Vishva.vishva.canvas;
-                canvas.style.top = h + "px";
-                canvas.style.height = `calc(100% - ${h}px)`;
-            };
-            updateLayout();
-            window.addEventListener("resize", updateLayout);
-        }
+        // const menuBar = document.getElementById("menuBar");
+        // if (menuBar) {
+        //     const updateLayout = () => {
+        //         const h = menuBar.offsetHeight || UIConst.MENU_BAR_HEIGHT;
+        //         Vishva.gui.style.top = h + "px";
+        //         Vishva.gui.style.height = `calc(100% - ${h}px)`;
+        //         const canvas = Vishva.vishva.canvas;
+        //         canvas.style.top = h + "px";
+        //         canvas.style.height = `calc(100% - ${h}px)`;
+        //     };
+        //     updateLayout();
+        //     window.addEventListener("resize", updateLayout);
+        // }
 
         Vishva.gui.append(saveElement);
 

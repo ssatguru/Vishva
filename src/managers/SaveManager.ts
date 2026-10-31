@@ -54,7 +54,6 @@ export class SaveManager {
 
         this.vishva.progressManager.show("Saving World", "Preparing scene...");
         await this.vishva.progressManager.update(undefined, 0);
-
         const zipBlob = await this._getWorldZipBlob();
         
         await this.vishva.progressManager.update(undefined, 100);
@@ -115,8 +114,8 @@ export class SaveManager {
         vishvaSerialized.misc.skyBright = this.vishva.skyBright;
         vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
         vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
-        // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
-        this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialized.snas);
+        // Restore asset paths in all VishvaSerialized data, including controller sounds.
+        this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialized);
         vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
         vishvaSerialized.boneAttachments = this.vishva.serializeBoneAttachments();
 
@@ -260,8 +259,8 @@ export class SaveManager {
             vishvaSerialized.misc.skyBright = this.vishva.skyBright;
             vishvaSerialized.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
             vishvaSerialized.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
-            // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
-            this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialized.snas);
+            // Restore asset paths in all VishvaSerialized data, including controller sounds.
+            this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialized);
             vishvaSerialized.spawners = this.vishva.spawnerManager.serialize();
             vishvaSerialized.boneAttachments = this.vishva.serializeBoneAttachments();
 
@@ -428,8 +427,8 @@ export class SaveManager {
             vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
             vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
-            // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
-            this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialzed.snas);
+            // Restore asset paths in all VishvaSerialized data, including controller sounds.
+            this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialzed);
             vishvaSerialzed.spawners = this.vishva.spawnerManager.serialize();
 
             vishvaSerialzed.objectIds = new ObjectIdMap();
@@ -674,8 +673,8 @@ export class SaveManager {
         vishvaSerialzed.misc.sceneShadowsEnabled = this.vishva.scene.shadowsEnabled;
 
         vishvaSerialzed.snas = <SNAserialized[]>SNAManager.getSNAManager().serializeSnAs(this.vishva.scene);
-        // Reverse blob URLs in SNA properties back to original vishva/assets/ paths
-        this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialzed.snas);
+        // Restore asset paths in all VishvaSerialized data, including controller sounds.
+        this.vishva._assetResolver?.reverseAllBlobUrls(vishvaSerialzed);
         vishvaSerialzed.spawners = this.vishva.spawnerManager.serialize();
 
         // NEW: Capture object IDs from special Vishva objects
@@ -788,22 +787,16 @@ export class SaveManager {
         // Fetch server assets and accumulate errors
         const serverAssetFiles: Array<{ filename: string; data: Uint8Array }> = [];
         const serverFetchErrors: string[] = [];
+        const assetStore: AssetStore | undefined = this.vishva._assetStore;
         for (const entry of serverAssetEntries) {
-            try {
-                const response = await fetch(entry.fetchUrl);
-                if (!response.ok) {
-                    serverFetchErrors.push(entry.originalUrl);
-                    console.warn(`Failed to fetch server asset "${entry.fetchUrl}" (HTTP ${response.status})`);
-                    continue;
-                }
-                const arrayBuffer = await response.arrayBuffer();
+            const data = await this._getServerAssetData(entry, assetStore);
+            if (data) {
                 serverAssetFiles.push({
                     filename: entry.archiveFilename,
-                    data: new Uint8Array(arrayBuffer)
+                    data
                 });
-            } catch (err) {
+            } else {
                 serverFetchErrors.push(entry.originalUrl);
-                console.warn(`Failed to fetch server asset "${entry.fetchUrl}", skipping:`, err);
             }
         }
 
@@ -842,7 +835,6 @@ export class SaveManager {
         // When a world is loaded from an archive, textures keep their "vishva/assets/..." names.
         // On re-save, these need their binary data carried forward from the session store.
         const carryForwardFiles: Array<{ filename: string; data: Uint8Array }> = [];
-        const assetStore: AssetStore | undefined = this.vishva._assetStore;
         if (assetStore) {
             // Collect all vishva/assets/ references from the scene that need carrying forward
             const referencedAssets = this._collectAssetsReferences(sceneObj);
@@ -936,6 +928,25 @@ export class SaveManager {
         }
         
         return gzipBlob;
+    }
+
+    private async _getServerAssetData(entry: AssetEntry, assetStore?: AssetStore): Promise<Uint8Array | null> {
+        const sessionData = assetStore ? await assetStore.get(entry.archiveFilename) : null;
+        if (sessionData) {
+            return sessionData;
+        }
+
+        try {
+            const response = await fetch(entry.fetchUrl);
+            if (!response.ok) {
+                console.warn(`Failed to fetch server asset "${entry.fetchUrl}" (HTTP ${response.status})`);
+                return null;
+            }
+            return new Uint8Array(await response.arrayBuffer());
+        } catch (err) {
+            console.warn(`Failed to fetch server asset "${entry.fetchUrl}", skipping:`, err);
+            return null;
+        }
     }
 
     /**

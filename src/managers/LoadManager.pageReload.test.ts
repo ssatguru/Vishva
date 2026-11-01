@@ -1,6 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "fake-indexeddb/auto";
 
+// Sever the GUI/Vishva import chain (SaveManager -> gui/DialogMgr ->
+// gui/components/VDiag -> ../Vishva -> DOM-building GUI markup modules) so this
+// suite loads under the node environment without needing a DOM. This suite
+// round-trips ArrayBuffers through fake-indexeddb, which relies on the node
+// realm's structuredClone, so it must not run under jsdom.
+vi.mock("../gui/components/VDiag", () => ({
+    VDiag: class VDiag {},
+}));
+
 /**
  * Unit tests for validateWorldFile and loadWorldFromFile (page-reload flow).
  *

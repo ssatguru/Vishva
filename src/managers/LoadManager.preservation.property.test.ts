@@ -78,6 +78,13 @@ vi.mock("../sna/SNA", () => ({
     SNAManager: { getSNAManager: () => ({ removeSNAs: vi.fn() }) },
 }));
 
+// Sever the GUI/Vishva import chain (SaveManager -> gui/DialogMgr ->
+// gui/components/VDiag -> ../Vishva -> DOM-building GUI markup modules) so this
+// suite loads under the node environment without needing a DOM.
+vi.mock("../gui/components/VDiag", () => ({
+    VDiag: class VDiag {},
+}));
+
 vi.mock("../eventing/VEvent", () => ({ VEvent: {} }));
 vi.mock("../eventing/EventManager", () => ({ EventManager: { publish: vi.fn() } }));
 vi.mock("./AssetResolver", () => ({

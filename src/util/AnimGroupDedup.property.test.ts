@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
 import {
@@ -76,7 +77,24 @@ function createMockNode(name: string, id: string, parent: MockNode | null = null
 }
 
 function createMockAnimation(name: string): MockAnimation {
-    return { name };
+    // framesSame() (called by deduplicateAtRuntime) reads getKeys()[i].frame to
+    // confirm two same-named animations really match before sharing. All mock
+    // animations expose identical keyframes so duplicates are treated as equal.
+    // framesSame() confirms a match only after comparing more than its `f`
+    // (=5) sentinel frames, so expose > 6 identical keyframes here.
+    return {
+        name,
+        getKeys: () => [
+            { frame: 0, value: 0 },
+            { frame: 1, value: 0 },
+            { frame: 2, value: 0 },
+            { frame: 3, value: 0 },
+            { frame: 4, value: 0 },
+            { frame: 5, value: 0 },
+            { frame: 6, value: 0 },
+            { frame: 7, value: 0 },
+        ],
+    };
 }
 
 function createMockAnimationGroup(

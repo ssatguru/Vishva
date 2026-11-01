@@ -86,10 +86,18 @@ export class SensorClick extends SensorAbstract {
         }
 
         let action: Action = new ExecuteCodeAction(actType, (e) => {
-            if (Vishva.vishva.key.alt ||
+            // Desktop modifier-key guard: alt/ctl/shift are reserved for
+            // editor selection/multi-select, so a modified desktop click must
+            // not fire the SNA signal. During a WebXR session those modifiers
+            // are not asserted, and the desktop `key` flags may be stale from
+            // before the session — so skip the guard entirely in XR, letting an
+            // XR_Select route through scene picking and fire the sensor exactly
+            // as an unmodified desktop click would (Requirement 8.3).
+            if (!Vishva.vishva.isInXR() && (
+                Vishva.vishva.key.alt ||
                 Vishva.vishva.key.ctl ||
                 Vishva.vishva.key.shift
-            ) return;
+            )) return;
 
             // Proximity guard
             if (!shouldEmitByProximity(

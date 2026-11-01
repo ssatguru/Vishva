@@ -8,3 +8,4 @@ vishva/config.js
 vishva/assets/*
 vishva/worlds/*
 *.log
+certs

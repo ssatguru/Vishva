@@ -488,7 +488,7 @@ describe("restoreSharedSkeletonAnimations", () => {
         ];
 
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, fixFn as any
+            scene as any, entries, fixFn as any, []
         );
 
         expect(count).toBe(1);
@@ -517,7 +517,7 @@ describe("restoreSharedSkeletonAnimations", () => {
         ];
 
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, vi.fn() as any
+            scene as any, entries, vi.fn() as any, []
         );
 
         expect(count).toBe(0);
@@ -541,7 +541,7 @@ describe("restoreSharedSkeletonAnimations", () => {
         ];
 
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, vi.fn() as any
+            scene as any, entries, vi.fn() as any, []
         );
 
         expect(count).toBe(0);
@@ -575,7 +575,7 @@ describe("restoreSharedSkeletonAnimations", () => {
         ];
 
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, vi.fn() as any
+            scene as any, entries, vi.fn() as any, []
         );
 
         // Still counts as restored because at least one bone matched
@@ -616,7 +616,7 @@ describe("restoreSharedSkeletonAnimations", () => {
         ];
 
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, fixFn as any
+            scene as any, entries, fixFn as any, []
         );
 
         expect(count).toBe(2);
@@ -632,13 +632,13 @@ describe("restoreSharedSkeletonAnimations", () => {
             animationGroups: [],
         };
         expect(restoreSharedSkeletonAnimations(
-            scene as any, null as any, vi.fn() as any
+            scene as any, null as any, vi.fn() as any, []
         )).toBe(0);
         expect(restoreSharedSkeletonAnimations(
-            scene as any, [] as any, vi.fn() as any
+            scene as any, [] as any, vi.fn() as any, []
         )).toBe(0);
         expect(restoreSharedSkeletonAnimations(
-            scene as any, undefined as any, vi.fn() as any
+            scene as any, undefined as any, vi.fn() as any, []
         )).toBe(0);
     });
 
@@ -663,7 +663,7 @@ describe("restoreSharedSkeletonAnimations", () => {
         ];
 
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, vi.fn() as any
+            scene as any, entries, vi.fn() as any, []
         );
 
         expect(count).toBe(0);
@@ -782,7 +782,7 @@ describe("Error handling", () => {
         ];
         const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
         const count = restoreSharedSkeletonAnimations(
-            scene as any, entries, vi.fn() as any
+            scene as any, entries, vi.fn() as any, []
         );
         expect(count).toBe(0);
         warnSpy.mockRestore();

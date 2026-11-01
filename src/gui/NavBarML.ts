@@ -36,6 +36,10 @@ let navHTML = `
 
                 <button id="navSettings" title="settings"><span class="material-icons-outlined">settings</span></button>
 
+                <button id="navEnterVR" title="enter VR"><span class="material-icons-outlined">vrpano</span></button>
+
+                <button id="navEnterAR" title="enter AR"><span class="material-icons-outlined">3d_rotation</span></button>
+
                 <button id="debugLink" title="inspector"><span class="material-icons-outlined">info</span></button>
 
                 <button id="helpLink" title="help"><span class="material-icons-outlined">help_outline</span></button>

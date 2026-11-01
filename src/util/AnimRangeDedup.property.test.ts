@@ -1454,7 +1454,8 @@ describe("Feature: animation-range-sharing, Property 8: fixAnimationRanges Appli
                 const restoredCount = restoreSharedSkeletonAnimations(
                     scene as any,
                     sharingEntries,
-                    mockFix as any
+                    mockFix as any,
+                    []
                 );
 
                 // Verify: fixAnimationRanges was called once per restored skeleton
@@ -1505,7 +1506,7 @@ describe("Feature: animation-range-sharing, Property 8: fixAnimationRanges Appli
                 const { fn: mockFix } = createMockFixAnimationRanges();
 
                 // Execute restoration
-                restoreSharedSkeletonAnimations(scene as any, sharingEntries, mockFix as any);
+                restoreSharedSkeletonAnimations(scene as any, sharingEntries, mockFix as any, []);
 
                 // Verify: each sharing skeleton's animation ranges have `from` incremented by 1
                 for (const sharingSkel of sharingSkeletons) {
@@ -1553,7 +1554,8 @@ describe("Feature: animation-range-sharing, Property 8: fixAnimationRanges Appli
                 const restoredCount = restoreSharedSkeletonAnimations(
                     scene as any,
                     sharingEntries,
-                    mockFix as any
+                    mockFix as any,
+                    []
                 );
 
                 // fixAnimationRanges should NOT have been called
@@ -1719,7 +1721,7 @@ describe("Feature: animation-range-sharing, Property 6: Restoration Copies Bone 
                     sourceSkeletonId: sourceId,
                 }];
 
-                restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges);
+                restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges, []);
 
                 // Verify: for each bone name present in both skeletons, sharing bone's
                 // animations array is the same reference as source bone's animations array
@@ -1751,7 +1753,7 @@ describe("Feature: animation-range-sharing, Property 6: Restoration Copies Bone 
                     sourceSkeletonId: sourceId,
                 }];
 
-                restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges);
+                restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges, []);
 
                 // After restoration + fixAnimationRanges, the sharing skeleton's created ranges
                 // should have the same names as source ranges, with `from` incremented by 1
@@ -1796,7 +1798,7 @@ describe("Feature: animation-range-sharing, Property 6: Restoration Copies Bone 
 
                 // Should not throw even when source has bones not in sharing skeleton
                 expect(() => {
-                    restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges);
+                    restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges, []);
                 }).not.toThrow();
 
                 // Verify the sharing skeleton still only has its original bone names
@@ -1832,7 +1834,7 @@ describe("Feature: animation-range-sharing, Property 6: Restoration Copies Bone 
                     sourceSkeletonId: sourceId,
                 }];
 
-                const count = restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges);
+                const count = restoreSharedSkeletonAnimations(scene as any, entries, mockFixAnimationRanges, []);
                 expect(count).toBe(1);
             }),
             { numRuns: 100 }

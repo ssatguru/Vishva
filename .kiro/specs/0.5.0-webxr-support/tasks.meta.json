@@ -1,0 +1,401 @@
+{
+  "pbtResults": {
+    "1.3 (Optional) Write `src/managers/XRSupport.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1789774481731
+    },
+    "8.3 Extend `XRManager.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1789782215545
+    }
+  },
+  "executionHistory": {
+    "1.1 Create `src/managers/XRSupport.ts`": [
+      {
+        "executionId": "12d57a8c-72cd-4f24-85f6-f87648e8accc",
+        "chatSessionId": "sess_63128443-7bee-462b-9520-2e8fbe3e94d9",
+        "timestamp": 1789774380344
+      },
+      {
+        "executionId": "12d57a8c-72cd-4f24-85f6-f87648e8accc",
+        "chatSessionId": "sess_63128443-7bee-462b-9520-2e8fbe3e94d9",
+        "timestamp": 1789774498237
+      }
+    ],
+    "1.2 Write `src/managers/XRSupport.test.ts`": [
+      {
+        "executionId": "12d57a8c-72cd-4f24-85f6-f87648e8accc",
+        "chatSessionId": "sess_63128443-7bee-462b-9520-2e8fbe3e94d9",
+        "timestamp": 1789774499612
+      }
+    ],
+    "1.3 (Optional) Write `src/managers/XRSupport.property.test.ts`": [
+      {
+        "executionId": "12d57a8c-72cd-4f24-85f6-f87648e8accc",
+        "chatSessionId": "sess_63128443-7bee-462b-9520-2e8fbe3e94d9",
+        "timestamp": 1789774500545
+      }
+    ],
+    "1. XR capability detection + button-state mapping": [
+      {
+        "executionId": "12d57a8c-72cd-4f24-85f6-f87648e8accc",
+        "chatSessionId": "sess_63128443-7bee-462b-9520-2e8fbe3e94d9",
+        "timestamp": 1789774500610
+      }
+    ],
+    "2.1 Create `src/managers/XRLocomotion.ts`": [
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774681441
+      },
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774746139
+      }
+    ],
+    "2.2 Write `src/managers/XRLocomotion.test.ts`": [
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774749459
+      },
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774824307
+      }
+    ],
+    "2.3 Write `src/managers/XRLocomotion.property.test.ts`": [
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774750560
+      },
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774824747
+      }
+    ],
+    "2. XR locomotion sub-mode state machine (pure)": [
+      {
+        "executionId": "f294cfb7-573b-4533-882f-b4cf522e97f9",
+        "chatSessionId": "sess_65d916e6-56ec-4616-be70-157f7127a221",
+        "timestamp": 1789774824815
+      }
+    ],
+    "3. Checkpoint — pure modules green": [
+      {
+        "executionId": "440c2d1a-7c6f-4425-a47a-ecf38dc1f84f",
+        "chatSessionId": "sess_a062fb0a-bdb5-4f55-9545-25b05f50a13e",
+        "timestamp": 1789777128631
+      },
+      {
+        "executionId": "440c2d1a-7c6f-4425-a47a-ecf38dc1f84f",
+        "chatSessionId": "sess_a062fb0a-bdb5-4f55-9545-25b05f50a13e",
+        "timestamp": 1789777175632
+      }
+    ],
+    "4.1 Create `src/managers/XRManager.ts`": [
+      {
+        "executionId": "5d9fdf61-ca05-440f-8b67-4583d3bfad7b",
+        "chatSessionId": "sess_bba5b8ec-fde6-48fe-973c-0164a42eeffc",
+        "timestamp": 1789777250438
+      },
+      {
+        "executionId": "5d9fdf61-ca05-440f-8b67-4583d3bfad7b",
+        "chatSessionId": "sess_bba5b8ec-fde6-48fe-973c-0164a42eeffc",
+        "timestamp": 1789777448659
+      }
+    ],
+    "4.2 Add `enterXR`/`exitXR` delegation on `Vishva`": [
+      {
+        "executionId": "b643e51a-2ecc-4be9-8bba-68032a6dbff1",
+        "chatSessionId": "sess_e0f22d53-f996-48ff-b4af-b4417394ce21",
+        "timestamp": 1789777732514
+      },
+      {
+        "executionId": "b643e51a-2ecc-4be9-8bba-68032a6dbff1",
+        "chatSessionId": "sess_e0f22d53-f996-48ff-b4af-b4417394ce21",
+        "timestamp": 1789777806230
+      }
+    ],
+    "4.3 Write `src/managers/XRManager.test.ts` (mocked experience/feature manager)": [
+      {
+        "executionId": "cad1f99d-bb12-4929-b8c9-2c5eb94edeeb",
+        "chatSessionId": "sess_896bcbfe-38d4-4ae8-95eb-1ead0bf02b42",
+        "timestamp": 1789778123974
+      },
+      {
+        "executionId": "cad1f99d-bb12-4929-b8c9-2c5eb94edeeb",
+        "chatSessionId": "sess_896bcbfe-38d4-4ae8-95eb-1ead0bf02b42",
+        "timestamp": 1789778678819
+      }
+    ],
+    "4. XRManager skeleton — enter/exit VR & AR": [
+      {
+        "executionId": "cad1f99d-bb12-4929-b8c9-2c5eb94edeeb",
+        "chatSessionId": "sess_896bcbfe-38d4-4ae8-95eb-1ead0bf02b42",
+        "timestamp": 1789778678905
+      }
+    ],
+    "5.1 Add buttons to `src/gui/NavBarML.ts`": [
+      {
+        "executionId": "da9c72cb-4b2f-4e51-a6a3-b9b1161c3aa1",
+        "chatSessionId": "sess_3a10aea9-2a8e-4b01-8547-f85854b297af",
+        "timestamp": 1789778692021
+      },
+      {
+        "executionId": "da9c72cb-4b2f-4e51-a6a3-b9b1161c3aa1",
+        "chatSessionId": "sess_3a10aea9-2a8e-4b01-8547-f85854b297af",
+        "timestamp": 1789778789760
+      }
+    ],
+    "5.2 Wire handlers + startup gating in `VishvaGUI`": [
+      {
+        "executionId": "bccb2b2a-846c-4712-be7e-a020d0f6f9ec",
+        "chatSessionId": "sess_93c2c958-5f5d-4e55-a844-53a5ab300db1",
+        "timestamp": 1789779170812
+      },
+      {
+        "executionId": "bccb2b2a-846c-4712-be7e-a020d0f6f9ec",
+        "chatSessionId": "sess_93c2c958-5f5d-4e55-a844-53a5ab300db1",
+        "timestamp": 1789779350944
+      }
+    ],
+    "5.3 Extend `src/gui/NavBarML.test.ts`": [
+      {
+        "executionId": "165bc434-32b0-459f-acb2-cbbab4acc4cc",
+        "chatSessionId": "sess_129e9a6e-cb89-4325-9d33-6f5dab1da40a",
+        "timestamp": 1789780050728
+      },
+      {
+        "executionId": "165bc434-32b0-459f-acb2-cbbab4acc4cc",
+        "chatSessionId": "sess_129e9a6e-cb89-4325-9d33-6f5dab1da40a",
+        "timestamp": 1789780143631
+      }
+    ],
+    "5. NavBar buttons + GUI wiring, gated by support": [
+      {
+        "executionId": "165bc434-32b0-459f-acb2-cbbab4acc4cc",
+        "chatSessionId": "sess_129e9a6e-cb89-4325-9d33-6f5dab1da40a",
+        "timestamp": 1789780143688
+      }
+    ],
+    "6. Checkpoint — build + wiring green": [
+      {
+        "executionId": "bfaece74-b20e-491c-9f14-451b929aad4a",
+        "chatSessionId": "sess_918ed104-f90e-4d41-be37-8ca6e7e0ab94",
+        "timestamp": 1789780186634
+      },
+      {
+        "executionId": "bfaece74-b20e-491c-9f14-451b929aad4a",
+        "chatSessionId": "sess_918ed104-f90e-4d41-be37-8ca6e7e0ab94",
+        "timestamp": 1789780291848
+      }
+    ],
+    "7.1 Implement first-person mode in `XRManager.applyLocomotionMode`": [
+      {
+        "executionId": "8e12305e-37cb-493e-8179-834b015f3479",
+        "chatSessionId": "sess_d7477aad-8b59-4749-b35a-bad40ad0cf58",
+        "timestamp": 1789780386663
+      },
+      {
+        "executionId": "8e12305e-37cb-493e-8179-834b015f3479",
+        "chatSessionId": "sess_d7477aad-8b59-4749-b35a-bad40ad0cf58",
+        "timestamp": 1789780540344
+      }
+    ],
+    "7.2 Extend `XRManager.test.ts`": [
+      {
+        "executionId": "410da172-9126-4c10-b6a5-ca22061306e5",
+        "chatSessionId": "sess_0ed4d711-6a95-4e66-a530-58672ea8d783",
+        "timestamp": 1789780712948
+      },
+      {
+        "executionId": "410da172-9126-4c10-b6a5-ca22061306e5",
+        "chatSessionId": "sess_0ed4d711-6a95-4e66-a530-58672ea8d783",
+        "timestamp": 1789780854502
+      }
+    ],
+    "7. First-person locomotion — teleport + controller pointers": [
+      {
+        "executionId": "410da172-9126-4c10-b6a5-ca22061306e5",
+        "chatSessionId": "sess_0ed4d711-6a95-4e66-a530-58672ea8d783",
+        "timestamp": 1789780854591
+      }
+    ],
+    "8.1 Extract shared click-to-move into `Vishva.moveAvatarTo(target)`": [
+      {
+        "executionId": "fc44be7d-666b-4ca1-a364-3bbdc2e08fe8",
+        "chatSessionId": "sess_5daa4410-5ea1-4177-bf1a-cdd1083707e5",
+        "timestamp": 1789781282719
+      },
+      {
+        "executionId": "fc44be7d-666b-4ca1-a364-3bbdc2e08fe8",
+        "chatSessionId": "sess_5daa4410-5ea1-4177-bf1a-cdd1083707e5",
+        "timestamp": 1789781380563
+      }
+    ],
+    "8.2 Implement third-person select handling in `XRManager.handleSelect`": [
+      {
+        "executionId": "f3396f88-05a1-4389-b4e6-b1b134c0ae5e",
+        "chatSessionId": "sess_ed8f5351-0222-49d3-81b1-77890fced86a",
+        "timestamp": 1789781526477
+      },
+      {
+        "executionId": "f3396f88-05a1-4389-b4e6-b1b134c0ae5e",
+        "chatSessionId": "sess_ed8f5351-0222-49d3-81b1-77890fced86a",
+        "timestamp": 1789781671131
+      }
+    ],
+    "8.3 Extend `XRManager.test.ts`": [
+      {
+        "executionId": "f3c6df2b-67e5-4e4e-a264-a4b709e0ad68",
+        "chatSessionId": "sess_77332357-0c75-4055-a54e-9ff7440ccd55",
+        "timestamp": 1789782106982
+      },
+      {
+        "executionId": "f3c6df2b-67e5-4e4e-a264-a4b709e0ad68",
+        "chatSessionId": "sess_77332357-0c75-4055-a54e-9ff7440ccd55",
+        "timestamp": 1789782253972
+      }
+    ],
+    "8. Third-person locomotion — point-and-moveTo avatar": [
+      {
+        "executionId": "f3c6df2b-67e5-4e4e-a264-a4b709e0ad68",
+        "chatSessionId": "sess_77332357-0c75-4055-a54e-9ff7440ccd55",
+        "timestamp": 1789782254031
+      }
+    ],
+    "9.1 Bind controller toggle in `XRManager.handleToggleRequest`": [
+      {
+        "executionId": "b2328b75-8067-4204-91b5-c906eae7292a",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789782942387
+      },
+      {
+        "executionId": "b2328b75-8067-4204-91b5-c906eae7292a",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789783122804
+      },
+      {
+        "executionId": "b829893a-fe22-4372-952a-fe531128dc6c",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789783722540
+      },
+      {
+        "executionId": "b829893a-fe22-4372-952a-fe531128dc6c",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789783847225
+      }
+    ],
+    "9.2 Extend `XRManager.test.ts`": [
+      {
+        "executionId": "b2328b75-8067-4204-91b5-c906eae7292a",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789783127204
+      },
+      {
+        "executionId": "b2328b75-8067-4204-91b5-c906eae7292a",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789783252618
+      }
+    ],
+    "9. In-XR sub-mode toggle with first-person guard": [
+      {
+        "executionId": "b2328b75-8067-4204-91b5-c906eae7292a",
+        "chatSessionId": "sess_b9d61849-413d-4fc5-ac7b-df0a787bc4c6",
+        "timestamp": 1789783252720
+      }
+    ],
+    "10.1 Ensure XR select routes to scene picking for SNA": [
+      {
+        "executionId": "72395af6-4b69-45bf-b4ce-1b8b485d789a",
+        "chatSessionId": "sess_d2f95e16-5497-49f9-8f20-bea69281604b",
+        "timestamp": 1789783967225
+      },
+      {
+        "executionId": "72395af6-4b69-45bf-b4ce-1b8b485d789a",
+        "chatSessionId": "sess_d2f95e16-5497-49f9-8f20-bea69281604b",
+        "timestamp": 1789784121810
+      }
+    ],
+    "10.2 Add SNA-in-XR test": [
+      {
+        "executionId": "72395af6-4b69-45bf-b4ce-1b8b485d789a",
+        "chatSessionId": "sess_d2f95e16-5497-49f9-8f20-bea69281604b",
+        "timestamp": 1789784125341
+      },
+      {
+        "executionId": "72395af6-4b69-45bf-b4ce-1b8b485d789a",
+        "chatSessionId": "sess_d2f95e16-5497-49f9-8f20-bea69281604b",
+        "timestamp": 1789784288771
+      }
+    ],
+    "10. SNA click interaction in XR": [
+      {
+        "executionId": "72395af6-4b69-45bf-b4ce-1b8b485d789a",
+        "chatSessionId": "sess_d2f95e16-5497-49f9-8f20-bea69281604b",
+        "timestamp": 1789784288867
+      }
+    ],
+    "11.1 Harden `exitXR`/session-end restore in `XRManager`": [
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784410493
+      },
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784626274
+      }
+    ],
+    "11.2 Extend `XRManager.test.ts` for cleanup idempotency": [
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784629708
+      },
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784749572
+      }
+    ],
+    "11.3 Add changelog entry": [
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784630620
+      },
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784750404
+      }
+    ],
+    "11. Exit/cleanup, lifecycle robustness, and changelog": [
+      {
+        "executionId": "7c0b15b6-a421-4a01-9b11-b18a071f48ce",
+        "chatSessionId": "sess_b5f5895b-23e5-4a0a-ae9a-1178f7969494",
+        "timestamp": 1789784750478
+      }
+    ],
+    "12. Final checkpoint — full suite + build": [
+      {
+        "executionId": "cfff5213-df26-459c-8183-2d80c3228cd1",
+        "chatSessionId": "sess_62891d2e-969d-4d78-b73a-fc4a401dd6fa",
+        "timestamp": 1789784945565
+      },
+      {
+        "executionId": "cfff5213-df26-459c-8183-2d80c3228cd1",
+        "chatSessionId": "sess_62891d2e-969d-4d78-b73a-fc4a401dd6fa",
+        "timestamp": 1789786199631
+      }
+    ]
+  }
+}

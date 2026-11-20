@@ -1,4 +1,5 @@
 ### 11/19/2026 0.6.0-alpha.3  
+- upgraded to babylons js version from 8.56.2 to 9.37.1.  
 - fixed issue with ActuatorAnimator. if a mesh had two ActuatorAnimator and if one was plaing an animation in a loop the other actuator was uanble to play its animation. The fix was to stop all current animation before playing the new one. Previously animation loop was based on looping the actuator. The animation loop was set to flase and the actuator was looped. Now the animation is looped rather than the actuaotr.
 
 ### 10/31/2026 0.6.0-alpha.2

@@ -1,6 +1,6 @@
 {
 	"name": "vishva",
-	"version": "0.6.0-alpha.2",
+	"version": "0.6.0-alpha.3",
 	"keywords": [
 		"babylonjs",
 		"editor"
@@ -9,13 +9,13 @@
 	"contributors": [],
 	"dependencies": {
 		"@types/jszip": "^3.4.1",
-		"babylonjs": "^8.56.2",
-		"babylonjs-charactercontroller": "file:../BabylonJS-CharacterController",
+		"babylonjs": "^9.37.1",
+		"babylonjs-charactercontroller": "file:../../character-controller/BabylonJS-CharacterController",
 		"babylonjs-editcontrol": "^4.0.0",
-		"babylonjs-gui": "^8.56.2",
-		"babylonjs-loaders": "^8.56.2",
-		"babylonjs-materials": "^8.56.2",
-		"babylonjs-serializers": "^8.56.2",
+		"babylonjs-gui": "^9.37.1",
+		"babylonjs-loaders": "^9.37.1",
+		"babylonjs-materials": "^9.37.1",
+		"babylonjs-serializers": "^9.37.1",
 		"cannon": "^0.6.2",
 		"oimo": "^1.0.9"
 	},

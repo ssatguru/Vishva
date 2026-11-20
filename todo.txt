@@ -48,6 +48,12 @@ subsequent esc key doesn't have this issue. (04/26/2025)
 
 ENHANCEMENTS
 
+update wiki (11/1/2026)
+
+update index.ts file to take care of use cases where config.js or userAssets.js files are not there. (11/1/2026)
+
+replace current default male avatar with a gender neutral avatar. and add a way, maybe a button, to switch avatar to the default avatar (11/1/2026)
+
 character controller ui (1/2/2026)
   add anim blending property (added - but character controller doesn't serialize it)
   add camera max and min distance from AV
@@ -73,11 +79,8 @@ better particle support
 
 better terrain support
 
-storing world files in browser storage
-
 storing settings om browser storage
 
-export world as aa zip file
 
 
 

@@ -1,7 +1,7 @@
 import { ActProperties } from "./SNA";
 import { ActuatorAbstract } from "./SNA";
 import { SNAManager } from "./SNA";
-import { AnimationRange, Mesh, Skeleton } from "babylonjs";
+import { Animatable,AnimationRange, Mesh, Skeleton } from "babylonjs";
 import { SelectType } from "../gui/VishvaGUI";
 import { AnimUtils } from "../util/AnimUtils";
 import { Vishva } from "../Vishva";
@@ -10,6 +10,7 @@ import { AnimationGroup } from "babylonjs/Animations/animationGroup";
 export class AnimatorProp extends ActProperties {
     animation: SelectType = new SelectType();
     rate: number = 1;
+    animLoop:boolean = false;
     // state_isAG:boolean=false;
     // state_skel:boolean=false;;
 }
@@ -18,9 +19,12 @@ export class ActuatorAnimator extends ActuatorAbstract {
 
     _isAG:boolean = false;
     _skel:boolean = false;
+    _curAG:AnimationGroup;
+    _curAnim :Animatable;
 
     override init():void {
         var prop: AnimatorProp = <AnimatorProp>this.properties;
+        prop.loop = null;
         let sm = AnimUtils.getMeshSkel(this.mesh, true);
         let skel:Skeleton = (sm === null) ? null : sm.skel;
         prop.animation.values = [""];
@@ -64,15 +68,22 @@ export class ActuatorAnimator extends ActuatorAbstract {
         let prop: AnimatorProp = <AnimatorProp>this.properties;
         if (this._skel) {
             if(this._isAG){
+                // stop any AG currently running on this mesh's hierarchy
+                const ags = AnimUtils.getMeshAg(this.mesh, Vishva.vishva.scene.animationGroups, true);
+                for (const ag of ags) { if (ag.isStarted) ag.stop(); }
+
                 let ag:AnimationGroup = AnimUtils.getAGByName4Mesh(Vishva.vishva.scene,prop.animation.value,this.mesh);
                 if (ag == null) {
                     console.error("ActuatorAnimator : Could not find animation group '"+ prop.animation.value+ "' for this mesh");
                 }else {
-                    ag.start(false, prop.rate)
+                    this._curAG = ag;
+                    ag.start(prop.animLoop, prop.rate)
                         .onAnimationGroupEndObservable.addOnce(() => {return this.onActuateEnd() });
                 }
             }else{
-                this.mesh.skeleton.beginAnimation(prop.animation.value, false, prop.rate, () => { return this.onActuateEnd() });
+                Vishva.vishva.scene.stopAnimation(this.mesh.skeleton);  // stop prior skeleton anim
+
+                this._curAnim = this.mesh.skeleton.beginAnimation(prop.animation.value, prop.animLoop, prop.rate, () => { return this.onActuateEnd() });
             }
         }else{
             console.log("no skeleton found");
@@ -80,6 +91,11 @@ export class ActuatorAnimator extends ActuatorAbstract {
     }
 
     public stop() {
+        if (this._isAG) { 
+            if (this._curAG) this._curAG.stop(); 
+        }else{ 
+            if (this._curAnim) this._curAnim.stop(); 
+        }
     }
 
     public isReady(): boolean {
@@ -92,6 +108,10 @@ export class ActuatorAnimator extends ActuatorAbstract {
         if (this.properties.autoStart) {
             var started: boolean = this.start(this.properties.signalId);
         }
+        //looping will be handled by animation itself based on animLoop property
+        //the actuator itself will not loop
+        //force this to false if user had set it to true
+        this.properties.loop = false;
     }
 
     public cleanUp() {

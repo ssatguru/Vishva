@@ -1,3 +1,6 @@
+### 11/19/2026 0.6.0-alpha.3  
+- fixed issue with ActuatorAnimator. if a mesh had two ActuatorAnimator and if one was plaing an animation in a loop the other actuator was uanble to play its animation. The fix was to stop all current animation before playing the new one. Previously animation loop was based on looping the actuator. The animation loop was set to flase and the actuator was looped. Now the animation is looped rather than the actuaotr.
+
 ### 10/31/2026 0.6.0-alpha.2
 - I had github copilot AI fix the issue where saved world archive where still referencing assets on the server. The archive have all the assets bundled in it and thus should not be referencing any assets on the server
 - the build was previously stored in the "bin" folder. I had github copilot AI change this to "dist" folder.

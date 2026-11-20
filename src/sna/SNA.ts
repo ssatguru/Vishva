@@ -990,6 +990,9 @@ export class ActProperties extends SNAproperties {
     signalStart: string = "";
     signalEnd: string = "";
     autoStart: boolean = false;
+    //loop the actuator? if set to true the signal will be resent to the actuator at the end to start it up again
+    //some process like animation provides their own looping capability. In such cases we should use their looping capability
+    //and ignore this actuator loop. see ActutaorAnimator as an example.
     loop: boolean = false;
     toggle: boolean = true;
 

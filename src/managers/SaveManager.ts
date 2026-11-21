@@ -54,16 +54,21 @@ export class SaveManager {
 
         this.vishva.progressManager.show("Saving World", "Preparing scene...");
         await this.vishva.progressManager.update(undefined, 0);
-        const zipBlob = await this._getWorldZipBlob();
-        
-        await this.vishva.progressManager.update(undefined, 100);
-        
-        // Hide progress after a short delay
-        setTimeout(() => {
-            this.vishva.progressManager.hide();
-        }, 500);
-        
-        return URL.createObjectURL(zipBlob);
+        this.vishva.pauseRenderLoop();
+        try {
+            const zipBlob = await this._getWorldZipBlob();
+
+            await this.vishva.progressManager.update(undefined, 100);
+
+            // Hide progress after a short delay
+            setTimeout(() => {
+                this.vishva.progressManager.hide();
+            }, 500);
+
+            return URL.createObjectURL(zipBlob);
+        } finally {
+            this.vishva.resumeRenderLoop();
+        }
     }
 
     /**
@@ -89,7 +94,19 @@ export class SaveManager {
 
         this.vishva.progressManager.show("Saving World (JSON)", "Preparing scene...");
         await this.vishva.progressManager.update(undefined, 0);
+        this.vishva.pauseRenderLoop();
+        try {
+            return await this._saveWorldAsJsonImpl();
+        } finally {
+            this.vishva.resumeRenderLoop();
+        }
+    }
 
+    /**
+     * Body of saveWorldAsJson, executed with the render loop paused
+     * (see saveWorldAsJson) so the mutated scene is not rendered mid-save.
+     */
+    private async _saveWorldAsJsonImpl(): Promise<string> {
         const assetCollector = new AssetCollector();
 
         this.preSaveCleanup()
@@ -218,6 +235,7 @@ export class SaveManager {
         this.vishva.progressManager.show("Saving World (JSON) to Browser", "Preparing scene...");
         await this.vishva.progressManager.update(undefined, 10);
 
+        this.vishva.pauseRenderLoop();
         try {
             await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -356,6 +374,8 @@ export class SaveManager {
             DialogMgr.showAlertDiag("Error saving world to browser: " + errorMessage);
             this.vishva.progressManager.hide();
             return false;
+        } finally {
+            this.vishva.resumeRenderLoop();
         }
     }
 
@@ -373,6 +393,7 @@ export class SaveManager {
         this.vishva.progressManager.show("Saving World to Browser", "Preparing scene...");
         await this.vishva.progressManager.update(undefined, 10);
 
+        this.vishva.pauseRenderLoop();
         try {
             // Give the UI time to render the progress bar
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -642,6 +663,8 @@ export class SaveManager {
             DialogMgr.showAlertDiag("Error saving world to browser: " + errorMessage);
             this.vishva.progressManager.hide();
             return false;
+        } finally {
+            this.vishva.resumeRenderLoop();
         }
     }
 

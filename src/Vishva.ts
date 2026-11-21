@@ -119,7 +119,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.6.0-alpha.3";
+    static version: string = "0.6.0-alpha.4";
 
     public static worldName: string;
 
@@ -936,6 +936,9 @@ export class Vishva {
         this.scene.executeWhenReady(() => { return this.startRenderLoop() });
     }
 
+    private _renderFn: () => void;
+    private _renderPaused: boolean = false;
+
     private startRenderLoop() {
         //this.backfaceCulling(this.scene.materials);
         if (this.editEnabled) {
@@ -945,7 +948,32 @@ export class Vishva {
         }
         this.engine.hideLoadingUI();
 
-        this.engine.runRenderLoop(() => this.scene.render());
+        this._renderFn = () => this.scene.render();
+        this.engine.runRenderLoop(this._renderFn);
+    }
+
+    /**
+     * Pause the BabylonJS render loop. Used while saving the world so the
+     * scene is not rendered in its half-mutated preSaveCleanup state during
+     * the long async tar.gz save — that window is what exposes the WebGL
+     * "Feedback loop formed between Framebuffer and active Texture" error.
+     * The save progress UI is DOM-based and keeps updating while paused.
+     * Safe to call multiple times; pair with resumeRenderLoop().
+     */
+    public pauseRenderLoop() {
+        if (this._renderPaused) return;
+        this._renderPaused = true;
+        if (this._renderFn) this.engine.stopRenderLoop(this._renderFn);
+    }
+
+    /**
+     * Resume the render loop after a pauseRenderLoop() call.
+     * Safe to call when not paused (no-op).
+     */
+    public resumeRenderLoop() {
+        if (!this._renderPaused) return;
+        this._renderPaused = false;
+        if (this._renderFn) this.engine.runRenderLoop(this._renderFn);
     }
 
     isFocusOnAv: boolean = true;

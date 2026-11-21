@@ -353,6 +353,7 @@ export class SNAManager {
         for (let sna of snas) {
             //var mesh: AbstractMesh = scene.getMeshesByTags(sna.meshId)[0];
             var mesh: TransformNode = this._getTransformNodeByTags(sna.meshId, scene);
+            //console.log(sna.meshId + " : " + mesh.id + " : " + mesh.name);
             //if null then we might be dealing with a instance mesh
             //search by name
             if (mesh == null) {

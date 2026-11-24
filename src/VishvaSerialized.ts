@@ -8,6 +8,7 @@ import { AnimationSharingEntry } from "./util/AnimGroupDedup";
 import { AnimRangeSharingEntry } from "./util/AnimRangeDedup";
 import { Vishva } from "./Vishva";
 import { AnimUtils } from "./util/AnimUtils";
+import { VThemes } from "./gui/components/VTheme";
 
 export class VishvaSerialized {
     //babylon version
@@ -43,7 +44,9 @@ export class VishvaSerialized {
     public constructor(vishva?: Vishva) {
         this.settings = new SettingsSerialized();
         this.misc = new MiscSerialized();
+        
         if (vishva == null) return;
+        this.settings.initFromVishva(vishva);
         this.avSerialized = new AvSerialized(vishva);
 
         //we donot serialize the sps. 
@@ -74,7 +77,34 @@ export class SettingsSerialized {
     public cameraCollision: boolean = true;
     //automatcally open edit menu whenever a mesh is selected
     public autoEditMenu: boolean = false;
+    public clickToMove: boolean = false;
+    public snapper:boolean = false;
+    public themeIndex:number=0;
 
+    public initFromVishva(vishva:Vishva){
+        this.cameraCollision = vishva.isCameraCollisionOn() ;
+        this.autoEditMenu = vishva.isAutoEditMenuOn();
+        this.clickToMove = vishva._clickToMove;
+        this.snapper = vishva.isSnapperOn();
+        this.themeIndex =  VThemes.getActivePresetIndex();
+    }
+
+    public initFromJson(jsonObj:Object): void{
+        this.cameraCollision= jsonObj["cameraCollision"];
+        this.autoEditMenu = jsonObj["autoEditMenu"];
+        this.clickToMove = jsonObj["clickToMove"];
+        this.snapper = jsonObj["snapper"];
+        this.themeIndex = jsonObj["themeIndex"];
+    }
+
+    public apply(vishva:Vishva){
+        vishva.enableCameraCollision(this.cameraCollision);
+        vishva.enableAutoEditMenu(this.autoEditMenu);
+        vishva._clickToMove = this.clickToMove;
+        vishva.snapper(this.snapper);
+        console.log(this.themeIndex);
+        VThemes.applyPreset(this.themeIndex);
+    }
 
 }
 

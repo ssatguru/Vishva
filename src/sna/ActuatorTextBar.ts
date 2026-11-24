@@ -35,7 +35,7 @@ export class ActuatorTextBar extends ActuatorAbstract {
     w: number;
     h: number;
     plane: Mesh;
-    td: AdvancedDynamicTexture;
+    dt: AdvancedDynamicTexture;
     tb: TextBlock;
     option: { width: 0, height: 0 };
 
@@ -59,7 +59,6 @@ export class ActuatorTextBar extends ActuatorAbstract {
     }
 
     override stop() {
-        console.log("stopped ");
     }
 
     override cleanUp() {
@@ -85,11 +84,13 @@ export class ActuatorTextBar extends ActuatorAbstract {
         //https://forum.babylonjs.com/t/skybox-visibility-effecting-advanceddynamictexture-transparency/58087
         this.plane.renderingGroupId = 1;
 
-        if (this.td != null) this.td.dispose();
-        let td = AdvancedDynamicTexture.CreateForMesh(this.plane);
-        if (!props.transparent) td.background = props.background;
-        td.vScale = props.height / props.width;
-        td.vOffset = td.vScale / 2;
+        if (this.dt != null) this.dt.dispose();
+        const texWidth = 256;
+        const texHeight = Math.max(64, Math.round(texWidth * (props.height / props.width)));
+        let dt = AdvancedDynamicTexture.CreateForMesh(this.plane, texWidth, texHeight);
+        if (!props.transparent) dt.background = props.background;
+        //dt.vScale = props.height / props.width;
+        //dt.vOffset = dt.vScale / 2;
 
         if (this.tb != null) this.tb.dispose();
         let tb = new TextBlock();
@@ -99,12 +100,13 @@ export class ActuatorTextBar extends ActuatorAbstract {
         tb.outlineWidth = props.outlineWidth;
         tb.color = props.color;
         tb.resizeToFit = false;
+        tb.textWrapping = true; 
         tb.fontStyle = "normal";
 
         this.tb = tb;
-        this.td = td;
+        this.dt = dt;
 
-        td.addControl(tb);
+        dt.addControl(tb);
 
         if (this.properties.autoStart) {
             this.plane.isVisible = true;

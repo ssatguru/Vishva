@@ -849,7 +849,7 @@ export abstract class ActuatorAbstract implements Actuator {
         this.stopped = false;
         //if(this.actuating||this.disabled) {
         if (this.actuating) {
-            if (!this.properties.loop) {
+            if (!this.properties.loop && this.properties.queueable) {
                 this.queued++;
             }
             return true;
@@ -988,13 +988,32 @@ export class SNAproperties {
 }
 
 export class ActProperties extends SNAproperties {
+    //should incoming signals be queued if the actuator is currently active
+    //processing the previous instance of the signal.
+    //if set to true the signal would be queued and would be handled when the
+    //actuator is done handling the previous instance of the signal
+    //otherwise it will be ignored.
+    queueable:boolean = true;
+
+    //signalStart would be emitted by the actuator when it is about to start actuating
     signalStart: string = "";
+
+    //signalStart would be emitted by the actuator when it is donea actuating
     signalEnd: string = "";
+
+    //the actuator will start actuating immediately on creation. It will not wait for a signal
     autoStart: boolean = false;
+
     //loop the actuator? if set to true the signal will be resent to the actuator at the end to start it up again
     //some process like animation provides their own looping capability. In such cases we should use their looping capability
     //and ignore this actuator loop. see ActutaorAnimator as an example.
     loop: boolean = false;
+
+    //invert the gehavior of the actuator. 
+    //the actual interpretation will depend on the nature of actuator.
+    //example for move actuator, on receiving the signal the mesh might move in one direction and 
+    //on receiving the next signal it migh move in the opposite direction
+    //for some it may not make sense.
     toggle: boolean = true;
 
     //when toggle is true then actuator can be in normal or reversed state

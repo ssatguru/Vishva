@@ -13,12 +13,13 @@ export class HealthProp extends ActProperties
 }
 
 /**
- * Tracks helath of the mesh.
+ * Tracks health of the mesh.
  * 
- * It can receive one of two signals.
- * If it receives the first one specified, it reduces the health by a step amount.
- * When health <=s zero it emits a onNoHealth signal
- * If it receives the second one specified, it revives the health by a step amount.
+ * For signal one needs to speicfy two signals seperated by comma exmaple "down,up".
+ * The first signal is for decreasing health and the second signal is for reviving health.
+ * If it receives the first one (say "down" in the example above) it will reduces the health by a step amount.
+ * and if health <= zero it will emit a onNoHealth signal
+ * If it receives the second one (say "up" in the example above), it will revive the health by a step amount.
  * When full health is restored it emits a onFullHealth signal
  *  
  */

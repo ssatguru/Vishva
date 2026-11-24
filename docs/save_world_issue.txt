@@ -1,0 +1,28 @@
+BJS - [12:16:09]: The scene must be ready before serializing the dynamic texture
+
+
+Explanation
+This warning is specific to Babylon.js. It occurs when you attempt to serialize a DynamicTexture (e.g., via SceneSerializer.Serialize(), BABYLON.GLTF2Export, or saving the scene) before the scene has finished its initial setup or before the texture's underlying data is fully generated and "ready."
+
+Babylon.js requires the scene to be in a "ready" state (where all shaders are compiled and meshes are processed) to accurately capture the state of dynamic resources like canvas-based textures during serialization.
+
+How to verify
+Check if you are calling a serialization or export function immediately after creating the scene or the texture. You can verify the scene status by checking:
+console.log("Is scene ready?", scene.isReady());
+
+If this returns false when your serialization code runs, you will trigger this warning.
+
+Suggested fix
+Wrap your serialization or export logic inside the scene.executeWhenReady() callback. This ensures that all components, including dynamic textures, are fully initialized and ready to be processed.
+
+// Ensure the scene is fully loaded and ready before serializing
+scene.executeWhenReady(() => {
+    // Replace this with your specific serialization logic
+    const serializedScene = BABYLON.SceneSerializer.Serialize(scene);
+    console.log("Scene serialized successfully");
+});
+
+Summary
+Cause: Attempting to serialize a DynamicTexture while the scene is still initializing or shaders are compiling.
+Key Takeaway: Always perform scene exports, snapshots, or serialization inside the executeWhenReady lifecycle hook to ensure all dynamic assets are valid.
+Data used to understand this message

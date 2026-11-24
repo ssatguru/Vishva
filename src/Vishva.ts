@@ -119,7 +119,7 @@ import { MeshUtils } from "./util/MeshUtils";
  */
 export class Vishva {
 
-    static version: string = "0.6.0-alpha.4";
+    static version: string = "0.6.0-alpha.5";
 
     public static worldName: string;
 
@@ -927,6 +927,11 @@ export class Vishva {
         SNAManager.getSNAManager().unMarshal(this.snas, this.scene);
         this.snas = null;
         this._dirty = true;
+
+        this.vishvaSerialized.settings.apply(this);
+
+        //TODO clean up vishvaSerialized here ??
+
         console.debug("sceneLaod4 done");
         this.render();
     }
@@ -1236,7 +1241,7 @@ export class Vishva {
 
     public editControl: EditControl;
 
-    public _clickMove: boolean = false;
+    public _clickToMove: boolean = false;
     private _clickMoveTarget: Vector3;
     private _prevClickMoveDist: number = 0;
 
@@ -1291,7 +1296,7 @@ export class Vishva {
         if (!pickResult.hit) return
 
         //move av using click
-        if (this._clickMove && (evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
+        if (this._clickToMove && (evt.button == 2) && !((this.key.alt) || (this.key.ctl))) {
             this.moveAvatarTo(pickResult.pickedPoint.clone());
             return;
         }
@@ -5090,7 +5095,9 @@ export class Vishva {
 
     public enableCameraCollision(yesNo: boolean) {
         this._cameraCollision = yesNo;
-        this.arcCamera.checkCollisions = yesNo;
+        if (this.arcCamera){
+            this.arcCamera.checkCollisions = yesNo;
+        }else{console.log("no arc cmaera");}
         this.cc.cameraCollisionChanged();
     }
 

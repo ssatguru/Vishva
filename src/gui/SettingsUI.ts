@@ -101,7 +101,7 @@ export class SettingsUI {
                 return false;
             }
 
-            this._vishva._clickMove = this._clickToMove.checked;
+            this._vishva._clickToMove = this._clickToMove.checked;
 
             this._settingDiag.hide();
             //DialogMgr.showAlertDiag("Saved");
@@ -135,7 +135,9 @@ export class SettingsUI {
 
         this._showToolTips.checked = this.enableToolTips;
 
-        this._clickToMove.checked = this._vishva._clickMove;
+        this._snapper.checked = this._vishva.snapperOn;
+
+        this._clickToMove.checked = this._vishva._clickToMove;
 
         this._themeSelect.value = VThemes.getActivePresetIndex().toString();
     }

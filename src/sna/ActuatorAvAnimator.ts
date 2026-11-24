@@ -14,6 +14,7 @@ export class AvAnimatorProp extends ActProperties {
     focusOnAV: boolean = true;
     focusPosition: Vector3 = new Vector3(0, 0, 0);
     animation: SelectType = new SelectType();
+    animLoop:boolean = false;
     rate: number = 1;
     //restore AV's transform back to what it was before Av was taken over by this actuator
     restoreOnDisable:boolean = true;
@@ -132,10 +133,15 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
             //this.anim = skel.beginAnimation(prop.animation.value, prop.loop, prop.rate);
             if (this._skel != null) {
             if(this._isAG){
-                this.ag = Vishva.vishva.scene.getAnimationGroupByName(prop.animation.value).start(prop.loop, prop.rate);
+                // stop any AG currently running on this mesh's hierarchy
+                const ags = AnimUtils.getMeshAg(this.mesh, Vishva.vishva.scene.animationGroups, true);
+                for (const ag of ags) { if (ag.isStarted) ag.stop(); }
+
+                this.ag = Vishva.vishva.scene.getAnimationGroupByName(prop.animation.value).start(prop.animLoop, prop.rate);
                 this.ag.onAnimationGroupEndObservable.addOnce(() => { return this.stop() });
             }else{
-                this.anim = this.avMesh.skeleton.beginAnimation(prop.animation.value, prop.loop, prop.rate,() => { return this.stop() });
+                Vishva.vishva.scene.stopAnimation(this.mesh.skeleton);  // stop prior skeleton anim
+                this.anim = this.avMesh.skeleton.beginAnimation(prop.animation.value, prop.animLoop, prop.rate,() => { return this.stop() });
             }
         }
         }
@@ -186,6 +192,11 @@ export class ActuatorAvAnimator extends ActuatorAbstract {
     }
 
     public onPropertiesChange() {
+        //looping will be handled by animation itself based on animLoop property
+        //the actuator itself will not loop
+        //force this to false if user had set it to true
+        this.properties.loop = false;
+
         if (this.properties.autoStart) {
             this.start(this.properties.signalId);
         }

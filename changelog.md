@@ -1,3 +1,9 @@
+### 11/23/2026 0.6.0-alpha.5
+- fixed settings serialization issue. Not all settings were being serialized
+- fixed ActuatorAnimator and ActuatorAvAnimator. When an animation played by a animator Actuator was in loop another animator Actuator wasn't able to change the animation.
+- added a new property to Actuator called "queueable". This decides if an actuator receives a signal when it is actuating will it queue the signal to handle it after it finishes the current actuation or ignore it.
+- added a "follow" porperty to ActuatorCCMoveToTurnTo. If set to true the mesh will continue to follow the other target after reaching the target.
+
 ### 11/19/2026 0.6.0-alpha.4  
 - fixed an intermittent white-screen crash when saving a world (most often in the tar.gz archive format). The console would flood with the WebGL error "Feedback loop formed between Framebuffer and active Texture" and the context would stay broken. The BabylonJS render loop is now paused for the whole save and resumed in a finally block, so the scene is never rendered in its half-mutated preSaveCleanup state during the long async save window (where the tar.gz path does many await fetches). The DOM-based save progress dialog keeps updating while the canvas is paused.  
 - added `Vishva.pauseRenderLoop()` / `resumeRenderLoop()` and wired them into all four save entry points (`saveWorld`, `saveWorldAsJson`, `saveWorldToIndexedDB`, `saveWorldToIndexedDBAsJson`); the `saveWorldAsJson` body was extracted into `_saveWorldAsJsonImpl()` so the pause/try/finally wrapper stays clean.

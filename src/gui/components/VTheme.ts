@@ -313,7 +313,7 @@ export class VThemes {
          * Apply a preset by index and persist the choice.
          */
         public static applyPreset(index: number): void {
-                if (index < 0 || index >= VThemes.presets.length) return;
+                if (!index || index < 0 || index >= VThemes.presets.length) return;
                 const preset = VThemes.presets[index];
                 VThemes.applyTheme(preset.theme);
                 try {

@@ -1,3 +1,7 @@
+REFACTORING
+- serialization  and deserialization is getting messy. VishvaSerialized should have toJson() and initFromJson() method. see LoadManager.applyVishvaSettings(). we are just assigning the json object to the VishvaSerialized Class object (11/23/2026)
+
+
 BUGS
 - make a character an avatar. copy aniamtions to this avatar. go to cc ui. none of the anims show up.
 (6/19/2026)

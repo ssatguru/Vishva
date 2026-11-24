@@ -105,13 +105,14 @@ export class ActuatorAnimator extends ActuatorAbstract {
    
 
     public onPropertiesChange() {
-        if (this.properties.autoStart) {
-            var started: boolean = this.start(this.properties.signalId);
-        }
         //looping will be handled by animation itself based on animLoop property
         //the actuator itself will not loop
         //force this to false if user had set it to true
         this.properties.loop = false;
+
+         if (this.properties.autoStart) {
+            var started: boolean = this.start(this.properties.signalId);
+        }
     }
 
     public cleanUp() {

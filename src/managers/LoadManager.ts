@@ -4,7 +4,7 @@ import {
     SceneLoader, Skeleton, StandardMaterial, Tags, TextFileAssetTask, Tools, TransformNode, Vector3, VertexBuffer, Color3
 } from "babylonjs";
 import { PlacementCalculator, PlacementContext, PlacementMode, Vector3 as PlacementVector3 } from "./PlacementCalculator";
-import { VishvaSerialized, ObjectIdMap, MeshMetadataMap } from "../VishvaSerialized";
+import { VishvaSerialized, ObjectIdMap, MeshMetadataMap, SettingsSerialized } from "../VishvaSerialized";
 import { RuntimeSharingEntry, framesSame, getRootMesh } from "../util/AnimGroupDedup";
 import { deduplicateRangesAtRuntime } from "../util/AnimRangeDedup";
 import { SNAManager } from "../sna/SNA";
@@ -168,15 +168,29 @@ export class LoadManager {
             vishvaSerialized.avSerialized.settings.ellipsoidOffset = new Vector3(0.0, 0.8, 0.0);
         }
 
-        this.vishva.vishvaSerialized = vishvaSerialized;
+
+
 
         if (vishvaSerialized !== undefined) {
             console.log("world babylon version : " + vishvaSerialized.bVer);
             console.log("world vishva version : " + vishvaSerialized.vVer);
 
+            let ss:SettingsSerialized = new  SettingsSerialized();
+            ss.initFromJson(vishvaSerialized.settings);
+
+            // TODO 
+            // should do this more cleanly 
+            // we loose all the nice methods on objects if we assign the json object directly
+            // maybe add a initFromJson() method in VishvaSerialized
+            this.vishva.vishvaSerialized = vishvaSerialized;
+
             this.vishva.snas = vishvaSerialized.snas;
-            this.vishva._cameraCollision = vishvaSerialized.settings.cameraCollision;
-            this.vishva.autoEditMenu = vishvaSerialized.settings.autoEditMenu;
+
+            //override the settings so it becomes a proper class object rather than a json object without any methods
+            this.vishva.vishvaSerialized.settings = ss;
+            //this.vishva._cameraCollision = vishvaSerialized.settings.cameraCollision;
+            //this.vishva.autoEditMenu = vishvaSerialized.settings.autoEditMenu;
+
             if (vishvaSerialized.misc.skyColor) {
                 this.vishva.skyColor.r = vishvaSerialized.misc.skyColor.r;
                 this.vishva.skyColor.g = vishvaSerialized.misc.skyColor.g;

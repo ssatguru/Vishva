@@ -10,6 +10,7 @@ export class CCMoveToTurnToProp extends ActProperties
     action: SelectType = new SelectType();
     targetMesh: MeshPickerType = new MeshPickerType();
     howClose : number = 2;
+    follow:boolean = false;
     run : boolean = false;
     // loop: boolean = null;
     // toggle: boolean = null;
@@ -60,7 +61,7 @@ export class ActuatorCCMoveToTurnTo extends ActuatorAbstract
                 {
                     arrivalDistance:properties.howClose,
                     run:properties.run,
-                    onComplete:() => this.stop()
+                    onComplete:() => {if (!props.follow) this.stop();}
                 }
             )
         }
@@ -71,7 +72,7 @@ export class ActuatorCCMoveToTurnTo extends ActuatorAbstract
                 targetMesh,
                 {   
                     angularTolerance:properties.howClose,
-                    onComplete:() => this.stop()
+                    onComplete:() => {if (!props.follow) this.stop();}
                 }
             )
         }

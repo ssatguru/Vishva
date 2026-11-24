@@ -123,8 +123,6 @@ export class SaveManager {
         let vishvaSerialized = new VishvaSerialized(this.vishva);
         vishvaSerialized.bVer = Engine.Version;
         vishvaSerialized.vVer = this.vishva.constructor.version;
-        vishvaSerialized.settings.cameraCollision = this.vishva._cameraCollision;
-        vishvaSerialized.settings.autoEditMenu = this.vishva.autoEditMenu;
         vishvaSerialized.guiSettings = this.vishva.vishvaGUI.guiSettings;
         vishvaSerialized.misc.activeCameraTarget = this.vishva.arcCamera.target;
         vishvaSerialized.misc.skyColor = this.vishva.skyColor;
@@ -269,8 +267,6 @@ export class SaveManager {
             let vishvaSerialized = new VishvaSerialized(this.vishva);
             vishvaSerialized.bVer = Engine.Version;
             vishvaSerialized.vVer = this.vishva.constructor.version;
-            vishvaSerialized.settings.cameraCollision = this.vishva._cameraCollision;
-            vishvaSerialized.settings.autoEditMenu = this.vishva.autoEditMenu;
             vishvaSerialized.guiSettings = this.vishva.vishvaGUI.guiSettings;
             vishvaSerialized.misc.activeCameraTarget = this.vishva.arcCamera.target;
             vishvaSerialized.misc.skyColor = this.vishva.skyColor;
@@ -439,8 +435,6 @@ export class SaveManager {
             vishvaSerialzed.bVer = Engine.Version;
             vishvaSerialzed.vVer = this.vishva.constructor.version;
 
-            vishvaSerialzed.settings.cameraCollision = this.vishva._cameraCollision;
-            vishvaSerialzed.settings.autoEditMenu = this.vishva.autoEditMenu;
             vishvaSerialzed.guiSettings = this.vishva.vishvaGUI.guiSettings;
             vishvaSerialzed.misc.activeCameraTarget = this.vishva.arcCamera.target;
             vishvaSerialzed.misc.skyColor = this.vishva.skyColor;
@@ -687,8 +681,6 @@ export class SaveManager {
         vishvaSerialzed.bVer = Engine.Version;
         vishvaSerialzed.vVer = this.vishva.constructor.version;
 
-        vishvaSerialzed.settings.cameraCollision = this.vishva._cameraCollision;
-        vishvaSerialzed.settings.autoEditMenu = this.vishva.autoEditMenu;
         vishvaSerialzed.guiSettings = this.vishva.vishvaGUI.guiSettings;
         vishvaSerialzed.misc.activeCameraTarget = this.vishva.arcCamera.target;
         vishvaSerialzed.misc.skyColor = this.vishva.skyColor;

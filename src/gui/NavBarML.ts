@@ -15,6 +15,8 @@ let navHTML = `
 
                 <button id="navWorldAssets" title="list items in world"><span class="material-icons-outlined">account_tree</span></button>
 
+                <button id="navSnaOverview" title="sensors and actuators overview"><span class="material-icons-outlined">hub</span></button>
+
                 <button id="navAllAssets" title="all files"><span class="material-icons-outlined">folder</span></button>
 
                 <div style="position:relative; display:inline-block;">

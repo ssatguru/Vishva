@@ -1,3 +1,6 @@
+### 11/23/2026 0.6.0-alpha.6
+- added a new sna-overview-dialog which lists out all the meshes in the scene which have sensors and actuators attached to them along with the attributes of each such sensors and actuators. see document "design.md" in .kiro/specs/0.6.0-alpha.6-sna-overview-dialog" folder.
+
 ### 11/23/2026 0.6.0-alpha.5
 - fixed settings serialization issue. Not all settings were being serialized
 - fixed ActuatorAnimator and ActuatorAvAnimator. When an animation played by a animator Actuator was in loop another animator Actuator wasn't able to change the animation.

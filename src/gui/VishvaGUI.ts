@@ -18,6 +18,7 @@ import { TransformNode } from "babylonjs";
 import { CCUI } from "./CCUI";
 import { SNAManager } from "../sna/SNA";
 import { SavePromptUI } from "./SavePromptUI";
+import { SnaOverviewUI } from "./SnaOverviewUI";
 import { WorldLauncher } from "./WorldLauncher";
 import { UploadUI } from "./UploadUI";
 import { MeshMetadata } from "../VishvaSerialized";
@@ -171,6 +172,7 @@ export class VishvaGUI {
     private _uploadUI: UploadUI;
     private _allAssetsVTDiag: VTreeDialog;
     private _items: ItemListUI;
+    private _snaOverviewUI: SnaOverviewUI;
     public showItemList(): ItemListUI {
         if (this._items == null) {
             this._items = new ItemListUI(this._vishva,false);
@@ -263,6 +265,16 @@ export class VishvaGUI {
             } else {
                 this._items.toggle();
             }
+            return false;
+        }
+
+        // button for sensors and actuators overview
+        let _navSnaOverview: HTMLElement = document.getElementById("navSnaOverview");
+        _navSnaOverview.onclick = (e) => {
+            if (this._snaOverviewUI == null) {
+                this._snaOverviewUI = new SnaOverviewUI();
+            }
+            this._snaOverviewUI.toggle();
             return false;
         }
 
